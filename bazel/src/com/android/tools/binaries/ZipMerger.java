@@ -18,18 +18,24 @@ package com.android.tools.binaries;
 
 import com.android.zipflinger.BytesSource;
 import com.android.zipflinger.ZipArchive;
+import com.android.zipflinger.ZipRepo;
 import com.android.zipflinger.ZipSource;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.io.ByteStreams;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.zip.Deflater;
 
 public class ZipMerger {
@@ -51,171 +57,172 @@ public class ZipMerger {
                 expanded.add(args[i]);
             }
         }
-
         int level = args[0].equals("cC") ? Deflater.BEST_COMPRESSION : Deflater.NO_COMPRESSION;
-        List<Action> overrides = new ArrayList<>();
-        List<Action> adds = new ArrayList<>();
-        for (String arg : expanded) {
-            if (arg.startsWith("#")) {
-                String[] spec = arg.substring(1).split("=");
-                if (spec.length != 2) {
-                    printUsage();
-                    return;
-                }
-                String[] paths = spec[0].split("!", 2);
-                if (paths.length != 2) {
-                    printUsage();
-                    return;
-                }
-                Action action = new Action();
-                action.entry = paths[0];
-                action.subEntry = paths[1];
-                action.data = new File(spec[1]);
-                action.type = Type.OVERRIDE;
-                overrides.add(action);
-            } else {
-                Action action = new Action();
-                action.entry = "";
-                action.type = Type.ADD;
 
-                String dataPath = arg;
-                String[] parts = arg.split("=", 2);
-                if (parts.length == 2) {
-                    action.entry = parts[0];
-                    dataPath = parts[1];
-                }
-                if (!dataPath.isEmpty() && dataPath.charAt(0) == '+') {
-                    action.type = Type.EXTRACT;
-                    dataPath = dataPath.substring(1);
-                }
-                action.data = new File(dataPath);
-                adds.add(action);
+        List<ZipFile> adds = new ArrayList<>();
+        for (String arg : expanded) {
+            String root = "";
+            boolean override = false;
+            String dataPath = arg;
+            String[] parts = arg.split("=", 2);
+            if (parts.length == 2) {
+                root = parts[0];
+                dataPath = parts[1];
             }
+            if (!dataPath.isEmpty() && dataPath.charAt(0) == '+') {
+                override = true;
+                dataPath = dataPath.substring(1);
+            }
+            adds.add(new ZipFile(root, new File(dataPath), override));
         }
 
-        createZip(out, adds, overrides, level);
+        mergeZips(out, adds, level);
     }
 
-    private enum Type {
-        ADD, // Adds a file to the target zip
-        EXTRACT, // Extracts a zip file into the target zip
-        OVERRIDE, // Overrides a nested file in the target zip
+    private static class ZipFile {
+        ZipFile(String root, File file, boolean override) {
+            this.root = root;
+            this.file = file;
+            this.override = override;
+        }
+
+        final boolean override;
+        final String root;
+        final File file;
     }
 
-    private static class Action {
-        String entry;
-        String subEntry;
-        File data;
-        Type type;
+    private static class Entry {
+        Entry(ZipFile zip, String entry) {
+            this.zip = zip;
+            this.entry = entry;
+        }
+
+        final ZipFile zip;
+        final String entry;
     }
 
-    private static void createZip(
-            String out, List<Action> adds, List<Action> overridesList, int level) throws Exception {
+    /**
+     * Recursively merge a set of zip files, in <files> into one zip file. If the same entry
+     * is in two or more zip files, the tool will throw an error, unless one of them is
+     * marked to override. If two or more entries collide, the behavior depends on whether
+     * the entry is an archive (zip or jar) or a file.
+     * If multiple source zip files provide the same file, the tool will fail unless exactly
+     * one of them is comes from an override zip. In that case, that entry is chosen.
+     * If multiple source zip files provide the same archive, then only one of them is allowed
+     * not to come from an override zip. If that's the case, all these archived are merged
+     * recursively. See the tests for examples.
+     */
+    private static void mergeZips(String out, List<ZipFile> files, int compressionLevel)
+            throws Exception {
         File outFile = new File(out);
         if (outFile.exists()) {
             outFile.delete();
         }
-        Map<String, List<Action>> overrides = new HashMap<>();
-        for (Action action : overridesList) {
-            List<Action> list = overrides.computeIfAbsent(action.entry, k -> new ArrayList<>());
-            list.add(action);
+
+        ListMultimap<String, Entry> entries = ArrayListMultimap.create();
+        for (ZipFile add : files) {
+            try (ZipRepo zip = new ZipRepo(add.file)) {
+                for (String s : zip.getEntries().keySet()) {
+                    String newName = add.root + s;
+                    entries.put(newName, new Entry(add, s));
+                }
+            }
         }
-        try (ZipArchive zip = new ZipArchive(outFile)) {
-            for (Action add : adds) {
-                if (add.type == Type.ADD) {
-                    File file = add.data;
-                    if (overrides.containsKey(add.entry)) {
-                        file = patchArchive(overrides, add.entry, file, level);
-                    }
-                    zip.add(new BytesSource(file, add.entry, level));
-                } else if (add.type == Type.EXTRACT){
-                    List<String> skipped =
-                            addZipFileToArchive(add.entry, add.data, zip, overrides::containsKey);
-                    try (ZipArchive archive = new ZipArchive(add.data)) {
-                        for (String oldName : skipped) {
-                            String newName = add.entry + oldName;
-                            ByteBuffer content = archive.getContent(oldName);
-                            File in = File.createTempFile("before", ".jar");
-                            try (FileOutputStream fos = new FileOutputStream(in)) {
-                                byte[] array = new byte[content.remaining()];
-                                content.get(array);
-                                fos.write(array);
-                            }
-                            in.deleteOnExit();
-                            File o = patchArchive(overrides, newName, in, level);
-                            zip.add(new BytesSource(o, newName, level));
+
+        // Merge
+        ListMultimap<ZipFile, String> merged = ArrayListMultimap.create();
+        for (Map.Entry<String, Collection<Entry>> e : entries.asMap().entrySet()) {
+            String newName = e.getKey();
+            Collection<Entry> zips = e.getValue();
+            if (zips.size() == 1) {
+                Entry next = zips.iterator().next();
+                merged.put(next.zip, next.entry);
+                continue;
+            }
+            boolean isZip = newName.endsWith(".jar") || newName.endsWith(".zip");
+            if (isZip) {
+                // We recursively merge the zips if they can be overridden
+                Entry doNotOverride = null;
+                for (Entry zip : zips) {
+                    if (!zip.zip.override) {
+                        if (doNotOverride != null) {
+                            throw new IllegalArgumentException(
+                                    "Attempting to merge zips from entries with no overrides");
                         }
+                        doNotOverride = zip;
                     }
                 }
+                File tmp = File.createTempFile(new File(newName).getName(), ".mrg.tmp");
+                List<ZipFile> toMerge = new ArrayList<>();
+                for (Entry zip : zips) {
+                    File part = extract(zip.zip.file, zip.entry);
+                    toMerge.add(new ZipFile("", part, zip.zip.override));
+                }
+                mergeZips(tmp.getAbsolutePath(), toMerge, compressionLevel);
+                tmp.deleteOnExit();
+
+                File mergedZip = File.createTempFile("merged", ".zip");
+                createZip(mergedZip, tmp, newName, compressionLevel);
+                merged.put(new ZipFile("", mergedZip, false), newName);
+                mergedZip.deleteOnExit();
+            } else {
+                // Merging files - Pick the one override, or fail.
+                Entry chosen = null;
+                for (Entry entry : zips) {
+                    if (entry.zip.override) {
+                        if (chosen != null) {
+                            throw new IllegalArgumentException("Two overrides for " + newName);
+                        }
+                        chosen = entry;
+                    }
+                }
+                if (chosen == null) {
+                    throw new IllegalArgumentException(
+                            "No entries for " + newName + ", have override set");
+                }
+                merged.put(chosen.zip, chosen.entry);
+            }
+        }
+
+        // Save
+        try (ZipArchive zip = new ZipArchive(outFile)) {
+            for (Map.Entry<ZipFile, Collection<String>> e : merged.asMap().entrySet()) {
+                ZipFile src = e.getKey();
+                ZipSource zipsrc = new ZipSource(src.file);
+                for (String entry : e.getValue()) {
+                    zipsrc.select(entry, src.root + entry);
+                }
+                zip.add(zipsrc);
             }
         }
     }
 
-    private static File patchArchive(
-            Map<String, List<Action>> overrides, String newName, File in, int level)
-            throws Exception {
-        File o = File.createTempFile("after", ".jar");
-        o.delete();
-        List<Action> actions = overrides.get(newName);
-        Map<String, File> filesToOverride = new LinkedHashMap<>();
-        for (Action action : actions) {
-            filesToOverride.put(action.subEntry, action.data);
+    private static void createZip(File zip, File file, String entry, int level) throws IOException {
+        if (zip.exists()) {
+            zip.delete();
         }
-        try (ZipArchive patched = new ZipArchive(o)) {
-            addZipFileToArchive("", in, patched, filesToOverride.keySet()::contains);
-            for (Map.Entry<String, File> e : filesToOverride.entrySet()) {
-                patched.add(new BytesSource(e.getValue(), e.getKey(), level));
-            }
+        try (ZipArchive a = new ZipArchive(zip)) {
+            a.add(new BytesSource(file, entry, level));
+        }
+    }
+
+    private static File extract(File file, String entry) throws IOException {
+        File o = File.createTempFile(new File(entry).getName(), ".tmp");
+        try (ZipRepo archive = new ZipRepo(file);
+             FileOutputStream fos = new FileOutputStream(o)) {
+            ByteStreams.copy(archive.getInputStream(entry), fos);
         }
         o.deleteOnExit();
         return o;
     }
 
-    private static List<String> addZipFileToArchive(
-            String prefix, File from, ZipArchive to, Predicate<String> skip) throws Exception {
-        List<String> skipped = new ArrayList<>();
-        ZipSource zipsrc = new ZipSource(from);
-        for (String s : zipsrc.entries().keySet()) {
-            String newName = prefix + s;
-            if (!skip.test(newName)) {
-                zipsrc.select(s, newName);
-            } else {
-                skipped.add(s);
-            }
-        }
-        to.add(zipsrc);
-        return skipped;
-    }
-
     private static void printUsage() {
         System.out.println("zip_merger is a zipper tool that supports merging zips.");
         System.out.println("Usage:");
-        System.out.println("   zip_merger c <out> arg1 arg2 @arg_file");
+        System.out.println("   zip_merger cC <out> zip1 zip2 zip3 ...");
         System.out.println("Args:");
-        System.out.println("     c <out>: Only create is supported, and the given file will be");
-        System.out.println("              overridden.");
-        System.out.println("     file: A file to add to the zip. It will be added using only its");
-        System.out.println("           basename.");
-        System.out.println("     +zip_file: A zip file whose entries will be added to the zip,");
-        System.out.println("                at the same location they where on the original zip.");
-        System.out.println("     <path>=[+]file: A file to add to the zip, where <path> is the");
-        System.out.println("                     full path (and name) to be used in the zip.");
-        System.out.println("                     If the file is of the form +zip_file, then all");
-        System.out.println("                     the entries will be added relative to <path>.");
-        System.out.println("     #<path1>!<path2>=file: Allows to override a file inside");
-        System.out.println("                            another zip file. <path1> refers to the");
-        System.out.println("                            path of a zip file in the final zip.");
-        System.out.println("                            <path2> refers to a path in that file.");
-        System.out.println("                            and <file> points to a file whose content");
-        System.out.println("                            will be used instead.");
-        System.out.println("Example:");
-        System.out.println("    zip_merger c a.zip @args");
-        System.out.println("where args is:");
-        System.out.println("dir/file.txt");
-        System.out.println("dir/file.jar");
-        System.out.println("dir/file2.jar=/local/path/to/file2.jar");
-        System.out.println("+/local/path/to/file.zip");
-        System.out.println("other_path/=+/local/path/to/file.zip");
-        System.out.println("#dir/file.jar!rewrite.txt=/local/file/to/rewrite.txt");
+        System.out.println("     Args format: [path=][+]zip_file where:");
+        System.out.println("  - [path] Prefix to be added to each entry name in this zip.");
+        System.out.println("  - [+] Allows entries in this zip to overwrite destination entries.");
     }
 }
