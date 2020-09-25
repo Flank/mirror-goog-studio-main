@@ -1232,7 +1232,7 @@ public class TestLintTask {
     /**
      * Interface to implement to configure the lint driver before lint starts running.
      *
-     * <p>Register this configurator via {@link #driverConfigurator)}.
+     * <p>Register this configurator via {@link #configureDriver)}.
      */
     @FunctionalInterface
     public interface LintDriverConfigurator {

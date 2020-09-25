@@ -692,6 +692,8 @@ class LintModelFactory : LintModelModuleLoader {
             htmlOutput = options.htmlOutput,
             xmlReport = options.xmlReport,
             xmlOutput = options.xmlOutput,
+            sarifReport = options.sarifReport,
+            sarifOutput = options.sarifOutput,
             checkReleaseBuilds = options.isCheckReleaseBuilds
         )
     }
@@ -942,6 +944,8 @@ class LintModelFactory : LintModelModuleLoader {
                 htmlOutput = options.htmlOutput,
                 xmlReport = options.xmlReport,
                 xmlOutput = options.xmlOutput,
+                sarifReport = options.sarifReport,
+                sarifOutput = options.sarifOutput,
                 checkReleaseBuilds = options.isCheckReleaseBuilds
             )
         }

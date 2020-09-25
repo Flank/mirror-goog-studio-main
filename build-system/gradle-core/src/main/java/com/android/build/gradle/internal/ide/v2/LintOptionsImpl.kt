@@ -46,6 +46,8 @@ data class LintOptionsImpl(
     override val htmlOutput: File?,
     override val xmlReport: Boolean,
     override val xmlOutput: File?,
+    override val sarifReport: Boolean,
+    override val sarifOutput: File?,
     override val isCheckReleaseBuilds: Boolean,
     override val isCheckDependencies: Boolean,
     override val baselineFile: File?,

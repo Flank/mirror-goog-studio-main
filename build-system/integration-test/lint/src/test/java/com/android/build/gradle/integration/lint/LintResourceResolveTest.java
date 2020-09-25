@@ -54,5 +54,9 @@ public class LintResourceResolveTest {
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-report.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.");
+
+        File sarifFile = new File(project.getSubproject("app").getBuildDir(), "reports/lint-results-debug.sarif");
+        assertThat(sarifFile).exists();
+        assertThat(sarifFile).contains("\"$schema\" : \"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/");
     }
 }

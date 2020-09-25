@@ -45,5 +45,7 @@ data class IdeLintOptionsImpl(
   override val htmlReport: Boolean = true,
   override val htmlOutput: File? = null,
   override val xmlReport: Boolean = true,
-  override val xmlOutput: File? = null
+  override val xmlOutput: File? = null,
+  override val sarifReport: Boolean = false,
+  override val sarifOutput: File? = null
 ) : Serializable, IdeLintOptions

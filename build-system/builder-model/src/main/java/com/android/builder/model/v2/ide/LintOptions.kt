@@ -135,6 +135,19 @@ interface LintOptions: AndroidModel {
     val xmlOutput: File?
 
     /**
+     * Whether we should write a SARIF (OASIS Static Analysis Results Interchange Format) report.
+     * Default is false. The location can be controlled by [sarifOutput].
+     */
+    val sarifReport: Boolean
+
+    /**
+     * The optional path to where a SARIF report (OASIS Static
+     * Analysis Results Interchange Format) should be written.
+     * Setting this property will also turn on [sarifOutput].
+     */
+    val sarifOutput: File?
+
+    /**
      * Returns whether lint should check for fatal errors during release builds. Default is true.
      * If issues with severity "fatal" are found, the release build is aborted.
      */
