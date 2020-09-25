@@ -124,6 +124,7 @@ import com.android.build.gradle.internal.tasks.ProguardTask
 import com.android.build.gradle.internal.tasks.R8Task
 import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
+import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask
 import com.android.build.gradle.internal.tasks.SigningReportTask
 import com.android.build.gradle.internal.tasks.SourceSetsTask
@@ -1377,9 +1378,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         setJavaCompilerTask(javacTask, androidTestProperties)
         createPostCompilationTasks(androidTestProperties)
 
-        // Add a task to produce the signing config file
+        // Add tasks to produce the signing config files
         createValidateSigningTask(androidTestProperties)
         taskFactory.register(SigningConfigWriterTask.CreationAction(androidTestProperties))
+        taskFactory.register(SigningConfigVersionsWriterTask.CreationAction(androidTestProperties))
         createPackagingTask(androidTestProperties)
         taskFactory.configure(
                 ASSEMBLE_ANDROID_TEST

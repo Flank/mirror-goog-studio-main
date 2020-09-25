@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.signing.SigningConfigData
+import com.android.build.gradle.internal.signing.SigningConfigVersions
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import org.apache.commons.io.FileUtils
@@ -38,16 +39,9 @@ class SigningConfigUtils {
 
     companion object {
 
-        private const val SIGNING_CONFIG_FILE_NAME = "signing-config.json"
-
-        /** Returns the signing config file under the given directory. */
-        fun getSigningConfigFile(directory: File) = File(directory, SIGNING_CONFIG_FILE_NAME)
-
-        /** Saves the signing config information to a json file under the given output directory. */
-        fun save(outputDirectory: File, signingConfig: SigningConfigData?) {
-            val outputFile = getSigningConfigFile(outputDirectory)
-
-            // create the file, so we can set the permissions on it.
+        /** Saves the [SigningConfigData] information to the outputFile.  */
+        fun saveSigningConfigData(outputFile: File, signingConfigData: SigningConfigData?) {
+            // create the file if it doesn't already exist, so we can set the permissions on it.
             outputFile.createNewFile()
             if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
                 // set read, write permissions for owner only.
@@ -81,20 +75,40 @@ class SigningConfigUtils {
                 view.acl = listOf(entry)
             }
 
-            FileUtils.write(outputFile, getGson().toJson(signingConfig), StandardCharsets.UTF_8)
+            FileUtils.write(outputFile, gson.toJson(signingConfigData), StandardCharsets.UTF_8)
         }
 
-        /** Loads the signing config information from a json file. */
-        fun load(input: File): SigningConfigData? {
+        /** Saves the [SigningConfigVersions] information to the outputFile.  */
+        fun saveSigningConfigVersions(
+            outputFile: File,
+            signingConfigVersions: SigningConfigVersions
+        ) {
+            FileUtils.write(
+                outputFile,
+                gson.toJson(signingConfigVersions),
+                StandardCharsets.UTF_8
+            )
+        }
+
+        /** Loads the [SigningConfigData] information from a json file. */
+        fun loadSigningConfigData(input: File): SigningConfigData? {
             return input.bufferedReader(StandardCharsets.UTF_8).use { reader ->
-                getGson().fromJson(reader, SigningConfigData::class.java)
+                gson.fromJson(reader, SigningConfigData::class.java)
             }
         }
 
-        private fun getGson(): Gson {
+        /** Loads the [SigningConfigVersions] information from a json file. */
+        @JvmStatic
+        fun loadSigningConfigVersions(input: File): SigningConfigVersions {
+            return input.bufferedReader(StandardCharsets.UTF_8).use { reader ->
+                gson.fromJson(reader, SigningConfigVersions::class.java)
+            }
+        }
+
+        private val gson: Gson by lazy {
             val gsonBuilder = GsonBuilder()
             gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
-            return gsonBuilder.create()
+            gsonBuilder.create()
         }
     }
 }

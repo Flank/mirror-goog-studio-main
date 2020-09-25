@@ -765,13 +765,24 @@ open class VariantDslInfoImpl internal constructor(
             if (variantType.isDynamicFeature) {
                 return null
             }
-            if (signingConfigOverride != null) {
-                return signingConfigOverride
-            }
-            val signingConfig: SigningConfig? = buildTypeObj.signingConfig
             // cast builder.SigningConfig to dsl.SigningConfig because MergedFlavor merges
             // dsl.SigningConfig of ProductFlavor objects
-            return signingConfig ?: mergedFlavor.signingConfig as SigningConfig?
+            val dslSigningConfig: SigningConfig? =
+                    buildTypeObj.signingConfig ?: (mergedFlavor.signingConfig as SigningConfig?)
+            signingConfigOverride?.let {
+                // use enableV1 and enableV2 from the DSL if the override values are null
+                if (it.enableV1Signing == null) {
+                    it.enableV1Signing = dslSigningConfig?.enableV1Signing
+                }
+                if (it.enableV2Signing == null) {
+                    it.enableV2Signing = dslSigningConfig?.enableV2Signing
+                }
+                // use enableV3 and enableV4 from the DSL because they're not injectable
+                it.enableV3Signing = dslSigningConfig?.enableV3Signing
+                it.enableV4Signing = dslSigningConfig?.enableV4Signing
+                return it
+            }
+            return dslSigningConfig
         }
 
     override val isSigningReady: Boolean

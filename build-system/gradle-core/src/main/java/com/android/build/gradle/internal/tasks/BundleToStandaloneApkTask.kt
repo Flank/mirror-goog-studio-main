@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
-import com.android.build.gradle.internal.signing.SigningConfigProvider
+import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.commands.BuildApksCommand.ApkBuildMode
@@ -73,7 +73,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
     private lateinit var tempDirectory: File
 
     @get:Nested
-    lateinit var signingConfig: SigningConfigProvider
+    lateinit var signingConfigData: SigningConfigDataProvider
         private set
 
     override fun doTaskAction() {
@@ -83,7 +83,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             it.aapt2File.set(aapt2.getAapt2Executable().toFile())
             it.outputFile.set(outputFile)
             it.temporaryDir.set(tempDirectory)
-            signingConfig.resolve()?.let { config ->
+            signingConfigData.resolve()?.let { config ->
                 it.keystoreFile.set(config.storeFile)
                 it.keystorePassword.set(config.storePassword)
                 it.keyAlias.set(config.keyAlias)
@@ -199,7 +199,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
             )
             creationConfig.services.initializeAapt2Input(task.aapt2)
             task.tempDirectory = creationConfig.paths.getIncrementalDir(name)
-            task.signingConfig = SigningConfigProvider.create(creationConfig)
+            task.signingConfigData = SigningConfigDataProvider.create(creationConfig)
         }
     }
 }

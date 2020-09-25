@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
@@ -290,6 +291,7 @@ interface VariantDslInfo {
      */
     fun getResValues(): Map<ResValue.Key, ResValue>
 
+    /** Holds all SigningConfig information from the DSL and/or [ProjectOptions].  */
     val signingConfig: SigningConfig?
 
     val isSigningReady: Boolean

@@ -119,8 +119,10 @@ class NoOpIncrementalBuildMinifyTest {
                 ":processReleaseResources",
                 ":sdkReleaseDependencyData",
                 ":validateSigningDebugAndroidTest",
+                ":writeDebugAndroidTestSigningConfigVersions",
                 ":writeReleaseAppMetadata",
-                ":writeReleaseApplicationId"
+                ":writeReleaseApplicationId",
+                ":writeReleaseSigningConfigVersions"
             ),
             SKIPPED to setOf(
                 ":compileDebugAidl",

@@ -391,10 +391,13 @@ InternalArtifactType<T : FileSystemLocation>(
     // The name of a dynamic or legacy instant feature`
     object FEATURE_NAME: InternalArtifactType<RegularFile>(FILE), Replaceable
 
-    // The signing configuration the feature module should be using: InternalArtifactType<RegularFile>(FILE), Replaceable which is taken from the
+    // The signing configuration data the feature modules should be using which is taken from the
     // application module. Also used for androidTest variants (bug 118611693). This has already
     // been validated
-    object SIGNING_CONFIG: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object SIGNING_CONFIG_DATA: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // The information about which signature versions the application module is using. The feature
+    // modules should use the same versions.
+    object SIGNING_CONFIG_VERSIONS: InternalArtifactType<RegularFile>(FILE), Replaceable
     // The validated signing config output: InternalArtifactType<RegularFile>(FILE), Replaceable to allow the task to be up to date: InternalArtifactType<RegularFile>(FILE), Replaceable and for allowing
     // other tasks to depend on the output.
     object VALIDATE_SIGNING_CONFIG: InternalArtifactType<Directory>(DIRECTORY), Replaceable

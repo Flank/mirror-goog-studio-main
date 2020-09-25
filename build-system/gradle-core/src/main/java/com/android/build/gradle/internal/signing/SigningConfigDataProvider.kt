@@ -21,8 +21,6 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.SigningConfigUtils
-import com.android.build.gradle.options.IntegerOption
-import com.android.build.gradle.options.SigningOptions
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
@@ -44,7 +42,7 @@ import java.io.Serializable
  * Those tasks should then annotate this object with `@Nested`, so that if the signing config
  * information has changed, the tasks will be re-executed with the updated info.
  */
-class SigningConfigProvider(
+class SigningConfigDataProvider(
 
     /** When not `null`, the signing config information can be obtained directly in memory. */
     @get:Nested
@@ -76,16 +74,14 @@ class SigningConfigProvider(
     fun convertToParams(): SigningConfigProviderParams {
         return SigningConfigProviderParams(
             signingConfigData,
-            signingConfigFileCollection?.let {
-                SigningConfigUtils.getSigningConfigFile(it.singleFile)
-            }
+            signingConfigFileCollection?.let { it.singleFile }
         )
     }
 
     companion object {
 
         @JvmStatic
-        fun create(creationConfig: ComponentCreationConfig): SigningConfigProvider {
+        fun create(creationConfig: ComponentCreationConfig): SigningConfigDataProvider {
             val isInDynamicFeature =
                 creationConfig.variantType.isDynamicFeature
                         || (creationConfig is TestComponentImpl
@@ -96,15 +92,9 @@ class SigningConfigProvider(
             // memory first.
             return if (!isInDynamicFeature) {
                 // Get it from the variant scope
-                SigningConfigProvider(
+                SigningConfigDataProvider(
                     signingConfigData = creationConfig.variantDslInfo.signingConfig?.let {
-                        SigningConfigData.fromSigningConfig(
-                            it,
-                            creationConfig.minSdkVersion.apiLevel,
-                            creationConfig.globalScope
-                                .projectOptions
-                                .get(IntegerOption.IDE_TARGET_DEVICE_API)
-                        )
+                        SigningConfigData.fromSigningConfig(it)
                     },
                     signingConfigFileCollection = null,
                     signingConfigValidationResultDir = creationConfig.artifacts.get(
@@ -113,24 +103,11 @@ class SigningConfigProvider(
                 )
             } else {
                 // Get it from the injected properties passed from the IDE
-                val signingOptions =
-                    SigningOptions.readSigningOptions(creationConfig.services.projectOptions)
-                return if (signingOptions != null
-                    && signingOptions.v1Enabled != null && signingOptions.v2Enabled != null
-                ) {
-                    SigningConfigProvider(
-                        signingConfigData = SigningConfigData(
-                            name = "SigningConfigReceivedFromIDE",
-                            storeType = signingOptions.storeType, // IDE may/may not send storeType
-                            storeFile = File(signingOptions.storeFile),
-                            storePassword = signingOptions.storePassword,
-                            keyAlias = signingOptions.keyAlias,
-                            keyPassword = signingOptions.keyPassword,
-                            enableV1Signing = signingOptions.v1Enabled!!,
-                            enableV2Signing = signingOptions.v2Enabled!!,
-                            enableV3Signing = signingOptions.enableV3Signing,
-                            enableV4Signing = signingOptions.enableV4Signing
-                        ),
+                val signingConfigData =
+                    SigningConfigData.fromProjectOptions(creationConfig.services.projectOptions)
+                return if (signingConfigData != null) {
+                    SigningConfigDataProvider(
+                        signingConfigData = signingConfigData,
                         signingConfigFileCollection = null,
                         // Validation for this case is currently missing because the base module
                         // doesn't publish its validation result so that we can use it here.
@@ -142,13 +119,14 @@ class SigningConfigProvider(
                     )
                 } else {
                     // Otherwise, get it from the published artifact
-                    SigningConfigProvider(
+                    SigningConfigDataProvider(
                         signingConfigData = null,
-                        signingConfigFileCollection = creationConfig.variantDependencies.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG
-                        ),
+                        signingConfigFileCollection =
+                            creationConfig.variantDependencies.getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.PROJECT,
+                                AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG_DATA
+                            ),
                         // Validation is taken care of by the task in the base module that publishes
                         // the signing config info (SigningConfigWriterTask).
                         signingConfigValidationResultDir = null
@@ -160,8 +138,8 @@ class SigningConfigProvider(
 }
 
 /**
- * Similar to [SigningConfigProvider], but uses a [File] instead of a [FileCollection] to be used
- * by Gradle workers.
+ * Similar to [SigningConfigDataProvider], but uses a [File] instead of a [FileCollection] to be
+ * used by Gradle workers.
  */
 class SigningConfigProviderParams(
     private val signingConfigData: SigningConfigData?,
@@ -170,7 +148,8 @@ class SigningConfigProviderParams(
 
     /** Resolves this provider to get the signing config information. It may be `null`. */
     fun resolve(): SigningConfigData? {
-        return signingConfigData ?: signingConfigFile?.let { SigningConfigUtils.load(it) }
+        return signingConfigData
+                ?: signingConfigFile?.let { SigningConfigUtils.loadSigningConfigData(it) }
     }
 
     companion object {

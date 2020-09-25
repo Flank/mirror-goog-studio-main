@@ -21,7 +21,13 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.*
+import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.TestVariant
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -36,6 +42,7 @@ import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
 import com.android.builder.model.CodeShrinker
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -146,6 +153,15 @@ open class TestVariantImpl @Inject constructor(
 
     override val shouldPackageProfilerDependencies: Boolean = false
     override val advancedProfilingTransforms: List<String> = emptyList()
+
+    override val signingConfig: SigningConfig by lazy {
+        SigningConfigImpl(
+            variantDslInfo.signingConfig,
+            internalServices,
+            minSdkVersion.apiLevel,
+            globalScope.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
+        )
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

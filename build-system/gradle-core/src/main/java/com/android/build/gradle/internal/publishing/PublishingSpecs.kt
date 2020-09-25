@@ -77,7 +77,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_DIR
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_LIBRARY_CLASSES_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
+import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG_DATA
+import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG_VERSIONS
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType
@@ -156,7 +157,8 @@ class PublishingSpecs {
                 // this is only for base modules.
                 api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
                 api(BASE_MODULE_METADATA, ArtifactType.BASE_MODULE_METADATA)
-                api(SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
+                api(SIGNING_CONFIG_DATA, ArtifactType.FEATURE_SIGNING_CONFIG_DATA)
+                api(SIGNING_CONFIG_VERSIONS, ArtifactType.FEATURE_SIGNING_CONFIG_VERSIONS)
             }
 
             variantSpec(VariantTypeImpl.OPTIONAL_APK) {

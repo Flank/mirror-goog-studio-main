@@ -70,8 +70,9 @@ class ApplicationTaskManager(
         taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variant))
 
         createValidateSigningTask(variant)
-        // Add a task to produce the signing config file.
+        // Add tasks to produce the signing config files.
         taskFactory.register(SigningConfigWriterTask.CreationAction(variant))
+        taskFactory.register(SigningConfigVersionsWriterTask.CreationAction(variant))
 
         // Add a task to produce the app-metadata.properties file
         taskFactory.register(AppMetadataTask.CreationAction(variant))

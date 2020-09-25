@@ -150,7 +150,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setSecondaryManifestFiles",
                 "com.android.build.gradle.tasks.LintPerVariantTask::setVariantName",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",
-                "com.android.build.gradle.tasks.PackageAndroidArtifact::setSigningConfig",
                 "com.android.build.gradle.tasks.ProcessTestManifest::setTmpDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setImportDirs",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setNdkMode",

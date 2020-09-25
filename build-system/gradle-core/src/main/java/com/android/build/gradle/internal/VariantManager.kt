@@ -724,7 +724,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
     private fun createSigningOverride(): SigningConfig? {
         SigningOptions.readSigningOptions(projectOptions)?.let { signingOptions ->
-            val signingConfigDsl = SigningConfig("externalOverride")
+            val signingConfigDsl = SigningConfig(SigningOptions.SIGNING_CONFIG_NAME)
             signingConfigDsl.storeFile(File(signingOptions.storeFile))
             signingConfigDsl.storePassword(signingOptions.storePassword)
             signingConfigDsl.keyAlias(signingOptions.keyAlias)
@@ -733,15 +733,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 signingConfigDsl.storeType(it)
             }
             signingOptions.v1Enabled?.let {
-                @Suppress("DEPRECATION")
-                signingConfigDsl.isV1SigningEnabled = it
+                signingConfigDsl.enableV1Signing = it
             }
             signingOptions.v2Enabled?.let {
-                @Suppress("DEPRECATION")
-                signingConfigDsl.isV2SigningEnabled = it
+                signingConfigDsl.enableV2Signing = it
             }
-            signingConfigDsl.enableV3Signing = signingOptions.enableV3Signing
-            signingConfigDsl.enableV4Signing = signingOptions.enableV4Signing
             return signingConfigDsl
         }
         return null

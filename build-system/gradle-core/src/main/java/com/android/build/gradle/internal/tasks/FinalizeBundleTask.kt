@@ -24,7 +24,7 @@ import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.signing.SigningConfigProvider
+import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -62,7 +62,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
     @get:Nested
     @get:Optional
-    var signingConfig: SigningConfigProvider? = null
+    var signingConfigData: SigningConfigDataProvider? = null
         private set
 
     @get:Input
@@ -83,7 +83,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             it.initializeFromAndroidVariantTask(this)
             it.intermediaryBundleFile.set(intermediaryBundleFile)
             it.finalBundleFile.set(finalBundleFile)
-            signingConfig?.convertToParams()?.let { signing ->
+            signingConfigData?.convertToParams()?.let { signing ->
                 it.signingConfig.set(signing)
             }
             it.bundleIdeModel.set(bundleIdeModel)
@@ -220,7 +220,8 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
             // Don't sign debuggable bundles.
             if (!creationConfig.debuggable) {
-                task.signingConfig = SigningConfigProvider.create(creationConfig as ComponentImpl)
+                task.signingConfigData =
+                    SigningConfigDataProvider.create(creationConfig as ComponentImpl)
             }
 
             task.applicationId.setDisallowChanges(creationConfig.applicationId)

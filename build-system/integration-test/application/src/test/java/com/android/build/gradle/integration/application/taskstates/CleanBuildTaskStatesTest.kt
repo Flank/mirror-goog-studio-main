@@ -64,7 +64,8 @@ class CleanBuildTaskStatesTest {
                 ":app:processDebugResources",
                 ":app:testDebugUnitTest",
                 ":app:validateSigningDebug",
-                ":app:writeDebugAppMetadata"
+                ":app:writeDebugAppMetadata",
+                ":app:writeDebugSigningConfigVersions"
             ),
             UP_TO_DATE to setOf(
                 ":app:clean",

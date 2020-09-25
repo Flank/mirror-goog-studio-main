@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.signing.SigningConfigData
+import com.android.build.gradle.internal.signing.SigningConfigVersions
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -38,69 +39,70 @@ class SigningConfigUtilsTest {
     @JvmField
     var temporaryFolder = TemporaryFolder()
 
-    lateinit var outputDirectory : File
+    lateinit var outputFile : File
     lateinit var storeFile : File
 
     @Before
     @Throws(IOException::class)
     fun setUp() {
-        outputDirectory = temporaryFolder.newFolder()
+        outputFile = temporaryFolder.newFile()
         storeFile = temporaryFolder.newFile()
     }
 
     @Test
     @Throws(IOException::class)
-    fun testSaveAndLoad() {
-        val signingConfig = SigningConfigData(
+    fun testSigningConfigDataSaveAndLoad() {
+        val signingConfigData = SigningConfigData(
             name = "sampleName",
             storeType = "sampleStoreType",
             storeFile = storeFile,
             storePassword = "sampleStorePassword",
             keyAlias = "sampleKeyAlias",
-            keyPassword = "sampleKeyPassword",
-            enableV1Signing = false,
-            enableV2Signing = true,
-            enableV3Signing = false,
-            enableV4Signing = false
+            keyPassword = "sampleKeyPassword"
         )
-        SigningConfigUtils.save(outputDirectory, signingConfig)
+        SigningConfigUtils.saveSigningConfigData(outputFile, signingConfigData)
 
-        val files = outputDirectory.listFiles()
-        assertThat(files).hasLength(1)
-
-        val config = SigningConfigUtils.load(files[0])
-        assertThat(config).isEqualTo(signingConfig)
+        val config = SigningConfigUtils.loadSigningConfigData(outputFile)
+        assertThat(config).isEqualTo(signingConfigData)
     }
 
     @Test
     @Throws(IOException::class)
-    fun testSavedFileIsReadWriteByOwnerOnly() {
+    fun testSigningConfigVersionsSaveAndLoad() {
+        val signingConfigVersions = SigningConfigVersions(
+                enableV1Signing = false,
+                enableV2Signing = true,
+                enableV3Signing = false,
+                enableV4Signing = true
+        )
+        SigningConfigUtils.saveSigningConfigVersions(outputFile, signingConfigVersions)
+
+        val loadedSigningConfigVersions = SigningConfigUtils.loadSigningConfigVersions(outputFile)
+        assertThat(loadedSigningConfigVersions).isEqualTo(signingConfigVersions)
+    }
+
+    @Test
+    @Throws(IOException::class)
+    fun testSigningConfigDataFileIsReadWriteByOwnerOnly() {
         val signingConfig = SigningConfigData(
             name = "sampleName",
             storeType = "sampleStoreType",
             storeFile = storeFile,
             storePassword = "sampleStorePassword",
             keyAlias = "sampleKeyAlias",
-            keyPassword = "sampleKeyPassword",
-            enableV1Signing = false,
-            enableV2Signing = true,
-            enableV3Signing = false,
-            enableV4Signing = false
+            keyPassword = "sampleKeyPassword"
         )
-        SigningConfigUtils.save(outputDirectory, signingConfig)
+        SigningConfigUtils.saveSigningConfigData(outputFile, signingConfig)
 
-        val files = outputDirectory.listFiles()
-        assertThat(files).hasLength(1)
-
-        val file = files[0]
         if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
-            val perms = Files.getPosixFilePermissions(file.toPath())
+            val perms = Files.getPosixFilePermissions(outputFile.toPath())
             assertThat(perms).containsExactly(
                 PosixFilePermission.OWNER_READ,
                 PosixFilePermission.OWNER_WRITE)
         } else {
             // Windows special handling, check that we can read and write.
-            val view = Files.getFileAttributeView(file.toPath(), AclFileAttributeView::class.java)
+            val view =
+                Files.getFileAttributeView(outputFile.toPath(), AclFileAttributeView::class.java)
             val expectedEntry = AclEntry.newBuilder()
                 .setType(AclEntryType.ALLOW)
                 .setPrincipal(view.owner)

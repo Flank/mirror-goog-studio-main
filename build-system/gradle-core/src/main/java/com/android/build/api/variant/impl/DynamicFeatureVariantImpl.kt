@@ -21,7 +21,13 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.*
+import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.DynamicFeatureVariant
+import com.android.build.api.variant.SigningConfig
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -165,6 +171,8 @@ open class DynamicFeatureVariantImpl @Inject constructor(
                 ","
             ) ?: emptyList()
         }
+
+    override val signingConfig: SigningConfig? = null
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff

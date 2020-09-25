@@ -84,16 +84,17 @@ class DynamicAppSigningConfigTest {
             )
         Files.write(keystoreFile.toPath(), keystoreContents)
 
-        project.executor()
-            // http://b/146208910
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
-            .with(StringOption.IDE_SIGNING_STORE_FILE, keystoreFile.path)
-            .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
-            .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
-            .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
-            .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
-            .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
-            .run("assembleRelease")
+        val result =
+            project.executor()
+                // http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystoreFile.path)
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
+                .run("assembleRelease")
 
         for (subProjectName in listOf("app", "feature1", "feature2")) {
             val subProject = project.getSubproject(subProjectName)
@@ -102,12 +103,75 @@ class DynamicAppSigningConfigTest {
             val apk = subProject.getApk(GradleTestProject.ApkType.RELEASE_SIGNED)
             assertThat(apk).contains("META-INF/CERT.RSA")
             assertThat(apk).contains("META-INF/CERT.SF")
+        }
+        // Check that signing config is not written to disk when passed from the IDE (bug 137210434)
+        assertThat(result.tasks).doesNotContain(":app:signingConfigWriterRelease")
+        assertThat(result.tasks).contains(":app:writeReleaseSigningConfigVersions")
+    }
 
-            // Check that signing config is not written to disk when passed from the IDE (bug
-            // 137210434)
-            val signingConfigDir =
-                InternalArtifactType.SIGNING_CONFIG.getOutputDir(subProject.buildDir)
-            assertThat(signingConfigDir).doesNotExist()
+    @Test
+    fun testAllApksUseSigningConfigVersionsFromBase() {
+        val keystoreFile = project.file("keystore.jks")
+        val keystoreContents =
+                Resources.toByteArray(
+                        Resources.getResource(SigningTest::class.java, "SigningTest/rsa_keystore.jks")
+                )
+        Files.write(keystoreFile.toPath(), keystoreContents)
+
+        project.getSubproject("app").buildFile.appendText(
+            """
+                android {
+                    onVariantProperties.withName('debug') {
+                        signingConfig.enableV1Signing.set(true)
+                        signingConfig.enableV2Signing.set(true)
+                        signingConfig.enableV3Signing.set(true)
+                        signingConfig.enableV4Signing.set(true)
+                    }
+                    onVariants {
+                        androidTestProperties {
+                            signingConfig.enableV1Signing.set(true)
+                            signingConfig.enableV2Signing.set(true)
+                            signingConfig.enableV3Signing.set(true)
+                            signingConfig.enableV4Signing.set(true)
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+
+        project.executor()
+            // http://b/146208910
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
+            .with(StringOption.IDE_SIGNING_STORE_FILE, keystoreFile.path)
+            .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+            .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+            .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+            .run("assembleDebug", "assembleDebugAndroidTest")
+
+        for (subProjectName in listOf("app", "feature1", "feature2")) {
+            val subProject = project.getSubproject(subProjectName)
+
+            // Check the APK's signatures
+            val apk = subProject.getApk(GradleTestProject.ApkType.DEBUG)
+            assertThat(apk).contains("META-INF/CERT.RSA")
+            assertThat(apk).contains("META-INF/CERT.SF")
+            assertThat(apk).containsApkSigningBlock()
+            val result = SigningTest.assertApkSignaturesVerify(apk, 23)
+            assertThat(result.isVerifiedUsingV1Scheme).isTrue()
+            assertThat(result.isVerifiedUsingV2Scheme).isTrue()
+            assertThat(result.isVerifiedUsingV3Scheme).isTrue()
+            assertThat(result.isVerifiedUsingV4Scheme).isTrue()
+
+            // Check the android test APK's signatures
+            val androidTestApk = subProject.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)
+            assertThat(androidTestApk).contains("META-INF/CERT.RSA")
+            assertThat(androidTestApk).contains("META-INF/CERT.SF")
+            assertThat(androidTestApk).containsApkSigningBlock()
+            val androidTestResult = SigningTest.assertApkSignaturesVerify(androidTestApk, 23)
+            assertThat(androidTestResult.isVerifiedUsingV1Scheme).isTrue()
+            assertThat(androidTestResult.isVerifiedUsingV2Scheme).isTrue()
+            assertThat(androidTestResult.isVerifiedUsingV3Scheme).isTrue()
+            assertThat(androidTestResult.isVerifiedUsingV4Scheme).isTrue()
         }
     }
 }

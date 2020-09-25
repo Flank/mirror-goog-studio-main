@@ -18,11 +18,13 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.BASE_MODULE_METADATA;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG_VERSIONS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPRESSED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.SHRUNK_JAVA_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG_VERSIONS;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -30,6 +32,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.Artifact;
 import com.android.build.api.artifact.ArtifactTransformationRequest;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactImpl;
@@ -51,11 +54,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType;
-import com.android.build.gradle.internal.signing.SigningConfigProvider;
+import com.android.build.gradle.internal.signing.SigningConfigDataProvider;
 import com.android.build.gradle.internal.signing.SigningConfigProviderParams;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
+import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters;
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter;
@@ -224,7 +228,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     private boolean jniDebugBuild;
 
-    private SigningConfigProvider signingConfig;
+    private SigningConfigDataProvider signingConfigData;
 
     @NonNull
     @Input
@@ -280,13 +284,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     public abstract Property<Boolean> getIsInvokedFromIde();
 
     @Nested
-    public SigningConfigProvider getSigningConfig() {
-        return signingConfig;
+    public SigningConfigDataProvider getSigningConfigData() {
+        return signingConfigData;
     }
 
-    public void setSigningConfig(SigningConfigProvider signingConfig) {
-        this.signingConfig = signingConfig;
+    void setSigningConfigData(SigningConfigDataProvider signingConfigData) {
+        this.signingConfigData = signingConfigData;
     }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    public abstract ConfigurableFileCollection getSigningConfigVersions();
 
     @Input
     public abstract Property<Integer> getMinSdkVersion();
@@ -459,7 +467,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .set(new SerializableInputChanges(ImmutableList.of(), ImmutableSet.of()));
             }
             parameter.getManifestType().set(manifestType);
-            parameter.getSigningConfig().set(signingConfig.convertToParams());
+            parameter.getSigningConfigData().set(signingConfigData.convertToParams());
+            parameter.getSigningConfigVersionsFile().set(
+                    getSigningConfigVersions().getSingleFile());
 
             if (getBaseModuleMetadata().isEmpty()) {
                 parameter.getAbiFilters().set(getAbiFilters());
@@ -592,7 +602,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @Optional
         @NonNull
-        protected abstract Property<SigningConfigProviderParams> getSigningConfig();
+        protected abstract Property<SigningConfigProviderParams> getSigningConfigData();
+
+        @NonNull
+        public abstract RegularFileProperty getSigningConfigVersionsFile();
 
         @NonNull
         public abstract SetProperty<String> getAbiFilters();
@@ -780,7 +793,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 new IncrementalPackagerBuilder(params.getPackagerMode().get())
                         .withOutputFile(outputFile)
                         .withSigning(
-                                params.getSigningConfig().get().resolve(),
+                                params.getSigningConfigData().get().resolve(),
+                                SigningConfigUtils.loadSigningConfigVersions(
+                                        params.getSigningConfigVersionsFile().get().getAsFile()
+                                ),
                                 params.getMinSdkVersion().get(),
                                 dependencyData)
                         .withCreatedBy(params.getCreatedBy().get())
@@ -1210,13 +1226,37 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getProjectPath()
                     .set(packageAndroidArtifact.getProject().getPath());
 
+            // If we're in a dynamic feature, we use FEATURE_SIGNING_CONFIG_VERSIONS, published from
+            // the base. Otherwise, we use the SIGNING_CONFIG_VERSIONS internal artifact.
+            if (creationConfig.getVariantType().isDynamicFeature()
+                    || (creationConfig instanceof TestComponentImpl
+                        && creationConfig.getTestedConfig().getVariantType().isDynamicFeature())) {
+                packageAndroidArtifact
+                        .getSigningConfigVersions()
+                        .from(
+                                creationConfig
+                                        .getVariantDependencies()
+                                        .getArtifactFileCollection(
+                                                COMPILE_CLASSPATH,
+                                                PROJECT,
+                                                FEATURE_SIGNING_CONFIG_VERSIONS));
+            } else {
+                packageAndroidArtifact
+                        .getSigningConfigVersions()
+                        .from(
+                                creationConfig
+                                        .getArtifacts()
+                                        .get(SIGNING_CONFIG_VERSIONS.INSTANCE));
+            }
+            packageAndroidArtifact.getSigningConfigVersions().disallowChanges();
+
             finalConfigure(packageAndroidArtifact);
         }
 
         protected void finalConfigure(TaskT task) {
             task.getJniFolders().from(PerModuleBundleTaskKt.getNativeLibsFiles(creationConfig));
 
-            task.setSigningConfig(SigningConfigProvider.create(creationConfig));
+            task.setSigningConfigData(SigningConfigDataProvider.create(creationConfig));
         }
 
         @NonNull
