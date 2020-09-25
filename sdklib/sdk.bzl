@@ -35,6 +35,7 @@ def sdk_java_binary(name, command_name = None, main_class = None, runtime_deps =
     native.java_library(
         name = command_name,
         runtime_deps = runtime_deps,
+        javacopts = ["--release", "8"],
         visibility = visibility,
     )
     classpath_jar = command_name + "-classpath.jar"

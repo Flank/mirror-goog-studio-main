@@ -3,6 +3,7 @@ load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target")
 load(":maven.bzl", "maven_pom")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
+load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
 def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     """Runs kotlinc on the given source files.
@@ -22,18 +23,31 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     Note: kotlinc only compiles Kotlin, not Java. So if there are Java
     sources, then you will also need to run javac after this action.
     """
+    args = ctx.actions.args()
+    transitive_deps = []
+
+    # Never use currently running JDK (java installation used to run kotlinc) to resolve JDK APIs.
+    # This is because we want to ship code that runs on JDK 8 and right now we run kotlinc on
+    # newer versions of java installation. See b/166472930 for more details.
+    if jre:
+        args.add("--no-jdk")
+    else:
+        # We also need to specify "jre" as tools.jar is missing if only -jdk-home is there.
+        jre = find_java_toolchain(ctx, ctx.attr._kotlin_jdk_toolchain).bootclasspath.to_list()
+        kotlin_jdk_home = find_java_runtime_toolchain(ctx, ctx.attr._kotlin_jdk_home)
+        transitive_deps += [kotlin_jdk_home.files]
+        args.add("-jdk-home", kotlin_jdk_home.java_home)
+
     deps = depset(direct = jre, transitive = [deps])
+    transitive_deps += [deps]
     src_paths = [src.path for src in srcs]
     option_flags, option_files = \
         create_java_compiler_args_srcs(ctx, src_paths, out, deps.to_list())
 
-    args = ctx.actions.args()
     args.add_all(option_flags)
     args.add("--module_name", name)
     for friend in friends:
         args.add("--friend_dir", friend.path)
-    if jre:
-        args.add("--no-jdk")
 
     # b/166582569
     args.add("-api-version", "1.3")
@@ -43,7 +57,7 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     args.set_param_file_format("multiline")
 
     ctx.actions.run(
-        inputs = depset(direct = srcs + option_files, transitive = [deps]),
+        inputs = depset(direct = srcs + option_files, transitive = transitive_deps),
         outputs = [out],
         mnemonic = "kotlinc",
         arguments = [args],
@@ -90,6 +104,14 @@ _kotlin_jar = rule(
             allow_files = [".jar"],
         ),
         "module_name": attr.string(),
+        # Java 8 runtime passed as -jdk-home to kotlinc. This is different than --javabase.
+        "_kotlin_jdk_home": attr.label(
+            default = Label("//prebuilts/studio/jdk:jdk_runtime"),
+        ),
+        # JDK used to extract bootclasspath which as appended to the compile classpath.
+        "_kotlin_jdk_toolchain": attr.label(
+            default = Label("@bazel_tools//tools/jdk:current_java_toolchain"),
+        ),
         "_kotlinc": attr.label(
             executable = True,
             cfg = "host",
@@ -110,7 +132,7 @@ _kotlin_jar = rule(
 def kotlin_library(
         name,
         srcs,
-        javacopts = None,
+        javacopts = [],
         resources = [],
         resource_strip_prefix = None,
         deps = [],
@@ -157,12 +179,14 @@ def kotlin_library(
 
     java_name = name + ".java"
     resources_with_notice = native.glob(["NOTICE", "LICENSE"]) + resources if pom else resources
+    final_javacopts = javacopts + ["--release", "8"]
+
     if javas or resources_with_notice:
         targets += [java_name]
         native.java_library(
             name = java_name,
             srcs = javas,
-            javacopts = javacopts if javas else None,
+            javacopts = final_javacopts if javas else None,
             resources = resources_with_notice,
             resource_strip_prefix = resource_strip_prefix,
             deps = (kdeps + deps + bundled_deps) if javas else None,
