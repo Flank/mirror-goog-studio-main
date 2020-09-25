@@ -27,7 +27,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import sun.misc.Unsafe;
 
 public class ByteBufferUtil {
 
@@ -66,14 +65,16 @@ public class ByteBufferUtil {
 
     // in Java 9+, the "official" dispose method is sun.misc.Unsafe#invokeCleaner
     try {
-      Field f = Unsafe.class.getDeclaredField("theUnsafe");
+      Class<?> unsafeClass =
+        ByteBufferUtil.class.getClassLoader().loadClass("sun.misc.Unsafe");
+      Field f = unsafeClass.getDeclaredField("theUnsafe");
       f.setAccessible(true);
-      Unsafe unsafe = (Unsafe)f.get(null);
+      Object unsafe = f.get(null);
       MethodType type = MethodType.methodType(void.class, ByteBuffer.class);
       @SuppressWarnings("JavaLangInvokeHandleSignature")
       MethodHandle handle =
-        MethodHandles.lookup().findVirtual(Unsafe.class, "invokeCleaner", type);
-      handle.invokeExact(unsafe, buffer);
+        MethodHandles.lookup().findVirtual(unsafeClass, "invokeCleaner", type);
+      handle.invoke(unsafeClass.cast(unsafe), buffer);
       return true;
     }
     catch (Throwable ex) {
