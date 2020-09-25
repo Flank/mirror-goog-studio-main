@@ -32,26 +32,21 @@ public class BasicConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("basic")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+            GradleTestProject.builder().fromTestProject("basic").create();
 
     @Before
     public void setUp() throws IOException {
         // fail fast if no response
         project.addAdbTimeOutInMs();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
     @Test
     public void install() throws Exception {
-        try {
-            project.execute("installDebug", "uninstallAll");
-            // b/37498215 - Try again.  Behavior may be different when tasks are up-to-date.
-            project.execute("installDebug");
-        } finally {
-            project.execute("uninstallAll");
-        }
+        project.execute("installDebug", "uninstallAll");
+        // b/37498215 - Try again.  Behavior may be different when tasks are up-to-date.
+        project.execute("installDebug", "uninstallAll");
     }
 }

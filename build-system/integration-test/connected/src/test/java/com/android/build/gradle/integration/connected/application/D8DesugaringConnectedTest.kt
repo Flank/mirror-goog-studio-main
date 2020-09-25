@@ -55,8 +55,6 @@ class D8DesugaringConnectedTest {
                 )
             )
         )
-        // b/146163513
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     @Before
@@ -181,6 +179,10 @@ class D8DesugaringConnectedTest {
         TestFileUtils.appendToFile(
             debugMainDexList, "com/example/helloworld/InterfaceWithDefault.class"
         )
+
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll")
     }
 
     @Test
