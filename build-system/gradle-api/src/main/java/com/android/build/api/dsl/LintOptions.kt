@@ -65,8 +65,12 @@ import java.io.File
  *          xmlOutput file("lint-report.xml")
  *          // if true, generate an HTML report (with issue explanations, sourcecode, etc)
  *          htmlReport true
- *          // optional path to report (default will be lint-results.html in the builddir)
+ *          // optional path to HTML report (default will be lint-results.html in the builddir)
  *          htmlOutput file("lint-report.html")
+ *          // if true, generate a SARIF report (OASIS Static Analysis Results Interchange Format)
+ *          sarifReport true
+ *          // optional path to SARIF report (default will be lint-results.sarif in the builddir)
+ *          sarifOutput file("lint-report.html")
  *          // Set the severity of the given issues to fatal (which means they will be
  *          // checked during release builds (even if the lint target is not included)
  *          fatal 'NewApi', 'InlineApi'
@@ -212,6 +216,12 @@ interface LintOptions {
     var htmlReport: Boolean
 
     /**
+     * Whether we should write a SARIF (OASIS Static Analysis Results Interchange Format) report.
+     * Default is false. The location can be controlled by [sarifOutput].
+     */
+    var sarifReport: Boolean
+
+    /**
      * Whether we should write an XML report. Default is true. The location can be controlled by
      * [xmlOutput].
      */
@@ -219,15 +229,28 @@ interface LintOptions {
 
     /**
      * The optional path to where a text report should be written. The special value "stdout" can be
-     * used to point to standard output.
+     * used to point to standard output. Setting this property will also turn on [textReport].
      */
     var textOutput: File?
 
-    /** The optional path to where an HTML report should be written */
+    /**
+     * The optional path to where an HTML report should be written.
+     * Setting this property will also turn on [htmlReport].
+     */
     var htmlOutput: File?
 
-    /** The optional path to where an XML report should be written */
+    /**
+     * The optional path to where an XML report should be written.
+     * Setting this property will also turn on [xmlReport].
+     */
     var xmlOutput: File?
+
+    /**
+     * The optional path to where a SARIF report (OASIS Static
+     * Analysis Results Interchange Format) should be written.
+     * Setting this property will also turn on [sarifReport].
+     */
+    var sarifOutput: File?
 
     /**
      * The baseline file to use, if any. The baseline file is an XML report previously created by
@@ -268,7 +291,7 @@ interface LintOptions {
     /** Adds the id to the set of unique issues to check. */
     @Deprecated(
         message = "Use checkOnly instead; check will turn off all other checks so the method " +
-                "has been renamed to be more explicit about this",
+            "has been renamed to be more explicit about this",
         replaceWith = ReplaceWith("checkOnly(id)")
     )
     fun check(id: String)
@@ -276,7 +299,7 @@ interface LintOptions {
     /** Adds the ids to the set of unique issues to check. */
     @Deprecated(
         message = "Use checkOnly instead; check will turn off all other checks so the method " +
-                "has been renamed to be more explicit about this",
+            "has been renamed to be more explicit about this",
         replaceWith = ReplaceWith("checkOnly(ids)")
     )
     fun check(vararg ids: String)

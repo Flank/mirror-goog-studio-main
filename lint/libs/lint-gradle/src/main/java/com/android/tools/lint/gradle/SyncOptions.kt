@@ -159,6 +159,7 @@ fun syncTo(
             }
             val reporter = if (isSarifFile(output))
                 Reporter.createSarifReporter(client, output)
+                    .also { warnSarifCompat(client, "textOutput", options.textOutput) }
             else
                 Reporter.createTextReporter(client, flags, file, writer, closeWriter)
             flags.reporters.add(reporter)
@@ -176,6 +177,7 @@ fun syncTo(
             try {
                 val reporter = if (isSarifFile(output))
                     Reporter.createSarifReporter(client, output)
+                        .also { warnSarifCompat(client, "htmlOutput", options.htmlOutput) }
                 else
                     Reporter.createHtmlReporter(client, output, flags)
                 flags.reporters.add(reporter)
@@ -200,6 +202,7 @@ fun syncTo(
             try {
                 val reporter = if (isSarifFile(output))
                     Reporter.createSarifReporter(client, output)
+                        .also { warnSarifCompat(client, "xmlOutput", options.xmlOutput) }
                 else
                     Reporter.createXmlReporter(
                         client,
@@ -212,7 +215,35 @@ fun syncTo(
                 throw GradleException("XML invalid argument.", e)
             }
         }
+        if (options.sarifReport) {
+            var output = options.sarifOutput
+            if (output == null || flags.isFatalOnly) {
+                output = createOutputPath(
+                    project, variantName, ".sarif", reportsDir, flags.isFatalOnly
+                )
+            } else if (!output.isAbsolute && project != null) {
+                output = project.file(output.path)
+            }
+            output = validateOutputFile(output!!)
+            try {
+                val reporter = Reporter.createSarifReporter(client, output)
+                flags.reporters.add(reporter)
+            } catch (e: IOException) {
+                throw GradleException("SARIF invalid argument.", e)
+            }
+        }
     }
+}
+
+/**
+ * Warn when using the older .sarif file extension workaround
+ * for text, html and xml reports. The sarifOutput property should be used now.
+ */
+private fun warnSarifCompat(client: LintCliClient, used: String, file: File?) {
+    client.log(
+        Severity.WARNING, null,
+        "$used(${file?.name ?: ""}): Use sarifOutput() instead"
+    )
 }
 
 private fun getSeverity(

@@ -419,6 +419,8 @@ private fun LintOptions.writeToBuilder(builder: DumpBuilder) {
         item("htmlOutput", htmlOutput)
         item("xmlReport", xmlReport)
         item("xmlOutput", xmlOutput)
+        item("sarifReport", sarifReport)
+        item("sarifOutput", sarifOutput)
         item("isCheckReleaseBuilds", isCheckReleaseBuilds)
         item("isCheckDependencies", isCheckDependencies)
         item("baselineFile", baselineFile)

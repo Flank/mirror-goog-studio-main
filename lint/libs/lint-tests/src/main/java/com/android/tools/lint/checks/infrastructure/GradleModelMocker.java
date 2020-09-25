@@ -1401,6 +1401,9 @@ public class GradleModelMocker {
                 case "htmlReport":
                     error("Test framework doesn't support lint DSL flag htmlReport");
                     break;
+                case "sarifReport":
+                    error("Test framework doesn't support lint DSL flag sarifReport");
+                    break;
                 case "checkTestSources":
                     {
                         boolean checkTests = toBoolean(arg);
@@ -1465,6 +1468,9 @@ public class GradleModelMocker {
                     break;
                 case "htmlOutput":
                     error("Test framework doesn't support lint DSL flag htmlOutput");
+                    break;
+                case "saraifOutput":
+                    error("Test framework doesn't support lint DSL flag sarifOutput");
                     break;
                 case "baseline":
                     {
@@ -1584,7 +1590,9 @@ public class GradleModelMocker {
                         lintOptions.getHtmlReport(),
                         lintOptions.getHtmlOutput(),
                         lintOptions.getXmlReport(),
-                        lintOptions.getXmlOutput());
+                        lintOptions.getXmlOutput(),
+                        lintOptions.getSarifReport(),
+                        lintOptions.getSarifOutput());
         when(project.getLintOptions()).thenReturn(lintOptions);
     }
 

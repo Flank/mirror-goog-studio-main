@@ -230,6 +230,19 @@ public interface LintOptions {
     File getXmlOutput();
 
     /**
+     * Whether we should write a SARIF (OASIS Static Analysis Results Interchange Format) report.
+     * Default is false. The location can be controlled by {@link #getSarifOutput()}.
+     */
+    boolean getSarifReport();
+
+    /**
+     * The optional path to where a SARIF report (OASIS Static
+     * Analysis Results Interchange Format) should be written.
+     */
+    @Nullable
+    File getSarifOutput();
+
+    /**
      * Returns whether lint should check for fatal errors during release builds. Default is true.
      * If issues with severity "fatal" are found, the release build is aborted.
      */

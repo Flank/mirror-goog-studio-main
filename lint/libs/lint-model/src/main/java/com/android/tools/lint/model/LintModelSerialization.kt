@@ -738,11 +738,15 @@ private class LintModelModuleWriter(
         if (lintOptions.htmlReport) {
             printer.printAttribute("htmlReport", VALUE_TRUE, indent)
         }
-        printer.printFile("htmlOutput", lintOptions.htmlOutput, indent)
+        lintOptions.htmlOutput?.let { printer.printFile("htmlOutput", it, indent) }
         if (lintOptions.xmlReport) {
             printer.printAttribute("xmlReport", VALUE_TRUE, indent)
         }
-        printer.printFile("xmlOutput", lintOptions.xmlOutput, indent)
+        lintOptions.xmlOutput?.let { printer.printFile("xmlOutput", it, indent) }
+        if (lintOptions.sarifReport) {
+            printer.printAttribute("sarifReport", VALUE_TRUE, indent)
+        }
+        lintOptions.sarifOutput?.let { printer.printFile("sarifOutput", it, indent) }
 
         if (!writeSeverityOverrides(lintOptions.severityOverrides, indent + 1)) {
             printer.println("/>")
@@ -1267,6 +1271,8 @@ private class LintModelModuleReader(
         val htmlOutput = getOptionalFile("htmlOutput")
         val xmlReport = getOptionalBoolean("xmlReport", false)
         val xmlOutput = getOptionalFile("xmlOutput")
+        val sarifReport = getOptionalBoolean("sarifReport", false)
+        val sarifOutput = getOptionalFile("sarifOutput")
 
         while (parser.next() != END_DOCUMENT) {
             val eventType = parser.eventType
@@ -1307,7 +1313,9 @@ private class LintModelModuleReader(
             htmlReport = htmlReport,
             htmlOutput = htmlOutput,
             xmlReport = xmlReport,
-            xmlOutput = xmlOutput
+            xmlOutput = xmlOutput,
+            sarifReport = sarifReport,
+            sarifOutput = sarifOutput
         )
     }
 

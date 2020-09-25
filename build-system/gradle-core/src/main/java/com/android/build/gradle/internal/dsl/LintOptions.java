@@ -68,6 +68,9 @@ public class LintOptions
     private boolean xmlReport = true;
     @Nullable
     private File xmlOutput;
+    @Nullable
+    private File sarifOutput;
+    private boolean sarifReport;
 
     private final Map<String, Integer> severities = Maps.newHashMap();
     private File baselineFile;
@@ -88,6 +91,8 @@ public class LintOptions
             @Nullable File htmlOutput,
             boolean xmlReport,
             @Nullable File xmlOutput,
+            boolean sarifReport,
+            @Nullable File sarifOutput,
             boolean abortOnError,
             boolean absolutePaths,
             boolean noLines,
@@ -115,6 +120,8 @@ public class LintOptions
         this.htmlOutput = htmlOutput;
         this.xmlReport = xmlReport;
         this.xmlOutput = xmlOutput;
+        this.sarifReport = sarifReport;
+        this.sarifOutput = sarifOutput;
         this.abortOnError = abortOnError;
         this.absolutePaths = absolutePaths;
         this.noLines = noLines;
@@ -151,6 +158,8 @@ public class LintOptions
                 source.getHtmlOutput(),
                 source.getXmlReport(),
                 source.getXmlOutput(),
+                source.getSarifReport(),
+                source.getSarifOutput(),
                 source.isAbortOnError(),
                 source.isAbsolutePaths(),
                 source.isNoLines(),
@@ -398,7 +407,19 @@ public class LintOptions
 
     @Override
     public void setHtmlOutput(@NonNull File htmlOutput) {
+        this.htmlReport = true;
         this.htmlOutput = htmlOutput;
+    }
+
+    @Override
+    public void setSarifReport(boolean sarifReport) {
+        this.sarifReport = sarifReport;
+    }
+
+    @Override
+    public void setSarifOutput(@NonNull File sarifOutput) {
+        this.sarifReport = true;
+        this.sarifOutput = sarifOutput;
     }
 
     @Override
@@ -413,6 +434,7 @@ public class LintOptions
                     "Don't set the xmlOutput file to \"lint.xml\"; that's a "
                             + "reserved filename used for for lint configuration files, not reports.");
         }
+        this.xmlReport = true;
         this.xmlOutput = xmlOutput;
     }
 
@@ -455,6 +477,20 @@ public class LintOptions
     @OutputFile
     public File getXmlOutput() {
         return xmlOutput;
+    }
+
+    @Override
+    @Input
+    public boolean getSarifReport() {
+        return sarifReport;
+    }
+
+    @Override
+    @Nullable
+    @Optional
+    @OutputFile
+    public File getSarifOutput() {
+        return sarifOutput;
     }
 
     @Override
@@ -570,6 +606,7 @@ public class LintOptions
     // For textOutput file()
     @Override
     public void textOutput(File textOutput) {
+        this.textReport = true;
         this.textOutput = textOutput;
     }
 
