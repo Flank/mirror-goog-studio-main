@@ -28,117 +28,115 @@ import java.io.File
 /**
  * Holds immutable module-level information for C/C++ build and sync, see README.md
  */
-interface CxxModuleModel {
+data class CxxModuleModel(
 
-    val cxxFolder : File
+    val cxxFolder : File,
 
     /**
      * The abiFilters from build.gradle
      *   ex, android.splits.abiFilters 'x86', 'x86_64'
      */
-    val splitsAbiFilterSet: Set<String>
+    val splitsAbiFilterSet: Set<String>,
 
     /**
      * Folder for intermediates
      * ex, source-root/Source/Android/app/build/intermediates
      */
-    val intermediatesFolder: File
+    val intermediatesFolder: File,
 
     /**
      * The colon-delimited gradle path to this module
      *   ex, ':app' in ./gradlew :app:externalNativeBuildDebug
      */
-    val gradleModulePathName: String
+    val gradleModulePathName: String,
 
     /**
      * Dir of the project
      *   ex, source-root/Source/Android/app
      */
-    val moduleRootFolder: File
+    val moduleRootFolder: File,
 
     /**
      * The build.gradle file
      */
-    val moduleBuildFile: File
+    val moduleBuildFile: File,
 
     /**
      * The makefile
      *   ex, android.externalNativeBuild.cmake.path 'CMakeLists.txt'
      */
-    val makeFile: File
+    val makeFile: File,
 
     /**
      * The type of native build system
      *   ex, CMAKE
      */
-    val buildSystem: NativeBuildSystem
+    val buildSystem: NativeBuildSystem,
 
     /**
-     * The value of buildStagingingDirectory from build.gradle
+     * The value of buildStagingDirectory from build.gradle
      *   ex, myBuildStagingDirectory
      * Null means not specified.
      */
-    val buildStagingFolder: File?
+    val buildStagingFolder: File?,
 
     /**
      * Folder path to the NDK
      *   ex, /Android/sdk/ndk/20.0.5344622
      */
-    val ndkFolder: File
+    val ndkFolder: File,
 
     /**
      * The version of the NDK
      *   ex, 20.0.5344622-rc1
      */
-    val ndkVersion: Revision
+    val ndkVersion: Revision,
 
     /**
      * ABIs supported by this NDK
      *   ex, x86, x86_64
      */
-    val ndkSupportedAbiList: List<Abi>
+    val ndkSupportedAbiList: List<Abi>,
 
     /**
-     * ABIS that are default for this NDK
+     * ABIs that are default for this NDK
      *   ex, x86_64
      */
-    val ndkDefaultAbiList: List<Abi>
+    val ndkDefaultAbiList: List<Abi>,
 
     /**
      * The default STL that will be used by the given NDK version if the user does not select one.
      */
-    val ndkDefaultStl: Stl
+    val ndkDefaultStl: Stl,
 
     /**
      * Information about minimum and maximum platform along with mapping between platform
      * and platform code. Will be null if the NDK is so old it doesn't have meta/platforms.json.
      */
-    val ndkMetaPlatforms: NdkMetaPlatforms?
+    val ndkMetaPlatforms: NdkMetaPlatforms?,
 
     /**
      * Information about all ABIs
      */
-    val ndkMetaAbiList: List<AbiInfo>
+    val ndkMetaAbiList: List<AbiInfo>,
 
     /**
      * Path to the CMake toolchain in NDK as it was before any rewrites.
      * ex, /path/to/ndk/android.toolchain.cmake
      */
-    val originalCmakeToolchainFile: File
-        get() = join(ndkFolder, "build", "cmake", "android.toolchain.cmake")
+    val originalCmakeToolchainFile: File,
 
     /**
      * Path to the CMake toolchain in NDK after wrapping (if necessary). For NDK 15 and above,
      * this is equal to the originalCmakeToolchainFile.
      * ex, /path/to/ndk/android.toolchain.cmake
      */
-    val cmakeToolchainFile: File
-        get() = join(ndkFolder, "build", "cmake", "android.toolchain.cmake")
+    val cmakeToolchainFile: File,
 
     /**
      * CMake-specific settings for this Module.
      */
-    val cmake: CxxCmakeModuleModel?
+    val cmake: CxxCmakeModuleModel?,
 
     /**
      * Map describing the locations of STL shared objects for each STL/ABI pair.
@@ -147,13 +145,13 @@ interface CxxModuleModel {
      * system STL, and the "none" STL) or for STLs that are not supported by the given NDK. ABIs not
      * supported by the given NDK will also not be present in the map.
      */
-    val stlSharedObjectMap: Map<Stl, Map<Abi, File>>
+    val stlSharedObjectMap: Map<Stl, Map<Abi, File>>,
 
     /**
      * The project for this module
      */
     val project: CxxProjectModel
-}
+)
 
 /**  Get the NDK level CMakeSettings.json file */
 val CxxModuleModel.ndkCmakeSettingsJsonFile: File

@@ -19,32 +19,32 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.repository.Revision
 import java.io.File
 
-interface CxxCmakeModuleModel {
+data class CxxCmakeModuleModel(
     /**
      * Whether there is a valid cmake.exe.
      *   ex, /path/to/cmake/cmake.exe
      */
-    val isValidCmakeAvailable: Boolean
+    val isValidCmakeAvailable: Boolean,
 
     /**
      * Path to cmake.exe
      *   ex, /path/to/cmake/cmake.exe
      */
-    val cmakeExe: File
+    val cmakeExe: File?,
 
     /**
      * The effective minimum version required.
      */
-    val minimumCmakeVersion: Revision
+    val minimumCmakeVersion: Revision,
 
     /**
      * Path to ninja.exe, Null means the we will let CMake find the ninja executable
      *   ex, /path/to/ninja/ninja.exe
      */
-    val ninjaExe: File?
+    val ninjaExe: File?,
 
     /**
      * When set, prefer to use CMake's file API over CMake server when possible.
      */
     val isPreferCmakeFileApiEnabled: Boolean
-}
+)

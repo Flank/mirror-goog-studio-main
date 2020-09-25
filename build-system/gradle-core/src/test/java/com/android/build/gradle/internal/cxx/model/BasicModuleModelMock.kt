@@ -383,7 +383,7 @@ open class BasicModuleModelMock {
             doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
             doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
             doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
-            doReturn(join(sdkDir, "cmake", defaultCmakeVersion.toString())).`when`(cmakeFinder)
+            doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
                 .findCmakePath(any(), any(), any(), any())
 
             doReturn(null).`when`(gradle).parent

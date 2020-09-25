@@ -41,19 +41,18 @@ fun createCxxProjectModel(
             .getProperty(property) ?: return null
         return File(path)
     }
-    return object : CxxProjectModel {
-        override val rootBuildGradleFolder = configurationModel.rootDir
-        override val sdkFolder by lazy { sdkComponents.sdkDirectoryProvider.get().asFile }
-        override val isNativeCompilerSettingsCacheEnabled = configurationModel.isNativeCompilerSettingsCacheEnabled
-        override val isBuildOnlyTargetAbiEnabled = configurationModel.isBuildOnlyTargetAbiEnabled
-        override val ideBuildTargetAbi = configurationModel.ideBuildTargetAbi
-        override val isCmakeBuildCohabitationEnabled = configurationModel.isCmakeBuildCohabitationEnabled
-        override val compilerSettingsCacheFolder by lazy {
-            localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
-            join(configurationModel.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
-        }
-        override val chromeTraceJsonFolder = configurationModel.chromeTraceJsonFolder
-        override val isPrefabEnabled = configurationModel.isPrefabEnabled
-        override val isV2NativeModelEnabled: Boolean = configurationModel.isV2NativeModelEnabled
-    }
+    return CxxProjectModel(
+        rootBuildGradleFolder = configurationModel.rootDir,
+        cxxFolder = join(configurationModel.rootDir, ".cxx"),
+        sdkFolder = sdkComponents.sdkDirectoryProvider.get().asFile,
+        isNativeCompilerSettingsCacheEnabled = configurationModel.isNativeCompilerSettingsCacheEnabled,
+        isBuildOnlyTargetAbiEnabled = configurationModel.isBuildOnlyTargetAbiEnabled,
+        ideBuildTargetAbi = configurationModel.ideBuildTargetAbi,
+        isCmakeBuildCohabitationEnabled = configurationModel.isCmakeBuildCohabitationEnabled,
+        compilerSettingsCacheFolder = localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
+            join(configurationModel.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
+        chromeTraceJsonFolder = configurationModel.chromeTraceJsonFolder,
+        isPrefabEnabled = configurationModel.isPrefabEnabled,
+        isV2NativeModelEnabled = configurationModel.isV2NativeModelEnabled
+    )
 }

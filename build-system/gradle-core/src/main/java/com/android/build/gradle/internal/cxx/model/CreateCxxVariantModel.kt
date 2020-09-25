@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.cxx.gradle.generator.variantJsonFolder
 import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
 import com.android.build.gradle.internal.cxx.gradle.generator.variantSoFolder
 import com.android.utils.FileUtils.join
-import java.io.File
 
 /**
  * Construct a [CxxVariantModel], careful to be lazy with module-level fields.
@@ -32,28 +31,9 @@ import java.io.File
 fun createCxxVariantModel(
     configurationModel: CxxConfigurationModel,
     module: CxxModuleModel) : CxxVariantModel {
-
-    return object : CxxVariantModel {
-        override val buildTargetSet = configurationModel.nativeVariantConfig.targets
-        override val implicitBuildTargetSet = configurationModel.implicitBuildTargetSet
-        override val module = module
-        override val buildSystemArgumentList = configurationModel.nativeVariantConfig.arguments
-        override val cFlagsList = configurationModel.nativeVariantConfig.cFlags
-        override val cppFlagsList = configurationModel.nativeVariantConfig.cppFlags
-        override val variantName = configurationModel.variantName
-        override val cmakeSettingsConfiguration
-            // TODO remove this after configuration has been added to DSL
-            // If CMakeSettings.json has a configuration with this exact name then
-            // it will be used. The point is to delay adding 'configuration' to the
-            // DSL.
-            get() = "android-gradle-plugin-predetermined-name"
-        override val objFolder by lazy { configurationModel.variantObjFolder }
-        override val soFolder by lazy { configurationModel.variantSoFolder }
-        override val isDebuggableEnabled = configurationModel.isDebuggable
-        override val validAbiList by lazy {
-            CachingEnvironment(module.cxxFolder).use {
-                AbiConfigurator(
-                    AbiConfigurationKey(
+    val validAbiList = CachingEnvironment(module.cxxFolder).use {
+        AbiConfigurator(
+                AbiConfigurationKey(
                         module.ndkSupportedAbiList,
                         module.ndkDefaultAbiList,
                         configurationModel.nativeVariantConfig.externalNativeBuildAbiFilters,
@@ -61,15 +41,30 @@ fun createCxxVariantModel(
                         module.splitsAbiFilterSet,
                         module.project.isBuildOnlyTargetAbiEnabled,
                         module.project.ideBuildTargetAbi
-                    )
-                ).validAbis.toList()
-            }
-        }
-
-        override val prefabClassPath = configurationModel.prefabClassPath?.singleFile
-        override val prefabPackageDirectoryList get() = configurationModel.prefabPackageDirectoryList?.toList()?:listOf()
-        override val prefabDirectory: File = configurationModel.variantJsonFolder.resolve("prefab")
+                )
+        ).validAbis.toList()
     }
+    return CxxVariantModel(
+        buildTargetSet = configurationModel.nativeVariantConfig.targets,
+        implicitBuildTargetSet = configurationModel.implicitBuildTargetSet,
+        module = module,
+        buildSystemArgumentList = configurationModel.nativeVariantConfig.arguments,
+        cFlagsList = configurationModel.nativeVariantConfig.cFlags,
+        cppFlagsList = configurationModel.nativeVariantConfig.cppFlags,
+        variantName = configurationModel.variantName,
+        // TODO remove this after configuration has been added to DSL
+        // If CMakeSettings.json has a configuration with this exact name then
+        // it will be used. The point is to delay adding 'configuration' to the
+        // DSL.
+        cmakeSettingsConfiguration = "android-gradle-plugin-predetermined-name",
+        objFolder = configurationModel.variantObjFolder,
+        soFolder = configurationModel.variantSoFolder,
+        isDebuggableEnabled = configurationModel.isDebuggable,
+        validAbiList = validAbiList,
+        prefabClassPath = configurationModel.prefabClassPath?.singleFile,
+        prefabPackageDirectoryList = configurationModel.prefabPackageDirectoryList?.toList()?:listOf(),
+        prefabDirectory = configurationModel.variantJsonFolder.resolve("prefab")
+    )
 }
 
 /**

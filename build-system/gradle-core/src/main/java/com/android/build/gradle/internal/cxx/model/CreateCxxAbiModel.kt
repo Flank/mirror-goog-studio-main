@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
-import java.io.File
 
 /**
  * Construct a [CxxAbiModel], careful to be lazy with module level fields.
@@ -36,49 +35,32 @@ fun createCxxAbiModel(
     variant: CxxVariantModel,
     abi: Abi
 ) : CxxAbiModel {
-    return object : CxxAbiModel {
-        override val variant = variant
-        override val abi = abi
-        override val info by lazy {
-            variant.module.ndkMetaAbiList.single { it.abi == abi }
-        }
-        override val originalCxxBuildFolder by lazy {
-            configurationModel.abiCxxBuildFolder(abi)
-        }
-        override val cxxBuildFolder by lazy {
-            configurationModel.abiCxxBuildFolder(abi)
-        }
-        override val abiPlatformVersion by lazy {
-            val minSdkVersion = configurationModel.minSdkVersion
+    return CxxAbiModel(
+        variant = variant,
+        abi = abi,
+        info = variant.module.ndkMetaAbiList.single { it.abi == abi },
+        originalCxxBuildFolder = configurationModel.abiCxxBuildFolder(abi),
+        cxxBuildFolder = configurationModel.abiCxxBuildFolder(abi),
+        abiPlatformVersion =
             sdkComponents
                 .ndkHandler
                 .ndkPlatform
                 .getOrThrow()
                 .ndkInfo
-                .findSuitablePlatformVersion(abi.tag, minSdkVersion)
-        }
-        override val cmake by lazy {
+                .findSuitablePlatformVersion(abi.tag, configurationModel.minSdkVersion),
+        cmake =
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
-                object : CxxCmakeAbiModel {
-                    override val cmakeServerLogFile by lazy {
-                        join(cmakeArtifactsBaseFolder, "cmake_server_log.txt")
-                    }
-                    override val effectiveConfiguration by lazy { CMakeSettingsConfiguration() }
-                    override val cmakeWrappingBaseFolder by lazy {
-                       join(variant.gradleBuildOutputFolder, abi.tag)
-                    }
-                    override val cmakeArtifactsBaseFolder by lazy {
-                        join(configurationModel.variantJsonFolder, abi.tag)
-                    }
-                }
+                val cmakeArtifactsBaseFolder = join(configurationModel.variantJsonFolder, abi.tag)
+                CxxCmakeAbiModel(
+                    cmakeServerLogFile = join(cmakeArtifactsBaseFolder, "cmake_server_log.txt"),
+                    effectiveConfiguration = CMakeSettingsConfiguration(),
+                    cmakeWrappingBaseFolder = join(variant.gradleBuildOutputFolder, abi.tag),
+                    cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder
+                )
             } else {
                 null
-            }
-        }
-
-        override val buildSettings by lazy {
-            createBuildSettingsFromFile(variant.module.buildSettingsFile)
-        }
-        override val prefabFolder: File = variant.prefabDirectory.resolve(abi.tag)
-    }
+            },
+        buildSettings = createBuildSettingsFromFile(variant.module.buildSettingsFile),
+        prefabFolder = variant.prefabDirectory.resolve(abi.tag)
+    )
 }

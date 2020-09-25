@@ -74,7 +74,7 @@ internal class CmakeQueryMetadataGenerator(
         // Write the ninja build command, possibly with user settings from CMakeSettings.json.
         config.buildTargetsCommandComponents =
             CmakeUtils.getBuildTargetsCommand(
-                    variant.module.cmake!!.cmakeExe,
+                    variant.module.cmake!!.cmakeExe!!,
                     abi.cxxBuildFolder,
                     abi.getBuildCommandArguments()
             )
@@ -85,7 +85,7 @@ internal class CmakeQueryMetadataGenerator(
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
 
-        builder.setExecutable(variant.module.cmake!!.cmakeExe)
+        builder.setExecutable(variant.module.cmake!!.cmakeExe!!)
         val arguments = mutableListOf<CommandLineArgument>()
         arguments.addAll(abi.getFinalCmakeCommandLineArguments())
         builder.addArgs(arguments.convertCmakeCommandLineArgumentsToStringList())

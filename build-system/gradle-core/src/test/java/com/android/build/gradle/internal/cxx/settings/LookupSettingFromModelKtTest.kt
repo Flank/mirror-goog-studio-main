@@ -70,7 +70,7 @@ class LookupSettingFromModelKtTest {
                 it.configurationModel,
                 it.cmakeFinder)
             // Create the ninja executable files so that the macro expansion can succeed
-            module.cmake!!.cmakeExe.parentFile.apply { mkdirs() }.apply {
+            module.cmake!!.cmakeExe!!.parentFile.apply { mkdirs() }.apply {
                 resolve("ninja").writeText("whatever")
                 resolve("ninja.exe").writeText("whatever")
             }

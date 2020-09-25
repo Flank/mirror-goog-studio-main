@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfig
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.CmakeSettingsMock
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
 import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.buildOutputFile
@@ -86,9 +85,9 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     @Test
     fun `check rewrite with CMakeSettings json`() {
         CmakeSettingsMock().apply {
-            val variant = object : CxxVariantModel by variant {
-                override val cmakeSettingsConfiguration = DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
-            }
+            val variant = variant.copy(
+                cmakeSettingsConfiguration = DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
+            )
             val abi = createCxxAbiModel(
                 sdkComponents,
                 configurationModel,
@@ -97,7 +96,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             val rewritten = abi.rewriteCxxAbiModelWithCMakeSettings()
             assertThat(rewritten.cmake!!.effectiveConfiguration.generator).isEqualTo("some other generator")
             assertThat(rewritten.cxxBuildFolder.path).contains("some other build root folder")
-            assertThat(rewritten.variant.module.cmake!!.cmakeExe.path
+            assertThat(rewritten.variant.module.cmake!!.cmakeExe!!.path
                 .replace('\\', '/')).isEqualTo("my/path/to/cmake")
             assertThat(
                 rewritten.variant.module.cmakeToolchainFile.path
@@ -124,9 +123,9 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     @Test
     fun `alternate check`() {
         CmakeSettingsMock().apply {
-            val variant = object : CxxVariantModel by variant {
-                override val cmakeSettingsConfiguration = DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
-            }
+            val variant = variant.copy(
+                cmakeSettingsConfiguration = DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
+            )
             val abi = createCxxAbiModel(
                 sdkComponents,
                 configurationModel,
@@ -145,9 +144,9 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     @Test
     fun `map CMAKE_BUILD_TYPE to MinSizeRel`() {
         CmakeSettingsMock().apply {
-            val variant = object : CxxVariantModel by variant {
-                override val variantName = "myMinSizeRel" // Should cause CMAKE_BUILD_TYPE to be MinSizeRel
-            }
+            val variant = variant.copy(
+                variantName = "myMinSizeRel" // Should cause CMAKE_BUILD_TYPE to be MinSizeRel
+            )
             val abi = createCxxAbiModel(
                 sdkComponents,
                 configurationModel,
@@ -162,12 +161,12 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     @Test
     fun `user build args take precedence over default configuration`() {
         CmakeSettingsMock().apply {
-            val variant = object : CxxVariantModel by variant {
-                override val buildSystemArgumentList =
+            val variant = variant.copy(
+                buildSystemArgumentList =
                     listOf("-GPrecedenceCheckingGenerator",
                         "-D$CMAKE_BUILD_TYPE=PrecedenceCheckingBuildType",
                         "-D${CmakeProperty.CMAKE_TOOLCHAIN_FILE}=PrecedenceCheckingToolchainFile")
-            }
+            )
             val abi = createCxxAbiModel(
                 sdkComponents,
                 configurationModel,

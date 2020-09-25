@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.cxx.configure.toCmakeArgument
 import com.android.build.gradle.internal.cxx.hashing.toBase36
 import com.android.build.gradle.internal.cxx.hashing.update
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.replaceWith
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
@@ -65,27 +64,26 @@ fun CxxAbiModel.rewriteCxxAbiModelWithCMakeSettings() : CxxAbiModel {
             rewriteConfig.configuration
         }
 
-        val cmakeModule = original.variant.module.cmake!!.replaceWith(
-            cmakeExe = { configuration.cmakeExecutable.toFile()!! }
+        val cmakeModule = original.variant.module.cmake!!.copy(
+            cmakeExe = configuration.cmakeExecutable.toFile()
         )
-        val module = original.variant.module.replaceWith(
-            cmake = { cmakeModule },
-            cmakeToolchainFile = { configuration.cmakeToolchain.toFile()!! }
+        val module = original.variant.module.copy(
+            cmake = cmakeModule,
+            cmakeToolchainFile = configuration.cmakeToolchain.toFile()!!
         )
-        val variant = original.variant.replaceWith(
-            module = { module }
+        val variant = original.variant.copy(
+            module = module
         )
-        val cmakeAbi = original.cmake?.replaceWith(
-            cmakeArtifactsBaseFolder =  { configuration.buildRoot.toFile()!! },
-            effectiveConfiguration = {
-                configuration
-            }
+        val cmakeAbi = original.cmake?.copy(
+            cmakeArtifactsBaseFolder = configuration.buildRoot.toFile()!!,
+            effectiveConfiguration = configuration
         )
-        return original.replaceWith(
-            cmake = { cmakeAbi },
-            variant = { variant },
-            cxxBuildFolder = { configuration.buildRoot.toFile()!! },
-            buildSettings = { rewriteConfig.buildSettings }
+        return original.copy(
+                variant = ({ variant })(),
+                cmake = ({ cmakeAbi })(),
+                cxxBuildFolder = ({ configuration.buildRoot.toFile()!! })(),
+                buildSettings = ({ rewriteConfig.buildSettings }
+                        )()
         )
     } else {
 //        TODO(jomof) separate CMake-ness from macro expansion and add it to NDK build

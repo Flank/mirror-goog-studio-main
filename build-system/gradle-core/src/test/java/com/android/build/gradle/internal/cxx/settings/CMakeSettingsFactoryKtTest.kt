@@ -37,19 +37,23 @@ class CMakeSettingsFactoryKtTest {
 
     @Test
     fun `ninjaExecutable is only set if it exists`() {
-        BasicCmakeMock().apply {
+        // ninja.exe exists
+        BasicCmakeMock(createFakeNinja = true).apply {
             val settings = abi.gatherCMakeSettingsFromAllLocations()
             val resolver = CMakeSettingsNameResolver(settings.environments)
             val cmakeExecutable = resolver.resolve("ndk.cmakeExecutable", listOf("ndk"))!!.get()
             assertThat(
                 resolver.resolve("ndk.ninjaExecutable", listOf("ndk"))!!.get()
             ).contains("ninja")
-            File(cmakeExecutable).parentFile.apply { mkdirs() }.apply {
-                resolve("ninja").apply { if (exists()) delete() }
-                resolve("ninja.exe").apply { if (exists()) delete() }
-            }
+        }
+
+        // ninja.exe doesn't exist
+        BasicCmakeMock(createFakeNinja = false).apply {
+            val settings = abi.gatherCMakeSettingsFromAllLocations()
+            val resolver = CMakeSettingsNameResolver(settings.environments)
+            val cmakeExecutable = resolver.resolve("ndk.cmakeExecutable", listOf("ndk"))!!.get()
             assertThat(
-                resolver.resolve("ndk.ninjaExecutable", listOf("ndk"))!!.get()
+                    resolver.resolve("ndk.ninjaExecutable", listOf("ndk"))!!.get()
             ).isEmpty()
         }
     }

@@ -16,21 +16,15 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
-import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
-import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
-import com.android.build.gradle.internal.ndk.AbiInfo
-import com.android.build.gradle.internal.ndk.Stl
-import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
-import com.google.common.annotations.VisibleForTesting
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import org.gradle.api.file.FileCollection
 import java.io.File
+import java.io.IOException
 import java.io.StringWriter
 
 /**
@@ -38,7 +32,7 @@ import java.io.StringWriter
  */
 fun CxxAbiModel.toJsonString(): String {
     return StringWriter()
-        .also { writer -> GSON.toJson(toData(), writer) }
+        .also { writer -> GSON.toJson(this, writer) }
         .toString()
 }
 
@@ -47,7 +41,7 @@ fun CxxAbiModel.toJsonString(): String {
  */
 fun CxxCmakeAbiModel.toJsonString(): String {
     return StringWriter()
-        .also { writer -> GSON.toJson(toData(), writer) }
+        .also { writer -> GSON.toJson(this, writer) }
         .toString()
 }
 
@@ -56,7 +50,7 @@ fun CxxCmakeAbiModel.toJsonString(): String {
  */
 fun CxxVariantModel.toJsonString(): String {
     return StringWriter()
-        .also { writer -> GSON.toJson(toData(), writer) }
+        .also { writer -> GSON.toJson(this, writer) }
         .toString()
 }
 
@@ -65,7 +59,7 @@ fun CxxVariantModel.toJsonString(): String {
  */
 fun CxxModuleModel.toJsonString(): String {
     return StringWriter()
-        .also { writer -> GSON.toJson(toData(), writer) }
+        .also { writer -> GSON.toJson(this, writer) }
         .toString()
 }
 
@@ -73,14 +67,14 @@ fun CxxModuleModel.toJsonString(): String {
  * Create a [CxxModuleModel] from Json string.
  */
 fun createCxxModuleModelFromJson(json: String): CxxModuleModel {
-    return GSON.fromJson(json, CxxModuleModelData::class.java)
+    return GSON.fromJson(json, CxxModuleModel::class.java)
 }
 
 /**
  * Create a [CxxAbiModel] from Json string.
  */
 fun createCxxAbiModelFromJson(json: String): CxxAbiModel {
-    return GSON.fromJson(json, CxxAbiModelData::class.java)
+    return GSON.fromJson(json, CxxAbiModel::class.java)
 }
 
 /**
@@ -91,9 +85,45 @@ fun CxxAbiModel.writeJsonToFile() {
     modelOutputFile.writeText(toJsonString())
 }
 
+/**
+ * GSon TypeAdapter that will convert between File and String.
+ */
+class PlainFileGsonTypeAdaptor : TypeAdapter<File?>() {
+
+    @Throws(IOException::class)
+    override fun write(jsonWriter: JsonWriter, file: File?) {
+        if (file == null) {
+            jsonWriter.nullValue()
+            return
+        }
+        jsonWriter.value(file.path)
+    }
+
+    @Throws(IOException::class)
+    override fun read(jsonReader: JsonReader): File? {
+        val path = jsonReader.nextString()
+        return File(path)
+    }
+}
+
+class FileCollectionTypeAdaptor : TypeAdapter<FileCollection?>() {
+    override fun write(jsonWriter: JsonWriter, fileCollection: FileCollection?) {
+        if (fileCollection == null) {
+            jsonWriter.nullValue()
+            return
+        }
+        jsonWriter.beginArray()
+        fileCollection.toList().onEach { jsonWriter.value(it.path) }
+        jsonWriter.endArray()
+    }
+
+    override fun read(jsonReader: JsonReader): FileCollection? = null
+}
+
 private val GSON = GsonBuilder()
     .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
     .registerTypeAdapter(Revision::class.java, RevisionTypeAdapter())
+    .registerTypeAdapter(FileCollection::class.java, FileCollectionTypeAdaptor())
     .setPrettyPrinting()
     .create()
 
@@ -112,209 +142,15 @@ private class RevisionTypeAdapter : TypeAdapter<Revision>() {
 }
 
 /**
- * Private data-backed implementation of [CxxProjectModel] that Gson can
- * use to read and write.
- */
-@VisibleForTesting
-data class CxxProjectModelData(
-    override val compilerSettingsCacheFolder: File = File("."),
-    override val cxxFolder: File = File("."),
-    override val ideBuildTargetAbi: String? = null,
-    override val isBuildOnlyTargetAbiEnabled: Boolean = false,
-    override val isCmakeBuildCohabitationEnabled: Boolean = false,
-    override val isNativeCompilerSettingsCacheEnabled: Boolean = false,
-    override val rootBuildGradleFolder: File = File("."),
-    override val sdkFolder: File = File("."),
-    override val chromeTraceJsonFolder: File? = null,
-    override val isPrefabEnabled: Boolean = false,
-    override val isV2NativeModelEnabled: Boolean = false
-) : CxxProjectModel
-
-private fun CxxProjectModel.toData() = CxxProjectModelData(
-    compilerSettingsCacheFolder = compilerSettingsCacheFolder,
-    cxxFolder = cxxFolder,
-    ideBuildTargetAbi = ideBuildTargetAbi,
-    isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
-    isCmakeBuildCohabitationEnabled = isCmakeBuildCohabitationEnabled,
-    isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
-    rootBuildGradleFolder = rootBuildGradleFolder,
-    sdkFolder = sdkFolder,
-    isPrefabEnabled = isPrefabEnabled,
-    isV2NativeModelEnabled = isV2NativeModelEnabled
-)
-
-/**
- * Private data-backed implementation of [CxxModuleModel] that Gson can
- * use to read and write.
- */
-// TODO Can the Cxx*Data classes be automated or otherwise removed while still
-// TODO retaining JSON read/write? They're a pain to maintain.
-@VisibleForTesting
-data class CxxModuleModelData(
-    override val buildStagingFolder: File? = null,
-    override val buildSystem: NativeBuildSystem = NativeBuildSystem.CMAKE,
-    override val cmake: CxxCmakeModuleModelData? = null,
-    override val cmakeToolchainFile: File = File("."),
-    override val cxxFolder: File = File("."),
-    override val gradleModulePathName: String = "",
-    override val intermediatesFolder: File = File("."),
-    override val makeFile: File = File("."),
-    override val moduleBuildFile: File = File("."),
-    override val moduleRootFolder: File = File("."),
-    override val ndkDefaultAbiList: List<Abi> = listOf(),
-    override val ndkFolder: File = File("."),
-    override val ndkMetaAbiList: List<AbiInfo> = listOf(),
-    override val ndkMetaPlatforms: NdkMetaPlatforms? = NdkMetaPlatforms(),
-    override val ndkSupportedAbiList: List<Abi> = listOf(),
-    override val ndkDefaultStl: Stl = Stl.NONE,
-    override val ndkVersion: Revision = Revision.parseRevision("0.0.0"),
-    override val project: CxxProjectModelData = CxxProjectModelData(),
-    override val splitsAbiFilterSet: Set<String> = setOf(),
-    override val stlSharedObjectMap: Map<Stl, Map<Abi, File>> = emptyMap()
-) : CxxModuleModel
-
-private fun CxxModuleModel.toData() = CxxModuleModelData(
-    buildStagingFolder = buildStagingFolder,
-    buildSystem = buildSystem,
-    cmake = cmake?.toData(),
-    cmakeToolchainFile = cmakeToolchainFile,
-    cxxFolder = cxxFolder,
-    gradleModulePathName = gradleModulePathName,
-    intermediatesFolder = intermediatesFolder,
-    makeFile = makeFile,
-    moduleBuildFile = moduleBuildFile,
-    moduleRootFolder = moduleRootFolder,
-    ndkDefaultAbiList = ndkDefaultAbiList,
-    ndkFolder = ndkFolder,
-    ndkMetaAbiList = ndkMetaAbiList,
-    ndkMetaPlatforms = ndkMetaPlatforms,
-    ndkSupportedAbiList = ndkSupportedAbiList,
-    ndkDefaultStl = ndkDefaultStl,
-    ndkVersion = ndkVersion,
-    project = project.toData(),
-    splitsAbiFilterSet = splitsAbiFilterSet,
-    stlSharedObjectMap = stlSharedObjectMap
-)
-
-@VisibleForTesting
-data class CxxCmakeModuleModelData(
-    override val isValidCmakeAvailable: Boolean,
-    override val cmakeExe: File,
-    override val minimumCmakeVersion: Revision,
-    override val ninjaExe: File?,
-    override val isPreferCmakeFileApiEnabled: Boolean
-) : CxxCmakeModuleModel
-
-private fun CxxCmakeModuleModel.toData() =
-    CxxCmakeModuleModelData(
-        isValidCmakeAvailable = isValidCmakeAvailable,
-        cmakeExe = cmakeExe,
-        minimumCmakeVersion = minimumCmakeVersion,
-        ninjaExe = ninjaExe,
-        isPreferCmakeFileApiEnabled = isPreferCmakeFileApiEnabled
-    )
-
-/**
- * Private data-backed implementation of [CxxVariantModel] that Gson can
- * use to read and write.
- */
-@VisibleForTesting
-internal data class CxxVariantModelData(
-    override val buildSystemArgumentList: List<String> = listOf(),
-    override val buildTargetSet: Set<String> = setOf(),
-    override val implicitBuildTargetSet: Set<String> = setOf(),
-    override val cFlagsList: List<String> = listOf(),
-    override val cmakeSettingsConfiguration: String = "",
-    override val cppFlagsList: List<String> = listOf(),
-    override val isDebuggableEnabled: Boolean = false,
-    override val module: CxxModuleModelData = CxxModuleModelData(),
-    override val objFolder: File = File("."),
-    override val soFolder: File = File("."),
-    override val variantName: String = "",
-    override val validAbiList: List<Abi> = listOf(),
-    override val prefabClassPath: File? = null,
-    override val prefabDirectory: File = File("."),
-    override val prefabPackageDirectoryList: List<File> = listOf()
-) : CxxVariantModel
-
-private fun CxxVariantModel.toData() =
-    CxxVariantModelData(
-        buildSystemArgumentList = buildSystemArgumentList,
-        buildTargetSet = buildTargetSet,
-        implicitBuildTargetSet = implicitBuildTargetSet,
-        cFlagsList = cFlagsList,
-        cmakeSettingsConfiguration = cmakeSettingsConfiguration,
-        cppFlagsList = cppFlagsList,
-        isDebuggableEnabled = isDebuggableEnabled,
-        module = module.toData(),
-        objFolder = objFolder,
-        soFolder = soFolder,
-        validAbiList = validAbiList,
-        variantName = variantName,
-        prefabClassPath = prefabClassPath,
-        prefabDirectory = prefabDirectory,
-        prefabPackageDirectoryList = prefabPackageDirectoryList
-    )
-
-/**
- * Private data-backed implementation of [CxxAbiModel] that Gson can use
- * to read and write.
- */
-@VisibleForTesting
-internal data class CxxAbiModelData(
-    override val abi: Abi = Abi.X86,
-    override val abiPlatformVersion: Int = 0,
-    override val buildSettings: BuildSettingsConfiguration = BuildSettingsConfiguration(),
-    override val cmake: CxxCmakeAbiModelData? = null,
-    override val cxxBuildFolder: File = File("."),
-    override val info: AbiInfo = AbiInfo(),
-    override val originalCxxBuildFolder: File = File("."),
-    override val variant: CxxVariantModelData = CxxVariantModelData(),
-    override val prefabFolder: File = File(".")
-) : CxxAbiModel
-
-private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
-    abi = abi,
-    abiPlatformVersion = abiPlatformVersion,
-    buildSettings = buildSettings,
-    cmake = cmake?.toData(),
-    cxxBuildFolder = cxxBuildFolder,
-    info = info,
-    originalCxxBuildFolder = originalCxxBuildFolder,
-    variant = variant.toData(),
-    prefabFolder = prefabFolder
-)
-
-/**
- * Private data-backed implementation of [CxxCmakeAbiModel] that Gson can use
- * to read and write.
- */
-@VisibleForTesting
-internal data class CxxCmakeAbiModelData(
-    override val cmakeArtifactsBaseFolder: File,
-    override val cmakeServerLogFile: File,
-    override val cmakeWrappingBaseFolder: File,
-    override val effectiveConfiguration: CMakeSettingsConfiguration
-
-) : CxxCmakeAbiModel
-
-private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
-    cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder,
-    cmakeServerLogFile = cmakeServerLogFile,
-    cmakeWrappingBaseFolder = cmakeWrappingBaseFolder,
-    effectiveConfiguration = effectiveConfiguration
-)
-
-/**
  * Prefab configuration state to be persisted to disk.
  *
  * Prefab configuration state needs to be persisted to disk because changes in configuration
  * require model regeneration.
  */
 data class PrefabConfigurationState(
-    val enabled: Boolean,
-    val prefabPath: File?,
-    val packages: List<File>
+        val enabled: Boolean,
+        val prefabPath: File?,
+        val packages: List<File>
 ) {
     fun toJsonString(): String {
         return StringWriter()

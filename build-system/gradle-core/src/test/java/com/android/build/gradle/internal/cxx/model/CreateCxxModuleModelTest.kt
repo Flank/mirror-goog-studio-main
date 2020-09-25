@@ -58,20 +58,6 @@ class CreateCxxModuleModelTest {
     }
 
     @Test
-    fun `fully exercise model expect no exceptions`() {
-        BasicCmakeMock().let {
-            // Walk all vals in the model and invoke them
-            val module = createCxxModuleModel(
-                it.sdkComponents,
-                it.configurationModel
-            )
-            CxxModuleModel::class.java.methods.toList().onEach { method ->
-                method.invoke(module)
-            }
-        }
-    }
-
-    @Test
     fun `both cmake and ndk-build`() {
         BasicCmakeMock().let {
             doReturn(join(it.projectRootDir, "Android.mk")).`when`(it.ndkBuild).path
@@ -133,7 +119,7 @@ class CreateCxxModuleModelTest {
     @Test
     fun `round trip random instance`() {
         RandomInstanceGenerator()
-            .synthetics(CxxModuleModelData::class.java)
+            .synthetics(CxxModuleModel::class.java)
             .forEach { module ->
                 val abiString = module.toJsonString()
                 val recoveredAbi = createCxxModuleModelFromJson(abiString)

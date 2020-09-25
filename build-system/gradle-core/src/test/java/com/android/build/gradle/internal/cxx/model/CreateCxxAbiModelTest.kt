@@ -23,36 +23,6 @@ import org.junit.Test
 import java.io.File
 
 class CreateCxxAbiModelTest {
-    @Test
-    fun `fully exercise model and check invariants`() {
-        BasicCmakeMock().let {
-            // Walk all vals in the model and invoke them
-            val module = createCxxModuleModel(
-                it.sdkComponents,
-                it.configurationModel
-            )
-            val variant = createCxxVariantModel(
-                it.configurationModel,
-                module)
-            val abi = createCxxAbiModel(
-                it.sdkComponents,
-                it.configurationModel,
-                variant,
-                Abi.X86)
-            CxxAbiModel::class.java.methods.toList().onEach { method ->
-                val result = method.invoke(abi)
-                if (result is File) {
-                    assertThat(result.path.replace("\\", "/"))
-                        .named("Paths in CxxAbiModel::${method.name} should contain variant")
-                        .contains("/debug/")
-                    assertThat(result.path.replace("\\", "/"))
-                        .named("Paths in CxxAbiModel::${method.name} should contain ABI")
-                        .contains("/x86")
-                }
-            }
-        }
-    }
-
     // Check some specific issues I had to debug
     @Test
     fun `repeated cmake bug`() {
@@ -88,7 +58,7 @@ class CreateCxxAbiModelTest {
     @Test
     fun `round trip random instance`() {
         RandomInstanceGenerator()
-            .synthetics(CxxAbiModelData::class.java)
+            .synthetics(CxxAbiModel::class.java)
             .forEach { abi ->
                 val abiString = abi.toJsonString()
                 val recoveredAbi = createCxxAbiModelFromJson(abiString)

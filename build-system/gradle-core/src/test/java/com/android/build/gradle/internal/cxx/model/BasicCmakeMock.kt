@@ -17,13 +17,14 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito.doReturn
 
 /**
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
  */
-open class BasicCmakeMock : BasicModuleModelMock() {
+open class BasicCmakeMock(createFakeNinja : Boolean = true) : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
     val module by lazy { createCxxModuleModel(sdkComponents, configurationModel, cmakeFinder)!! }
@@ -40,10 +41,12 @@ open class BasicCmakeMock : BasicModuleModelMock() {
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")
-        // Create the ninja executable files so that the macro expansion can succeed
-        module.cmake!!.cmakeExe.parentFile.apply { mkdirs() }.apply {
-            resolve("ninja").writeText("whatever")
-            resolve("ninja.exe").writeText("whatever")
+        if (createFakeNinja) {
+            // Create the ninja executable files so that the macro expansion can succeed
+            cmakeDir.apply { mkdirs() }.apply {
+                resolve("ninja").writeText("whatever")
+                resolve("ninja.exe").writeText("whatever")
+            }
         }
     }
 }

@@ -37,19 +37,21 @@ import com.android.build.gradle.internal.dsl.ExternalNativeCmakeOptions
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.build.gradle.internal.ndk.NdkHandler
-import com.android.build.gradle.internal.ndk.NdkInstallStatus
-import com.android.build.gradle.internal.ndk.NdkPlatform
+import com.android.build.gradle.internal.ndk.*
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
+import org.gradle.api.provider.Provider
 
 fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAbiModel {
     val global = Mockito.mock(GlobalScope::class.java)
@@ -62,8 +64,12 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val ndkBuild = Mockito.mock(NdkBuildOptions::class.java)
     val project = Mockito.mock(Project::class.java)
     val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
+    val sdkDirectoryProvider = Mockito.mock(Provider::class.java) as Provider<Directory>
+    val sdkDirectory = Mockito.mock(Directory::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
-    val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
+    val ndkPlatform = Mockito.mock(NdkPlatform::class.java)
+    val ndkInfo = Mockito.mock(NdkInfo::class.java)
+    val ndkInstallStatus = NdkInstallStatus.Valid(ndkPlatform)
     val variantBuilder: VariantBuilderImpl = Mockito.mock(VariantBuilderImpl::class.java) as VariantBuilderImpl
     val variantImpl = Mockito.mock(VariantImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
@@ -105,10 +111,16 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(File("build.gradle")).`when`(project).buildFile
     Mockito.doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
     Mockito.doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
-    Mockito.doReturn(ndkPlatform).`when`(ndkHandler).ndkPlatform
-    Mockito.doReturn(ndkPlatform).`when`(ndkHandler).getNdkPlatform(true)
+    Mockito.doReturn(sdkDirectoryProvider).`when`(sdkComponents).sdkDirectoryProvider
+    Mockito.doReturn(sdkDirectory).`when`(sdkDirectoryProvider).get()
+    Mockito.doReturn(File(".")).`when`(sdkDirectory).asFile
+    Mockito.doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
+    Mockito.doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
+    Mockito.doReturn(ndkInfo).`when`(ndkPlatform).ndkInfo
+    Mockito.doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkPlatform).revision
+    Mockito.doReturn(Stl.LIBCXX_SHARED).`when`(ndkInfo).getDefaultStl(NativeBuildSystem.CMAKE)
     Mockito.doReturn(buildDir).`when`(project).buildDir
-    Mockito.doReturn(ndkFolder).`when`(ndkPlatform.getOrThrow()).ndkDirectory
+    Mockito.doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
     Mockito.doReturn("debug").`when`(variantImpl).name
     Mockito.doReturn(buildFeatures).`when`(variantImpl).buildFeatures
     Mockito.doReturn(false).`when`(buildFeatures).prefab

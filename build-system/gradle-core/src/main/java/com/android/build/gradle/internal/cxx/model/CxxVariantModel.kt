@@ -19,64 +19,64 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.utils.FileUtils
+import org.gradle.api.file.FileCollection
 import java.io.File
 
 /**
  * Holds immutable ABI-level information for C/C++ build and sync, see README.md
  */
-interface CxxVariantModel {
+data class CxxVariantModel(
     /**
      * Arguments passed to CMake or ndk-build
      *   ex, android.defaultConfig.externalNativeBuild.arguments '-DMY_PROP=1'
      */
-    val buildSystemArgumentList: List<String>
+    val buildSystemArgumentList: List<String>,
 
     /**
      * C flags forwarded to compiler
      *   ex, android.defaultConfig.externalNativeBuild.cFlags '-DTHIS_IS_C=1'
      */
-    val cFlagsList: List<String>
+    val cFlagsList: List<String>,
 
     /**
      * C++ flags forwarded to compiler
      *   ex, android.defaultConfig.externalNativeBuild.cppFlags '-DTHIS_IS_CPP=1'
      */
-    val cppFlagsList: List<String>
+    val cppFlagsList: List<String>,
 
     /**
      * The name of the variant
      *   ex, debug
      */
-    val variantName: String
+    val variantName: String,
 
     /**
      * Base folder for .o files
      *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
      */
-    val objFolder: File
+    val objFolder: File,
 
     /**
      * Base folder for .so files
      *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
      */
-    val soFolder: File
+    val soFolder: File,
 
     /**
      * Whether this variant build is debuggable
      */
-    val isDebuggableEnabled: Boolean
+    val isDebuggableEnabled: Boolean,
 
     /**
      * The list of valid ABIs for this variant
      */
-    val validAbiList : List<Abi>
+    val validAbiList : List<Abi>,
 
     /**
      * The list of build targets.
      *  ex, android.defaultConfig.externalNativeBuild.targets "my-target"
      */
-    val buildTargetSet : Set<String>
+    val buildTargetSet : Set<String>,
 
     /**
      * The list of implicit build targets determined by other parts of the build.
@@ -84,7 +84,7 @@ interface CxxVariantModel {
      * Currently the only use of this is for forcing static libraries to build if they are named in
      * an android.prefab block.
      */
-    val implicitBuildTargetSet : Set<String>
+    val implicitBuildTargetSet : Set<String>,
 
     /**  The CMakeSettings.json configuration
      *      ex, android
@@ -92,24 +92,24 @@ interface CxxVariantModel {
      *          .cmake
      *          .externalNativeBuild
      *          .configuration 'my-configuration' */
-    val cmakeSettingsConfiguration : String
+    val cmakeSettingsConfiguration : String,
 
     /**
      * The module that this variant is part of
      */
-    val module: CxxModuleModel
+    val module: CxxModuleModel,
 
     /**
      * Path to the Prefab jar to use.
      */
-    val prefabClassPath: File?
+    val prefabClassPath: File?,
 
     /**
      * Paths to the unprocessed prefab package directories extracted from the AAR.
      *
      * For example: jsoncpp/build/.transforms/$SHA/jsoncpp/prefab
      */
-    val prefabPackageDirectoryList: List<File>
+    val prefabPackageDirectoryList: List<File>,
 
     /**
      * Path to the prefab output to be passed to the native build system.
@@ -117,7 +117,7 @@ interface CxxVariantModel {
      * For example: app/.cxx/cmake/debug/prefab
      */
     val prefabDirectory: File
-}
+)
 
 sealed class DetermineUsedStlResult {
     data class Success(val stl: Stl) : DetermineUsedStlResult()

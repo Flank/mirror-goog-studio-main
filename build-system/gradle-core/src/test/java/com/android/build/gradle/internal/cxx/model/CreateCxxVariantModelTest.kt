@@ -16,10 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-
-import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.io.File
 
 class CreateCxxVariantModelTest {
 
@@ -34,43 +31,6 @@ class CreateCxxVariantModelTest {
                 it.configurationModel,
                 module
             )
-        }
-    }
-
-    @Test
-    fun `fully exercise variant model and check invariants`() {
-        BasicCmakeMock().let {
-            // Walk all vals in the model and invoke them
-            val module = createCxxModuleModel(
-                it.sdkComponents,
-                it.configurationModel
-            )
-            val variant = createCxxVariantModel(
-                it.configurationModel,
-                module)
-            CxxVariantModel::class.java.methods.toList().onEach { method ->
-                val result = method.invoke(variant)
-                if (result is File) {
-                    if (result.path.contains("/build/")) {
-                        assertThat(result.path)
-                            .named("Path for CxxVariantModel::${method.name} " +
-                                    "should contain intermediates/BuildSystem/Variant")
-                            .contains("/intermediates/cmake/debug/")
-                    }
-                    if (result.path.contains(".cxx/cxx/")) {
-                        assertThat(result.path)
-                            .named("Path for CxxVariantModel::${method.name} " +
-                                    "should contain .cxx/BuildSystem/Variant")
-                            .contains("/.cxx/cxx/debug")
-                    }
-                    if (result.path.contains(".cxx/cmake/")) {
-                        assertThat(result.path)
-                            .named("Path for CxxVariantModel::${method.name} " +
-                                    "should contain .cxx/BuildSystem/Variant")
-                            .contains("/.cxx/cmake/debug")
-                    }
-                }
-            }
         }
     }
 }
