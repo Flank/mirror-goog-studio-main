@@ -48,7 +48,7 @@ import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", us
 import android.view.Menu
 import android.view.MenuItem
 import ${packageName}.ui.main.SectionsPagerAdapter
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
 

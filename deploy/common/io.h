@@ -50,6 +50,7 @@ class IO {
   static int stat(const std::string& pathname, struct stat* statbuf);
   static int chmod(const std::string& pathname, mode_t mode);
   static int mkdir(const std::string& pathname, mode_t mode);
+  static bool mkpath(const std::string& pathname, mode_t mode);
   static int open(const std::string& pathname, int flags);
   static int open(const std::string& pathname, int flags, mode_t mode);
   static DIR* opendir(const std::string& name);

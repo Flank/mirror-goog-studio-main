@@ -23,6 +23,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.SortedMap
 import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 import kotlin.streams.toList
 
 /**
@@ -63,12 +64,16 @@ fun getSortedRelativePathsInJar(
     jar: File,
     filter: (relativePath: String) -> Boolean = { true }
 ): List<String> {
-    return ZipFile(jar).use { zipFile ->
-        zipFile.entries()
-            .toList()
-            .filter { entry -> filter(entry.name) }
-            .map { entry -> entry.name }
-            .sorted()
+    // Zip buffered inputstream is more memory efficient than using ZipFile.entries.
+    ZipInputStream(jar.inputStream().buffered()).use { stream ->
+        val relativePaths = mutableListOf<String>()
+        while (true) {
+            val entry = stream.nextEntry ?: break
+            if (filter(entry.name)) {
+                relativePaths.add(entry.name)
+            }
+        }
+        return relativePaths.sorted()
     }
 }
 

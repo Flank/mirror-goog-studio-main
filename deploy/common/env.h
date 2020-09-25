@@ -9,6 +9,9 @@ namespace deploy {
 // but when running tests it represents the test enviroment.
 class Env {
  public:
+  // Force Env to reinitalize itself based on env variables.
+  static void Reset();
+
   // Whether there is a custom environment set
   static bool IsValid();
 

@@ -72,7 +72,7 @@ class CompatibleScreensManifestTest {
     @Mock private lateinit var artifacts: ArtifactsImpl
     @Mock private lateinit var taskContainer: MutableTaskContainer
     @Mock private lateinit var variantData: BaseVariantData
-    @Mock private lateinit var variantProperties: ApplicationVariantImpl
+    @Mock private lateinit var appVariant: ApplicationVariantImpl
 
     private lateinit var task: CompatibleScreensManifest
 
@@ -97,17 +97,17 @@ class CompatibleScreensManifestTest {
         val services = createTaskCreationServices()
 
         MockitoAnnotations.initMocks(this)
-        `when`(variantProperties.name).thenReturn("fullVariantName")
-        `when`(variantProperties.baseName).thenReturn("baseName")
-        `when`(variantProperties.variantDslInfo).thenReturn(variantDslInfo)
-        `when`(variantProperties.globalScope).thenReturn(globalScope)
-        `when`(variantProperties.artifacts).thenReturn(artifacts)
-        `when`(variantProperties.taskContainer).thenReturn(taskContainer)
-        `when`(variantProperties.variantScope).thenReturn(scope)
-        `when`(variantProperties.variantType).thenReturn(VariantTypeImpl.BASE_APK)
-        `when`(variantProperties.variantData).thenReturn(variantData)
-        `when`(variantProperties.services).thenReturn(services)
-        `when`<AndroidVersion>(variantProperties.minSdkVersion).thenReturn(AndroidVersionImpl(21))
+        `when`(appVariant.name).thenReturn("fullVariantName")
+        `when`(appVariant.baseName).thenReturn("baseName")
+        `when`(appVariant.variantDslInfo).thenReturn(variantDslInfo)
+        `when`(appVariant.globalScope).thenReturn(globalScope)
+        `when`(appVariant.artifacts).thenReturn(artifacts)
+        `when`(appVariant.taskContainer).thenReturn(taskContainer)
+        `when`(appVariant.variantScope).thenReturn(scope)
+        `when`(appVariant.variantType).thenReturn(VariantTypeImpl.BASE_APK)
+        `when`(appVariant.variantData).thenReturn(variantData)
+        `when`(appVariant.services).thenReturn(services)
+        `when`<AndroidVersion>(appVariant.minSdkVersion).thenReturn(AndroidVersionImpl(21))
 
 
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
@@ -128,13 +128,13 @@ class CompatibleScreensManifestTest {
         )
         val applicationId = project.objects.property(String::class.java)
         applicationId.set("com.foo")
-        `when`(variantProperties.applicationId).thenReturn(applicationId)
+        `when`(appVariant.applicationId).thenReturn(applicationId)
     }
 
     @Test
     fun testConfigAction() {
         val configAction = CompatibleScreensManifest.CreationAction(
-                variantProperties, setOf("xxhpi", "xxxhdpi")
+                appVariant, setOf("xxhpi", "xxxhdpi")
         )
         val variantOutputList = VariantOutputList(
             listOf(
@@ -146,7 +146,7 @@ class CompatibleScreensManifestTest {
                     "base_name",
                     "main_full_name",
                     FakeGradleProperty(value = "output_file_name"))))
-        `when`(variantProperties.outputs).thenReturn(variantOutputList)
+        `when`(appVariant.outputs).thenReturn(variantOutputList)
 
         configAction.configure(task)
 

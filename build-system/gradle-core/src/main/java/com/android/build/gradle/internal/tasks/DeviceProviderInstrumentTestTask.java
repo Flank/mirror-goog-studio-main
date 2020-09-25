@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import static com.android.build.gradle.internal.testing.utp.RetentionConfigKt.createRetentionConfig;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
@@ -671,21 +672,15 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 configurations.getByName(
                                         UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
                                                 .getConfigurationName()));
-
             }
-            FailureRetention failureRetention =
-                    (FailureRetention) extension.getTestOptions().getFailureRetention();
-            Preconditions.checkArgument(!failureRetention.getEnable() ||
-                                        failureRetention.getRetainAll() ||
-                                        failureRetention.getMaxSnapshots() > 0,
-                                        "android.testOptions.maxSnapshots should be >0, actual value "
-                                        + failureRetention.getMaxSnapshots());
-            task.getTestRunnerFactory().getRetentionConfig().set(new RetentionConfig(
-                    failureRetention.getEnable(),
-                    failureRetention.getRetainAll(),
-                    failureRetention.getCompressSnapshots(),
-                    failureRetention.getMaxSnapshots()
-            ));
+
+            task.getTestRunnerFactory()
+                    .getRetentionConfig()
+                    .set(
+                            createRetentionConfig(
+                                    projectOptions,
+                                    (FailureRetention)
+                                            extension.getTestOptions().getFailureRetention()));
 
             task.getCodeCoverageEnabled()
                     .set(creationConfig.getVariantDslInfo().isTestCoverageEnabled());

@@ -56,7 +56,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${fragmentClass} : Fragment() {
 

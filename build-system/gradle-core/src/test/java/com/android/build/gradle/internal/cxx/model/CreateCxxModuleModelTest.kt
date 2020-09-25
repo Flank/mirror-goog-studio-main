@@ -31,8 +31,7 @@ class CreateCxxModuleModelTest {
     fun `no native build`() {
         BasicModuleModelMock().let {
             assertThat(tryCreateCxxConfigurationModel(
-                it.component,
-                it.componentProperties
+                    it.variantImpl
             )).isNull()
         }
     }
@@ -79,8 +78,7 @@ class CreateCxxModuleModelTest {
             PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 assertThat(
                     tryCreateCxxConfigurationModel(
-                        it.component,
-                        it.componentProperties
+                            it.variantImpl
                     )
                 ).isNull()
                 assertThat(logEnvironment.errors).hasSize(1)
@@ -97,8 +95,7 @@ class CreateCxxModuleModelTest {
                     .`when`(it.cmake).buildStagingDirectory
                 val componentModel =
                     tryCreateCxxConfigurationModel(
-                        it.component,
-                        it.componentProperties
+                            it.variantImpl
                     )!!
                 val module = createCxxModuleModel(
                     it.sdkComponents,
@@ -118,8 +115,7 @@ class CreateCxxModuleModelTest {
                 doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val configurationModel = tryCreateCxxConfigurationModel(
-                    it.component,
-                    it.componentProperties)!!
+                        it.variantImpl)!!
                 val module = createCxxModuleModel(
                     it.sdkComponents,
                     configurationModel

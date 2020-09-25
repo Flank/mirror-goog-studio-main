@@ -61,9 +61,8 @@ import android.widget.TextView
 import android.widget.Toast
 
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.GlideDrawable
-import com.bumptech.glide.request.animation.GlideAnimation
 import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 
 /**
  * Loads a grid of cards with movies to browse.
@@ -203,11 +202,11 @@ class ${mainFragment} : BrowseFragment() {
                 .load(uri)
                 .centerCrop()
                 .error(mDefaultBackground)
-                .into<SimpleTarget<GlideDrawable>>(
-                        object : SimpleTarget<GlideDrawable>(width, height) {
-                            override fun onResourceReady(resource: GlideDrawable,
-                                                         glideAnimation: GlideAnimation<in GlideDrawable>) {
-                                mBackgroundManager.drawable = resource
+                .into<SimpleTarget<Drawable>>(
+                        object : SimpleTarget<Drawable>(width, height) {
+                            override fun onResourceReady(drawable: Drawable,
+                                                         transition: Transition<in Drawable>?) {
+                                mBackgroundManager.drawable = drawable
                             }
                         })
         mBackgroundTimer?.cancel()

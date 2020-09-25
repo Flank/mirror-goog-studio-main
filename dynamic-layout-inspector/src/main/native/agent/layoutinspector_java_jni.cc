@@ -21,6 +21,7 @@
 #include "utils/agent_task.h"
 
 using layoutinspector::ComponentTreeEvent;
+using layoutinspector::ComponentTreeEvent_PayloadType;
 using layoutinspector::PropertyEvent;
 using profiler::Agent;
 using profiler::JStringWrapper;
@@ -92,26 +93,32 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendComponentTree(
     JNIEnv *env, jclass clazz, jlong jrequest, jbyteArray jmessage, jint jlen,
     jint id, jint imageType, jint generation) {
+  ComponentTreeEvent_PayloadType payloadType =
+      ComponentTreeEvent_PayloadType(imageType);
+  if (payloadType != ComponentTreeEvent::NONE) {
+    profiler::JByteArrayWrapper message(env, jmessage, jlen);
+
+    std::stringstream ss;
+    ss << id;
+    std::string payload_name = ss.str();
+
+    // Note: property_event is copied by value here which is not optimal.
+    Agent::Instance().SubmitAgentTasks(profiler::CreateTasksToSendPayload(
+        payload_name, std::string(message.get().data(), message.length()),
+        true));
+  }
+
   SendEventRequest request;
   request = *((SendEventRequest *)jrequest);
-  profiler::JByteArrayWrapper message(env, jmessage, jlen);
 
-  std::stringstream ss;
-  ss << id;
-  std::string payload_name = ss.str();
-
-  // Note: property_event is copied by value here which is not optimal.
-  Agent::Instance().SubmitAgentTasks(profiler::CreateTasksToSendPayload(
-      payload_name, std::string(message.get().data(), message.length()), true));
   Agent::Instance().SubmitAgentTasks(
-      {[request, id, imageType, generation](AgentService::Stub &stub,
-                                            grpc::ClientContext &ctx) mutable {
+      {[request, id, payloadType, generation](
+           AgentService::Stub &stub, grpc::ClientContext &ctx) mutable {
         auto *event = request.mutable_event();
         auto *inspector_event = event->mutable_layout_inspector_event();
         auto *tree = inspector_event->mutable_tree();
         tree->set_payload_id(id);
-        tree->set_payload_type(
-            ::layoutinspector::ComponentTreeEvent_PayloadType(imageType));
+        tree->set_payload_type(payloadType);
         tree->set_generation(generation);
         event->set_pid(getpid());
         event->set_is_ended(true);

@@ -89,6 +89,7 @@ import com.android.build.gradle.internal.dependency.AndroidXDependencySubstituti
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
+import com.android.build.gradle.internal.dsl.ManagedVirtualDevice;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.lint.LintModelDependenciesWriterTask;
@@ -133,6 +134,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
+import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeClassesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
@@ -310,9 +312,8 @@ public abstract class TaskManager<
     // Temporary static variables for Kotlin+Compose configuration
     public static final String KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME =
             "kotlinCompilerClasspath";
-    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-alpha01";
-    public static final String COMPOSE_KOTLIN_COMPILER_VERSION =
-            "1.4.0";
+    public static final String COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-alpha04";
+    public static final String COMPOSE_KOTLIN_COMPILER_VERSION = "1.4.10";
     public static final String CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar";
 
     @NonNull protected final Project project;
@@ -360,11 +361,11 @@ public abstract class TaskManager<
 
         variantPropertiesList =
                 variants.stream()
-                        .map(ComponentInfo::getProperties)
+                        .map(ComponentInfo::getVariant)
                         .collect(ImmutableList.toImmutableList());
         testComponentPropertiesList =
                 testComponents.stream()
-                        .map(ComponentInfo::getProperties)
+                        .map(ComponentInfo::getVariant)
                         .collect(ImmutableList.toImmutableList());
         allPropertiesList =
                 ImmutableList.<ComponentCreationConfig>builder()
@@ -393,6 +394,9 @@ public abstract class TaskManager<
 
         // Create top level test tasks.
         createTopLevelTestTasks();
+
+        // Create tasks to manage test devices.
+        createTestDevicesTasks();
 
         // Create tasks for all variants (main and tests)
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
@@ -442,7 +446,7 @@ public abstract class TaskManager<
     private void createTasksForVariant(
             @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> variants) {
-        final VariantT variantProperties = variant.getProperties();
+        final VariantT variantProperties = variant.getVariant();
 
         final VariantType variantType = variantProperties.getVariantType();
 
@@ -490,24 +494,24 @@ public abstract class TaskManager<
     /**
      * Entry point for each specialized TaskManager to create the tasks for a given VariantT
      *
-     * @param variant the variant for which to create the tasks
+     * @param variantInfo the variantInfo for which to create the tasks
      * @param allVariants all the other variants. This is needed for lint.
      */
     protected abstract void doCreateTasksForVariant(
-            @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
+            @NonNull ComponentInfo<VariantBuilderT, VariantT> variantInfo,
             @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allVariants);
 
     /** Create tasks for the specified variant. */
     private void createTasksForTest(
-            @NonNull ComponentInfo<TestComponentBuilderImpl, TestComponentImpl> testComponent) {
-        final TestComponentImpl componentProperties = testComponent.getProperties();
+            @NonNull ComponentInfo<TestComponentBuilderImpl, TestComponentImpl> testComponentInfo) {
+        final TestComponentImpl testVariant = testComponentInfo.getVariant();
 
-        createAssembleTask(componentProperties);
+        createAssembleTask(testVariant);
 
-        VariantImpl testedVariant = componentProperties.getTestedVariant();
+        VariantImpl testedVariant = testVariant.getTestedVariant();
 
-        VariantDslInfo variantDslInfo = componentProperties.getVariantDslInfo();
-        VariantDependencies variantDependencies = componentProperties.getVariantDependencies();
+        VariantDslInfo variantDslInfo = testVariant.getVariantDslInfo();
+        VariantDependencies variantDependencies = testVariant.getVariantDependencies();
 
         if (testedVariant.getVariantDslInfo().getRenderscriptSupportModeEnabled()) {
             project.getDependencies()
@@ -521,11 +525,11 @@ public abstract class TaskManager<
                                                             ::getRenderScriptSupportJarProvider)));
         }
 
-        if (componentProperties.getVariantType().isApk()) { // ANDROID_TEST
+        if (testVariant.getVariantType().isApk()) { // ANDROID_TEST
             if (DexingTypeKt.isLegacyMultiDexMode(
-                    ((ApkCreationConfig) componentProperties).getDexingType())) {
+                    ((ApkCreationConfig) testVariant).getDexingType())) {
                 String multiDexInstrumentationDep =
-                        componentProperties
+                        testVariant
                                         .getServices()
                                         .getProjectOptions()
                                         .get(BooleanOption.USE_ANDROID_X)
@@ -541,10 +545,10 @@ public abstract class TaskManager<
                                 multiDexInstrumentationDep);
             }
 
-            createAndroidTestVariantTasks((AndroidTestImpl) componentProperties);
+            createAndroidTestVariantTasks((AndroidTestImpl) testVariant);
         } else {
             // UNIT_TEST
-            createUnitTestVariantTasks((UnitTestImpl) componentProperties);
+            createUnitTestVariantTasks((UnitTestImpl) testVariant);
         }
     }
 
@@ -711,7 +715,7 @@ public abstract class TaskManager<
         project.getDependencies()
                 .add(
                         kotlinExtension.getName(),
-                        "androidx.compose:compose-compiler:"
+                        "androidx.compose.compiler:compiler:"
                                 + (kotlinCompilerExtensionVersionInDsl != null
                                         ? kotlinCompilerExtensionVersionInDsl
                                         : COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION));
@@ -924,12 +928,12 @@ public abstract class TaskManager<
                 });
     }
 
-    public void createMergeApkManifestsTask(@NonNull ComponentImpl componentProperties) {
-        ApkVariantData apkVariantData = (ApkVariantData) componentProperties.getVariantData();
+    public void createMergeApkManifestsTask(@NonNull ComponentImpl component) {
+        ApkVariantData apkVariantData = (ApkVariantData) component.getVariantData();
         Set<String> screenSizes = apkVariantData.getCompatibleScreens();
 
         // FIXME
-        ApkCreationConfig creationConfig = (ApkCreationConfig) componentProperties;
+        ApkCreationConfig creationConfig = (ApkCreationConfig) component;
 
         taskFactory.register(
                 new CompatibleScreensManifest.CreationAction(creationConfig, screenSizes));
@@ -937,7 +941,7 @@ public abstract class TaskManager<
         TaskProvider<? extends ManifestProcessorTask> processManifestTask =
                 createMergeManifestTasks(creationConfig);
 
-        final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
+        final MutableTaskContainer taskContainer = component.getTaskContainer();
         if (taskContainer.getMicroApkTask() != null) {
             TaskFactoryUtils.dependsOn(processManifestTask, taskContainer.getMicroApkTask());
         }
@@ -1524,7 +1528,7 @@ public abstract class TaskManager<
     public void createExternalNativeBuildJsonGenerators(
             @NonNull VariantBuilderT variant, @NonNull VariantT variantProperties) {
         CxxConfigurationModel configurationModel =
-                tryCreateCxxConfigurationModel(variant, variantProperties, false);
+                tryCreateCxxConfigurationModel(variantProperties, false);
 
         if (configurationModel == null) {
             return;
@@ -1534,8 +1538,8 @@ public abstract class TaskManager<
     }
 
     public void createExternalNativeBuildTasks(
-            @NonNull VariantBuilderT component, @NonNull VariantImpl componentProperties) {
-        final MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
+            @NonNull VariantBuilderT component, @NonNull VariantImpl variant) {
+        final MutableTaskContainer taskContainer = variant.getTaskContainer();
         CxxConfigurationModel configurationModel = taskContainer.getCxxConfigurationModel();
         if (configurationModel == null) {
             return;
@@ -1545,25 +1549,23 @@ public abstract class TaskManager<
         TaskProvider<? extends Task> generateTask =
                 taskFactory.register(
                         new ExternalNativeBuildJsonTask.CreationAction(
-                                configurationModel, componentProperties));
+                                configurationModel, variant));
 
         // Set up build tasks
         TaskProvider<ExternalNativeBuildTask> buildTask =
                 taskFactory.register(
                         new ExternalNativeBuildTask.CreationAction(
-                                configurationModel, componentProperties, generateTask));
+                                configurationModel, variant, generateTask));
 
         TaskFactoryUtils.dependsOn(taskContainer.getCompileTask(), buildTask);
 
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
-        CxxConfigurationModel allAbisModel =
-                tryCreateCxxConfigurationModel(component, componentProperties, true);
+        CxxConfigurationModel allAbisModel = tryCreateCxxConfigurationModel(variant, true);
         if (allAbisModel != null) {
             TaskProvider<ExternalNativeCleanTask> externalNativeCleanTask =
                     taskFactory.register(
-                            new ExternalNativeCleanTask.CreationAction(
-                                    allAbisModel, componentProperties));
+                            new ExternalNativeCleanTask.CreationAction(allAbisModel, variant));
             TaskFactoryUtils.dependsOn(cleanTask, externalNativeCleanTask);
         }
     }
@@ -1702,20 +1704,18 @@ public abstract class TaskManager<
         taskContainer.getAssembleTask().configure(task -> task.setGroup(null));
     }
 
-    protected void registerRClassTransformStream(@NonNull ComponentImpl componentProperties) {
+    protected void registerRClassTransformStream(@NonNull ComponentImpl variant) {
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             return;
         }
 
         Provider<RegularFile> rClassJar =
-                componentProperties
-                        .getArtifacts()
+                variant.getArtifacts()
                         .get(
                                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
                                         .INSTANCE);
 
-        componentProperties
-                .getTransformManager()
+        variant.getTransformManager()
                 .addStream(
                         OriginalStream.builder("compile-and-runtime-light-r-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
@@ -1806,7 +1806,7 @@ public abstract class TaskManager<
                 new LintPerVariantTask.CreationAction(
                         variantProperties,
                         allVariants.stream()
-                                .map(ComponentInfo::getProperties)
+                                .map(ComponentInfo::getVariant)
                                 .collect(Collectors.toList())));
         taskFactory.register(new LintModelDependenciesWriterTask.CreationAction(variantProperties));
     }
@@ -1831,7 +1831,7 @@ public abstract class TaskManager<
                         new LintPerVariantTask.VitalCreationAction(
                                 variant,
                                 allVariants.stream()
-                                        .map(ComponentInfo::getProperties)
+                                        .map(ComponentInfo::getVariant)
                                         .collect(Collectors.toList())),
                         null,
                         task -> task.dependsOn(variant.getTaskContainer().getJavacTask()),
@@ -1954,6 +1954,27 @@ public abstract class TaskManager<
                                 }
                             });
         }
+    }
+
+    protected void createTestDevicesTasks() {
+        if (!globalScope
+                .getProjectOptions()
+                .get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
+            return;
+        }
+        List<ManagedVirtualDevice> managedDevices = Lists.newArrayList();
+        extension
+                .getTestOptions()
+                .getDevices()
+                .forEach(
+                        device -> {
+                            if (device instanceof ManagedVirtualDevice) {
+                                managedDevices.add((ManagedVirtualDevice) device);
+                            }
+                        });
+        taskFactory.register(
+                new ManagedDeviceCleanTask.CreationAction(
+                        "cleanManagedDevices", globalScope, managedDevices));
     }
 
     protected void createConnectedTestForVariant(@NonNull AndroidTestImpl androidTestProperties) {
@@ -2556,7 +2577,13 @@ public abstract class TaskManager<
                         },
                         null);
 
-        TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), packageApp.getName());
+        taskContainer
+                .getAssembleTask()
+                .configure(
+                        task -> {
+                            task.dependsOn(
+                                    creationConfig.getArtifacts().get(ArtifactType.APK.INSTANCE));
+                        });
 
         // create install task for the variant Data. This will deal with finding the
         // right output if there are more than one.
@@ -2744,29 +2771,25 @@ public abstract class TaskManager<
         }
     }
 
-    public void createAssembleTask(@NonNull ComponentImpl componentProperties) {
+    public void createAssembleTask(@NonNull ComponentImpl component) {
         taskFactory.register(
-                componentProperties.computeTaskName("assemble"),
+                component.computeTaskName("assemble"),
                 null /*preConfigAction*/,
                 task ->
                         task.setDescription(
-                                "Assembles main output for variant "
-                                        + componentProperties.getName()),
-                taskProvider ->
-                        componentProperties.getTaskContainer().setAssembleTask(taskProvider));
+                                "Assembles main output for variant " + component.getName()),
+                taskProvider -> component.getTaskContainer().setAssembleTask(taskProvider));
     }
 
-    public void createBundleTask(@NonNull ComponentImpl componentProperties) {
+    public void createBundleTask(@NonNull ComponentImpl component) {
         taskFactory.register(
-                componentProperties.computeTaskName("bundle"),
+                component.computeTaskName("bundle"),
                 null,
                 task -> {
-                    task.setDescription(
-                            "Assembles bundle for variant " + componentProperties.getName());
-                    task.dependsOn(
-                            componentProperties.getArtifacts().get(ArtifactType.BUNDLE.INSTANCE));
+                    task.setDescription("Assembles bundle for variant " + component.getName());
+                    task.dependsOn(component.getArtifacts().get(ArtifactType.BUNDLE.INSTANCE));
                 },
-                taskProvider -> componentProperties.getTaskContainer().setBundleTask(taskProvider));
+                taskProvider -> component.getTaskContainer().setBundleTask(taskProvider));
     }
 
     protected void maybeCreateJavaCodeShrinkerTask(

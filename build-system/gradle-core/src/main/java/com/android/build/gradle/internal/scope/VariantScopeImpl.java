@@ -313,10 +313,10 @@ public class VariantScopeImpl implements VariantScope {
      *
      * <p>This value can be overridden by the OptionalBooleanOption.IDE_TEST_ONLY property.
      *
-     * @param variantProperties {@link VariantImpl} for this variant scope.
+     * @param variant {@link VariantImpl} for this variant scope.
      */
     @Override
-    public boolean isTestOnly(VariantImpl variantProperties) {
+    public boolean isTestOnly(VariantImpl variant) {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
 
@@ -328,7 +328,7 @@ public class VariantScopeImpl implements VariantScope {
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || isPreviewTargetPlatform()
-                || variantProperties.getVariant().getMinSdkVersion().getCodename() != null
+                || variant.getVariantBuilder().getMinSdkVersion().getCodename() != null
                 || variantDslInfo.getTargetSdkVersion().getCodename() != null;
     }
 

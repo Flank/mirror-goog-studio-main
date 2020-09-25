@@ -28,6 +28,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.AvdComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.ide.DependencyFailureHandler;
@@ -63,6 +64,7 @@ public class GlobalScope {
     @NonNull private final DataBindingBuilder dataBindingBuilder;
     @NonNull private BaseExtension extension;
     @NonNull private final Provider<SdkComponentsBuildService> sdkComponents;
+    @NonNull private final Provider<AvdComponentsBuildService> avdComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final MessageReceiver messageReceiver;
@@ -85,6 +87,7 @@ public class GlobalScope {
             @NonNull String createdBy,
             @NonNull DslServices dslServices,
             @NonNull Provider<SdkComponentsBuildService> sdkComponents,
+            @NonNull Provider<AvdComponentsBuildService> avdComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull MessageReceiver messageReceiver,
             @NonNull SoftwareComponentFactory componentFactory) {
@@ -94,6 +97,7 @@ public class GlobalScope {
         this.createdBy = createdBy;
         this.dslServices = checkNotNull(dslServices);
         this.sdkComponents = sdkComponents;
+        this.avdComponents = avdComponents;
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps =
                 checkNotNull(dslServices.getProjectOptions().getOptionalCompilationSteps());
@@ -146,6 +150,11 @@ public class GlobalScope {
     @NonNull
     public Provider<SdkComponentsBuildService> getSdkComponents() {
         return sdkComponents;
+    }
+
+    @NonNull
+    public Provider<AvdComponentsBuildService> getAvdComponents() {
+        return avdComponents;
     }
 
     @NonNull

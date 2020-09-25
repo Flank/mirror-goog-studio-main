@@ -73,9 +73,10 @@ else """${renderIf(parentView != null) { "$parentView." }} findViewById${renderI
 fun importViewBindingClass(
   isViewBindingSupported: Boolean,
   packageName: String,
-  layoutName: String
+  layoutName: String,
+  language: Language
 ) = renderIf(isViewBindingSupported) {
-  "import ${escapeKotlinIdentifier(packageName)}.databinding.${layoutToViewBindingClass(layoutName)}"
+  "import ${escapeKotlinIdentifier(packageName)}.databinding.${layoutToViewBindingClass(layoutName)}${renderIf(language == Language.Java){";"}}"
 }
 
 fun layoutToViewBindingClass(layoutName: String) = underscoreToCamelCase(layoutName) + "Binding"

@@ -201,8 +201,8 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     fun `configuration type build name does contribute to hash`() {
         val (abi1, abi2) = abisOf { mock, abi ->
             when (abi) {
-                1 -> Mockito.doReturn("debug").`when`(mock.componentProperties).name
-                2 -> Mockito.doReturn("release").`when`(mock.componentProperties).name
+                1 -> Mockito.doReturn("debug").`when`(mock.variantImpl).name
+                2 -> Mockito.doReturn("release").`when`(mock.variantImpl).name
             }
         }
 
@@ -287,8 +287,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             setup(this, 1)
 
             val configurationModel1 = tryCreateCxxConfigurationModel(
-                component,
-                componentProperties)!!
+                    variantImpl)!!
             val variant1 = createCxxVariantModel(configurationModel1, module)
             val result1 = createCxxAbiModel(
                 sdkComponents, configurationModel1,
@@ -296,9 +295,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             result1.toJsonString() // Force all lazy values
 
             setup(this, 2)
-            val configurationModel2 = tryCreateCxxConfigurationModel(
-                component,
-                componentProperties)!!
+            val configurationModel2 = tryCreateCxxConfigurationModel(variantImpl)!!
             val variant2 = createCxxVariantModel(configurationModel2, module)
             val result2 = createCxxAbiModel(
                 sdkComponents, configurationModel2,

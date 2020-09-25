@@ -37,12 +37,14 @@ Workspace::Workspace(const std::string& version, Executor* executor)
       cmd_path_(kDefaultCmdPath),
       executor_(executor),
       output_pipe_(dup(STDOUT_FILENO)) {
-  tmp_ = kBaseDir + "/tmp-"_s + version + "/";
+  tmp_ = kBaseDir + "/tmp/"_s + version + "/";
+  pids_folder_ = kBaseDir + "/ipids/"_s;
 }
 
 void Workspace::Init() noexcept {
   // Create all directory that may be used.
-  IO::mkdir(tmp_, kDirectoryMode);
+  IO::mkpath(tmp_, kDirectoryMode);
+  IO::mkpath(pids_folder_, kDirectoryMode);
 
   // Close all file descriptor which could potentially mess up with
   // our protobuffer output and install a data sink instead.

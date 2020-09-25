@@ -84,7 +84,7 @@ import java.io.File
 import java.util.concurrent.Callable
 
 abstract class ComponentImpl(
-    open val variant: ComponentBuilderImpl,
+    open val variantBuilder: ComponentBuilderImpl,
     override val buildFeatures: BuildFeatureValues,
     override val variantDslInfo: VariantDslInfo,
     override val variantDependencies: VariantDependencies,
@@ -98,7 +98,7 @@ abstract class ComponentImpl(
     override val services: TaskCreationServices,
     @Deprecated("Do not use if you can avoid it. Check if services has what you need")
     override val globalScope: GlobalScope
-): Component, ComponentCreationConfig, ComponentIdentity by variant {
+): Component, ComponentCreationConfig, ComponentIdentity by variantBuilder {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -676,7 +676,7 @@ abstract class ComponentImpl(
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
 
-    abstract fun createUserVisibleVariantPropertiesObject(
+    abstract fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledComponent

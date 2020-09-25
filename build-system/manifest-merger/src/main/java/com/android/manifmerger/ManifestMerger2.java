@@ -179,7 +179,9 @@ public class ManifestMerger2 {
         // first do we have a package declaration in the main manifest ?
         Optional<XmlAttribute> mainPackageAttribute =
                 loadedMainManifestInfo.getXmlDocument().getPackage();
-        if (mDocumentType != XmlDocument.Type.OVERLAY && !mainPackageAttribute.isPresent()) {
+        if (!mPlaceHolderValues.containsKey(PACKAGE_NAME)
+                && mDocumentType != XmlDocument.Type.OVERLAY
+                && !mainPackageAttribute.isPresent()) {
             mergingReportBuilder.addMessage(
                     loadedMainManifestInfo.getXmlDocument().getSourceFile(),
                     MergingReport.Record.Severity.ERROR,

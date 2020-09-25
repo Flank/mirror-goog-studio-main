@@ -39,12 +39,12 @@ public class UnitTestVariantImpl extends BaseVariantImpl implements UnitTestVari
     @Inject
     public UnitTestVariantImpl(
             @NonNull TestVariantData variantData,
-            @NonNull ComponentImpl componentProperties,
+            @NonNull ComponentImpl component,
             @NonNull TestedVariant testedVariant,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(componentProperties, services, readOnlyObjectProvider, outputs);
+        super(component, services, readOnlyObjectProvider, outputs);
 
         this.variantData = variantData;
         this.testedVariant = testedVariant;

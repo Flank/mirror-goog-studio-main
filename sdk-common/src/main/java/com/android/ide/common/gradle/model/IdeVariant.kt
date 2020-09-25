@@ -15,14 +15,17 @@
  */
 package com.android.ide.common.gradle.model
 
-interface IdeVariant {
+interface IdeVariantHeader {
   val name: String
+  val buildType: String
+  val productFlavors: List<String>
   val displayName: String
+}
+
+interface IdeVariant: IdeVariantHeader {
   val mainArtifact: IdeAndroidArtifact
   val androidTestArtifact: IdeAndroidArtifact?
   val unitTestArtifact: IdeJavaArtifact?
-  val buildType: String
-  val productFlavors: List<String>
 
   /**
    * The result of the merge of all the flavors and of the main default config. If no flavors

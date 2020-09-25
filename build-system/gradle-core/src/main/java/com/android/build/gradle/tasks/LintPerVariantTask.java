@@ -93,21 +93,20 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
 
     public static class CreationAction extends BaseCreationAction<LintPerVariantTask> {
 
-        private final VariantImpl variantProperties;
+        private final VariantImpl variant;
         private final List<? extends VariantImpl> allVariants;
 
         public CreationAction(
-                @NonNull VariantImpl variantProperties,
-                @NonNull List<? extends VariantImpl> allVariants) {
-            super(variantProperties.getGlobalScope());
-            this.variantProperties = variantProperties;
+                @NonNull VariantImpl variant, @NonNull List<? extends VariantImpl> allVariants) {
+            super(variant.getGlobalScope());
+            this.variant = variant;
             this.allVariants = allVariants;
         }
 
         @Override
         @NonNull
         public String getName() {
-            return variantProperties.computeTaskName("lint");
+            return variant.computeTaskName("lint");
         }
 
         @Override
@@ -120,10 +119,10 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
         public void configure(@NonNull LintPerVariantTask lint) {
             super.configure(lint);
 
-            lint.setVariantName(variantProperties.getName());
+            lint.setVariantName(variant.getName());
             lint.allInputs = globalScope.getProject().files();
 
-            lint.variantInputs = new VariantInputs(variantProperties);
+            lint.variantInputs = new VariantInputs(variant);
             lint.allInputs.from(lint.variantInputs.getAllInputs());
 
             for (VariantImpl variant : allVariants) {
@@ -138,21 +137,21 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
 
     public static class VitalCreationAction extends BaseCreationAction<LintPerVariantTask> {
 
-        private final ComponentImpl componentProperties;
+        private final ComponentImpl component;
         private final List<? extends VariantImpl> allComponentsWithLint;
 
         public VitalCreationAction(
-                @NonNull ComponentImpl componentProperties,
+                @NonNull ComponentImpl component,
                 @NonNull List<? extends VariantImpl> allComponentsWithLint) {
-            super(componentProperties.getGlobalScope());
-            this.componentProperties = componentProperties;
+            super(component.getGlobalScope());
+            this.component = component;
             this.allComponentsWithLint = allComponentsWithLint;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return componentProperties.computeTaskName("lintVital");
+            return component.computeTaskName("lintVital");
         }
 
         @NonNull
@@ -165,10 +164,10 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
         public void configure(@NonNull LintPerVariantTask task) {
             super.configure(task);
 
-            task.setVariantName(componentProperties.getName());
+            task.setVariantName(component.getName());
             task.allInputs = globalScope.getProject().files();
 
-            task.variantInputs = new VariantInputs(componentProperties);
+            task.variantInputs = new VariantInputs(component);
             task.allInputs.from(task.variantInputs.getAllInputs());
 
             for (ComponentImpl component : allComponentsWithLint) {

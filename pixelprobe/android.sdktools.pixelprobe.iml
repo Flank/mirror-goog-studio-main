@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/tools" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="library" name="studio-sdk" level="project" />
     <orderEntry type="module" module-name="android.sdktools.chunkio" />
     <orderEntry type="module" module-name="android.sdktools.chunkio-processor" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -25,6 +25,19 @@ using app_inspection::DisposeInspectorCommand;
 using profiler::Agent;
 using profiler::proto::Command;
 
+static const char* VERSION_TARGET_INFO_CLASS =
+    "com/android/tools/agent/app/inspection/version/VersionTargetInfo";
+static const std::string VERSION_TARGET_INFO_TYPE =
+    "L" + std::string(VERSION_TARGET_INFO_CLASS) + ";";
+
+jobject createVersionTargetInfo(JNIEnv* env, jstring version_file,
+                                jstring min_version) {
+  jclass clazz = env->FindClass(VERSION_TARGET_INFO_CLASS);
+  jmethodID constructor = env->GetMethodID(
+      clazz, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
+  return env->NewObject(clazz, constructor, version_file, min_version);
+}
+
 void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
     JavaVM* vm) {
   Agent::Instance().RegisterCommandHandler(
@@ -57,27 +70,30 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
           jstring project = jni_env->NewStringUTF(
               create_inspector.launch_metadata().launched_by_name().c_str());
           jboolean force = create_inspector.launch_metadata().force();
-          jstring version_file_name = nullptr;
-          jstring min_version = nullptr;
+
+          jobject target = nullptr;
           if (create_inspector.launch_metadata().has_version_params()) {
-            version_file_name =
+            jstring version_file_name =
                 jni_env->NewStringUTF(create_inspector.launch_metadata()
                                           .version_params()
                                           .version_file_name()
                                           .c_str());
-            min_version =
+            jstring min_version =
                 jni_env->NewStringUTF(create_inspector.launch_metadata()
                                           .version_params()
                                           .min_version()
                                           .c_str());
+            target = createVersionTargetInfo(jni_env, version_file_name,
+                                             min_version);
           }
           jmethodID create_inspector_method = jni_env->GetMethodID(
               service_class, "createInspector",
-              "(Ljava/lang/String;Ljava/lang/String;Ljava/"
-              "lang/String;Ljava/lang/String;Ljava/lang/String;ZI)V");
+              ("(Ljava/lang/String;Ljava/lang/String;" +
+               VERSION_TARGET_INFO_TYPE + "Ljava/lang/String;ZI)V")
+                  .c_str());
           jni_env->CallVoidMethod(service, create_inspector_method,
-                                  inspector_id, dex_path, version_file_name,
-                                  min_version, project, force, command_id);
+                                  inspector_id, dex_path, target, project,
+                                  force, command_id);
         } else if (app_command.has_dispose_inspector_command()) {
           auto& dispose_inspector = app_command.dispose_inspector_command();
           jmethodID dispose_inspector_method = jni_env->GetMethodID(
@@ -103,6 +119,33 @@ void AppInspectionAgentCommand::RegisterAppInspectionCommandHandler(
               jni_env->GetMethodID(service_class, "cancelCommand", "(I)V");
           jni_env->CallVoidMethod(service, cancel_command_method,
                                   cancelled_command_id);
+        } else if (app_command.has_get_library_versions_command()) {
+          auto& get_library_versions_command =
+              app_command.get_library_versions_command();
+          int request_size =
+              get_library_versions_command.target_versions_size();
+          jobjectArray targets = jni_env->NewObjectArray(
+              request_size, jni_env->FindClass(VERSION_TARGET_INFO_CLASS),
+              NULL);
+
+          for (int i = 0; i < request_size; ++i) {
+            jstring version_file = jni_env->NewStringUTF(
+                get_library_versions_command.target_versions(i)
+                    .version_file_name()
+                    .c_str());
+            jstring min_version = jni_env->NewStringUTF(
+                get_library_versions_command.target_versions(i)
+                    .min_version()
+                    .c_str());
+            jni_env->SetObjectArrayElement(
+                targets, i,
+                createVersionTargetInfo(jni_env, version_file, min_version));
+          }
+          jmethodID get_library_versions_method = jni_env->GetMethodID(
+              service_class, "getLibraryVersionsCommand",
+              ("(I[" + VERSION_TARGET_INFO_TYPE + ")V").c_str());
+          jni_env->CallVoidMethod(service, get_library_versions_method,
+                                  command_id, targets);
         }
       });
 }

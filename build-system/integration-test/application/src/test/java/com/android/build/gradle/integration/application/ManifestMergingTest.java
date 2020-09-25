@@ -429,4 +429,40 @@ public class ManifestMergingTest {
                                 "merged_manifests", "f1FaDebug", "AndroidManifest.xml"))
                 .contains("android:versionCode=\"124\"");
     }
+
+    @Test
+    public void checkPackageNameFromApplicationId() throws Exception {
+        TestFileUtils.appendToFile(
+                flavors.getBuildFile(),
+                "android {\n"
+                        + "    compileSdkVersion 24\n"
+                        + "    defaultConfig {\n"
+                        + "        applicationId \"com.android.tests.flavors\"\n"
+                        + "    }\n"
+                        + "}");
+        File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
+        TestFileUtils.searchAndReplace(appManifest, "package=\"com.android.tests.flavors\">", ">");
+        GradleBuildResult buildResult = flavors.executor().run("clean", "assembleF1FaDebug");
+        Truth.assertThat(buildResult.getDidWorkTasks()).contains(":processF1FaDebugManifest");
+        assertThat(
+                        flavors.getIntermediateFile(
+                                "merged_manifest", "f1FaDebug", "AndroidManifest.xml"))
+                .contains("package=\"com.android.tests.flavors\" >");
+    }
+
+    @Test
+    public void checkNoAvailablePackageName() throws Exception {
+        TestFileUtils.appendToFile(
+                flavors.getBuildFile(),
+                "android {\n"
+                        + "    compileSdkVersion 24\n"
+                        + "    defaultConfig {\n"
+                        + "    }\n"
+                        + "}");
+        File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
+        TestFileUtils.searchAndReplace(appManifest, "package=\"com.android.tests.flavors\">", ">");
+        GradleBuildResult buildResult =
+                flavors.executor().expectFailure().run("clean", "assembleF1FaDebug");
+        Truth.assertThat(buildResult.getFailureMessage()).contains("Package Name not found");
+    }
 }

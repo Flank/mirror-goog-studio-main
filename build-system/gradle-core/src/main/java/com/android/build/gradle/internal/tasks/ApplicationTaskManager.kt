@@ -58,63 +58,63 @@ class ApplicationTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-        variant: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
+        variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
         allVariants: MutableList<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
     ) {
-        createCommonTasks(variant, allVariants)
+        createCommonTasks(variantInfo, allVariants)
 
-        val variantProperties = variant.properties
+        val variant = variantInfo.variant
 
         // Base feature specific tasks.
-        taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variantProperties))
+        taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variant))
 
-        createValidateSigningTask(variantProperties)
+        createValidateSigningTask(variant)
         // Add a task to produce the signing config file.
-        taskFactory.register(SigningConfigWriterTask.CreationAction(variantProperties))
+        taskFactory.register(SigningConfigWriterTask.CreationAction(variant))
 
         // Add a task to produce the app-metadata.properties file
-        taskFactory.register(AppMetadataTask.CreationAction(variantProperties))
+        taskFactory.register(AppMetadataTask.CreationAction(variant))
 
         if ((extension as BaseAppModuleExtension).assetPacks.isNotEmpty()) {
-            createAssetPackTasks(variantProperties)
+            createAssetPackTasks(variant)
         }
 
-        if (variantProperties.buildFeatures.dataBinding
-                && variantProperties.globalScope.hasDynamicFeatures()) {
+        if (variant.buildFeatures.dataBinding
+                && variant.globalScope.hasDynamicFeatures()) {
             // Create a task that will package the manifest ids(the R file packages) of all
             // features into a file. This file's path is passed into the Data Binding annotation
             // processor which uses it to known about all available features.
             //
             // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
             taskFactory.register(
-                DataBindingExportFeatureApplicationIdsTask.CreationAction(variantProperties)
+                DataBindingExportFeatureApplicationIdsTask.CreationAction(variant)
             )
         }
 
-        createDynamicBundleTask(variant)
+        createDynamicBundleTask(variantInfo)
 
-        handleMicroApp(variantProperties)
+        handleMicroApp(variant)
 
         // do not publish the APK(s) if there are dynamic feature.
-        if (!variantProperties.globalScope.hasDynamicFeatures()) {
+        if (!variant.globalScope.hasDynamicFeatures()) {
             createSoftwareComponent(
-                variantProperties,
+                variant,
                 "_apk",
                 PublishedConfigType.APK_PUBLICATION
             )
         }
-        createSoftwareComponent(variantProperties, "_aab", PublishedConfigType.AAB_PUBLICATION)
+        createSoftwareComponent(variant, "_aab", PublishedConfigType.AAB_PUBLICATION)
     }
 
     /** Configure variantData to generate embedded wear application.  */
-    private fun handleMicroApp(variantProperties: ApplicationVariantImpl) {
-        val variantDslInfo = variantProperties.variantDslInfo
-        val variantType = variantProperties.variantType
+    private fun handleMicroApp(appVariant: ApplicationVariantImpl) {
+        val variantDslInfo = appVariant.variantDslInfo
+        val variantType = appVariant.variantType
         if (variantType.isBaseModule) {
             val unbundledWearApp: Boolean? = variantDslInfo.isWearAppUnbundled
             if (unbundledWearApp != true && variantDslInfo.isEmbedMicroApp) {
                 val wearApp =
-                    variantProperties.variantDependencies.wearAppConfiguration
+                        appVariant.variantDependencies.wearAppConfiguration
                         ?: error("Wear app with no wearApp configuration")
                 if (!wearApp.allDependencies.isEmpty()) {
                     val setApkArtifact =
@@ -131,11 +131,11 @@ class ApplicationTaskManager(
                             )
                         }
                         .files
-                    createGenerateMicroApkDataTask(variantProperties, files)
+                    createGenerateMicroApkDataTask(appVariant, files)
                 }
             } else {
                 if (unbundledWearApp == true) {
-                    createGenerateMicroApkDataTask(variantProperties)
+                    createGenerateMicroApkDataTask(appVariant)
                 }
             }
         }
@@ -154,23 +154,20 @@ class ApplicationTaskManager(
      * if null this will trigger the unbundled mode.
      */
     private fun createGenerateMicroApkDataTask(
-        variantProperties: ApplicationVariantImpl,
+        appVariant: ApplicationVariantImpl,
         config: FileCollection? = null
     ) {
         val generateMicroApkTask =
             taskFactory.register(
-                GenerateApkDataTask.CreationAction(
-                    variantProperties,
-                    config
-                )
+                GenerateApkDataTask.CreationAction(appVariant, config)
             )
         // the merge res task will need to run after this one.
-        variantProperties.taskContainer.resourceGenTask.dependsOn(
+        appVariant.taskContainer.resourceGenTask.dependsOn(
             generateMicroApkTask
         )
     }
 
-    private fun createAssetPackTasks(variantProperties: ApplicationVariantImpl) {
+    private fun createAssetPackTasks(appVariant: ApplicationVariantImpl) {
         val depHandler = project.dependencies
         val notFound: MutableList<String> =
             ArrayList()
@@ -198,18 +195,18 @@ class ApplicationTaskManager(
                         "manifestElements"
                     )
                 depHandler.add("assetPackManifest", depHandler.project(manifestDependency))
-                variantProperties.needAssetPackTasks.set(true)
+                appVariant.needAssetPackTasks.set(true)
             } else {
                 notFound.add(assetPack)
             }
         }
-        if (variantProperties.needAssetPackTasks.get()) {
+        if (appVariant.needAssetPackTasks.get()) {
             val assetPackManifest =
                 assetPackManifestConfiguration.incoming.files
             val assetFiles = assetPackFilesConfiguration.incoming.files
             taskFactory.register(
                 ProcessAssetPackManifestTask.CreationAction(
-                    variantProperties,
+                        appVariant,
                     assetPackManifest,
                     assetPacks
                         .stream()
@@ -224,72 +221,72 @@ class ApplicationTaskManager(
             )
             taskFactory.register(
                 LinkManifestForAssetPackTask.CreationAction(
-                    variantProperties
+                        appVariant
                 )
             )
             taskFactory.register(
                 AssetPackPreBundleTask.CreationAction(
-                    variantProperties,
-                    assetFiles
+                        appVariant,
+                        assetFiles
                 )
             )
         }
         if (!notFound.isEmpty()) {
-            variantProperties.services.issueReporter.reportError(
+            appVariant.services.issueReporter.reportError(
                 IssueReporter.Type.GENERIC,
                 "Unable to find matching projects for Asset Packs: $notFound"
             )
         }
     }
 
-    private fun createDynamicBundleTask(variant: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>) {
-        val variantProperties = variant.properties
+    private fun createDynamicBundleTask(variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>) {
+        val variant = variantInfo.variant
 
         // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
         // and the bundle can't be created. For now, just don't add the bundle task.
         // TODO(b/111168382): Remove this
-        if (variantProperties.globalScope.extension.aaptOptions.namespaced) {
+        if (variant.globalScope.extension.aaptOptions.namespaced) {
             return
         }
 
-        taskFactory.register(PerModuleBundleTask.CreationAction(variantProperties))
+        taskFactory.register(PerModuleBundleTask.CreationAction(variant))
 
-        val debuggable = variant.variant.debuggable
-        val includeSdkInfoInApk = variant.variant.dependenciesInfo.includeInApk
-        val includeSdkInfoInBundle = variant.variant.dependenciesInfo.includeInBundle
+        val debuggable = variantInfo.variantBuilder.debuggable
+        val includeSdkInfoInApk = variantInfo.variantBuilder.dependenciesInfo.includeInApk
+        val includeSdkInfoInBundle = variantInfo.variantBuilder.dependenciesInfo.includeInBundle
         if (!debuggable) {
-            taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
+            taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variant))
         }
-        if (variantProperties.variantType.isBaseModule) {
-            taskFactory.register(ParseIntegrityConfigTask.CreationAction(variantProperties))
-            taskFactory.register(PackageBundleTask.CreationAction(variantProperties))
+        if (variant.variantType.isBaseModule) {
+            taskFactory.register(ParseIntegrityConfigTask.CreationAction(variant))
+            taskFactory.register(PackageBundleTask.CreationAction(variant))
             if (!debuggable) {
                 if (includeSdkInfoInBundle) {
-                    taskFactory.register(BundleReportDependenciesTask.CreationAction(variantProperties))
+                    taskFactory.register(BundleReportDependenciesTask.CreationAction(variant))
                 }
-                if (includeSdkInfoInApk && variantProperties.services
+                if (includeSdkInfoInApk && variant.services
                         .projectOptions[BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS]) {
-                    taskFactory.register(SdkDependencyDataGeneratorTask.CreationAction(variantProperties))
+                    taskFactory.register(SdkDependencyDataGeneratorTask.CreationAction(variant))
                 }
             }
-            taskFactory.register(FinalizeBundleTask.CreationAction(variantProperties))
-            taskFactory.register(BundleToApkTask.CreationAction(variantProperties))
-            taskFactory.register(BundleToStandaloneApkTask.CreationAction(variantProperties))
-            taskFactory.register(ExtractApksTask.CreationAction(variantProperties))
+            taskFactory.register(FinalizeBundleTask.CreationAction(variant))
+            taskFactory.register(BundleToApkTask.CreationAction(variant))
+            taskFactory.register(BundleToStandaloneApkTask.CreationAction(variant))
+            taskFactory.register(ExtractApksTask.CreationAction(variant))
 
             val mergeNativeDebugMetadataTask =
-                taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variantProperties))
-            variantProperties.taskContainer.assembleTask.dependsOn(mergeNativeDebugMetadataTask)
+                taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variant))
+            variant.taskContainer.assembleTask.dependsOn(mergeNativeDebugMetadataTask)
         }
     }
 
     private fun createSoftwareComponent(
-        variantProperties: ApplicationVariantImpl,
+        appVariant: ApplicationVariantImpl,
         suffix: String,
         publication: PublishedConfigType
     ) {
-        val component = globalScope.componentFactory.adhoc(variantProperties.name + suffix)
-        val config = variantProperties.variantDependencies.getElements(publication)!!
+        val component = globalScope.componentFactory.adhoc(appVariant.name + suffix)
+        val config = appVariant.variantDependencies.getElements(publication)!!
         component.addVariantsFromConfiguration(config) { }
         project.components.add(component)
     }

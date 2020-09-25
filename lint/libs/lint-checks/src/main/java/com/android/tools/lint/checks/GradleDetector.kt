@@ -255,7 +255,7 @@ open class GradleDetector : Detector(), GradleScanner {
                             val label = "Update targetSdkVersion to $highest"
                             val fix = fix().name(label)
                                 .replace()
-                                .all()
+                                .text(value)
                                 .with(highest.toString())
                                 .build()
 
@@ -283,10 +283,10 @@ open class GradleDetector : Detector(), GradleScanner {
                         val label = "Update targetSdkVersion to $highest"
                         val fix = fix().name(label)
                             .replace()
-                            .all()
+                            .text(value)
                             .with(highest.toString())
                             .build()
-                        report(context, valueCookie, TARGET_NEWER, message, fix)
+                        report(context, statementCookie, TARGET_NEWER, message, fix)
                     }
                 }
                 if (version > 0) {

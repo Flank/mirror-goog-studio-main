@@ -166,7 +166,7 @@ import android.widget.TextView;
 """}}
 
 import android.widget.Toast;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
 
 public class ${activityClass} extends AppCompatActivity {

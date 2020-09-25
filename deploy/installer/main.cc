@@ -37,6 +37,7 @@
 #include "tools/base/deploy/installer/dump.h"
 #include "tools/base/deploy/installer/executor/executor_impl.h"
 #include "tools/base/deploy/installer/executor/redirect_executor.h"
+#include "tools/base/deploy/installer/highlander.h"
 #include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
@@ -66,7 +67,7 @@ Parameters ParseArgs(int argc, char** argv) {
       parameters.cmd_path = strtok(nullptr, "=");
     } else if (!strncmp("-pm", argv[index], 3)) {
       parameters.pm_path = strtok(nullptr, "=");
-    } else if (!strncmp("-daemon", argv[index], 8)) {
+    } else if (!strncmp("-daemon", argv[index], 7)) {
       daemon_mode = true;
     } else if (!strncmp("-version", argv[index], 8)) {
       parameters.version = strtok(nullptr, "=");
@@ -208,6 +209,10 @@ int main(int argc, char** argv) {
   Workspace workspace(GetVersion(), &executor);
 
   Init(argc, argv, &workspace);
+
+  // There should be only one...instance of installer running at
+  // all time on a device. Kill(2) other instances if necessary.
+  Highlander highlander(workspace);
 
   while (running) {
     // Retrieve request from stdin.

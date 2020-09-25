@@ -260,25 +260,24 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
      * would make sure they are resolved before starting the task.
      */
     protected static void addModelArtifactsToInputs(
-            @NonNull ConfigurableFileCollection inputs,
-            @NonNull ComponentImpl componentProperties) {
+            @NonNull ConfigurableFileCollection inputs, @NonNull ComponentImpl component) {
 
         inputs.from(
                 (Callable<Collection<ArtifactCollection>>)
                         () ->
-                                new ArtifactCollections(componentProperties, COMPILE_CLASSPATH)
+                                new ArtifactCollections(component, COMPILE_CLASSPATH)
                                         .getAllCollections());
         inputs.from(
                 (Callable<Collection<ArtifactCollection>>)
                         () ->
-                                new ArtifactCollections(componentProperties, RUNTIME_CLASSPATH)
+                                new ArtifactCollections(component, RUNTIME_CLASSPATH)
                                         .getAllCollections());
 
-        if (componentProperties instanceof VariantImpl) {
-            VariantImpl variantProperties = (VariantImpl) componentProperties;
+        if (component instanceof VariantImpl) {
+            VariantImpl variant = (VariantImpl) component;
 
             for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-                ComponentImpl testVariant = variantProperties.getTestComponents().get(variantType);
+                ComponentImpl testVariant = variant.getTestComponents().get(variantType);
                 if (testVariant != null) {
                     addModelArtifactsToInputs(inputs, testVariant);
                 }
@@ -294,10 +293,10 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
 
         private final ConfigurableFileCollection allInputs;
 
-        public VariantInputs(@NonNull ComponentImpl componentProperties) {
-            GlobalScope globalScope = componentProperties.getGlobalScope();
+        public VariantInputs(@NonNull ComponentImpl component) {
+            GlobalScope globalScope = component.getGlobalScope();
 
-            name = componentProperties.getName();
+            name = component.getName();
             allInputs = globalScope.getProject().files();
 
             FileCollection localLintJarCollection;
@@ -305,7 +304,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =
-                            componentProperties
+                            component
                                     .getVariantDependencies()
                                     .getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
@@ -314,7 +313,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
                             .getProject()
                             .files(localLintJarCollection, dependencyLintJarCollection);
 
-            ArtifactsImpl artifacts = componentProperties.getArtifacts();
+            ArtifactsImpl artifacts = component.getArtifacts();
             Provider<? extends FileSystemLocation> tmpMergedManifest =
                     artifacts.get(PACKAGED_MANIFESTS.INSTANCE);
             if (!tmpMergedManifest.isPresent()) {
@@ -323,7 +322,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             if (!tmpMergedManifest.isPresent()) {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest on: "
-                                + componentProperties.getVariantType());
+                                + component.getVariantType());
             }
             mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
@@ -334,14 +333,14 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest report on: "
-                                + componentProperties.getVariantType());
+                                + component.getVariantType());
             }
 
             // these inputs are only there to ensure that the lint task runs after these build
             // intermediates are built.
-            allInputs.from(componentProperties.getArtifacts().getAllClasses());
+            allInputs.from(component.getArtifacts().getAllClasses());
 
-            addModelArtifactsToInputs(allInputs, componentProperties);
+            addModelArtifactsToInputs(allInputs, component);
         }
 
         @NonNull

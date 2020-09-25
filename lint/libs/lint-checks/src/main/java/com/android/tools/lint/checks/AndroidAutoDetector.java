@@ -150,6 +150,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     private static final String VAL_NAME_MEDIA = "media";
     private static final String VAL_NAME_NOTIFICATION = "notification";
     private static final String VAL_NAME_SMS = "sms";
+    private static final String VAL_NAME_TEMPLATE = "template";
     private static final String TAG_AUTOMOTIVE_APP = "automotiveApp";
     private static final String ATTR_RESOURCE = "resource";
     private static final String TAG_USES = "uses";
@@ -278,8 +279,10 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                                     + VAL_NAME_MEDIA
                                     + "`, `"
                                     + VAL_NAME_NOTIFICATION
-                                    + "`, or `"
+                                    + "`, `"
                                     + VAL_NAME_SMS
+                                    + "`, or `"
+                                    + VAL_NAME_TEMPLATE
                                     + "` for the name "
                                     + "attribute in "
                                     + TAG_USES
@@ -418,6 +421,8 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     @SuppressWarnings("unused")
     @NonNull
     public static String[] getAllowedAutomotiveAppTypes() {
-        return new String[] {VAL_NAME_MEDIA, VAL_NAME_NOTIFICATION, VAL_NAME_SMS};
+        return new String[] {
+            VAL_NAME_MEDIA, VAL_NAME_NOTIFICATION, VAL_NAME_SMS, VAL_NAME_TEMPLATE
+        };
     }
 }

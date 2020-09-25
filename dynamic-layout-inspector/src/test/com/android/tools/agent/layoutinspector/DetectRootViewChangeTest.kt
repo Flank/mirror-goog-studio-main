@@ -42,7 +42,7 @@ class DetectRootViewChangeTest {
         val views = mutableListOf(v1)
         `when`(myService!!.rootViews).thenReturn(views)
 
-        val changeDetector = DetectRootViewChange(myService!!)
+        val changeDetector = DetectRootViewChange(myService!!, -1)
         var startCount = 0
         var stopCount = 0
         `when`(myService!!.startLayoutInspector(any())).thenAnswer { startCount++ }
@@ -96,7 +96,7 @@ class DetectRootViewChangeTest {
         val views = mutableListOf(v1)
         `when`(myService!!.rootViews).thenReturn(views).thenReturn(emptyList())
 
-        val changeDetector = DetectRootViewChange(myService!!)
+        val changeDetector = DetectRootViewChange(myService!!, -1)
         var startCount = 0
         var stopCount = 0
         `when`(myService!!.startLayoutInspector(any())).thenAnswer { startCount++ }
@@ -105,6 +105,51 @@ class DetectRootViewChangeTest {
         changeDetector.handler.advance(step)
         assertThat(startCount).isEqualTo(0)
         assertThat(stopCount).isEqualTo(1)
+
+        assertThat(changeDetector.roots).isEmpty()
+    }
+
+    @Test
+    fun testAutoStopAfterLimitedRetryCount() {
+        val v1 = createView()
+        val views = mutableListOf(v1)
+        `when`(myService!!.rootViews)
+            .thenReturn(views)
+            .thenReturn(emptyList())
+            .thenReturn(views)
+            .thenReturn(emptyList())
+            .thenReturn(views)
+            .thenReturn(emptyList())
+
+        val changeDetector = DetectRootViewChange(myService!!, 2)
+        var startCount = 0
+        var stopCount = 0
+        `when`(myService!!.startLayoutInspector(any())).thenAnswer { startCount++ }
+        `when`(myService!!.stopCapturing(any())).thenAnswer { stopCount++ }
+
+        // Initial check:
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(0)
+        assertThat(stopCount).isEqualTo(1)
+
+        // First retry check:
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(1)
+        assertThat(stopCount).isEqualTo(1)
+
+        // Second retry check:
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(1)
+        assertThat(stopCount).isEqualTo(2)
+
+        // Third retry, no changes expected:
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(1)
+        assertThat(stopCount).isEqualTo(2)
+
+        changeDetector.handler.advance(step)
+        assertThat(startCount).isEqualTo(1)
+        assertThat(stopCount).isEqualTo(2)
 
         assertThat(changeDetector.roots).isEmpty()
     }

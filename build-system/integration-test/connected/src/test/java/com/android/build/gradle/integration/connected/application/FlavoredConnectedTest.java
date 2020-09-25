@@ -20,6 +20,8 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
+import java.io.IOException;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,6 +38,12 @@ public class FlavoredConnectedTest {
                     // b/146163513
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
+
+    @Before
+    public void setUp() throws IOException {
+        // fail fast if no response
+        project.addAdbTimeOutInMs();
+    }
 
     @Test
     public void connectedCheck() throws Exception {

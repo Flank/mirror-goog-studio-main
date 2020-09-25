@@ -20,6 +20,8 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
+import java.io.IOException;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,6 +40,13 @@ public class KotlinAppConnectedTest {
                     // b/158092419
                     .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=45")
                     .create();
+
+    @Before
+    public void setUp() throws IOException {
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeOutInMs();
+        project.getSubproject("library").addAdbTimeOutInMs();
+    }
 
     @Test
     public void connectedAndroidTest() throws Exception {

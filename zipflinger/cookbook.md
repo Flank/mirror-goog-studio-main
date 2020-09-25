@@ -116,9 +116,8 @@ try(ZipArchive zip = new ZipArchive("archive.zip")) {
 
 # How to extract content from an archive
 ```
- try(ZipRepo repo = new ZipRepo("source.zip")) {
-   try(InputStream inputStream = repo.getContent("entryName")) {
+ try(ZipArchive archive = new ZipArchive("source.zip")) {
+   ByteBuffer buffer = archive.getContent("name");
    ...
-   }
  }
 ```

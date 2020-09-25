@@ -76,12 +76,18 @@ class CoreLibraryDesugarConversionConnectedTest(minSdkVersion: Int) {
                         targetCompatibility JavaVersion.VERSION_1_8
                         coreLibraryDesugaringEnabled true
                     }
+
+                    defaultConfig {
+                        multiDexEnabled true
+                    }
                 }
-                android.defaultConfig.multiDexEnabled = true
                 dependencies {
                     coreLibraryDesugaring "$DESUGAR_DEPENDENCY"
                 }
             """.trimIndent())
+
+        // fail fast if no response
+        project.addAdbTimeOutInMs()
 
         // add a function with desugar library parameter, which is called from application
         TestFileUtils.addMethod(

@@ -70,7 +70,7 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public TestVariantBuilderImpl createVariantObject(
+    public TestVariantBuilderImpl createVariantBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices) {
@@ -85,7 +85,7 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public UnitTestBuilderImpl createUnitTestObject(
+    public UnitTestBuilderImpl createUnitTestBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices) {
@@ -94,7 +94,7 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public AndroidTestBuilderImpl createAndroidTestObject(
+    public AndroidTestBuilderImpl createAndroidTestBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantApiServices variantApiServices) {
@@ -103,8 +103,8 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public TestVariantImpl createVariantPropertiesObject(
-            @NonNull TestVariantBuilderImpl variant,
+    public TestVariantImpl createVariant(
+            @NonNull TestVariantBuilderImpl variantBuilder,
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
@@ -117,12 +117,12 @@ public class TestVariantFactory
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices) {
-        TestVariantImpl variantProperties =
+        TestVariantImpl variant =
                 projectServices
                         .getObjectFactory()
                         .newInstance(
                                 TestVariantImpl.class,
-                                variant,
+                                variantBuilder,
                                 buildFeatures,
                                 variantDslInfo,
                                 variantDependencies,
@@ -137,10 +137,10 @@ public class TestVariantFactory
                                 globalScope);
 
         // create default output
-        variantProperties.addVariantOutput(
+        variant.addVariantOutput(
                 new VariantOutputConfigurationImpl(false, ImmutableList.of()), null);
 
-        return variantProperties;
+        return variant;
     }
 
     @NonNull
@@ -169,8 +169,8 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public UnitTestImpl createUnitTestProperties(
-            @NonNull UnitTestBuilderImpl componentIdentity,
+    public UnitTestImpl createUnitTest(
+            @NonNull UnitTestBuilderImpl unitTestBuilder,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -179,7 +179,7 @@ public class TestVariantFactory
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariantProperties,
+            @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices) {
@@ -188,8 +188,8 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public AndroidTestImpl createAndroidTestProperties(
-            @NonNull AndroidTestBuilderImpl componentIdentity,
+    public AndroidTestImpl createAndroidTest(
+            @NonNull AndroidTestBuilderImpl androidTestBuilder,
             @NonNull BuildFeatureValues buildFeatures,
             @NonNull VariantDslInfo variantDslInfo,
             @NonNull VariantDependencies variantDependencies,
@@ -198,7 +198,7 @@ public class TestVariantFactory
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariantProperties,
+            @NonNull VariantImpl testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantPropertiesApiServices variantPropertiesApiServices,
             @NonNull TaskCreationServices taskCreationServices) {

@@ -43,9 +43,9 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+${renderIf(!isViewBindingSupported) {"""import android.widget.Button"""}}
 import androidx.navigation.fragment.findNavController
-${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName, Language.Kotlin)}
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.

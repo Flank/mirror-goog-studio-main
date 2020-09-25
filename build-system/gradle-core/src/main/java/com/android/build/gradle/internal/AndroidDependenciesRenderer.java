@@ -60,33 +60,32 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         super.completeProject(project);
     }
 
-    public void startComponent(@NonNull ComponentImpl componentProperties) {
+    public void startComponent(@NonNull ComponentImpl component) {
         if (hasConfigs) {
             getTextOutput().println();
         }
         hasConfigs = true;
         renderer = new GraphRenderer(getTextOutput());
         renderer.visit(
-                styledTextOutput ->
-                        getTextOutput().withStyle(Header).text(componentProperties.getName()),
+                styledTextOutput -> getTextOutput().withStyle(Header).text(component.getName()),
                 true);
     }
 
-    public void render(@NonNull ComponentImpl componentProperties) {
+    public void render(@NonNull ComponentImpl component) {
         ImmutableMap<String, String> buildMapping =
                 BuildMappingUtils.computeBuildMapping(
-                        componentProperties.getGlobalScope().getProject().getGradle());
+                        component.getGlobalScope().getProject().getGradle());
 
         Set<ResolvedArtifact> compileArtifacts =
                 ArtifactUtils.getAllArtifacts(
-                        componentProperties,
+                        component,
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         null,
                         buildMapping);
 
         getTextOutput()
                 .withStyle(Identifier)
-                .text(componentProperties.getVariantDependencies().getCompileClasspath().getName());
+                .text(component.getVariantDependencies().getCompileClasspath().getName());
         getTextOutput().withStyle(Description).text(" - Dependencies for compilation");
         getTextOutput().println();
         renderer.startChildren();
@@ -95,7 +94,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
 
         Set<ResolvedArtifact> runtimeArtifacts =
                 ArtifactUtils.getAllArtifacts(
-                        componentProperties,
+                        component,
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         null,
                         buildMapping);
@@ -103,7 +102,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
         getTextOutput().println();
         getTextOutput()
                 .withStyle(Identifier)
-                .text(componentProperties.getVariantDependencies().getRuntimeClasspath().getName());
+                .text(component.getVariantDependencies().getRuntimeClasspath().getName());
         getTextOutput().withStyle(Description).text(" - Dependencies for runtime/packaging");
         getTextOutput().println();
         renderer.startChildren();

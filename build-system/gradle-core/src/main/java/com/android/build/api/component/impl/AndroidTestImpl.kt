@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.android.builder.dexing.DexingType
-import com.android.builder.model.ApiVersion
 import com.android.builder.model.CodeShrinker
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -51,7 +50,7 @@ import java.io.Serializable
 import javax.inject.Inject
 
 open class AndroidTestImpl @Inject constructor(
-    override val variant: AndroidTestBuilderImpl,
+    override val variantBuilder: AndroidTestBuilderImpl,
     buildFeatureValues: BuildFeatureValues,
     variantDslInfo: VariantDslInfo,
     variantDependencies: VariantDependencies,
@@ -66,7 +65,7 @@ open class AndroidTestImpl @Inject constructor(
     taskCreationServices: TaskCreationServices,
     globalScope: GlobalScope
 ) : TestComponentImpl(
-    variant,
+    variantBuilder,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -92,7 +91,7 @@ open class AndroidTestImpl @Inject constructor(
         get() = variantDslInfo.isDebuggable
 
     override val minSdkVersion: AndroidVersion
-        get() = testedVariant.variant.minSdkVersion
+        get() = testedVariant.variantBuilder.minSdkVersion
 
     override val applicationId: Property<String> = internalServices.propertyOf(
         String::class.java,
@@ -232,7 +231,7 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val renderscriptTargetApi: Int
-        get() = testedVariant.variant.renderscriptTargetApi
+        get() = testedVariant.variantBuilder.renderscriptTargetApi
 
     /**
      * Package desugar_lib DEX for base feature androidTest only if the base packages shrunk
@@ -249,7 +248,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion =
         testedVariant.minSdkVersionWithTargetDeviceApi
-    
+
     override val maxSdkVersion: Int?
         get() = testedVariant.maxSdkVersion
 
@@ -268,7 +267,7 @@ open class AndroidTestImpl @Inject constructor(
     override val needsMainDexListForBundle: Boolean
         get() = false
 
-    override fun createUserVisibleVariantPropertiesObject(
+    override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledAndroidTest =

@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.ExtractApksTask
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
@@ -162,7 +163,8 @@ class ModelBuilder<
     private fun buildAndroidProjectModel(project: Project): AndroidProject {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
-        val projectOptions = ProjectOptions(project)
+        val projectOptions = getBuildService<ProjectOptionService>(project.gradle.sharedServices)
+            .get().projectOptions
 
         verifyIDEIsNotOld(projectOptions)
 

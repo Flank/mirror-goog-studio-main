@@ -41,6 +41,7 @@ class OverlayInstallCommand : public Command {
   void SetUpAgent(const std::string& agent,
                   proto::OverlayInstallResponse* overlay_response);
   void UpdateOverlay(proto::OverlayInstallResponse* overlay_response);
+  void GetAgentLogs(proto::OverlayInstallResponse* overlay_response);
 
   // This method was lifted directly from base_swap.cc and should probably be
   // extracted into a shared utility.

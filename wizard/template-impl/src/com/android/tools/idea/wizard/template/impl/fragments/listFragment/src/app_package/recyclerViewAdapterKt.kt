@@ -16,6 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.fragments.listFragment.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
 import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
@@ -67,7 +68,7 @@ import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
 import ${kotlinEscapedPackageName}.placeholder.PlaceholderContent.PlaceholderItem
-${importViewBindingClass(isViewBindingSupported, kotlinEscapedPackageName, fragmentLayout)}
+${importViewBindingClass(isViewBindingSupported, kotlinEscapedPackageName, fragmentLayout, Language.Kotlin)}
 
 /**
  * [RecyclerView.Adapter] that can display a [PlaceholderItem].

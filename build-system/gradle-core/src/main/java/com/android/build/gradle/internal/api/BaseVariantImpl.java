@@ -78,7 +78,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public static final String USE_PROPERTIES_DEPRECATION_URL =
             "https://d.android.com/r/tools/use-properties";
 
-    @NonNull protected final ComponentImpl componentProperties;
+    @NonNull protected final ComponentImpl component;
     @NonNull protected final BaseServices services;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
@@ -86,11 +86,11 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull protected final NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
     BaseVariantImpl(
-            @NonNull ComponentImpl componentProperties,
+            @NonNull ComponentImpl component,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        this.componentProperties = componentProperties;
+        this.component = component;
         this.services = services;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
         this.outputs = outputs;
@@ -106,7 +106,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     @NonNull
     public String getName() {
-        return componentProperties.getName();
+        return component.getName();
     }
 
     @Override
@@ -118,19 +118,19 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     @NonNull
     public String getDirName() {
-        return componentProperties.getDirName();
+        return component.getDirName();
     }
 
     @Override
     @NonNull
     public String getBaseName() {
-        return componentProperties.getBaseName();
+        return component.getBaseName();
     }
 
     @NonNull
     @Override
     public String getFlavorName() {
-        return componentProperties.getFlavorName();
+        return component.getFlavorName();
     }
 
     @NonNull
@@ -145,7 +145,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =
-                (VariantDslInfoImpl) componentProperties.getVariantDslInfo();
+                (VariantDslInfoImpl) component.getVariantDslInfo();
         return readOnlyObjectProvider.getBuildType(variantDslInfo.getBuildTypeObj());
     }
 
@@ -153,8 +153,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     public List<ProductFlavor> getProductFlavors() {
         return new ImmutableFlavorList(
-                componentProperties.getVariantDslInfo().getProductFlavorList(),
-                readOnlyObjectProvider);
+                component.getVariantDslInfo().getProductFlavorList(), readOnlyObjectProvider);
     }
 
     @Override
@@ -163,20 +162,20 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         // cast for VariantDslInfoImpl since we need to return this.
         // this is to be removed when we can get rid of the old API.
         final VariantDslInfoImpl variantDslInfo =
-                (VariantDslInfoImpl) componentProperties.getVariantDslInfo();
+                (VariantDslInfoImpl) component.getVariantDslInfo();
         return variantDslInfo.getMergedFlavor();
     }
 
     @NonNull
     @Override
     public JavaCompileOptions getJavaCompileOptions() {
-        return componentProperties.getVariantDslInfo().getJavaCompileOptions();
+        return component.getVariantDslInfo().getJavaCompileOptions();
     }
 
     @NonNull
     @Override
     public List<SourceProvider> getSourceSets() {
-        return componentProperties.getVariantSources().getSortedSourceProviders();
+        return component.getVariantSources().getSortedSourceProviders();
     }
 
     @NonNull
@@ -184,7 +183,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType) {
         switch (folderType) {
             case JAVA:
-                return componentProperties.getJavaSources();
+                return component.getJavaSources();
             default:
                 services.getIssueReporter()
                         .reportError(
@@ -218,7 +217,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public String getApplicationId() {
         // this getter cannot work for dynamic features as the applicationId comes from somewhere
         // else and cannot be known at config time.
-        if (componentProperties.getVariantType().isDynamicFeature()) {
+        if (component.getVariantType().isDynamicFeature()) {
             services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -226,7 +225,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         }
 
         // FIXME: Break if this is done during configuration
-        return componentProperties.getApplicationId().get();
+        return component.getApplicationId().get();
     }
 
     @Override
@@ -250,14 +249,14 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getPreBuild()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getPreBuildTask().get();
+        return component.getTaskContainer().getPreBuildTask().get();
     }
 
     @NonNull
     @Override
     public TaskProvider<Task> getPreBuildProvider() {
         //noinspection unchecked
-        return (TaskProvider<Task>) componentProperties.getTaskContainer().getPreBuildTask();
+        return (TaskProvider<Task>) component.getTaskContainer().getPreBuildTask();
     }
 
     @Override
@@ -269,7 +268,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getCheckManifest()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getCheckManifestTask().get();
+        return component.getTaskContainer().getCheckManifestTask().get();
     }
 
     @NonNull
@@ -278,13 +277,13 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         // Double cast needed to satisfy the compiler
         //noinspection unchecked
         return (TaskProvider<Task>)
-                (TaskProvider<?>) componentProperties.getTaskContainer().getCheckManifestTask();
+                (TaskProvider<?>) component.getTaskContainer().getCheckManifestTask();
     }
 
     @Override
     @Nullable
     public AidlCompile getAidlCompile() {
-        if (!componentProperties.getBuildFeatures().getAidl()) {
+        if (!component.getBuildFeatures().getAidl()) {
             services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -298,13 +297,13 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getAidlCompile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getAidlCompileTask().get();
+        return component.getTaskContainer().getAidlCompileTask().get();
     }
 
     @Nullable
     @Override
     public TaskProvider<AidlCompile> getAidlCompileProvider() {
-        if (!componentProperties.getBuildFeatures().getAidl()) {
+        if (!component.getBuildFeatures().getAidl()) {
             services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -313,14 +312,13 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         }
 
         //noinspection unchecked
-        return (TaskProvider<AidlCompile>)
-                componentProperties.getTaskContainer().getAidlCompileTask();
+        return (TaskProvider<AidlCompile>) component.getTaskContainer().getAidlCompileTask();
     }
 
     @Override
     @Nullable
     public RenderscriptCompile getRenderscriptCompile() {
-        if (!componentProperties.getBuildFeatures().getRenderScript()) {
+        if (!component.getBuildFeatures().getRenderScript()) {
             services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -334,13 +332,13 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getRenderscriptCompile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getRenderscriptCompileTask().get();
+        return component.getTaskContainer().getRenderscriptCompileTask().get();
     }
 
     @Nullable
     @Override
     public TaskProvider<RenderscriptCompile> getRenderscriptCompileProvider() {
-        if (!componentProperties.getBuildFeatures().getRenderScript()) {
+        if (!component.getBuildFeatures().getRenderScript()) {
             services.getIssueReporter()
                     .reportError(
                             IssueReporter.Type.GENERIC,
@@ -361,15 +359,14 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getMergeResources()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getMergeResourcesTask().getOrNull();
+        return component.getTaskContainer().getMergeResourcesTask().getOrNull();
     }
 
     @Nullable
     @Override
     public TaskProvider<MergeResources> getMergeResourcesProvider() {
         //noinspection unchecked
-        return (TaskProvider<MergeResources>)
-                componentProperties.getTaskContainer().getMergeResourcesTask();
+        return (TaskProvider<MergeResources>) component.getTaskContainer().getMergeResourcesTask();
     }
 
     @Override
@@ -380,7 +377,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getMergeAssets()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getMergeAssetsTask().getOrNull();
+        return component.getTaskContainer().getMergeAssetsTask().getOrNull();
     }
 
     @Nullable
@@ -399,7 +396,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getGenerateBuildConfig()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getGenerateBuildConfigTask().get();
+        return component.getTaskContainer().getGenerateBuildConfigTask().get();
     }
 
     @Nullable
@@ -407,7 +404,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     public TaskProvider<GenerateBuildConfig> getGenerateBuildConfigProvider() {
         //noinspection unchecked
         return (TaskProvider<GenerateBuildConfig>)
-                componentProperties.getTaskContainer().getGenerateBuildConfigTask();
+                component.getTaskContainer().getGenerateBuildConfigTask();
     }
 
     @Override
@@ -419,7 +416,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getJavaCompile()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getJavacTask().get();
+        return component.getTaskContainer().getJavacTask().get();
     }
 
     @NonNull
@@ -438,7 +435,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getJavaCompiler()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getJavacTask().get();
+        return component.getTaskContainer().getJavacTask().get();
     }
 
     @NonNull
@@ -463,7 +460,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         //noinspection unchecked
         TaskProvider<ExternalNativeBuildTask> provider =
                 (TaskProvider<ExternalNativeBuildTask>)
-                        componentProperties.getTaskContainer().getExternalNativeBuildTask();
+                        component.getTaskContainer().getExternalNativeBuildTask();
         if (provider == null) {
             return ImmutableList.of();
         }
@@ -491,7 +488,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
         // bypass the configuration time resolution check as some calls this API during
         // configuration.
         RegularFile mappingFile =
-                componentProperties
+                component
                         .getArtifacts()
                         .get(ArtifactType.OBFUSCATION_MAPPING_FILE.INSTANCE)
                         .getOrNull();
@@ -501,19 +498,20 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public Provider<FileCollection> getMappingFileProvider() {
-        return componentProperties
+        return component
                 .getGlobalScope()
                 .getProject()
                 .getProviders()
                 .provider(
                         () ->
-                                componentProperties
+                                component
                                         .getServices()
                                         .fileCollection(
-                                                componentProperties
+                                                component
                                                         .getArtifacts()
                                                         .get(
-                                                                ArtifactType.OBFUSCATION_MAPPING_FILE
+                                                                ArtifactType
+                                                                        .OBFUSCATION_MAPPING_FILE
                                                                         .INSTANCE)));
     }
 
@@ -526,7 +524,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getProcessJavaResources()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getProcessJavaResourcesTask().get();
+        return component.getTaskContainer().getProcessJavaResourcesTask().get();
     }
 
     @NonNull
@@ -547,14 +545,14 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
                         "variant.getAssemble()",
                         TASK_ACCESS_DEPRECATION_URL,
                         DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT);
-        return componentProperties.getTaskContainer().getAssembleTask().get();
+        return component.getTaskContainer().getAssembleTask().get();
     }
 
     @Nullable
     @Override
     public TaskProvider<Task> getAssembleProvider() {
         //noinspection unchecked
-        return (TaskProvider<Task>) componentProperties.getTaskContainer().getAssembleTask();
+        return (TaskProvider<Task>) component.getTaskContainer().getAssembleTask();
     }
 
     @Override
@@ -618,7 +616,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public FileCollection getCompileClasspath(@Nullable Object generatorKey) {
-        return componentProperties.getJavaClasspath(
+        return component.getJavaClasspath(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactType.CLASSES_JAR,
                 generatorKey);
@@ -627,7 +625,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public ArtifactCollection getCompileClasspathArtifacts(@Nullable Object generatorKey) {
-        return componentProperties.getJavaClasspathArtifacts(
+        return component.getJavaClasspathArtifacts(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                 AndroidArtifacts.ArtifactType.CLASSES_JAR,
                 generatorKey);
@@ -636,33 +634,30 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     public void buildConfigField(
             @NonNull String type, @NonNull String name, @NonNull String value) {
-        componentProperties.getVariantDslInfo().addBuildConfigField(type, name, value);
+        component.getVariantDslInfo().addBuildConfigField(type, name, value);
     }
 
     @Override
     public void resValue(@NonNull String type, @NonNull String name, @NonNull String value) {
-        componentProperties.getVariantDslInfo().addResValue(type, name, value);
+        component.getVariantDslInfo().addResValue(type, name, value);
     }
 
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull String requestedValue) {
-        componentProperties.handleMissingDimensionStrategy(
-                dimension, ImmutableList.of(requestedValue));
+        component.handleMissingDimensionStrategy(dimension, ImmutableList.of(requestedValue));
     }
 
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull String... requestedValues) {
-        componentProperties.handleMissingDimensionStrategy(
-                dimension, ImmutableList.copyOf(requestedValues));
+        component.handleMissingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
     }
 
     @Override
     public void missingDimensionStrategy(
             @NonNull String dimension, @NonNull List<String> requestedValues) {
-        componentProperties.handleMissingDimensionStrategy(
-                dimension, ImmutableList.copyOf(requestedValues));
+        component.handleMissingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
     }
 
     @Override
@@ -683,7 +678,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
     @Override
     public void register(Task task) {
-        MutableTaskContainer taskContainer = componentProperties.getTaskContainer();
+        MutableTaskContainer taskContainer = component.getTaskContainer();
         TaskFactoryUtils.dependsOn(taskContainer.getAssembleTask(), task);
         TaskProvider<? extends Task> bundleTask = taskContainer.getBundleTask();
         if (bundleTask != null) {

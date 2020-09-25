@@ -53,6 +53,9 @@ public class LayoutInspectorService {
     @VisibleForTesting public static final int MAX_IMAGE_SIZE = (int) (3.5 * 1024. * 1024.);
     // Copied from ViewDebug
     private static final int CAPTURE_TIMEOUT = 6000;
+    private static final int RETRY_LIMIT_REFRESH = 2;
+    private static final byte[] EMPTY_IMAGE = new byte[0];
+    private static final long[] EMPTY_ROOT_VIEW_IDS = new long[0];
 
     private final Properties mProperties = new Properties();
     private final Object mLock = new Object();
@@ -74,6 +77,7 @@ public class LayoutInspectorService {
     // should match ComponentTreeEvent.PayloadType
     enum ImageType {
         UNKNOWN,
+        NONE,
         SKP,
         PNG_SKP_TOO_LARGE,
         PNG_AS_REQUESTED
@@ -97,6 +101,10 @@ public class LayoutInspectorService {
         List<View> roots = getRootViews();
         for (View root : roots) {
             startLayoutInspector(root);
+        }
+        if (roots.isEmpty()) {
+            mGeneration++;
+            sendEmptyRootViews();
         }
         startRootViewDetector();
     }
@@ -209,10 +217,15 @@ public class LayoutInspectorService {
         for (View root : roots) {
             startLayoutInspector(root);
         }
+        if (roots.isEmpty()) {
+            sendEmptyRootViews();
+        }
     }
 
     private void startRootViewDetector() {
-        DetectRootViewChange old = mDetectRootChange.getAndSet(new DetectRootViewChange(this));
+        int retryLimit = mCaptureOnlyOnce ? RETRY_LIMIT_REFRESH : -1;
+        DetectRootViewChange old =
+                mDetectRootChange.getAndSet(new DetectRootViewChange(this, retryLimit));
         if (old != null) {
             old.cancel();
         }
@@ -247,6 +260,20 @@ public class LayoutInspectorService {
                     sendErrorMessage(ex);
                 }
             }
+        }
+    }
+
+    public void sendEmptyRootViews() {
+        long request = 0;
+        try {
+            request = allocateSendRequest();
+            long event = initComponentTree(request, EMPTY_ROOT_VIEW_IDS, 0, 0);
+            byte[] image = EMPTY_IMAGE;
+            int messageId = 0;
+            ImageType type = ImageType.NONE;
+            sendComponentTree(request, image, image.length, messageId, type.ordinal(), mGeneration);
+        } finally {
+            freeSendRequest(request);
         }
     }
 
@@ -291,6 +318,15 @@ public class LayoutInspectorService {
         }
     }
 
+    private long[] getRootViewIds() {
+        List<View> rootViews = getRootViews();
+        long[] rootViewIds = new long[rootViews.size()];
+        for (int i = 0; i < rootViews.size(); i++) {
+            rootViewIds[i] = rootViews.get(i).getUniqueDrawingId();
+        }
+        return rootViewIds;
+    }
+
     /** Allocates a SendRequest protobuf. */
     private native long allocateSendRequest();
 
@@ -321,16 +357,14 @@ public class LayoutInspectorService {
                                 : ImageType.PNG_SKP_TOO_LARGE;
             }
             int index = 0;
-            List<View> rootViews = getRootViews();
-            long[] rootViewIds = new long[rootViews.size()];
-            for (int i = 0; i < rootViews.size(); i++) {
-                rootViewIds[i] = rootViews.get(i).getUniqueDrawingId();
-            }
+            long[] rootViewIds = getRootViewIds();
             // The offset of the root view from the origin of the surface. Will always be 0,0 for
             // the
             // main window, but can be positive for floating windows (e.g. dialogs).
             int[] rootOffset = new int[2];
-            root.getLocationInSurface(rootOffset);
+            if (root != null) {
+                root.getLocationInSurface(rootOffset);
+            }
 
             long event = initComponentTree(request, rootViewIds, rootOffset[0], rootOffset[1]);
             if (root != null) {

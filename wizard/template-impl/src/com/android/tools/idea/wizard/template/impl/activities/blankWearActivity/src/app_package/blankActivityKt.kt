@@ -16,6 +16,7 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.impl.activities.common.importViewBindingClass
 import com.android.tools.idea.wizard.template.impl.activities.common.layoutToViewBindingClass
@@ -38,7 +39,7 @@ package ${escapeKotlinIdentifier(packageName)}
 
 import android.app.Activity
 import android.os.Bundle
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class ${activityClass} : Activity() {
 

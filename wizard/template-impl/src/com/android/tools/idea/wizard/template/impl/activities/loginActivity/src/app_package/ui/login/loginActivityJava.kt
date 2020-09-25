@@ -58,7 +58,7 @@ import android.widget.Toast;
 import ${packageName}.R;
 import ${packageName}.ui.login.LoginViewModel;
 import ${packageName}.ui.login.LoginViewModelFactory;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class LoginActivity extends AppCompatActivity {
 

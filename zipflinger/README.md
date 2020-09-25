@@ -45,7 +45,7 @@ Load entries in memory:
 Zipflinger loads entries in memory before adding them to an archive (unless the entry is coming from an
 other archive in which case a zero-copy transfer occurs). This design choice is a trade-off which
 increase speed (by allowing multithreaded-compression) and simplify the overall architecture at the
-cost of not supporting files bigger than 2GiB.  
+cost of not supporting files bigger than 2GiB.
 
 ## ZipArchive
 ZipArchive is the interface to create/read/write an archive. Typically an user will provide the path
@@ -95,11 +95,6 @@ you need to perform.
 
 Note that if a zip contains several entries with the same name, the last entry in CD order
 (not top-down) order is kept.
-
-## ZipRepo
-If all operations needed are to list entries and read entries content, ZipRepo is the object to use.
-It is lightweight compared to a ZipArchive and allows to read entries via an InputStream to exceed
-the 2GiB limitation and reduce heap stress.
 
 ## Freestore
 The freestore behaves like a memory allocator except that is deals with file address space instead
@@ -188,15 +183,15 @@ Once the target has run, retrieve the report from the workstation tmp folder. e.
 ```
 cp /tmp/report.json ~/
 ```
-You can examine the report in Chrome via about://tracing. 
+You can examine the report in Chrome via about://tracing.
 
 Edit time (ms) on a 3Ghz machine with a PM981 NVMe drive.
 
 ```
-APK Size     NumRes      SizeRes       NumDex       SizeDex       Time (ms)          
+APK Size     NumRes      SizeRes       NumDex       SizeDex       Time (ms)
  120 MiB      5000       16 KiB         10            4 MiB          27
   60 MiB      2500       16 KiB         10            4 MiB          18
   49 MiB      2500        4 KiB         10            4 MiB          18
 ```
-  
-The edit time is dominated by the parsing time (itself dominated by the number of entries).  
+
+The edit time is dominated by the parsing time (itself dominated by the number of entries).

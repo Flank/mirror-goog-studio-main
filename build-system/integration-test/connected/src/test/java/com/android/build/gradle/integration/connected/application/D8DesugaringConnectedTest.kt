@@ -64,46 +64,49 @@ class D8DesugaringConnectedTest {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile,
             """
-                    apply plugin: "com.android.application"
+                apply plugin: "com.android.application"
 
-                    apply from: "../../commonLocalRepo.gradle"
+                apply from: "../../commonLocalRepo.gradle"
 
-                    android {
-                        compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+                android {
+                    compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
 
-                        defaultConfig {
-                            applicationId "com.example.d8desugartest"
-                            minSdkVersion 20
-                            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-                        }
+                    defaultConfig {
+                        applicationId "com.example.d8desugartest"
+                        minSdkVersion 20
+                        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+                    }
 
-                      flavorDimensions "whatever"
+                    flavorDimensions "whatever"
 
-                        productFlavors {
-                          multidex {
+                    productFlavors {
+                        multidex {
                             dimension "whatever"
                             multiDexEnabled true
                             multiDexKeepFile file('debug_main_dex_list.txt')
-                          }
-                          base {
+                        }
+                        base {
                             dimension "whatever"
-                          }
-                        }
-                        compileOptions {
-                            sourceCompatibility JavaVersion.VERSION_1_8
-                            targetCompatibility JavaVersion.VERSION_1_8
-                        }
-
-                        dependencies {
-                            implementation project(':lib')
-                            androidTestImplementation 'com.android.support:support-v4:$SUPPORT_LIB_VERSION'
-                            testImplementation 'junit:junit:4.12'
-                            androidTestImplementation 'com.android.support.test:runner:$TEST_SUPPORT_LIB_VERSION'
-                            androidTestImplementation 'com.android.support.test:rules:$TEST_SUPPORT_LIB_VERSION'
                         }
                     }
-                    """
+
+                    compileOptions {
+                        sourceCompatibility JavaVersion.VERSION_1_8
+                        targetCompatibility JavaVersion.VERSION_1_8
+                    }
+                }
+
+                dependencies {
+                    implementation project(':lib')
+                    androidTestImplementation 'com.android.support:support-v4:$SUPPORT_LIB_VERSION'
+                    testImplementation 'junit:junit:4.12'
+                    androidTestImplementation 'com.android.support.test:runner:$TEST_SUPPORT_LIB_VERSION'
+                    androidTestImplementation 'com.android.support.test:rules:$TEST_SUPPORT_LIB_VERSION'
+                }
+                """.trimIndent()
         )
+        // fail fast if no response
+        project.getSubproject(":app").addAdbTimeOutInMs()
 
         TestFileUtils.appendToFile(
             project.getSubproject(":lib").buildFile, "apply plugin: 'java'\n"

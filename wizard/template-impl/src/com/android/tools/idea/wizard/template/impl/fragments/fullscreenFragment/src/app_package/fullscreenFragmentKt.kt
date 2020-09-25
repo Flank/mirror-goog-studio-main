@@ -48,7 +48,7 @@ import android.view.WindowManager
 import android.widget.Button
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 /**
  * An example full-screen fragment that shows and hides the system UI (i.e.

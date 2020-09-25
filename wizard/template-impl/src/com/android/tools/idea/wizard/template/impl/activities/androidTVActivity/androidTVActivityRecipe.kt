@@ -69,7 +69,7 @@ fun RecipeExecutor.androidTVActivityRecipe(
 
   addDependency("com.android.support:appcompat-v7:${appCompatVersion}.+")
   addDependency("com.android.support:leanback-v17:+")
-  addDependency("com.github.bumptech.glide:glide:3.8.0")
+  addDependency("com.github.bumptech.glide:glide:4.11.0")
 
   mergeXml(androidManifestXml(activityClass, detailsActivityClass, moduleData.isLibrary, moduleData.isNewModule, packageName),
            manifestOut.resolve("AndroidManifest.xml"))

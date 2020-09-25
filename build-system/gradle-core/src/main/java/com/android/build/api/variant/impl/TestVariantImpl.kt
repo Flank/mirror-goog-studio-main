@@ -46,7 +46,7 @@ import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 open class TestVariantImpl @Inject constructor(
-        override val variant: TestVariantBuilderImpl,
+        override val variantBuilder: TestVariantBuilderImpl,
         buildFeatureValues: BuildFeatureValues,
         variantDslInfo: VariantDslInfo,
         variantDependencies: VariantDependencies,
@@ -60,7 +60,7 @@ open class TestVariantImpl @Inject constructor(
         taskCreationServices: TaskCreationServices,
         globalScope: GlobalScope
 ) : VariantImpl(
-    variant,
+    variantBuilder,
     buildFeatureValues,
     variantDslInfo,
     variantDependencies,
@@ -174,7 +174,7 @@ open class TestVariantImpl @Inject constructor(
     override val needsMainDexListForBundle: Boolean
         get() = false
 
-    override fun createUserVisibleVariantPropertiesObject(
+    override fun createUserVisibleVariantObject(
         projectServices: ProjectServices,
         stats: GradleBuildVariant.Builder
     ): AnalyticsEnabledVariant =

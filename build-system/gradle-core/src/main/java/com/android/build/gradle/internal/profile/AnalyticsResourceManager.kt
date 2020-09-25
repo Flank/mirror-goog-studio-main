@@ -17,8 +17,10 @@
 package com.android.build.gradle.internal.profile
 
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.profile.AnalyticsProfileWriter
@@ -278,7 +280,8 @@ class AnalyticsResourceManager(
     }
 
     fun recordGlobalProperties(project: Project) {
-        val projectOptions = ProjectOptions(project)
+        val projectOptions = getBuildService<ProjectOptionService>(project.gradle.sharedServices)
+            .get().projectOptions
         val providers = project.providers
 
         recordPlugins(project)

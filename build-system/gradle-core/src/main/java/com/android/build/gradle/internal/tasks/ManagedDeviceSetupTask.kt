@@ -18,19 +18,30 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.dsl.TestOptions
 import com.android.build.gradle.internal.AvdComponentsBuildService
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.utils.GrabProcessOutput
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import java.lang.Exception
+import java.util.concurrent.TimeUnit
 
-private val DEVICE_PREFIX = "dev"
-private val DEVICE_DEVIDER = "_"
-private val SYSTEM_IMAGE_PREFIX = "system-images;"
-private val HASH_DIVIDER = ";"
+private const val SYSTEM_IMAGE_PREFIX = "system-images;"
+private const val HASH_DIVIDER = ";"
+private const val WAIT_AFTER_BOOT_MS = 5000L
+private const val DEVICE_BOOT_TIMEOUT_SEC = 80L
+
+private val loggerWrapper = LoggerWrapper.getLogger(ManagedDeviceSetupTask::class.java)
 
 /**
  * Task to create an AVD from a managed device definition in the DSL.
@@ -42,7 +53,10 @@ private val HASH_DIVIDER = ";"
  * This task is required as a dependency for all Unified Testing Platform Tasks that require this
  * device.
  */
-abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
+abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
+
+    @get: Internal
+    abstract val sdkService: Property<SdkComponentsBuildService>
 
     @get: Internal
     abstract val avdService: Property<AvdComponentsBuildService>
@@ -61,9 +75,13 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
 
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
+            it.initializeWith(projectName,  path, analyticsService)
+            it.sdkService.set(sdkService)
             it.avdService.set(avdService)
             it.imageHash.set(computeImageHash())
-            it.deviceName.set(computeDeviceName())
+            it.deviceName.set(
+                computeAvdName(
+                    apiLevel.get(), systemImageVendor.get(), abi.get(), hardwareProfile.get()))
             it.hardwareProfile.set(hardwareProfile)
         }
     }
@@ -75,11 +93,69 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
                 parameters.deviceName.get(),
                 parameters.hardwareProfile.get()).get()
 
-            // TODO(b/165626279) Expand the avd with the emulator command.
+            if (parameters.avdService.get().deviceSnapshotCreated(parameters.deviceName.get())) {
+                // Snapshot is already there, don't need to create with emulator.
+                loggerWrapper.info("Snapshot already exists for device " +
+                        "${parameters.deviceName.get()}.")
+                return
+            }
+
+            loggerWrapper.info("Creating snapshot for ${parameters.deviceName.get()}")
+            val emulatorDir = parameters.sdkService.get().emulatorDirectoryProvider.orNull?.asFile
+            emulatorDir ?: error("Emulator is missing.")
+            val emulatorExecutable = emulatorDir.resolve("emulator")
+            val processBuilder = ProcessBuilder(
+                listOf(
+                    emulatorExecutable.absolutePath,
+                    "@${parameters.deviceName.get()}",
+                    "-no-window",
+                    "-read-only",
+                    "-no-boot-anim"
+                )
+            )
+            val environment = processBuilder.environment()
+            environment["ANDROID_AVD_HOME"] =
+                parameters.avdService.get().parameters.avdLocation.get().asFile.absolutePath
+            val process = processBuilder.start()
+
+            try {
+                GrabProcessOutput.grabProcessOutput(
+                    process,
+                    GrabProcessOutput.Wait.ASYNC,
+                    object : GrabProcessOutput.IProcessOutput {
+                        override fun out(line: String?) {
+                            line ?: return
+                            if (line.contains("boot completed")) {
+                                Thread.sleep(WAIT_AFTER_BOOT_MS)
+                                process.destroyForcibly()
+                            }
+                        }
+
+                        override fun err(line: String?) {}
+                    }
+                )
+                if (!process.waitFor(DEVICE_BOOT_TIMEOUT_SEC, TimeUnit.SECONDS)) {
+                    process.destroyForcibly()
+                    process.waitFor()
+                    if (!parameters.avdService.get().deviceSnapshotCreated(
+                            parameters.deviceName.get())) {
+                        error("Failed to generate snapshot for device.")
+                    }
+                } else {
+                    loggerWrapper.info(
+                        "Successfully created snapshot for ${parameters.deviceName.get()}")
+                }
+            } catch (e : Exception) {
+                process.destroyForcibly()
+                process.waitFor()
+                throw RuntimeException(e)
+            }
+
         }
     }
 
     abstract class ManagedDeviceSetupParams : ProfileAwareWorkAction.Parameters() {
+        abstract val sdkService: Property<SdkComponentsBuildService>
         abstract val avdService: Property<AvdComponentsBuildService>
         abstract val imageHash: Property<String>
         abstract val deviceName: Property<String>
@@ -91,14 +167,6 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
                 computeVersionString() + HASH_DIVIDER +
                 computeVendorString() + HASH_DIVIDER +
                 abi.get()
-    }
-
-    private fun computeDeviceName(): String {
-        return DEVICE_PREFIX +
-                apiLevel.get() + DEVICE_DEVIDER +
-                systemImageVendor.get() + DEVICE_DEVIDER +
-                abi.get() + DEVICE_DEVIDER +
-                hardwareProfile.get().replace(' ', '_')
     }
 
     private fun computeVersionString() = "android-${apiLevel.get()}"
@@ -116,31 +184,40 @@ abstract class ManagedDeviceSetupTask: NonIncrementalTask() {
         private val systemImageSource: String,
         private val apiLevel: Int,
         private val abi: String,
-        private val hardwareProfile: String
-    ) : TaskCreationAction<ManagedDeviceSetupTask>() {
+        private val hardwareProfile: String,
+        globalScope: GlobalScope
+    ) : GlobalTaskCreationAction<ManagedDeviceSetupTask>(globalScope) {
 
         constructor(
             name: String,
             avdService: Provider<AvdComponentsBuildService>,
-            managedDevice: ManagedVirtualDevice
+            managedDevice: ManagedVirtualDevice,
+            globalScope: GlobalScope
         ): this(
             name,
             avdService,
             managedDevice.systemImageSource,
             managedDevice.apiLevel,
             managedDevice.abi,
-            managedDevice.device)
+            managedDevice.device,
+            globalScope)
 
         override val type: Class<ManagedDeviceSetupTask>
             get() = ManagedDeviceSetupTask::class.java
 
         override fun configure(task: ManagedDeviceSetupTask) {
+            task.sdkService.setDisallowChanges(globalScope.sdkComponents)
             task.avdService.setDisallowChanges(avdService)
 
             task.systemImageVendor.setDisallowChanges(systemImageSource)
             task.apiLevel.setDisallowChanges(apiLevel)
             task.abi.setDisallowChanges(abi)
             task.hardwareProfile.setDisallowChanges(hardwareProfile)
+            task.analyticsService.set(
+                getBuildService(
+                    task.project.gradle.sharedServices, AnalyticsService::class.java
+                )
+            )
         }
 
     }

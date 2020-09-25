@@ -322,7 +322,7 @@ public class AnalyticsUtilTest {
         properties.put(StringOption.IDE_BUILD_TARGET_ABI.getPropertyName(), "x86");
         ProjectOptions options =
                 new ProjectOptions(
-                        properties.build(),
+                        ImmutableMap.of(),
                         new FakeProviderFactory(
                                 FakeProviderFactory.getFactory(), properties.build()));
 

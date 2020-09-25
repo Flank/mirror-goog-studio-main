@@ -20,7 +20,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 
 
-class LibraryDependencyAnalyzerAarTransformTest {
+class CollectResourceSymbolsTransformTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
@@ -64,52 +64,6 @@ class LibraryDependencyAnalyzerAarTransformTest {
     }
 
     @Test
-    fun `Parse JAR for class files`() {
-        val jar1 = FileUtils.join(explodedAar, SdkConstants.FD_JARS, SdkConstants.FN_CLASSES_JAR)
-        val jar2 = FileUtils.join(explodedAar, SdkConstants.FD_JARS, SdkConstants.LIBS_FOLDER, "lib1.jar")
-
-        val classesFromJar1 = getClassesInJar(jar1.toPath())
-        val classesFromJar2 = getClassesInJar(jar2.toPath())
-
-        assertThat(classesFromJar1).containsExactlyElementsIn(
-                listOf(
-                        "com/android/build/gradle/internal/transforms/testdata/CarbonForm.class",
-                        "com/android/build/gradle/internal/transforms/testdata/Animal.class"
-                )
-        )
-
-        assertThat(classesFromJar2).containsExactlyElementsIn(
-                listOf(
-                        "com/android/build/gradle/internal/transforms/testdata/Cat.class",
-                        "com/android/build/gradle/internal/transforms/testdata/ClassWithInnerClass.class",
-                        "com/android/build/gradle/internal/transforms/testdata/ClassWithInnerClass\$TheInnerClass.class"
-                )
-        )
-    }
-
-    @Test
-    fun `Transform produces expected resource symbols, given an exploded AAR with two JAR files`() {
-        val transform = getTestTransform(explodedAar)
-
-        val transformOutputs = FakeTransformOutputs(temporaryFolder)
-
-        transform.transform(transformOutputs)
-
-        val outputClassesFile =
-                FileUtils.join(transformOutputs.outputDirectory, "classes${SdkConstants.DOT_TXT}")
-
-        assertThat(outputClassesFile.readLines()).containsExactlyElementsIn(
-                listOf(
-                        "com/android/build/gradle/internal/transforms/testdata/CarbonForm.class",
-                        "com/android/build/gradle/internal/transforms/testdata/Animal.class",
-                        "com/android/build/gradle/internal/transforms/testdata/Cat.class",
-                        "com/android/build/gradle/internal/transforms/testdata/ClassWithInnerClass.class",
-                        "com/android/build/gradle/internal/transforms/testdata/ClassWithInnerClass\$TheInnerClass.class"
-                )
-        )
-    }
-
-    @Test
     fun `Transform produces expected classes, given an exploded AAR with resources`() {
         val transform = getTestTransform(explodedAar)
 
@@ -117,10 +71,7 @@ class LibraryDependencyAnalyzerAarTransformTest {
 
         transform.transform(transformOutputs)
 
-        val outputClassesFile = FileUtils.join(transformOutputs.outputDirectory,
-                "resources_symbols${SdkConstants.DOT_TXT}")
-
-        assertThat(outputClassesFile.readLines()).containsExactly(
+        assertThat(transformOutputs.outputFile.readLines()).containsExactly(
                         "styleable:ds2:-1",
                         "attr:myAttr2:-1",
                         "attr:maybeAttr:-1",
@@ -180,10 +131,10 @@ class LibraryDependencyAnalyzerAarTransformTest {
         return resDir
     }
 
-    private fun getTestTransform(explodedAarFile: File): LibraryDependencyAnalyzerAarTransform {
-        return object : LibraryDependencyAnalyzerAarTransform() {
-            override val inputArtifact: Provider<FileSystemLocation>
-                get() = FakeGradleProvider(FakeGradleRegularFile(explodedAarFile))
+    private fun getTestTransform(resourceDirectory: File): CollectResourceSymbolsTransform {
+        return object : CollectResourceSymbolsTransform() {
+            override val inputAndroidResArtifact: Provider<FileSystemLocation>
+                get() = FakeGradleProvider(FakeGradleRegularFile(resourceDirectory))
 
             override fun getParameters(): GenericTransformParameters = object :
                     GenericTransformParameters {

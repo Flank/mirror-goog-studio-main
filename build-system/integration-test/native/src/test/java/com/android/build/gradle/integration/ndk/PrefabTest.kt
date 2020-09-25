@@ -65,7 +65,7 @@ class PrefabTest(private val buildSystem: NativeBuildSystem) {
     private fun verifyCMakePackage(pkg: String, abiDir: File, abi: Abi) {
         assertThat(
             abiDir.resolve(
-                "prefab/lib/${abi.gccExecutablePrefix}/cmake/$pkg/$pkg-config.cmake"
+                "prefab/lib/${abi.gccExecutablePrefix}/cmake/$pkg/${pkg}Config.cmake"
             )
         ).exists()
     }

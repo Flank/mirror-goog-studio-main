@@ -49,11 +49,11 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
     @Inject
     public ApplicationVariantImpl(
             @NonNull ApplicationVariantData variantData,
-            @NonNull ComponentImpl componentProperties,
+            @NonNull ComponentImpl component,
             @NonNull BaseServices services,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(componentProperties, services, readOnlyObjectProvider, outputs);
+        super(component, services, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 

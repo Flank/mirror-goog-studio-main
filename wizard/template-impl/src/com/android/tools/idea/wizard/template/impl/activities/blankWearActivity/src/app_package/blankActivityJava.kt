@@ -40,7 +40,7 @@ package ${packageName};
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${activityClass} extends Activity {
 

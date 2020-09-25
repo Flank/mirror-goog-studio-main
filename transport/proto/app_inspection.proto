@@ -36,6 +36,7 @@ message AppInspectionCommand {
     DisposeInspectorCommand dispose_inspector_command = 4;
     RawCommand raw_inspector_command = 5;
     CancellationCommand cancellation_command = 6;
+    GetLibraryVersionsCommand get_library_versions_command = 7;
   }
 }
 
@@ -87,6 +88,10 @@ message CancellationCommand {
     uint32 cancelled_command_id = 1;
 }
 
+message GetLibraryVersionsCommand {
+  repeated VersionParams target_versions = 1;
+}
+
 // A response is sent from the device to answer a command.
 message AppInspectionResponse {
   uint32 command_id = 1;
@@ -102,6 +107,7 @@ message AppInspectionResponse {
     CreateInspectorResponse create_inspector_response = 4;
     DisposeInspectorResponse dispose_inspector_response = 5;
     RawResponse raw_response = 6;
+    GetLibraryVersionsResponse library_versions_response = 7;
   }
 }
 
@@ -135,6 +141,23 @@ message CreateInspectorResponse {
 
 // Response to DisposeInspectorCommand.
 message DisposeInspectorResponse {
+}
+
+message LibraryVersionResponse {
+  enum Status {
+    COMPATIBLE = 0;
+    INCOMPATIBLE = 1;
+    LIBRARY_MISSING = 2;
+    SERVICE_ERROR = 3;
+  }
+  Status status = 1;
+  string version_file_name = 2;
+  string version = 3;
+  string error_message = 4;
+}
+
+message GetLibraryVersionsResponse {
+  repeated LibraryVersionResponse responses = 1;
 }
 
 // Opaque response from an inspector.

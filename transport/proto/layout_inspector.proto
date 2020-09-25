@@ -31,9 +31,10 @@ message ComponentTreeEvent {
   int32 payload_id = 1;
   enum PayloadType {
     UNKNOWN = 0;
-    SKP = 1;
-    PNG_SKP_TOO_LARGE = 2;
-    PNG_AS_REQUESTED = 3;
+    NONE = 1;
+    SKP = 2;
+    PNG_SKP_TOO_LARGE = 3;
+    PNG_AS_REQUESTED = 4;
   }
   PayloadType payload_type = 2;
   View root = 3;

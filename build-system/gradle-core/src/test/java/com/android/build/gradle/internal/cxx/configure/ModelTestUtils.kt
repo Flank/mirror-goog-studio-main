@@ -64,8 +64,8 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
     val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
-    val variantImpl: VariantBuilderImpl = Mockito.mock(VariantBuilderImpl::class.java) as VariantBuilderImpl
-    val componentPropertiesImpl = Mockito.mock(VariantImpl::class.java)
+    val variantBuilder: VariantBuilderImpl = Mockito.mock(VariantBuilderImpl::class.java) as VariantBuilderImpl
+    val variantImpl = Mockito.mock(VariantImpl::class.java)
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     val variantScope = Mockito.mock(VariantScope::class.java)
     val buildFeatures = Mockito.mock(BuildFeatureValues::class.java)
@@ -73,9 +73,9 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val splits = Mockito.mock(Splits::class.java)
     val mergedNdkConfig = Mockito.mock(MergedNdkConfig::class.java)
     val minSdkVersion = AndroidVersionImpl(19)
-    Mockito.doReturn(global).`when`(componentPropertiesImpl).globalScope
-    Mockito.doReturn(variantScope).`when`(componentPropertiesImpl).variantScope
-    Mockito.doReturn(baseVariantData).`when`(componentPropertiesImpl).variantData
+    Mockito.doReturn(global).`when`(variantImpl).globalScope
+    Mockito.doReturn(variantScope).`when`(variantImpl).variantScope
+    Mockito.doReturn(baseVariantData).`when`(variantImpl).variantData
     projectParentFolder.create()
     val projectDir = projectParentFolder.newFolder("project")
     val moduleDir = join(projectDir, "module")
@@ -109,10 +109,11 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(ndkPlatform).`when`(ndkHandler).getNdkPlatform(true)
     Mockito.doReturn(buildDir).`when`(project).buildDir
     Mockito.doReturn(ndkFolder).`when`(ndkPlatform.getOrThrow()).ndkDirectory
-    Mockito.doReturn("debug").`when`(componentPropertiesImpl).name
-    Mockito.doReturn(buildFeatures).`when`(componentPropertiesImpl).buildFeatures
+    Mockito.doReturn("debug").`when`(variantImpl).name
+    Mockito.doReturn(buildFeatures).`when`(variantImpl).buildFeatures
     Mockito.doReturn(false).`when`(buildFeatures).prefab
-    Mockito.doReturn(variantDslInfo).`when`(componentPropertiesImpl).variantDslInfo
+    Mockito.doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
+    Mockito.doReturn(variantBuilder).`when`(variantImpl).variantBuilder
     Mockito.doReturn(true).`when`(variantDslInfo).isDebuggable
     Mockito.doReturn(externalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
     Mockito.doReturn(externalNativeCmakeOptions).`when`(externalNativeBuildOptions).externalNativeCmakeOptions
@@ -123,10 +124,9 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(listOf<String>()).`when`(externalNativeCmakeOptions).cppFlags
     Mockito.doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
     Mockito.doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
-    Mockito.doReturn(minSdkVersion).`when`(variantImpl).minSdkVersion
+    Mockito.doReturn(minSdkVersion).`when`(variantBuilder).minSdkVersion
     val componentModel = tryCreateCxxConfigurationModel(
-        variantImpl,
-        componentPropertiesImpl
+            variantImpl
     )!!
     val module = createCxxModuleModel(sdkComponents, componentModel)
     val variant = createCxxVariantModel(componentModel, module)

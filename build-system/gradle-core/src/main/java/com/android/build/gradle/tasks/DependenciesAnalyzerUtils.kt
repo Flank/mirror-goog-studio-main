@@ -119,34 +119,28 @@ class DependencyGraphAnalyzer(
     }
 }
 
-private class ArtifactFinder(private val externalArtifactCollections: Collection<ArtifactCollection>
-) {
-    fun getMapByFileName(fileName: String): Map<String, String> {
-        val map = mutableMapOf<String, String>()
-        for (artifactCollection in externalArtifactCollections)
-            for (artifact in artifactCollection) {
-                val file = FileUtils.join(artifact.file, fileName)
-                if (!file.exists()) continue
-                file.forEachLine { artifactFileLine ->
-                    map[artifactFileLine] = artifact.id.componentIdentifier.displayName
-                }
-            }
-        return map
-    }
-}
-
 /** Finds where a class is coming from. */
-class ClassFinder(private val externalArtifactCollections : Collection<ArtifactCollection>) {
+class ClassFinder(private val classesArtifactCollection : ArtifactCollection) {
 
-    private val classToDependency: Map<String, String> by lazy {
-        val artifactFinder = ArtifactFinder(externalArtifactCollections)
-        artifactFinder.getMapByFileName("classes${SdkConstants.DOT_TXT}")
+    private val classToDependency: Map<String, String> by lazy (this::getClassDependencyMap)
+
+    private fun getClassDependencyMap() : Map<String, String> {
+        val map = mutableMapOf<String, String>()
+        for (artifact in classesArtifactCollection) {
+            val file = artifact.file
+            if (file.name != SdkConstants.FN_CLASS_LIST) {
+                throw IllegalArgumentException(
+                        "${file.name} should have name ${SdkConstants.FN_CLASS_LIST}.")
+            }
+            file.forEachLine { artifactFileLine ->
+                map[artifactFileLine] = artifact.id.componentIdentifier.displayName
+            }
+        }
+        return map
     }
 
     /** Returns the dependency that contains {@code className} or null if we can't find it. */
-    fun find(className: String) : String? {
-        return classToDependency[className]
-    }
+    fun find(className: String) : String? = classToDependency[className]
 
     fun findClassesInDependency(dependencyId: String) =
         classToDependency.filterValues { it == dependencyId }.keys
@@ -160,14 +154,13 @@ data class ResourceDependencyHolder(
 
 class ResourcesFinder(
         private val manifest: File?,
-        private val resourceSets: List<File>,
-        private val externalArtifactCollection: ArtifactCollection) {
+        private val resourceSets: Collection<File>,
+        private val resourceSymbolsArtifactCollection: ArtifactCollection) {
 
-    private val resourceToDependency: Map<String, ResourceDependencyHolder> by lazy {
-        getMapByFileName("resources_symbols${SdkConstants.DOT_TXT}")
-    }
+    private val resourceToDependency: Map<String, ResourceDependencyHolder>
+            by lazy (this::getResourceDependencyMap)
 
-    private fun getMapByFileName(fileName: String): Map<String, ResourceDependencyHolder> {
+    private fun getResourceDependencyMap(): Map<String, ResourceDependencyHolder> {
         val resourceToDependency = mutableMapOf<String, ResourceDependencyHolder>()
 
         // Extract resource usages from manifest, if it exists.
@@ -186,19 +179,22 @@ class ResourcesFinder(
         }
 
         // Add library AAR resources to map.
-        for (artifact in externalArtifactCollection){
-                    val resourceSymbols = FileUtils.join(artifact.file, fileName)
-                    if (!resourceSymbols.exists()) continue
-                    resourceSymbols.readLines().forEach { resourceName ->
-                        // Get existing ResourceDependencyHolder or create a new instance. Then
-                        // add the current dependency to dependency usages.
-                        val resDeps = resourceToDependency.getOrDefault(resourceName,
-                                ResourceDependencyHolder(resourceName, false)).apply {
-                            dependencyUsages += artifact.id.componentIdentifier.displayName
-                        }
-                        resourceToDependency[resourceName] = resDeps
-                    }
+        for (artifact in resourceSymbolsArtifactCollection) {
+            val resSymbols = artifact.file
+            if (resSymbols.name != SdkConstants.FN_RESOURCE_SYMBOLS) {
+                throw IllegalArgumentException(
+                        "${resSymbols.name} should have name ${SdkConstants.FN_RESOURCE_SYMBOLS}.")
+            }
+            resSymbols.readLines().forEach { resourceName ->
+                // Get existing ResourceDependencyHolder or create a new instance. Then
+                // add the current dependency to dependency usages.
+                val resDeps = resourceToDependency.getOrDefault(resourceName,
+                        ResourceDependencyHolder(resourceName, false)).apply {
+                    dependencyUsages += artifact.id.componentIdentifier.displayName
                 }
+                resourceToDependency[resourceName] = resDeps
+            }
+        }
 
         return resourceToDependency
     }
@@ -232,7 +228,7 @@ class ResourcesFinder(
      * Returns a list of dependencies which do not contain an identical resource in another
      * dependency.
      */
-    fun findUnUsedDependencies(): Set<String> = externalArtifactCollection
+    fun findUnUsedDependencies(): Set<String> = resourceSymbolsArtifactCollection
             .map { it.id.componentIdentifier.displayName }
             .minus(findUsedDependencies())
             .toSet()
@@ -271,8 +267,8 @@ class DependencyUsageReporter(
         val toRemove = depsUsageFinder.unusedDirectDependencies
                 .intersect(graphAnalyzer.renderableDependencies.keys)
                 .minus(resourceFinder.findUsedDependencies())
-                .toList()
-        val toAdd = graphAnalyzer.findIndirectRequiredDependencies().toList()
+                .sorted()
+        val toAdd = graphAnalyzer.findIndirectRequiredDependencies().sorted()
 
         val report = DependenciesUsageReport(toAdd, toRemove)
         writeToFile(report, destinationFile)

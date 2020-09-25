@@ -361,6 +361,12 @@ public final class SdkConstants {
      */
     public static final String FN_AGP_ATTRIBUTION_DATA = "androidGradlePluginAttributionData";
 
+    /** Dependency Analyzer */
+    /** File holding list of resource symbols */
+    public static final String FN_RESOURCE_SYMBOLS = "resources_symbols.txt";
+    /** File holding relative class entries */
+    public static final String FN_CLASS_LIST = "classes.txt";
+
     /* Folder Names for Android Projects . */
 
     /** Resources folder name, i.e. "res". */

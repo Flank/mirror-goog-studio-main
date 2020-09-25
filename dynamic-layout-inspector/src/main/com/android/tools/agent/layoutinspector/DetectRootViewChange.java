@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * AsyncTask for detecting when root view changes.
+ * Root view change detection.
  *
  * <p>This code will handle activity changes in an application.
  */
@@ -39,14 +39,23 @@ class DetectRootViewChange {
     private final Object mySync = new Object();
     private final List<View> myRoots = new ArrayList<>();
     private boolean myServiceCancelled;
+    private int myRetryLimit;
 
-    public DetectRootViewChange(@NonNull LayoutInspectorService service) {
+    /**
+     * Start the root view change detection.
+     *
+     * @param service to affect
+     * @param retryLimit if >= 0 stop after retryLimit times, otherwise continue until explicitly
+     *     stopped.
+     */
+    public DetectRootViewChange(@NonNull LayoutInspectorService service, int retryLimit) {
         // ThreadWatcher accepts threads starting with "Studio:"
         myThread = new HandlerThread("Studio:LayInsp");
         myThread.start();
         myHandler = new Handler(myThread.getLooper());
         myService = service;
         myRoots.addAll(myService.getRootViews());
+        myRetryLimit = retryLimit;
         myHandler.postDelayed(this::checkRoots, myCheckInterval);
     }
 
@@ -89,11 +98,14 @@ class DetectRootViewChange {
                     // If we just removed a window without adding another, we need to trigger an
                     // update to the Studio side.
                     //  - If there are any windows left: do this by invalidating one of them.
-                    //  - If no windows are left: we need to do something different.
-                    // TODO: Notify the Studio side if this is the last window closed.
-                    if (!newRoots.isEmpty() && newlyAdded.isEmpty()) {
-                        View root = newRoots.get(0);
-                        root.post(root::invalidate);
+                    //  - If no windows are left: send an empty tree event
+                    if (newlyAdded.isEmpty()) {
+                        if (!newRoots.isEmpty()) {
+                            View root = newRoots.get(0);
+                            root.post(root::invalidate);
+                        } else {
+                            myService.sendEmptyRootViews();
+                        }
                     }
                 }
                 myRoots.clear();
@@ -102,7 +114,9 @@ class DetectRootViewChange {
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
-            myHandler.postDelayed(myCheckRoots, myCheckInterval);
+            if (myRetryLimit < 0 || myRetryLimit-- > 0) {
+                myHandler.postDelayed(myCheckRoots, myCheckInterval);
+            }
         }
     }
 }

@@ -50,11 +50,11 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Button
+${renderIf(!isViewBindingSupported) {"""import android.widget.Button"""}}
 import android.widget.EditText
-import android.widget.ProgressBar
+${renderIf(!isViewBindingSupported) {"""import android.widget.ProgressBar"""}}
 import android.widget.Toast
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 import ${escapeKotlinIdentifier(packageName)}.R
 

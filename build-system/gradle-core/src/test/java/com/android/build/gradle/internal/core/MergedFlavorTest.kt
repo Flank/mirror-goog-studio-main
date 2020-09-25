@@ -94,8 +94,9 @@ class MergedFlavorTest {
 
         dslServices = createDslServices(
             createProjectServices(
-                projectOptions = ProjectOptions(properties.build(), FakeProviderFactory(
-                    FakeProviderFactory.factory, properties.build())
+                projectOptions = ProjectOptions(
+                    ImmutableMap.of(),
+                    FakeProviderFactory(FakeProviderFactory.factory, properties.build())
                 ),
                 issueReporter = FakeSyncIssueReporter(throwOnError = throwOnError)
             )

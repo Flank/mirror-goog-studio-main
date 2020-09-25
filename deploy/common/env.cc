@@ -43,6 +43,12 @@ void Init() {
 }
 
 }  // namespace
+
+void Env::Reset() {
+  init_ = false;
+  Init();
+}
+
 bool Env::IsValid() { return true; }
 
 int Env::port() {

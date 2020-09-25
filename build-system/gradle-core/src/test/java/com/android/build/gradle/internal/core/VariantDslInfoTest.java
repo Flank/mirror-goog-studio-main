@@ -333,7 +333,7 @@ public class VariantDslInfoTest {
                             injectedDeviceApi);
             projectOptions =
                     new ProjectOptions(
-                            gradleProperties,
+                            ImmutableMap.of(),
                             new FakeProviderFactory(
                                     FakeProviderFactory.getFactory(), gradleProperties));
         }

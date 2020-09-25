@@ -39,8 +39,8 @@ import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
-import com.android.build.gradle.internal.dependency.LibraryDependencyAnalyzerAarTransform
-import com.android.build.gradle.internal.dependency.LibraryDependencyAnalyzerJarTransform
+import com.android.build.gradle.internal.dependency.CollectResourceSymbolsTransform
+import com.android.build.gradle.internal.dependency.CollectClassesTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
@@ -388,13 +388,13 @@ class DependencyConfigurator(
         }
 
         registerTransform(
-            LibraryDependencyAnalyzerAarTransform::class.java,
-            AndroidArtifacts.ArtifactType.EXPLODED_AAR.type,
-            AndroidArtifacts.ArtifactType.AAR_CLASS_LIST_AND_RES_SYMBOLS.type
+            CollectResourceSymbolsTransform::class.java,
+            AndroidArtifacts.ArtifactType.ANDROID_RES.type,
+            AndroidArtifacts.ArtifactType.ANDROID_RES_SYMBOLS.type
         )
         registerTransform(
-            LibraryDependencyAnalyzerJarTransform::class.java,
-            AndroidArtifacts.ArtifactType.CLASSES,
+            CollectClassesTransform::class.java,
+            AndroidArtifacts.ArtifactType.CLASSES_JAR,
             AndroidArtifacts.ArtifactType.JAR_CLASS_LIST
         )
 
@@ -557,7 +557,7 @@ class DependencyConfigurator(
         testComponents: List<ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
-            (variants + testComponents).map { it.properties as ComponentCreationConfig }
+            (variants + testComponents).map { it.variant as ComponentCreationConfig }
 
         val dependencies = project.dependencies
 

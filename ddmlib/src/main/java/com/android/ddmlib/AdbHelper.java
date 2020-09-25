@@ -16,6 +16,8 @@
 
 package com.android.ddmlib;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
@@ -48,6 +50,8 @@ public final class AdbHelper {
     // public static final long kFail = 0x4c494146L;
 
     static final int WAIT_TIME = 5; // spin-wait sleep, in ms
+
+    static final int ADB_HEADER_SIZE = 4;
 
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
@@ -251,11 +255,15 @@ public final class AdbHelper {
      * is the length of the rest of the string, encoded as ASCII hex (case
      * doesn't matter).
      */
-    public static byte[] formAdbRequest(String req) {
-        String resultStr = String.format("%04X%s", req.length(), req); //$NON-NLS-1$
-        byte[] result = resultStr.getBytes(DEFAULT_CHARSET);
-        assert result.length == req.length() + 4;
-        return result;
+    public static byte[] formAdbRequest(String payloadString) {
+        byte[] payload = payloadString.getBytes(DEFAULT_CHARSET);
+        assert payload.length <= 9999; // Max encodable length;
+        byte[] header = String.format("%04X", payload.length).getBytes(US_ASCII);
+        assert header.length == ADB_HEADER_SIZE;
+        ByteBuffer request = ByteBuffer.allocate(header.length + payload.length);
+        request.put(header);
+        request.put(payload);
+        return request.array();
     }
 
     /**

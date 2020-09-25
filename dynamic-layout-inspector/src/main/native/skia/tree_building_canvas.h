@@ -47,13 +47,26 @@ struct View {
 
 class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
  public:
+  /**
+   * Parse the picture and populate root.
+   *
+   * @param skp The serialized SkPicture
+   * @param len The length of skp
+   * @param version The version of the request protocol. See definitions in
+   * skia.proto.
+   * @param requested_node_info The rendernodes to return, along with their size
+   * and location. Nodes not included here will be merged into their parents.
+   * @param scale The factor by which to scale the result. Usually the full-size
+   * rendering won't be needed, so we can save the memory and bandwidth.
+   * @param root The output proto to populate.
+   */
   static void ParsePicture(
       const char* skp, size_t len, int version,
       const ::google::protobuf::RepeatedPtrField<
           ::layoutinspector::proto::RequestedNodeInfo>* requested_node_info,
-      ::layoutinspector::proto::InspectorView* root) {
+      float scale, ::layoutinspector::proto::InspectorView* root) {
 #ifdef TREEBUILDINGCANVAS_DEBUG
-    std::cerr << "###start" << std::endl;
+    std::cerr << "###start scale: " << scale << std::endl;
 #endif
     std::unique_ptr<SkStreamAsset> stream =
         SkMemoryStream::MakeDirect(skp, len);
@@ -68,13 +81,14 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
     for (const ::layoutinspector::proto::RequestedNodeInfo& node :
          *requested_node_info) {
       SkIRect rect =
-          SkIRect::MakeXYWH(node.x(), node.y(), node.width(), node.height());
+          SkIRect::MakeXYWH(node.x() * scale, node.y() * scale,
+                            node.width() * scale, node.height() * scale);
       rootBounds.join(rect);
       requested_nodes.insert(std::make_pair(node.id(), rect));
     }
     TreeBuildingCanvas canvas(version, root, requested_node_info,
                               rootBounds.width(), rootBounds.height(),
-                              requested_nodes);
+                              requested_nodes, scale);
     picture->playback(&canvas);
 
     picture->unref();
@@ -90,9 +104,11 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
       int version, ::layoutinspector::proto::InspectorView* r,
       const ::google::protobuf::RepeatedPtrField<
           ::layoutinspector::proto::RequestedNodeInfo>* requested_node_info,
-      int width, int height, std::map<long, SkIRect> requested_nodes)
+      int width, int height, std::map<long, SkIRect> requested_nodes,
+      float scale)
       : SkCanvasVirtualEnforcer<SkCanvas>(),
         request_version(version),
+        request_scale(scale),
         surface(SkSurface::MakeRaster(
             SkImageInfo::Make(width, height, kBGRA_8888_SkColorType,
                               kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB()),
@@ -100,6 +116,9 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
         root(r),
         real_canvas(surface->getCanvas()),
         requested_nodes(std::move(requested_nodes)) {
+    if (request_scale > 0) {
+      real_canvas->scale(request_scale, request_scale);
+    }
 #ifdef TREEBUILDINGCANVAS_DEBUG
     printDebug("Create surface: %i x %i\n", width, height);
     printDebug("Canvas %s null\n", real_canvas == nullptr ? "is" : "is not");
@@ -111,6 +130,8 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   void didSetMatrix(const SkMatrix& matrix) override;
 
   void didTranslate(SkScalar dx, SkScalar dy) override;
+
+  void didScale(SkScalar sx, SkScalar sy) override;
 
   void willSave() override;
 
@@ -221,6 +242,7 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
 
  private:
   int request_version;
+  SkScalar request_scale;
   sk_sp<SkSurface> surface;
   ::layoutinspector::proto::InspectorView* root;
   SkCanvas* real_canvas;

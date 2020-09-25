@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.plugins;
 
+import static com.android.build.gradle.internal.ManagedDeviceUtilsKt.getManagedDeviceAvdFolder;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
@@ -36,6 +37,7 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
+import com.android.build.gradle.internal.AvdComponentsBuildService;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.ClasspathVerifier;
 import com.android.build.gradle.internal.DependencyConfigurator;
@@ -48,7 +50,7 @@ import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.attribution.AttributionListenerInitializer;
+import com.android.build.gradle.internal.attribution.BuildAttributionService;
 import com.android.build.gradle.internal.crash.CrashReporting;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -91,6 +93,7 @@ import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptionService;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
@@ -174,6 +177,8 @@ public abstract class BasePlugin<
     private boolean hasCreatedTasks = false;
 
     private AnalyticsConfiguratorService configuratorService;
+
+    private ProjectOptionService optionService;
 
     @NonNull private final BuildEventsListenerRegistry listenerRegistry;
 
@@ -270,6 +275,8 @@ public abstract class BasePlugin<
         configuratorService
                 = new AnalyticsConfiguratorService.RegistrationAction(project).execute().get();
 
+        optionService = new ProjectOptionService.RegistrationAction(project).execute().get();
+
         createProjectServices(project);
 
         ProjectOptions projectOptions = projectServices.getProjectOptions();
@@ -282,10 +289,15 @@ public abstract class BasePlugin<
         checkPathForErrors();
         checkModulesForErrors();
 
-        AttributionListenerInitializer.INSTANCE.init(
-                project, projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION));
-
         AgpVersionChecker.enforceTheSamePluginVersions(project);
+
+        String attributionFileLocation =
+                projectOptions.get(StringOption.IDE_ATTRIBUTION_FILE_LOCATION);
+        if (attributionFileLocation != null) {
+            new BuildAttributionService.RegistrationAction(project).execute();
+            BuildAttributionService.Companion.init(
+                    project, attributionFileLocation, listenerRegistry);
+        }
 
         configuratorService.createAnalyticsService(project, listenerRegistry);
 
@@ -357,6 +369,13 @@ public abstract class BasePlugin<
                                 project.getProviders().provider(() -> extension.getNdkVersion()),
                                 project.getProviders().provider(() -> extension.getNdkPath()))
                         .execute();
+        Provider<AvdComponentsBuildService> avdComponentsBuildService =
+                new AvdComponentsBuildService.RegistrationAction(
+                                project,
+                                getManagedDeviceAvdFolder(
+                                        project.getObjects(), project.getProviders()),
+                                sdkComponentsBuildService)
+                        .execute();
 
         new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
@@ -390,6 +409,7 @@ public abstract class BasePlugin<
                         creator,
                         dslServices,
                         sdkComponentsBuildService,
+                        avdComponentsBuildService,
                         registry,
                         messageReceiver,
                         componentFactory);
@@ -488,11 +508,11 @@ public abstract class BasePlugin<
                         extension::getTestBuildType,
                         () ->
                                 variantManager.getMainComponents().stream()
-                                        .map(ComponentInfo::getProperties)
+                                        .map(ComponentInfo::getVariant)
                                         .collect(Collectors.toList()),
                         () ->
                                 variantManager.getTestComponents().stream()
-                                        .map(ComponentInfo::getProperties)
+                                        .map(ComponentInfo::getVariant)
                                         .collect(Collectors.toList()),
                         dslServices.getIssueReporter());
 
@@ -678,7 +698,7 @@ public abstract class BasePlugin<
                 new ApiObjectFactory(extension, variantFactory, globalScope);
 
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
-            apiObjectFactory.create(variant.getProperties());
+            apiObjectFactory.create(variant.getVariant());
         }
 
         // lock the Properties of the variant API after the old API because
@@ -694,13 +714,13 @@ public abstract class BasePlugin<
         // now publish all variant artifacts for non test variants since
         // tests don't publish anything.
         for (ComponentInfo<VariantBuilderT, VariantT> component : variants) {
-            component.getProperties().publishBuildArtifacts();
+            component.getVariant().publishBuildArtifacts();
         }
 
         checkSplitConfiguration();
         variantManager.setHasCreatedTasks(true);
         for (ComponentInfo<VariantBuilderT, VariantT> variant : variants) {
-            variant.getProperties().getArtifacts().ensureAllOperationsAreSatisfied();
+            variant.getVariant().getArtifacts().ensureAllOperationsAreSatisfied();
         }
         // notify our properties that configuration is over for us.
         GradleProperty.Companion.endOfEvaluation();
@@ -878,7 +898,7 @@ public abstract class BasePlugin<
         final Logger logger = project.getLogger();
         final String projectPath = project.getPath();
 
-        ProjectOptions projectOptions = new ProjectOptions(project);
+        ProjectOptions projectOptions = optionService.getProjectOptions();
 
         syncIssueReporter =
                 new SyncIssueReporterImpl(SyncOptions.getModelQueryMode(projectOptions), logger);

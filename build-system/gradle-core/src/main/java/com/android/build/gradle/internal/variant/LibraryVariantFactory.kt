@@ -46,7 +46,7 @@ class LibraryVariantFactory(
         projectServices,
         globalScope) {
 
-    override fun createVariantObject(
+    override fun createVariantBuilder(
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
             variantApiServices: VariantApiServices): LibraryVariantBuilderImpl {
@@ -59,8 +59,8 @@ class LibraryVariantFactory(
                         variantApiServices)
     }
 
-    override fun createVariantPropertiesObject(
-            variant: LibraryVariantBuilderImpl,
+    override fun createVariant(
+            variantBuilder: LibraryVariantBuilderImpl,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
             variantDslInfo: VariantDslInfo,
@@ -73,11 +73,11 @@ class LibraryVariantFactory(
             transformManager: TransformManager,
             variantPropertiesApiServices: VariantPropertiesApiServices,
             taskCreationServices: TaskCreationServices): LibraryVariantImpl {
-        val variantProperties = projectServices
+        val libVariant = projectServices
                 .objectFactory
                 .newInstance(
                         LibraryVariantImpl::class.java,
-                        variant,
+                        variantBuilder,
                         buildFeatures,
                         variantDslInfo,
                         variantDependencies,
@@ -92,10 +92,10 @@ class LibraryVariantFactory(
                         globalScope)
 
         // create default output
-        val name = "${globalScope.projectBaseName}-${variantProperties.baseName}.${BuilderConstants.EXT_LIB_ARCHIVE}"
-        variantProperties.addVariantOutput(
+        val name = "${globalScope.projectBaseName}-${libVariant.baseName}.${BuilderConstants.EXT_LIB_ARCHIVE}"
+        libVariant.addVariantOutput(
                 VariantOutputConfigurationImpl(false, ImmutableList.of()), name)
-        return variantProperties
+        return libVariant
     }
 
     override fun createBuildFeatureValues(

@@ -20,20 +20,29 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.tools.bazel.avd.Emulator;
+import java.io.IOException;
+import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class BasicConnectedTest {
 
     @ClassRule public static final Emulator emulator = EmulatorUtils.getEmulator();
 
-    @ClassRule
-    public static GradleTestProject project =
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("basic")
                     // b/146163513
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
+
+    @Before
+    public void setUp() throws IOException {
+        // fail fast if no response
+        project.addAdbTimeOutInMs();
+    }
 
     @Test
     public void install() throws Exception {
@@ -44,10 +53,5 @@ public class BasicConnectedTest {
         } finally {
             project.execute("uninstallAll");
         }
-    }
-
-    @Test
-    public void connectedCheck() throws Exception {
-        project.executor().run("connectedAndroidTest");
     }
 }

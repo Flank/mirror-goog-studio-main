@@ -48,7 +48,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import ${packageName}.ui.main.SectionsPagerAdapter;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
 

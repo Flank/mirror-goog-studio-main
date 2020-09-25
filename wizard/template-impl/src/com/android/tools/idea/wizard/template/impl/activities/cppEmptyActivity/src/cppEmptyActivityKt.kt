@@ -42,7 +42,7 @@ package ${escapeKotlinIdentifier(packageName)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import android.os.Bundle
 import android.widget.TextView
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)}
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
 
 class $activityClass : AppCompatActivity() {
 

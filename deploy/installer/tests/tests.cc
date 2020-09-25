@@ -17,12 +17,17 @@
 #include <fstream>
 #include <iostream>
 
+#include <signal.h>
+
 #include <gtest/gtest.h>
 
+#include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/installer/apk_archive.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/executor_impl.h"
+#include "tools/base/deploy/installer/highlander.h"
 #include "tools/base/deploy/installer/patch_applier.h"
+#include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 using namespace deploy;
@@ -196,4 +201,63 @@ TEST_F(InstallerTest, TestFilePatching) {
   EXPECT_TRUE(patchedContent[0] == 'a');
   EXPECT_TRUE(patchedContent[1] == 'b');
   EXPECT_TRUE(patchedContent[2] == 'c');
+}
+
+// Test Highlander by spawning two child process. The first child
+// creates a Highlander, spawns a second child and sends itself to
+// the background via SIGSTOP where it should stay forever. The
+// second child also creates a Highlander, which should kill(2) the
+// first child, and exit(2)s.
+//
+// The test process then verifies that the first child ended because
+// of a signal and that signal was SIGKILL.
+//
+//    Test Process------+
+//        |             |
+//        |           Child 1 -------+
+//        |             |            |
+//        |             |         Child 2
+//        |           SIGSTOP        |
+//        |             |            |
+//        |             |<--SIGKILL--+
+//        |             X            |
+//        |             X           exit
+//      waitpid ------->X
+//        |
+//        |
+//      success if (child 1 == SIGKILLed)
+TEST_F(InstallerTest, TestHighlander) {
+  char cwd[1024];
+  getcwd(cwd, sizeof(cwd));
+  setenv("FAKE_DEVICE_ROOT", ".", 1);
+  Env::Reset();
+
+  Workspace workspace("", nullptr);
+  workspace.Init();
+
+  int pid = fork();
+  if (!pid) {
+    // Child 1
+
+    Highlander highlander(workspace);
+    pid = fork();
+
+    if (!pid) {
+      // Child 2
+
+      Highlander h(workspace);  // This should SIGKILL child 1
+      exit(EXIT_SUCCESS);
+    }
+    // Go to background and never wake up.
+    // The expectation is that the second child will SIGKILL
+    // this process.
+    kill(getpid(), SIGSTOP);
+  }
+
+  int status;
+  waitpid(pid, &status, 0);
+  // Make sure Child 1 terminated due to signal
+  EXPECT_TRUE(WIFSIGNALED(status));
+  // Make sure the Child 1 was SIGKILLed.
+  EXPECT_TRUE(WTERMSIG(status) == SIGKILL);
 }

@@ -59,12 +59,12 @@ public class ApiObjectFactory {
         this.globalScope = globalScope;
     }
 
-    public BaseVariantImpl create(@NonNull VariantImpl variantProperties) {
-        BaseVariantData variantData = variantProperties.getVariantData();
+    public BaseVariantImpl create(@NonNull VariantImpl variant) {
+        BaseVariantData variantData = variant.getVariantData();
 
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(
-                        globalScope, variantProperties, variantData, readOnlyObjectProvider);
+                        globalScope, variant, variantData, readOnlyObjectProvider);
         if (variantApi == null) {
             return null;
         }
@@ -73,7 +73,7 @@ public class ApiObjectFactory {
             BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
 
             ComponentImpl androidTestVariantProperties =
-                    variantProperties.getTestComponents().get(ANDROID_TEST);
+                    variant.getTestComponents().get(ANDROID_TEST);
 
             if (androidTestVariantProperties != null) {
                 TestVariantImpl androidTestVariant =
@@ -91,8 +91,7 @@ public class ApiObjectFactory {
                 ((TestedVariant) variantApi).setTestVariant(androidTestVariant);
             }
 
-            ComponentImpl unitTestVariantProperties =
-                    variantProperties.getTestComponents().get(UNIT_TEST);
+            ComponentImpl unitTestVariantProperties = variant.getTestComponents().get(UNIT_TEST);
 
             if (unitTestVariantProperties != null) {
                 UnitTestVariantImpl unitTestVariant =
@@ -110,7 +109,7 @@ public class ApiObjectFactory {
             }
         }
 
-        createVariantOutput(variantProperties, variantApi);
+        createVariantOutput(variant, variantApi);
 
         try {
             // Only add the variant API object to the domain object set once it's been fully
@@ -125,21 +124,21 @@ public class ApiObjectFactory {
     }
 
     private void createVariantOutput(
-            @NonNull ComponentImpl componentProperties, @NonNull BaseVariantImpl variantApi) {
+            @NonNull ComponentImpl component, @NonNull BaseVariantImpl variantApi) {
 
         final BaseServices services = variantFactory.getServicesForOldVariantObjectsOnly();
         VariantOutputFactory variantOutputFactory =
                 new VariantOutputFactory(
-                        (componentProperties.getVariantType().isAar())
+                        (component.getVariantType().isAar())
                                 ? LibraryVariantOutputImpl.class
                                 : ApkVariantOutputImpl.class,
                         services,
                         extension,
                         variantApi,
-                        componentProperties.getVariantType(),
-                        componentProperties.getTaskContainer());
+                        component.getVariantType(),
+                        component.getTaskContainer());
 
-        componentProperties
+        component
                 .getOutputs()
                 .forEach(
                         // pass the new api variant output object so the override method can

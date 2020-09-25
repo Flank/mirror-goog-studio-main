@@ -42,10 +42,12 @@ public class ParentLibsConnectedTest {
                     .create();
 
     @Before
-    public void moveLocalProperties() throws IOException {
+    public void setUp() throws IOException {
         Files.move(
                 project.file(SdkConstants.FN_LOCAL_PROPERTIES),
                 project.getSubproject("app").file(SdkConstants.FN_LOCAL_PROPERTIES));
+        // fail fast if no response
+        project.getSubproject(":app:application").addAdbTimeOutInMs();
     }
 
     @Test

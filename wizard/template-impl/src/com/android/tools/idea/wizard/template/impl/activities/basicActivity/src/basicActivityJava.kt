@@ -76,16 +76,14 @@ import android.view.MenuItem;
 package ${(packageName)};
 
 import android.os.Bundle;
-import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)};
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
-import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
 import android.view.View;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 $newProjectImportBlock
 $applicationPackageBlock

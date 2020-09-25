@@ -77,7 +77,7 @@ import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroi
 import android.view.View;
 $newModuleImportBlock
 $applicationPackageBlock
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
 

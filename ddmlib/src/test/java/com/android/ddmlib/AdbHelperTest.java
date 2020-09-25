@@ -15,6 +15,9 @@
  */
 package com.android.ddmlib;
 
+import static com.android.ddmlib.AdbHelper.DEFAULT_CHARSET;
+import static com.android.ddmlib.AdbHelper.formAdbRequest;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -24,7 +27,20 @@ public final class AdbHelperTest {
     public void defaultCharsetPreservesChinese() {
         String path = "/sdcard/中文";
 
-        byte[] bytes = path.getBytes(AdbHelper.DEFAULT_CHARSET);
-        assertEquals(path, new String(bytes, AdbHelper.DEFAULT_CHARSET));
+        byte[] bytes = path.getBytes(DEFAULT_CHARSET);
+        assertEquals(path, new String(bytes, DEFAULT_CHARSET));
+    }
+
+    @Test
+    public void formAdbRequestHandlesUtf8() {
+        String asciiTestString = "foo";
+        // Note the last letter below is not an ASCII "O",
+        // instead it's a 3-byte character when encoded in UTF-8.
+        String utf8TestString = "fōଠ";
+
+        assertArrayEquals(("0003"+asciiTestString).getBytes(DEFAULT_CHARSET),
+                          formAdbRequest(asciiTestString));
+        assertArrayEquals(("0006"+utf8TestString).getBytes(DEFAULT_CHARSET),
+                          formAdbRequest(utf8TestString));
     }
 }

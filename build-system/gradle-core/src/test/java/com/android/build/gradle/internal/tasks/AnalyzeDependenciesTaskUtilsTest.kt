@@ -17,8 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.dependency.getClassesInJar
-import com.android.build.gradle.internal.dependency.writePathsToFile
+import com.android.build.gradle.internal.dependency.writeListToFile
 import com.android.build.gradle.internal.fixtures.FakeArtifactCollection
 import com.android.build.gradle.internal.fixtures.FakeComponentIdentifier
 import com.android.build.gradle.internal.fixtures.FakeResolvedArtifactResult
@@ -28,6 +27,7 @@ import com.android.build.gradle.tasks.AnalyzeDependenciesTask.VariantDependencie
 import com.android.build.gradle.tasks.ClassFinder
 import com.android.build.gradle.tasks.DependencyUsageFinder
 import com.android.build.gradle.tasks.ResourcesFinder
+import com.android.builder.dexing.getSortedRelativePathsInJar
 import com.android.ide.common.resources.usage.getResourcesFromExplodedAarToFile
 import com.android.testutils.TestInputsGenerator
 import com.google.common.collect.ImmutableList
@@ -107,14 +107,18 @@ class AnalyzeDependenciesTaskUtilsTest {
         val fooDependencySources = tmp.newFolder("dependency-sources-foo")
         val barDependencySources = tmp.newFolder("dependency-sources-bar")
 
-        writePathsToFile(File(fooDependencySources, "classes.txt"), getClassesInJar(fooJar))
-        writePathsToFile(File(barDependencySources, "classes.txt"), getClassesInJar(barJar))
+        val fooClasses = writeListToFile(
+                File(fooDependencySources, "classes.txt"),
+                getSortedRelativePathsInJar(fooJar.toFile()))
+        val barClasses = writeListToFile(
+                File(barDependencySources, "classes.txt"),
+                getSortedRelativePathsInJar(barJar.toFile()))
 
         val classesArtifacts = FakeArtifactCollection(mutableSetOf(
-                FakeResolvedArtifactResult(fooDependencySources, FakeComponentIdentifier(fooPackage)),
-                FakeResolvedArtifactResult(barDependencySources, FakeComponentIdentifier(barPackage))))
+                FakeResolvedArtifactResult(fooClasses, FakeComponentIdentifier(fooPackage)),
+                FakeResolvedArtifactResult(barClasses, FakeComponentIdentifier(barPackage))))
 
-        val finder = ClassFinder(listOf(classesArtifacts))
+        val finder = ClassFinder(classesArtifacts)
 
         assertThat(fooPackage).isEqualTo(finder.find(getClassName(class1)))
         assertThat(fooPackage).isEqualTo(finder.find(getClassName(class2)))
@@ -207,26 +211,20 @@ class AnalyzeDependenciesTaskUtilsTest {
         val bazDrawable = File(bazRes, SdkConstants.FD_RES_LAYOUT).also { it.mkdir() }
         File(bazDrawable, "baz.png").also { it.writeText("") }
 
-        val fooResSymbols = getResourcesFromExplodedAarToFile(fooProject)
-        val barResSymbols = getResourcesFromExplodedAarToFile(barProject)
-        val bazResSymbols = getResourcesFromExplodedAarToFile(bazProject)
-        writePathsToFile(
+        val fooResSymbols = writeListToFile(
                 File(fooDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
-                fooResSymbols)
-        writePathsToFile(
+                getResourcesFromExplodedAarToFile(fooProject))
+        val barResSymbols = writeListToFile(
                 File(barDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
-                barResSymbols)
-        writePathsToFile(
+                getResourcesFromExplodedAarToFile(barProject))
+        val bazResSymbols = writeListToFile(
                 File(bazDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
-                bazResSymbols)
+                getResourcesFromExplodedAarToFile(bazProject))
 
         val artifacts = FakeArtifactCollection(mutableSetOf(
-                FakeResolvedArtifactResult(fooDependencySources,
-                        FakeComponentIdentifier(fooProject.name)),
-                FakeResolvedArtifactResult(barDependencySources,
-                        FakeComponentIdentifier(barProject.name)),
-                FakeResolvedArtifactResult(bazDependencySources,
-                        FakeComponentIdentifier(bazProject.name))
+                FakeResolvedArtifactResult(fooResSymbols, FakeComponentIdentifier(fooProject.name)),
+                FakeResolvedArtifactResult(barResSymbols, FakeComponentIdentifier(barProject.name)),
+                FakeResolvedArtifactResult(bazResSymbols, FakeComponentIdentifier(bazProject.name))
         ))
 
         val finder = ResourcesFinder(appManifestFile, listOf(appRes), artifacts)
@@ -249,23 +247,22 @@ class AnalyzeDependenciesTaskUtilsTest {
 
         addResourceTestDirectoryTo(fooProject)
 
-        val fooResSymbols = getResourcesFromExplodedAarToFile(fooProject)
-        val emptyResSymbols = getResourcesFromExplodedAarToFile(emptyProject)
-
-        writePathsToFile(
+        val fooResSymbols = writeListToFile(
                 File(fooDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
-                fooResSymbols)
-        writePathsToFile(
+                getResourcesFromExplodedAarToFile(fooProject)
+        )
+        val emptyResSymbols = writeListToFile(
                 File(emptyDependencySources, "resources_symbols${SdkConstants.DOT_TXT}"),
-                emptyResSymbols)
+                getResourcesFromExplodedAarToFile(emptyProject)
+        )
         val artifacts = FakeArtifactCollection(
                 mutableSetOf(
                         FakeResolvedArtifactResult(
-                                fooDependencySources,
+                                fooResSymbols,
                                 FakeComponentIdentifier(fooProject.name)
                         ),
                         FakeResolvedArtifactResult(
-                                emptyDependencySources,
+                                emptyResSymbols,
                                 FakeComponentIdentifier(emptyProject.name)
                         )
                 )
@@ -325,15 +322,21 @@ class AnalyzeDependenciesTaskUtilsTest {
         val dependency2Sources = tmp.newFolder("dependencySources-aar2")
         val dependency3Sources = tmp.newFolder("dependencySources-aar3")
 
-        writePathsToFile(File(dependency1Sources, "classes.txt"), getClassesInJar(jarA))
-        writePathsToFile(File(dependency2Sources, "classes.txt"), getClassesInJar(jarB))
-        writePathsToFile(File(dependency3Sources, "classes.txt"), getClassesInJar(jarC))
+        val dep1Classes = writeListToFile(
+                File(dependency1Sources, "classes.txt"),
+                getSortedRelativePathsInJar(jarA.toFile()))
+        val dep2Classes = writeListToFile(
+                File(dependency2Sources, "classes.txt"),
+                getSortedRelativePathsInJar(jarB.toFile()))
+        val dep3Classes = writeListToFile(
+                File(dependency3Sources, "classes.txt"),
+                getSortedRelativePathsInJar(jarC.toFile()))
 
         // Create an ArtifactCollection
         val externalArtifactCollection = FakeArtifactCollection(mutableSetOf(
-                FakeResolvedArtifactResult(dependency1Sources, FakeComponentIdentifier(id1)),
-                FakeResolvedArtifactResult(dependency2Sources, FakeComponentIdentifier(id2)),
-                FakeResolvedArtifactResult(dependency3Sources, FakeComponentIdentifier(id3))))
+                FakeResolvedArtifactResult(dep1Classes, FakeComponentIdentifier(id1)),
+                FakeResolvedArtifactResult(dep2Classes, FakeComponentIdentifier(id2)),
+                FakeResolvedArtifactResult(dep3Classes, FakeComponentIdentifier(id3))))
 
 
         // Create some test classes
@@ -351,7 +354,7 @@ class AnalyzeDependenciesTaskUtilsTest {
 
         val variantClasses = VariantClassesHolder(projectClassesArtifact.artifactFiles)
 
-        val classFinder = ClassFinder(listOf(externalArtifactCollection))
+        val classFinder = ClassFinder(externalArtifactCollection)
         val dependencyUsageFinder = DependencyUsageFinder(
             classFinder,
             variantClasses,
@@ -398,15 +401,21 @@ class AnalyzeDependenciesTaskUtilsTest {
         val dependency2Sources = tmp.newFolder("dependencySources-aar2")
         val dependency3Sources = tmp.newFolder("dependencySources-aar3")
 
-        writePathsToFile(File(dependency1Sources, "classes.txt"), getClassesInJar(jarA))
-        writePathsToFile(File(dependency2Sources, "classes.txt"), getClassesInJar(jarB))
-        writePathsToFile(File(dependency3Sources, "classes.txt"), getClassesInJar(jarC))
+        val dep1Classes = writeListToFile(
+                File(dependency1Sources, "classes.txt"),
+                getSortedRelativePathsInJar(jarA.toFile()))
+        val dep2Classes = writeListToFile(
+                File(dependency2Sources, "classes.txt"),
+                getSortedRelativePathsInJar(jarB.toFile()))
+        val dep3Classes = writeListToFile(
+                File(dependency3Sources, "classes.txt"),
+                getSortedRelativePathsInJar(jarC.toFile()))
 
         // Create an ArtifactCollection
         val externalArtifactCollection = FakeArtifactCollection(mutableSetOf(
-            FakeResolvedArtifactResult(dependency1Sources, FakeComponentIdentifier(id1)),
-            FakeResolvedArtifactResult(dependency2Sources, FakeComponentIdentifier(id2)),
-            FakeResolvedArtifactResult(dependency3Sources, FakeComponentIdentifier(id3))))
+            FakeResolvedArtifactResult(dep1Classes, FakeComponentIdentifier(id1)),
+            FakeResolvedArtifactResult(dep2Classes, FakeComponentIdentifier(id2)),
+            FakeResolvedArtifactResult(dep3Classes, FakeComponentIdentifier(id3))))
 
         // Create some test classes
         val class6 = Giraffe::class.java
@@ -422,7 +431,7 @@ class AnalyzeDependenciesTaskUtilsTest {
                     FakeComponentIdentifier("project"))))
 
         val variantClasses = VariantClassesHolder(projectClassesArtifact.artifactFiles)
-        val classFinder = ClassFinder(listOf(externalArtifactCollection))
+        val classFinder = ClassFinder(externalArtifactCollection)
         val dependencyUsageFinder = DependencyUsageFinder(
             classFinder,
             variantClasses,

@@ -54,7 +54,7 @@ import android.widget.TextView;
 import ${getMaterialComponentName("android.support.design.widget.CollapsingToolbarLayout", useAndroidX)};
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
 import ${packageName}.placeholder.PlaceholderContent;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 /**
  * A fragment representing a single ${objectKind} detail screen.

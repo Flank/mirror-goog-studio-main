@@ -46,7 +46,6 @@ package $packageName;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Menu;
-import ${getMaterialComponentName("android.support.design.widget.FloatingActionButton", useAndroidX)};
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)};
 import ${getMaterialComponentName("android.support.design.widget.NavigationView", useAndroidX)};
 import androidx.navigation.NavController;
@@ -55,8 +54,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
-import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroidX)};
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName)};
+${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
 
@@ -70,14 +68,14 @@ ${renderIf(isViewBindingSupported) {"""
         super.onCreate(savedInstanceState);
         $contentViewBlock
         setSupportActionBar(${findViewById(
-          Language.Java, 
-          isViewBindingSupported, 
-          id = "toolbar", 
+          Language.Java,
+          isViewBindingSupported,
+          id = "toolbar",
           bindingName = "binding.${appBarMainBinding}")});
         ${findViewById(
-          Language.Java, 
-          isViewBindingSupported, 
-          id = "fab", 
+          Language.Java,
+          isViewBindingSupported,
+          id = "fab",
           bindingName = "binding.${appBarMainBinding}")}.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -111,6 +109,6 @@ ${renderIf(isViewBindingSupported) {"""
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
     }
-} 
+}
 """
 }

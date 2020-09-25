@@ -67,11 +67,11 @@ public class TestApplicationTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variant,
+            @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo,
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
-        createCommonTasks(variant, allVariants);
+        createCommonTasks(variantInfo, allVariants);
 
-        TestVariantImpl testVariantProperties = variant.getProperties();
+        TestVariantImpl testVariantProperties = variantInfo.getVariant();
 
         Provider<Directory> testingApk =
                 testVariantProperties.getArtifacts().get(ArtifactType.APK.INSTANCE);
@@ -133,7 +133,7 @@ public class TestApplicationTaskManager
 
     @Override
     public void createLintTasks(
-            @NonNull TestVariantImpl variantProperties,
+            @NonNull TestVariantImpl testVariant,
             @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
         // do nothing
     }

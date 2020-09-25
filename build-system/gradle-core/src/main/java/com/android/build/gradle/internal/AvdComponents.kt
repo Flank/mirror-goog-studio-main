@@ -32,6 +32,7 @@ import com.android.utils.ILogger
 import com.android.utils.StdLogger
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -52,7 +53,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     interface Parameters : BuildServiceParameters {
         val sdkService: Property<SdkComponentsBuildService>
-        val avdLocation: Property<String>
+        val avdLocation: DirectoryProperty
     }
 
     private val sdkDirectory: File
@@ -67,18 +68,13 @@ abstract class AvdComponentsBuildService @Inject constructor(
     private val avdManager: AvdManager by lazy {
         AvdManager.getInstance(
             sdkHandler,
-            avdFolder,
+            parameters.avdLocation.get().asFile,
             logger
         ) ?: throw RuntimeException ("Failed to initialize AvdManager")
     }
 
     private val deviceManager: DeviceManager by lazy {
         DeviceManager.createInstance(sdkDirectory, logger)
-    }
-
-    private val avdFolder: File by lazy {
-        // TODO(b/16526279): Make sure this is wired up correctly once build service is set up.
-        File(parameters.avdLocation.get())
     }
 
     private fun createOrRetrieveAvd(
@@ -88,8 +84,13 @@ abstract class AvdComponentsBuildService @Inject constructor(
     ): File {
         val info = avdManager.getAvd(deviceName, false)
         if (info != null) {
-            // already generated the avd
-            return info.configFile
+            if (info.configFile.exists()) {
+                logger.info("Device: $deviceName already exists. AVD creation skipped.")
+                // already generated the avd
+                return info.configFile
+            }
+            // Devices were deleted between runs, need to reload the avd.
+            avdManager.reloadAvds(logger)
         }
 
         val imageProvider = parameters.sdkService.get().sdkImageDirectoryProvider(imageHash)
@@ -128,7 +129,36 @@ abstract class AvdComponentsBuildService @Inject constructor(
             false,
             logger
         )
-        return parameters.sdkService.get().sdkImageDirectoryProvider(imageHash).get().asFile
+        return newInfo?.configFile ?: error("AVD could not be created.")
+    }
+
+    /**
+     * Returns the names of all avds currently in the shared avd folder.
+     */
+    fun allAvds(): List<String> {
+        avdManager.reloadAvds(logger)
+        return avdManager.allAvds.map {
+            it.name
+        }
+    }
+
+    /**
+     * Removes all the specified avds.
+     *
+     * This will delete the specified avds from the shared avd folder and update the avd cache.
+     *
+     * @param avds names of the avds to be deleted.
+     */
+    fun deleteAvds(avds: List<String>) {
+        avdManager.reloadAvds(logger)
+        for(avdName in avds) {
+            val avdInfo = avdManager.getAvd(avdName, false)
+            if (avdInfo != null) {
+                avdManager.deleteAvd(avdInfo, logger)
+            } else {
+                logger.warning("Failed to delete avd: $avdName.")
+            }
+        }
     }
 
     private fun defaultHardwareConfig(): MutableMap<String, String> {
@@ -140,7 +170,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         } else {
             error(
                 "AVD Emulator package is not downloaded. Failed to retrieve hardware defaults" +
-                        "for virtual device."
+                        " for virtual device."
             )
         }
 
@@ -194,9 +224,15 @@ abstract class AvdComponentsBuildService @Inject constructor(
             createOrRetrieveAvd(imageHash, deviceName, hardwareProfile)
         })
 
+    fun deviceSnapshotCreated(deviceName: String): Boolean {
+        val device = avdManager.getAvd(deviceName, false)?: return false
+        val snapshotPath = File(device.dataFolderPath, "snapshots/default_boot/snapshot.pb")
+        return snapshotPath.exists()
+    }
+
     class RegistrationAction(
         project: Project,
-        private val avdFolderLocation: String,
+        private val avdFolderLocation: Provider<Directory>,
         private val sdkService: Provider<SdkComponentsBuildService>
     ) : ServiceRegistrationAction<AvdComponentsBuildService, Parameters>(
         project,

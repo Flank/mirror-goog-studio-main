@@ -54,23 +54,23 @@ import org.gradle.api.Project;
  */
 interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl> {
 
-    fun createVariantObject(
+    fun createVariantBuilder(
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
             variantApiServices: VariantApiServices): VariantBuilderT
 
-    fun createUnitTestObject(
+    fun createUnitTestBuilder(
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
             variantApiServices: VariantApiServices): UnitTestBuilderImpl
 
-    fun createAndroidTestObject(
+    fun createAndroidTestBuilder(
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
             variantApiServices: VariantApiServices): AndroidTestBuilderImpl
 
-    fun createVariantPropertiesObject(
-            variant: VariantBuilderT,
+    fun createVariant(
+            variantBuilder: VariantBuilderT,
             componentIdentity: ComponentIdentity,
             buildFeatures: BuildFeatureValues,
             variantDslInfo: VariantDslInfo,
@@ -84,8 +84,8 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             variantPropertiesApiServices: VariantPropertiesApiServices,
             taskCreationServices: TaskCreationServices): VariantT
 
-    fun createUnitTestProperties(
-            componentIdentity: UnitTestBuilderImpl,
+    fun createUnitTest(
+            unitTestBuilder: UnitTestBuilderImpl,
             buildFeatures: BuildFeatureValues,
             variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
@@ -99,8 +99,8 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
             variantPropertiesApiServices: VariantPropertiesApiServices,
             taskCreationServices: TaskCreationServices): UnitTestImpl
 
-    fun createAndroidTestProperties(
-            componentIdentity: AndroidTestBuilderImpl,
+    fun createAndroidTest(
+            androidTestBuilder: AndroidTestBuilderImpl,
             buildFeatures: BuildFeatureValues,
             variantDslInfo: VariantDslInfo,
             variantDependencies: VariantDependencies,
@@ -137,7 +137,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
 
     fun createVariantApi(
             globalScope: GlobalScope,
-            componentProperties: ComponentImpl,
+            component: ComponentImpl,
             variantData: BaseVariantData,
             readOnlyObjectProvider: ReadOnlyObjectProvider): BaseVariantImpl?
 

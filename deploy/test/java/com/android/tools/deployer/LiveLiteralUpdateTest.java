@@ -59,11 +59,49 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
         android.loadDex(DEX_LOCATION);
         android.launchActivity(ACTIVITY_CLASS);
 
-        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
-        Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
-
         Deploy.LiveLiteralUpdateRequest request =
-                createRequest("key1", "Ljava/lang/String;", "value1");
+                Deploy.LiveLiteralUpdateRequest.newBuilder()
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key1")
+                                        .setType("Ljava/lang/String;")
+                                        .setValue("value1"))
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key2")
+                                        .setType("B")
+                                        .setValue("2"))
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key3")
+                                        .setType("C")
+                                        .setValue("X"))
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key4")
+                                        .setType("J")
+                                        .setValue("" + Long.MAX_VALUE))
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key5")
+                                        .setType("S")
+                                        .setValue("5"))
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key6")
+                                        .setType("F")
+                                        .setValue("1.234E-10"))
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key7")
+                                        .setType("D")
+                                        .setValue("" + Double.MIN_VALUE))
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setKey("key8")
+                                        .setType("Z")
+                                        .setValue("true"))
+                        .build();
         installer.update(request);
 
         Deploy.AgentLiveLiteralUpdateResponse response = installer.getLiveLiteralAgentResponse();
@@ -72,21 +110,41 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
         Assert.assertTrue(android.waitForInput(
                 "updateLiveLiteralValue(key1, class java.lang.String, value1)",
                 RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(key2, class java.lang.Byte, 2)",
+                        RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(key3, class java.lang.Character, X)",
+                        RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(key4, class java.lang.Long, "
+                                + Long.MAX_VALUE
+                                + ")",
+                        RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(key5, class java.lang.Short, 5)",
+                        RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(key6, class java.lang.Float, 1.234E-10)",
+                        RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(key7, class java.lang.Double, "
+                                + Double.MIN_VALUE
+                                + ")",
+                        RETURN_VALUE_TIMEOUT));
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(key8, class java.lang.Boolean, true)",
+                        RETURN_VALUE_TIMEOUT));
     }
 
-    protected Deploy.LiveLiteralUpdateRequest createRequest(String key, String type, String value) {
-        Deploy.LiveLiteralUpdateRequest request =
-                Deploy.LiveLiteralUpdateRequest.newBuilder()
-                        .addUpdates(
-                                Deploy.LiveLiteral.newBuilder()
-                                        .setKey(key)
-                                        .setType(type)
-                                        .setValue(value))
-                        .build();
-        return request;
-    }
-
-            /** A helper to communicate SwapRequest to the agent with the on-host installer. */
+    /** A helper to communicate SwapRequest to the agent with the on-host installer. */
     protected static class LocalLiveLiteralUpdateClient extends InstallServerTestClient {
         protected LocalLiveLiteralUpdateClient(
                 FakeAndroidDriver android, TemporaryFolder messageDir) {
