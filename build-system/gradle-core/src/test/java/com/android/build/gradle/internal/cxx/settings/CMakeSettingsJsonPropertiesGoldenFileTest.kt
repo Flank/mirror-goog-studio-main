@@ -47,14 +47,6 @@ class CMakeSettingsJsonPropertiesGoldenFileTest {
                 result += ""
                 BasicCmakeMock().let {
                     // Walk all vals in the model and invoke them
-                    val module = createCxxModuleModel(it.sdkComponents, it.configurationModel)
-                    val variant = createCxxVariantModel(
-                        it.configurationModel,
-                        module)
-                    val abi = createCxxAbiModel(
-                        it.sdkComponents, it.configurationModel,
-                        variant,
-                        Abi.X86_64)
                     Macro.values()
                         .toList()
                         .sortedBy { macro -> macro.qualifiedName }

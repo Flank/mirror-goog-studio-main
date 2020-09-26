@@ -1165,36 +1165,34 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .build())
     }
 
-    fun createExternalNativeBuildJsonGenerators(
-            variant: VariantBuilderT, variantProperties: VariantT) {
-        val configurationModel = tryCreateCxxConfigurationModel(variantProperties, false) ?: return
-        variantProperties.taskContainer.cxxConfigurationModel = configurationModel
-    }
+    fun createExternalNativeBuildTasks(variant: VariantImpl) {
+        val configurationModel = tryCreateCxxConfigurationModel(variant) ?: return
 
-    fun createExternalNativeBuildTasks(
-            component: VariantBuilderT, variant: VariantImpl) {
+        // External native build
+        variant.taskContainer.cxxConfigurationModel = configurationModel
         val taskContainer = variant.taskContainer
-        val configurationModel = taskContainer.cxxConfigurationModel ?: return
 
         // Set up JSON generation tasks
         val generateTask: TaskProvider<out Task> = taskFactory.register(
-                ExternalNativeBuildJsonTask.CreationAction(
-                        configurationModel, variant))
+            ExternalNativeBuildJsonTask.CreationAction(
+                configurationModel, variant
+            )
+        )
 
         // Set up build tasks
         val buildTask = taskFactory.register(
-                ExternalNativeBuildTask.CreationAction(
-                        configurationModel, variant, generateTask))
+            ExternalNativeBuildTask.CreationAction(
+                configurationModel, variant, generateTask
+            )
+        )
         taskContainer.compileTask.dependsOn(buildTask)
 
         // Set up clean tasks
         val cleanTask = taskFactory.named("clean")
-        val allAbisModel = tryCreateCxxConfigurationModel(variant, true)
-        if (allAbisModel != null) {
-            val externalNativeCleanTask = taskFactory.register(
-                    ExternalNativeCleanTask.CreationAction(allAbisModel, variant))
-            cleanTask.dependsOn(externalNativeCleanTask)
-        }
+        val externalNativeCleanTask = taskFactory.register(
+            ExternalNativeCleanTask.CreationAction(configurationModel, variant)
+        )
+        cleanTask.dependsOn(externalNativeCleanTask)
     }
 
     /** Creates the tasks to build unit tests.  */

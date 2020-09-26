@@ -140,8 +140,7 @@ public abstract class AbstractAppTaskManager<
         createAidlTask(appVariantProperties);
 
         // Add external native build tasks
-        createExternalNativeBuildJsonGenerators(variant.getVariantBuilder(), appVariantProperties);
-        createExternalNativeBuildTasks(variant.getVariantBuilder(), appVariantProperties);
+        createExternalNativeBuildTasks(appVariantProperties);
 
         maybeExtractProfilerDependencies(apkCreationConfig);
 

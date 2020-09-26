@@ -19,8 +19,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
-import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.infoln
@@ -56,14 +54,10 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
         ).use {
             infoln("starting clean")
             infoln("finding existing JSONs")
-            val generator =
-                createCxxMetadataGenerator(
-                    sdkComponents.get(),
-                    configurationModel,
-                    analyticsService.get()
-                )
             val existingJsons = mutableListOf<File>()
-            for (abi in generator.abis) {
+            // Include unused ABIs since changes to build.gradle may have changed the set of
+            // ABIs that are built. We want to clean the old ones too.
+            for (abi in (configurationModel.activeAbis + configurationModel.unusedAbis)) {
                 if (abi.jsonFile.isFile) {
                     existingJsons.add(abi.jsonFile)
                 } else {
@@ -85,7 +79,7 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
                 targetNames.add(Joiner.on(",").join(targets))
             }
             infoln("about to execute %s clean commands", cleanCommands.size)
-            executeProcessBatch(generator, cleanCommands, targetNames)
+            executeProcessBatch(cleanCommands, targetNames)
             infoln("clean complete")
         }
     }
@@ -95,7 +89,6 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
      * that point.
      */
     private fun executeProcessBatch(
-        generator: CxxMetadataGenerator,
         commands: List<List<String>>,
         targetNames: List<String>
     ) {
@@ -110,9 +103,9 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
             }
             infoln("$processBuilder")
             createProcessOutputJunction(
-                generator.variant.objFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
-                generator.variant.objFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
-                generator.variant.objFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
+                configurationModel.variant.objFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
+                configurationModel.variant.objFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
+                configurationModel.variant.objFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
                     processBuilder,
                 ""
             )

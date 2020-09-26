@@ -17,10 +17,11 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.settings.Token.LiteralToken
 import com.android.build.gradle.internal.cxx.settings.Token.MacroToken
 import com.google.common.truth.Truth.assertThat
@@ -40,14 +41,14 @@ class LookupSettingFromModelKtTest {
             // Walk all vals in the model and invoke them
             val module = createCxxModuleModel(
                 it.sdkComponents,
-                it.configurationModel,
+                it.configurationParameters,
                 it.cmakeFinder)
             val variant = createCxxVariantModel(
-                it.configurationModel,
+                it.configurationParameters,
                 module)
             val abi = createCxxAbiModel(
                 it.sdkComponents,
-                it.configurationModel,
+                it.configurationParameters,
                 variant,
                 Abi.X86_64)
 
@@ -65,23 +66,8 @@ class LookupSettingFromModelKtTest {
     fun `ensure all macros example values are accurate`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = createCxxModuleModel(
-                it.sdkComponents,
-                it.configurationModel,
-                it.cmakeFinder)
-            // Create the ninja executable files so that the macro expansion can succeed
-            module.cmake!!.cmakeExe!!.parentFile.apply { mkdirs() }.apply {
-                resolve("ninja").writeText("whatever")
-                resolve("ninja.exe").writeText("whatever")
-            }
-            val variant = createCxxVariantModel(
-                it.configurationModel,
-                module)
-            val abi = createCxxAbiModel(
-                it.sdkComponents,
-                it.configurationModel,
-                variant,
-                Abi.X86_64)
+            val allAbis = it.configurationModel.activeAbis + it.configurationModel.unusedAbis
+            val abi = allAbis.single { abi -> abi.abi == Abi.X86_64 }
 
             assertThat(abi.resolveMacroValue(Macro.NDK_SYSTEM_VERSION))
                 .isEqualTo("19")

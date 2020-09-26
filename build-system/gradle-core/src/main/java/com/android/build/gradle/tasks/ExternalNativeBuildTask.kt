@@ -24,8 +24,6 @@ import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
-import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
-import com.android.build.gradle.internal.cxx.gradle.generator.variantSoFolder
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -47,7 +45,6 @@ import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
-import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils.isSameFile
 import com.android.utils.FileUtils.join
@@ -98,7 +95,6 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
         ).use {
             generator =
                 createCxxMetadataGenerator(
-                    sdkComponents.get(),
                     configurationModel,
                     analyticsService.get()
                 )
@@ -118,12 +114,12 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
     // Exposed in Variants API
     @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val objFolder: File
-        get() = configurationModel.variantObjFolder
+        get() = configurationModel.variant.objFolder
 
     // Exposed in Variants API
     @get:Internal("Temporary to suppress warnings (bug 135900510), may need more investigation")
     val soFolder: File
-        get() = configurationModel.variantSoFolder
+        get() = configurationModel.variant.soFolder
 
     /** Represents a single build step that, when executed, builds one or more libraries.  */
     private class BuildStep(

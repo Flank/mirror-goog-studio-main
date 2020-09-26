@@ -19,53 +19,73 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.variantJsonFolder
-import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
-import com.android.build.gradle.internal.cxx.gradle.generator.variantSoFolder
+import com.android.build.gradle.internal.cxx.gradle.generator.*
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment.Companion.requireExplicitLogger
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
+import java.io.File
 
 /**
- * Construct a [CxxVariantModel], careful to be lazy with module-level fields.
+ * Construct a [CxxVariantModel]
  */
 fun createCxxVariantModel(
-    configurationModel: CxxConfigurationModel,
+    configurationParameters: CxxConfigurationParameters,
     module: CxxModuleModel) : CxxVariantModel {
     val validAbiList = CachingEnvironment(module.cxxFolder).use {
         AbiConfigurator(
                 AbiConfigurationKey(
                         module.ndkSupportedAbiList,
                         module.ndkDefaultAbiList,
-                        configurationModel.nativeVariantConfig.externalNativeBuildAbiFilters,
-                        configurationModel.nativeVariantConfig.ndkAbiFilters,
+                        configurationParameters.nativeVariantConfig.externalNativeBuildAbiFilters,
+                        configurationParameters.nativeVariantConfig.ndkAbiFilters,
                         module.splitsAbiFilterSet,
                         module.project.isBuildOnlyTargetAbiEnabled,
                         module.project.ideBuildTargetAbi
                 )
         ).validAbis.toList()
     }
+    val variantIntermediatesFolder = join(
+            configurationParameters.intermediatesFolder,
+            configurationParameters.buildSystem.tag,
+            configurationParameters.variantName
+    )
     return CxxVariantModel(
-        buildTargetSet = configurationModel.nativeVariantConfig.targets,
-        implicitBuildTargetSet = configurationModel.implicitBuildTargetSet,
+        buildTargetSet = configurationParameters.nativeVariantConfig.targets,
+        implicitBuildTargetSet = configurationParameters.implicitBuildTargetSet,
         module = module,
-        buildSystemArgumentList = configurationModel.nativeVariantConfig.arguments,
-        cFlagsList = configurationModel.nativeVariantConfig.cFlags,
-        cppFlagsList = configurationModel.nativeVariantConfig.cppFlags,
-        variantName = configurationModel.variantName,
+        buildSystemArgumentList = configurationParameters.nativeVariantConfig.arguments,
+        cFlagsList = configurationParameters.nativeVariantConfig.cFlags,
+        cppFlagsList = configurationParameters.nativeVariantConfig.cppFlags,
+        variantName = configurationParameters.variantName,
         // TODO remove this after configuration has been added to DSL
         // If CMakeSettings.json has a configuration with this exact name then
         // it will be used. The point is to delay adding 'configuration' to the
         // DSL.
         cmakeSettingsConfiguration = "android-gradle-plugin-predetermined-name",
-        objFolder = configurationModel.variantObjFolder,
-        soFolder = configurationModel.variantSoFolder,
-        isDebuggableEnabled = configurationModel.isDebuggable,
+        objFolder = if (configurationParameters.buildSystem == NativeBuildSystem.NDK_BUILD) {
+            // ndkPlatform-build create libraries in a "local" subfolder.
+            join(variantIntermediatesFolder, "obj", "local")
+        } else {
+            join(variantIntermediatesFolder, "obj")
+        },
+        soFolder = join(variantIntermediatesFolder, "lib"),
+        isDebuggableEnabled = configurationParameters.isDebuggable,
         validAbiList = validAbiList,
-        prefabClassPath = configurationModel.prefabClassPath?.singleFile,
-        prefabPackageDirectoryList = configurationModel.prefabPackageDirectoryList?.toList()?:listOf(),
-        prefabDirectory = configurationModel.variantJsonFolder.resolve("prefab")
+        prefabClassPathFileCollection = configurationParameters.prefabClassPath,
+        prefabPackageDirectoryListFileCollection = configurationParameters.prefabPackageDirectoryList,
+        prefabDirectory = join(
+            configurationParameters.cxxFolder,
+            configurationParameters.buildSystem.tag,
+            configurationParameters.variantName,
+            "prefab")
     )
 }
+
+val CxxVariantModel.prefabClassPath : File?
+    get() = prefabClassPathFileCollection?.singleFile
+
+val CxxVariantModel.prefabPackageDirectoryList : List<File>
+    get() = prefabPackageDirectoryListFileCollection?.toList()?:listOf()
 
 /**
  * The gradle build output folder

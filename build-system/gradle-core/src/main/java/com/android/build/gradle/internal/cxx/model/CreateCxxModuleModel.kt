@@ -22,9 +22,7 @@ import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.configure.*
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.cxxFolder
-import com.android.build.gradle.internal.cxx.logging.lifecycleln
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -36,13 +34,13 @@ import java.util.function.Consumer
  */
 fun createCxxModuleModel(
     sdkComponents : SdkComponentsBuildService,
-    configurationModel: CxxConfigurationModel,
+    configurationParameters: CxxConfigurationParameters,
     cmakeLocator: CmakeLocator
 ) : CxxModuleModel {
 
-    val cxxFolder = configurationModel.cxxFolder
+    val cxxFolder = configurationParameters.cxxFolder
     fun localPropertyFile(property : String) : File? {
-        val path = gradleLocalProperties(configurationModel.rootDir)
+        val path = gradleLocalProperties(configurationParameters.rootDir)
             .getProperty(property) ?: return null
         return File(path)
     }
@@ -60,36 +58,35 @@ fun createCxxModuleModel(
     }
 
     return CxxModuleModel(
-        moduleBuildFile = configurationModel.buildFile,
+        moduleBuildFile = configurationParameters.buildFile,
         cxxFolder = cxxFolder,
-        project = createCxxProjectModel(sdkComponents, configurationModel),
+        project = createCxxProjectModel(sdkComponents, configurationParameters),
         ndkMetaPlatforms = ndkMetaPlatforms,
         ndkMetaAbiList = NdkAbiFile(ndkMetaAbisFile(ndkFolder)).abiInfoList,
         cmakeToolchainFile = join(ndkFolder, "build", "cmake", "android.toolchain.cmake"),
         originalCmakeToolchainFile = join(ndkFolder, "build", "cmake", "android.toolchain.cmake"),
         cmake =
-                if (configurationModel.buildSystem == CMAKE) {
+                if (configurationParameters.buildSystem == CMAKE) {
                     val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
                     val cmakeFolder =
                         cmakeLocator.findCmakePath(
-                                configurationModel.cmakeVersion,
+                                configurationParameters.cmakeVersion,
                                 localPropertyFile(CMAKE_DIR_PROPERTY),
                                 sdkComponents.sdkDirectoryProvider.get().asFile,
                                 Consumer { sdkComponents.installCmake(it) })
                     val cmakeExe =
                             if (cmakeFolder == null) null
                             else join(cmakeFolder, "bin", "cmake$exe")
-                    lifecycleln("NINJAX: Locating Ninjas")
                     val ninjaExe =
                             cmakeExe?.parentFile?.resolve("ninja$exe")
                             ?.takeIf { it.exists() }
                     CxxCmakeModuleModel(
                         minimumCmakeVersion =
-                            CmakeVersionRequirements(configurationModel.cmakeVersion).effectiveRequestVersion,
+                            CmakeVersionRequirements(configurationParameters.cmakeVersion).effectiveRequestVersion,
                         isValidCmakeAvailable = cmakeFolder != null,
                         cmakeExe = cmakeExe,
                         ninjaExe = ninjaExe,
-                        isPreferCmakeFileApiEnabled = configurationModel.isPreferCmakeFileApiEnabled
+                        isPreferCmakeFileApiEnabled = configurationParameters.isPreferCmakeFileApiEnabled
                     )
 
                 } else {
@@ -99,14 +96,14 @@ fun createCxxModuleModel(
         ndkVersion = ndk.revision,
         ndkSupportedAbiList = ndk.supportedAbis,
         ndkDefaultAbiList = ndk.defaultAbis,
-        ndkDefaultStl = ndk.ndkInfo.getDefaultStl(configurationModel.buildSystem),
-        makeFile = configurationModel.makeFile,
-        buildSystem = configurationModel.buildSystem,
-        splitsAbiFilterSet = configurationModel.splitsAbiFilterSet,
-        intermediatesFolder = configurationModel.intermediatesFolder,
-        gradleModulePathName = configurationModel.gradleModulePathName,
-        moduleRootFolder = configurationModel.moduleRootFolder,
-        buildStagingFolder = configurationModel.buildStagingFolder,
+        ndkDefaultStl = ndk.ndkInfo.getDefaultStl(configurationParameters.buildSystem),
+        makeFile = configurationParameters.makeFile,
+        buildSystem = configurationParameters.buildSystem,
+        splitsAbiFilterSet = configurationParameters.splitsAbiFilterSet,
+        intermediatesFolder = configurationParameters.intermediatesFolder,
+        gradleModulePathName = configurationParameters.gradleModulePathName,
+        moduleRootFolder = configurationParameters.moduleRootFolder,
+        buildStagingFolder = configurationParameters.buildStagingFolder,
         stlSharedObjectMap =
             ndk.ndkInfo.supportedStls
                 .map { stl ->
@@ -121,10 +118,10 @@ fun createCxxModuleModel(
 
 fun createCxxModuleModel(
     sdkComponents: SdkComponentsBuildService,
-    configurationModel: CxxConfigurationModel
+    configurationParameters: CxxConfigurationParameters
 ) = createCxxModuleModel(
     sdkComponents,
-    configurationModel,
+    configurationParameters,
     CmakeLocator()
 )
 

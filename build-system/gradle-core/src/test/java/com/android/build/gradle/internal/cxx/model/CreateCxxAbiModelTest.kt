@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.io.File
 
 class CreateCxxAbiModelTest {
     // Check some specific issues I had to debug
@@ -29,14 +28,14 @@ class CreateCxxAbiModelTest {
         BasicCmakeMock().let {
             val module = createCxxModuleModel(
                 it.sdkComponents,
-                it.configurationModel
+                it.configurationParameters
             )
             val variant = createCxxVariantModel(
-                it.configurationModel,
+                it.configurationParameters,
                 module)
             val abi = createCxxAbiModel(
                 it.sdkComponents,
-                it.configurationModel,
+                it.configurationParameters,
                 variant, Abi.X86)
             assertThat(abi.cxxBuildFolder.path
                     .replace("\\", "/"))

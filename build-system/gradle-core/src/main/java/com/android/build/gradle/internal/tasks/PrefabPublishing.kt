@@ -20,7 +20,6 @@ import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.abiJsonFile
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -39,10 +38,8 @@ import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -200,19 +197,10 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    val jsonFiles get() = Abi.values().map { configurationModel.abiJsonFile(it) }
+    val jsonFiles get() = configurationModel.activeAbis.map { it.jsonFile }
 
     @get:Input
-    val minSdkVersion get() = configurationModel.minSdkVersion
-
-    @get:Input
-    val externalNativeBuildArguments get() = configurationModel.nativeVariantConfig.arguments
-
-    @get:Input
-    val externalNativeBuildAbiFilters get() = configurationModel.nativeVariantConfig.externalNativeBuildAbiFilters
-
-    @get:Input
-    val ndkAbiFilters get() = configurationModel.nativeVariantConfig.ndkAbiFilters
+    val ndkAbiFilters get() = configurationModel.variant.validAbiList
 
     override fun doTaskAction() {
         val installDir = outputDirectory.get().asFile.apply { mkdirs() }
@@ -224,7 +212,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
     }
 
     private fun createAbiData() : List<PrefabAbiData> {
-        val generator = createCxxMetadataGenerator(sdkComponents.get(), configurationModel, analyticsService.get())
+        val generator = createCxxMetadataGenerator(configurationModel, analyticsService.get())
         val variantModel = generator.variant
         val abiModels = generator.abis
 

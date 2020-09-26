@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito.doReturn
 
@@ -27,9 +26,9 @@ import org.mockito.Mockito.doReturn
 open class BasicCmakeMock(createFakeNinja : Boolean = true) : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
-    val module by lazy { createCxxModuleModel(sdkComponents, configurationModel, cmakeFinder)!! }
-    val variant by lazy { createCxxVariantModel(configurationModel, module) }
-    val abi by lazy { createCxxAbiModel(sdkComponents, configurationModel, variant, Abi.X86) }
+    val module by lazy { createCxxModuleModel(sdkComponents, configurationParameters, cmakeFinder) }
+    val variant by lazy { createCxxVariantModel(configurationParameters, module) }
+    val abi by lazy { createCxxAbiModel(sdkComponents, configurationParameters, variant, Abi.X86) }
 
     init {
         doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).abiFilters

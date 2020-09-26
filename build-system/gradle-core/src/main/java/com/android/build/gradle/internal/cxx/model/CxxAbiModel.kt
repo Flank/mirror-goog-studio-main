@@ -204,6 +204,6 @@ fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean {
     // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK version
     // that we can guarantee will not be used to use those ABIs.
     return (variant.module.project.isPrefabEnabled
-            && (variant.prefabPackageDirectoryList?.toList()?:listOf()).isNotEmpty()
+            && (variant.prefabPackageDirectoryListFileCollection != null)
             && variant.module.ndkVersion.major >= 17)
 }

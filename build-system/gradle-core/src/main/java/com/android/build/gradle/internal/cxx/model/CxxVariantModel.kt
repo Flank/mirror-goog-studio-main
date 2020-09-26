@@ -102,14 +102,14 @@ data class CxxVariantModel(
     /**
      * Path to the Prefab jar to use.
      */
-    val prefabClassPath: File?,
+    val prefabClassPathFileCollection: FileCollection?,
 
     /**
      * Paths to the unprocessed prefab package directories extracted from the AAR.
      *
      * For example: jsoncpp/build/.transforms/$SHA/jsoncpp/prefab
      */
-    val prefabPackageDirectoryList: List<File>,
+    val prefabPackageDirectoryListFileCollection: FileCollection?,
 
     /**
      * Path to the prefab output to be passed to the native build system.

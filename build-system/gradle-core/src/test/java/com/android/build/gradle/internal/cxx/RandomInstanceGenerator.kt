@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision
+import org.gradle.api.file.FileCollection
 import java.io.File
 import java.lang.Math.abs
 import java.lang.RuntimeException
@@ -38,7 +39,7 @@ import java.util.Random
 class RandomInstanceGenerator {
     private val defaultSequenceLength = 100
     private val random = Random(192)
-    private val factoryMap = mutableMapOf<Type, (RandomInstanceGenerator) -> Any>()
+    private val factoryMap = mutableMapOf<Type, (RandomInstanceGenerator) -> Any?>()
 
     init {
         // Revision can't handle negative values
@@ -57,6 +58,7 @@ class RandomInstanceGenerator {
             )
         }
         provide(File::class.java) { file() }
+        provideNull(FileCollection::class.java)
         provide(BuildSettingsConfiguration::class.java) { buildSettings() }
     }
     fun <T> oneOf(vararg creators : () -> T) = creators[abs(int()) % creators.size]()
@@ -98,6 +100,15 @@ class RandomInstanceGenerator {
         factoryMap[type] = factory
         return this
     }
+
+    /**
+     * Add a new factory for the given type.
+     */
+    private fun provideNull(type : Type) : RandomInstanceGenerator {
+        factoryMap[type] = { null }
+        return this
+    }
+
 
     /**
      * Invoke to create a random instance of T.

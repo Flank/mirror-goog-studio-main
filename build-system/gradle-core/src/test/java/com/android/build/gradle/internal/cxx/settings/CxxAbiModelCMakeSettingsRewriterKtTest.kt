@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTI
 import com.android.build.gradle.internal.cxx.configure.getBuildRootFolder
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
 import com.android.build.gradle.internal.cxx.configure.getGenerator
-import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.CmakeSettingsMock
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
@@ -90,7 +90,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             val abi = createCxxAbiModel(
                 sdkComponents,
-                configurationModel,
+                configurationParameters,
                 variant,
                 Abi.X86)
             val rewritten = abi.rewriteCxxAbiModelWithCMakeSettings()
@@ -128,7 +128,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             val abi = createCxxAbiModel(
                 sdkComponents,
-                configurationModel,
+                configurationParameters,
                 variant,
                 Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
@@ -149,7 +149,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             val abi = createCxxAbiModel(
                 sdkComponents,
-                configurationModel,
+                configurationParameters,
                 variant,
                 Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
@@ -169,7 +169,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             val abi = createCxxAbiModel(
                 sdkComponents,
-                configurationModel,
+                configurationParameters,
                 variant,
                 Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
@@ -285,7 +285,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             )
             setup(this, 1)
 
-            val configurationModel1 = tryCreateCxxConfigurationModel(
+            val configurationModel1 = tryCreateConfigurationParameters(
                     variantImpl)!!
             val variant1 = createCxxVariantModel(configurationModel1, module)
             val result1 = createCxxAbiModel(
@@ -294,7 +294,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             result1.toJsonString() // Force all lazy values
 
             setup(this, 2)
-            val configurationModel2 = tryCreateCxxConfigurationModel(variantImpl)!!
+            val configurationModel2 = tryCreateConfigurationParameters(variantImpl)!!
             val variant2 = createCxxVariantModel(configurationModel2, module)
             val result2 = createCxxAbiModel(
                 sdkComponents, configurationModel2,

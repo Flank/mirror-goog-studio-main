@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
@@ -137,14 +138,14 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
     Mockito.doReturn(setOf<String>()).`when`(mergedNdkConfig).abiFilters
     Mockito.doReturn(minSdkVersion).`when`(variantBuilder).minSdkVersion
-    val componentModel = tryCreateCxxConfigurationModel(
+    val componentParameters = tryCreateConfigurationParameters(
             variantImpl
     )!!
-    val module = createCxxModuleModel(sdkComponents, componentModel)
-    val variant = createCxxVariantModel(componentModel, module)
+    val module = createCxxModuleModel(sdkComponents, componentParameters)
+    val variant = createCxxVariantModel(componentParameters, module)
     return createCxxAbiModel(
         sdkComponents,
-        componentModel,
+        componentParameters,
         variant,
         Abi.X86)
 }

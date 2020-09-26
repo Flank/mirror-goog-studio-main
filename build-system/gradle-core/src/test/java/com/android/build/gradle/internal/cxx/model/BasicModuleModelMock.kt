@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIX
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
+import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
@@ -46,10 +47,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
+import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
@@ -136,6 +139,13 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
+    val taskCreationServices: TaskCreationServices = mock(
+        TaskCreationServices::class.java,
+        throwUnmocked
+    )
+
+    val issueReporter: IssueReporter = mock(IssueReporter::class.java)
+
     val externalNativeBuild: ExternalNativeBuild = mock(
         ExternalNativeBuild::class.java,
         throwUnmocked
@@ -213,6 +223,12 @@ open class BasicModuleModelMock {
         )!!
     }
 
+    val configurationParameters by lazy {
+        tryCreateConfigurationParameters(
+            variantImpl
+        )!!
+    }
+
     private fun <T> any(): T {
         Mockito.any<T>()
         return uninitialized()
@@ -270,6 +286,8 @@ open class BasicModuleModelMock {
         doReturn(global).`when`(this.variantImpl).globalScope
         doReturn(variantScope).`when`(this.variantImpl).variantScope
         doReturn(baseVariantData).`when`(this.variantImpl).variantData
+        doReturn(taskCreationServices).`when`(this.variantImpl).services
+        doReturn(issueReporter).`when`(this.taskCreationServices).issueReporter
 
         val variantDependencies = Mockito.mock(VariantDependencies::class.java)
         doReturn(prefabArtifactCollection).`when`(variantDependencies).getArtifactCollection(

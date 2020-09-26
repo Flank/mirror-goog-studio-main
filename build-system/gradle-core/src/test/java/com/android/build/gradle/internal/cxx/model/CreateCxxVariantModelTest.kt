@@ -25,10 +25,10 @@ class CreateCxxVariantModelTest {
         BasicCmakeMock().let {
             val module = createCxxModuleModel(
                 it.sdkComponents,
-                it.configurationModel
+                it.configurationParameters
             )
             createCxxVariantModel(
-                it.configurationModel,
+                it.configurationParameters,
                 module
             )
         }

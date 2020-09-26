@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
+import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModelImpl
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth.assertThat
@@ -42,7 +44,7 @@ class CreateCxxModuleModelTest {
             doReturn(File("./CMakeLists.txt")).`when`(it.cmake).path
             assertThat(createCxxModuleModel(
                 it.sdkComponents,
-                it.configurationModel)).isNotNull()
+                it.configurationParameters)).isNotNull()
         }
     }
 
@@ -52,7 +54,7 @@ class CreateCxxModuleModelTest {
             doReturn(File("./Android.mk")).`when`(it.ndkBuild).path
             assertThat(createCxxModuleModel(
                 it.sdkComponents,
-                it.configurationModel
+                it.configurationParameters
             )).isNotNull()
         }
     }
@@ -63,7 +65,7 @@ class CreateCxxModuleModelTest {
             doReturn(join(it.projectRootDir, "Android.mk")).`when`(it.ndkBuild).path
             PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 assertThat(
-                    tryCreateCxxConfigurationModel(
+                    tryCreateCxxConfigurationModelImpl(
                             it.variantImpl
                     )
                 ).isNull()
@@ -85,7 +87,7 @@ class CreateCxxModuleModelTest {
                     )!!
                 val module = createCxxModuleModel(
                     it.sdkComponents,
-                    componentModel
+                    it.configurationParameters
                 )
                 val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.errors).hasSize(0)
@@ -100,11 +102,11 @@ class CreateCxxModuleModelTest {
             BasicCmakeMock().let {
                 doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
-                val configurationModel = tryCreateCxxConfigurationModel(
+                val configurationParameters = tryCreateConfigurationParameters(
                         it.variantImpl)!!
                 val module = createCxxModuleModel(
                     it.sdkComponents,
-                    configurationModel
+                    configurationParameters
                 )
                 val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.warnings).hasSize(1)

@@ -18,44 +18,46 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.abiCxxBuildFolder
-import com.android.build.gradle.internal.cxx.gradle.generator.variantJsonFolder
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
 
 /**
- * Construct a [CxxAbiModel], careful to be lazy with module level fields.
+ * Construct a [CxxAbiModel].
  */
 fun createCxxAbiModel(
     sdkComponents: SdkComponentsBuildService,
-    configurationModel: CxxConfigurationModel,
+    configurationParameters: CxxConfigurationParameters,
     variant: CxxVariantModel,
     abi: Abi
 ) : CxxAbiModel {
+    val cxxBuildFolder = join(
+        configurationParameters.cxxFolder,
+        configurationParameters.buildSystem.tag,
+        configurationParameters.variantName,
+        abi.tag)
     return CxxAbiModel(
         variant = variant,
         abi = abi,
         info = variant.module.ndkMetaAbiList.single { it.abi == abi },
-        originalCxxBuildFolder = configurationModel.abiCxxBuildFolder(abi),
-        cxxBuildFolder = configurationModel.abiCxxBuildFolder(abi),
+        originalCxxBuildFolder = cxxBuildFolder,
+        cxxBuildFolder = cxxBuildFolder,
         abiPlatformVersion =
             sdkComponents
                 .ndkHandler
                 .ndkPlatform
                 .getOrThrow()
                 .ndkInfo
-                .findSuitablePlatformVersion(abi.tag, configurationModel.minSdkVersion),
+                .findSuitablePlatformVersion(abi.tag, configurationParameters.minSdkVersion),
         cmake =
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
-                val cmakeArtifactsBaseFolder = join(configurationModel.variantJsonFolder, abi.tag)
                 CxxCmakeAbiModel(
-                    cmakeServerLogFile = join(cmakeArtifactsBaseFolder, "cmake_server_log.txt"),
+                    cmakeServerLogFile = join(cxxBuildFolder, "cmake_server_log.txt"),
                     effectiveConfiguration = CMakeSettingsConfiguration(),
                     cmakeWrappingBaseFolder = join(variant.gradleBuildOutputFolder, abi.tag),
-                    cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder
+                    cmakeArtifactsBaseFolder = cxxBuildFolder
                 )
             } else {
                 null

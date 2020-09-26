@@ -202,8 +202,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libraryVariant));
 
         // External native build
-        createExternalNativeBuildJsonGenerators(variantInfo.getVariantBuilder(), libraryVariant);
-        createExternalNativeBuildTasks(variantInfo.getVariantBuilder(), libraryVariant);
+        createExternalNativeBuildTasks(libraryVariant);
 
         createMergeJniLibFoldersTasks(libraryVariant);
 
