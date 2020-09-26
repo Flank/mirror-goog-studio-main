@@ -44,8 +44,6 @@ cc_library(
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/perfd/common",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
         "-I$(GENDIR)/external/perfetto_repo",
     ],
     tags = ["no_windows"],
@@ -77,8 +75,6 @@ cc_test(
     copts = [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/tests",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
         "-I$(GENDIR)/external/perfetto_repo",
     ],
     data = [

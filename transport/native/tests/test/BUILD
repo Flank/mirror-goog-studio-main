@@ -4,10 +4,13 @@ cc_library(
         "utils.bazel.cc",
         "utils.h",
     ],
+    hdrs = [
+        "utils.h",
+    ],
     copts = [
         "-Itools/base/transport/native/daemon",
-        "-I$(GENDIR)/tools/base/transport",
     ],
+    include_prefix = "test",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
 )

@@ -10,10 +10,7 @@ cc_library(
         "commands/echo_daemon_command.h",
         "echo.h",
     ],
-    copts = ANDROID_COPTS + [
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
-    ],
+    copts = ANDROID_COPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
@@ -35,8 +32,6 @@ cc_library(
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
         "-Itools/base/echo-sample",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
@@ -59,8 +54,6 @@ cc_library(
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],

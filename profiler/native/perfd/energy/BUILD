@@ -17,8 +17,6 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
     deps = [
@@ -33,9 +31,6 @@ cc_test(
     srcs = ["energy_cache_test.cc"],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native/tests",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],

@@ -4,7 +4,7 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "utils",
-    srcs = [
+    srcs = glob(["**/*.h"]) + [
         "activity_manager.cc",
         "background_queue.cc",
         "bash_command.cc",
@@ -108,10 +108,9 @@ cc_library(
         "uid_fetcher.h",
     ],
     copts = [
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
         "-std=c++11",
     ],
+    include_prefix = "utils",
     tags = ["no_windows"],
     deps = [
         "//tools/base/transport/proto:cc_proto",
@@ -142,11 +141,6 @@ cc_test(
         "trie_test.cc",
         "uid_fetcher_test.cc",
     ],
-    copts = [
-        "-Itools/base/transport/native/tests",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
-    ],
     data = [
         "//tools/base/transport/native/tests/testdata",
     ],
@@ -174,9 +168,6 @@ cc_test(
         "nonblocking_command_runner.h",
         "nonblocking_command_runner_test.cc",
         "thread_name.h",
-    ],
-    copts = [
-        "-Itools/base/transport/native",
     ],
     linkstatic = 1,
     tags = ["no_windows"],

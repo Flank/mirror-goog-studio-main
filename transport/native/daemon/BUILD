@@ -27,10 +27,19 @@ cc_library(
         "transport_service.cc",
         "transport_service.h",
     ],
-    copts = ANDROID_COPTS + [
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
+    hdrs = [
+        "agent_service.h",
+        "commands/command.h",
+        "connector.h",
+        "daemon.h",
+        "event_buffer.h",
+        "event_writer.h",
+        "service_component.h",
+        "transport_component.h",
+        "transport_service.h",
     ],
+    copts = ANDROID_COPTS,
+    include_prefix = "daemon",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
@@ -49,8 +58,6 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = [
         "-ldl",  # Needed for dladdr referenced in TermincationService
@@ -72,8 +79,6 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = [
         "-ldl",  # Needed for dladdr referenced in TermincationService

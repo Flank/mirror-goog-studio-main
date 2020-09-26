@@ -16,6 +16,7 @@ cc_grpc_proto_library(
     name = "proto",
     srcs = ["fake_device.proto"],
     grpc_support = 1,
+    include_prefix = "proto",
     tags = ["no_windows"],
 )
 

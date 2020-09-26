@@ -29,8 +29,6 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
@@ -59,10 +57,7 @@ cc_library(
     name = "memory_component",
     srcs = ["memory_component.cc"],
     hdrs = ["memory_component.h"],
-    copts = ANDROID_COPTS + [
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
-    ],
+    copts = ANDROID_COPTS,
     tags = ["no_windows"],
     visibility = ["//tools/base/transport/native/agent:__pkg__"],
     deps = [

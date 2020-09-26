@@ -8,9 +8,7 @@ cc_library(
     hdrs = [
         "utils/tracing_utils.h",
     ],
-    copts = ANDROID_COPTS + [
-        "-Itools/base/transport/native",
-    ],
+    copts = ANDROID_COPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
@@ -38,8 +36,6 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
         "-I$(GENDIR)/external/perfetto_repo",
     ],
     tags = ["no_windows"],
@@ -63,8 +59,6 @@ cc_test(
     copts = [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/tests",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
         "-I$(GENDIR)/external/perfetto_repo",
     ],
     data = [

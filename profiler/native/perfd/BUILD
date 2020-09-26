@@ -73,9 +73,7 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/profiler/native/perfd",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
@@ -105,9 +103,7 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/profiler/native/perfd",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     data = [
         "//tools/base/profiler/native/testdata:perfd/cpu",
