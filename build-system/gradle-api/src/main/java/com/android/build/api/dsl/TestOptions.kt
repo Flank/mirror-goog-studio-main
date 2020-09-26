@@ -104,5 +104,7 @@ interface TestOptions {
      * }
      * ```
      */
-    var failureRetention: FailureRetention
+    val failureRetention: FailureRetention
+
+    fun failureRetention(action: FailureRetention.() -> Unit)
 }

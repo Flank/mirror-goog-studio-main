@@ -340,4 +340,20 @@ class KotlinDslTest {
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)
     }
+
+    @Test
+    fun `test options failure retention`() {
+        android.testOptions {
+            failureRetention {
+                assertThat(enable).isFalse()
+                enable = true
+                assertThat(enable).isTrue()
+                maxSnapshots = 2
+                assertThat(maxSnapshots).isEqualTo(2)
+                assertThat(compressSnapshots).isFalse()
+                compressSnapshots = true
+                assertThat(compressSnapshots).isTrue()
+            }
+        }
+    }
 }

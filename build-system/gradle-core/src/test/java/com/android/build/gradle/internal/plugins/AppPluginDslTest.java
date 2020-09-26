@@ -447,6 +447,25 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks();
     }
 
+    @Test
+    public void testFailureRetention() throws Exception {
+        Eval.me(
+                "project",
+                project,
+                "\n"
+                        + "project.android {\n"
+                        + "    testOptions {\n"
+                        + "        failureRetention {\n"
+                        + "          enable true\n"
+                        + "          retainAll()\n"
+                        + "          maxSnapshots 2\n"
+                        + "          compressSnapshots true\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        plugin.createAndroidTasks();
+    }
+
     private void checkGeneratedDensities(String taskName, String... densities) {
         MergeResources mergeResources = getTask(taskName, MergeResources.class);
         assertThat(mergeResources.getGeneratedDensities())
@@ -457,4 +476,6 @@ public class AppPluginDslTest {
         //noinspection unchecked
         return (T) project.getTasks().getByName(name);
     }
+
+
 }

@@ -63,7 +63,7 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
             )!!
         }
 
-    override var failureRetention: com.android.build.api.dsl.FailureRetention =
+    override val failureRetention: com.android.build.api.dsl.FailureRetention =
         dslServices.newInstance(FailureRetention::class.java, dslServices)
 
     init {
@@ -128,5 +128,14 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
         fun applyConfiguration(task: Test) {
             testTasks.add(task)
         }
+    }
+
+    // (Implementing interface for kotlin)
+    override fun failureRetention(action: com.android.build.api.dsl.FailureRetention.() -> Unit) {
+        action.invoke(failureRetention)
+    }
+    // Runtime only for groovy decorator to generate the closure based block
+    fun failureRetention(action: Action<com.android.build.api.dsl.FailureRetention>) {
+        action.execute(failureRetention)
     }
 }
