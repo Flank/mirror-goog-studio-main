@@ -40,5 +40,6 @@
     <orderEntry type="library" name="aia-proto" level="project" />
     <orderEntry type="library" name="studio-proto" level="project" />
     <orderEntry type="library" name="jaxb-api" level="project" />
+    <orderEntry type="library" name="Xerces" level="project" />
   </component>
 </module>

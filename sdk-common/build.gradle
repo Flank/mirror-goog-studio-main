@@ -28,6 +28,7 @@ dependencies {
     compile libs.javax_inject
     compile libs.trove4j
     compile libs.aapt2_proto
+    compile libs.xerces
 
     testCompile libs.junit
     testCompile project(':base:testutils')

@@ -1916,3 +1916,19 @@ maven_java_library(
         ":org.checkerframework_checker-qual",
     ],
 )
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "xerces_xercesImpl",
+    export_artifact = "//prebuilts/tools/common/m2/repository/xerces/xercesImpl/2.12.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":xml-apis_xml-apis"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "xml-apis_xml-apis",
+    export_artifact = "//prebuilts/tools/common/m2/repository/xml-apis/xml-apis/1.4.01:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
