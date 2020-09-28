@@ -130,6 +130,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
             }
         }
 
+        task.showSecondaryLintContent(true);
         task.issues(getIssues().toArray(new Issue[0]));
         task.sdkHome(sdk);
         return task;

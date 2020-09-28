@@ -269,7 +269,9 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                 "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
                 "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "    src/test/pkg/WrongCastActivity.java:13: Id bound to a Button in casts.xml\n" +
-                "1 errors, 0 warnings\n"
+                "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
+                "                                                                ~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings"
             )
 
         lint().files(casts, wrongCastActivity, rClass)
@@ -316,6 +318,8 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                         ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     src/test/pkg/WrongCastActivity.java:12: Id bound to a Button in casts.xml
+                        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
+                                                                                ~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
             )
@@ -476,14 +480,20 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                     "        TextView textView3 = findViewById(R.id.imageView);   // ERROR\n" +
                     "        ~~~~~~~~\n" +
                     "    src/test/pkg/ImplicitCastTest.java:11: Id bound to an ImageView in my_layout.xml\n" +
+                    "        TextView textView3 = findViewById(R.id.imageView);   // ERROR\n" +
+                    "                                          ~~~~~~~~~~~~~~\n" +
                     "src/test/pkg/ImplicitCastTest.java:12: Error: Unexpected implicit cast to CheckBox: layout tag was TextView [WrongViewCast]\n" +
                     "        CheckBox checkBox1 = findViewById(R.id.textView);    // ERROR\n" +
                     "        ~~~~~~~~\n" +
                     "    src/test/pkg/ImplicitCastTest.java:12: Id bound to a TextView in my_layout.xml\n" +
+                    "        CheckBox checkBox1 = findViewById(R.id.textView);    // ERROR\n" +
+                    "                                          ~~~~~~~~~~~~~\n" +
                     "src/test/pkg/ImplicitCastTest.java:15: Error: Unexpected implicit cast to ImageView: layout tag was TextView [WrongViewCast]\n" +
                     "        ImageView imageView2 = findViewById(R.id.textView);  // ERROR\n" +
                     "        ~~~~~~~~~\n" +
                     "    src/test/pkg/ImplicitCastTest.java:15: Id bound to a TextView in my_layout.xml\n" +
+                    "        ImageView imageView2 = findViewById(R.id.textView);  // ERROR\n" +
+                    "                                            ~~~~~~~~~~~~~\n" +
                     "src/test/pkg/ImplicitCastTest.java:19: Error: Unexpected implicit cast to TextView: layout tag was ImageView [WrongViewCast]\n" +
                     "        textView3 = findViewById(R.id.imageView); // ERROR\n" +
                     "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
@@ -491,14 +501,20 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                     "        TextView textView3 = requireViewById(R.id.imageView);   // ERROR\n" +
                     "        ~~~~~~~~\n" +
                     "    src/test/pkg/ImplicitCastTest.java:24: Id bound to an ImageView in my_layout.xml\n" +
+                    "        TextView textView3 = requireViewById(R.id.imageView);   // ERROR\n" +
+                    "                                             ~~~~~~~~~~~~~~\n" +
                     "src/test/pkg/ImplicitCastTest.java:25: Error: Unexpected implicit cast to CheckBox: layout tag was TextView [WrongViewCast]\n" +
                     "        CheckBox checkBox1 = requireViewById(R.id.textView);    // ERROR\n" +
                     "        ~~~~~~~~\n" +
                     "    src/test/pkg/ImplicitCastTest.java:25: Id bound to a TextView in my_layout.xml\n" +
+                    "        CheckBox checkBox1 = requireViewById(R.id.textView);    // ERROR\n" +
+                    "                                             ~~~~~~~~~~~~~\n" +
                     "src/test/pkg/ImplicitCastTest.java:28: Error: Unexpected implicit cast to ImageView: layout tag was TextView [WrongViewCast]\n" +
                     "        ImageView imageView2 = requireViewById(R.id.textView);  // ERROR\n" +
                     "        ~~~~~~~~~\n" +
                     "    src/test/pkg/ImplicitCastTest.java:28: Id bound to a TextView in my_layout.xml\n" +
+                    "        ImageView imageView2 = requireViewById(R.id.textView);  // ERROR\n" +
+                    "                                               ~~~~~~~~~~~~~\n" +
                     "7 errors, 0 warnings"
             )
     }

@@ -80,6 +80,7 @@ import com.android.tools.lint.checks.WrongCallDetector
 import com.android.tools.lint.checks.WrongCaseDetector
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.Location
 import com.android.utils.SdkUtils
 import com.google.common.annotations.Beta
 import com.google.common.collect.Sets
@@ -477,6 +478,15 @@ abstract class Reporter protected constructor(
  * the error range using ~ characters. Suitable for text output.
  */
 fun Incident.getErrorLines(textProvider: (File) -> CharSequence?): String? {
+    return location.getErrorLines(textProvider)
+}
+
+/**
+ * Produces the source line containing this error, as well as a second line showing
+ * the error range using ~ characters. Suitable for text output.
+ */
+fun Location.getErrorLines(textProvider: (File) -> CharSequence?): String? {
+    val location = this
     val startPosition = location.start
     if (startPosition != null && startPosition.line >= 0) {
         val source = textProvider(file)

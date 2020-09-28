@@ -426,7 +426,9 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
                                 + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
                                 + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "    src/main/AndroidManifest.xml:14: Other launchable activity here\n"
-                                + "0 errors, 1 warnings\n");
+                                + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                                + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
     }
 
     /**

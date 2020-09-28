@@ -114,6 +114,7 @@ public class TestLintTask {
     Map<String, byte[]> mockNetworkData;
     boolean allowNetworkAccess;
     boolean allowDuplicates;
+    boolean showSecondaryLintContent = false;
     File rootDirectory;
     File tempDir;
     TestFile baseline;
@@ -789,6 +790,18 @@ public class TestLintTask {
      */
     public TestLintTask allowDuplicates() {
         this.allowDuplicates = true;
+        return this;
+    }
+
+    /**
+     * Whether lint should show the line content for secondary locations in test output.
+     * Historically it did not, but this meant that lint checks would not spot that the secondary
+     * locations were not always as intended.
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask showSecondaryLintContent(boolean showSecondaryLintContent) {
+        this.showSecondaryLintContent = showSecondaryLintContent;
         return this;
     }
 

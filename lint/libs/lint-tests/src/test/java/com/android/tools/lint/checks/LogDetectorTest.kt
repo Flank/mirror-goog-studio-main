@@ -30,22 +30,32 @@ class LogDetectorTest : AbstractCheckTest() {
                         Log.d(TAG2, "message"); // warn: mismatched tags!
                               ~~~~
                 src/test/pkg/LogTest.java:32: Conflicting tag
+                    if (Log.isLoggable(TAG1, Log.DEBUG)) {
+                                       ~~~~
             src/test/pkg/LogTest.java:36: Error: Mismatched tags: the d() and isLoggable() calls typically should pass the same tag: "my_tag" versus "other_tag" [LogTagMismatch]
                         Log.d("other_tag", "message"); // warn: mismatched tags!
                               ~~~~~~~~~~~
                 src/test/pkg/LogTest.java:35: Conflicting tag
+                    if (Log.isLoggable("my_tag", Log.DEBUG)) {
+                                       ~~~~~~~~
             src/test/pkg/LogTest.java:80: Error: Mismatched logging levels: when checking isLoggable level DEBUG, the corresponding log call should be Log.d, not Log.v [LogTagMismatch]
                         Log.v(TAG1, "message"); // warn: wrong level
                             ~
                 src/test/pkg/LogTest.java:79: Conflicting tag
+                    if (Log.isLoggable(TAG1, Log.DEBUG)) {
+                                             ~~~~~~~~~
             src/test/pkg/LogTest.java:83: Error: Mismatched logging levels: when checking isLoggable level DEBUG, the corresponding log call should be Log.d, not Log.v [LogTagMismatch]
                         Log.v(TAG1, "message"); // warn: wrong level
                             ~
                 src/test/pkg/LogTest.java:82: Conflicting tag
+                    if (Log.isLoggable(TAG1, DEBUG)) { // static import of level
+                                             ~~~~~
             src/test/pkg/LogTest.java:86: Error: Mismatched logging levels: when checking isLoggable level VERBOSE, the corresponding log call should be Log.v, not Log.d [LogTagMismatch]
                         Log.d(TAG1, "message"); // warn? verbose is a lower logging level, which includes debug
                             ~
                 src/test/pkg/LogTest.java:85: Conflicting tag
+                    if (Log.isLoggable(TAG1, Log.VERBOSE)) {
+                                             ~~~~~~~~~~~
             src/test/pkg/LogTest.java:53: Error: The logging tag can be at most 23 characters, was 43 (really_really_really_really_really_long_tag) [LongLogTag]
                         Log.d("really_really_really_really_really_long_tag", "message"); // error: too long
                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1637,8 +1637,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:4: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n" +
             "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
             "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "    build.gradle:5: <No location-specific message\n" +
-            "1 errors, 0 warnings\n"
+            "    build.gradle:5: <No location-specific message>\n" +
+            "    compile 'com.google.android.gms:play-services-location:7.3.0'\n" +
+            "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "1 errors, 0 warnings"
 
         lint().files(
             gradle(

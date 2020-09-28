@@ -45,6 +45,8 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                     ObjectAnimator.ofInt(myObject, "prop2", 0, 1, 2, 5).start();
                                                    ~~~~~~~
                 src/main/java/test/pkg/AnimatorTest.java:58: Property setter here
+                    private void setProp2(float x) {
+                                 ~~~~~~~~~~~~~~~~~
             src/main/java/test/pkg/AnimatorTest.java:24: Error: Could not find property setter method setUnknown on test.pkg.AnimatorTest.MyObject [ObjectAnimatorBinding]
                     ObjectAnimator.ofInt(myObject, "unknown", 0, 1, 2, 5).start();
                                                    ~~~~~~~~~
@@ -52,6 +54,8 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                     ObjectAnimator.ofInt(myObject, "prop3", 0, 1, 2, 5).start();
                                                    ~~~~~~~
                 src/main/java/test/pkg/AnimatorTest.java:61: Property setter here
+                    public static void setProp3(int x) {
+                                       ~~~~~~~~~~~~~~~
             src/main/java/test/pkg/AnimatorTest.java:40: Error: Could not find property setter method setAlpha2 on android.widget.Button [ObjectAnimatorBinding]
                     ObjectAnimator.ofArgb(button, "alpha2", 1, 5); // Missing
                                                   ~~~~~~~~
@@ -59,10 +63,14 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                     public void setProp1(int x) {
                                 ~~~~~~~~~~~~~~~
                 src/main/java/test/pkg/AnimatorTest.java:15: ObjectAnimator usage here
+                    ObjectAnimator animator1 = ObjectAnimator.ofInt(myObject, "prop1", 0, 1, 2, 5);
+                                                                              ~~~~~~~
             src/main/java/test/pkg/AnimatorTest.java:58: Warning: This method is accessed from an ObjectAnimator so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]
                     private void setProp2(float x) {
                                  ~~~~~~~~~~~~~~~~~
                 src/main/java/test/pkg/AnimatorTest.java:47: ObjectAnimator usage here
+                    PropertyValuesHolder p2 = PropertyValuesHolder.ofFloat("prop2", 100f);
+                                                                           ~~~~~~~
             4 errors, 2 warnings
             """
         lint().files(
@@ -238,22 +246,32 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                     PropertyValuesHolder p1 = PropertyValuesHolder.ofInt("prop1", 50); // ERROR
                                                                          ~~~~~~~
                 src/test/pkg/AnimatorFlowTest.java:37: Property setter here
+                    public void setProp1(double z) { // ERROR
+                                ~~~~~~~~~~~~~~~~~~
             src/test/pkg/AnimatorFlowTest.java:14: Error: The setter for this property does not match the expected signature (public void setProp1(int arg) [ObjectAnimatorBinding]
                 private PropertyValuesHolder field = PropertyValuesHolder.ofInt("prop1", 50); // ERROR
                                                                                 ~~~~~~~
                 src/test/pkg/AnimatorFlowTest.java:37: Property setter here
+                    public void setProp1(double z) { // ERROR
+                                ~~~~~~~~~~~~~~~~~~
             src/test/pkg/AnimatorFlowTest.java:21: Error: The setter for this property does not match the expected signature (public void setProp1(int arg) [ObjectAnimatorBinding]
                     p1 = PropertyValuesHolder.ofInt("prop1", 50); // ERROR
                                                     ~~~~~~~
                 src/test/pkg/AnimatorFlowTest.java:37: Property setter here
+                    public void setProp1(double z) { // ERROR
+                                ~~~~~~~~~~~~~~~~~~
             src/test/pkg/AnimatorFlowTest.java:26: Error: The setter for this property does not match the expected signature (public void setProp1(int arg) [ObjectAnimatorBinding]
                     PropertyValuesHolder p1 = PropertyValuesHolder.ofInt("prop1", 50); // ERROR
                                                                          ~~~~~~~
                 src/test/pkg/AnimatorFlowTest.java:37: Property setter here
+                    public void setProp1(double z) { // ERROR
+                                ~~~~~~~~~~~~~~~~~~
             src/test/pkg/AnimatorFlowTest.java:33: Error: The setter for this property does not match the expected signature (public void setProp1(int arg) [ObjectAnimatorBinding]
                     ObjectAnimator.ofPropertyValuesHolder(new MyObject(), PropertyValuesHolder.ofInt("prop1", 50)).start(); // ERROR
                                                                                                      ~~~~~~~
                 src/test/pkg/AnimatorFlowTest.java:37: Property setter here
+                    public void setProp1(double z) { // ERROR
+                                ~~~~~~~~~~~~~~~~~~
             5 errors, 0 warnings
             """
         lint().files(
@@ -701,10 +719,14 @@ class ObjectAnimatorDetectorTest : AbstractCheckTest() {
                         app:attributeName="iconTint1"
                                            ~~~~~~~~~
                 src/main/java/test/pkg/TintingToolbarJava.java:13: This method is accessed via reflection from a MotionScene (scene_show_details) so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds
+                public void setIconTint1(int value) { } // ERROR
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/main/res/xml/scene_show_details.xml:40: Warning: This attribute references a method or property in custom view test.pkg.TintingToolbarKotlin which is not annotated with @Keep; it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds [AnimatorKeep]
                         app:attributeName="iconTint3"
                                            ~~~~~~~~~
                 src/main/kotlin/test/pkg/TintingToolbarKotlin.kt:13: This method is accessed via reflection from a MotionScene (scene_show_details) so it should be annotated with @Keep to ensure that it is not discarded or renamed in release builds
+                var iconTint3: Int = 0 // ERROR
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 2 warnings
             """
         )

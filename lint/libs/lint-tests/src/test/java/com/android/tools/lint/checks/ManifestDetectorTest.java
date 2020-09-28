@@ -243,8 +243,12 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "    <uses-sdk android:targetSdkVersion=\"14\" />\n"
                         + "     ~~~~~~~~\n"
                         + "    AndroidManifest.xml:7: Also appears here\n"
+                        + "    <uses-sdk android:minSdkVersion=\"5\" />\n"
+                        + "     ~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Also appears here\n"
-                        + "1 errors, 0 warnings\n";
+                        + "    <uses-sdk android:maxSdkVersion=\"15\" />\n"
+                        + "     ~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -604,7 +608,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Previous permission here\n"
-                        + "1 errors, 0 warnings\n";
+                        + "    <permission android:name=\"foo.permission.SEND_SMS\"\n"
+                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -643,7 +649,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "    <permission-group android:name=\"bar.permissiongroup.STORAGE\"\n"
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Previous permission group here\n"
-                        + "1 errors, 0 warnings\n";
+                        + "    <permission-group android:name=\"foo.permissiongroup.STORAGE\"\n"
+                        + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
         lint().files(
                         xml(
                                 "AndroidManifest.xml",
@@ -739,7 +747,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
                                 + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "    AndroidManifest.xml:9: Previous permission here\n"
-                                + "1 errors, 0 warnings\n");
+                                + "    <permission android:name=\"foo.permission.SEND_SMS\"\n"
+                                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void testUniquePermissionsPrunedViaManifestRemove() {
@@ -802,8 +812,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 + "../Library/AndroidManifest.xml:8: Error: Permission name PERMISSION_NAME_1 is not unique (appears in both pkg2.PERMISSION_NAME_1 and pkg1.PERMISSION_NAME_1) [UniquePermission]\n"
                                 + "    <permission android:name=\"pkg1.PERMISSION_NAME_1\"/>\n"
                                 + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "    AndroidManifest.xml:5: Previous permission here\n"
-                                + "1 errors, 0 warnings\n");
+                                + "    AndroidManifest.xml:6: Previous permission here\n"
+                                + "        android:name=\"a.b.c.SHARED_ACCESS\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
     }
 
     public void testMissingVersion() {

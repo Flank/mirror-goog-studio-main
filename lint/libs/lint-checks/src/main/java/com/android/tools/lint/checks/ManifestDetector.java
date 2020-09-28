@@ -1139,7 +1139,8 @@ public class ManifestDetector extends Detector implements XmlScanner {
                         if (sibling.getTagName().equals(tagName)) {
                             String b = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
                             if (b.endsWith(suffix)) {
-                                Location prevLocation = context.getLocation(node);
+                                Attr no = sibling.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+                                Location prevLocation = context.getLocation(no);
                                 prevLocation.setMessage("Previous " + humanReadableName + " here");
                                 location.setSecondary(prevLocation);
                                 break;

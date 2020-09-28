@@ -130,12 +130,20 @@ public class LayoutConsistencyDetectorTest extends AbstractCheckTest {
                         + "        android:id=\"@+id/button1\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout-sw600dp/layout1.xml:11: Occurrence in layout-sw600dp\n"
+                        + "        android:id=\"@+id/button1\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout-sw600dp-land/layout1.xml:11: Occurrence in layout-sw600dp-land\n"
+                        + "        android:id=\"@+id/button1\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/layout/layout1.xml:38: Warning: The id \"button4\" in layout \"layout1\" is missing from the following layout configurations: layout-xlarge (present in layout, layout-sw600dp, layout-sw600dp-land) [InconsistentLayout]\n"
                         + "        android:id=\"@+id/button4\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout-sw600dp/layout1.xml:38: Occurrence in layout-sw600dp\n"
+                        + "        android:id=\"@+id/button4\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout-sw600dp-land/layout1.xml:38: Occurrence in layout-sw600dp-land\n"
+                        + "        android:id=\"@+id/button4\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings\n";
         lint().files(mFoo, mLayout1, mLayout1_class, mLayout1_class2, mLayout2)
                 .allowCompilationErrors()

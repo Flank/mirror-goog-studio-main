@@ -51,6 +51,11 @@ class TextReporter(
      */
     var isForwardSlashPaths = false
 
+    /**
+     * Whether the report should include secondary line content
+     */
+    var includeSecondaryLineContent = false
+
     private var writeStats = true
 
     /**
@@ -175,6 +180,11 @@ class TextReporter(
                             output.append('\n')
                         } else {
                             omitted = true
+                        }
+                        if (flags.isShowSourceLines && includeSecondaryLineContent) {
+                            location.getErrorLines(textProvider = { client.getSourceText(it) })?.let {
+                                if (it.isNotEmpty()) output.append(it)
+                            }
                         }
                         location = location.secondary
                     }

@@ -369,6 +369,8 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
    <uses-sdk android:minSdkVersion="15" />
     ~~~~~~~~
     src/main/AndroidManifest.xml:9: Also appears here
+   <uses-sdk android:targetSdkVersion="24" />
+    ~~~~~~~~
 1 errors, 0 warnings
             """
         )

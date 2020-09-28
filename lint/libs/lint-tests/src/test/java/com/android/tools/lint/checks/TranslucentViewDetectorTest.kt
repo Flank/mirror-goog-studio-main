@@ -34,10 +34,13 @@ class TranslucentViewDetectorTest : AbstractCheckTest() {
             manifestWithActivityTheme,
             themeFile
         ).run().expect(
-            "res/values/styles.xml:7: Warning: Should not specify screen orientation with translucent or floating theme [TranslucentOrientation]\n" +
+            "" +
+                "res/values/styles.xml:7: Warning: Should not specify screen orientation with translucent or floating theme [TranslucentOrientation]\n" +
                 "        <item name=\"android:windowIsFloating\">true</item>\n" +
                 "                    ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "    AndroidManifest.xml:9: <No location-specific message\n" +
+                "    AndroidManifest.xml:9: <No location-specific message>\n" +
+                "            android:screenOrientation=\"landscape\"\n" +
+                "                                       ~~~~~~~~~\n" +
                 "0 errors, 1 warnings"
         )
     }
@@ -47,10 +50,13 @@ class TranslucentViewDetectorTest : AbstractCheckTest() {
             manifestWithApplicationTheme,
             themeFile
         ).run().expect(
-            "res/values/styles.xml:7: Warning: Should not specify screen orientation with translucent or floating theme [TranslucentOrientation]\n" +
+            "" +
+                "res/values/styles.xml:7: Warning: Should not specify screen orientation with translucent or floating theme [TranslucentOrientation]\n" +
                 "        <item name=\"android:windowIsFloating\">true</item>\n" +
                 "                    ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "    AndroidManifest.xml:10: <No location-specific message\n" +
+                "    AndroidManifest.xml:10: <No location-specific message>\n" +
+                "            android:screenOrientation=\"landscape\" />\n" +
+                "                                       ~~~~~~~~~\n" +
                 "0 errors, 1 warnings"
         )
     }

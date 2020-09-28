@@ -179,6 +179,8 @@ class OverrideDetectorTest : AbstractCheckTest() {
                 void method() { // Flag this as an accidental override
                      ~~~~~~
                 src/pkg1/Class1.java:4: This method is treated as overridden
+                void method() {
+                     ~~~~~~
             1 errors, 0 warnings
             """
         )

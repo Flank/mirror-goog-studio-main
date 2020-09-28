@@ -257,6 +257,8 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                         + "        <pin-set>\n"
                         + "         ~~~~~~~\n"
                         + "    res/xml/network_config.xml:5: Already declared here\n"
+                        + "        <pin-set>\n"
+                        + "         ~~~~~~~\n"
                         + "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
@@ -288,10 +290,14 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                         + "        <domain includeSubdomains=\"true\">www.Example.com</domain>\n"
                         + "                                         ^\n"
                         + "    res/xml/network_config.xml:4: Already declared here\n"
+                        + "        <domain includeSubdomains=\"true\">www.example.com</domain>\n"
+                        + "                                         ^\n"
                         + "res/xml/network_config.xml:13: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
                         + "            <domain includeSubdomains=\"true\">www.example.com</domain>\n"
                         + "                                             ^\n"
                         + "    res/xml/network_config.xml:4: Already declared here\n"
+                        + "        <domain includeSubdomains=\"true\">www.example.com</domain>\n"
+                        + "                                         ^\n"
                         + "2 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
@@ -467,14 +473,20 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                         + "    <base-config>\n"
                         + "     ~~~~~~~~~~~\n"
                         + "    res/xml/network_config.xml:3: Already declared here\n"
+                        + "    <base-config>\n"
+                        + "    ^\n"
                         + "res/xml/network_config.xml:12: Error: Expecting at most 1 <debug-overrides> [NetworkSecurityConfig]\n"
                         + "    <debug-overrides>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "    res/xml/network_config.xml:7: Already declared here\n"
+                        + "    <debug-overrides>\n"
+                        + "    ^\n"
                         + "res/xml/network_config_debug.xml:3: Error: Expecting at most 1 <debug-overrides> [NetworkSecurityConfig]\n"
                         + "    <debug-overrides>\n"
                         + "     ~~~~~~~~~~~~~~~\n"
                         + "    res/xml/network_config.xml:7: Already declared here\n"
+                        + "    <debug-overrides>\n"
+                        + "    ^\n"
                         + "3 errors, 0 warnings\n";
         lint().files(
                         xml(

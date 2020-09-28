@@ -813,8 +813,8 @@ public class MainTest extends AbstractCheckTest {
                                 "res/layout/test.xml",
                                 ""
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                                        + "    <Button android:id='@+id/duplicated'/>"
-                                        + "    <Button android:id='@+id/duplicated'/>"
+                                        + "    <Button android:id='@+id/duplicated'/>\n"
+                                        + "    <Button android:id='@+id/duplicated'/>\n"
                                         + "</LinearLayout>\n"),
                         xml(
                                 "res/values/duplicates.xml",
@@ -828,9 +828,9 @@ public class MainTest extends AbstractCheckTest {
         // Without --fatalOnly: Both errors and warnings are reported.
         checkDriver(
                 ""
-                        + "res/layout/test.xml:2: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
-                        + "    <Button android:id='@+id/duplicated'/>    <Button android:id='@+id/duplicated'/></LinearLayout>\n"
-                        + "                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/test.xml:3: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
+                        + "    <Button android:id='@+id/duplicated'/>\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout/test.xml:2: Duplicate id @+id/duplicated originally defined here\n"
                         + "res/values/duplicates.xml:3: Error: name has already been defined in this folder [DuplicateDefinition]\n"
                         + "    <item type=\"id\" name=\"name\" />\n"
@@ -861,9 +861,9 @@ public class MainTest extends AbstractCheckTest {
                 // Both an implicitly fatal issue (DuplicateIds) and an error severity issue
                 // configured to be fatal via lint.xml (DuplicateDefinition)
                 ""
-                        + "res/layout/test.xml:2: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
-                        + "    <Button android:id='@+id/duplicated'/>    <Button android:id='@+id/duplicated'/></LinearLayout>\n"
-                        + "                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "res/layout/test.xml:3: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
+                        + "    <Button android:id='@+id/duplicated'/>\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout/test.xml:2: Duplicate id @+id/duplicated originally defined here\n"
                         + "res/values/duplicates.xml:3: Error: name has already been defined in this folder [DuplicateDefinition]\n"
                         + "    <item type=\"id\" name=\"name\" />\n"

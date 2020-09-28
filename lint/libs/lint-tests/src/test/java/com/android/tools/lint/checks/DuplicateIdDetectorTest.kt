@@ -26,12 +26,14 @@ class DuplicateIdDetectorTest : AbstractCheckTest() {
     fun testDuplicate() {
         val expected =
             """
-res/layout/duplicate.xml:5: Error: Duplicate id @+id/android_logo, already defined earlier in this layout [DuplicateIds]
-    <ImageButton android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
-                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    res/layout/duplicate.xml:4: Duplicate id @+id/android_logo originally defined here
-1 errors, 0 warnings
-"""
+            res/layout/duplicate.xml:5: Error: Duplicate id @+id/android_logo, already defined earlier in this layout [DuplicateIds]
+                <ImageButton android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                res/layout/duplicate.xml:4: Duplicate id @+id/android_logo originally defined here
+                <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
 
         lint().files(
             xml(
@@ -56,20 +58,33 @@ res/layout/layout1.xml:7: Warning: Duplicate id @+id/button1, defined or include
     <include
     ^
     res/layout/layout1.xml:13: Defined here
+        android:id="@+id/button1"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
     res/layout/layout3.xml:8: Defined here, included via layout/layout1.xml => layout/layout2.xml => layout/layout3.xml defines @+id/button1
+        android:id="@+id/button1"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
     res/layout/layout4.xml:8: Defined here, included via layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button1
+        android:id="@+id/button1"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/layout1.xml:7: Warning: Duplicate id @+id/button2, defined or included multiple times in layout/layout1.xml: [layout/layout1.xml defines @+id/button2, layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button2] [DuplicateIncludedIds]
     <include
     ^
     res/layout/layout1.xml:19: Defined here
+        android:id="@+id/button2"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
     res/layout/layout4.xml:14: Defined here, included via layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button2
+        android:id="@+id/button2"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
 res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or included multiple times in layout/layout2.xml: [layout/layout2.xml => layout/layout3.xml defines @+id/button1, layout/layout2.xml => layout/layout4.xml defines @+id/button1] [DuplicateIncludedIds]
     <include
     ^
     res/layout/layout3.xml:8: Defined here, included via layout/layout2.xml => layout/layout3.xml defines @+id/button1
+        android:id="@+id/button1"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
     res/layout/layout4.xml:8: Defined here, included via layout/layout2.xml => layout/layout4.xml defines @+id/button1
-0 errors, 3 warnings
-"""
+        android:id="@+id/button1"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
+0 errors, 3 warnings"""
 
         // layout1: defines @+id/button1, button2
         // layout3: defines @+id/button1
@@ -122,7 +137,11 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
     <include
     ^
     res/layout/layout3.xml:8: Defined here, included via layout/layout2.xml => layout/layout3.xml defines @+id/button1
+        android:id="@+id/button1"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
     res/layout/layout4.xml:8: Defined here, included via layout/layout2.xml => layout/layout4.xml defines @+id/button1
+        android:id="@+id/button1"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~
 0 errors, 1 warnings
 """
         lint().files(
@@ -364,13 +383,14 @@ res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or includ
             )
         ).run().expect(
             """
-res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earlier in this layout [DuplicateIds]
-  <fragment android:id="@+id/first" />
-            ~~~~~~~~~~~~~~~~~~~~~~~
-    res/navigation/test.xml:6: Duplicate id @+id/first originally defined here
-1 errors, 0 warnings
-
-"""
+            res/navigation/test.xml:7: Error: Duplicate id @+id/first, already defined earlier in this layout [DuplicateIds]
+              <fragment android:id="@+id/first" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~
+                res/navigation/test.xml:6: Duplicate id @+id/first originally defined here
+              <fragment android:id="@+id/first" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         )
     }
 

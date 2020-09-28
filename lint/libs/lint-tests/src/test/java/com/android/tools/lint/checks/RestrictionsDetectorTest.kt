@@ -351,6 +351,8 @@ class RestrictionsDetectorTest : AbstractCheckTest() {
                     android:key="can_say_hello"
                                  ~~~~~~~~~~~~~
                 res/xml/app_restrictions.xml:5: Previous use of key here
+                    android:key="can_say_hello"
+                                 ~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         lint().files(

@@ -103,11 +103,15 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
             src/test/pkg/NotificationTest.java:36: Error: This intent launches a BroadcastReceiver (BroadcastTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                                     .setContentIntent(notificationPendingIntent)
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message
+                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message>
+                    context.startActivity(i);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/NotificationTest.java:38: Error: This intent launches a BroadcastReceiver (BroadcastTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                                     .addAction(android.R.drawable.ic_dialog_email, "Launch Receiver From Action",
                                      ^
-                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message
+                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message>
+                    context.startActivity(i);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings
             """
         )
@@ -165,11 +169,15 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
             src/test/pkg/NotificationTest.kt:27: Error: This intent launches a BroadcastReceiver (BroadcastTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                         .setContentIntent(notificationPendingIntent)
                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message
+                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message>
+                    context.startActivity(i);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/NotificationTest.kt:29: Error: This intent launches a BroadcastReceiver (BroadcastTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                         .addAction(
                          ^
-                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message
+                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message>
+                    context.startActivity(i);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings
             """
         )
@@ -239,7 +247,9 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
             src/test/pkg/NotificationTest.java:21: Error: This intent launches a Service (ServiceTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                                     .setContentIntent(serviceIntent)
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/ServiceTrampoline.java:14: <No location-specific message
+                src/test/pkg/ServiceTrampoline.java:14: <No location-specific message>
+                    startActivity(intent);
+                    ~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )
@@ -286,6 +296,8 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
                                     .setContentIntent(serviceIntent)
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/NotificationTest.java:15: This Service intent is launched from a notification; this is discouraged except as notification actions
+                    PendingIntent serviceIntent = PendingIntent.getService(context, 0, notificationIntent, 0);
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         )
@@ -348,11 +360,15 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
             src/test/pkg/NotificationTest.kt:28: Error: This intent launches a BroadcastReceiver (BroadcastTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                         .setContentIntent(notificationPendingIntent)
                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message
+                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message>
+                    context.startActivity(i);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/NotificationTest.kt:30: Error: This intent launches a BroadcastReceiver (BroadcastTrampoline) which launches activities; this indirection is bad for performance, and activities should be launched directly from the notification [NotificationTrampoline]
                         .addAction(
                          ^
-                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message
+                src/test/pkg/BroadcastTrampoline.java:14: <No location-specific message>
+                    context.startActivity(i);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings
             """
         )
@@ -402,6 +418,8 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
                                     .setContentIntent(notificationPendingIntent) // WARN
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/NotificationTest.java:17: This BroadcastReceiver intent is launched from a notification; this is discouraged except as notification actions
+                    PendingIntent notificationPendingIntent = PendingIntent.getBroadcast(context, requestCode, notificationIntent, flags);
+                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         )
@@ -449,6 +467,8 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
                                     .setContentIntent(createIntent())
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/NotificationTest.java:13: This Service intent is launched from a notification; this is discouraged except as notification actions
+                    return PendingIntent.getService(context, 0, notificationIntent, 0);
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         )
