@@ -77,7 +77,6 @@ public class RepoTest extends AbstractZipflingerTest {
             for (int i = 0; i < files.length; i++) {
                 String entryName = Integer.toString(i);
                 ByteBuffer content = repo.getContent(entryName);
-                content.rewind();
                 Assert.assertArrayEquals("Content does not match", files[i], toByteArray(content));
             }
         }

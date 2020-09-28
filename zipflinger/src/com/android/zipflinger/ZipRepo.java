@@ -17,7 +17,6 @@
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
-
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -97,6 +96,8 @@ public class ZipRepo implements Closeable {
         Location payloadLocation = entry.getPayloadLocation();
         ByteBuffer payloadByteBuffer = ByteBuffer.allocate(Math.toIntExact(payloadLocation.size()));
         channel.read(payloadByteBuffer, payloadLocation.first);
+        payloadByteBuffer.rewind();
+
         if (entry.isCompressed()) {
             return Compressor.inflate(payloadByteBuffer.array());
         } else {
