@@ -42,5 +42,6 @@
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.build-system.aapt2-proto" />
     <orderEntry type="library" name="jaxb-api" level="project" />
+    <orderEntry type="library" name="xerces" level="project" />
   </component>
 </module>
