@@ -263,8 +263,10 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                 String attrValue = child.getAttribute(ATTR_NAME);
                 if (VAL_NAME_MEDIA.equals(attrValue)) {
                     mIsAutomotiveMediaApp |= isMetadataResource;
-                } else if (!VAL_NAME_NOTIFICATION.equals(attrValue)
-                        && context.isEnabled(INVALID_USES_TAG_ISSUE)) {
+                } else if (VAL_NAME_TEMPLATE.equals(attrValue)
+                        || VAL_NAME_NOTIFICATION.equals(attrValue)) {
+                    continue;
+                } else if (context.isEnabled(INVALID_USES_TAG_ISSUE)) {
                     // Error invalid value for attribute.
                     Attr node = child.getAttributeNode(ATTR_NAME);
                     if (node == null) {
