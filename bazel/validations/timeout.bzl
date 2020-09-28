@@ -440,7 +440,6 @@ APPROVED_ETERNAL_TESTS = [
     "//tools/adt/idea/android:intellij.android.core.tests_tests__testartifacts",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__other",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__navigator",
-    "//tools/adt/idea/android:intellij.android.core.tests_tests__jetbrains.android.refactoring.MigrateToAndroidxGradleTest",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__jetbrains",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.structure.model.android",
     "//tools/adt/idea/android:intellij.android.core.tests_tests__gradle.structure",
