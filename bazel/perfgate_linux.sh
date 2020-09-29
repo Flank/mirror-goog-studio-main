@@ -9,6 +9,11 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
+if [[ $build_number =~ ^[0-9]+$ ]];
+then
+  readonly is_post_submit=true
+fi
+
 build_tag_filters=-no_linux
 test_tag_filters=perfgate,-no_linux,-no_test_linux
 
@@ -55,4 +60,12 @@ if [[ -d "${dist_dir}" ]]; then
   find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/bazel_test_logs.zip" {} \;
 fi
 
-exit $bazel_status
+BAZEL_EXITCODE_TEST_FAILURES=3
+
+# For post-submit builds, if the tests fail we still want to report success
+# otherwise ATP will think the build failed and there are no tests. b/152755167
+if [[ $is_post_submit && $bazel_status == $BAZEL_EXITCODE_TEST_FAILURES ]]; then
+  exit 0
+else
+  exit $bazel_status
+fi
