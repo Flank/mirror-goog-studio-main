@@ -133,6 +133,15 @@ abstract class VariantImpl(
         }
     }
 
+    override val ndkBuildNativeBuildOptions: ExternalNativeNdkBuildOptions? by lazy {
+        variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
+            ExternalNativeNdkBuildOptionsImpl(
+                    it,
+                    variantPropertiesApiServices
+            )
+        }
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

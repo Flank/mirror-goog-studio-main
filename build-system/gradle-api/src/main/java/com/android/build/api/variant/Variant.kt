@@ -91,4 +91,9 @@ interface Variant : Component {
      * Variant's [ExternalNativeCmakeOptions], initialized by merging the product flavor values
      */
     val cmakeNativeBuildOptions: ExternalNativeCmakeOptions?
+
+    /**
+     * Variant's [ExternalNativeNdkBuildOptions], initialized by merging the product flavor values
+     */
+    val ndkBuildNativeBuildOptions: ExternalNativeNdkBuildOptions?
 }

@@ -895,6 +895,7 @@ com.android.build.api.variant.ExternalNativeGenericOptions.getArguments: org.gra
 com.android.build.api.variant.ExternalNativeGenericOptions.getCFlags: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.ExternalNativeGenericOptions.getCppFlags: org.gradle.api.provider.ListProperty<java.lang.String> ()
 com.android.build.api.variant.ExternalNativeGenericOptions.getTargets: org.gradle.api.provider.SetProperty<java.lang.String> ()
+com.android.build.api.variant.ExternalNativeNdkBuildOptions implements com.android.build.api.variant.ExternalNativeGenericOptions
 com.android.build.api.variant.FilterConfiguration implements java.io.Serializable
 com.android.build.api.variant.FilterConfiguration$FilterType extends java.lang.Enum
 com.android.build.api.variant.FilterConfiguration$FilterType.valueOf: com.android.build.api.variant.FilterConfiguration$FilterType (java.lang.String)
@@ -955,6 +956,7 @@ com.android.build.api.variant.Variant.getApplicationId: org.gradle.api.provider.
 com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provider.MapProperty<java.lang.String, com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> ()
 com.android.build.api.variant.Variant.getCmakeNativeBuildOptions: com.android.build.api.variant.ExternalNativeCmakeOptions ()
 com.android.build.api.variant.Variant.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
+com.android.build.api.variant.Variant.getNdkBuildNativeBuildOptions: com.android.build.api.variant.ExternalNativeNdkBuildOptions ()
 com.android.build.api.variant.Variant.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackagingOptions: com.android.build.api.variant.PackagingOptions ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject

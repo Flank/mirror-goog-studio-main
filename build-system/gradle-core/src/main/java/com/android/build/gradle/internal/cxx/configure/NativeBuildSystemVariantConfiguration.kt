@@ -54,7 +54,7 @@ fun createNativeBuildSystemVariantConfig(
         NativeBuildSystem.CMAKE ->
             variant.cmakeNativeBuildOptions?.abiFilters?.get() ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
-            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.abiFilters ?: setOf()
+            variant.ndkBuildNativeBuildOptions?.abiFilters?.get() ?: setOf()
     }
 
     /**
@@ -88,7 +88,7 @@ fun createNativeBuildSystemVariantConfig(
         NativeBuildSystem.CMAKE ->
             variant.cmakeNativeBuildOptions?.arguments?.get() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.arguments ?: listOf()
+            variant.ndkBuildNativeBuildOptions?.arguments?.get() ?: listOf()
     }
 
     /**
@@ -108,7 +108,7 @@ fun createNativeBuildSystemVariantConfig(
         NativeBuildSystem.CMAKE ->
             variant.cmakeNativeBuildOptions?.cFlags?.get() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.getcFlags() ?: listOf()
+            variant.ndkBuildNativeBuildOptions?.cFlags?.get() ?: listOf()
     }
 
     /**
@@ -128,7 +128,7 @@ fun createNativeBuildSystemVariantConfig(
         NativeBuildSystem.CMAKE ->
             variant.cmakeNativeBuildOptions?.cppFlags?.get() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.cppFlags ?: listOf()
+            variant.ndkBuildNativeBuildOptions?.cppFlags?.get() ?: listOf()
     }
 
     /**
@@ -148,7 +148,7 @@ fun createNativeBuildSystemVariantConfig(
         NativeBuildSystem.CMAKE ->
             variant.cmakeNativeBuildOptions?.targets?.get() ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
-            variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.targets ?: setOf()
+            variant.ndkBuildNativeBuildOptions?.targets?.get() ?: setOf()
     }
 
     return NativeBuildSystemVariantConfig(
