@@ -30,6 +30,10 @@ public final class StaticVarInit {
         public static final boolean X_BOOLEAN = true; // Added.
     }
 
+    public static class RemoveStaticFinalPrimitives {
+        // public static final int X_INT = 99; // This will attempt to remove a primitive.
+    }
+
     public static int Y = 89;
 
     public static int staticGetY() {

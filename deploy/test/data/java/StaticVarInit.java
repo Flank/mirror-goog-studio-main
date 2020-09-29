@@ -23,6 +23,10 @@ public final class StaticVarInit {
         // public static final int X_INT = 99; // Will be added in swap.
     }
 
+    public static class RemoveStaticFinalPrimitives {
+        public static final int X_INT = 99; // Will be removed in swap.
+    }
+
     // Will be added in swap.
     // public static int Y = 89;
 
