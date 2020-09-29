@@ -46,7 +46,7 @@ val watchFaceServiceTemplate
   get() = template {
     revision = 1
     name = "Watch Face"
-    constraints = listOf(TemplateConstraint.AndroidX, TemplateConstraint.Jetifier)
+    constraints = listOf(TemplateConstraint.AndroidX)
     minApi = 23
     minBuildApi = 25
     description = "Creates a watch face for Wear OS"
