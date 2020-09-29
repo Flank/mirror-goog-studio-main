@@ -19,6 +19,7 @@ if [[ $BUILD_NUMBER =~ ^[0-9]+$ ]];
 then
   IS_POST_SUBMIT=true
 fi
+AS_BUILD_NUMBER="${BUILD_NUMBER/P/0}"  # for AB presubmit: satisfy Integer.parseInt in BuildNumber.parseBuildNumber
 
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
@@ -48,7 +49,7 @@ echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
   --define=meta_android_build_number="${BUILD_NUMBER}" \
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
-  --embed_label="${BUILD_NUMBER}" \
+  --embed_label="${AS_BUILD_NUMBER}" \
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
   -- \

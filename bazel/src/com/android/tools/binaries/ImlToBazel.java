@@ -33,7 +33,8 @@ public class ImlToBazel {
 
         Configuration config = new Configuration();
         Path workspace = null;
-        String project = "tools/idea";
+        String project = "tools/adt/idea";
+        config.strict = true;
 
         Iterator<String> args = Arrays.asList(strings).iterator();
         while (args.hasNext()) {
