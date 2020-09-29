@@ -18,6 +18,9 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.utils.FileUtils.join
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.SetProperty
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 
 /**
@@ -31,11 +34,11 @@ open class BasicCmakeMock(createFakeNinja : Boolean = true) : BasicModuleModelMo
     val abi by lazy { createCxxAbiModel(sdkComponents, configurationParameters, variant, Abi.X86) }
 
     init {
-        doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).abiFilters
-        doReturn(listOf("-DCMAKE_ARG=1")).`when`(externalNativeCmakeOptions).arguments
-        doReturn(listOf("-DC_FLAG_DEFINED")).`when`(externalNativeCmakeOptions).getcFlags()
-        doReturn(listOf("-DCPP_FLAG_DEFINED")).`when`(externalNativeCmakeOptions).cppFlags
-        doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).targets
+        doReturn(makeSetProperty(setOf())).`when`(externalNativeCmakeOptions).abiFilters
+        doReturn(makeListProperty(listOf("-DCMAKE_ARG=1"))).`when`(externalNativeCmakeOptions).arguments
+        doReturn(makeListProperty(listOf("-DC_FLAG_DEFINED"))).`when`(externalNativeCmakeOptions).cFlags
+        doReturn(makeListProperty(listOf("-DCPP_FLAG_DEFINED"))).`when`(externalNativeCmakeOptions).cppFlags
+        doReturn(makeSetProperty(setOf<String>())).`when`(externalNativeCmakeOptions).targets
         val makefile = join(allPlatformsProjectRootDir, "CMakeLists.txt")
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
@@ -48,4 +51,15 @@ open class BasicCmakeMock(createFakeNinja : Boolean = true) : BasicModuleModelMo
             }
         }
     }
+
+    private fun makeListProperty(values: List<String>): ListProperty<*> =
+        Mockito.mock(ListProperty::class.java).also {
+            doReturn(values).`when`(it).get()
+        }
+
+    private fun makeSetProperty(values: Set<String>): SetProperty<*> =
+            Mockito.mock(SetProperty::class.java).also {
+                doReturn(values).`when`(it).get()
+            }
+
 }

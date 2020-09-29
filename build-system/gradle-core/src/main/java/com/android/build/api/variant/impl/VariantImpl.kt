@@ -123,6 +123,16 @@ abstract class VariantImpl(
         PackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
     }
 
+
+    override val cmakeNativeBuildOptions: ExternalNativeCmakeOptions? by lazy {
+        variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
+            ExternalNativeCmakeOptionsImpl(
+                    it,
+                    variantPropertiesApiServices
+            )
+        }
+    }
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------

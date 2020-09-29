@@ -17,6 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.ExternalNativeCmakeOptions
 import com.android.build.api.variant.PackagingOptions
 import com.android.build.api.variant.Variant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -96,5 +97,22 @@ abstract class AnalyticsEnabledVariant (
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return userVisiblePackagingOptions
+        }
+
+    private val userVisibleCmakeOptions: AnalyticsEnabledExternalNativeCmakeOptions? by lazy {
+        delegate.cmakeNativeBuildOptions?.let {
+            objectFactory.newInstance(
+                    AnalyticsEnabledExternalNativeCmakeOptions::class.java,
+                    it,
+                    stats
+            )
+        }
+    }
+
+    override val cmakeNativeBuildOptions: ExternalNativeCmakeOptions?
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                    VariantPropertiesMethodType.CMAKE_NATIVE_OPTIONS_VALUE
+            return userVisibleCmakeOptions
         }
 }

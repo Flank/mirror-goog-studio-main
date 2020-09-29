@@ -135,6 +135,8 @@ interface VariantPropertiesApiServices:
      */
     fun <T> setPropertyOf(type: Class<T>, value: Callable<Collection<T>>): SetProperty<T>
 
+    fun <T> setPropertyOf(type: Class<T>, value: Collection<T>): SetProperty<T>
+
     /**
      * Creates a new [MapProperty].
      *

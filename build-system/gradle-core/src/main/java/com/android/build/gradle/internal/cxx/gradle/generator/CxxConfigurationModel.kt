@@ -284,7 +284,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         implicitBuildTargetSet = prefabTargets,
         variantName = variant.name,
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
-            buildSystem, variant.variantDslInfo
+            buildSystem, variant, variant.variantDslInfo
         ),
         isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL),
         isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API)
