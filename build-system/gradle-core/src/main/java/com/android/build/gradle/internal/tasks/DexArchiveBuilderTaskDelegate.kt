@@ -29,6 +29,7 @@ import com.android.builder.core.DefaultDexOptions
 import com.android.builder.dexing.ClassBucket
 import com.android.builder.dexing.ClassBucketGroup
 import com.android.builder.dexing.ClassFileEntry
+import com.android.builder.dexing.ClassFileInput
 import com.android.builder.dexing.DexerTool
 import com.android.builder.dexing.DirectoryBucketGroup
 import com.android.builder.dexing.JarBucketGroup
@@ -40,6 +41,7 @@ import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
 import com.google.common.hash.Hashing
 import com.google.common.io.Closer
+import org.gradle.api.file.FileType
 import org.gradle.api.provider.Provider
 import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
@@ -337,20 +339,22 @@ class DexArchiveBuilderTaskDelegate(
         }
     }
 
+    @Suppress("UnstableApiUsage")
     private fun deletePreviousOutputsFromDirs(inputFileChanges: Set<FileChange>, output: File) {
         // Handle dir/file deletions only. We rewrite modified files, so no need to delete those.
-        inputFileChanges.asSequence().filter {
-            it.changeType == ChangeType.REMOVED && it.file.extension != SdkConstants.EXT_JAR
-        }.forEach {
-            val relativePath = it.normalizedPath
-
-            val fileToDelete = if (it.file.extension == SdkConstants.EXT_CLASS) {
-                ClassFileEntry.withDexExtension(relativePath.toString())
-            } else {
-                relativePath.toString()
+        inputFileChanges.forEach {
+            if (it.changeType == ChangeType.REMOVED) {
+                val fileOrDirToDelete: File? = when {
+                    it.fileType == FileType.DIRECTORY -> {
+                        output.resolve(it.normalizedPath)
+                    }
+                    ClassFileInput.CLASS_MATCHER.test(it.normalizedPath) -> {
+                        output.resolve(ClassFileEntry.withDexExtension(it.normalizedPath))
+                    }
+                    else -> null
+                }
+                fileOrDirToDelete?.let { FileUtils.deleteRecursivelyIfExists(it) }
             }
-
-            FileUtils.deleteRecursivelyIfExists(output.resolve(fileToDelete))
         }
     }
 
