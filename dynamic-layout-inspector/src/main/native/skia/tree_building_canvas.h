@@ -112,7 +112,7 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
         surface(SkSurface::MakeRaster(
             SkImageInfo::Make(width, height, kBGRA_8888_SkColorType,
                               kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB()),
-            width * height * sizeof(int32_t), nullptr)),
+            width * sizeof(int32_t), nullptr)),
         root(r),
         real_canvas(surface->getCanvas()),
         requested_nodes(std::move(requested_nodes)) {
