@@ -56,7 +56,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
 
         // WRITE_EXTERNAL_STORAGE.
         if (permission.value == "android.permission.WRITE_EXTERNAL_STORAGE") {
-            val sdk = context.mainProject.targetSdk
+            val sdk = minOf(context.mainProject.targetSdk, getMaxSdk(element))
             if (sdk < VersionCodes.Q) {
                 return
             }
@@ -84,6 +84,12 @@ class ScopedStorageDetector : Detector(), XmlScanner {
                 "Most apps are not allowed to use MANAGE_EXTERNAL_STORAGE"
             )
         }
+    }
+
+    // See https://developer.android.com/guide/topics/manifest/uses-permission-element#maxSdk.
+    private fun getMaxSdk(element: Element): Int {
+        val maxSdkAttr = element.getAttributeNodeNS(ANDROID_URI, "maxSdkVersion")
+        return maxSdkAttr?.value?.toIntOrNull() ?: Integer.MAX_VALUE
     }
 
     private fun getStoragePermissions(context: Context): StoragePermissions? {

@@ -143,4 +143,22 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
             .run()
             .expectClean()
     }
+
+    fun testMaxSdkVersionAttr() {
+        // Regression test for https://issuetracker.google.com/169483540.
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                    <uses-sdk android:targetSdkVersion="29"/>
+                    <uses-permission
+                        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                        android:maxSdkVersion="28"/><!-- OK -->
+                </manifest>
+                """
+            ).indented()
+        )
+            .run()
+            .expectClean()
+    }
 }
