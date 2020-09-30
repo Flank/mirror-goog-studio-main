@@ -36,6 +36,7 @@ import com.android.builder.model.SyncIssue;
 import com.android.repository.Revision;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
@@ -389,6 +390,12 @@ public class SdkAutoDownloadTest {
         getExecutor()
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run("assembleDebug");
+
+        // Check the cmake build actually worked here, as the NDK can fail to be configured in a
+        // way that doesn't actully fail the build https://issuetracker.google.com/169742131
+        try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            assertThat(apk).contains("lib/arm64-v8a/libhello-jni.so");
+        }
 
         // Hard to get the NDK SxS flag here. Just check whether either expected directory exists.
         File legacyFolder = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
