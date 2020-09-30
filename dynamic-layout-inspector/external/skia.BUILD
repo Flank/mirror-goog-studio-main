@@ -57,6 +57,7 @@ cc_library(
         "src/images/SkWebp*.cpp",
         "src/utils/SkLua*.cpp",
         "src/utils/SkShaperJSONWriter.cpp",
+        "src/sksl/SkSLMain.cpp",
     ]) + [
         "src/pdf/SkDocument_PDF_None.cpp",
         "src/ports/SkFontMgr_custom.cpp",
