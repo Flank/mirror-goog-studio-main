@@ -25,6 +25,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/apiTest/kotlin" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/apiTest/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.gradle" />
     </content>
     <orderEntry type="library" name="asm-tools" level="project" />
@@ -89,7 +90,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-		<root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/com/squareup/javapoet/1.10.0/javapoet-1.10.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/m2/repository/com/squareup/javapoet/1.10.0/javapoet-1.10.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -99,7 +100,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-		<root url="file://$MODULE_DIR$/../../../../out/build/base/build-system/gradle-core/build/pluginUnderTestMetadata" />
+          <root url="file://$MODULE_DIR$/../../../../out/build/base/build-system/gradle-core/build/pluginUnderTestMetadata" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -112,4 +113,3 @@
     <orderEntry type="library" name="jaxb-api" level="project" />
   </component>
 </module>
-

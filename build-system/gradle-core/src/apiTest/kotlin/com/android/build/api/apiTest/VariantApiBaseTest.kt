@@ -19,6 +19,7 @@ package com.android.build.api.apiTest
 import com.android.SdkConstants
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.AbstractBuildGivenBuildCheckTest
+import com.android.testutils.TestResources
 import com.android.testutils.TestUtils
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
@@ -436,6 +437,24 @@ ${repositories.joinToString(
         this.parameters.putAll(parameters)
     }
 
+    private fun withGradleWrapper(gradleVersion: String = "6.6.1") {
+        val projectPath = "${testProjectDir.root}/${testName.methodName}"
+        TestResources.getFile("/gradlew")
+            .copyTo(File("${projectPath}/gradlew")).setExecutable(true)
+        TestResources.getFile("/gradlew.bat")
+            .copyTo(File("${projectPath}/gradlew.bat"))
+        TestResources.getFile("/gradle-wrapper.jar")
+            .copyTo(File("${projectPath}/gradle/wrapper/gradle-wrapper.jar"))
+        // TODO: Fetch the gradle version from $SRC/tools/gradle/wrapper/gradle-wrapper.properties
+        File("${projectPath}/gradle/wrapper/gradle-wrapper.properties").writeText(
+"""distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https://services.gradle.org/distributions/gradle-${gradleVersion}-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+        """)
+    }
+
     override fun defaultWhen(given: GivenBuilder): BuildResult? {
 
         val projectDir = File(testProjectDir.root, testName.methodName)
@@ -454,6 +473,7 @@ ${repositories.joinToString(
         val initScript = privateTestProjectDir.newFile(scriptingLanguage.makeScriptFileName("init.gradle")).also {
             it.writeText(scriptingLanguage.configureInitScript(mavenRepos))
         }
+        withGradleWrapper()
         Logger.getGlobal().info(
             """Init script:
             ${scriptingLanguage.configureInitScript(mavenRepos)}""".trim()
