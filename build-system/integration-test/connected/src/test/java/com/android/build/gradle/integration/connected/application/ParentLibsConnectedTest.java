@@ -43,7 +43,7 @@ public class ParentLibsConnectedTest {
                 project.file(SdkConstants.FN_LOCAL_PROPERTIES),
                 project.getSubproject("app").file(SdkConstants.FN_LOCAL_PROPERTIES));
         // fail fast if no response
-        project.getSubproject(":app:application").addAdbTimeOutInMs();
+        project.getSubproject(":app:application").addAdbTimeout();
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.getSubproject("app").execute("uninstallAll");

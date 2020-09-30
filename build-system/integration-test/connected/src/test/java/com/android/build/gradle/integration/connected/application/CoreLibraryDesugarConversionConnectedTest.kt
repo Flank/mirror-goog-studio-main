@@ -87,7 +87,7 @@ class CoreLibraryDesugarConversionConnectedTest(minSdkVersion: Int) {
             """.trimIndent())
 
         // fail fast if no response
-        project.addAdbTimeOutInMs()
+        project.addAdbTimeout()
 
         // add a function with desugar library parameter, which is called from application
         TestFileUtils.addMethod(

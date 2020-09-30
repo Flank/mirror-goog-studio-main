@@ -42,7 +42,7 @@ class ComposeHelloWorldConnectedTest {
     @Before
     fun setUp() {
         // fail fast if no response
-        project.getSubproject("app").addAdbTimeOutInMs()
+        project.getSubproject("app").addAdbTimeout()
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.execute("uninstallAll")

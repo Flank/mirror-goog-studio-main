@@ -64,6 +64,7 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.io.File
 import java.nio.file.Path
+import java.time.Duration
 import java.util.Arrays
 import java.util.Comparator
 import java.util.Locale
@@ -1423,17 +1424,17 @@ buildCache {
     }
 
     /**
-     * Adds an adb timeout (in milliseconds) to the build file, so that tests using adb will fail
-     * fast when there is no response.
+     * Adds an adb timeout to the build file, so that tests using adb will fail fast when there is
+     * no response.
      */
     @JvmOverloads
-    fun addAdbTimeOutInMs(timeOutInMs: Int = 30000) {
+    fun addAdbTimeout(timeout: Duration = Duration.ofSeconds(30)) {
         TestFileUtils.appendToFile(
             buildFile,
             """
                 android {
                     adbOptions {
-                        timeOutInMs $timeOutInMs
+                        timeOutInMs ${timeout.toMillis()}
                     }
                 }
             """.trimIndent()
