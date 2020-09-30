@@ -107,6 +107,17 @@ TEST(TraceProcessorServiceImplTest, LoadTrace) {
   EXPECT_TRUE(rs.ok());
   EXPECT_TRUE(response.ok());
   EXPECT_EQ(response.error(), "");
+
+  // Let's do a "reload"
+  // We set to missing, because since 42 is already loaded as tank.trace
+  // it should return ok and keep that one.
+  request.set_trace_id(42);
+  request.set_trace_path(TESTDATA_DIR + "missing.trace");
+  response.Clear();
+  const grpc::Status rs_reload = svc.LoadTrace(nullptr, &request, &response);
+  EXPECT_TRUE(rs_reload.ok());
+  EXPECT_TRUE(response.ok());
+  EXPECT_EQ(response.error(), "");
 }
 
 TEST(TraceProcessorServiceImplTest, BatchQuery) {

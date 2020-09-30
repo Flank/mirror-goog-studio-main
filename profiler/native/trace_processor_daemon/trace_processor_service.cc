@@ -54,6 +54,12 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
     return grpc::Status::OK;
   }
 
+  // If we're attempting to load the same trace again, just return.
+  if (trace_id == loaded_trace_id) {
+    response->set_ok(true);
+    return grpc::Status::OK;
+  }
+
   Config config;
   // Avoid filling the RAW table with ftrace events, as we will not want to
   // export the trace back into systrace format. This allows TP to save a good
