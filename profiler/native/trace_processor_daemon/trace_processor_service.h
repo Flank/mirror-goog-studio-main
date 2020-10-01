@@ -17,6 +17,7 @@
 #define TRACE_PROCESSOR_SERVICE_H_
 
 #include <grpc++/grpc++.h>
+#include <shared_mutex>
 
 #include "perfetto/trace_processor/trace_processor.h"
 #include "proto/trace_processor_service.grpc.pb.h"
@@ -36,6 +37,9 @@ class TraceProcessorServiceImpl final
                           proto::QueryBatchResponse* response) override;
 
  private:
+  // Mutex to control access to the loaded trace, to prevent a trace to being
+  // unloaded while a batch query is still being run against it for example.
+  std::shared_mutex tp_mutex;
   std::unique_ptr<::perfetto::trace_processor::TraceProcessor> tp_;
   int64_t loaded_trace_id = 0;
 

@@ -17,6 +17,7 @@
 #include "trace_processor_service.h"
 
 #include <grpc++/grpc++.h>
+#include <mutex>
 
 #include "counters/counters_request_handler.h"
 #include "memory/memory_request_handler.h"
@@ -60,6 +61,11 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
     return grpc::Status::OK;
   }
 
+  // We acquire the mutex here after basic data validations.
+  // When we get hold of it, we know we can safely replace the current
+  // trace.
+  std::lock_guard tp_exclusive_guard(tp_mutex);
+
   Config config;
   // Avoid filling the RAW table with ftrace events, as we will not want to
   // export the trace back into systrace format. This allows TP to save a good
@@ -93,6 +99,11 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
 grpc::Status TraceProcessorServiceImpl::QueryBatch(
     grpc::ServerContext* context, const proto::QueryBatchRequest* batch_request,
     proto::QueryBatchResponse* batch_response) {
+  // We acquire the shared mutex here so multiple requests of query
+  // can be served at the same time, but prevents the trace from being
+  // unloaded from memory.
+  std::shared_lock tp_shared_guard(tp_mutex);
+
   for (auto& request : batch_request->query()) {
     auto query_result = batch_response->add_result();
 
