@@ -146,6 +146,30 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
+    fun `bug 159434435--check known and unknown flag combinability`() {
+        assertThat(looksCombinable("-N")).isFalse()
+        assertThat(looksCombinable("-D")).isTrue()
+        assertThat(looksCombinable("-X")).isTrue()
+        assertThat(looksCombinable("--XYZ")).isFalse()
+        assertThat(looksCombinable("-x")).isFalse()
+        assertThat(looksCombinable("--")).isFalse()
+    }
+
+    @Test
+    fun `bug 159434435--test unknown command-line arg`() {
+        val arguments = parseCmakeCommandLine("-CD:\\Test\\TargetProperties.cmake")
+        println(arguments)
+        assertThat(arguments[0]).isEqualTo(UnknownArgument(sourceArgument = "-CD:\\Test\\TargetProperties.cmake"))
+    }
+
+    @Test
+    fun `bug 159434435--test unknown command-line arg with space`() {
+        val arguments = parseCmakeCommandLine("-C D:\\Test\\TargetProperties.cmake")
+        println(arguments)
+        assertThat(arguments[0]).isEqualTo(UnknownArgument(sourceArgument = "-C D:\\Test\\TargetProperties.cmake"))
+    }
+
+    @Test
     fun `parse command-line -G`() {
         val arguments = parseCmakeCommandLine("-DX=Y -G Ninja -GNinja")
         assertThat(arguments.getGenerator()).isEqualTo("Ninja")

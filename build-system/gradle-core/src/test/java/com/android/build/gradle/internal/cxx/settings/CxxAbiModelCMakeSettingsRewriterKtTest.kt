@@ -159,6 +159,31 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     }
 
     @Test
+    fun `bug 159434435--unknown user build args are forwarded`() {
+        CmakeSettingsMock().apply {
+            val variant = variant.copy(
+                    buildSystemArgumentList =
+                        listOf(
+                            "-CD:\\Test\\TargetProperties.cmake",
+                            "--log-level=VERBOSE",
+                            "-X some-parameter-after-a-space",
+                        ),
+
+            )
+            val abi = createCxxAbiModel(
+                    sdkComponents,
+                    configurationParameters,
+                    variant,
+                    Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
+            println(abi.toJsonString())
+            val variables = abi.getFinalCmakeCommandLineArguments().map { it.sourceArgument }
+            assertThat(variables).contains("-CD:\\Test\\TargetProperties.cmake")
+            assertThat(variables).contains("--log-level=VERBOSE")
+            assertThat(variables).contains("-X some-parameter-after-a-space")
+        }
+    }
+
+    @Test
     fun `user build args take precedence over default configuration`() {
         CmakeSettingsMock().apply {
             val variant = variant.copy(

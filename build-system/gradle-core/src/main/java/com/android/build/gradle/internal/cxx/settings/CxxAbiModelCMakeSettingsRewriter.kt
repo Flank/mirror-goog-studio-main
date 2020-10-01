@@ -16,21 +16,12 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.configure.*
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_FIND_ROOT_PATH
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
-import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
-import com.android.build.gradle.internal.cxx.configure.getGenerator
-import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
-import com.android.build.gradle.internal.cxx.configure.onlyKeepProperties
-import com.android.build.gradle.internal.cxx.configure.parseCmakeArguments
-import com.android.build.gradle.internal.cxx.configure.parseCmakeCommandLine
-import com.android.build.gradle.internal.cxx.configure.removeBlankProperties
-import com.android.build.gradle.internal.cxx.configure.removeSubsumedArguments
-import com.android.build.gradle.internal.cxx.configure.toCmakeArgument
 import com.android.build.gradle.internal.cxx.hashing.toBase36
 import com.android.build.gradle.internal.cxx.hashing.update
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
@@ -148,7 +139,11 @@ private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
             variables = variables +
                     arguments.onlyKeepProperties().map {
                         CMakeSettingsVariable(it.propertyName, it.propertyValue)
-                    }
+                    },
+            cmakeCommandArgs = arguments.onlyKeepUnknownArguments().let { unknowns ->
+                if (unknowns.isEmpty()) cmakeCommandArgs
+                else (cmakeCommandArgs ?: "") + unknowns.joinToString(" ") { it.sourceArgument }
+            }
         )
     }
 
@@ -254,7 +249,7 @@ fun CMakeSettingsConfiguration.getCmakeCommandLineArguments() : List<CommandLine
     }
 
     if (cmakeCommandArgs != null) {
-        parseCmakeCommandLine(cmakeCommandArgs)
+        result += parseCmakeCommandLine(cmakeCommandArgs)
     }
     return result.removeSubsumedArguments().removeBlankProperties()
 }

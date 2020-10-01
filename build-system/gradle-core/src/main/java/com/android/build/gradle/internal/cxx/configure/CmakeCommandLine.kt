@@ -135,6 +135,28 @@ fun parseCmakeArguments(args : List<String>) : List<CommandLineArgument> {
     }
 }
 
+
+/**
+ * Check whether a CMake flag looks combinable with the argument that immediately follows it.
+ * See: https://cmake.org/cmake/help/latest/manual/cmake.1.html
+ *
+ * There are some flags that are definitely known to be combinable (see [knownCombinable]).
+ * There are some flags that are definitely known to not be combinable (see [knownNotCombinable]).
+ * For the remainder, a heuristic is used to decide whether it's combinable or not.
+ *
+ * Last updated CMake 3.18.1
+ */
+fun looksCombinable(flag: String) =
+        // Is the flag in the allow-list of known combinable CMake flags?
+        knownCombinable.contains(flag) ||
+                // Is the flag in the disallow-list of flags known to not be combinable?
+                (!knownNotCombinable.contains(flag) &&
+                        // Heuristic to guess whether the flag is combinable or not.
+                        flag.length == 2 && flag[0]=='-' && flag[1].isUpperCase())
+
+private val knownNotCombinable = listOf("-N")
+private val knownCombinable = listOf("-S", "-B", "-C", "-D", "-U", "-G", "-T", "-A")
+
 /**
  * Parse a CMake command-line and returns the corresponding list of [CommandLineArgument].
  */
@@ -147,7 +169,7 @@ fun parseCmakeCommandLine(
             hostConventions.tokenizeCommandLineToRaw(commandLine)
     var prior : Pair<String, String>? = null
     val result = mutableListOf<CommandLineArgument>()
-    val combinable = listOf("-D", "-H", "-B", "-G")
+
     for(combinedToken in combinedTokens) {
         val (escaped, raw) = combinedToken
         when {
@@ -156,7 +178,7 @@ fun parseCmakeCommandLine(
                     "${prior.first} $escaped".toCmakeArgument("${prior.second} $raw")
                 prior = null
             }
-            combinable.contains(escaped) -> prior = combinedToken
+            looksCombinable(escaped) -> prior = combinedToken
             else -> result += escaped.toCmakeArgument(raw)
         }
     }
@@ -275,6 +297,13 @@ fun List<CommandLineArgument>.onlyKeepProperties() =
     filterIsInstance(DefineProperty::class.java)
 
 /**
+ * Keep the [CommandLineArgument]s that are not explicitly recognized but that need to be
+ * forwarded to the CMake command-line invocation.
+ */
+fun List<CommandLineArgument>.onlyKeepUnknownArguments() =
+        filterIsInstance(UnknownArgument::class.java)
+
+/**
  * Remove duplicate property names and other arguments, leaving only the last.
  */
 fun List<CommandLineArgument>.removeSubsumedArguments() =
@@ -282,6 +311,7 @@ fun List<CommandLineArgument>.removeSubsumedArguments() =
     .distinctBy {
         when (it) {
             is DefineProperty -> it.propertyName
+            is UnknownArgument -> it.sourceArgument
             else -> it.javaClass
         }
     }
