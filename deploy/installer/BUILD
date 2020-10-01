@@ -148,6 +148,7 @@ cc_library(
         "delta_preinstall.cc",
         "dump.cc",
         "dump.h",
+        "executor/executor.cc",
         "executor/executor_impl.cc",
         "executor/redirect_executor.cc",
         "highlander.cc",

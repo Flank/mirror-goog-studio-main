@@ -62,8 +62,8 @@ bool BaseInstallCommand::SendApkToPackageManager(
   }
 
   int pm_stdin, pid;
-  workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, nullptr,
-                                       nullptr, &pid);
+  Executor::Get().ForkAndExec("cmd", parameters, &pm_stdin, nullptr, nullptr,
+                              &pid);
 
   PatchApplier patchApplier;
   bool patch_result = patchApplier.ApplyPatchToFD(patch, pm_stdin);

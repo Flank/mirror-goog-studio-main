@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef RUNAS_EXECUTOR_H
-#define RUNAS_EXECUTOR_H
+#include "tools/base/deploy/installer/executor/executor.h"
 
+#include "tools/base/deploy/common/env.h"
+#include "tools/base/deploy/installer/executor/executor_impl.h"
 #include "tools/base/deploy/installer/executor/redirect_executor.h"
 
 namespace deploy {
 
-const std::string kRunAsExecutable = "/system/bin/run-as";
+Executor& Executor::Get() {
+  static ExecutorImpl executorImpl;
 
-class RunasExecutor : public RedirectExecutor {
- public:
-  RunasExecutor(const std::string& package, Executor& executor)
-      : RedirectExecutor(kRunAsExecutable, package, executor) {}
+  // If there is no custom environment, return the default executor.
+  if (!Env::IsValid()) {
+    return executorImpl;
+  }
 
-  RunasExecutor(const std::string& package)
-      : RedirectExecutor(kRunAsExecutable, package, Executor::Get()) {}
-};
+  static RedirectExecutor redirectExecutor(Env::shell(), executorImpl);
+  return redirectExecutor;
+}
 
 }  // namespace deploy
-
-#endif  // RUNAS_EXECUTOR_H

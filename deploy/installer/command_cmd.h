@@ -34,10 +34,13 @@ struct ProcessRecord {
 // Wrapper around Android executable "service client".
 class CmdCommand {
  public:
-  CmdCommand(const Workspace& workspace)
-      : executor_(workspace.GetExecutor()),
+  explicit CmdCommand(const Workspace& workspace, Executor& executor)
+      : executor_(executor),
         pm_exec_(workspace.GetPmPath()),
         cmd_exec_(workspace.GetCmdPath()) {}
+
+  explicit CmdCommand(const Workspace& workspace)
+      : CmdCommand(workspace, Executor::Get()) {}
 
   bool GetApks(const std::string& package_name, std::vector<std::string>* apks,
                std::string* error_string) const noexcept;

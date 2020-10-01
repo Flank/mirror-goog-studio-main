@@ -78,7 +78,7 @@ void LiveLiteralUpdateCommand::Run(proto::InstallerResponse* response) {
   }
 
   client_ = StartInstallServer(
-      workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
       package_name_, kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_) {
@@ -138,7 +138,7 @@ void LiveLiteralUpdateCommand::PrepareAndBuildRequest(
   // TODO: Error checking
   CheckFilesExist({startup_path, studio_path, agent_path}, &missing_files);
 
-  RunasExecutor run_as(package_name_, workspace_.GetExecutor());
+  RunasExecutor run_as(package_name_);
   std::string error;
 
   if (missing_files.find(startup_path) != missing_files.end() &&

@@ -31,11 +31,10 @@ constexpr const char* kDefaultCmdPath = "/system/bin/cmd";
 constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
 }  // namespace
 
-Workspace::Workspace(const std::string& version, Executor* executor)
+Workspace::Workspace(const std::string& version)
     : version_(version),
       pm_path_(kDefaultPmPath),
       cmd_path_(kDefaultCmdPath),
-      executor_(executor),
       output_pipe_(dup(STDOUT_FILENO)) {
   tmp_ = kBaseDir + "/tmp/"_s + version + "/";
   pids_folder_ = kBaseDir + "/ipids/"_s;

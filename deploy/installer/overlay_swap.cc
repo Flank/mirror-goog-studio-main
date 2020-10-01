@@ -20,6 +20,7 @@
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 
 namespace deploy {
@@ -64,7 +65,7 @@ OverlaySwapCommand::PrepareAndBuildRequest() {
     return nullptr;
   }
 
-  RunasExecutor run_as(package_name_, workspace_.GetExecutor());
+  RunasExecutor run_as(package_name_);
   std::string error;
 
   bool missing_startup =

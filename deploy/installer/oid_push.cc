@@ -22,6 +22,7 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/server/install_server.h"
 
@@ -62,7 +63,7 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   update_request->set_wipe_all_files(request_.wipe_overlays());
 
   std::unique_ptr<InstallClient> client_ = StartInstallServer(
-      workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
       request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_) {

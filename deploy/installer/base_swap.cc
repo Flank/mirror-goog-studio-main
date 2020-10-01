@@ -56,7 +56,7 @@ void BaseSwapCommand::Run(proto::InstallerResponse* response) {
   }
 
   client_ = StartInstallServer(
-      workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
       package_name_, kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_) {

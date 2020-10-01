@@ -336,7 +336,7 @@ bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
   LogEvent(parameters.back());
 
   int err_fd = -1;
-  RunasExecutor run_as(request_.package_name(), workspace_.GetExecutor());
+  RunasExecutor run_as(request_.package_name());
   bool success = run_as.ForkAndExec(target_dir_ + kServerFilename, parameters,
                                     write_fd, read_fd, &err_fd, server_pid);
   close(sync_write_fd);
@@ -382,8 +382,8 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          const std::vector<std::string>& args,
                          std::string* output) const {
   std::string err;
-  Executor* executor = &workspace_.GetExecutor();
-  RunasExecutor alt(request_.package_name(), workspace_.GetExecutor());
+  Executor* executor = &Executor::Get();
+  RunasExecutor alt(request_.package_name(), *executor);
   if (run_as == User::APP_PACKAGE) {
     executor = &alt;
   }
