@@ -12,7 +12,7 @@ transport_test(
     jvm_flags = [
         "-Dtest.inspector.dex.location=$(location //tools/base/app-inspection/tests/test-inspector:test-inspector)",
     ],
-    shard_count = 2,
+    shard_count = 3,
     deps = [
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//tools/base/app-inspection/tests/test-framework",
