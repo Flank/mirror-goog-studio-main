@@ -69,7 +69,7 @@ class AsmInstrumentationManager(
             FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES,
             FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES ->
                 ClassReader.SKIP_FRAMES
-            else -> 0
+            else -> ClassReader.EXPAND_FRAMES
         }
 
     fun instrumentClassesFromDirectoryToDirectory(inputDir: File, outputDir: File) {
