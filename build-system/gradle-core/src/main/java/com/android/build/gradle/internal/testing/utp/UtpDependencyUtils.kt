@@ -25,7 +25,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 
 private const val NITROGEN_MAVEN_GROUP_ID = "com.google.testing.platform"
-private const val NITROGEN_DEFAULT_VERSION = "0.0.4-dev"
+private const val NITROGEN_DEFAULT_VERSION = "0.0.5-dev"
 
 /**
  * Available Unified Test Platform dependencies.
@@ -45,9 +45,6 @@ enum class UtpDependency(
     ANDROID_DEVICE_PROVIDER_LOCAL(
             "android-device-provider-local",
             "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"),
-    ANDROID_DEVICE_CONTROLLER_ADB(
-            "android-device-controller-adb",
-            "com.google.testing.platform.runtime.android.adb.controller.AdbDeviceController"),
     ANDROID_DRIVER_INSTRUMENTATION(
             "android-driver-instrumentation",
             "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"),
@@ -79,9 +76,6 @@ abstract class UtpDependencies {
     @get:Optional
     @get:Classpath
     abstract val deviceProviderLocal: ConfigurableFileCollection
-    @get:Optional
-    @get:Classpath
-    abstract val deviceControllerAdb: ConfigurableFileCollection
     @get:Optional
     @get:Classpath
     abstract val driverInstrumentation: ConfigurableFileCollection
