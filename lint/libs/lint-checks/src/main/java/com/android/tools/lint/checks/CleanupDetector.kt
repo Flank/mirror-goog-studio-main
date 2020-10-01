@@ -98,7 +98,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             EDIT,
 
             // Animation
-            ANIMATE,
             OF_INT,
             OF_ARGB,
             OF_FLOAT,
@@ -125,7 +124,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         when (method.name) {
             BEGIN_TRANSACTION -> checkTransactionCommits(context, node, method)
             EDIT -> checkEditorApplied(context, node, method)
-            ANIMATE -> checkRecycled(context, node, VIEW_PROPERTY_ANIMATOR_CLS, START)
             else -> checkResourceRecycled(context, node, method)
         }
     }
@@ -324,7 +322,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     "This `%1\$s` should be recycled after use with `#recycle()`",
                     className
                 )
-            } else if (ANIMATE == recycleName || START == recycleName) {
+            } else if (START == recycleName) {
                 "This animation should be started with `#start()`"
             } else {
                 String.format(
@@ -1014,7 +1012,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val OF_FLOAT = "ofFloat"
         private const val OF_OBJECT = "ofObject"
         private const val OF_PROPERTY_VALUES_HOLDER = "ofPropertyValuesHolder"
-        private const val ANIMATE = "animate"
         private const val START = "start"
 
         private const val RECYCLE = "recycle"
@@ -1051,7 +1048,6 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val VALUE_ANIMATOR_CLS = "android.animation.ValueAnimator"
         private const val OBJECT_ANIMATOR_CLS = "android.animation.ObjectAnimator"
         private const val ANIMATOR_SET_CLS = "android.animation.AnimatorSet"
-        private const val VIEW_PROPERTY_ANIMATOR_CLS = "android.view.ViewPropertyAnimator"
 
         const val SURFACE_CLS = "android.view.Surface"
         const val SURFACE_TEXTURE_CLS = "android.graphics.SurfaceTexture"
