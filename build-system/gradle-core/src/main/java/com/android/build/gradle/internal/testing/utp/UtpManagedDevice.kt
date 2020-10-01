@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import java.io.File
+
 /**
  * Processed data from the Android Gradle Plugin to UTP regarding a specific Managed Virtual Device
  * as specified from the DSL.
