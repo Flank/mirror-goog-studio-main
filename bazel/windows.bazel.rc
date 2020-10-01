@@ -6,6 +6,7 @@ startup --windows_enable_symlinks
 
 build --enable_runfiles
 
+build:remote --python_path="C:/Python27/python.exe"
 build:remote --config=remote_common
 build:remote --jobs=250
 
