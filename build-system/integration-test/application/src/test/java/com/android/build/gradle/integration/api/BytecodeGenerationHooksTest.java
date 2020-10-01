@@ -71,11 +71,6 @@ public class BytecodeGenerationHooksTest {
         assertThat(dexFile).containsClasses("Lcom/example/bytecode/App;");
         assertThat(dexFile).containsClasses("Lcom/example/bytecode/PostJavacApp;");
 
-        assertThat(apk).contains("META-INF/app.kotlin_module");
-        assertThat(apk).contains("META-INF/post-app.kotlin_module");
-        assertThat(apk).contains("META-INF/lib.kotlin_module");
-        assertThat(apk).contains("META-INF/post-lib.kotlin_module");
-
         // also verify that the kotlin module files are present in the intermediate classes.jar
         // published by the library
 
@@ -123,7 +118,6 @@ public class BytecodeGenerationHooksTest {
 
         Apk apk = appProject.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
         assertThat(apk.getFile()).isFile();
-        assertThat(apk).contains("META-INF/test.kotlin_module");
 
         // also verify that the app's jar used by test compilation contains the kotlin module files
         File classesJar = appProject.getIntermediateFile("app_classes/debug/classes.jar");

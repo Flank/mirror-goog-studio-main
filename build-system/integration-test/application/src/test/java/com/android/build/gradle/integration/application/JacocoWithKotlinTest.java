@@ -22,7 +22,12 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.testutils.truth.FileSubject;
+import com.android.utils.FileUtils;
+import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,7 +68,16 @@ public class JacocoWithKotlinTest {
                 .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasField("$jacocoData");
-        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .containsJavaResource("META-INF/project_debug.kotlin_module");
+
+        File kotlinModuleFile =
+                FileUtils.join(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES.INSTANCE,
+                                project.getBuildDir()),
+                        "debug",
+                        "out",
+                        "META-INF",
+                        "project_debug.kotlin_module");
+        FileSubject.assertThat(kotlinModuleFile).isFile();
     }
 }

@@ -22,24 +22,15 @@ import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import java.util.concurrent.Callable
 
-class ResourcesPackagingOptionsImpl(
-    dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
+open class ResourcesPackagingOptionsImpl(
+    private val dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
 ) : ResourcesPackagingOptions {
 
     override val excludes =
         variantPropertiesApiServices.setPropertyOf(
             String::class.java,
-            // the union of dslPackagingOptions.excludes and dslPackagingOptions.resources.excludes,
-            // minus the default patterns removed from either of them.
-            Callable<Collection<String>> {
-                dslPackagingOptions.excludes
-                    .union(dslPackagingOptions.resources.excludes)
-                    .minus(
-                        defaultExcludes.subtract(dslPackagingOptions.excludes)
-                            .union(defaultExcludes.subtract(dslPackagingOptions.resources.excludes))
-                    )
-            }
+            Callable<Collection<String>> { getBaseExcludes() }
         )
 
     override val pickFirsts =
@@ -64,4 +55,14 @@ class ResourcesPackagingOptionsImpl(
                     )
             }
         )
+
+    // the union of dslPackagingOptions.excludes and dslPackagingOptions.resources.excludes, minus
+    // the default patterns removed from either of them.
+    protected fun getBaseExcludes(): Set<String> =
+        dslPackagingOptions.excludes
+            .union(dslPackagingOptions.resources.excludes)
+            .minus(
+                defaultExcludes.subtract(dslPackagingOptions.excludes)
+                    .union(defaultExcludes.subtract(dslPackagingOptions.resources.excludes))
+            )
 }

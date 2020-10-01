@@ -117,6 +117,10 @@ public class JavaResPackagingTest {
         File appDir = appProject.getProjectDir();
         createOriginalResFile(appDir,  "main",        "app.txt",         "app:abcd");
         createOriginalResFile(appDir,  "androidTest", "apptest.txt",     "appTest:abcd");
+        // add some .kotlin_module files to ensure they're excluded by default.
+        createOriginalResFile(appDir, "main", "META-INF", "foo.kotlin_module", "app:abcd");
+        createOriginalResFile(
+                appDir, "androidTest", "META-INF", "foo.kotlin_module", "appTest:abcd");
 
         File testDir = testProject.getProjectDir();
         createOriginalResFile(testDir, "main",        "test.txt",        "test:abcd");
@@ -124,6 +128,11 @@ public class JavaResPackagingTest {
         File libDir = libProject.getProjectDir();
         createOriginalResFile(libDir,  "main",        "library.txt",      "library:abcd");
         createOriginalResFile(libDir,  "androidTest", "librarytest.txt",  "libraryTest:abcd");
+        // add some .kotlin_module files to ensure they're included for the AAR but excluded for the
+        // android test APK.
+        createOriginalResFile(libDir, "main", "META-INF", "foo.kotlin_module", "library:abcd");
+        createOriginalResFile(
+                libDir, "androidTest", "META-INF", "foo.kotlin_module", "libraryTest:abcd");
 
         File lib2Dir = libProject2.getProjectDir();
         createOriginalResFile(lib2Dir, "main",        "library2.txt",     "library2:abcd");
@@ -151,9 +160,20 @@ public class JavaResPackagingTest {
             @NonNull String filename,
             @NonNull String content)
             throws Exception {
-        File assetFolder = FileUtils.join(projectFolder, "src", dimension, "resources", "com", "foo");
-        FileUtils.mkdirs(assetFolder);
-        Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
+        createOriginalResFile(projectFolder, dimension, "com/foo", filename, content);
+    }
+
+    private static void createOriginalResFile(
+            @NonNull File projectFolder,
+            @NonNull String dimension,
+            @NonNull String parentDirRelativePath,
+            @NonNull String filename,
+            @NonNull String content)
+            throws Exception {
+        File resourcesFolder = FileUtils.join(projectFolder, "src", dimension, "resources");
+        File parentFolder = new File(resourcesFolder, parentDirRelativePath);
+        FileUtils.mkdirs(parentFolder);
+        Files.asCharSink(new File(parentFolder, filename), Charsets.UTF_8).write(content);
     }
 
     private GradleBuildResult execute(String... tasks) throws IOException, InterruptedException {
@@ -198,6 +218,12 @@ public class JavaResPackagingTest {
         checkTestApk(appProject, "localjar.txt",     null);
         checkTestApk(appProject, "librarytest.txt",  null);
         checkTestApk(appProject, "library2test.txt", null);
+
+        // All APKs should exclude .kotlin_module files, but the AAR should include it.
+        checkApk(appProject, "META-INF", "foo.kotlin_module", null);
+        checkTestApk(appProject, "META-INF", "foo.kotlin_module", null);
+        checkTestApk(libProject, "META-INF", "foo.kotlin_module", null);
+        checkAar(libProject, "META-INF", "foo.kotlin_module", "library:abcd");
     }
 
     // ---- APP DEFAULT ---
@@ -692,7 +718,27 @@ public class JavaResPackagingTest {
     private void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(assertThat(project.getTestApk()), "com/foo", filename, content);
+        checkTestApk(project, "com/foo", filename, content);
+    }
+
+    /**
+     * check a test apk has (or not) the given res file name.
+     *
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
+     * content is null the file is not expected to be there.
+     *
+     * @param project the project
+     * @param parentDirRelativePath the relative path of the file's parent directory
+     * @param filename the filename
+     * @param content the content
+     */
+    private void checkTestApk(
+            @NonNull GradleTestProject project,
+            @NonNull String parentDirRelativePath,
+            @NonNull String filename,
+            @Nullable String content)
+            throws Exception {
+        check(assertThat(project.getTestApk()), parentDirRelativePath, filename, content);
     }
 
     /**
@@ -708,7 +754,27 @@ public class JavaResPackagingTest {
     private static void checkAar(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        project.testAar("debug", it -> check(it, "com/foo", filename, content));
+        checkAar(project, "com/foo", filename, content);
+    }
+
+    /**
+     * check an aar has (or not) the given res file name.
+     *
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
+     * content is null the file is not expected to be there.
+     *
+     * @param project the project
+     * @param parentDirRelativePath the relative path of the file's parent directory
+     * @param filename the filename
+     * @param content the content
+     */
+    private static void checkAar(
+            @NonNull GradleTestProject project,
+            @NonNull String parentDirRelativePath,
+            @NonNull String filename,
+            @Nullable String content)
+            throws Exception {
+        project.testAar("debug", it -> check(it, parentDirRelativePath, filename, content));
     }
 
     /**

@@ -40,4 +40,7 @@ class ApkPackagingOptionsImpl(
     override fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit) {
         action.invoke(jniLibs)
     }
+
+    override val resources =
+        ResourcesApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
 }
