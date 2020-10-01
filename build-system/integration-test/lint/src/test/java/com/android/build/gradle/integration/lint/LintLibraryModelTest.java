@@ -37,7 +37,9 @@ import org.junit.runners.Parameterized;
 public class LintLibraryModelTest {
     @Parameterized.Parameters(name = "{0}")
     public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
+        return new LintInvocationType[] {
+            LintInvocationType.REFLECTIVE_LINT_RUNNER
+        }; // TODO(b/160392650)
     }
 
     @Rule

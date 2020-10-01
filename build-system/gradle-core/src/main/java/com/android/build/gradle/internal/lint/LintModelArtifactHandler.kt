@@ -18,9 +18,7 @@ package com.android.build.gradle.internal.lint
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
-import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
 import com.android.builder.model.MavenCoordinates
-import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.DefaultLintModelAndroidLibrary
 import com.android.tools.lint.model.DefaultLintModelJavaLibrary
 import com.android.tools.lint.model.DefaultLintModelMavenName
@@ -30,10 +28,12 @@ import com.android.tools.lint.model.LintModelMavenName
 import com.android.utils.FileUtils
 import java.io.File
 
-class LintModelArtifactHandler(
-    localJarCache: CreatingCache<File, List<File>>,
-    mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>
-) : ArtifactHandler<LintModelLibrary>(localJarCache, mavenCoordinatesCache) {
+internal class LintModelArtifactHandler(
+    dependencyCaches: DependencyCaches
+) : ArtifactHandler<LintModelLibrary>(
+    dependencyCaches.localJarCache,
+    dependencyCaches.mavenCoordinatesCache
+) {
 
     override fun handleAndroidLibrary(
         aarFile: File,

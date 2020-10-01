@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.VariantType
-import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
@@ -527,13 +526,3 @@ abstract class LintModelModuleWriterTask : NonIncrementalGlobalTask() {
     }
 }
 
-private fun VariantType.toLintModelModuleType(): LintModelModuleType {
-    return when (this) {
-        // FIXME add other types
-        VariantTypeImpl.BASE_APK -> LintModelModuleType.APP
-        VariantTypeImpl.LIBRARY -> LintModelModuleType.LIBRARY
-        VariantTypeImpl.OPTIONAL_APK -> LintModelModuleType.DYNAMIC_FEATURE
-        VariantTypeImpl.TEST_APK -> LintModelModuleType.TEST
-        else -> throw RuntimeException("Unsupported VariantTypeImpl value")
-    }
-}

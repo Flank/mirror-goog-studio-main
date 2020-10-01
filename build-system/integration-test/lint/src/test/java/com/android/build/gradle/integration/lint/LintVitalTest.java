@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.lint;
 
+import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -23,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
@@ -45,10 +47,13 @@ public class LintVitalTest {
     @Rule
     public final GradleTestProject project;
 
+    private LintInvocationType lintInvocationType;
+
     public LintVitalTest(LintInvocationType lintInvocationType) {
         this.project = lintInvocationType.testProjectBuilder()
                 .fromTestApp(HelloWorldApp.noBuildFile())
                 .create();
+        this.lintInvocationType = lintInvocationType;
     }
 
     @Before
@@ -89,10 +94,24 @@ public class LintVitalTest {
         GradleBuildResult result = project.executor().expectFailure().run("lintVitalRelease", "lint");
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped();
 
-        // We make this assertion to ensure that :lint is actually run and runs as expected. Without
+        // We make this assertion to ensure that lint is actually run and runs as expected. Without
         // this, it's possible that we break the execution in some other way and the test still
         // passes.
-        TruthHelper.assertThat(result.getTask(":lint")).failed();
+        final String expectedFailedTaskPath;
+        switch (lintInvocationType) {
+            case REFLECTIVE_LINT_RUNNER:
+                expectedFailedTaskPath = ":lint";
+                break;
+            case NEW_LINT_MODEL:
+                expectedFailedTaskPath = ":lintDebug";
+                break;
+            default:
+                throw new IllegalStateException(
+                        "Unexpected lintInvocationType" + lintInvocationType);
+        }
+
+        TaskStateList.TaskInfo task = result.getTask(expectedFailedTaskPath);
+        assertThat(task).failed();
     }
 
     @Test

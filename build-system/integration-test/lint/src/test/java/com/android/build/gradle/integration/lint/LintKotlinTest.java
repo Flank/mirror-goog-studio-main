@@ -41,9 +41,8 @@ public class LintKotlinTest {
     public final GradleTestProject project;
 
     public LintKotlinTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintKotlin")
-                .create();
+        this.project =
+                lintInvocationType.testProjectBuilder(4).fromTestProject("lintKotlin").create();
     }
 
     @Test

@@ -280,6 +280,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
         if (autoFixing) {
             flags.isAutoFix = true
             flags.isSetExitCode = false
+            flags.isAbortOnAutoFix = true
         }
         try {
             warnings = client.run(registry)

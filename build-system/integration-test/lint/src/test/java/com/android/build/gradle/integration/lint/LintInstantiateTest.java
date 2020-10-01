@@ -31,16 +31,20 @@ public class LintInstantiateTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
+        return new LintInvocationType[] {
+            LintInvocationType.REFLECTIVE_LINT_RUNNER
+        }; // TODO(b/160392650)
     }
 
     @Rule
     public final GradleTestProject project;
 
     public LintInstantiateTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintInstantiate")
-                .create();
+        this.project =
+                lintInvocationType
+                        .testProjectBuilder(87)
+                        .fromTestProject("lintInstantiate")
+                        .create();
     }
 
     @Test

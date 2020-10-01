@@ -36,16 +36,17 @@ public class LintFixTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
+        return new LintInvocationType[] {
+            LintInvocationType.REFLECTIVE_LINT_RUNNER
+        }; // TODO(b/160392650)
     }
 
     @Rule
     public final GradleTestProject project;
 
     public LintFixTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintKotlin")
-                .create();
+        this.project =
+                lintInvocationType.testProjectBuilder(66).fromTestProject("lintKotlin").create();
     }
 
     @Test

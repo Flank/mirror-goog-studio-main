@@ -32,6 +32,8 @@ import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.XmlUtils
 import com.google.common.collect.Lists
+import com.google.common.io.Files
+import org.w3c.dom.Document
 import java.io.File
 import java.io.IOException
 import java.util.ArrayList
@@ -347,6 +349,26 @@ open class LintModelModuleProject(
                 leanback
             }
             else -> super.dependsOn(id)
+        }
+    }
+
+    override fun getMergedManifest(): Document? {
+        val manifest = variant.mergedManifest ?: return super.getMergedManifest()
+        return try {
+            val xml: String = Files.asCharSource(manifest, Charsets.UTF_8).read()
+            val document = XmlUtils.parseDocumentSilently(xml, true)
+            if (document == null) {
+                client.log(null,"Could not read %1\$s", manifest)
+                return null
+            }
+            // Note for later that we'll need to resolve locations from
+            // the merged manifest
+            val manifestMergeReport = variant.manifestMergeReport
+            manifestMergeReport?.let { client.resolveMergeManifestSources(document, it) }
+            document
+        } catch (ioe: IOException) {
+            client.log(ioe, "Could not read %1\$s", manifest)
+            null
         }
     }
 }
