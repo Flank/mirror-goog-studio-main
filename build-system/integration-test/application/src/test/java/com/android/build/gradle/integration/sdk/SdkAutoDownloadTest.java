@@ -35,6 +35,7 @@ import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.SyncIssue;
 import com.android.repository.Revision;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.AssumeUtil;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
@@ -288,6 +289,7 @@ public class SdkAutoDownloadTest {
 
     @Test
     public void checkCmakeDownloading() throws Exception {
+        AssumeUtil.assumeIsLinux();
         installPlatforms();
         installBuildTools();
         installNdk();
@@ -323,6 +325,7 @@ public class SdkAutoDownloadTest {
 
     @Test
     public void checkCmakeMissingLicense() throws Exception {
+        AssumeUtil.assumeIsLinux();
         installPlatforms();
         installBuildTools();
         installPlatformTools();
@@ -359,6 +362,7 @@ public class SdkAutoDownloadTest {
 
     @Test
     public void checkNdkDownloading() throws Exception {
+        AssumeUtil.assumeIsLinux();
         installPlatforms();
         installBuildTools();
         TestFileUtils.appendToFile(
@@ -407,6 +411,7 @@ public class SdkAutoDownloadTest {
 
     @Test
     public void checkNdkMissingLicense() throws Exception {
+        AssumeUtil.assumeIsLinux();
         installPlatforms();
         installBuildTools();
         installPlatformTools();
