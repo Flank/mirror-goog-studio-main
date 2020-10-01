@@ -75,6 +75,7 @@ gradle_connected_test(
     name = "AndroidTestResourcesConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -83,6 +84,7 @@ gradle_connected_test(
     name = "AnnotationProcessorConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -91,6 +93,7 @@ gradle_connected_test(
     name = "ApiConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/api"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -99,6 +102,7 @@ gradle_connected_test(
     name = "BasicConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -107,6 +111,7 @@ gradle_connected_test(
     name = "BasicConnectedTest2",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -115,6 +120,7 @@ gradle_connected_test(
     name = "ComposeHelloWorldConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -123,6 +129,7 @@ gradle_connected_test(
     name = "CoreLibraryDesugarConversionConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
@@ -132,6 +139,7 @@ gradle_connected_test(
     name = "D8DesugaringConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -140,6 +148,7 @@ gradle_connected_test(
     name = "DensitySplitConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/densitySplit"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -148,6 +157,7 @@ gradle_connected_test(
     name = "DependenciesConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/dependencies"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -156,6 +166,7 @@ gradle_connected_test(
     name = "FlavoredConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavored"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -164,6 +175,7 @@ gradle_connected_test(
     name = "KotlinAppConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/kotlinApp"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -172,6 +184,7 @@ gradle_connected_test(
     name = "MigratedConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/migrated"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -183,6 +196,7 @@ gradle_connected_test(
         "//tools/base/build-system/integration-test:test-projects/mlModelBinding",
         "//prebuilts/tools/common/mlkit/testData",
     ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -195,6 +209,7 @@ gradle_connected_test(
         "//prebuilts/studio/sdk:ndk",
         "//tools/base/build-system/integration-test:test-projects/ndkJniLib",
     ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
@@ -203,6 +218,7 @@ gradle_connected_test(
     name = "ParentLibsConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/parentLibsTest"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )

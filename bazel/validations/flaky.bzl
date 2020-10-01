@@ -7,6 +7,22 @@ the allowlisted targets below can set "flaky" to true.
 APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/application:GradlePluginMemoryLeakTest",  # b/153972155
     "//tools/adt/idea/emulator:intellij.android.emulator.tests_tests",  # b/169167550
+    "//tools/base/build-system/integration-test/connected:ParentLibsConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:NdkJniLibConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MlModelBindingConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MigratedConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:KotlinAppConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:FlavoredConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:DependenciesConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:DensitySplitConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:D8DesugaringConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:CoreLibraryDesugarConversionConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:ComposeHelloWorldConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:BasicConnectedTest2",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:BasicConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:ApiConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:AnnotationProcessorConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:AndroidTestResourcesConnectedTest",  # b/148626301
 ]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.
