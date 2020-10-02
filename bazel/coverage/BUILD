@@ -651,7 +651,6 @@ coverage_report(
         "//tools/base/apkparser/analyzer:tools.tests",
         "//tools/base/apkparser/cli:tools.tests",
         "//tools/base/aspects_agent:agent_tests",
-        "//tools/base/aspects_agent:studio.android.sdktools.aspects-agent_tests",
         "//tools/base/bazel:bin2c_tests",
         "//tools/base/bazel:iml_to_build_tests",
         "//tools/base/bazel:third_party_up_to_date",

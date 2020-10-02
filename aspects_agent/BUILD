@@ -47,25 +47,3 @@ java_jarjar(
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],
 )
-
-load("//tools/base/bazel:bazel.bzl", "iml_module")
-
-# managed by go/iml_to_build
-iml_module(
-    name = "studio.android.sdktools.aspects-agent",
-    srcs = ["src/main"],
-    iml_files = ["android.sdktools.aspects_agent.iml"],
-    lint_baseline = "lint_baseline.xml",
-    test_data = glob(["testData/**"]),
-    test_srcs = ["src/test"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tools/base/annotations",
-        "//tools/base/testutils:tools.testutils[test]",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit[test]",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-commons",
-        "//tools/idea/.idea/libraries:gson",
-    ],
-)
