@@ -81,7 +81,7 @@ The [onVariantProperties] block will wire the [DisplayBundleFile] input property
 the Artifacts.get call with the right ArtifactType
 `bundleFile.set(artifacts.get(ArtifactType.BUNDLE))`
 ## To Run
-/path/to/gradle debugDisplayBundleFile
+./gradlew debugDisplayBundleFile
 expected result : "Got the Bundle ...." message.
             """.trimIndent()
         }

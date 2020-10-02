@@ -81,7 +81,7 @@ The [onVariantProperties] block will wire the [AarUploadTask] input property (ap
 the [Artifacts.get] call with the right [ArtifactType]
 `aar.set(artifacts.get(ArtifactType.AAR))`
 ## To Run
-/path/to/gradle debugAarUpload
+./gradlew debugAarUpload
 expected result : "Uploading .... to a fantasy server...s" message.
             """.trimIndent()
         }

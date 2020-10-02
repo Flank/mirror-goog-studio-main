@@ -129,7 +129,7 @@ For more information about how to mark resources as public see
 [Choose resources to make public](https://developer.android.com/studio/projects/android-library.html#PrivateResources)
 
 ## To Run
-/path/to/gradle validateDebugPublicResources
+./gradlew validateDebugPublicResources
 expected result : "Public Android resources unchanged."
             """.trimIndent()
         }

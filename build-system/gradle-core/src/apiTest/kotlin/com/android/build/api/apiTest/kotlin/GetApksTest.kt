@@ -84,7 +84,7 @@ Since more than one APK can be produced by the build when dealing with multi-apk
 `builtArtifactsLoader.get().load(apkFolder.get())'
 Once loaded, the built artifacts can be accessed.
 ## To Run
-/path/to/gradle debugDisplayApks
+./gradlew debugDisplayApks
 expected result : "Got an APK...." message.
             """.trimIndent()
         }

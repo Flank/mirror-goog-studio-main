@@ -42,7 +42,7 @@ class ChangeMinSdkVersion: VariantApiBaseTest(TestType.Script) {
                     kotlin("android.extensions")
             }
             import com.android.build.api.variant.AndroidVersion
-            
+
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
 
@@ -63,17 +63,17 @@ class ChangeMinSdkVersion: VariantApiBaseTest(TestType.Script) {
                 """
 # artifacts.get in Kotlin
 
-This sample show how to change the minSdkVersion for a particular variant. Because the min sdk 
+This sample show how to change the minSdkVersion for a particular variant. Because the min sdk
 version will impact the build flow, in particular how dexing is performed, it cannot be provided at
 execution time but during configuration time.
 
 Changing the minSdkVersion through the onVariants API is not as straightforward as changing it in
-the DSL directly and should only be done when a lot of build flavors and/or build types yield 
+the DSL directly and should only be done when a lot of build flavors and/or build types yield
 multiple variants.
 
 ## To Run
-/path/to/gradle assembleRelease
-expected result : An APK with minSdkVersion of 23 
+./gradlew assembleRelease
+expected result : An APK with minSdkVersion of 23
             """.trimIndent()
         }
         check {

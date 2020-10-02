@@ -85,7 +85,7 @@ The [onVariantProperties] block will wire the [MappingFileUploadTask] input prop
 the [Artifacts.get] call with the right [ArtifactType]
 `mapping.set(artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))`
 ## To Run
-/path/to/gradle debugMappingFileUpload
+./gradlew debugMappingFileUpload
 expected result : "Uploading .... to a fantasy server...s" message.
             """.trimIndent()
         }
