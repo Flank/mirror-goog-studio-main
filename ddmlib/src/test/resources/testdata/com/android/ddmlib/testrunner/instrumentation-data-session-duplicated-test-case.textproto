@@ -1,0 +1,159 @@
+# This text proto is the output of "am instrument -w -m" command with the following tests.
+#
+# package com.example.duplicatedtestcase
+#
+# import org.junit.Assert
+# import org.junit.Test
+# import org.junit.runner.RunWith
+# import org.junit.runners.JUnit4
+# import org.junit.runners.Suite
+#
+# @RunWith(Suite::class)
+# @Suite.SuiteClasses(ExampleInstrumentedTest::class)
+# class InstrumentationTestSuite
+#
+# @RunWith(JUnit4::class)
+# class ExampleInstrumentedTest() {
+#   @Test
+#   fun exampleTestCase() {
+#     Assert.assertEquals("a", "b")
+#   }
+# }
+
+test_status {
+    result_code: 1
+    results {
+        entries {
+            key: "class"
+            value_string: "com.example.duplicatedtestcase.ExampleInstrumentedTest"
+        }
+        entries {
+            key: "current"
+            value_int: 1
+        }
+        entries {
+            key: "id"
+            value_string: "AndroidJUnitRunner"
+        }
+        entries {
+            key: "numtests"
+            value_int: 2
+        }
+        entries {
+            key: "stream"
+            value_string: "\ncom.example.duplicatedtestcase.ExampleInstrumentedTest:"
+        }
+        entries {
+            key: "test"
+            value_string: "exampleTestCase"
+        }
+    }
+}
+
+test_status {
+    result_code: -2
+    results {
+        entries {
+            key: "class"
+            value_string: "com.example.duplicatedtestcase.ExampleInstrumentedTest"
+        }
+        entries {
+            key: "current"
+            value_int: 1
+        }
+        entries {
+            key: "id"
+            value_string: "AndroidJUnitRunner"
+        }
+        entries {
+            key: "numtests"
+            value_int: 2
+        }
+        entries {
+            key: "stack"
+            value_string: "org.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n\tat org.junit.Assert.assertEquals(Assert.java:115)\n\tat org.junit.Assert.assertEquals(Assert.java:144)\n\tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n"
+        }
+        entries {
+            key: "stream"
+            value_string: "\nError in exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest):\norg.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n\tat org.junit.Assert.assertEquals(Assert.java:115)\n\tat org.junit.Assert.assertEquals(Assert.java:144)\n\tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n"
+        }
+        entries {
+            key: "test"
+            value_string: "exampleTestCase"
+        }
+    }
+    logcat: "--------- beginning of main\n10-02 14:10:15.835 10113  4955  4986 I TestRunner: started: exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: failed: exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: ----- begin exception -----\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: org.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.Assert.assertEquals(Assert.java:115)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.Assert.assertEquals(Assert.java:144)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat java.lang.reflect.Method.invoke(Native Method)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:128)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:27)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: \tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n10-02 14:10:15.837 10113  4955  4986 E TestRunner: ----- end exception -----\n10-02 14:10:15.838 10113  4955  4986 I TestRunner: finished: exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest)\n"
+}
+test_status {
+    result_code: 1
+    results {
+        entries {
+            key: "class"
+            value_string: "com.example.duplicatedtestcase.ExampleInstrumentedTest"
+        }
+        entries {
+            key: "current"
+            value_int: 2
+        }
+        entries {
+            key: "id"
+            value_string: "AndroidJUnitRunner"
+        }
+        entries {
+            key: "numtests"
+            value_int: 2
+        }
+        entries {
+            key: "stream"
+        }
+        entries {
+            key: "test"
+            value_string: "exampleTestCase"
+        }
+    }
+}
+
+test_status {
+    result_code: -2
+    results {
+        entries {
+            key: "class"
+            value_string: "com.example.duplicatedtestcase.ExampleInstrumentedTest"
+        }
+        entries {
+            key: "current"
+            value_int: 2
+        }
+        entries {
+            key: "id"
+            value_string: "AndroidJUnitRunner"
+        }
+        entries {
+            key: "numtests"
+            value_int: 2
+        }
+        entries {
+            key: "stack"
+            value_string: "org.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n\tat org.junit.Assert.assertEquals(Assert.java:115)\n\tat org.junit.Assert.assertEquals(Assert.java:144)\n\tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n"
+        }
+        entries {
+            key: "stream"
+            value_string: "\nError in exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest):\norg.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n\tat org.junit.Assert.assertEquals(Assert.java:115)\n\tat org.junit.Assert.assertEquals(Assert.java:144)\n\tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n"
+        }
+        entries {
+            key: "test"
+            value_string: "exampleTestCase"
+        }
+    }
+    logcat: "--------- beginning of main\n10-02 14:10:15.895 10113  4955  4986 E TestRunner: failed: exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest)\n10-02 14:10:15.895 10113  4955  4986 E TestRunner: ----- begin exception -----\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: org.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.Assert.assertEquals(Assert.java:115)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.Assert.assertEquals(Assert.java:144)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat java.lang.reflect.Method.invoke(Native Method)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:128)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:27)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:128)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.Suite.runChild(Suite.java:27)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: \tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n10-02 14:10:15.896 10113  4955  4986 E TestRunner: ----- end exception -----\n10-02 14:10:15.897 10113  4955  4986 I TestRunner: finished: exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest)\n"
+}
+
+session_status {
+    result_code: -1
+    results {
+        entries {
+            key: "stream"
+            value_string: "\n\nTime: 0.085\nThere were 2 failures:\n1) exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest)\norg.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n\tat org.junit.Assert.assertEquals(Assert.java:115)\n\tat org.junit.Assert.assertEquals(Assert.java:144)\n\tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n2) exampleTestCase(com.example.duplicatedtestcase.ExampleInstrumentedTest)\norg.junit.ComparisonFailure: expected:<[a]> but was:<[b]>\n\tat org.junit.Assert.assertEquals(Assert.java:115)\n\tat org.junit.Assert.assertEquals(Assert.java:144)\n\tat com.example.duplicatedtestcase.ExampleInstrumentedTest.exampleTestCase(ExampleInstrumentedTest.kt:17)\n\tat java.lang.reflect.Method.invoke(Native Method)\n\tat org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)\n\tat org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)\n\tat org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)\n\tat org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)\n\tat org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)\n\tat org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runners.Suite.runChild(Suite.java:128)\n\tat org.junit.runners.Suite.runChild(Suite.java:27)\n\tat org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)\n\tat org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:363)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:137)\n\tat org.junit.runner.JUnitCore.run(JUnitCore.java:115)\n\tat androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:56)\n\tat androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:395)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2189)\n\nFAILURES!!!\nTests run: 2,  Failures: 2\n\n"
+        }
+    }
+}
