@@ -151,6 +151,13 @@ you want to not follow symbolic links, you must use the FullFileSource object.
 Keep in mind that FullFileSource is a little bit slower to process files since it needs to perform
 extra I/O in order to retrieve each properties.
 
+## Memory (heap) stress
+
+If you find that ByteSource stresses the heap too much or if you run out of memory on large entries,
+use a LargeFileSource. These use storage to temporarily store the payload and never load it all
+in memory. Because this is also done in the Constructor, compression can still be parallelized and
+there is little speed impact.
+
 ## Performance considerations when using ZipSource
 
 Zipflinger excels at moving zip entries between zip archives thanks to zero-copy transfer. However

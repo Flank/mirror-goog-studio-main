@@ -20,15 +20,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.zip.Deflater;
 import org.junit.Assert;
 import org.junit.Test;
@@ -939,6 +942,87 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
         try (ZipArchive zip = new ZipArchive(file)) {
             Assert.assertEquals(ByteBuffer.wrap(content1), zip.getContent("file1.txt"));
             Assert.assertEquals(ByteBuffer.wrap(content2), zip.getContent("file2.txt"));
+        }
+    }
+
+    @Test
+    public void testLargeSource() throws IOException {
+        byte[] bytes = new byte[4096];
+        Random random = new Random(0);
+        Path srcPath = getTestPath("testLargeSource.txt");
+        try (OutputStream out =
+                Files.newOutputStream(
+                        srcPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+            random.nextBytes(bytes);
+            out.write(bytes);
+        }
+
+        Path tmpPath = getTestPath("testLargeSourceTmpPath.tmp");
+
+        // Test compressed FileBackedSource
+        File compressedDstFile = getTestFile("testLargeSourceCompressed.zip");
+        try (ZipArchive zipArchive = new ZipArchive(compressedDstFile)) {
+            LargeFileSource s = new LargeFileSource(srcPath, tmpPath, "x", 1);
+            zipArchive.add(s);
+        }
+
+        verifyArchive(compressedDstFile);
+        try (ZipRepo zipRepo = new ZipRepo(compressedDstFile)) {
+            ByteBuffer buffer = zipRepo.getContent("x");
+            Assert.assertEquals("FileBacked entry differ", ByteBuffer.wrap(bytes), buffer);
+        }
+        Assert.assertFalse("LargeSource tmp file was not deleted", Files.exists(tmpPath));
+
+        // Test uncompressed FileBackedSource
+        File uncompressedDstFile = getTestFile("testLargeSourceUncompressed.zip");
+        try (ZipArchive zipArchive = new ZipArchive(uncompressedDstFile)) {
+            LargeFileSource s = new LargeFileSource(srcPath, tmpPath, "x", 0);
+            zipArchive.add(s);
+        }
+
+        verifyArchive(uncompressedDstFile);
+        try (ZipRepo zipRepo = new ZipRepo(uncompressedDstFile)) {
+            ByteBuffer buffer = zipRepo.getContent("x");
+            Assert.assertEquals("FileBacked entry differ", ByteBuffer.wrap(bytes), buffer);
+        }
+        Assert.assertFalse("LargeSource tmp file was not deleted", Files.exists(tmpPath));
+    }
+
+    @Test
+    public void testDetectLargeFileTmpCollision() throws Exception {
+        Path tmpCollider = getTestPath("tmpFileToCollide.txt");
+        Files.createFile(tmpCollider);
+
+        Path fooSrc = getTestPath("testTmpCollisionSrc.txt");
+        Files.createFile(fooSrc);
+
+        File f = getTestFile("testTmpCollisionArchive.zip");
+        try (ZipArchive archive = new ZipArchive(f)) {
+            LargeFileSource s = new LargeFileSource(fooSrc, tmpCollider, "x", 1);
+            archive.add(s);
+            Assert.fail("Tmp file collision not detected");
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testDetectBadParameter() throws Exception {
+        Path fooPath = getTestPath("testDetectBadParameter.txt");
+        Files.createFile(fooPath);
+
+        File f = getTestFile("testDetectBadParameter.zip");
+
+        try (ZipArchive archive = new ZipArchive(f)) {
+            LargeFileSource s = new LargeFileSource(fooPath, null, "x", 0);
+            archive.add(s);
+
+            try {
+                s = new LargeFileSource(fooPath, null, "x", 1);
+                archive.add(s);
+                Assert.fail("Adding a compressed large file without a tmp path did not throw");
+            } catch (IllegalStateException e) {
+            }
         }
     }
 }
