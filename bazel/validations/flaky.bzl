@@ -23,6 +23,7 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:ApiConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AnnotationProcessorConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AndroidTestResourcesConnectedTest",  # b/148626301
+    "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",  # b/169760203
 ]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.
