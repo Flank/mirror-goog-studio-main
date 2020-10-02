@@ -53,6 +53,7 @@ echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
   -- \
   //tools/adt/idea/studio:android-studio \
+  //tools/adt/idea/studio:android-studio.linux.tar.gz \
   //tools/adt/idea/studio:updater_deploy.jar \
   //tools/adt/idea/updater-ui:sdk-patcher.zip \
   //tools/adt/idea/native/installer:android-studio-bundle-data \
@@ -100,9 +101,11 @@ if [[ -d "${DIST_DIR}" ]]; then
 
   readonly artifacts_dir="${DIST_DIR}/artifacts"
   mkdir -p ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
+
+  build_txt="$(unzip -p ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip android-studio/build.txt)"
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.tar.gz ${artifacts_dir}/android-studio-${build_txt:3}.tar.gz
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}/android-studio-${build_txt:3}.win.zip
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}/android-studio-${build_txt:3}.mac.zip
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
