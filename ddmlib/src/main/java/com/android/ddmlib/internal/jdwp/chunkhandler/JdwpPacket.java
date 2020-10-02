@@ -195,6 +195,11 @@ public final class JdwpPacket {
         mBuffer.position(oldPosn);
     }
 
+    /** Helper function to copy the packet into a new buffer. */
+    public void copy(ByteBuffer into) {
+        into.put(mBuffer.array(), 0, mLength);
+    }
+
     /** Replace the payload of the package with a buffer. The current position is unchanged. */
     public void setPayload(ByteBuffer buf) {
         if (mLength - JDWP_HEADER_LEN != buf.remaining()) {
@@ -231,6 +236,26 @@ public final class JdwpPacket {
         mBuffer.position(mLength);
         mBuffer.compact();
         mLength = 0;
+    }
+
+    /**
+     * When the "buf" contains JdwpPackets the first 4 bytes are the length of the packet. This
+     * helper function reads the first 4 bytes and validates that the length is at least the size of
+     * the JDWP header.
+     *
+     * @param buf a buffer assumed to contain a jdwp packet.
+     * @return -1 if the length is invalid, otherwise the length of the packet.
+     */
+    public static int getPacketLength(ByteBuffer buf) {
+        int count = buf.position();
+        if (count < JDWP_HEADER_LEN) {
+            return -1;
+        }
+        int length = buf.getInt(0x00);
+        if (length < JDWP_HEADER_LEN) {
+            return -1;
+        }
+        return length;
     }
 
     /**

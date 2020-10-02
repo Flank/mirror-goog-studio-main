@@ -21,7 +21,7 @@ import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.TimeoutException;
-import com.google.common.annotations.VisibleForTesting;
+import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -46,25 +46,20 @@ public class JdwpProxyClient implements JdwpSocketHandler {
 
     private String mDeviceId = null;
 
-    private int mPId = 0;
+    private int mPid = 0;
 
     private JdwpClientManager mConnection;
 
     private boolean mHandshakeComplete = false;
 
-    private final byte[] mBuffer;
+    private JdwpConnectionReader mReader;
 
     private final JdwpClientManagerFactory mFactory;
 
-    @VisibleForTesting static final String JDWP_DISCONNECT = "disconnect:";
-
-    JdwpProxyClient(
-            @NonNull SocketChannel socket,
-            @NonNull JdwpClientManagerFactory factory,
-            @NonNull byte[] readBuffer) {
+    JdwpProxyClient(@NonNull SocketChannel socket, @NonNull JdwpClientManagerFactory factory) {
         mClientImplSocket = socket;
-        mBuffer = readBuffer;
         mFactory = factory;
+        mReader = new JdwpConnectionReader(mClientImplSocket, 1024);
     }
 
     public boolean isConnected() {
@@ -88,27 +83,24 @@ public class JdwpProxyClient implements JdwpSocketHandler {
         if (mClientImplSocket == null) {
             return;
         }
-        ByteBuffer buffer = ByteBuffer.wrap(mBuffer);
-        int count = mClientImplSocket.read(buffer);
-        if (count == -1) {
+        int length = mReader.read();
+        if (length == -1) {
             shutdown();
             throw new EOFException("Client Disconnected");
         }
-        JdwpLoggingUtils.log("CLIENT", "READ", mBuffer, count);
-        String data = new String(mBuffer, 0, count);
-        // First 4 bytes are required to be the length of the content.
-        String body = data.length() > 4 ? data.substring(4) : "";
-
         // If we are tracking a new host grab the device id and return OKAY.
         // Else if we are tracking a new client, grab the pid and register with an
         // associated JdwpClientManager
         // Else send packets to the JdwpClientManager and let it sort it out.
-        if (mDeviceId == null && body.startsWith(AdbHelper.HOST_TRANSPORT)) {
-            mDeviceId = body.substring(AdbHelper.HOST_TRANSPORT.length());
+        if (mDeviceId == null && mReader.isHostTransport()) {
+            DdmCommandPacket packet = mReader.parseCommandPacket();
+            mDeviceId = packet.getCommand().substring(AdbHelper.HOST_TRANSPORT.length());
             write("OKAY");
-        } else if (mPId == 0 && body.startsWith("jdwp:")) {
-            mPId = Integer.parseInt(body.substring("jdwp:".length()));
-            JdwpClientManagerId key = new JdwpClientManagerId(mDeviceId, mPId);
+            mReader.consumeData(packet.getTotalSize());
+        } else if (mPid == 0 && mReader.isJdwpPid()) {
+            DdmCommandPacket packet = mReader.parseCommandPacket();
+            mPid = Integer.parseInt(packet.getCommand().substring("jdwp:".length()));
+            JdwpClientManagerId key = new JdwpClientManagerId(mDeviceId, mPid);
             try {
                 mConnection = mFactory.createConnection(key);
                 mConnection.addListener(this);
@@ -117,9 +109,11 @@ public class JdwpProxyClient implements JdwpSocketHandler {
                 writeFailHelper(ex.getMessage());
                 shutdown();
             }
-        } else if (body.startsWith(JDWP_DISCONNECT)) {
+            mReader.consumeData(packet.getTotalSize());
+        } else if (mReader.isDisconnect()) {
+            DdmCommandPacket packet = mReader.parseCommandPacket();
             try {
-                String[] params = body.split(":");
+                String[] params = packet.getCommand().split(":");
                 JdwpClientManager clientManager =
                         mFactory.getConnection(params[1], Integer.parseInt(params[2]));
                 if (clientManager == null) {
@@ -132,13 +126,19 @@ public class JdwpProxyClient implements JdwpSocketHandler {
             } catch (Exception ex) {
                 writeFailHelper(ex.getMessage());
             }
-        } else if (JdwpHandshake.findHandshake(buffer) == JdwpHandshake.HANDSHAKE_GOOD) {
+            mReader.consumeData(packet.getTotalSize());
+        } else if (mReader.isHandshake()) {
             ByteBuffer handshake = ByteBuffer.allocate(JdwpHandshake.HANDSHAKE_LEN);
             JdwpHandshake.putHandshake(handshake);
             write(handshake.array(), handshake.position());
             setHandshakeComplete();
+            mReader.consumeData(JdwpHandshake.HANDSHAKE_LEN);
         } else if (mConnection != null) {
-            mConnection.write(this, mBuffer, count);
+            JdwpPacket packet;
+            while ((packet = mReader.readPacket()) != null) {
+                mConnection.write(this, packet);
+                packet.consume();
+            }
         }
     }
 
@@ -163,7 +163,7 @@ public class JdwpProxyClient implements JdwpSocketHandler {
     }
 
     public void write(byte[] data, int length) throws IOException, TimeoutException {
-        JdwpLoggingUtils.log("CLIENT", "WRITE", mBuffer, length);
+        JdwpLoggingUtils.log("CLIENT", "WRITE", data, length);
         AdbHelper.write(mClientImplSocket, data, length, DdmPreferences.getTimeOut());
     }
 

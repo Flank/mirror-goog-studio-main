@@ -16,9 +16,9 @@
 
 package com.android.ddmlib.internal.jdwp.interceptor;
 
+import static com.android.ddmlib.internal.jdwp.JdwpTest.makePacket;
 import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.CHUNK_ORDER;
 import static com.android.ddmlib.internal.jdwp.chunkhandler.HandleProfiling.CHUNK_MPRQ;
-import static com.android.ddmlib.internal.jdwp.interceptor.InterceptorTest.makePacket;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -35,14 +35,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 public class ClientInitializationInterceptorTest {
-
-    @Test
-    public void defaultsReturnFalse() throws Exception {
-        ClientInitializationInterceptor interceptor = new ClientInitializationInterceptor();
-        JdwpProxyClient mock = mock(JdwpProxyClient.class);
-        assertThat(interceptor.filterToClient(mock, new byte[0], 0)).isFalse();
-        assertThat(interceptor.filterToDevice(mock, new byte[0], 0)).isFalse();
-    }
 
     @Test
     public void packetFilterIgnoresUnknownPackets() throws Exception {

@@ -41,38 +41,6 @@ import java.io.IOException;
  */
 public interface Interceptor {
     /**
-     * Called when data from a client is received and will be sent to the device. This API is called
-     * before the {@link #filterToDevice(JdwpProxyClient, JdwpPacket)} call.
-     *
-     * @param from         which client is sending the data
-     * @param bufferToSend full buffer of data. size can be greater than length
-     * @param length       amount of data in bufferToSend that is relevant
-     * @return true if data should be filtered from being sent to device false otherwise
-     * @throws IOException      is thrown if {@link JdwpProxyClient ::write} fails.
-     * @throws TimeoutException is thrown if writing times out.
-     */
-    default boolean filterToDevice(@NonNull JdwpProxyClient from, @NonNull byte[] bufferToSend, int length)
-      throws IOException, TimeoutException {
-        return false;
-    }
-
-    /**
-     * Called when data from a device is received and will be sent to the "to" client. This API is
-     * called before the {@link #filterToClient(JdwpProxyClient, JdwpPacket)} call.
-     *
-     * @param to           which client is will receive the data.
-     * @param bufferToSend full buffer of data. size can be greater than length
-     * @param length       amount of data in bufferToSend that is relevant
-     * @return true if data should be filtered from being sent to client false otherwise
-     * @throws IOException      is thrown if {@link JdwpProxyClient ::write} fails.
-     * @throws TimeoutException is thrown if writing times out.
-     */
-    default boolean filterToClient(@NonNull JdwpProxyClient to, @NonNull byte[] bufferToSend, int length)
-      throws IOException, TimeoutException {
-        return false;
-    }
-
-    /**
      * So each Interceptor doesn't need to manage parsing {@link JdwpPacket}'s two helper functions
      * are provided that allow filters to intercept and inspect packets that are about to be sent.
      * This method allows interceptors to filter packets that are going to the device.
