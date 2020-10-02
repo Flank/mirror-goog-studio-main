@@ -862,7 +862,9 @@ public class ConstantEvaluator {
                 }
             } else if (operator == UastBinaryOperator.DIV) {
                 if (isInteger) {
-                    if (isWide) {
+                    if (right.longValue() == 0) {
+                        return null;
+                    } else if (isWide) {
                         return left.longValue() / right.longValue();
                     } else {
                         return left.intValue() / right.intValue();
@@ -876,7 +878,9 @@ public class ConstantEvaluator {
                 }
             } else if (operator == UastBinaryOperator.MOD) {
                 if (isInteger) {
-                    if (isWide) {
+                    if (right.longValue() == 0) {
+                        return null;
+                    } else if (isWide) {
                         return left.longValue() % right.longValue();
                     } else {
                         return left.intValue() % right.intValue();
@@ -1300,7 +1304,9 @@ public class ConstantEvaluator {
                     }
                 } else if (operator == JavaTokenType.DIV) {
                     if (isInteger) {
-                        if (isWide) {
+                        if (right.longValue() == 0) {
+                            return null;
+                        } else if (isWide) {
                             return left.longValue() / right.longValue();
                         } else {
                             return left.intValue() / right.intValue();
@@ -1314,7 +1320,9 @@ public class ConstantEvaluator {
                     }
                 } else if (operator == JavaTokenType.PERC) {
                     if (isInteger) {
-                        if (isWide) {
+                        if (right.longValue() == 0) {
+                            return null;
+                        } else if (isWide) {
                             return left.longValue() % right.longValue();
                         } else {
                             return left.intValue() % right.intValue();
@@ -2047,6 +2055,8 @@ public class ConstantEvaluator {
                                     long l = ((Number) value).longValue();
                                     if (i == 0) {
                                         result = l;
+                                    } else if (l == 0) {
+                                        return null;
                                     } else {
                                         result = result / l;
                                     }
@@ -2061,6 +2071,8 @@ public class ConstantEvaluator {
                                     int l = ((Number) value).intValue();
                                     if (i == 0) {
                                         result = l;
+                                    } else if (l == 0) {
+                                        return null;
                                     } else {
                                         result = result / l;
                                     }
@@ -2109,6 +2121,8 @@ public class ConstantEvaluator {
                                     long l = ((Number) value).longValue();
                                     if (i == 0) {
                                         result = l;
+                                    } else if (l == 0) {
+                                        return null;
                                     } else {
                                         result = result % l;
                                     }
@@ -2123,6 +2137,8 @@ public class ConstantEvaluator {
                                     int l = ((Number) value).intValue();
                                     if (i == 0) {
                                         result = l;
+                                    } else if (l == 0) {
+                                        return null;
                                     } else {
                                         result = result % l;
                                     }

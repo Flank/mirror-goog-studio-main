@@ -330,6 +330,8 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(-(double) 5, "-(double)5");
         checkExpression(-(float) 5, "-(float)5");
         checkExpression(-2, "1 + -3");
+        checkExpression(null, "1 / 0");
+        checkExpression(null, "1 % 0");
 
         checkExpression(false, "11 == 5");
         checkExpression(true, "11 == 11");
@@ -352,6 +354,8 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(94, "100 - 3 - 3");
         checkExpression(100, "2 * 5 * 10");
         checkExpression(1, "10 / 5 / 2");
+        checkExpression(null, "10 / 0 / 2");
+        checkExpression(null, "10 % 0 % 2");
         checkExpression(16, "1 << 3 << 1");
         checkExpression(8, "32 >> 1 >> 1");
         checkExpression(8, "32 >>> 1 >>> 1");
