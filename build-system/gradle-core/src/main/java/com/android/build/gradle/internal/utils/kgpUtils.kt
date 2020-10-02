@@ -19,14 +19,18 @@
 package com.android.build.gradle.internal.utils
 
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.services.getBuildService
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.ExtensionAware
+import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun getKotlinCompile(project: Project, creationConfig: ComponentCreationConfig): TaskProvider<Task> =
         project.tasks.named(creationConfig.computeTaskName("compile", "Kotlin"))
@@ -76,4 +80,43 @@ private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, projec
 
     buildService.getVariantBuilder(project.path, creationConfig.name)
             .setKotlinOptions(GradleBuildVariant.KotlinOptions.newBuilder().setUseIr(true))
+}
+
+/** Add compose compiler extension args to Kotlin compile task. */
+fun addComposeArgsToKotlinCompile(
+        task: Task,
+        creationConfig: ComponentCreationConfig,
+        compilerExtension: FileCollection) {
+    task as KotlinCompile
+    // Add as input
+    task.inputs.files(compilerExtension)
+            .withPropertyName("composeCompilerExtension")
+            .withNormalizer(ClasspathNormalizer::class.java)
+
+    val debuggable = if (creationConfig is ApkCreationConfig) {
+        creationConfig.debuggable
+    } else {
+        false
+    }
+
+    task.doFirst {
+        it as KotlinCompile
+        it.kotlinOptions.useIR = true
+        it.kotlinOptions.freeCompilerArgs +=
+                listOf(
+                        "-Xplugin=${compilerExtension.files.first().absolutePath}",
+                        "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
+                        "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
+                        "-Xallow-jvm-ir-dependencies"
+                ) + if (debuggable) {
+                    listOf(
+                            "-P",
+                            "plugin:androidx.compose.compiler.plugins.kotlin:liveLiterals=true",
+                            "-P",
+                            "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true"
+                    )
+                } else {
+                    listOf()
+                }
+    }
 }
