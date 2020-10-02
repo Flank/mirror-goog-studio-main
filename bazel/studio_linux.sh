@@ -103,15 +103,16 @@ if [[ -d "${DIST_DIR}" ]]; then
   mkdir -p ${artifacts_dir}
 
   build_txt="$(unzip -p ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip android-studio/build.txt)"
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.tar.gz ${artifacts_dir}/android-studio-${build_txt:3}.tar.gz
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}/android-studio-${build_txt:3}.win.zip
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}/android-studio-${build_txt:3}.mac.zip
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.tar.gz ${DIST_DIR}/android-studio-${build_txt:3}.tar.gz
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${DIST_DIR}/android-studio-${build_txt:3}.win.zip
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${DIST_DIR}/android-studio-${build_txt:3}.mac.zip
+  cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
+  cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${DIST_DIR}
+  cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${DIST_DIR}
+
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
-  cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3
