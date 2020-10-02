@@ -234,6 +234,7 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
 
             String testClassName = "";
             String testMethodName = "";
+            int currentTestIndex = -1;
             String stackTrace = "";
             LinkedHashMap<String, String> testMetrics = new LinkedHashMap<>();
             for (InstrumentationData.ResultsBundleEntry entry :
@@ -247,6 +248,9 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
                         break;
                     case StatusKeys.STACK:
                         stackTrace = entry.getValueString();
+                        break;
+                    case StatusKeys.CURRENT:
+                        currentTestIndex = entry.getValueInt();
                         break;
                     default:
                         if (!StatusKeys.KNOWN_KEYS.contains(entry.getKey())) {
@@ -269,6 +273,7 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
                 if (previousTestStatus.isPresent()) {
                     testClassName = previousTestStatus.get().getKey().getClassName();
                     testMethodName = previousTestStatus.get().getKey().getTestName();
+                    currentTestIndex = previousTestStatus.get().getKey().getTestIndex();
                     resultCodeOverride =
                             Optional.of(previousTestStatus.get().getValue().mTestResultCode);
                 } else {
@@ -281,6 +286,7 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
                 updateTestState(
                         testClassName,
                         testMethodName,
+                        currentTestIndex,
                         resultCodeOverride.orElse(status.getResultCode()),
                         status.getLogcat(),
                         stackTrace,
@@ -382,11 +388,12 @@ public class InstrumentationProtoResultParser implements IInstrumentationResultP
     private void updateTestState(
             String testClassName,
             String testMethodName,
+            int currentTestIndex,
             int testResultCode,
             String logcat,
             String stackTrace,
             LinkedHashMap<String, String> testMetrics) {
-        TestIdentifier testId = new TestIdentifier(testClassName, testMethodName);
+        TestIdentifier testId = new TestIdentifier(testClassName, testMethodName, currentTestIndex);
         TestStatus status =
                 mTestStatuses.computeIfAbsent(
                         testId,

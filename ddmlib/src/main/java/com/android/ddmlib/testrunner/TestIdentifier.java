@@ -24,6 +24,11 @@ public class TestIdentifier {
     private final String mClassName;
     private final String mTestName;
 
+    // An index of this test.
+    // Test suite may have duplicated test cases (the same test case may be run twice). This
+    // property is used to distinguish them.
+    private final int mTestIndex;
+
     /**
      * Creates a test identifier.
      *
@@ -31,12 +36,23 @@ public class TestIdentifier {
      * @param testName name of the test. Cannot be null.
      */
     public TestIdentifier(String className, String testName) {
+        this(className, testName, /*testIndex=*/ -1);
+    }
+
+    /**
+     * Creates a test identifier with a test index.
+     *
+     * @param className fully qualified class name of the test. Cannot be null.
+     * @param testName name of the test. Cannot be null.
+     * @param testIndex an index of this test run.
+     */
+    public TestIdentifier(String className, String testName, int testIndex) {
         if (className == null || testName == null) {
-            throw new IllegalArgumentException("className and testName must " +
-                    "be non-null");
+            throw new IllegalArgumentException("className and testName must " + "be non-null");
         }
         mClassName = className;
         mTestName = testName;
+        mTestIndex = testIndex;
     }
 
     /**
@@ -53,12 +69,18 @@ public class TestIdentifier {
         return mTestName;
     }
 
+    /** Returns the index of the test. */
+    public int getTestIndex() {
+        return mTestIndex;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((mClassName == null) ? 0 : mClassName.hashCode());
         result = prime * result + ((mTestName == null) ? 0 : mTestName.hashCode());
+        result = prime * result + mTestIndex;
         return result;
     }
 
@@ -81,7 +103,7 @@ public class TestIdentifier {
                 return false;
         } else if (!mTestName.equals(other.mTestName))
             return false;
-        return true;
+        return mTestIndex == other.mTestIndex;
     }
 
     @Override
