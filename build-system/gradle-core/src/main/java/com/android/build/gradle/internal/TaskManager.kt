@@ -151,6 +151,7 @@ import com.android.build.gradle.internal.transforms.CustomClassTransform
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
+import com.android.build.gradle.internal.utils.addComposeArgsToKotlinCompile
 import com.android.build.gradle.internal.utils.getKotlinCompile
 import com.android.build.gradle.internal.utils.recordIrBackendForAnalytics
 import com.android.build.gradle.internal.variant.ApkVariantData
@@ -181,7 +182,6 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction
 import com.android.build.gradle.tasks.PackageApplication
-import com.android.build.gradle.tasks.PrepareKotlinCompileTask
 import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.build.gradle.tasks.ProcessManifestForBundleTask
 import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask
@@ -478,17 +478,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         kotlinExtension.isTransitive = false
         kotlinExtension.description = "Configuration for Compose related kotlin compiler extension"
 
-        // register for all variant the prepareKotlinCompileTask if necessary.
+        // add compose args to all kotlin compile tasks
         for (creationConfig in allPropertiesList) {
             try {
-                val compileKotlin = getKotlinCompile(
-                        globalScope.project, creationConfig)
-                val prepareKotlinCompileTaskTaskProvider = taskFactory.register(
-                        PrepareKotlinCompileTask.CreationAction(
-                                creationConfig, compileKotlin, kotlinExtension))
-                // make the dependency !
-                compileKotlin.configure { task: Task ->
-                    task.dependsOn(prepareKotlinCompileTaskTaskProvider)
+                val compileKotlin = getKotlinCompile(globalScope.project, creationConfig)
+
+                compileKotlin.configure {
+                    addComposeArgsToKotlinCompile(
+                            it, creationConfig, project.files(kotlinExtension))
                 }
             } catch (e: UnknownTaskException) {
                 // ignore
