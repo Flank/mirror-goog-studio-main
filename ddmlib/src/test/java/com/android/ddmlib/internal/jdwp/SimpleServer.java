@@ -16,6 +16,7 @@
 
 package com.android.ddmlib.internal.jdwp;
 
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -29,11 +30,11 @@ class SimpleServer implements Runnable {
 
     private int mListenPort = 0;
 
-    private ByteBuffer mData = ByteBuffer.allocate(1024);
+    protected ByteBuffer mData = ByteBuffer.allocate(1024);
 
     private SocketChannel mClient = null;
 
-    private byte[] mConnectMessage;
+    protected byte[] mConnectMessage;
 
     SimpleServer() throws IOException {
         this(new byte[0]);

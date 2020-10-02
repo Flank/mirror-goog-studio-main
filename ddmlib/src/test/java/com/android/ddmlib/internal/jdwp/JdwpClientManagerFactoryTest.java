@@ -36,8 +36,7 @@ public class JdwpClientManagerFactoryTest {
   @Before
   public void setup() throws IOException {
     Selector selector = Selector.open();
-    byte[] buffer = new byte[128];
-    myFactory = new JdwpClientManagerFactory(selector, buffer);
+        myFactory = new JdwpClientManagerFactory(selector);
   }
 
   @Test

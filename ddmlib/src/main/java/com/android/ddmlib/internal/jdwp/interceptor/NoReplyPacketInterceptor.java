@@ -31,11 +31,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * This interceptor captures packets sent by the device that are not in response to a request. An example of this type of packet is the
- * APNM packet. The APNM packet will be sent when the device wants to inform clients of an updated app package name. This information is not
- * requested by clients first so this interceptor needs to cache the response and send the data to new connections after the handshake is
- * completed.
- *
+ * This interceptor captures packets sent by the device that are not in response to a request. An
+ * example of this type of packet is the APNM packet. The APNM packet will be sent when the device
+ * wants to inform clients of an updated app package name. This information is not requested by
+ * clients first so this interceptor needs to cache the response and send the data to new
+ * connections after the handshake is completed.
+ * <p>
  * Example:
  * DDMLIB_1 -> JDWP-Handshake -> Proxy -> JDWP-Handshake -> Device
  * DDMLIB_2 Connects to proxy
@@ -44,8 +45,9 @@ import java.util.Set;
  * DDMLIB_2 -> JDWP-Handshake -> Proxy (Send handshake as well as cached no-reply packets)
  *                                      -> JDWP-Handshake -> DDMLIB_2
  *                                      -> APNM -> DDMLIB_2
- *                                      
+ *
  * Note: If these packets are sent to the client before the handshake they are discarded as invalid packets.
+ * </p>
  */
 public class NoReplyPacketInterceptor implements Interceptor {
   private List<ByteBuffer> mCachedPackets = new ArrayList<>();
@@ -71,7 +73,7 @@ public class NoReplyPacketInterceptor implements Interceptor {
     }
     ByteBuffer buffer = ByteBuffer.allocate(packetToSend.getLength());
     buffer.order(CHUNK_ORDER);
-    packetToSend.move(buffer);
+    packetToSend.copy(buffer);
     mCachedPackets.add(buffer);
     return !to.isHandshakeComplete();
   }

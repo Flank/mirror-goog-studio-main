@@ -46,6 +46,19 @@ public class JdwpPacketTest extends TestCase {
         }
     }
 
+    public void testLengthFunction() {
+        ByteBuffer tooSmall = ByteBuffer.allocate(1);
+        assertThat(JdwpPacket.getPacketLength(tooSmall)).isEqualTo(-1);
+        ByteBuffer invalidLength = ByteBuffer.allocate(128);
+        invalidLength.putInt(JdwpPacket.JDWP_HEADER_LEN - 1);
+        invalidLength.put(new byte[JdwpPacket.JDWP_HEADER_LEN]);
+        assertThat(JdwpPacket.getPacketLength(invalidLength)).isEqualTo(-1);
+        ByteBuffer proper = ByteBuffer.allocate(128);
+        proper.putInt(JdwpPacket.JDWP_HEADER_LEN);
+        proper.put(new byte[JdwpPacket.JDWP_HEADER_LEN]);
+        assertThat(JdwpPacket.getPacketLength(proper)).isEqualTo(JdwpPacket.JDWP_HEADER_LEN);
+    }
+
     public void testLoggingDisabled() throws Exception {
         // Prepare
         Log.setLevel(Log.LogLevel.WARN);

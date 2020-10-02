@@ -16,10 +16,6 @@
 
 package com.android.ddmlib.internal.jdwp;
 
-import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.CHUNK_HEADER_LEN;
-import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.CHUNK_ORDER;
-import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CMD;
-import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.DDMS_CMD_SET;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +44,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.After;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -55,170 +52,126 @@ public class JdwpClientManagerTest {
 
     // FakeAdbTestRule cannot be initialized as a rule in this class because some test need to have
     // a customized initialization order for FakeAdb
+    FakeAdbTestRule myFakeAdb = new FakeAdbTestRule();
+    JdwpProxyServer myServer =
+            new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {});
+
+    @After
+    public void shutdown() {
+        // Attempt to stop server and fake adb after each test.
+        myFakeAdb.after();
+        myServer.stop();
+    }
 
     @Test
     public void connectionThrowsErrorOnFiledToFindDevice() throws Throwable {
         Selector selector = Selector.open();
-        FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
-        fakeAdb.before();
-        byte[] buffer = new byte[1];
+        myFakeAdb.before();
         try {
             JdwpClientManager ignored =
                     new JdwpClientManager(
-                            new JdwpClientManagerId("BAD_DEVICE", FakeAdbTestRule.PID),
-                            selector,
-                            buffer);
+                            new JdwpClientManagerId("BAD_DEVICE", FakeAdbTestRule.PID), selector);
             // Should never hit due to exception
             fail("Connection should throw exception");
         } catch (AdbCommandRejectedException ex) {
             assertThat(ex).hasMessageThat().contains("device");
         }
-        fakeAdb.after();
     }
 
     @Test
     public void connectionThrowsErrorOnFiledToFindProcess() throws Throwable {
-        FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
-        fakeAdb.before();
+        myFakeAdb.before();
         Selector selector = Selector.open();
-        DeviceState state = fakeAdb.connectAndWaitForDevice();
+        DeviceState state = myFakeAdb.connectAndWaitForDevice();
         assertThat(state.getDeviceStatus()).isEqualTo(DeviceState.DeviceStatus.ONLINE);
-        byte[] buffer = new byte[1];
         try {
             JdwpClientManager ignored =
                     new JdwpClientManager(
-                            new JdwpClientManagerId(FakeAdbTestRule.SERIAL, -1), selector, buffer);
+                            new JdwpClientManagerId(FakeAdbTestRule.SERIAL, -1), selector);
             // Should never hit due to exception
             fail("Connection should throw exception");
         } catch (AdbCommandRejectedException ex) {
             assertThat(ex).hasMessageThat().contains("pid");
         }
-        fakeAdb.after();
     }
 
     @Test
     public void connectionRegistorsSelector() throws Throwable {
-        FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
-        fakeAdb.before();
+        myFakeAdb.before();
         Selector selector = Selector.open();
-        DeviceState state = fakeAdb.connectAndWaitForDevice();
+        DeviceState state = myFakeAdb.connectAndWaitForDevice();
         assertThat(state.getDeviceStatus()).isEqualTo(DeviceState.DeviceStatus.ONLINE);
         FakeAdbTestRule.launchAndWaitForProcess(state, true);
-        byte[] buffer = new byte[1];
         assertThat(selector.keys()).isEmpty();
         JdwpClientManager connection =
                 new JdwpClientManager(
                         new JdwpClientManagerId(FakeAdbTestRule.SERIAL, FakeAdbTestRule.PID),
-                        selector,
-                        buffer);
+                        selector);
         assertThat(selector.keys()).isNotEmpty();
         SelectionKey key = selector.keys().iterator().next();
         assertThat(key.isAcceptable()).isFalse();
         assertThat(key.attachment()).isEqualTo(connection);
         assertThat(key.interestOps()).isEqualTo(SelectionKey.OP_READ);
-        fakeAdb.after();
-    }
-
-    @Test
-    public void proxyClientIsCalledWhenDataIsReceived() throws Throwable {
-        // Need to start a server before FakeAdb so we have the actual server instead of the
-        // fallback.
-        JdwpProxyServer server =
-                new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {});
-        server.start();
-        FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
-        fakeAdb.before();
-        DeviceState state = fakeAdb.connectAndWaitForDevice();
-        assertThat(state.getDeviceStatus()).isEqualTo(DeviceState.DeviceStatus.ONLINE);
-        FakeAdbTestRule.launchAndWaitForProcess(state, true);
-        JdwpClientManager connection =
-                server.getFactory()
-                        .createConnection(
-                                new JdwpClientManagerId(
-                                        FakeAdbTestRule.SERIAL, FakeAdbTestRule.PID));
-        JdwpProxyClient client = mock(JdwpProxyClient.class);
-        when(client.isHandshakeComplete()).thenReturn(true);
-        connection.addListener(client);
-        connection.read(); // Read data from fake adb even if that data is 0, we should call write.
-        verify(client, times(1)).write(any(), anyInt());
-        fakeAdb.after();
-        server.stop();
     }
 
     @Test
     public void inspectorIsRunOnWriteAndRead() throws Throwable {
-        // Need to start a server before FakeAdb so we have the actual server instead of the
-        // fallback.
-        JdwpProxyServer server =
-                new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {});
-        server.start();
-        FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
-        fakeAdb.before();
-
-        // Attach device and process
-        DeviceState state = fakeAdb.connectAndWaitForDevice();
-        assertThat(state.getDeviceStatus()).isEqualTo(DeviceState.DeviceStatus.ONLINE);
-        FakeAdbTestRule.launchAndWaitForProcess(state, true);
-
-        // Spy on the real connection
-        JdwpClientManager connection =
-                Mockito.spy(
-                        server.getFactory()
-                                .createConnection(
-                                        new JdwpClientManagerId(
-                                                FakeAdbTestRule.SERIAL, FakeAdbTestRule.PID)));
-
-        // Add a mock interceptor to verify the functions we expect get called
-        TestInterceptor testInterceptor = new TestInterceptor(false);
-        connection.addInterceptor(testInterceptor);
-
-        // Create a fake client that writes data to device
-        JdwpProxyClient client = mock(JdwpProxyClient.class);
-        connection.addListener(client);
-        // Create a test packet.
         ByteBuffer data = ChunkHandler.allocBuffer(4);
         JdwpPacket packet = new JdwpPacket(data);
         ChunkHandler.getChunkDataBuf(data);
         data.putInt(1234);
-        ChunkHandler.finishChunkPacket(packet, ChunkHandler.type("TEST"), data.position());
+        ChunkHandler.finishChunkPacket(packet, JdwpTest.CHUNK_TEST, data.position());
+        SimpleServer server = new SimpleServer(data.array());
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+        SocketChannel channel = SocketChannel.open();
+        channel.connect(
+                new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
+        JdwpClientManager manager = Mockito.spy(new JdwpClientManager(channel));
+        serverThread.join();
+        assertThat(server.getData().position()).isEqualTo(JdwpHandshake.HANDSHAKE_LEN);
+        assertThat(JdwpHandshake.findHandshake(server.getData()))
+                .isEqualTo(JdwpHandshake.HANDSHAKE_GOOD);
+
+        // Add a mock interceptor to verify the functions we expect get called
+        TestInterceptor testInterceptor = new TestInterceptor(false);
+        manager.addInterceptor(testInterceptor);
+
+        // Create a fake client that writes data to device
+        JdwpProxyClient client = mock(JdwpProxyClient.class);
+        manager.addListener(client);
+        // Create a test packet.
 
         // Write data to device from client.
-        connection.write(client, data.array(), data.position());
-        verify(connection, times(1)).writeRaw(any());
+        manager.write(client, packet);
+        verify(manager, times(1)).writeRaw(any());
 
-        testInterceptor.verifyFunctionCallCount(1, 1, 0, 0);
-        testInterceptor.verifyArguments(
-                new Object[] {client, data.array(), data.position(), client, packet});
+        testInterceptor.verifyFunctionCallCount(1, 0);
+        testInterceptor.verifyArguments(new Object[] {client, packet});
         testInterceptor.reset();
-        // Read data from device to client.
-        // Read only read 0 bytes of data as such we don't expect to parse that as a packet.
-        connection.read();
-        // Two monitors are connected so we expect the filter to be called twice.
-        testInterceptor.verifyFunctionCallCount(0, 0, 2, 0);
-        // Shutdown everything
-        fakeAdb.after();
-        server.stop();
+
+        manager.read();
+        // One monitor connected the filter should be called once.
+        testInterceptor.verifyFunctionCallCount(0, 1);
     }
 
     @Test
     public void dontWriteWhenFiltered() throws Throwable {
         // Need to start a server before FakeAdb so we have the actual server instead of the
         // fallback.
-        JdwpProxyServer server =
-                new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {});
-        server.start();
-        FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
-        fakeAdb.before();
+
+        myServer.start();
+        myFakeAdb.before();
 
         // Attach device and process
-        DeviceState state = fakeAdb.connectAndWaitForDevice();
+        DeviceState state = myFakeAdb.connectAndWaitForDevice();
         assertThat(state.getDeviceStatus()).isEqualTo(DeviceState.DeviceStatus.ONLINE);
         FakeAdbTestRule.launchAndWaitForProcess(state, true);
 
         // Spy on the real connection
         JdwpClientManager connection =
                 Mockito.spy(
-                        server.getFactory()
+                        myServer.getFactory()
                                 .createConnection(
                                         new JdwpClientManagerId(
                                                 FakeAdbTestRule.SERIAL, FakeAdbTestRule.PID)));
@@ -235,15 +188,11 @@ public class JdwpClientManagerTest {
         JdwpPacket packet = new JdwpPacket(data);
         ChunkHandler.getChunkDataBuf(data);
         data.putInt(1234);
-        ChunkHandler.finishChunkPacket(packet, ChunkHandler.type("TEST"), data.position());
+        ChunkHandler.finishChunkPacket(packet, JdwpTest.CHUNK_TEST, data.position());
 
         // Write data to device from client.
-        connection.write(client, data.array(), data.position());
+        connection.write(client, packet);
         verify(connection, times(0)).writeRaw(any());
-
-        // Shutdown everything
-        fakeAdb.after();
-        server.stop();
     }
 
     @Test
@@ -254,7 +203,7 @@ public class JdwpClientManagerTest {
         SocketChannel channel = SocketChannel.open();
         channel.connect(
                 new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
-        JdwpClientManager manager = new JdwpClientManager(channel, new byte[1024]);
+        JdwpClientManager manager = new JdwpClientManager(channel);
         serverThread.join();
         assertThat(server.getData().position()).isEqualTo(JdwpHandshake.HANDSHAKE_LEN);
         assertThat(JdwpHandshake.findHandshake(server.getData()))
@@ -263,8 +212,8 @@ public class JdwpClientManagerTest {
 
     @Test
     public void eachClientGetsSameData() throws Exception {
-        ByteBuffer packetA = createPacket(ChunkHandler.type("TEST"));
-        ByteBuffer packetB = createPacket(ChunkHandler.type("TSET"));
+        ByteBuffer packetA = JdwpTest.createPacketBuffer(JdwpTest.CHUNK_TEST, 0);
+        ByteBuffer packetB = JdwpTest.createPacketBuffer(JdwpTest.CHUNK_TEST, 0);
         byte[] data = new byte[packetA.position() + packetB.position()];
         System.arraycopy(packetA.array(), 0, data, 0, packetA.position());
         System.arraycopy(packetB.array(), 0, data, packetA.position(), packetB.position());
@@ -274,7 +223,7 @@ public class JdwpClientManagerTest {
         SocketChannel channel = SocketChannel.open();
         channel.connect(
                 new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
-        JdwpClientManager manager = new JdwpClientManager(channel, new byte[1024]);
+        JdwpClientManager manager = new JdwpClientManager(channel);
         List<byte[]> dataCapture = new ArrayList<>();
 
         // Create multiple clients
@@ -289,7 +238,7 @@ public class JdwpClientManagerTest {
                                     dataCapture.add(
                                             Arrays.copyOf(
                                                     (byte[]) invocation.getArgument(0),
-                                                    (int) invocation.getArgument(1)))))
+                                                    invocation.getArgument(1)))))
                     .when(clients[i])
                     .write(any(), anyInt());
             manager.addListener(clients[i]);
@@ -311,19 +260,45 @@ public class JdwpClientManagerTest {
         }
     }
 
-    private static ByteBuffer createPacket(int type) {
-        ByteBuffer rawBuf = ByteBuffer.allocate(JdwpPacket.JDWP_HEADER_LEN + 8);
-        rawBuf.order(CHUNK_ORDER);
-        JdwpPacket packet = new JdwpPacket(rawBuf);
-        ByteBuffer buf = ChunkHandler.getChunkDataBuf(rawBuf);
-        int chunkLen = buf.position();
-        // no data
-        ByteBuffer payload = packet.getPayload();
-        payload.putInt(0x00, type);
-        payload.putInt(0x04, chunkLen);
-        packet.finishPacket(DDMS_CMD_SET, DDMS_CMD, CHUNK_HEADER_LEN + chunkLen);
-        rawBuf.put(0x08, (byte) 0x80 /* reply packet */);
-        return rawBuf;
+    @Test
+    public void largePacket() throws Exception {
+        int largePacketSize = 1024 * 1024;
+        ByteBuffer packetA = JdwpTest.createPacketBuffer(JdwpTest.CHUNK_TEST, largePacketSize);
+        SimpleServer server = new SimpleServer(packetA.array());
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+        SocketChannel channel = SocketChannel.open();
+        channel.connect(
+                new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
+        JdwpClientManager manager = new JdwpClientManager(channel);
+        List<byte[]> dataCapture = new ArrayList<>();
+
+        // Create multiple clients
+        JdwpProxyClient[] clients = new JdwpProxyClient[3];
+        for (int i = 0; i < clients.length; i++) {
+            clients[i] = Mockito.mock(JdwpProxyClient.class);
+            when(clients[i].isHandshakeComplete()).thenReturn(true);
+            // Due to https://code.google.com/archive/p/mockito/issues/126 we are unable to use
+            // an ArgumentCapture. Instead we grab a copy of the arguments using an Answer.
+            doAnswer(
+                            (invocation ->
+                                    dataCapture.add(
+                                            Arrays.copyOf(
+                                                    (byte[]) invocation.getArgument(0),
+                                                    (int) invocation.getArgument(1)))))
+                    .when(clients[i])
+                    .write(any(), anyInt());
+            manager.addListener(clients[i]);
+        }
+        // Read initial data from SimpleServer
+        manager.read();
+        for (int i = 0; i < clients.length; i++) {
+            int packetAIndex = i;
+            assertThat(dataCapture.get(packetAIndex)).hasLength(packetA.position());
+            assertThat(dataCapture.get(packetAIndex)).isEqualTo(packetA.array());
+        }
+        serverThread.interrupt();
+        serverThread.join();
     }
 
     private static class TestInterceptor implements Interceptor {
@@ -338,12 +313,9 @@ public class JdwpClientManagerTest {
             this.defaultReturnValue = defaultReturnValue;
         }
 
-        void verifyFunctionCallCount(
-                int deviceBytes, int devicePackets, int clientBytes, int clientPackets) {
-            assertThat(functionCallCount[0]).isEqualTo(deviceBytes);
-            assertThat(functionCallCount[1]).isEqualTo(devicePackets);
-            assertThat(functionCallCount[2]).isEqualTo(clientBytes);
-            assertThat(functionCallCount[3]).isEqualTo(clientPackets);
+        void verifyFunctionCallCount(int devicePackets, int clientPackets) {
+            assertThat(functionCallCount[0]).isEqualTo(devicePackets);
+            assertThat(functionCallCount[1]).isEqualTo(clientPackets);
         }
 
         void verifyArguments(Object[] data) {
@@ -368,18 +340,8 @@ public class JdwpClientManagerTest {
 
         @Override
         public boolean filterToDevice(
-                @NonNull JdwpProxyClient from, @NonNull byte[] bufferToSend, int length) {
-            functionCallCount[0]++;
-            capturedData.add(from);
-            capturedData.add(bufferToSend);
-            capturedData.add(length);
-            return defaultReturnValue;
-        }
-
-        @Override
-        public boolean filterToDevice(
                 @NonNull JdwpProxyClient from, @NonNull JdwpPacket packetToSend) {
-            functionCallCount[1]++;
+            functionCallCount[0]++;
             capturedData.add(from);
             capturedData.add(packetToSend);
             return defaultReturnValue;
@@ -387,18 +349,8 @@ public class JdwpClientManagerTest {
 
         @Override
         public boolean filterToClient(
-                @NonNull JdwpProxyClient to, @NonNull byte[] bufferToSend, int length) {
-            functionCallCount[2]++;
-            capturedData.add(to);
-            capturedData.add(bufferToSend);
-            capturedData.add(length);
-            return defaultReturnValue;
-        }
-
-        @Override
-        public boolean filterToClient(
                 @NonNull JdwpProxyClient to, @NonNull JdwpPacket packetToSend) {
-            functionCallCount[3]++;
+            functionCallCount[1]++;
             capturedData.add(to);
             capturedData.add(packetToSend);
             return defaultReturnValue;

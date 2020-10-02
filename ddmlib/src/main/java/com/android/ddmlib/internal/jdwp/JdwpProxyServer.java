@@ -77,7 +77,6 @@ public class JdwpProxyServer implements Runnable {
 
     private boolean mQuit = false;
     private Selector mSelector;
-    private final byte[] mBuffer = new byte[1024 * 1024];
     private JdwpClientManagerFactory mFactory;
     private boolean mIsRunningAsServer = false;
     private InetSocketAddress mServerAddress;
@@ -126,7 +125,7 @@ public class JdwpProxyServer implements Runnable {
         synchronized (myChannelLock) {
             mListenChannel = ServerSocketChannel.open();
             mSelector = Selector.open();
-            mFactory = new JdwpClientManagerFactory(mSelector, mBuffer);
+            mFactory = new JdwpClientManagerFactory(mSelector);
             mListenChannel.socket().setReuseAddress(true); // enable SO_REUSEADDR
             mListenChannel.socket().bind(mServerAddress);
             mListenChannel.configureBlocking(false);
@@ -226,7 +225,7 @@ public class JdwpProxyServer implements Runnable {
                 }
                 chan = mFallbackChannel;
             }
-            ByteBuffer buffer = ByteBuffer.wrap(mBuffer);
+            ByteBuffer buffer = ByteBuffer.allocate(1);
             // If we are able to open a socket attempt to read from the channel. Our server never
             // writes data to clients that haven't
             // initialized themselves as such this read will block the thread until the server dies.
@@ -280,7 +279,7 @@ public class JdwpProxyServer implements Runnable {
                         client.register(
                                 mSelector,
                                 SelectionKey.OP_READ,
-                                new JdwpProxyClient(client, mFactory, mBuffer));
+                                new JdwpProxyClient(client, mFactory));
                     }
                 }
                 else if (key.attachment() instanceof JdwpSocketHandler) {
