@@ -16,13 +16,10 @@
 package com.android.testutils
 
 import org.junit.rules.ExternalResource
-import org.junit.runner.Description
-import org.mockito.ArgumentMatcher
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import kotlin.reflect.KMutableProperty
-import kotlin.reflect.KProperty
 
 object MockitoKt {
   /**
@@ -65,7 +62,10 @@ object MockitoKt {
    * Using the not-null assertion operator (!!) doesn't work because the result of the method call is recorded internally by Mockito.
    * @see Mockito.eq
    */
-  fun <T> eq(arg: T): T = Mockito.eq(arg)
+  fun <T> eq(arg: T): T {
+      Mockito.eq(arg)
+      return arg
+  }
 
   /**
    * Wrapper around [Mockito.refEq] that doesn't return null.
