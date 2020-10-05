@@ -82,17 +82,18 @@ public class Gradle implements Closeable {
         return new File(outDir, "init.script");
     }
 
-    public void run(String task) {
+    public void run(String task) throws IOException {
         run(Collections.singletonList(task), System.out, System.err);
     }
 
-    public void run(List<String> tasks) {
+    public void run(List<String> tasks) throws IOException {
         run(tasks, System.out, System.err);
     }
 
-    public void run(List<String> tasks, OutputStream out, OutputStream err) {
+    public void run(List<String> tasks, OutputStream out, OutputStream err) throws IOException {
         File buildDir = getBuildDir().getAbsoluteFile();
         File androidDir = new File(outDir, "_android").getAbsoluteFile();
+        Files.createDirectories(androidDir.toPath());
         File homeDir = getGradleUserHome().getAbsoluteFile();
         // gradle tries to write into .m2 so we pass it a tmp one.
         Path tmpLocalMaven = getLocalMavenRepo();
