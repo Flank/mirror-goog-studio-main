@@ -79,7 +79,7 @@ bool ReadFile(const std::string& file_path, T* content) {
       "Template parameter 'T' must be of type std::vector or std::string");
   int fd = IO::open(file_path, O_RDONLY);
   if (fd == -1) {
-    ErrEvent("Could not open file at '" + file_path + "': " + strerror(errno));
+    LogEvent("Could not open file at '" + file_path + "': " + strerror(errno));
     return false;
   }
 
