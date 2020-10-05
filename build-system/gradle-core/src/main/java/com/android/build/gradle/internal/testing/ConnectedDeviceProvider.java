@@ -130,7 +130,10 @@ public class ConnectedDeviceProvider extends DeviceProvider {
             File adbLocation = adbLocationSupplier.get();
             AndroidDebugBridge bridge =
                     AndroidDebugBridge.createBridge(
-                            adbLocation.getAbsolutePath(), false /*forceNewBridge*/);
+                            adbLocation.getAbsolutePath(),
+                            false /*forceNewBridge*/,
+                            timeOut,
+                            timeOutUnit);
 
             if (bridge == null) {
                 throw new DeviceException(

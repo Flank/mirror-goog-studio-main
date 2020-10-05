@@ -2,6 +2,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
+load("//tools/base/bazel/avd:avd.bzl", "avd")
 
 # managed by go/iml_to_build
 iml_module(
@@ -89,9 +90,37 @@ kotlin_test(
     ],
 )
 
+avd(name = "avd")
+
 java_proto_library(
     name = "am-instrumentation-data-proto",
     srcs = glob(["src/main/proto/**/*.proto"]),
     protoc_version = "3.4.0",
     visibility = ["//visibility:public"],
+)
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.ddmlib.integration.tests",
+    iml_files = ["android.sdktools.ddmlib.integration.tests.iml"],
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    test_data = [
+        ":avd",
+        "//prebuilts/studio/sdk:platform-tools",
+    ],
+    test_srcs = ["src/integration/test/java"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/bazel/avd:studio.android.sdktools.base.bazel.avd[module, test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module, test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
 )
