@@ -1663,10 +1663,13 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             "" +
+                "src/test/pkg/TestStyleable.java:8: Error: Expected resource of type styleable [ResourceType]\n" +
+                "    public static final int MY_STYLE = 1;\n" +
+                "                                       ~\n" +
                 "src/test/pkg/TestStyleable.java:17: Error: Expected resource of type styleable [ResourceType]\n" +
                 "        process(R.string.my_string); // ERROR\n" +
                 "                ~~~~~~~~~~~~~~~~~~\n" +
-                "1 errors, 0 warnings"
+                "2 errors, 0 warnings"
         )
     }
 

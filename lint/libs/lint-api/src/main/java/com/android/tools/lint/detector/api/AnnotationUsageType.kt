@@ -38,9 +38,17 @@ enum class AnnotationUsageType {
     /** A variable whose declaration was annotated */
     VARIABLE_REFERENCE,
 
-    /** The right hand side of an assignment (or variable/field declaration) where the
-     * left hand side was annotated */
-    ASSIGNMENT,
+    /**
+     * The right hand side of an assignment (or variable/field declaration) where the
+     * left hand side was annotated
+     */
+    ASSIGNMENT_RHS,
+
+    /**
+     * The left hand side of an assignment (or variable/field declaration) where the
+     * right hand side is inferred to have been annotated
+     */
+    ASSIGNMENT_LHS,
 
     /**
      * An annotated element is combined with this element in a binary expression

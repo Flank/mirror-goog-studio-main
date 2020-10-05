@@ -41,6 +41,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.toUElement
+import org.jetbrains.uast.util.isNewArrayWithDimensions
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 
 class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
@@ -137,6 +138,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             argument.elseExpression?.let { elseExpression ->
                 checkFloatRange(context, annotation, elseExpression)
             }
+            return
+        }
+
+        if (argument.isNewArrayWithDimensions()) {
             return
         }
 
@@ -326,6 +331,8 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         return error
                     }
                 }
+            } else if (argument.isNewArrayWithDimensions()) {
+                return null
             }
 
             val constraint = IntRangeConstraint.create(annotation)

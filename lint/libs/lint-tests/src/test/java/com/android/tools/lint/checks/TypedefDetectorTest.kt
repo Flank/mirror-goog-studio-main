@@ -1461,4 +1461,50 @@ class TypedefDetectorTest : AbstractCheckTest() {
             .checkUInjectionHost(false)
             .run().expectClean()
     }
+
+    fun test80166964() {
+        // 80166964: IntDef annotation for variable not working anymore
+        lint().files(
+            java(
+                """
+                package com.example.tnorbye.myapplication;
+
+                import android.support.annotation.IntDef;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+
+                @SuppressWarnings({"WeakerAccess", "unused", "ClassNameDiffersFromFileName"})
+                public class IntDefTest {
+
+                    public static final int LINE = 0;
+                    public static final int CORNER = 1;
+
+                    @IntDef({LINE, CORNER})
+                    @Retention(RetentionPolicy.SOURCE)
+                    public @interface ShapeTypes {}
+
+                    @ShapeTypes public int shapeType;
+
+                    public void test(IntDefTest myClassObj) {
+                        shapeType = 99;
+                        myClassObj.shapeType = 99;
+                    }
+                }
+                """
+            ).indented(),
+
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/com/example/tnorbye/myapplication/IntDefTest.java:20: Error: Must be one of: IntDefTest.LINE, IntDefTest.CORNER [WrongConstant]
+                    shapeType = 99;
+                                ~~
+            src/com/example/tnorbye/myapplication/IntDefTest.java:21: Error: Must be one of: IntDefTest.LINE, IntDefTest.CORNER [WrongConstant]
+                    myClassObj.shapeType = 99;
+                                           ~~
+            2 errors, 0 warnings
+            """
+        )
+    }
 }

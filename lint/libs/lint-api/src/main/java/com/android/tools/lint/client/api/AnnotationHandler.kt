@@ -54,6 +54,7 @@ import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -98,7 +99,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     context = context,
                     argument = check,
                     type = when (p.operator) {
-                        UastBinaryOperator.ASSIGN -> AnnotationUsageType.ASSIGNMENT
+                        UastBinaryOperator.ASSIGN -> AnnotationUsageType.ASSIGNMENT_LHS
                         UastBinaryOperator.EQUALS,
                         UastBinaryOperator.NOT_EQUALS,
                         UastBinaryOperator.IDENTITY_EQUALS,
@@ -134,18 +135,6 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                     }
                 }
             }
-        } else if (p.isAssignment()) {
-            val assignment = p as UBinaryExpression
-            val rExpression = assignment.rightOperand
-            checkAnnotations(
-                context = context,
-                argument = rExpression,
-                type = AnnotationUsageType.ASSIGNMENT,
-                method = method,
-                referenced = referenced,
-                annotations = allMethodAnnotations,
-                annotated = annotated
-            )
         } else if (call is UVariable) {
             val variable = call
             val variablePsi = call.psi
@@ -190,13 +179,36 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                 checkAnnotations(
                     context,
                     initializer,
-                    type = AnnotationUsageType.ASSIGNMENT,
+                    type = AnnotationUsageType.ASSIGNMENT_RHS,
                     method = null,
                     referenced = referenced,
                     annotations = allMethodAnnotations,
                     annotated = annotated
                 )
             }
+        }
+    }
+
+    fun visitBinaryExpression(context: JavaContext, node: UBinaryExpression) {
+        // Assigning to an annotated field?
+        if (node.isAssignment()) {
+            // We're only processing fields, not local variables, since those are
+            // already visited
+            val resolved = node.leftOperand.tryResolve() as? PsiField ?: return
+            val evaluator = context.evaluator
+            val annotations = filterRelevantAnnotations(
+                evaluator,
+                evaluator.getAllAnnotations(resolved, true)
+            )
+            checkAnnotations(
+                context = context,
+                argument = node.rightOperand,
+                type = AnnotationUsageType.ASSIGNMENT_RHS,
+                method = null,
+                annotations = annotations,
+                annotated = resolved,
+                referenced = resolved
+            )
         }
     }
 
@@ -644,7 +656,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             checkContextAnnotations(context, method, method, call, methodAnnotations, method)
         }
 
-        if (containingClass != null && !classAnnotations.isEmpty()) {
+        if (containingClass != null && classAnnotations.isNotEmpty()) {
             checkAnnotations(
                 context,
                 call,
@@ -659,7 +671,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
             )
         }
 
-        if (!pkgAnnotations.isEmpty()) {
+        if (pkgAnnotations.isNotEmpty()) {
             checkAnnotations(
                 context,
                 call,
