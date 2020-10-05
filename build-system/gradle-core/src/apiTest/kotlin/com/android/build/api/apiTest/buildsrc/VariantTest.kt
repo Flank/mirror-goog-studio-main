@@ -165,6 +165,19 @@ class VariantTest: VariantApiBaseTest(
                 testingElements.addManifest(this)
             }
         }
+        withDocs {
+            index =
+                    // language=markdown
+                    """
+# Test Variant properties
+
+This sample shows how to use the `onVariantProperties` API.
+It modifies the versionCode and versionName of the manifest file for a specific variant.
+
+## To Run
+./gradlew verifierForRelease
+            """.trimIndent()
+        }
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
