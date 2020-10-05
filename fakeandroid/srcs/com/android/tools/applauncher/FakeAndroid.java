@@ -18,6 +18,7 @@ package com.android.tools.applauncher;
 
 import android.app.Activity;
 import android.app.ActivityThread;
+import android.os.Looper;
 import android.tools.SimpleWebServer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -61,6 +62,7 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
                 curClassLoader = Thread.currentThread().getContextClassLoader();
                 Thread.currentThread().setContextClassLoader(currentActivityClassLoader);
             }
+            Looper.prepareMainLooper();
 
             // To simulate cmd activity attach-agent we need to call direclty into the VM and
             // attach the agent manually.

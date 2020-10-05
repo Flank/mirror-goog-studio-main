@@ -15,25 +15,15 @@
  */
 package com.android.tools.agent.app.inspection;
 
+import android.os.Looper;
+
 public class ClassLoaderUtils {
-    private static final String MAIN_THREAD_NAME = "main";
     /**
      * Iterates through threads presented in the app and looks for a thread with name "main". It can
      * return {@code null} in case if thread with a name "main" is missing.
      */
     public static ClassLoader mainThreadClassLoader() {
-        ThreadGroup group = Thread.currentThread().getThreadGroup();
-        while (group.getParent() != null) {
-            group = group.getParent();
-        }
-        Thread[] threads = new Thread[100];
-        group.enumerate(threads);
-        for (Thread thread : threads) {
-            if (thread != null && thread.getName().equals(MAIN_THREAD_NAME)) {
-                return thread.getContextClassLoader();
-            }
-        }
-        return null;
+        return Looper.getMainLooper().getThread().getContextClassLoader();
     }
 
     public static final String optimizedDirectory = System.getProperty("java.io.tmpdir");

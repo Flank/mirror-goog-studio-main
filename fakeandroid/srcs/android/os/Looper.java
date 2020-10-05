@@ -16,4 +16,24 @@
 
 package android.os;
 
-public class Looper {}
+public class Looper {
+    private static Looper sMainLooper;
+
+    private final Thread myThread;
+
+    public Looper() {
+        this.myThread = Thread.currentThread();
+    }
+
+    public Thread getThread() {
+        return myThread;
+    }
+
+    public static void prepareMainLooper() {
+        sMainLooper = new Looper();
+    }
+
+    public static Looper getMainLooper() {
+        return sMainLooper;
+    }
+}

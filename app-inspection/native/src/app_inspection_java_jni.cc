@@ -89,8 +89,6 @@ void EnqueueAppInspectionRawResponse(JNIEnv *env, int32_t command_id,
   } else {
     EnqueueAppInspectionResponse(env, command_id, status, error_message,
                                  [](AppInspectionResponse *response) {
-                                   auto *raw_response =
-                                       response->mutable_raw_response();
                                  });
   }
 }
