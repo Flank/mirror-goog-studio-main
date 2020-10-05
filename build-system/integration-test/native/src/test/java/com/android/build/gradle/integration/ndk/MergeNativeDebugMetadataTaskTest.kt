@@ -149,8 +149,9 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
         try {
             project.executor().run("app:assembleDebug")
         } catch (e: BuildException) {
-            // message starts with, e.g., "Entry name 'armeabi-v7a/collide.so.sym' collided"
-            assertThat(Throwables.getRootCause(e).message).startsWith("Entry name")
+            // message starts with, e.g., "Zip file '%s' already contains entry '%s'..."
+            // See Zipflinger.ZipArchive for where this exception is thrown
+            assertThat(Throwables.getRootCause(e).message).startsWith("Zip file")
             return
         }
         fail("expected build error because of native libraries with same name.")

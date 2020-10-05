@@ -330,7 +330,9 @@ public class ZipArchive implements Archive {
         }
 
         if (cd.contains(name)) {
-            throw new IllegalStateException(String.format("Entry name '%s' collided", name));
+            String template = "Zip file '%s' already contains entry '%s', cannot overwrite";
+            String msg = String.format(template, file.getAbsolutePath(), name);
+            throw new IllegalStateException(msg);
         }
     }
 }
