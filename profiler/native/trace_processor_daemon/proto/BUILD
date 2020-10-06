@@ -6,6 +6,7 @@ cc_grpc_proto_library(
     name = "cc_trace_processor_service_proto",
     srcs = glob(["**/*.proto"]),
     grpc_support = 1,
+    include_prefix = "proto",
 )
 
 # The following expose the TPD protos to Studio.

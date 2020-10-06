@@ -6,13 +6,13 @@
     - groupId           = ""
     - defaultVariant    = "debug"
     - flavorDimensions  = []
-    - compileTarget     = "29"
+    - compileTarget     = "30"
     - buildFolder       = {PROJECT}/build{!}
     - resourcePrefix    = (null)
-    - buildToolsVersion = "30.0.0"
+    - buildToolsVersion = "30.0.2"
     - dynamicFeatures   = []
     > bootClasspath:
-       * {ANDROID_SDK}/platforms/android-29/android.jar{F}
+       * {ANDROID_SDK}/platforms/android-30/android.jar{F}
     < bootClasspath
     > defaultConfig:
        > productFlavor:

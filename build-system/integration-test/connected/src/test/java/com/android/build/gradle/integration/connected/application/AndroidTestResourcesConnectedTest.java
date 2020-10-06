@@ -41,8 +41,6 @@ public class AndroidTestResourcesConnectedTest {
     public GradleTestProject appProject =
             GradleTestProject.builder()
                     .withName("application")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestApp(HelloWorldApp.noBuildFile())
                     .create();
 
@@ -71,6 +69,9 @@ public class AndroidTestResourcesConnectedTest {
                         + "}\n");
         // fail fast if no response
         appProject.addAdbTimeOutInMs();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        appProject.execute("uninstallAll");
     }
 
     private static void setUpProject(GradleTestProject project) throws IOException {

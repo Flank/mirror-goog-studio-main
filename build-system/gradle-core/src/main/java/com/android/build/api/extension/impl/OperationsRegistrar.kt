@@ -22,26 +22,27 @@ import com.android.build.api.extension.VariantSelector
 import org.gradle.api.Action
 
 /**
- * Registrar object to keep track of Variant API operations registered on the [VariantBuilderT]
+ * Registrar object to keep track of Variant API operations registered on the [Component]
  */
-class OperationsRegistrar<VariantBuilderT>
-        where VariantBuilderT: ActionableComponentObject,
-              VariantBuilderT: ComponentIdentity {
+class OperationsRegistrar<Component: ComponentIdentity> {
 
-    private class Operation<VariantBuilderT>(
-            val selector: VariantSelectorImpl<VariantBuilderT>,
-            val callBack: Action<VariantBuilderT>
-    ) where VariantBuilderT: ActionableComponentObject,
-            VariantBuilderT: ComponentIdentity
+    private class Operation<Component: ComponentIdentity>(
+            val selector: VariantSelectorImpl,
+            val callBack: Action<Component>
+    )
 
+    private val operations= mutableListOf<Operation<Component>>()
 
-    private val operations= mutableListOf<Operation<VariantBuilderT>>()
+    private val noSelector = VariantSelectorImpl().all()
 
-    fun addOperation(selector: VariantSelector<VariantBuilderT>, callback: Action<VariantBuilderT>) {
+    fun addOperation(
+            callback: Action<Component>,
+            selector: VariantSelector = noSelector
+    ) {
         operations.add(Operation(selector as VariantSelectorImpl, callback))
     }
 
-    fun executeOperations(variant: VariantBuilderT) {
+    fun executeOperations(variant: Component) {
         operations.forEach { operation ->
             if (operation.selector.appliesTo(variant)) {
                 operation.callBack.execute(variant)

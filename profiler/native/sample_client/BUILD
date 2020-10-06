@@ -3,9 +3,7 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 cc_binary(
     name = "sample_client",
     srcs = ["sample_client.cc"],
-    copts = ANDROID_COPTS + [
-        "-I$(GENDIR)/tools/base/transport",
-    ],
+    copts = ANDROID_COPTS,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [

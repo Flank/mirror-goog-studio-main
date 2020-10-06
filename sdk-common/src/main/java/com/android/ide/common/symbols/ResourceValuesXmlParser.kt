@@ -147,7 +147,8 @@ import java.util.ArrayList
 fun parseValuesResource(
         xmlDocument: Document,
         idProvider: IdProvider,
-        platformAttrSymbols: SymbolTable?
+        platformAttrSymbols: SymbolTable?,
+        validation: Boolean = true
 ): SymbolTable {
     val root = xmlDocument.documentElement ?:
             throw ResourceValuesXmlParseException("XML document does not have a root element.")
@@ -171,7 +172,8 @@ fun parseValuesResource(
                     builder,
                     idProvider,
                     enumSymbols,
-                    platformAttrSymbols)
+                    platformAttrSymbols,
+                    validation)
         }
         current = current.nextSibling
     }
@@ -192,13 +194,15 @@ fun parseValuesResource(
  * @param idProvider the provider for IDs to assign to the resources
  * @param enumSymbols out list of enum symbols discovered in declare-styleable
  * @param platformAttrSymbols the platform attr symbols
+ * @param validation check the `name` of the symbol is a valid resource name
  */
 private fun parseChild(
         child: Element,
         builder: SymbolTable.Builder,
         idProvider: IdProvider,
         enumSymbols: MutableList<Symbol>,
-        platformAttrSymbols: SymbolTable?) {
+        platformAttrSymbols: SymbolTable?,
+        validation: Boolean = true) {
     if (child.tagName == SdkConstants.TAG_EAT_COMMENT) {
         return
     }
@@ -235,11 +239,11 @@ private fun parseChild(
         ResourceType.STYLE,
         ResourceType.TRANSITION,
         ResourceType.XML ->
-            builder.add(Symbol.createAndValidateSymbol(resourceType, name, idProvider))
+            builder.add(Symbol.createSymbol(resourceType, name, idProvider, validation))
         ResourceType.STYLEABLE ->
             // We also need to find all the attributes declared under declare styleable.
             parseDeclareStyleable(
-                    child, idProvider, name, builder, enumSymbols, platformAttrSymbols)
+                    child, idProvider, name, builder, enumSymbols, platformAttrSymbols, validation)
         ResourceType.ATTR ->
             // We also need to find all the enums declared under attr (if there are any).
             parseAttr(child, idProvider, name, builder, enumSymbols, false)
@@ -267,7 +271,8 @@ private fun parseDeclareStyleable(
         styleableName: String,
         builder: SymbolTable.Builder,
         enumSymbols: MutableList<Symbol>,
-        platformAttrSymbols: SymbolTable?) {
+        platformAttrSymbols: SymbolTable?,
+        validation: Boolean = true) {
     val attrNames = ImmutableList.Builder<String>()
     val attrValues = ImmutableList.builder<Int>()
 
@@ -314,17 +319,18 @@ private fun parseDeclareStyleable(
                 attrSymbol.intValue
             }
         } else {
-            parseAttr(attrElement, idProvider, attrName, builder, enumSymbols, true)
+            parseAttr(attrElement, idProvider, attrName, builder, enumSymbols, true, validation)
         }
         attrNames.add(attrName)
         attrValues.add(attrValue)
         attrNode = attrNode.nextSibling
     }
     builder.add(
-            Symbol.createAndValidateStyleableSymbol(
+            Symbol.createStyleableSymbol(
                 styleableName,
                 attrValues.build(),
-                attrNames.build()
+                attrNames.build(),
+                validation
             ))
 }
 
@@ -344,7 +350,8 @@ private fun parseAttr(
         name: String,
         builder: SymbolTable.Builder,
         enumSymbols: MutableList<Symbol>,
-        isMaybeDefinition: Boolean): Int {
+        isMaybeDefinition: Boolean,
+        validation: Boolean = true): Int {
     var enumNode: Node? = attr.firstChild
     while (enumNode != null) {
         if (enumNode.nodeType != Node.ELEMENT_NODE) {
@@ -364,17 +371,18 @@ private fun parseAttr(
             continue
         }
 
-        val newEnum = Symbol.createAndValidateSymbol(
+        val newEnum = Symbol.createSymbol(
                 ResourceType.ID,
                 getMandatoryAttr(enumElement, "name"),
-                idProvider)
+                idProvider,
+                validation = validation)
 
         enumSymbols.add(newEnum)
         enumNode = enumNode.nextSibling
     }
 
-    val newAttr = Symbol.createAndValidateSymbol(
-        ResourceType.ATTR, name, idProvider, isMaybeDefinition)
+    val newAttr = Symbol.createSymbol(
+        ResourceType.ATTR, name, idProvider, isMaybeDefinition, validation)
 
     if (!builder.contains(newAttr)) {
         // If we haven't encountered this attribute yet, add the new one.

@@ -18,8 +18,6 @@ cc_library(
         "-Itools/base/profiler/native/perfa",
         "-Itools/base/profiler/native/agent",
         "-Itools/base/profiler/native/agent/support",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     tags = [
         "no_windows",

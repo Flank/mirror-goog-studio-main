@@ -22,9 +22,10 @@ import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.AndroidTestBuilderImpl
 import com.android.build.api.component.impl.UnitTestBuilderImpl
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.impl.DelayedActionExecutor
 import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
@@ -34,12 +35,6 @@ abstract class AnalyticsEnabledVariantBuilder(
         stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledComponentBuilder(delegate, stats),
     VariantBuilder {
-
-    private val unitTestActions = DelayedActionExecutor<UnitTestBuilder>()
-    private val unitTestPropertiesOperations = DelayedActionExecutor<UnitTest>()
-
-    private val androidTestActions = DelayedActionExecutor<AndroidTestBuilder>()
-    private val androidTestPropertiesOperations = DelayedActionExecutor<AndroidTest>()
 
     override var minSdkVersion: AndroidVersion
         get() = delegate.minSdkVersion
@@ -65,55 +60,59 @@ abstract class AnalyticsEnabledVariantBuilder(
             delegate.renderscriptTargetApi = value
         }
 
+    val thisVariantApiOperationsRegistrar= VariantApiOperationsRegistrar<VariantBuilder, Variant>()
+
     override fun unitTest(action: UnitTestBuilder.() -> Unit) {
-        unitTestActions.registerAction(Action { action(it) })
+        thisVariantApiOperationsRegistrar.unitTestBuilderOperations.addOperation(action)
     }
 
     fun unitTest(action: Action<UnitTestBuilder>) {
-        unitTestActions.registerAction(action)
+        thisVariantApiOperationsRegistrar.unitTestBuilderOperations.addOperation(action)
     }
 
     override fun unitTestProperties(action: UnitTest.() -> Unit) {
-        unitTestPropertiesOperations.registerAction(Action { action(it) })
+        thisVariantApiOperationsRegistrar.unitTestOperations.addOperation(action)
     }
 
     fun unitTestProperties(action: Action<UnitTest>) {
-        unitTestPropertiesOperations.registerAction(action)
+        thisVariantApiOperationsRegistrar.unitTestOperations.addOperation(action)
     }
 
     override fun androidTest(action: AndroidTestBuilder.() -> Unit) {
-        androidTestActions.registerAction(Action { action(it) })
+        thisVariantApiOperationsRegistrar.androidTestBuilderOperations.addOperation(action)
     }
 
     fun androidTest(action: Action<AndroidTestBuilder>) {
-        androidTestActions.registerAction(action)
+        thisVariantApiOperationsRegistrar.androidTestBuilderOperations.addOperation(action)
     }
 
     override fun androidTestProperties(action: AndroidTest.() -> Unit) {
-        androidTestPropertiesOperations.registerAction(Action { action(it) })
+        thisVariantApiOperationsRegistrar.androidTestOperations.addOperation(action)
     }
 
     fun androidTestProperties(action: Action<AndroidTest>) {
-        androidTestPropertiesOperations.registerAction(action)
+        thisVariantApiOperationsRegistrar.androidTestOperations.addOperation(action)
     }
 
     // FIXME should be internal
     fun executeUnitTestActions(target: UnitTestBuilderImpl) {
-        unitTestActions.executeActions(AnalyticsEnabledUnitTestBuilder(target, stats))
+        thisVariantApiOperationsRegistrar.unitTestBuilderOperations.executeOperations(
+                AnalyticsEnabledUnitTestBuilder(target, stats))
     }
 
     // FIXME should be internal
     fun executeUnitTestPropertiesActions(target: UnitTest) {
-        unitTestPropertiesOperations.executeActions(target)
+        thisVariantApiOperationsRegistrar.unitTestOperations.executeOperations(target)
     }
 
     // FIXME should be internal
     fun executeAndroidTestActions(target: AndroidTestBuilderImpl) {
-        androidTestActions.executeActions(AnalyticsEnabledAndroidTestBuilder(target, stats))
+        thisVariantApiOperationsRegistrar.androidTestBuilderOperations.executeOperations(
+                AnalyticsEnabledAndroidTestBuilder(target, stats))
     }
 
     // FIXME should be internal
     fun executeAndroidTestPropertiesActions(target: AndroidTest) {
-        androidTestPropertiesOperations.executeActions(target)
+        thisVariantApiOperationsRegistrar.androidTestOperations.executeOperations(target)
     }
 }

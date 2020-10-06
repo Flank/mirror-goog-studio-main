@@ -15,28 +15,39 @@
  */
 
 package com.android.build.gradle.internal.cxx.logging
+
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel.ERROR
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel.INFO
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel.LIFECYCLE
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel.WARN
+import com.android.utils.cxx.CxxDiagnosticCode
 import java.io.File
 
 data class LoggingMessage(
-    val level : LoggingLevel,
-    val message : String,
-    val file : File? = null,
-    val tag : String? = null) {
-    override fun toString() = when {
-        (file == null && tag == null) -> message
-        (file != null && tag == null) -> "$file : C/C++ : $message"
-        (file == null && tag != null) -> "C/C++ $tag : $message"
-        else -> "$file : C/C++ $tag : $message"
+    val level: LoggingLevel,
+    val message: String,
+    val file: File? = null,
+    val tag: String? = null,
+    val diagnosticCode: CxxDiagnosticCode = CxxDiagnosticCode.UNKNOWN
+) {
+    override fun toString(): String {
+        val codeHeader = when (diagnosticCode) {
+            CxxDiagnosticCode.UNKNOWN -> "C/C++"
+            else -> "CXX${diagnosticCode.code}"
+        }
+        return when {
+            (file == null && tag == null) -> message
+            (file != null && tag == null) -> "$file : $codeHeader : $message"
+            (file == null && tag != null) -> "$codeHeader $tag : $message"
+            else -> "$file : $codeHeader $tag : $message"
+        }
     }
 }
 
-fun LoggingLevel.recordOf(message : String) = LoggingMessage(this, message)
+private fun LoggingLevel.recordOf(message: String, diagnosticCode: CxxDiagnosticCode = CxxDiagnosticCode.UNKNOWN) =
+    LoggingMessage(this, message, diagnosticCode = diagnosticCode)
 
-fun errorRecordOf(message : String) = ERROR.recordOf(message)
-fun warnRecordOf(message : String) = WARN.recordOf(message)
+fun errorRecordOf(message : String, diagnosticCode: CxxDiagnosticCode) = ERROR.recordOf(message, diagnosticCode)
+fun warnRecordOf(message : String, diagnosticCode: CxxDiagnosticCode) = WARN.recordOf(message, diagnosticCode)
 fun lifecycleRecordOf(message : String) = LIFECYCLE.recordOf(message)
 fun infoRecordOf(message : String) = INFO.recordOf(message)

@@ -16,42 +16,21 @@
 
 package com.android.tools.lint
 
+import com.android.tools.lint.client.api.ConfigurationHierarchy
 import com.android.tools.lint.client.api.FlagConfiguration
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
-import java.io.File
 
 /**
  * Consult the lint.xml file, but override with the --enable and --disable flags supplied on the
  * command line (as well as any other applicable [LintCliFlags])
  */
-open class CliConfiguration : FlagConfiguration {
+open class CliConfiguration(
+    configurations: ConfigurationHierarchy,
+    private val flags: LintCliFlags,
     private val fatalOnly: Boolean
-    private val flags: LintCliFlags
-
-    constructor(
-        client: LintCliClient,
-        flags: LintCliFlags,
-        project: Project,
-        fatalOnly: Boolean
-    ) : super(client, project) {
-        this.fatalOnly = fatalOnly
-        this.flags = flags
-    }
-
-    constructor(
-        client: LintCliClient,
-        flags: LintCliFlags,
-        lintFile: File,
-        dir: File,
-        fatalOnly: Boolean
-    ) : super(client, lintFile, dir) {
-        this.fatalOnly = fatalOnly
-        this.flags = flags
-    }
-
+) : FlagConfiguration(configurations) {
     override fun fatalOnly(): Boolean = fatalOnly
     override fun isWarningsAsErrors(): Boolean = flags.isWarningsAsErrors
     override fun isIgnoreWarnings(): Boolean = flags.isIgnoreWarnings

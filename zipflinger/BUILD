@@ -181,6 +181,22 @@ java_test(
     ],
 )
 
+java_test(
+    name = "testRepo",
+    size = "small",
+    srcs = [
+        "test/src/java/com/android/zipflinger/RepoTest.java",
+    ],
+    jvm_flags = ["-Dtest.suite.jar=testRepo.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":test_utils",
+        ":zipflinger",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:junit_junit",
+    ],
+)
+
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.zipflinger",

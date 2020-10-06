@@ -18,8 +18,8 @@ package com.android.build.api.variant.impl
 
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
-import com.android.build.gradle.internal.signing.SigningConfigData.Companion.MIN_V2_SDK
-import com.android.build.gradle.internal.signing.SigningConfigData.Companion.MIN_V3_SDK
+import com.android.build.gradle.internal.signing.SigningConfigVersions.Companion.MIN_V2_SDK
+import com.android.build.gradle.internal.signing.SigningConfigVersions.Companion.MIN_V3_SDK
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -52,26 +52,28 @@ public class AccessibilityDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE =
             Issue.create(
-                    "ContentDescription",
-                    "Image without `contentDescription`",
-                    "Non-textual widgets like ImageViews and ImageButtons should use the "
-                            + "`contentDescription` attribute to specify a textual description of "
-                            + "the widget such that screen readers and other accessibility tools "
-                            + "can adequately describe the user interface.\n"
-                            + "\n"
-                            + "Note that elements in application screens that are purely decorative "
-                            + "and do not provide any content or enable a user action should not "
-                            + "have accessibility content descriptions. In this case, just suppress the "
-                            + "lint warning with a tools:ignore=\"ContentDescription\" attribute.\n"
-                            + "\n"
-                            + "Note that for text fields, you should not set both the `hint` and the "
-                            + "`contentDescription` attributes since the hint will never be shown. Just "
-                            + "set the `hint`. See "
-                            + "https://developer.android.com/guide/topics/ui/accessibility/apps#special-cases",
-                    Category.A11Y,
-                    3,
-                    Severity.WARNING,
-                    new Implementation(AccessibilityDetector.class, Scope.RESOURCE_FILE_SCOPE));
+                            "ContentDescription",
+                            "Image without `contentDescription`",
+                            "Non-textual widgets like ImageViews and ImageButtons should use the "
+                                    + "`contentDescription` attribute to specify a textual description of "
+                                    + "the widget such that screen readers and other accessibility tools "
+                                    + "can adequately describe the user interface.\n"
+                                    + "\n"
+                                    + "Note that elements in application screens that are purely decorative "
+                                    + "and do not provide any content or enable a user action should not "
+                                    + "have accessibility content descriptions. In this case, just suppress the "
+                                    + "lint warning with a tools:ignore=\"ContentDescription\" attribute.\n"
+                                    + "\n"
+                                    + "Note that for text fields, you should not set both the `hint` and the "
+                                    + "`contentDescription` attributes since the hint will never be shown. Just "
+                                    + "set the `hint`.",
+                            Category.A11Y,
+                            3,
+                            Severity.WARNING,
+                            new Implementation(
+                                    AccessibilityDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo(
+                            "https://developer.android.com/guide/topics/ui/accessibility/apps#special-cases");
 
     /** Constructs a new {@link AccessibilityDetector} */
     public AccessibilityDetector() {}

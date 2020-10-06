@@ -28,7 +28,7 @@ java_binary(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/30.0.0"],
+    srcs = [":build-tools/30.0.2"],
     visibility = ["//visibility:public"],
 )
 
@@ -44,7 +44,6 @@ filegroup(
         "//tools/base/build-system/previous-versions:__pkg__",
     ],
 )
-
 
 filegroup(
     name = "build-tools/28.0.3",
@@ -65,9 +64,9 @@ filegroup(
 )
 
 filegroup(
-    name = "build-tools/30.0.0",
+    name = "build-tools/30.0.2",
     srcs = sdk_glob(
-        include = ["build-tools/30.0.0/**"],
+        include = ["build-tools/30.0.2/**"],
     ),
     visibility = ["//visibility:private"],
 )
@@ -163,19 +162,19 @@ filegroup(
 
 filegroup(
     name = "platforms/latest_build_only",
-    srcs = [":platforms/android-29_build_only"],
+    srcs = [":platforms/android-30_build_only"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-29"],
+    srcs = [":platforms/android-30"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-29"],  # Currently there isn't a preview available
+    srcs = [":platforms/android-30"],  # Currently there isn't a preview available
     visibility = ["//visibility:public"],
 )
 
@@ -183,7 +182,7 @@ filegroup(
 # Note: these stubbed classes will not be available at runtime.
 java_import(
     name = "platforms/latest_jar",
-    jars = sdk_path(["platforms/android-29/android.jar"]),
+    jars = sdk_path(["platforms/android-30/android.jar"]),
     neverlink = 1,
     visibility = [
         "//tools/base/app-inspection/agent:__pkg__",
@@ -198,7 +197,7 @@ java_import(
 # Note: these are stubbed classes.
 java_import(
     name = "platforms/latest_runtime_jar",
-    jars = sdk_path(["platforms/android-29/android.jar"]),
+    jars = sdk_path(["platforms/android-30/android.jar"]),
     testonly = 1,
     visibility = [
         "//tools/base/dynamic-layout-inspector:__pkg__",
@@ -207,10 +206,17 @@ java_import(
 
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
-    name = "platforms/android-29",
+    name = "platforms/android-30",
     #visibility = ["//visibility:private"],
     visibility = [
         "//tools/base/build-system/integration-test:__subpackages__",
+    ],
+)
+
+platform_filegroup(
+    name = "platforms/android-29",
+    visibility = [
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
     ],
 )
 

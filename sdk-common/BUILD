@@ -54,6 +54,7 @@ iml_module(
         "//tools/idea/.idea/libraries:aia-proto",
         "//tools/idea/.idea/libraries:studio-proto",
         "//tools/idea/.idea/libraries:jaxb-api",
+        "//tools/idea/.idea/libraries:Xerces",
     ],
 )
 
@@ -100,6 +101,7 @@ kotlin_library(
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
+        "//tools/base/third_party:xerces_xercesImpl",
     ],
 )
 

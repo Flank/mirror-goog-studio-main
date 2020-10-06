@@ -26,9 +26,7 @@ import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.client.api.LintDriver
-import com.android.tools.lint.client.api.LintOptionsConfiguration
 import com.android.tools.lint.client.api.LintRequest
-import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
@@ -83,27 +81,21 @@ class LintGradleClient(
         project: Project,
         driver: LintDriver?
     ): Configuration {
-        return configurations.getConfigurationForProject(project) { _, _ ->
-            createConfiguration(project, driver)
+        return configurations.getConfigurationForProject(project) { _, default ->
+            createConfiguration(project, default)
         }
     }
 
     private fun createConfiguration(
         project: Project,
-        driver: LintDriver?
-    ): Configuration {
-        val overrideConfiguration = overrideConfiguration
-        if (overrideConfiguration != null) {
-            return overrideConfiguration
-        }
+        default: Configuration?
+    ): Configuration? {
+        val buildModel = project.buildModule ?: return default
         // Look up local lint configuration for this project, either via Gradle lintOptions
         // or via local lint.xml
-        val buildModel = project.buildModule
-            ?: return super.getConfiguration(project, driver)
-        val lintOptions = buildModel.lintOptions
-        val lintXml = lintOptions.lintConfig
-            ?: File(project.dir, LintXmlConfiguration.CONFIG_FILE_NAME)
-        return LintOptionsConfiguration(this, lintXml, project.dir, lintOptions, flags.isFatalOnly)
+        return configurations.createLintOptionsConfiguration(
+            project, buildModel.lintOptions, flags.isFatalOnly, default
+        )
     }
 
     override fun findResource(relativePath: String): File? {

@@ -16,10 +16,13 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.tools.lint.LintCliFlags
+import com.android.tools.lint.MainTest.checkDriver
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.SdCardDetector
 import com.android.tools.lint.detector.api.Detector
+import java.io.File
 
 class ConfigurationHierarchyTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
@@ -141,9 +144,8 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 """
                 <lint>
                     <!-- This will turn it off in lib and in indirect lib. It will not affect app. -->
-                    <!-- BUG: Not working in indirectlib -->
                     <issue id="WrongManifestParent" severity="ignore" />
-                    <!-- overrides inherited -->
+                    <!-- does not override inherited (would in a direct project, not a lib project -->
                     <issue id="ManifestOrder" severity="error" />
                 </lint>
                 """
@@ -181,16 +183,13 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
             app/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
                <uses-library android:name="android.test.runner" android:required="false" />
                 ~~~~~~~~~~~~
-            indirectLib/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
-               <uses-library android:name="android.test.runner" android:required="false" />
-                ~~~~~~~~~~~~
             indirectLib/src/main/AndroidManifest.xml:9: Error: <uses-sdk> tag appears after <application> tag [ManifestOrder]
                <uses-sdk android:targetSdkVersion="24" />
                 ~~~~~~~~
             lib/src/main/AndroidManifest.xml:9: Error: <uses-sdk> tag appears after <application> tag [ManifestOrder]
                <uses-sdk android:targetSdkVersion="24" />
                 ~~~~~~~~
-            4 errors, 0 warnings
+            3 errors, 0 warnings
             """
         )
     }
@@ -266,16 +265,13 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
             app/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
                <uses-library android:name="android.test.runner" android:required="false" />
                 ~~~~~~~~~~~~
-            indirectLib/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
-               <uses-library android:name="android.test.runner" android:required="false" />
-                ~~~~~~~~~~~~
             app/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
                <uses-sdk android:targetSdkVersion="24" />
                 ~~~~~~~~
             lib/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
                <uses-sdk android:targetSdkVersion="24" />
                 ~~~~~~~~
-            2 errors, 2 warnings
+            1 errors, 2 warnings
             """
         )
     }
@@ -298,7 +294,7 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                         // Also enabled by lint.xml in same folder; this setting should win
                         disable 'IllegalResourceRef'
                         // Also enabled by lint.xml in src/main folder: that setting should win
-                        disable 'MultipleUsesSdk'
+                        informational 'MultipleUsesSdk'
                         lintConfig file("default-lint.xml")
                         // Also set in default-lint.xml, but this setting should win
                         disable 'DuplicateUsesFeature'
@@ -316,8 +312,8 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                     <!-- Only configured here: should be applied -->
                     <issue id="ManifestOrder" severity="ignore" />
                     <!-- Configured both by default-lint.xml and lint.xml in the same folder:
-                         this configuration wins -->
-                    <issue id="OldTargetApi" severity="ignore" />
+                         that one configuration wins -->
+                    <issue id="OldTargetApi" severity="error" />
                 </lint>
             """
             ).indented(),
@@ -337,8 +333,8 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                     <issue id="IllegalResourceRef" severity="fatal" />
                     <!-- Should be inherited into sources (no conflict in build.gradle) -->
                     <issue id="WrongManifestParent" severity="ignore" />
-                    <!-- Also configured by lint-default.xml in same folder: that one wins -->
-                    <issue id="OldTargetApi" severity="error" />
+                    <!-- Also configured by lint-default.xml in same folder: this one wins -->
+                    <issue id="OldTargetApi" severity="ignore" />
                 </lint>
                 """
             ).indented(),
@@ -368,5 +364,161 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
 1 errors, 0 warnings
             """
         )
+    }
+
+    fun testOverrideAndFallbackConfigurations() {
+        val project = getProjectDir(
+            null,
+            manifest().minSdk(1),
+            xml(
+                "lint.xml",
+                """
+                    <lint>
+                        <!-- // Overridden in override.xml: this is ignored -->
+                        <issue id="DuplicateDefinition" severity="fatal"/>
+                        <!-- // Set in both fallback and here: this is used -->
+                        <issue id="DuplicateIds" severity="ignore"/>
+                        <!-- // Not set in fallback or override: this is used -->
+                        <issue id="SdCardPath" severity="ignore"/>
+                    </lint>
+                    """
+            ).indented(),
+            xml(
+                "fallback.xml",
+                """
+                <lint>
+                    <issue id="DuplicateIds" severity="fatal"/>
+                </lint>
+                """
+            ).indented(),
+            xml(
+                "override.xml",
+                """
+                <lint>
+                    <issue id="DuplicateDefinition" severity="ignore"/>
+                </lint>
+                """
+            ).indented(),
+            xml(
+                "res/layout/test.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+                    <Button android:id='@+id/duplicated'/>    <Button android:id='@+id/duplicated'/></LinearLayout>
+                """
+            ).indented(),
+            xml(
+                "res/values/duplicates.xml",
+                """
+                <resources>
+                    <item type="id" name="name" />
+                    <item type="id" name="name" />
+                </resources>
+                """
+            ).indented(),
+            kotlin("val path = \"/sdcard/path\"")
+        )
+        checkDriver(
+            "No issues found.",
+            "", // Expected exit code
+            LintCliFlags.ERRNO_SUCCESS,
+            arrayOf<String>(
+                "--quiet",
+                "--disable",
+                "LintError",
+                "--disable",
+                "UsesMinSdkAttributes",
+                "--disable",
+                "UnusedResources",
+                "--config",
+                File(project, "fallback.xml").path,
+                "--override-config",
+                File(project, "override.xml").path,
+                project.path
+            )
+        )
+    }
+
+    fun testOverrideAndFallbackConfigurations2() {
+        // Like testOverrideAndFallbackConfigurations, but here we don't have a local
+        // lint.xml file; we want to make sure that we consult the fallback if not
+        // specified in the override (since getParent() on overrides deliberately don't
+        // return a fallback, in order to allow a local lint.xml lookup (which will
+        // always consult the override first) to not automatically jump to the fallback
+        // via getParent there, since we need to go back to the local lint file first.
+        val project = getProjectDir(
+            null,
+            manifest().minSdk(1),
+            xml(
+                "fallback.xml",
+                """
+                <lint>
+                    <issue id="DuplicateIds" severity="ignore"/>
+                </lint>
+                """
+            ).indented(),
+            xml(
+                "override.xml",
+                """
+                <lint>
+                    <issue id="DuplicateDefinition" severity="ignore"/>
+                </lint>
+                """
+            ).indented(),
+            xml(
+                "res/layout/test.xml",
+                """
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+                    <Button android:id='@+id/duplicated'/>    <Button android:id='@+id/duplicated'/></LinearLayout>
+                """
+            ).indented(),
+            xml(
+                "res/values/duplicates.xml",
+                """
+                <resources>
+                    <item type="id" name="name" />
+                    <item type="id" name="name" />
+                </resources>
+                """
+            ).indented()
+        )
+        checkDriver(
+            "No issues found.",
+            "", // Expected exit code
+            LintCliFlags.ERRNO_SUCCESS,
+            arrayOf<String>(
+                "--quiet",
+                "--disable",
+                "LintError",
+                "--disable",
+                "UsesMinSdkAttributes",
+                "--disable",
+                "UnusedResources",
+                "--config",
+                File(project, "fallback.xml").path,
+                "--override-config",
+                File(project, "override.xml").path,
+                project.path
+            )
+        )
+    }
+
+    private fun checkDriver(
+        expectedOutput: String,
+        expectedError: String,
+        expectedExitCode: Int,
+        args: Array<String>
+    ) {
+        checkDriver(
+            expectedOutput,
+            expectedError,
+            expectedExitCode,
+            args,
+            this::cleanup,
+            null
+        )
+    }
+
+    override fun cleanup(result: String?): String? {
+        return super.cleanup(result)
     }
 }

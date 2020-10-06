@@ -20,11 +20,13 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.Component
-import com.android.build.api.component.analytics.AnalyticsEnabledComponent
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -39,6 +41,7 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
+import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.instrumentation.AsmClassVisitorsFactoryRegistry
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -176,12 +179,25 @@ abstract class ComponentImpl(
     override val allProjectClassesPostAsmInstrumentation: FileCollection
         get() =
             if (registeredProjectClassesVisitors.isNotEmpty()) {
-                services.fileCollection(
-                    artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES),
+                if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                     services.fileCollection(
-                        artifacts.get(InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS)
-                    ).asFileTree
-                )
+                            artifacts.get(
+                                    FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES
+                            ),
+                            services.fileCollection(
+                                    artifacts.get(
+                                            FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS
+                                    )
+                            ).asFileTree
+                    )
+                } else {
+                    services.fileCollection(
+                            artifacts.get(ASM_INSTRUMENTED_PROJECT_CLASSES),
+                            services.fileCollection(
+                                    artifacts.get(ASM_INSTRUMENTED_PROJECT_JARS)
+                            ).asFileTree
+                    )
+                }
             } else {
                 artifacts.getAllClasses()
             }
@@ -203,7 +219,7 @@ abstract class ComponentImpl(
      *
      * if there is no tested variant this does nothing and returns null.
      */
-    override fun <T> onTestedConfig(action: (VariantCreationConfig) -> T): T? {
+    override fun <T> onTestedConfig(action: (VariantCreationConfig) -> T?): T? {
         if (variantType.isTestComponent) {
             val tested = testedConfig ?: throw RuntimeException("testedVariant null with type $variantType")
             return action(tested)
@@ -676,28 +692,37 @@ abstract class ComponentImpl(
         asmClassVisitorsRegistry.configureAndLock(objectFactory, asmApiVersion)
     }
 
-    abstract fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledComponent
+    abstract fun <T: Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder
+    ): T
 
     override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
         return if (registeredDependenciesClassesVisitors.isNotEmpty()) {
-            variantDependencies.getArtifactFileCollection(
-                ConsumedConfigType.RUNTIME_CLASSPATH,
-                scope,
-                AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
-                AsmClassesTransform.getAttributesForConfig(this)
-            )
+            if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
+                variantDependencies.getArtifactFileCollection(
+                        ConsumedConfigType.RUNTIME_CLASSPATH,
+                        scope,
+                        AndroidArtifacts.ArtifactType.CLASSES_FIXED_FRAMES_JAR,
+                        RecalculateStackFramesTransform.getAttributesForConfig(this)
+                )
+            } else {
+                variantDependencies.getArtifactFileCollection(
+                        ConsumedConfigType.RUNTIME_CLASSPATH,
+                        scope,
+                        AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
+                        AsmClassesTransform.getAttributesForConfig(this)
+                )
+            }
         } else {
             variantDependencies.getArtifactFileCollection(
-                ConsumedConfigType.RUNTIME_CLASSPATH,
-                scope,
-                AndroidArtifacts.ArtifactType.CLASSES_JAR
+                    ConsumedConfigType.RUNTIME_CLASSPATH,
+                    scope,
+                    AndroidArtifacts.ArtifactType.CLASSES_JAR
             )
         }
     }
-
     companion object {
         // String to
         final val ENABLE_LEGACY_API: String =

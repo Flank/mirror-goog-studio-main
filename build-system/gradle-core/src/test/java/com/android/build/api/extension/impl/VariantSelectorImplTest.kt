@@ -31,15 +31,15 @@ internal class VariantSelectorImplTest {
 
     @Test
     fun testAll() {
-        val variantSelector = VariantSelectorImpl<VariantBuilder>().all() as VariantSelectorImpl<VariantBuilder>
+        val variantSelector = VariantSelectorImpl().all() as VariantSelectorImpl
         val variant = Mockito.mock(VariantBuilder::class.java)
         Truth.assertThat(variantSelector.appliesTo(variant)).isTrue()
     }
 
     @Test
     fun testWithName() {
-        val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withName(Pattern.compile("F.o")) as VariantSelectorImpl<VariantBuilder>
+        val variantSelector = VariantSelectorImpl()
+                .withName(Pattern.compile("F.o")) as VariantSelectorImpl
         val variantFoo = Mockito.mock(ApplicationVariantBuilder::class.java)
         Mockito.`when`(variantFoo.name).thenReturn("Foo")
         val variantFuo = Mockito.mock(ApplicationVariantBuilder::class.java)
@@ -53,8 +53,8 @@ internal class VariantSelectorImplTest {
 
     @Test
     fun testWithBuildType() {
-        val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withBuildType("debug") as VariantSelectorImpl<VariantBuilder>
+        val variantSelector = VariantSelectorImpl()
+                .withBuildType("debug") as VariantSelectorImpl
         val debugVariant1 = Mockito.mock(ApplicationVariantBuilder::class.java)
         Mockito.`when`(debugVariant1.buildType).thenReturn("debug")
         val debugVariant2 = Mockito.mock(ApplicationVariantBuilder::class.java)
@@ -68,9 +68,9 @@ internal class VariantSelectorImplTest {
 
     @Test
     fun testWithBuildTypeAndName() {
-        val variantSelector = VariantSelectorImpl<VariantBuilder>()
+        val variantSelector = VariantSelectorImpl()
                 .withBuildType("debug")
-                .withName(Pattern.compile("F.o")) as VariantSelectorImpl<VariantBuilder>
+                .withName(Pattern.compile("F.o")) as VariantSelectorImpl
         val debugVariant1 = Mockito.mock(ApplicationVariantBuilder::class.java)
         Mockito.`when`(debugVariant1.buildType).thenReturn("debug")
         Mockito.`when`(debugVariant1.name).thenReturn("Foo")
@@ -86,122 +86,9 @@ internal class VariantSelectorImplTest {
     }
 
     @Test
-    fun testWithTypedVariantType() {
-        @Suppress("UNCHECKED_CAST") val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withType(ApplicationVariantBuilder::class.java) as VariantSelectorImpl<VariantBuilder>
-        val applicationVariantBuilder = Mockito.mock(ApplicationVariantBuilder::class.java)
-        val libraryVariantBuilder = Mockito.mock(LibraryVariantBuilder::class.java)
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder)).isTrue()
-        Truth.assertThat(variantSelector.appliesTo(libraryVariantBuilder)).isFalse()
-    }
-
-    @Test
-    fun testWithTypedVariantTypeAndName() {
-        @Suppress("UNCHECKED_CAST") val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withType(ApplicationVariantBuilder::class.java)
-                .withName(Pattern.compile("F.o")) as VariantSelectorImpl<VariantBuilder>
-
-        val applicationVariantBuilder1 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder1.name).thenReturn("Foo")
-        val applicationVariantBuilder2 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder2.name).thenReturn("Bar")
-        val libraryVariantBuilder = Mockito.mock(LibraryVariantBuilder::class.java)
-        Mockito.`when`(libraryVariantBuilder.name).thenReturn("Foo")
-
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder1)).isTrue()
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder2)).isFalse()
-        Truth.assertThat(variantSelector.appliesTo(libraryVariantBuilder)).isFalse()
-    }
-
-    @Test
-    fun testWithTypedVariantTypeAndBuildType() {
-        @Suppress("UNCHECKED_CAST") val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withType(ApplicationVariantBuilder::class.java)
-                .withBuildType("debug") as VariantSelectorImpl<VariantBuilder>
-
-        val applicationVariantBuilder1 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder1.buildType).thenReturn("debug")
-        val applicationVariantBuilder2 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder2.buildType).thenReturn("release")
-        val libraryVariantBuilder = Mockito.mock(LibraryVariantBuilder::class.java)
-        Mockito.`when`(libraryVariantBuilder.buildType).thenReturn("debug")
-
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder1)).isTrue()
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder2)).isFalse()
-        Truth.assertThat(variantSelector.appliesTo(libraryVariantBuilder)).isFalse()
-    }
-
-    @Test
-    fun testWithTypedVariantTypeAndBuildTypeAndName() {
-        @Suppress("UNCHECKED_CAST") val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withType(ApplicationVariantBuilder::class.java)
-                .withBuildType("debug")
-                .withName(Pattern.compile("F.o")) as VariantSelectorImpl<VariantBuilder>
-
-        val applicationVariantBuilder1 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder1.name).thenReturn("Foo")
-        Mockito.`when`(applicationVariantBuilder1.buildType).thenReturn("debug")
-        val applicationVariantBuilder2 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder2.name).thenReturn("Foo")
-        Mockito.`when`(applicationVariantBuilder2.buildType).thenReturn("release")
-        val applicationVariantBuilder3 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder3.name).thenReturn("Bar")
-        Mockito.`when`(applicationVariantBuilder3.buildType).thenReturn("debug")
-        val libraryVariantBuilder = Mockito.mock(LibraryVariantBuilder::class.java)
-        Mockito.`when`(libraryVariantBuilder.name).thenReturn("Foo")
-        Mockito.`when`(libraryVariantBuilder.buildType).thenReturn("debug")
-
-
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder1)).isTrue()
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder2)).isFalse()
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder3)).isFalse()
-        Truth.assertThat(variantSelector.appliesTo(libraryVariantBuilder)).isFalse()
-    }
-
-    @Test
-    fun testWithTypedVariantTypeAndBuildTypeAndFlavorAndName() {
-        @Suppress("UNCHECKED_CAST") val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withType(ApplicationVariantBuilder::class.java)
-                .withBuildType("debug")
-                .withFlavor("dim1" to "flavor1")
-                .withName(Pattern.compile("F.o")) as VariantSelectorImpl<VariantBuilder>
-
-        val applicationVariantBuilder1 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder1.name).thenReturn("Foo")
-        Mockito.`when`(applicationVariantBuilder1.buildType).thenReturn("debug")
-        Mockito.`when`(applicationVariantBuilder1.productFlavors).thenReturn(
-                listOf("dim1" to "flavor1", "dim2" to "flavor2"))
-        val applicationVariantBuilder2 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder2.name).thenReturn("Foo")
-        Mockito.`when`(applicationVariantBuilder2.buildType).thenReturn("release")
-        Mockito.`when`(applicationVariantBuilder2.productFlavors).thenReturn(
-                listOf("dim1" to "flavor1", "dim2" to "flavor2"))
-        val applicationVariantBuilder3 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder3.name).thenReturn("Bar")
-        Mockito.`when`(applicationVariantBuilder3.buildType).thenReturn("debug")
-        Mockito.`when`(applicationVariantBuilder3.productFlavors).thenReturn(
-                listOf("dim1" to "flavor1", "dim2" to "flavor2"))
-        val applicationVariantBuilder4 = Mockito.mock(ApplicationVariantBuilder::class.java)
-        Mockito.`when`(applicationVariantBuilder4.name).thenReturn("Foo")
-        Mockito.`when`(applicationVariantBuilder4.buildType).thenReturn("debug")
-        Mockito.`when`(applicationVariantBuilder4.productFlavors).thenReturn(
-                listOf("dim2" to "flavor3", "dim3" to "flavor4"))
-        val libraryVariantBuilder = Mockito.mock(LibraryVariantBuilder::class.java)
-        Mockito.`when`(libraryVariantBuilder.name).thenReturn("Foo")
-        Mockito.`when`(libraryVariantBuilder.buildType).thenReturn("debug")
-
-
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder1)).isTrue()
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder2)).isFalse()
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder3)).isFalse()
-        Truth.assertThat(variantSelector.appliesTo(applicationVariantBuilder4)).isFalse()
-        Truth.assertThat(variantSelector.appliesTo(libraryVariantBuilder)).isFalse()
-    }
-
-    @Test
     fun testWithProductFlavor() {
-        val variantSelector = VariantSelectorImpl<VariantBuilder>()
-                .withFlavor("dim1" to "flavor1") as VariantSelectorImpl<VariantBuilder>
+        val variantSelector = VariantSelectorImpl()
+                .withFlavor("dim1" to "flavor1") as VariantSelectorImpl
         val flavor1Variant = Mockito.mock(ApplicationVariantBuilder::class.java)
         Mockito.`when`(flavor1Variant.productFlavors).thenReturn(
                 listOf("dim1" to "flavor1", "dim2" to "flavor2"))
@@ -214,9 +101,9 @@ internal class VariantSelectorImplTest {
 
     @Test
     fun testWithBuildTypeAndFlavor() {
-        val variantSelector = VariantSelectorImpl<VariantBuilder>()
+        val variantSelector = VariantSelectorImpl()
                 .withFlavor("dim1" to "flavor1")
-                .withBuildType("debug") as VariantSelectorImpl<VariantBuilder>
+                .withBuildType("debug") as VariantSelectorImpl
 
         val applicationVariantBuilder1 = Mockito.mock(ApplicationVariantBuilder::class.java)
         Mockito.`when`(applicationVariantBuilder1.buildType).thenReturn("debug")
@@ -238,10 +125,10 @@ internal class VariantSelectorImplTest {
 
     @Test
     fun testWithBuildTypeAndFlavorAndName() {
-        val variantSelector = VariantSelectorImpl<VariantBuilder>()
+        val variantSelector = VariantSelectorImpl()
                 .withFlavor("dim1" to "flavor1")
                 .withBuildType("debug")
-                .withName(Pattern.compile("F.o")) as VariantSelectorImpl<VariantBuilder>
+                .withName(Pattern.compile("F.o")) as VariantSelectorImpl
 
         val variantFoo = Mockito.mock(ApplicationVariantBuilder::class.java)
         Mockito.`when`(variantFoo.buildType).thenReturn("debug")

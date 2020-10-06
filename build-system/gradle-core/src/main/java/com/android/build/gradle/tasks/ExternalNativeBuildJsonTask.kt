@@ -53,7 +53,6 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: 
         IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use {
             val generator =
                 createCxxMetadataGenerator(
-                    sdkComponents.get(),
                     configurationModel,
                     analyticsService = analyticsService.get()
                 )

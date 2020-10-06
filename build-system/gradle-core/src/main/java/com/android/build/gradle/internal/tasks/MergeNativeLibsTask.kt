@@ -19,7 +19,6 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.cxx.gradle.generator.variantObjFolder
 import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -225,7 +224,7 @@ fun getProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection 
         getBuildService<SdkComponentsBuildService>(creationConfig.services.buildServiceRegistry).get()
 
     // add content of the local external native build if there is one
-    taskContainer.cxxConfigurationModel?.variantObjFolder?.let { objFolder ->
+    taskContainer.cxxConfigurationModel?.variant?.objFolder?.let { objFolder ->
         nativeLibs.from(
             creationConfig.services.fileCollection(objFolder)
                     .builtBy(taskContainer.externalNativeBuildTask?.name)

@@ -19,6 +19,7 @@ package com.android.ddmlib.internal.jdwp;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.TimeoutException;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.EOFException;
@@ -131,6 +132,11 @@ public class JdwpProxyClient implements JdwpSocketHandler {
             } catch (Exception ex) {
                 writeFailHelper(ex.getMessage());
             }
+        } else if (JdwpHandshake.findHandshake(buffer) == JdwpHandshake.HANDSHAKE_GOOD) {
+            ByteBuffer handshake = ByteBuffer.allocate(JdwpHandshake.HANDSHAKE_LEN);
+            JdwpHandshake.putHandshake(handshake);
+            write(handshake.array(), handshake.position());
+            setHandshakeComplete();
         } else if (mConnection != null) {
             mConnection.write(this, mBuffer, count);
         }

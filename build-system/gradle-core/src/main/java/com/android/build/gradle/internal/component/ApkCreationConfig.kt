@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.SigningConfig
 import org.gradle.api.provider.MapProperty
 
 /**
@@ -30,8 +31,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
     val manifestPlaceholders: MapProperty<String, String>
 
     val embedsMicroApp: Boolean
-
-    val debuggable: Boolean
 
     // TODO: move to a non variant object (GlobalTaskScope?)
     val testOnlyApk: Boolean
@@ -51,4 +50,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
     val advancedProfilingTransforms: List<String>
 
     override val packagingOptions: ApkPackagingOptions
+
+    val signingConfig: SigningConfig?
 }

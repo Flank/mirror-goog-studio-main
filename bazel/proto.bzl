@@ -200,6 +200,7 @@ def java_proto_library(
             name = name,
             srcs = outs,
             deps = java_deps,
+            javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
             visibility = visibility,
             **kwargs
         )
@@ -240,7 +241,7 @@ def android_java_proto_library(
         visibility = visibility,
     )
 
-def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility = None, grpc_support = False, tags = None):
+def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility = None, grpc_support = False, tags = None, include_prefix = None):
     outs = []
     hdrs = []
     for src in srcs:
@@ -265,11 +266,13 @@ def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility 
     )
     native.cc_library(
         name = name,
-        srcs = outs,
+        srcs = outs + hdrs,
         deps = deps + ["//external:grpc++_unsecure", "//external:protobuf"],
         includes = includes,
         visibility = visibility,
         tags = tags,
         hdrs = hdrs,
         copts = select_android(["-std=c++11"], []),
+        strip_include_prefix = "",
+        include_prefix = include_prefix,
     )

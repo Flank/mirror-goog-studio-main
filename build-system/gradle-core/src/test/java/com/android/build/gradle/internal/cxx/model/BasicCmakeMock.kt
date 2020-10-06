@@ -23,12 +23,12 @@ import org.mockito.Mockito.doReturn
 /**
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
  */
-open class BasicCmakeMock : BasicModuleModelMock() {
+open class BasicCmakeMock(createFakeNinja : Boolean = true) : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
-    val module by lazy { createCxxModuleModel(sdkComponents, configurationModel, cmakeFinder)!! }
-    val variant by lazy { createCxxVariantModel(configurationModel, module) }
-    val abi by lazy { createCxxAbiModel(sdkComponents, configurationModel, variant, Abi.X86) }
+    val module by lazy { createCxxModuleModel(sdkComponents, configurationParameters, cmakeFinder) }
+    val variant by lazy { createCxxVariantModel(configurationParameters, module) }
+    val abi by lazy { createCxxAbiModel(sdkComponents, configurationParameters, variant, Abi.X86) }
 
     init {
         doReturn(setOf<String>()).`when`(externalNativeCmakeOptions).abiFilters
@@ -40,10 +40,12 @@ open class BasicCmakeMock : BasicModuleModelMock() {
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")
-        // Create the ninja executable files so that the macro expansion can succeed
-        module.cmake!!.cmakeExe.parentFile.apply { mkdirs() }.apply {
-            resolve("ninja").writeText("whatever")
-            resolve("ninja.exe").writeText("whatever")
+        if (createFakeNinja) {
+            // Create the ninja executable files so that the macro expansion can succeed
+            cmakeDir.apply { mkdirs() }.apply {
+                resolve("ninja").writeText("whatever")
+                resolve("ninja.exe").writeText("whatever")
+            }
         }
     }
 }

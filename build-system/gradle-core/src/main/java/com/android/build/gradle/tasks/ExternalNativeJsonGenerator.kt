@@ -37,7 +37,9 @@ import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
+import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
+import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile

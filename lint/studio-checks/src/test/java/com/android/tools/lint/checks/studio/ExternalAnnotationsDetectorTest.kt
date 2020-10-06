@@ -133,16 +133,16 @@ class ExternalAnnotationsDetectorTest {
             .run()
             .expect(
                 """
-                src/com/android/tools/lint/checks/SomeDetectorInJava.java:13: Error: getAnnotations used instead of JavaContext.getAllAnnotations. [ExternalAnnotations]
+                src/com/android/tools/lint/checks/SomeDetectorInJava.java:13: Error: getAnnotations used instead of JavaEvaluator.getAllAnnotations. [ExternalAnnotations]
                                                 for (PsiAnnotation ann : method.getAnnotations()) {
                                                                          ~~~~~~~~~~~~~~~~~~~~~~~
-                src/com/android/tools/lint/checks/SomeDetectorInJava.java:22: Error: getAnnotations used instead of JavaContext.getAllAnnotations. [ExternalAnnotations]
+                src/com/android/tools/lint/checks/SomeDetectorInJava.java:22: Error: getAnnotations used instead of JavaEvaluator.getAllAnnotations. [ExternalAnnotations]
                                                 for (UAnnotation ann : method.getAnnotations()) {
                                                                        ~~~~~~~~~~~~~~~~~~~~~~~
-                src/com/android/tools/lint/checks/SomeDetectorInKotlin.kt:11: Error: getAnnotations used instead of JavaContext.getAllAnnotations. [ExternalAnnotations]
+                src/com/android/tools/lint/checks/SomeDetectorInKotlin.kt:11: Error: getAnnotations used instead of JavaEvaluator.getAllAnnotations. [ExternalAnnotations]
                                                 return method.annotations.any { it.qualifiedName == "com.example.Special" }
                                                        ~~~~~~~~~~~~~~~~~~
-                src/com/android/tools/lint/checks/SomeDetectorInKotlin.kt:15: Error: getAnnotations used instead of JavaContext.getAllAnnotations. [ExternalAnnotations]
+                src/com/android/tools/lint/checks/SomeDetectorInKotlin.kt:15: Error: getAnnotations used instead of JavaEvaluator.getAllAnnotations. [ExternalAnnotations]
                                                 return method.annotations.any { it.qualifiedName == "com.example.Special" }
                                                               ~~~~~~~~~~~
                 4 errors, 0 warnings

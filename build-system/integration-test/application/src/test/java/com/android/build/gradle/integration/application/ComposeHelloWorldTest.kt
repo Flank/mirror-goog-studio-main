@@ -26,12 +26,17 @@ class ComposeHelloWorldTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
-        // http://b/158092419
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .create()
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+            .create()
 
     @Test
     fun appBuildsSuccessfully() {
-        project.execute("assembleDebug")
+        val executor =
+                project.executor()
+                        .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=25")
+
+        executor.run("assembleDebug")
+        // run once again to test configuration caching
+        executor.run("clean", "assembleDebug")
     }
 }

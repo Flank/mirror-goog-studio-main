@@ -20,15 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.times;
 
 import com.android.ddmlib.DdmPreferences;
-import java.io.IOException;
+import com.android.ddmlib.JdwpHandshake;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -74,19 +71,11 @@ public class JdwpProxyClientTest {
 
     @Test
     public void validateDisconnectCommandNoClients() throws Throwable {
-        SimpleServer server = new SimpleServer("0000" + JdwpProxyClient.JDWP_DISCONNECT + "0:0");
         byte[] buffer = new byte[1024];
-        Thread serverThread = new Thread(server);
-        serverThread.start();
-        SocketChannel channel = SocketChannel.open();
-        channel.connect(
-                new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
-        JdwpProxyClient client =
-                new JdwpProxyClient(channel, new JdwpClientManagerFactory(null, buffer), buffer);
-        client.read();
-        serverThread.join();
-        assertThat(server.getData()).hasSize(1);
-        assertThat(server.getData().get(0)).startsWith("FAIL");
+        verifyCommand(
+                new JdwpClientManagerFactory(null, buffer),
+                ("0000" + JdwpProxyClient.JDWP_DISCONNECT + "0:0").getBytes(),
+                "FAIL".getBytes());
     }
 
     @Test
@@ -94,8 +83,24 @@ public class JdwpProxyClientTest {
         JdwpClientManagerFactory factory = Mockito.mock(JdwpClientManagerFactory.class);
         JdwpClientManager clientManager = Mockito.mock(JdwpClientManager.class);
         Mockito.when(factory.getConnection("DEVICEID", 1234)).thenReturn(clientManager);
-        SimpleServer server =
-                new SimpleServer("0000" + JdwpProxyClient.JDWP_DISCONNECT + "DEVICEID:1234");
+        verifyCommand(
+                factory,
+                ("0000" + JdwpProxyClient.JDWP_DISCONNECT + "DEVICEID:1234").getBytes(),
+                "OKAY".getBytes());
+        Mockito.verify(clientManager, times(1)).shutdown();
+    }
+
+    @Test
+    public void validateHandshakeResponseOnHandshake() throws Throwable {
+        JdwpClientManagerFactory factory = Mockito.mock(JdwpClientManagerFactory.class);
+        ByteBuffer handshake = ByteBuffer.allocate(JdwpHandshake.HANDSHAKE_LEN);
+        JdwpHandshake.putHandshake(handshake);
+        verifyCommand(factory, handshake.array(), handshake.array());
+    }
+
+    private void verifyCommand(JdwpClientManagerFactory factory, byte[] command, byte[] response)
+            throws Throwable {
+        SimpleServer server = new SimpleServer(command);
         byte[] buffer = new byte[1024];
         Thread serverThread = new Thread(server);
         serverThread.start();
@@ -105,62 +110,12 @@ public class JdwpProxyClientTest {
         JdwpProxyClient client = new JdwpProxyClient(channel, factory, buffer);
         client.read();
         serverThread.join();
-        assertThat(server.getData()).hasSize(1);
-        assertThat(server.getData().get(0)).startsWith("OKAY");
-        Mockito.verify(clientManager, times(1)).shutdown();
-    }
-
-    private class SimpleServer implements Runnable {
-
-        private ServerSocketChannel mListenChannel;
-
-        private int mListenPort = 0;
-
-        private List<String> mData = new ArrayList<>();
-
-        private SocketChannel mClient = null;
-
-        private String mConnectMessage;
-
-        SimpleServer(String onConnectMessage) throws IOException {
-            mConnectMessage = onConnectMessage;
-            mListenChannel = ServerSocketChannel.open();
-            InetSocketAddress addr =
-                    new InetSocketAddress(
-                            InetAddress.getByName("localhost"), // $NON-NLS-1$
-                            0);
-            mListenChannel.socket().setReuseAddress(true); // enable SO_REUSEADDR
-            mListenChannel.socket().bind(addr);
-            mListenPort = mListenChannel.socket().getLocalPort();
-        }
-
-        public ServerSocketChannel getServerSocket() {
-            return mListenChannel;
-        }
-
-        public int getPort() {
-            return mListenPort;
-        }
-
-        public List<String> getData() {
-            return mData;
-        }
-
-        public SocketChannel getClient() {
-            return mClient;
-        }
-
-        @Override
-        public void run() {
-            try {
-                mClient = mListenChannel.accept();
-                mClient.write(ByteBuffer.wrap(mConnectMessage.getBytes()));
-                ByteBuffer buffer = ByteBuffer.allocate(1024);
-                mClient.read(buffer);
-                mData.add(new String(buffer.array()).trim());
-            } catch (Exception ex) {
-                // End thread.
-            }
+        // If the client sends more than one bit of data back sometimes it can be appended to
+        // original response. (eg FAIL [failure message]). To reduce the risk of flakes, only the
+        // portion of the response that matches the expected response length is checked.
+        assertThat(server.getData().position()).isAtLeast(response.length);
+        for (int i = 0; i < response.length; i++) {
+            assertThat(server.getData().get(i)).isEqualTo(response[i]);
         }
     }
 }

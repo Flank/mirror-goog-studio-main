@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
-import com.android.build.api.artifact.impl.DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
@@ -41,7 +40,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.process.CommandLineArgumentProvider
-import java.io.File
 
 /**
  * Arguments passed to data binding. This class mimics the [CompilerArguments] class except that it

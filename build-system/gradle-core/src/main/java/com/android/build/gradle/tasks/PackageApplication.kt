@@ -50,7 +50,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         creationConfig: ApkCreationConfig,
         private val outputDirectory: File,
         useResourceShrinker: Boolean,
-        manifests: Provider<Directory?>,
+        manifests: Provider<Directory>,
         manifestType: Artifact<Directory>
     ) : PackageAndroidArtifact.CreationAction<PackageApplication>(
         creationConfig,
@@ -71,7 +71,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
         ) {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.packageAndroidTask = taskProvider
-            val useOptimizedResources = !creationConfig.variantDslInfo.isDebuggable &&
+            val useOptimizedResources = !creationConfig.debuggable &&
                     creationConfig.services.projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]
             val operationRequest = creationConfig.artifacts.use(taskProvider)
                     .wiredWithDirectories(

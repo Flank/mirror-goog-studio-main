@@ -20,6 +20,8 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
 import com.android.build.gradle.internal.cxx.model.determineUsedStl
+import com.android.build.gradle.internal.cxx.model.prefabClassPath
+import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder

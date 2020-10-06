@@ -50,6 +50,8 @@ import org.jetbrains.jps.model.java.JpsJavaDependencyExtension;
 import org.jetbrains.jps.model.java.JpsJavaDependencyScope;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.java.compiler.JpsCompilerExcludes;
+import org.jetbrains.jps.model.java.compiler.JpsJavaCompilerConfiguration;
+import org.jetbrains.jps.model.java.compiler.JpsJavaCompilerOptions;
 import org.jetbrains.jps.model.library.JpsLibrary;
 import org.jetbrains.jps.model.library.JpsOrderRootType;
 import org.jetbrains.jps.model.module.JpsDependencyElement;
@@ -112,8 +114,11 @@ public class ImlToIr {
 
         IrProject irProject = new IrProject(workspace.toFile(), projectPath, id);
 
-        JpsCompilerExcludes excludes = JpsJavaExtensionService.getInstance()
-                .getOrCreateCompilerConfiguration(project).getCompilerExcludes();
+        JpsJavaCompilerConfiguration compilerConfiguration =
+                JpsJavaExtensionService.getInstance().getOrCreateCompilerConfiguration(project);
+        JpsCompilerExcludes excludes = compilerConfiguration.getCompilerExcludes();
+        JpsJavaCompilerOptions compilerOptions =
+                compilerConfiguration.getCompilerOptions(compilerConfiguration.getJavaCompilerId());
         List<File> excludedFiles = excludedFiles(excludes);
 
         JpsGraph compileGraph = new JpsGraph(project, COMPILE_SCOPE, logger);
@@ -131,7 +136,7 @@ public class ImlToIr {
         Map<JpsModule, IrModule> imlToIr = new HashMap<>();
         Map<JpsLibrary, IrLibrary> libraryToIr = new HashMap<>();
         for (List<JpsModule> component : testCompileGraph.getConnectedComponents()) {
-            IrModule irModule = createIrModule(component);
+            IrModule irModule = createIrModule(component, compilerOptions);
             irProject.modules.add(irModule);
             for (JpsModule module : component) {
                 imlToIr.put(module, irModule);
@@ -439,7 +444,8 @@ public class ImlToIr {
         return runtimeDeps;
     }
 
-    private static IrModule createIrModule(List<JpsModule> modules) {
+    private static IrModule createIrModule(
+            List<JpsModule> modules, JpsJavaCompilerOptions jpsCompilerOptions) {
         String jpsModuleName =
                 modules.stream()
                         .max(BY_NUM_ORDER_ENTRIES)
@@ -469,6 +475,19 @@ public class ImlToIr {
                 // Move common "up" until it covers the current module
                 while (!path.startsWith(baseDir)) {
                     baseDir = baseDir.getParent();
+                }
+            }
+
+            String additionalOptions =
+                    jpsCompilerOptions.ADDITIONAL_OPTIONS_OVERRIDE.getOrDefault(
+                            module.getName(), jpsCompilerOptions.ADDITIONAL_OPTIONS_STRING);
+            if (additionalOptions != null && !additionalOptions.isEmpty()) {
+                String currentOptions = irModule.getCompilerOptions();
+                if (currentOptions == null) {
+                    irModule.setCompilerOptions(additionalOptions);
+                } else if (!currentOptions.equals(additionalOptions)) {
+                    throw new IllegalStateException(
+                            "Conflicting compiler options specified by module " + module.getName());
                 }
             }
 

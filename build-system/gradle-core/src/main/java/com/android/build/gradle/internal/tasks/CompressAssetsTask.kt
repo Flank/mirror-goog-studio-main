@@ -125,7 +125,7 @@ abstract class CompressAssetsTask : NewIncrementalTask() {
             )
             task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             task.compressionLevel.setDisallowChanges(
-                if (creationConfig.variantDslInfo.isDebuggable) {
+                if (creationConfig.debuggable) {
                     BEST_SPEED
                 } else {
                     DEFAULT_COMPRESSION

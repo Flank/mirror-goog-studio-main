@@ -23,11 +23,9 @@ import com.android.build.gradle.internal.services.DslServices
 
 open class TestAndroidComponentsExtensionImpl(
         dslServices: DslServices,
-        variantBuilderOperations: OperationsRegistrar<TestVariantBuilder>,
-        variantOperations: OperationsRegistrar<TestVariant>
+        variantApiOperationsRegistrar: VariantApiOperationsRegistrar<TestVariantBuilder, TestVariant>
 ):
         TestAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<TestVariantBuilder, TestVariant>(
                 dslServices,
-                variantBuilderOperations,
-                variantOperations)
+                variantApiOperationsRegistrar)

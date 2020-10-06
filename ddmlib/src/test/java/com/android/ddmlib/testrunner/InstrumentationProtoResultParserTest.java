@@ -78,12 +78,15 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testCase1")));
+                                        "testCase1",
+                                        1)));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
-                                        "com.example.myapplication.MainActivityTest", "testCase1")),
+                                        "com.example.myapplication.MainActivityTest",
+                                        "testCase1",
+                                        1)),
                         argThat(
                                 testMetrics ->
                                         testMetrics
@@ -96,12 +99,15 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testCase2")));
+                                        "testCase2",
+                                        2)));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
-                                        "com.example.myapplication.MainActivityTest", "testCase2")),
+                                        "com.example.myapplication.MainActivityTest",
+                                        "testCase2",
+                                        2)),
                         argThat(
                                 testMetrics ->
                                         testMetrics
@@ -114,19 +120,22 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testWithIgnoreAnnotation")));
+                                        "testWithIgnoreAnnotation",
+                                        3)));
         inOrder.verify(mockListener)
                 .testIgnored(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testWithIgnoreAnnotation")));
+                                        "testWithIgnoreAnnotation",
+                                        3)));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testWithIgnoreAnnotation")),
+                                        "testWithIgnoreAnnotation",
+                                        3)),
                         argThat(
                                 testMetrics ->
                                         Strings.isNullOrEmpty(
@@ -137,20 +146,23 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "failingTest")));
+                                        "failingTest",
+                                        4)));
         inOrder.verify(mockListener)
                 .testFailed(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "failingTest")),
+                                        "failingTest",
+                                        4)),
                         contains("java.lang.AssertionError: This is a testing test"));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "failingTest")),
+                                        "failingTest",
+                                        4)),
                         argThat(
                                 testMetrics ->
                                         !Strings.isNullOrEmpty(
@@ -172,13 +184,15 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testCaseWithCustomStatusAndResultReport")));
+                                        "testCaseWithCustomStatusAndResultReport",
+                                        1)));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testCaseWithCustomStatusAndResultReport")),
+                                        "testCaseWithCustomStatusAndResultReport",
+                                        1)),
                         argThat(
                                 testMetrics ->
                                         new ArrayList<>(testMetrics.keySet())
@@ -218,20 +232,23 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest2",
-                                        "crashInUiThread")));
+                                        "crashInUiThread",
+                                        1)));
         inOrder.verify(mockListener)
                 .testFailed(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest2",
-                                        "crashInUiThread")),
+                                        "crashInUiThread",
+                                        1)),
                         contains("java.lang.RuntimeException: Crash on UI Thread"));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest2",
-                                        "crashInUiThread")),
+                                        "crashInUiThread",
+                                        1)),
                         anyMap());
 
         inOrder.verify(mockListener).testRunFailed(eq("Process crashed."));
@@ -251,20 +268,23 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.CrashTest",
-                                        "systemServerCrashed")));
+                                        "systemServerCrashed",
+                                        1)));
         inOrder.verify(mockListener)
                 .testFailed(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.CrashTest",
-                                        "systemServerCrashed")),
+                                        "systemServerCrashed",
+                                        1)),
                         eq(""));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.CrashTest",
-                                        "systemServerCrashed")),
+                                        "systemServerCrashed",
+                                        1)),
                         anyMap());
 
         inOrder.verify(mockListener)
@@ -278,11 +298,13 @@ public class InstrumentationProtoResultParserTest {
         TestIdentifier testcase1 =
                 new TestIdentifier(
                         "com.example.myapplication.benchmarkexample.MyBenchmarkTest",
-                        "benchmarkSomeWork");
+                        "benchmarkSomeWork",
+                        1);
         TestIdentifier testcase2 =
                 new TestIdentifier(
                         "com.example.myapplication.benchmarkexample.MyBenchmarkTest",
-                        "benchmarkSomeWork2");
+                        "benchmarkSomeWork2",
+                        2);
 
         readSession("instrumentation-data-session-benchmark.textproto");
 
@@ -293,6 +315,29 @@ public class InstrumentationProtoResultParserTest {
         inOrder.verify(mockListener).testStarted(eq(testcase2));
         inOrder.verify(mockListener).testEnded(eq(testcase2), anyMap());
         inOrder.verify(mockListener).testRunEnded(eq(6460L), eq(emptyMap()));
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    public void testDuplicatedTestCase() throws Exception {
+        String testClassName = "com.example.duplicatedtestcase.ExampleInstrumentedTest";
+        String testCaseName = "exampleTestCase";
+        TestIdentifier testcase1 =
+                new TestIdentifier(testClassName, testCaseName, /*testIndex=*/ 1);
+        TestIdentifier testcase2 =
+                new TestIdentifier(testClassName, testCaseName, /*testIndex=*/ 2);
+
+        readSession("instrumentation-data-session-duplicated-test-case.textproto");
+
+        InOrder inOrder = inOrder(mockListener);
+        inOrder.verify(mockListener).testRunStarted(eq("myTestRun"), eq(2));
+        inOrder.verify(mockListener).testStarted(eq(testcase1));
+        inOrder.verify(mockListener).testFailed(eq(testcase1), any());
+        inOrder.verify(mockListener).testEnded(eq(testcase1), anyMap());
+        inOrder.verify(mockListener).testStarted(eq(testcase2));
+        inOrder.verify(mockListener).testFailed(eq(testcase2), any());
+        inOrder.verify(mockListener).testEnded(eq(testcase2), anyMap());
+        inOrder.verify(mockListener).testRunEnded(eq(85L), anyMap());
         inOrder.verifyNoMoreInteractions();
     }
 
@@ -324,12 +369,15 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testCase1")));
+                                        "testCase1",
+                                        1)));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
-                                        "com.example.myapplication.MainActivityTest", "testCase1")),
+                                        "com.example.myapplication.MainActivityTest",
+                                        "testCase1",
+                                        1)),
                         anyMap());
         inOrder.verify(mockListener).testRunEnded(eq(57L), eq(emptyMap()));
         inOrder.verifyNoMoreInteractions();
@@ -355,12 +403,15 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testCase1")));
+                                        "testCase1",
+                                        1)));
         inOrder.verify(mockListener)
                 .testEnded(
                         eq(
                                 new TestIdentifier(
-                                        "com.example.myapplication.MainActivityTest", "testCase1")),
+                                        "com.example.myapplication.MainActivityTest",
+                                        "testCase1",
+                                        1)),
                         anyMap());
         inOrder.verify(mockListener).testRunEnded(eq(57L), eq(emptyMap()));
         inOrder.verifyNoMoreInteractions();
@@ -393,14 +444,17 @@ public class InstrumentationProtoResultParserTest {
                         eq(
                                 new TestIdentifier(
                                         "com.example.myapplication.MainActivityTest",
-                                        "testCase1")));
+                                        "testCase1",
+                                        1)));
 
         // testEnded should not be called yet.
         inOrder.verify(mockListener, never())
                 .testEnded(
                         eq(
                                 new TestIdentifier(
-                                        "com.example.myapplication.MainActivityTest", "testCase1")),
+                                        "com.example.myapplication.MainActivityTest",
+                                        "testCase1",
+                                        1)),
                         anyMap());
 
         parser.handleTestRunFailed("Some unexpected error happens in Ddmlib");

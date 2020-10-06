@@ -146,28 +146,21 @@ import kotlin.system.measureTimeMillis
 /**
  * Analyzes Android projects and files
  *
- *
  * **NOTE: This is not a public or final API; if you rely on this be prepared
  * to adjust your code for the next tools release.**
  */
 @Beta
-class LintDriver
-/**
- * Creates a new [LintDriver]
- *
- * @param registry The registry containing issues to be checked
- *
- * @param request The request which points to the original files to be checked,
- * the original scope, the original [LintClient], as well as the release mode.
- *
- * @param client the tool wrapping the analyzer, such as an IDE or a CLI
- */
-(var registry: IssueRegistry, client: LintClient, val request: LintRequest) {
-    /** True if execution has been canceled  */
-    @Volatile
-    internal var isCanceled: Boolean = false
-        private set
-
+class LintDriver(
+    /** The [registry] containing issues to be checked */
+    var registry: IssueRegistry,
+    /** The tool wrapping the analyzer, such as an IDE or a CLI */
+    client: LintClient,
+    /**
+     * The request which points to the original files to be checked,
+     * the original scope, the original [LintClient], as well as the release mode.
+     */
+    val request: LintRequest
+) {
     /** The original client (not the wrapped one intended to pass to detectors */
     private val realClient: LintClient = client
 
@@ -255,11 +248,6 @@ class LintDriver
 
     /** Whether dependent projects should be checked */
     var checkDependencies = true
-
-    /** Cancels the current lint run as soon as possible  */
-    fun cancel() {
-        isCanceled = true
-    }
 
     /** Time the analysis started */
     var analysisStartTime = System.currentTimeMillis()
@@ -371,7 +359,6 @@ class LintDriver
      * for each job.
      */
     fun analyze() {
-        isCanceled = false
         assert(!scope.contains(Scope.ALL_RESOURCE_FILES) || scope.contains(Scope.RESOURCE_FILE))
 
         circularProjectError?.let {
@@ -398,11 +385,6 @@ class LintDriver
             realClient.performInitializeProjects(projects)
         }
 
-        if (isCanceled) {
-            realClient.performDisposeProjects(projects)
-            return
-        }
-
         for (project in projects) {
             fireEvent(EventType.REGISTERED_PROJECT, project = project)
         }
@@ -414,7 +396,7 @@ class LintDriver
         // See if the lint.xml file specifies a baseline and we're not in incremental mode
         if (baseline == null && scope.size > 2) {
             val lastProject = Iterables.getLast(projects)
-            val mainConfiguration = client.getConfiguration(lastProject, this)
+            val mainConfiguration = lastProject.getConfiguration(this)
             val baselineFile = mainConfiguration.baselineFile
             if (baselineFile != null) {
                 baseline = LintBaseline(client, baselineFile)
@@ -442,9 +424,6 @@ class LintDriver
                 checkProjectTimeMs += measureTimeMillis {
                     checkProject(project, main)
                 }
-                if (isCanceled) {
-                    break
-                }
 
                 extraPhasesTimeMs += measureTimeMillis {
                     runExtraPhases(project, main)
@@ -453,12 +432,13 @@ class LintDriver
         } catch (throwable: Throwable) {
             // Process canceled etc
             if (!handleDetectorError(null, this, throwable)) {
-                cancel()
+                realClient.performDisposeProjects(projects)
+                return
             }
         }
 
         val baseline = this.baseline
-        if (baseline != null && !isCanceled) {
+        if (baseline != null) {
             val lastProject = Iterables.getLast(projects)
             val main = request.getMainProject(lastProject)
             reportBaselineIssuesTimeMs += measureTimeMillis {
@@ -466,7 +446,7 @@ class LintDriver
             }
         }
 
-        fireEvent(if (isCanceled) EventType.CANCELED else EventType.COMPLETED, null)
+        fireEvent(EventType.COMPLETED, null)
         disposeProjectsTimeMs += measureTimeMillis {
             realClient.performDisposeProjects(projects)
         }
@@ -549,9 +529,6 @@ class LintDriver
             }
 
             checkProject(project, main)
-            if (isCanceled) {
-                break
-            }
         } while (phase < MAX_PHASES && repeatingDetectors != null)
 
         scope = oldScope
@@ -811,10 +788,6 @@ class LintDriver
                     parent = parent.parentFile
                 }
             }
-
-            if (isCanceled) {
-                return emptySet()
-            }
         }
 
         for ((file, project) in fileToProject) {
@@ -881,10 +854,6 @@ class LintDriver
         fileToProject: MutableMap<File, Project>,
         rootDir: File
     ) {
-        if (isCanceled) {
-            return
-        }
-
         if (client.isProjectDirectory(dir)) {
             registerProjectFile(fileToProject, dir, dir, rootDir)
         } else {
@@ -904,9 +873,22 @@ class LintDriver
 
         // Set up inheritance of configurations from the library project to the main project
         val projectConfiguration = project.getConfiguration(this)
+        val leaf: Configuration?
+        val leafPrevParent: Configuration?
         if (main !== project) {
+            // Note that libraryConfig can have one or more parents who are also
+            // part of this library (e.g. for a Gradle library we can have one
+            // configuration for the DSL flags, another for the XML file it links
+            // via the lintConfig property, and finally a lint.xml in the project
+            // directory) so skip to the most distant parent that is still referencing
+            // this library
+            leaf = client.configurations.getScopeLeaf(projectConfiguration)
+            leafPrevParent = projectConfiguration.parent
             val mainConfiguration = main.getConfiguration(this)
-            client.configurations.setParent(projectConfiguration, mainConfiguration)
+            projectConfiguration.setParent(mainConfiguration)
+        } else {
+            leaf = null
+            leafPrevParent = null
         }
 
         val projectContext = Context(this, project, null, projectDir)
@@ -923,56 +905,16 @@ class LintDriver
         for (check in applicableDetectors) {
             check.beforeCheckRootProject(projectContext)
             check.beforeCheckEachProject(projectContext)
-            if (isCanceled) {
-                return
-            }
         }
 
         assert(currentProject === project)
         runFileDetectors(project, main)
-        if (isCanceled) {
-            return
-        }
-
         runDelayedRunnables()
 
         if (checkDependencies && !Scope.checkSingleFile(scope)) {
-            val libraries = project.allLibraries
-            for (library in libraries) {
-                // Set up configuration inheritance from the library project into the depending
-                // project
-                if (library.reportIssues) {
-                    val libraryConfiguration = library.getConfiguration(this)
-                    client.configurations.setParent(libraryConfiguration, projectConfiguration)
-                }
-
-                val libraryContext = Context(this, library, project, projectDir)
-                fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext)
-                currentProject = library
-
-                for (check in applicableDetectors) {
-                    check.beforeCheckEachProject(libraryContext)
-                    if (isCanceled) {
-                        return
-                    }
-                }
-                assert(currentProject === library)
-
-                runFileDetectors(library, main)
-                if (isCanceled) {
-                    return
-                }
-                assert(currentProject === library)
-
-                runDelayedRunnables()
-
-                for (check in applicableDetectors) {
-                    check.afterCheckEachProject(libraryContext)
-                    if (isCanceled) {
-                        return
-                    }
-                }
-            }
+            val libraries = project.directLibraries
+            val seen = HashSet<Project>(project.allLibraries.size)
+            analyzeDependencies(libraries, projectConfiguration, project, main, seen)
         }
 
         currentProject = project
@@ -984,23 +926,73 @@ class LintDriver
                     check.afterCheckRootProject(projectContext)
                 }
             )
-            if (isCanceled) {
-                return
-            }
-        }
-
-        if (isCanceled) {
-            client.report(
-                projectContext,
-                // Must provide an issue since API guarantees that the issue parameter
-                IssueRegistry.CANCELLED,
-                Severity.INFORMATIONAL,
-                Location.create(project.dir),
-                "Lint canceled by user", TextFormat.RAW, null
-            )
         }
 
         currentProjects = null
+
+        if (leaf != null) {
+            client.configurations.setParent(leaf, leafPrevParent)
+        }
+    }
+
+    private fun analyzeDependencies(
+        libraries: List<Project>,
+        projectConfiguration: Configuration?,
+        project: Project,
+        main: Project,
+        seen: MutableSet<Project>
+    ) {
+        for (library in libraries) {
+            if (!seen.add(library)) {
+                continue
+            }
+
+            // Set up configuration inheritance from the library project into the depending
+            // project.
+            if (projectConfiguration != null && library.reportIssues) {
+                val libraryConfig = library.getConfiguration(this)
+                val libraryConfigLeaf = client.configurations.getScopeLeaf(libraryConfig)
+                val libraryConfigPrevParent = libraryConfigLeaf.parent
+                libraryConfigLeaf.setParent(projectConfiguration)
+                try {
+                    analyzeLibraryProject(library, project, main)
+                    analyzeDependencies(
+                        library.directLibraries, libraryConfig, library, main, seen
+                    )
+                } finally {
+                    client.configurations.setParent(libraryConfigLeaf, libraryConfigPrevParent)
+                }
+            } else {
+                analyzeLibraryProject(library, project, main)
+                analyzeDependencies(
+                    library.directLibraries, null, library, main, seen
+                )
+            }
+        }
+    }
+
+    private fun analyzeLibraryProject(
+        library: Project,
+        project: Project,
+        main: Project
+    ) {
+        val libraryContext = Context(this, library, project, library.dir)
+        fireEvent(EventType.SCANNING_LIBRARY_PROJECT, libraryContext)
+        currentProject = library
+
+        for (check in applicableDetectors) {
+            check.beforeCheckEachProject(libraryContext)
+        }
+        assert(currentProject === library)
+
+        runFileDetectors(library, main)
+        assert(currentProject === library)
+
+        runDelayedRunnables()
+
+        for (check in applicableDetectors) {
+            check.afterCheckEachProject(libraryContext)
+        }
     }
 
     // The UAST source list of the last project analyzed.
@@ -1034,10 +1026,6 @@ class LintDriver
             }
             prepareUast(uastSourceList)
             cachedUastSourceList = CachedUastSourceList(project, uastSourceList)
-        }
-
-        if (isCanceled) {
-            return
         }
 
         // Look up manifest information (but not for library projects)
@@ -1136,10 +1124,6 @@ class LintDriver
                     }
                 }
             }
-
-            if (isCanceled) {
-                return
-            }
         }
 
         // Java & Kotlin
@@ -1151,10 +1135,6 @@ class LintDriver
             visitUast(project, main, uastSourceList, uastScanners)
         }
 
-        if (isCanceled) {
-            return
-        }
-
         if (scope.contains(Scope.CLASS_FILE) ||
             scope.contains(Scope.ALL_CLASS_FILES) ||
             scope.contains(Scope.JAVA_LIBRARIES)
@@ -1162,16 +1142,8 @@ class LintDriver
             checkClasses(project, main)
         }
 
-        if (isCanceled) {
-            return
-        }
-
         if (scope.contains(Scope.GRADLE_FILE)) {
             checkBuildScripts(project, main, uastSourceList)
-        }
-
-        if (isCanceled) {
-            return
         }
 
         if (scope.contains(Scope.OTHER)) {
@@ -1180,10 +1152,6 @@ class LintDriver
                 val visitor = OtherFileVisitor(checks)
                 visitor.scan(this, project, main)
             }
-        }
-
-        if (isCanceled) {
-            return
         }
 
         if (project === main && scope.contains(Scope.PROGUARD_FILE) &&
@@ -1398,10 +1366,6 @@ class LintDriver
             runClassDetectors(libraryDetectors, libraryEntries, project, main, fromLibrary = true)
         }
 
-        if (isCanceled) {
-            return
-        }
-
         val classDetectors = union(
             scopeDetectors[Scope.CLASS_FILE],
             scopeDetectors[Scope.ALL_CLASS_FILES]
@@ -1476,7 +1440,7 @@ class LintDriver
             } catch (t: Throwable) {
                 client.log(
                     null,
-                    "Error processing ${entry.path()}: broken class file? (${t.message})"
+                    "Error processing ${entry.path()}: broken class file? ($t)"
                 )
                 continue
             }
@@ -1534,10 +1498,11 @@ class LintDriver
 
             try {
                 visitor.runClassDetectors(context)
+            } catch (interrupt: ProcessCanceledException) {
+                throw interrupt
             } catch (throwable: Throwable) {
-                // Process canceled etc
                 if (!handleDetectorError(context, this, throwable)) {
-                    cancel()
+                    return
                 }
             }
 
@@ -1546,10 +1511,6 @@ class LintDriver
             // observed file count (which is usually taken to mean source files)
             // and with lots of inner classes, more than double.
             // fileCount++
-
-            if (isCanceled) {
-                return
-            }
 
             sourceContents = context.getSourceContents(false/*read*/)
             sourceName = classNode.name
@@ -1612,7 +1573,7 @@ class LintDriver
             } catch (t: Throwable) {
                 client.log(
                     null,
-                    "Error processing ${classFile.path}: broken class file? (${t.message})"
+                    "Error processing ${classFile.path}: broken class file? ($t)"
                 )
             }
         }
@@ -1667,7 +1628,7 @@ class LintDriver
         }
 
         // Even if checkGeneratedSources == false, we must include generated sources
-        // in our context list such that the source files are found by the Kotin analyzer
+        // in our context list such that the source files are found by the Kotlin analyzer
         sources.clear()
         for (folder in project.generatedSourceFolders) {
             gatherJavaFiles(folder, sources)
@@ -1805,9 +1766,6 @@ class LintDriver
                 javaFileCount++
             } else {
                 kotlinFileCount++
-            }
-            if (isCanceled) {
-                return true
             }
         }
 
@@ -1953,10 +1911,6 @@ class LintDriver
             if (type != null) {
                 checkResourceFolder(project, main, dir, type, xmlChecks, dirChecks, binaryChecks)
             }
-
-            if (isCanceled) {
-                return
-            }
         }
     }
 
@@ -2027,9 +1981,6 @@ class LintDriver
                     visitor.visitBinaryResource(context)
                     fileCount++
                     resourceFileCount++
-                }
-                if (isCanceled) {
-                    return
                 }
             }
         }
@@ -2111,9 +2062,6 @@ class LintDriver
                         visitor.visitBinaryResource(context)
                         fileCount++
                         resourceFileCount++
-                        if (isCanceled) {
-                            return
-                        }
                     }
                 }
             }
@@ -2262,10 +2210,6 @@ class LintDriver
             return delegate.getConfiguration(file)
         }
 
-        override fun getParentConfiguration(configuration: Configuration): Configuration? {
-            return delegate.getParentConfiguration(configuration)
-        }
-
         override fun log(
             severity: Severity,
             exception: Throwable?,
@@ -2316,11 +2260,6 @@ class LintDriver
 
         override val xmlParser: XmlParser
             get() = delegate.xmlParser
-
-        override fun replaceDetector(
-            detectorClass: Class<out Detector>
-        ): Class<out Detector> =
-            delegate.replaceDetector(detectorClass)
 
         override fun getSdkInfo(project: Project): SdkInfo = delegate.getSdkInfo(project)
 
@@ -2487,9 +2426,6 @@ class LintDriver
         var i = 0
         while (i < runLaterOutsideReadActionList.size) {
             runLaterOutsideReadActionList[i].run()
-            if (isCanceled) {
-                return
-            }
             ++i
         }
         runLaterOutsideReadActionList.clear()
@@ -3072,9 +3008,8 @@ class LintDriver
                     return true
                 }
                 throwable is ProcessCanceledException -> {
-                    // Cancelling inspections in the IDE
-                    driver.cancel()
-                    return false
+                    // Cancelling inspections in the IDE; bubble outwards without logging; the IDE will retry
+                    throw throwable
                 }
                 throwable is AssertionError &&
                     throwable.message?.startsWith("Already disposed: ") == true -> {

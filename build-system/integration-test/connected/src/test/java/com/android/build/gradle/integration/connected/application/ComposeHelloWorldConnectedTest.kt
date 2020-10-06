@@ -35,7 +35,7 @@ class ComposeHelloWorldConnectedTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
-        // b/146163513
+        // b/158092419
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
@@ -43,6 +43,9 @@ class ComposeHelloWorldConnectedTest {
     fun setUp() {
         // fail fast if no response
         project.getSubproject("app").addAdbTimeOutInMs()
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll")
     }
 
     @Test

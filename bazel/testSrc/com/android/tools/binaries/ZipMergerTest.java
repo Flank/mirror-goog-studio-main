@@ -23,14 +23,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -40,221 +37,111 @@ import org.junit.Test;
 public class ZipMergerTest {
 
     @Test
-    public void testAddToZip() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File b = createFile("b.txt", "BB");
-        File res = newFile("res.zip");
-        ZipMerger.main(new String[]{
-                "c",
-                res.getAbsolutePath(),
-                "place/here/a.txt=" + a.getAbsolutePath(),
-                "place/here/b.txt=" + b.getAbsolutePath(),
-        });
-
-        assertZipEquals(res,
-                "place/here/a.txt", "AA",
-                "place/here/b.txt", "BB");
-    }
-
-    @Test
-    public void testAddZipToZip() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File zip = createZipFile("zip.zip",
-                "place/here/b.txt", "BB",
-                "place/here/c.txt", "CC");
-
-        File res = newFile("res.zip");
-        ZipMerger.main(new String[]{
-                "c",
-                res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/o.zip=" + zip.getAbsolutePath(),
-        });
-
-        assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/o.zip!place/here/b.txt", "BB",
-                "new/o.zip!place/here/c.txt", "CC");
-    }
-
-    @Test
-    public void testFlattenZip() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File zip = createZipFile("zip.zip",
-                "place/here/b.txt", "BB",
-                "place/here/c.txt", "CC");
-
-        File res = newFile("res.zip");
-        ZipMerger.main(new String[]{
-                "c",
-                res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/path/=+" + zip.getAbsolutePath(),
-        });
-
-        assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/path/place/here/b.txt", "BB",
-                "new/path/place/here/c.txt", "CC");
-    }
-
-    @Test
-    public void testFlattenZipWithZip() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File zip = createZipFile("zip.zip",
-                "place/here/b.txt", "BB",
-                "place/here/c.txt", "CC",
-                "place/here/d.zip!one.txt", "11",
-                "place/here/d.zip!two.txt", "22");
-
-        File res = newFile("res.zip");
-        ZipMerger.main(new String[]{
-                "c",
-                res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/path/=+" + zip.getAbsolutePath(),
-        });
-
-        assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/path/place/here/b.txt", "BB",
-                "new/path/place/here/c.txt", "CC",
-                "new/path/place/here/d.zip!one.txt", "11",
-                "new/path/place/here/d.zip!two.txt", "22");
-    }
-
-    @Test
-    public void testAddZipToZipWithOverride() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File zip = createZipFile("zip.zip",
-                "place/here/b.txt", "BB",
-                "place/here/c.txt", "CC");
-        File x = createFile("x.txt", "XX");
-
-        File res = newFile("res.zip");
-        ZipMerger.main(new String[]{
-                "c",
-                res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/o.zip=" + zip.getAbsolutePath(),
-                "#new/o.zip!place/here/b.txt=" + x.getAbsolutePath(),
-        });
-
-        assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/o.zip!place/here/b.txt", "XX",
-                "new/o.zip!place/here/c.txt", "CC");
-    }
-
-    @Test
-    public void testFlattenZipWithZipAndOverride() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File zip = createZipFile("zip.zip",
-                "place/here/b.txt", "BB",
-                "place/here/c.txt", "CC",
-                "place/here/d.zip!one.txt", "11",
-                "place/here/d.zip!two.txt", "22");
-
-        File x = createFile("x.txt", "XX");
-        File res = newFile("res.zip");
-        ZipMerger.main(new String[]{
-                "c",
-                res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/path/=+" + zip.getAbsolutePath(),
-                "#new/path/place/here/d.zip!one.txt=" + x.getAbsolutePath(),
-        });
-
-        assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/path/place/here/b.txt", "BB",
-                "new/path/place/here/c.txt", "CC",
-                "new/path/place/here/d.zip!one.txt", "XX",
-                "new/path/place/here/d.zip!two.txt", "22");
-    }
-
-    @Test
-    public void testFlattenZipWithZipAndInject() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File zip = createZipFile("zip.zip",
-                "place/here/b.txt", "BB",
-                "place/here/c.txt", "CC",
-                "place/here/d.zip!two.txt", "22");
-
-        File x = createFile("x.txt", "XX");
-        File res = newFile("res.zip");
-        ZipMerger.main(new String[]{
-                "c",
-                res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/path/=+" + zip.getAbsolutePath(),
-                "#new/path/place/here/d.zip!one.txt=" + x.getAbsolutePath(),
-        });
-
-        assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/path/place/here/b.txt", "BB",
-                "new/path/place/here/c.txt", "CC",
-                "new/path/place/here/d.zip!one.txt", "XX",
-                "new/path/place/here/d.zip!two.txt", "22");
-    }
-
-    @Test
-    public void testAddZipToZipWithTwoOverrides() throws Exception {
-        File a = createFile("a.txt", "AA");
+    public void testMergeTwoZips() throws Exception {
         File zip1 = createZipFile("zip1.zip",
-                "one/b.txt", "BB",
-                "two/c.txt", "CC");
+                "place/here/b.txt", "BB",
+                "place/here/c.txt", "CC");
         File zip2 = createZipFile("zip2.zip",
-                "three/d.txt", "DD");
-        File x = createFile("x.txt", "XX");
-        File y = createFile("y.txt", "YY");
+                "place/here/d.txt", "DD",
+                "place/here/e.txt", "EE");
 
         File res = newFile("res.zip");
         ZipMerger.main(new String[]{
                 "c",
                 res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/o.zip=" + zip1.getAbsolutePath(),
-                "new/p.zip=" + zip2.getAbsolutePath(),
-                "#new/o.zip!one/b.txt=" + x.getAbsolutePath(),
-                "#new/p.zip!three/d.txt=" + y.getAbsolutePath(),
+                "prefix/=" + zip1.getAbsolutePath(),
+                "prefix/=" + zip2.getAbsolutePath(),
         });
 
         assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/o.zip!one/b.txt", "XX",
-                "new/o.zip!two/c.txt", "CC",
-                "new/p.zip!three/d.txt", "YY");
+                "prefix/place/here/b.txt", "BB",
+                "prefix/place/here/c.txt", "CC",
+                "prefix/place/here/d.txt", "DD",
+                "prefix/place/here/e.txt", "EE");
     }
 
     @Test
-    public void testFlattenZipWithZipAndTwoOverridesSameFile() throws Exception {
-        File a = createFile("a.txt", "AA");
-        File zip = createZipFile("zip.zip",
+    public void testRecursiveMerge() throws Exception {
+        File zip1 = createZipFile("zip1.zip",
                 "place/here/b.txt", "BB",
                 "place/here/c.txt", "CC",
                 "place/here/d.zip!one.txt", "11",
-                "place/here/d.zip!two.txt", "22");
+                "place/here/e.zip!two.txt", "22");
+        File zip2 = createZipFile("zip2.zip",
+                "prefix/place/here/f.txt", "FF",
+                "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/g.zip!four.txt", "44");
 
-        File x = createFile("x.txt", "XX");
-        File y = createFile("y.txt", "YY");
         File res = newFile("res.zip");
         ZipMerger.main(new String[]{
                 "c",
                 res.getAbsolutePath(),
-                "new/a.txt=" + a.getAbsolutePath(),
-                "new/path/=+" + zip.getAbsolutePath(),
-                "#new/path/place/here/d.zip!one.txt=" + x.getAbsolutePath(),
-                "#new/path/place/here/d.zip!two.txt=" + y.getAbsolutePath(),
+                "prefix/=" + zip1.getAbsolutePath(),
+                "+" + zip2.getAbsolutePath(),
         });
 
         assertZipEquals(res,
-                "new/a.txt", "AA",
-                "new/path/place/here/b.txt", "BB",
-                "new/path/place/here/c.txt", "CC",
-                "new/path/place/here/d.zip!one.txt", "XX",
-                "new/path/place/here/d.zip!two.txt", "YY");
+                "prefix/place/here/b.txt", "BB",
+                "prefix/place/here/c.txt", "CC",
+                "prefix/place/here/f.txt", "FF",
+                "prefix/place/here/d.zip!one.txt", "11",
+                "prefix/place/here/e.zip!two.txt", "22",
+                "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/g.zip!four.txt", "44");
+    }
+
+    @Test
+    public void testMergeTwoZipsWithOverlap() throws Exception {
+        File zip1 = createZipFile("zip1.zip",
+                "place/here/b.txt", "BB",
+                "place/here/c.txt", "CC");
+        File zip2 = createZipFile("zip2.zip",
+                "place/here/d.txt", "DD",
+                "place/here/c.txt", "OO");
+
+        File res = newFile("res.zip");
+        ZipMerger.main(new String[]{
+                "c",
+                res.getAbsolutePath(),
+                "prefix/=" + zip1.getAbsolutePath(),
+                "prefix/=+" + zip2.getAbsolutePath(),
+        });
+
+        assertZipEquals(res,
+                "prefix/place/here/b.txt", "BB",
+                "prefix/place/here/c.txt", "OO",
+                "prefix/place/here/d.txt", "DD");
+    }
+
+    @Test
+    public void testRecursiveMergeWithOverlap() throws Exception {
+        File zip1 = createZipFile("zip1.zip",
+                "place/here/b.txt", "BB",
+                "place/here/c.txt", "CC",
+                "place/here/d.zip!one.txt", "11",
+                "place/here/e.zip!two.txt", "22");
+        File zip2 = createZipFile("zip2.zip",
+                "prefix/place/here/f.txt", "FF",
+                "prefix/place/here/e.zip!two.txt", "OO",
+                "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/g.zip!four.txt", "44");
+
+        File res = newFile("res.zip");
+        ZipMerger.main(new String[]{
+                "c",
+                res.getAbsolutePath(),
+                "prefix/=" + zip1.getAbsolutePath(),
+                "+" + zip2.getAbsolutePath(),
+        });
+
+        assertZipEquals(res,
+                "prefix/place/here/b.txt", "BB",
+                "prefix/place/here/c.txt", "CC",
+                "prefix/place/here/f.txt", "FF",
+                "prefix/place/here/d.zip!one.txt", "11",
+                "prefix/place/here/e.zip!two.txt", "OO",
+                "prefix/place/here/e.zip!three.txt", "33",
+                "prefix/place/here/g.zip!four.txt", "44");
     }
 
     private void assertZipEquals(File zip, String... args) throws Exception {
@@ -314,10 +201,11 @@ public class ZipMergerTest {
                     String prefix = name.substring(0, ix + 1);
                     ArrayList<String> innerNames = new ArrayList<>();
                     ArrayList<String> innerContents = new ArrayList<>();
-                    while (i < names.size() && names.get(i).startsWith(prefix)) {
+                    i--;
+                    while (i + 1 < names.size() && names.get(i + 1).startsWith(prefix)) {
+                        i++;
                         innerNames.add(names.get(i).substring(ix + 1));
                         innerContents.add(contents.get(i));
-                        i++;
                     }
                     zipOut.putNextEntry(new ZipEntry(name.substring(0, ix)));
                     byte[] bytes = createZipFile(innerNames, innerContents);
@@ -335,13 +223,5 @@ public class ZipMergerTest {
     private File newFile(String name) {
         String tmp = System.getenv("TEST_TMPDIR");
         return new File(tmp, name);
-    }
-
-    private File createFile(String name, String content) throws Exception {
-        File file = newFile(name);
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(content.getBytes(StandardCharsets.UTF_8));
-        };
-        return file;
     }
 }

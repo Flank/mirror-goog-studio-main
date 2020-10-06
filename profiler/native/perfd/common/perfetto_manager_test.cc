@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 #include "perfetto_manager.h"
-#include "fake_perfetto.h"
-#include "utils/fake_clock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include "fake_perfetto.h"
+#include "utils/fake_clock.h"
 
 using std::string;
 namespace profiler {
@@ -82,8 +83,11 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   const int buffer_size_kb = 32000;
   perfetto::protos::TraceConfig config =
       PerfettoManager::BuildFtraceConfig(app_name, buffer_size_kb);
+  EXPECT_EQ(config.data_sources().size(), 3);
   // Assume the format of the config, perfetto doesn't care about the order but
   // for the test we assume its order so we don't need to search for data.
+
+  // Ftrace config
   const auto& ftrace_config = config.data_sources()[0].config().ftrace_config();
   EXPECT_EQ(ftrace_config.atrace_apps()[0], "*");
   // The minimal set of atrace categories needed is sched.
@@ -100,6 +104,11 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   }
   EXPECT_EQ(categories_found, categories_size);
   EXPECT_EQ(config.buffers()[0].size_kb(), buffer_size_kb);
+
+  // Process stats
+  EXPECT_EQ(config.data_sources()[1].config().name(), "linux.process_stats");
+  // CPU information
+  EXPECT_EQ(config.data_sources()[2].config().name(), "linux.system_info");
 }
 
 TEST(PerfettoManagerTest, ValidateShutdownErrors) {
@@ -172,8 +181,8 @@ TEST(PerfettoManagerTest, ValidateHeapprofdConfig) {
   int sample_bytes = 1234;
   int shmem_size = 4567;
   int dump_interval = 7890;
-  perfetto::protos::TraceConfig config =
-      PerfettoManager::BuildHeapprofdConfig(app_name, sample_bytes, dump_interval, shmem_size);
+  perfetto::protos::TraceConfig config = PerfettoManager::BuildHeapprofdConfig(
+      app_name, sample_bytes, dump_interval, shmem_size);
   // Validate we write to file at some interval.
   EXPECT_TRUE(config.write_into_file());
   EXPECT_GT(config.file_write_period_ms(), 0);
@@ -184,7 +193,8 @@ TEST(PerfettoManagerTest, ValidateHeapprofdConfig) {
   EXPECT_EQ(heap_config.sampling_interval_bytes(), sample_bytes);
   EXPECT_EQ(heap_config.process_cmdline()[0], app_name);
   EXPECT_EQ(heap_config.shmem_size_bytes(), shmem_size);
-  EXPECT_EQ(heap_config.continuous_dump_config().dump_interval_ms(), dump_interval);
+  EXPECT_EQ(heap_config.continuous_dump_config().dump_interval_ms(),
+            dump_interval);
   EXPECT_TRUE(heap_config.all_heaps());
   EXPECT_TRUE(heap_config.block_client());
 }

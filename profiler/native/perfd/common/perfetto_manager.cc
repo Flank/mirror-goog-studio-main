@@ -15,8 +15,8 @@
  *
  */
 #include "perfetto_manager.h"
-#include "perfetto.h"
 
+#include "perfetto.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/trace.h"
 
@@ -205,6 +205,11 @@ perfetto::protos::TraceConfig PerfettoManager::BuildFtraceConfig(
   proc->set_scan_all_processes_on_start(true);
   proc->set_record_thread_names(true);
   proc->set_proc_stats_poll_ms(1000);
+
+  // Add config to get CPU information from procfs and sysfs.
+  source = config.add_data_sources();
+  data_config = source->mutable_config();
+  data_config->set_name("linux.system_info");
 
   return config;
 }

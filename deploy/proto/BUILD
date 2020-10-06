@@ -6,6 +6,7 @@ package(default_visibility = ["//tools/base/deploy:__subpackages__"])
 cc_grpc_proto_library(
     name = "cc_proto",
     srcs = glob(["*.proto"]),
+    include_prefix = "proto",
     tags = ["no_windows"],
 )
 

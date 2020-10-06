@@ -117,7 +117,10 @@ public class AndroidArtifacts {
     private static final String TYPE_BASE_MODULE_METADATA = "android-base-module-metadata";
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
     private static final String TYPE_FEATURE_DEX = "android-feature-dex";
-    private static final String TYPE_FEATURE_SIGNING_CONFIG = "android-feature-signing-config";
+    private static final String TYPE_FEATURE_SIGNING_CONFIG_DATA =
+            "android-feature-signing-config-data";
+    private static final String TYPE_FEATURE_SIGNING_CONFIG_VERSIONS =
+            "android-feature-signing-config-versions";
     private static final String TYPE_FEATURE_NAME = "android-feature-name";
 
     // types for reverse metadata content.
@@ -392,7 +395,12 @@ public class AndroidArtifacts {
         // the res ID offset, both tied to the feature module path. Published by the base for the
         // other features to consume and find their own metadata.
         FEATURE_SET_METADATA(TYPE_FEATURE_SET_METADATA),
-        FEATURE_SIGNING_CONFIG(TYPE_FEATURE_SIGNING_CONFIG),
+        // file containing the signing config data to be used by any features. Published by the base
+        // for the features to consume.
+        FEATURE_SIGNING_CONFIG_DATA(TYPE_FEATURE_SIGNING_CONFIG_DATA),
+        // file containing the signing config versions to be used by any features. Published by the
+        // base for the features to consume.
+        FEATURE_SIGNING_CONFIG_VERSIONS(TYPE_FEATURE_SIGNING_CONFIG_VERSIONS),
 
         // file containing the base module info (appId, versionCode, debuggable, ...).
         // This is published by the base module and read by the dynamic feature modules

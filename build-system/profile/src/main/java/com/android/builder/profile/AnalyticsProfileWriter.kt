@@ -16,11 +16,8 @@
 
 package com.android.builder.profile
 
-import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.CommonMetricsData
-import com.android.tools.analytics.Environment
 import com.android.tools.analytics.UsageTracker
-import com.android.utils.ILogger
 import com.android.utils.PathUtils
 import com.android.utils.StdLogger
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
@@ -47,12 +44,10 @@ class AnalyticsProfileWriter {
         "'profile-'yyyy-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US)
     private val scheduledExecutorService: ScheduledExecutorService
             = Executors.newScheduledThreadPool(1)
-    private val logger = StdLogger(StdLogger.Level.INFO)
 
     fun writeAndFinish(
         profile: GradleBuildProfile,
         events: List<AndroidStudioEvent.Builder>,
-        environment: Environment,
         profileDir: File?,
         enableProfileJson: Boolean
     ) {
@@ -61,7 +56,6 @@ class AnalyticsProfileWriter {
                 writeAnalytics(
                     profile,
                     events,
-                    environment,
                     enableProfileJson,
                     profileDir
                 )
@@ -70,7 +64,6 @@ class AnalyticsProfileWriter {
             writeAnalytics(
                 profile,
                 events,
-                environment,
                 enableProfileJson,
                 profileDir
             )
@@ -80,12 +73,14 @@ class AnalyticsProfileWriter {
     private fun writeAnalytics(
         profile: GradleBuildProfile,
         events: List<AndroidStudioEvent.Builder>,
-        environment: Environment,
         enableChromeTracingOutput: Boolean,
         profileDir: File?
     ) {
         synchronized(gate) {
-            initializeAnalytics(logger, scheduledExecutorService, environment)
+            // UsageTracker is initialized when analytics service instance is created but we still
+            // have to make sure it is initialized here because another analytics service instance
+            // might de-initialize UsageTracker in the context of composite build.
+            initializeUsageTracker()
 
             UsageTracker.log(
                 AndroidStudioEvent.newBuilder()
@@ -115,12 +110,8 @@ class AnalyticsProfileWriter {
         }
     }
 
-    private fun initializeAnalytics(
-        logger: ILogger,
-        eventLoop: ScheduledExecutorService,
-        environment: Environment
-    ) {
-        UsageTracker.initialize(eventLoop)
+    fun initializeUsageTracker() {
+        UsageTracker.initialize(scheduledExecutorService)
         UsageTracker.setMaxJournalTime(10, TimeUnit.MINUTES)
         UsageTracker.maxJournalSize = 1000
     }

@@ -18,12 +18,10 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
-import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ApkPackagingOptions
-import com.android.build.api.variant.SigningConfig
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.*
 import com.android.build.api.variant.impl.*
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
@@ -267,16 +265,16 @@ open class AndroidTestImpl @Inject constructor(
     override val needsMainDexListForBundle: Boolean
         get() = false
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledAndroidTest =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledAndroidTest::class.java,
-            this
-,
-            stats
-        )
+    override fun <T : Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledAndroidTest::class.java,
+                    this,
+                    stats
+            ) as T
 
     override val shouldPackageProfilerDependencies: Boolean = false
 

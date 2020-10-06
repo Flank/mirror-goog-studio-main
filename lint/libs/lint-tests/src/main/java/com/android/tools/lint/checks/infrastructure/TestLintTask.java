@@ -35,6 +35,7 @@ import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
+import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JarFileIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
@@ -68,7 +69,9 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +106,7 @@ public class TestLintTask {
     LintDriverConfigurator driverConfigurator;
     OptionSetter optionSetter;
     ErrorMessageChecker messageChecker;
+    ProjectInspector projectInspector;
     String variantName;
     EnumSet<Scope> customScope;
     public boolean forceSymbolResolutionErrors;
@@ -118,6 +122,7 @@ public class TestLintTask {
     boolean allowNetworkAccess;
     boolean allowDuplicates;
     File rootDirectory;
+    File tempDir = Files.createTempDir();
     private TestFile baseline;
     File baselineFile;
     Set<Desugaring> desugaring;
@@ -516,6 +521,19 @@ public class TestLintTask {
     }
 
     /**
+     * Configures a custom callback after lint has run but before the run context has been disposed,
+     * which lets you analyze the client and project state.
+     *
+     * @param inspector the inspector to invoke
+     * @return this, for constructor chaining
+     */
+    public TestLintTask checkProjects(@NonNull ProjectInspector inspector) {
+        ensurePreRun();
+        this.projectInspector = inspector;
+        return this;
+    }
+
+    /**
      * Configures lint to run with a custom lint client instead of the default one.
      *
      * @param client the custom client to use
@@ -759,13 +777,18 @@ public class TestLintTask {
         alreadyRun = true;
         ensureConfigured();
 
-        File rootDir = rootDirectory != null ? rootDirectory : Files.createTempDir();
+        File rootDir = rootDirectory != null ? rootDirectory : tempDir;
         try {
             // Use canonical path to make sure we don't end up failing
             // to chop off the prefix from Project#getDisplayPath
             rootDir = rootDir.getCanonicalFile();
         } catch (IOException ignore) {
         }
+
+        // Make sure tests don't pick up random things outside the test directory.
+        // I had accidentally placed a file named lint.xml in /tmp, and this caused
+        // a number of confusing failures!
+        ConfigurationHierarchy.Companion.setDefaultRootDir(tempDir);
 
         if (platforms == null) {
             platforms = computePlatforms(getCheckedIssues());
@@ -790,6 +813,14 @@ public class TestLintTask {
             String output = result.getFirst();
             List<Incident> incidents = result.getSecond();
 
+            if (projectInspector != null) {
+                Collection<Project> knownProjects = lintClient.getKnownProjects();
+                List<Project> projects = new ArrayList<>(knownProjects);
+                LintDriver driver = lintClient.getDriver();
+                projects.sort(Comparator.comparing(Project::getName));
+                projectInspector.inspect(driver, projects);
+            }
+
             // Test both with and without UInjectionHost
             if (checkUInjectionHost && haveKotlinTestFiles()) {
                 setForceUiInjection(true);
@@ -813,9 +844,7 @@ public class TestLintTask {
         } catch (Throwable e) {
             return new TestLintResult(this, rootDir, null, e, Collections.emptyList());
         } finally {
-            if (rootDirectory == null) { // Only delete if we created it above
-                TestUtils.deleteFile(rootDir);
-            }
+            TestUtils.deleteFile(tempDir);
         }
     }
 
@@ -1205,11 +1234,13 @@ public class TestLintTask {
      *
      * <p>Register this configurator via {@link #driverConfigurator)}.
      */
+    @FunctionalInterface
     public interface LintDriverConfigurator {
         void configure(@NonNull LintDriver driver);
     }
 
     /** Interface to implement a lint test task which customizes the command line flags */
+    @FunctionalInterface
     public interface OptionSetter {
         void set(@NonNull LintCliFlags flags);
     }
@@ -1219,6 +1250,7 @@ public class TestLintTask {
      *
      * <p>Register this checker via {@link #checkMessage(ErrorMessageChecker)})}.
      */
+    @FunctionalInterface
     public interface ErrorMessageChecker {
         void checkReportedError(
                 @NonNull Context context,
@@ -1227,5 +1259,15 @@ public class TestLintTask {
                 @NonNull Location location,
                 @NonNull String message,
                 @Nullable LintFix fixData);
+    }
+
+    /**
+     * Interface to implement a lint test task which inspects the known projects after lint has run.
+     *
+     * <p>Register this checker via {@link #checkProjects(ProjectInspector)}.
+     */
+    @FunctionalInterface
+    public interface ProjectInspector {
+        void inspect(@NonNull LintDriver driver, @NonNull List<Project> knownProjects);
     }
 }

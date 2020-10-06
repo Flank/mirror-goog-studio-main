@@ -126,6 +126,34 @@ public class StaticVarInitTest extends AgentBasedClassRedefinerTestBase {
     }
 
     @Test
+    public void testRemoveStaticVar() throws Exception {
+        // Available only with test flag turned on.
+        Assume.assumeTrue(artFlag != null);
+
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        // Our Deployer / D8 computes this but since we don't invoke them from this test, we
+        // manually create it here.
+
+        Deploy.SwapRequest request =
+                createRequest(
+                        "app.StaticVarInit$RemoveStaticFinalPrimitives",
+                        "app/StaticVarInit$RemoveStaticFinalPrimitives.dex",
+                        false,
+                        Deploy.ClassDef.FieldReInitState.newBuilder()
+                                .setName("X_INT_NOT_THERE")
+                                .setType("I")
+                                .setStaticVar(true)
+                                .setValue("99")
+                                .setState(Deploy.ClassDef.FieldReInitState.VariableState.CONSTANT)
+                                .build());
+        redefiner.redefine(request);
+        Deploy.AgentSwapResponse response = redefiner.getSwapAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
+    }
+
+    @Test
     public void testInitNonStaticNotSupported() throws Exception {
         // Available only with test flag turned on.
         Assume.assumeTrue(artFlag != null);

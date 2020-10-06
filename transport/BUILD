@@ -6,9 +6,7 @@ cc_binary(
     srcs = ["native/main/transport.cc"],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
         "-Itools/base/echo-sample",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = ANDROID_LINKOPTS + [
         "-ldl",  # Needed for dladdr referenced in TermincationService

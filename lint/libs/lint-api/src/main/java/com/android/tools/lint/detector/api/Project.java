@@ -759,6 +759,7 @@ public class Project {
     public Configuration getConfiguration(@Nullable LintDriver driver) {
         if (configuration == null) {
             configuration = client.getConfiguration(this, driver);
+            configuration.setFileLevel(false);
         }
         return configuration;
     }

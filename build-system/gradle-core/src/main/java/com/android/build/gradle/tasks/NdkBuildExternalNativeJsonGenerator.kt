@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
+import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.base.Charsets

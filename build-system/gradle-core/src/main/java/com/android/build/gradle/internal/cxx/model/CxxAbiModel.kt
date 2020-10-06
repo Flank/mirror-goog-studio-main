@@ -26,16 +26,16 @@ import java.io.File
 /**
  * Holds immutable ABI-level information for C/C++ build and sync, see README.md
  */
-interface CxxAbiModel {
+data class CxxAbiModel(
     /**
      * The target ABI
      */
-    val abi: Abi
+    val abi: Abi,
 
     /**
      * Metadata about the ABI
      */
-    val info: AbiInfo
+    val info: AbiInfo,
 
     /**
      * The gradle-controlled .cxx build folder. By default, the same as [cxxBuildFolder] but this
@@ -43,40 +43,40 @@ interface CxxAbiModel {
      *
      *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
      */
-    val originalCxxBuildFolder: File
+    val originalCxxBuildFolder: File,
 
     /**
      * The .cxx build folder
      *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
      */
-    val cxxBuildFolder: File
+    val cxxBuildFolder: File,
 
     /**
      * The final platform version for this ABI (ex 28)
      */
-    val abiPlatformVersion: Int
+    val abiPlatformVersion: Int,
 
     /**
      * CMake-specific settings for this ABI. Return null if this isn't CMake.
      */
-    val cmake: CxxCmakeAbiModel?
+    val cmake: CxxCmakeAbiModel?,
 
     /**
      * The variant for this ABI
      */
-    val variant: CxxVariantModel
+    val variant: CxxVariantModel,
 
     /**
      * Ninja/gnu make build settings specified by BuildSettings.json. Returns an empty
      * model if the file is absent.
      */
-    val buildSettings: BuildSettingsConfiguration
+    val buildSettings: BuildSettingsConfiguration,
 
     /**
      * The directory containing generated Prefab imports, if any.
      */
     val prefabFolder: File
-}
+)
 
 /**
  * The model json
@@ -204,6 +204,6 @@ fun CxxAbiModel.shouldGeneratePrefabPackages(): Boolean {
     // Prefab will fail if we try to create ARMv5/MIPS/MIPS64 modules. r17 was the first NDK version
     // that we can guarantee will not be used to use those ABIs.
     return (variant.module.project.isPrefabEnabled
-            && variant.prefabPackageDirectoryList.isNotEmpty()
+            && (variant.prefabPackageDirectoryListFileCollection != null)
             && variant.module.ndkVersion.major >= 17)
 }

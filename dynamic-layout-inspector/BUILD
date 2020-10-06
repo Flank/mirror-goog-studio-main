@@ -119,22 +119,11 @@ cc_binary(
 flat_archive(
     name = "skiaparser",
     ext = "zip",
-    deps = select({
-        "windows": {
-            "files/version-map.xml": "skiaparser",
-            ":skia-grpc-server": "skiaparser",
-            "files/source.properties": "skiaparser",
-            "files/vcruntime140.dll": "skiaparser",
-            "files/vcruntime140_1.dll": "skiaparser",
-            "files/msvcp140.dll": "skiaparser",
-            "files/NOTICE.txt": "skiaparser",
-        },
-        "//conditions:default": {
-            "files/version-map.xml": "skiaparser",
-            ":skia-grpc-server": "skiaparser",
-            "files/source.properties": "skiaparser",
-        },
-    }),
+    deps = {
+        "files/version-map.xml": "skiaparser",
+        ":skia-grpc-server": "skiaparser",
+        "files/source.properties": "skiaparser",
+    },
 )
 
 cc_library(
@@ -150,8 +139,6 @@ cc_library(
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
@@ -178,8 +165,6 @@ cc_library(
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
@@ -199,8 +184,6 @@ cc_library(
     srcs = ["src/test/native/testing/component_tree_test_java_jni.cc"],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],

@@ -187,7 +187,7 @@ abstract class CommonExtensionImpl<
     }
 
     override val packagingOptions: PackagingOptions =
-        dslServices.newInstance(PackagingOptions::class.java)
+        dslServices.newInstance(PackagingOptions::class.java, dslServices)
 
     override fun packagingOptions(action: com.android.build.api.dsl.PackagingOptions.() -> Unit) {
         action.invoke(packagingOptions)

@@ -93,6 +93,7 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.jetbrains.annotations.NotNull;
 
 /** TaskManager for creating tasks in an Android library project. */
 public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, LibraryVariantImpl> {
@@ -109,9 +110,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl> variantInfo,
-            @NonNull
-                    List<ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>>
+            @NotNull ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl> variantInfo,
+            @NotNull
+                    List<? extends ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>>
                             allVariants) {
 
         LibraryVariantImpl libraryVariant = variantInfo.getVariant();
@@ -173,7 +174,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                     globalScope.getProjectBaseName());
 
             // Only verify resources if in Release and not namespaced.
-            if (!libraryVariant.getVariantDslInfo().isDebuggable()
+            if (!libraryVariant.getDebuggable()
                     && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
                 createVerifyLibraryResTask(libraryVariant);
             }
@@ -201,8 +202,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libraryVariant));
 
         // External native build
-        createExternalNativeBuildJsonGenerators(variantInfo.getVariantBuilder(), libraryVariant);
-        createExternalNativeBuildTasks(variantInfo.getVariantBuilder(), libraryVariant);
+        createExternalNativeBuildTasks(libraryVariant);
 
         createMergeJniLibFoldersTasks(libraryVariant);
 

@@ -138,6 +138,7 @@ public class MinifyLibAndAppKeepRules {
                 .named("keep rules libraryjars")
                 .containsExactly(
                         "android.jar",
+                        "android.car.jar",
                         "core-lambda-stubs.jar",
                         "org.apache.http.legacy.jar",
                         "android.test.mock.jar",

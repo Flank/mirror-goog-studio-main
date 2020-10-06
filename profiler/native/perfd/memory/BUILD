@@ -32,8 +32,6 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
     deps = [
@@ -56,9 +54,6 @@ cc_test(
     ],
     copts = [
         "-Itools/base/profiler/native",
-        "-Itools/base/transport/native",
-        "-Itools/base/transport/native/tests",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     data = [
         "//tools/base/profiler/native/testdata:perfd/memory",
@@ -71,6 +66,7 @@ cc_test(
         "//tools/base/profiler/native/perfd/common:perfetto",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/native/tests/test:testutils",
+        "//tools/base/transport/proto:cc_proto",
         "@googletest//:gtest_main",
     ],
 )

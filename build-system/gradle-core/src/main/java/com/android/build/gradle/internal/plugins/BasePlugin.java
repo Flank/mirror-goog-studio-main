@@ -28,7 +28,7 @@ import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
-import com.android.build.api.extension.impl.OperationsRegistrar;
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.Variant;
 import com.android.build.api.variant.impl.GradleProperty;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
@@ -148,9 +148,6 @@ public abstract class BasePlugin<
     private BaseExtension extension;
     private AndroidComponentsExtension<? extends ComponentBuilder, ? extends Variant>
             androidComponentsExtension;
-    private final OperationsRegistrar<VariantBuilderT> variantBuilderOperations =
-            new OperationsRegistrar<>();
-    private final OperationsRegistrar<VariantT> variantOperations = new OperationsRegistrar<>();
 
     private VariantManager<VariantBuilderT, VariantT> variantManager;
     private LegacyVariantInputManager variantInputModel;
@@ -208,8 +205,9 @@ public abstract class BasePlugin<
     @NonNull
     protected abstract AndroidComponentsT createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<VariantBuilderT> variantBuilderOperationsRegistrar,
-            @NonNull OperationsRegistrar<VariantT> variantOperationsRegistrar);
+            @NonNull
+                    VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
+                            variantApiOperationsRegistrar);
 
     @NonNull
     protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
@@ -465,8 +463,9 @@ public abstract class BasePlugin<
 
         globalScope.setExtension(extension);
 
-        androidComponentsExtension =
-                createComponentExtension(dslServices, variantBuilderOperations, variantOperations);
+        VariantApiOperationsRegistrar<VariantBuilderT, VariantT> variantApiOperations =
+                new VariantApiOperationsRegistrar<>();
+        androidComponentsExtension = createComponentExtension(dslServices, variantApiOperations);
 
         variantManager =
                 new VariantManager(
@@ -474,8 +473,7 @@ public abstract class BasePlugin<
                         project,
                         projectServices.getProjectOptions(),
                         extension,
-                        variantBuilderOperations,
-                        variantOperations,
+                        variantApiOperations,
                         variantFactory,
                         variantInputModel,
                         projectServices);

@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -109,6 +110,13 @@ public class DeployerRunner {
             apks.add(parameters.get(i));
         }
 
+        EnumSet<ChangeType> optimisticInstallSupport = EnumSet.noneOf(ChangeType.class);
+        if (parameters.isOptimisticInstall()) {
+            optimisticInstallSupport.add(ChangeType.DEX);
+            optimisticInstallSupport.add(ChangeType.NATIVE_LIBRARY);
+            optimisticInstallSupport.add(ChangeType.RESOURCE);
+        }
+
         metrics.getDeployMetrics().clear();
         AdbClient adb = new AdbClient(device, logger);
         Installer installer =
@@ -123,6 +131,7 @@ public class DeployerRunner {
                         .setUseStructuralRedefinition(true)
                         .setUseVariableReinitialization(true)
                         .setFastRestartOnSwapFail(false)
+                        .setOptimisticInstallSupport(optimisticInstallSupport)
                         .build();
 
         Deployer deployer =

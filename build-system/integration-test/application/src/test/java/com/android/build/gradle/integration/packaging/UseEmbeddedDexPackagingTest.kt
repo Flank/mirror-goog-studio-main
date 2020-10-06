@@ -94,7 +94,7 @@ class UseEmbeddedDexPackagingTest(
                     """
                         apply plugin: 'com.android.application'
                         android {
-                            compileSdkVersion 'android-29'
+                            compileSdkVersion 'android-30'
                             defaultConfig {
                                 minSdk = $minSdk
                             }

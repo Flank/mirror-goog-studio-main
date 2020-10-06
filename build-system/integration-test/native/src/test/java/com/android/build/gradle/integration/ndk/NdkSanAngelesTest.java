@@ -53,7 +53,8 @@ public class NdkSanAngelesTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        project.executor().run("clean", "assembleDebug");
+        model = project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModel();
     }
 
     @AfterClass

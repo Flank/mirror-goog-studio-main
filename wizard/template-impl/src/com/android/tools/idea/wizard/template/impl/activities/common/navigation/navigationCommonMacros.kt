@@ -76,12 +76,13 @@ fun RecipeExecutor.navigationDependencies(
   useAndroidX: Boolean,
   appCompatVersion: Int
 ) {
-  addDependency("android.arch.navigation:navigation-fragment:+")
-  addDependency("android.arch.navigation:navigation-ui:+")
   addLifecycleDependencies(useAndroidX)
   if (generateKotlin) {
     addDependency("android.arch.navigation:navigation-fragment-ktx:+")
     addDependency("android.arch.navigation:navigation-ui-ktx:+")
+  } else {
+    addDependency("android.arch.navigation:navigation-fragment:+")
+    addDependency("android.arch.navigation:navigation-ui:+")
   }
   /*
   navigation-ui depends on the stable version of design library.

@@ -310,7 +310,7 @@ internal class UElementVisitor constructor(
                 context.uastFile = null
             }
         } catch (e: ProcessCanceledException) {
-            // Cancelling inspections in the IDE
+            // Cancelling inspections in the IDE; bubble out to the IDE without logging
             throw e
         } catch (e: Throwable) {
             // Don't allow lint bugs to take down the whole build. TRY to log this as a

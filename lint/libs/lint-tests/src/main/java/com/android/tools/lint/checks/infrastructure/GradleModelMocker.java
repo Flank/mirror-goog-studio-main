@@ -322,10 +322,9 @@ public class GradleModelMocker {
         to.setCheckDependencies(flags.isCheckDependencies());
         to.setCheckGeneratedSources(flags.isCheckGeneratedSources());
         to.setShowEverything(flags.isShowEverything());
-        to.setDefaultConfiguration(flags.getDefaultConfiguration());
+        to.setLintConfig(flags.getLintConfig());
         to.setExplainIssues(flags.isExplainIssues());
         to.setBaselineFile(flags.getBaselineFile());
-        ;
     }
 
     private void initialize() {
@@ -1454,7 +1453,7 @@ public class GradleModelMocker {
                 case "lintConfig":
                     {
                         File file = file(arg, true);
-                        flags.setDefaultConfiguration(file);
+                        flags.setLintConfig(file);
                         updateLintOptions(null, file, null, null, null);
                         break;
                     }

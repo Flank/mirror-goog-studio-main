@@ -145,6 +145,7 @@ java_binary(
     main_class = "com.android.tools.binaries.ZipMerger",
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/zipflinger",
     ],
 )

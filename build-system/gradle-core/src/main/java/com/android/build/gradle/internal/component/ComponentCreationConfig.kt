@@ -76,6 +76,8 @@ interface ComponentCreationConfig : ComponentIdentity {
     val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
     val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
     val allProjectClassesPostAsmInstrumentation: FileCollection
+    val debuggable: Boolean
+
 
     // ---------------------------------------------------------------------------------------------
     // TODO figure out whether these properties are needed by all
@@ -127,7 +129,7 @@ interface ComponentCreationConfig : ComponentIdentity {
      *
      * if there is no tested variant this does nothing and returns null.
      */
-    fun <T> onTestedConfig(action: (VariantCreationConfig) -> T): T?
+    fun <T> onTestedConfig(action: (VariantCreationConfig) -> T? ): T?
 
     // TODO : Remove BaseVariantData.
     val variantData: BaseVariantData

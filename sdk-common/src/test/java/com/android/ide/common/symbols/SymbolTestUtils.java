@@ -60,10 +60,11 @@ public final class SymbolTestUtils {
         if (javaType.equals("int[]")) {
             Preconditions.checkState(
                     type == ResourceType.STYLEABLE, "Only styleables may have type int[]");
-            return Symbol.createAndValidateStyleableSymbol(
+            return Symbol.createStyleableSymbol(
                     name,
                     SymbolUtils.parseArrayLiteral(styleableChildren.size(), value),
-                    ImmutableList.copyOf(styleableChildren));
+                    ImmutableList.copyOf(styleableChildren),
+                    true);
         }
         Preconditions.checkState(type != ResourceType.STYLEABLE, "Styleables must have type int[]");
 
@@ -74,7 +75,7 @@ public final class SymbolTestUtils {
             intValue = -1;
         }
 
-        return Symbol.createAndValidateSymbol(type, name, intValue, maybeDefinition);
+        return Symbol.createSymbol(type, name, intValue, maybeDefinition);
     }
 
     /** @see #createSymbol(String, String, String, String, List) */
@@ -95,8 +96,14 @@ public final class SymbolTestUtils {
             @NonNull String javaType,
             int numericValue) {
         if ("styleable".equals(resourceType) && "int".equals(javaType)) {
-            return createSymbol(resourceType, name, javaType, Integer.toString(numericValue));
+            return createSymbol(resourceType,
+                    name,
+                    javaType,
+                    Integer.toString(numericValue));
         }
-        return createSymbol(resourceType, name, javaType, "0x" + Integer.toHexString(numericValue));
+        return createSymbol(resourceType,
+                name,
+                javaType,
+                "0x" + Integer.toHexString(numericValue));
     }
 }

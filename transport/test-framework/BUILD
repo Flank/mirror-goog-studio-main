@@ -32,8 +32,6 @@ cc_library(
     srcs = glob(["src/main/native/**/*.cc"]),
     copts = [
         "-Itools/base/profiler/native/agent/",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],

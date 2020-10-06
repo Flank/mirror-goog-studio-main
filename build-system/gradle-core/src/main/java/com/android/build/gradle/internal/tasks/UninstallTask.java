@@ -40,6 +40,7 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class UninstallTask extends NonIncrementalTask {
 
     private String variantName;
+    private String projectName;
     // these are not inputs so we don't need the task to have its own Property
     private Provider<String> applicationId;
 
@@ -72,7 +73,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
                         logger.lifecycle(
                                 "Uninstalling {} (from {}:{}) from device '{}' ({}).",
                                 applicationId.get(),
-                                getProject().getName(),
+                                projectName,
                                 variantName,
                                 device.getName(),
                                 device.getSerialNumber());
@@ -125,6 +126,7 @@ public abstract class UninstallTask extends NonIncrementalTask {
             super.configure(task);
 
             task.variantName = creationConfig.getName();
+            task.projectName = task.getProject().getName();
             task.applicationId = creationConfig.getApplicationId();
             task.setDescription("Uninstalls the " + creationConfig.getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);

@@ -1436,6 +1436,171 @@ class ProjectInitializerTest {
         )
     }
 
+    @Test
+    fun testLintXmlOutside() {
+
+        val library = project(
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="foo.bar2"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+
+                    <uses-sdk android:minSdkVersion="14" />
+
+                    <permission android:name="bar.permission.SEND_SMS"
+                        android:label="@string/foo"
+                        android:description="@string/foo" />
+
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                    </application>
+
+                </manifest>"""
+            ).indented()
+        ).type(LIBRARY).name("Library")
+
+        val main = project(
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="foo.bar2"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+
+                    <uses-sdk android:minSdkVersion="14" />
+
+                    <permission android:name="foo.permission.SEND_SMS"
+                        android:label="@string/foo"
+                        android:description="@string/foo" />
+
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).name("App").dependsOn(library)
+
+        val root = temp.newFolder()
+
+        val configFile = File(root, "foobar/lint.xml")
+        @Language("XML")
+        val config =
+            """
+            <lint>
+                <!-- Reduce severity of UniquePermission from error to warning -->
+                <issue id="UniquePermission" severity="warning"/>
+            </lint>
+            """
+        configFile.parentFile?.mkdirs()
+        configFile.writeText(config.trimIndent())
+
+        val projects = lint().projects(main, library).createProjects(root)
+        val appProjectDir = projects[0]
+        val appProjectPath = appProjectDir.path
+
+        val sdk = temp.newFolder("fake-sdk-dir")
+        val cacheDir = temp.newFolder("cache-dir")
+
+        @Language("XML")
+        val descriptor =
+            """
+            <project>
+            <root dir="$root" />
+            <sdk dir='$sdk'/>
+            <cache dir='$cacheDir'/>
+            <module name="$appProjectPath:App" android="true" library="false" compile-sdk-version='18'>
+              <manifest file="AndroidManifest.xml" />
+              <dep module="Library" />
+            </module>
+            <module name="Library" android="true" library="true" compile-sdk-version='android-M'>
+              <manifest file="Library/AndroidManifest.xml" />
+            </module>
+            </project>
+            """.trimIndent()
+        Files.asCharSink(File(root, "project.xml"), Charsets.UTF_8).write(descriptor)
+
+        val canonicalRoot = root.canonicalPath
+        MainTest.checkDriver(
+            """
+            ../Library/AndroidManifest.xml:8: Warning: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
+                <permission android:name="bar.permission.SEND_SMS"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:8: Previous permission here
+            0 errors, 1 warnings
+            """,
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "UniquePermission",
+                "--config",
+                configFile.path,
+                "--text",
+                "stdout",
+                "--project",
+                File(root, "project.xml").path
+            ),
+
+            {
+                it
+                    .replace(canonicalRoot, "ROOT")
+                    .replace(root.path, "ROOT")
+                    .replace('\\', '/')
+            },
+            null
+        )
+
+        val newConfigFile = File(root, "default.xml")
+        configFile.renameTo(newConfigFile)
+        MainTest.checkDriver(
+            """
+            ../Library/AndroidManifest.xml:8: Warning: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
+                <permission android:name="bar.permission.SEND_SMS"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:8: Previous permission here
+            0 errors, 1 warnings
+            """,
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "UniquePermission",
+                "--config",
+                newConfigFile.path,
+                "--text",
+                "stdout",
+                "--project",
+                File(root, "project.xml").path
+            ),
+
+            {
+                it
+                    .replace(canonicalRoot, "ROOT")
+                    .replace(root.path, "ROOT")
+                    .replace('\\', '/')
+            },
+            null
+        )
+    }
+
     companion object {
         @ClassRule
         @JvmField

@@ -10,9 +10,7 @@ cc_library(
         "statsd_subscriber.h",
     ] + glob(["*/*.h"]),
     copts = [
-        "-Itools/base/transport/native",
         "-I$(GENDIR)/tools/base/profiler/native/perfd",
-        "-I$(GENDIR)/tools/base/transport",
         "-std=c++11",
     ],
     tags = ["no_windows"],
@@ -29,10 +27,8 @@ cc_test(
         "statsd_subscriber_test.cc",
     ],
     copts = [
-        "-Itools/base/transport/native",
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler/native/perfd",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkstatic = 1,
     tags = ["no_windows"],

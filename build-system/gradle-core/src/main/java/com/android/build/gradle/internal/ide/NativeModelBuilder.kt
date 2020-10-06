@@ -67,7 +67,6 @@ class NativeModelBuilder(
     private val generators get() = scopes.map { scope ->
         IssueReporterLoggingEnvironment(issueReporter).use {
             createCxxMetadataGenerator(
-                getBuildService<SdkComponentsBuildService>(globalScope.project.gradle.sharedServices).get(),
                 scope.taskContainer.cxxConfigurationModel!!,
                 getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
             )

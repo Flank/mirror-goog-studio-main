@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.packaging;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.signing.SigningConfigData;
+import com.android.build.gradle.internal.signing.SigningConfigVersions;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.SerializableChange;
 import com.android.builder.internal.packaging.ApkCreatorType;
@@ -148,6 +149,7 @@ public class IncrementalPackagerBuilder {
     @NonNull
     public IncrementalPackagerBuilder withSigning(
             @Nullable SigningConfigData signingConfig,
+            @NonNull SigningConfigVersions signingConfigVersions,
             int minSdk,
             @Nullable byte[] sdkDependencyData) {
         if (signingConfig == null) {
@@ -170,10 +172,10 @@ public class IncrementalPackagerBuilder {
                             Preconditions.checkNotNull(
                                     signingConfig.getKeyAlias(), error, "keyAlias"));
 
-            boolean enableV1Signing = signingConfig.getEnableV1Signing();
-            boolean enableV2Signing = signingConfig.getEnableV2Signing();
-            enableV3Signing = signingConfig.getEnableV3Signing();
-            enableV4Signing = signingConfig.getEnableV4Signing();
+            boolean enableV1Signing = signingConfigVersions.getEnableV1Signing();
+            boolean enableV2Signing = signingConfigVersions.getEnableV2Signing();
+            enableV3Signing = signingConfigVersions.getEnableV3Signing();
+            enableV4Signing = signingConfigVersions.getEnableV4Signing();
 
             // Check that v2 or v3 signing is enabled if v4 signing is enabled.
             if (enableV4Signing) {

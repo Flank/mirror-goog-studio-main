@@ -155,18 +155,6 @@ class UtpConfigFactoryTest {
               device_id {
                 id: "mockDeviceSerialNumber"
               }
-              controller {
-                label {
-                  label: "device_controller"
-                }
-                class_name: "com.google.testing.platform.runtime.android.adb.controller.AdbDeviceController"
-                jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_ADB.jar"
-                }
-                config {
-                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AdbDeviceController"
-                }
-              }
               provider {
                 label {
                   label: "local_android_device_provider"
@@ -303,18 +291,6 @@ class UtpConfigFactoryTest {
             device {
               device_id {
                 id: "mockDeviceSerialNumber"
-              }
-              controller {
-                label {
-                  label: "device_controller"
-                }
-                class_name: "com.google.testing.platform.runtime.android.adb.controller.AdbDeviceController"
-                jar {
-                  path: "pathToANDROID_DEVICE_CONTROLLER_ADB.jar"
-                }
-                config {
-                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AdbDeviceController"
-                }
               }
               provider {
                 label {

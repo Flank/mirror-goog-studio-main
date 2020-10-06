@@ -1,0 +1,27 @@
+apply from: "../../commonHeader.gradle"
+buildscript {
+    apply from: "../../commonHeader.gradle"  // for $kotlinVersion
+    apply from: "../../commonBuildScript.gradle"
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion"
+    }
+}
+
+apply from: "../../commonLocalRepo.gradle"
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'kotlin'
+
+dependencies {
+    api gradleApi()
+    api "com.android.tools.build:gradle:$rootProject.buildVersion"
+}
+
+gradlePlugin {
+    plugins {
+        instrumentationPlugin {
+            id = 'instrumentation-plugin'
+            implementationClass = 'com.example.buildsrc.plugin.InstrumentationPlugin'
+        }
+    }
+}

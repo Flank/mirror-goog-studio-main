@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.build.gradle.internal.testing.utp.RetentionConfig
-import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
@@ -30,7 +28,6 @@ import com.android.sdklib.BuildToolInfo
 import com.google.protobuf.Any
 import com.google.testing.platform.plugin.android.icebox.host.proto.IceboxPluginProto
 import com.google.testing.platform.plugin.android.icebox.host.proto.IceboxPluginProto.IceboxPlugin
-import com.google.testing.platform.proto.api.config.AdbDeviceControllerProto
 import com.google.testing.platform.proto.api.config.AndroidInstrumentationDriverProto
 import com.google.testing.platform.proto.api.config.DeviceProto
 import com.google.testing.platform.proto.api.config.EnvironmentProto
@@ -111,7 +108,6 @@ class UtpConfigFactory {
                 id = device.serialNumber
             }
             provider = createLocalDeviceProvider(device, utpDependencies)
-            controller = createAdbDeviceController(utpDependencies)
         }.build()
     }
 
@@ -133,22 +129,6 @@ class UtpConfigFactory {
                 Any.pack(LocalAndroidDeviceProviderProto.LocalAndroidDeviceProvider.newBuilder().apply {
                     serial = device.serialNumber
                 }.build())
-        }.build()
-    }
-
-    private fun createAdbDeviceController(utpDependencies: UtpDependencies): ExtensionProto.Extension {
-        return ExtensionProto.Extension.newBuilder().apply {
-            label = LabelProto.Label.newBuilder().apply {
-                label = "device_controller"
-            }.build()
-            className = ANDROID_DEVICE_CONTROLLER_ADB.mainClass
-            addAllJar(utpDependencies.deviceControllerAdb.map {
-                PathProto.Path.newBuilder().apply {
-                    path = it.absolutePath
-                }.build()
-            })
-            config =
-                Any.pack(AdbDeviceControllerProto.AdbDeviceController.getDefaultInstance())
         }.build()
     }
 

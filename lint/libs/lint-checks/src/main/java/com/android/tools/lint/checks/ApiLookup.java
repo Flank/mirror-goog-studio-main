@@ -29,7 +29,7 @@ import com.android.tools.lint.detector.api.Lint;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -73,7 +73,7 @@ public class ApiLookup extends ApiDatabase {
 
     @VisibleForTesting static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
 
-    private static final Map<AndroidVersion, WeakReference<ApiLookup>> instances = new HashMap<>();
+    private static final Map<AndroidVersion, SoftReference<ApiLookup>> instances = new HashMap<>();
 
     private final IAndroidTarget target;
 
@@ -105,7 +105,7 @@ public class ApiLookup extends ApiDatabase {
     public static ApiLookup get(@NonNull LintClient client, @Nullable IAndroidTarget target) {
         synchronized (ApiLookup.class) {
             AndroidVersion version = target != null ? target.getVersion() : AndroidVersion.DEFAULT;
-            WeakReference<ApiLookup> reference = instances.get(version);
+            SoftReference<ApiLookup> reference = instances.get(version);
             ApiLookup db = reference != null ? reference.get() : null;
             if (db == null) {
                 // Fallbacks: Allow the API database to be read from a custom location
@@ -135,7 +135,7 @@ public class ApiLookup extends ApiDatabase {
                 } else {
                     db = get(client, file, target);
                 }
-                instances.put(version, new WeakReference<>(db));
+                instances.put(version, new SoftReference<>(db));
             }
 
             return db;

@@ -14,5 +14,6 @@ cc_grpc_proto_library(
     name = "layout_inspector_cc_proto",
     srcs = ["skia.proto"],
     grpc_support = 1,
+    include_prefix = "proto",
     includes = ["."],
 )

@@ -24,11 +24,14 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Apk
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 
 /**
  * Integration tests for [JniLibsPackagingOptions]
@@ -44,6 +47,7 @@ class NativeSoPackagingOptionsTest {
                             jniLibs {
                                 excludes += '**/dslExclude.so'
                                 pickFirsts += '**/dslPickFirst.so'
+                                useLegacyPackaging = true
                             }
                         }
                         onVariantProperties.withName('debug') {
@@ -51,6 +55,7 @@ class NativeSoPackagingOptionsTest {
                         }
                         onVariantProperties.withName('release') {
                             packagingOptions.jniLibs.excludes.add('**/releaseExclude.so')
+                            packagingOptions.jniLibs.useLegacyPackaging.set(false)
                         }
                         onVariantProperties {
                             packagingOptions.jniLibs.pickFirsts.add('**/variantPickFirst.so')
@@ -76,11 +81,7 @@ class NativeSoPackagingOptionsTest {
             .appendToBuild(
                 """
                     android {
-                        packagingOptions {
-                            jniLibs {
-                                excludes += '**/dslExclude.so'
-                            }
-                        }
+                        packagingOptions.jniLibs.excludes += '**/dslExclude.so'
                         onVariantProperties {
                             packagingOptions.jniLibs.excludes.add('**/libExclude.so')
                         }
@@ -123,7 +124,8 @@ class NativeSoPackagingOptionsTest {
         appSubProject.execute("assemble", "assembleDebugAndroidTest")
         libSubProject.execute("assembleDebug", "assembleDebugAndroidTest")
 
-        FileSubject.assertThat(appSubProject.getApk(DEBUG).file.toFile()).exists()
+        val debugApkFile = appSubProject.getApk(DEBUG).file.toFile()
+        FileSubject.assertThat(debugApkFile).exists()
         val debugApk = TruthHelper.assertThat(appSubProject.getApk(DEBUG))
         debugApk.doesNotContainJavaResource("lib/x86/dslExclude.so")
         debugApk.doesNotContainJavaResource("lib/x86/debugExclude.so")
@@ -131,8 +133,20 @@ class NativeSoPackagingOptionsTest {
         debugApk.containsJavaResourceWithContent("lib/x86/dslPickFirst.so", "foo")
         debugApk.containsJavaResourceWithContent("lib/x86/releaseExclude.so", "foo")
         debugApk.containsJavaResourceWithContent("lib/x86/variantPickFirst.so", "foo")
+        // check correct compression and manifest from useLegacyPackaging
+        ZipFile(debugApkFile).use {
+            val nativeLibEntry = it.getEntry("lib/x86/appKeep.so")
+            assertThat(nativeLibEntry).isNotNull()
+            assertThat(nativeLibEntry.method).isEqualTo(ZipEntry.DEFLATED)
+        }
+        assertThat(
+                ApkSubject.getManifestContent(debugApkFile.toPath()).none {
+                    it.contains("android:extractNativeLibs")
+                }
+        ).isTrue()
 
-        FileSubject.assertThat(appSubProject.getApk(RELEASE).file.toFile()).exists()
+        val releaseApkFile = appSubProject.getApk(RELEASE).file.toFile()
+        FileSubject.assertThat(releaseApkFile).exists()
         val releaseApk = TruthHelper.assertThat(appSubProject.getApk(RELEASE))
         releaseApk.doesNotContainJavaResource("lib/x86/dslExclude.so")
         releaseApk.doesNotContainJavaResource("lib/x86/releaseExclude.so")
@@ -140,6 +154,19 @@ class NativeSoPackagingOptionsTest {
         releaseApk.containsJavaResourceWithContent("lib/x86/dslPickFirst.so", "foo")
         releaseApk.containsJavaResourceWithContent("lib/x86/debugExclude.so", "foo")
         releaseApk.containsJavaResourceWithContent("lib/x86/variantPickFirst.so", "foo")
+        // check correct compression and manifest from useLegacyPackaging
+        ZipFile(releaseApkFile).use {
+            val nativeLibEntry = it.getEntry("lib/x86/appKeep.so")
+            assertThat(nativeLibEntry).isNotNull()
+            assertThat(nativeLibEntry.method).isEqualTo(ZipEntry.STORED)
+        }
+        assertThat(
+                ApkSubject.getManifestContent(releaseApkFile.toPath()).any {
+                    // check strings separately because there are extra characters between them
+                    // in this manifest.
+                    it.contains("android:extractNativeLibs") && it.contains("=false")
+                }
+        ).isTrue()
 
         FileSubject.assertThat(appSubProject.getApk(ANDROIDTEST_DEBUG).file.toFile()).exists()
         val androidTestApk = TruthHelper.assertThat(appSubProject.getApk(ANDROIDTEST_DEBUG))

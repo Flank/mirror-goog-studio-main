@@ -130,7 +130,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
 
             setKeepRules(task)
 
-            task.debuggable.set(creationConfig.variantDslInfo.isDebuggable)
+            task.debuggable.set(creationConfig.debuggable)
         }
 
         private fun setKeepRules(task: L8DexDesugarLibTask) {

@@ -64,7 +64,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(28, getApiByPreviewName("P", false));
         assertEquals(28, getApiByPreviewName("Pie", false));
         assertEquals(29, getApiByPreviewName("Q", false));
-        assertEquals(HIGHEST_KNOWN_API + 1, getApiByPreviewName("R", true));
+        assertEquals(30, getApiByPreviewName("R", true));
 
         assertEquals(-1, getApiByPreviewName("UnknownName", false));
         assertEquals(HIGHEST_KNOWN_API + 1, getApiByPreviewName("UnknownName", true));

@@ -50,8 +50,7 @@ class AnnotationProcessorConnectedTest {
                     ":lib-compiler" to AnnotationProcessorLib.createCompiler()
                 )
             )
-        ).withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF) // b/146163513
-        .create()
+        ).create()
 
     @Before
     fun setUp() {
@@ -91,6 +90,9 @@ class AnnotationProcessorConnectedTest {
             .write(buildScript)
         // fail fast if no response
         project.getSubproject(":app").addAdbTimeOutInMs()
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll")
     }
 
     @Test

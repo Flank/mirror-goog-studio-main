@@ -19,19 +19,17 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
 import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVariantConfig
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
+import com.android.build.gradle.internal.cxx.model.*
 import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.ndk.NdkHandler
@@ -56,6 +54,7 @@ import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.util.Objects
@@ -73,11 +72,20 @@ val ENABLE_CHECK_CONFIG_TIME_CONSTRUCTION by lazy { System.getenv().containsKey(
 
 /**
  * This is the task data model that gets serialized with the task in configuration caching.
- * Generally, it should be data that comes from the DSL or input files. It shouldn't encode
- * information from reading local files (like local.settings or CMakeSettings.json)
  */
 data class CxxConfigurationModel(
-    val allDefaultAbis: Boolean,
+    val variant: CxxVariantModel,
+    // ABIs that are used in the build
+    val activeAbis: List<CxxAbiModel>,
+    // Remaining ABIs that are not used in the build
+    val unusedAbis: List<CxxAbiModel>
+)
+
+/**
+ * Parameters common to configuring the creation of [CxxConfigurationModel].
+ */
+data class CxxConfigurationParameters(
+    val cxxFolder: File,
     val buildSystem: NativeBuildSystem,
     val makeFile: File,
     val buildStagingFolder: File?,
@@ -142,73 +150,6 @@ data class CxxConfigurationModel(
 }
 
 /**
- * Module-level folder for android_gradle_build.json files
- *   ex, $moduleRootFolder/.cxx
- */
-val CxxConfigurationModel.cxxFolder : File get() {
-    return findCxxFolder(
-            moduleRootFolder,
-            buildStagingFolder,
-            buildDir)
-}
-
-/**
- * Base folder for android_gradle_build.json files
- *   ex, $moduleRootFolder/.cxx/cmake/debug
- */
-val CxxConfigurationModel.variantJsonFolder : File get() {
-    return FileUtils.join(cxxFolder, buildSystem.tag, variantName)
-}
-
-/**
- * Base intermediates folder for all build output files
- *   ex, $moduleRootFolder/build/intermediates/cmake/debug
- */
-private val CxxConfigurationModel.variantIntermediatesFolder : File get() {
-    return FileUtils.join(
-            intermediatesFolder,
-            buildSystem.tag,
-            variantName)
-}
-
-/**
- * Base folder for .o files
- *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
- */
-val CxxConfigurationModel.variantObjFolder : File get() {
-    return if (buildSystem == NativeBuildSystem.NDK_BUILD) {
-        // ndkPlatform-build create libraries in a "local" subfolder.
-        FileUtils.join(variantIntermediatesFolder, "obj", "local")
-    } else {
-        FileUtils.join(variantIntermediatesFolder, "obj")
-    }
-}
-
-/**
- * Base folder for .so files
- *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
- */
-val CxxConfigurationModel.variantSoFolder: File get() {
-    return FileUtils.join(variantIntermediatesFolder, "lib")
-}
-
-/**
- * The .cxx build folder
- *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
- */
-fun CxxConfigurationModel.abiCxxBuildFolder(abi : Abi): File {
-    return variantJsonFolder.resolve(abi.tag)
-}
-
-/**
- * The .cxx build folder
- *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
- */
-fun CxxConfigurationModel.abiJsonFile(abi : Abi): File {
-    return abiCxxBuildFolder(abi).resolve("android_gradle_build.json")
-}
-
-/**
  * This creates the [CxxConfigurationModel]. After deserialization it is used to construct
  * [CxxMetadataGenerator] for tasks to operate on. The resulting [CxxConfigurationModel] is
  * passed to [createCxxMetadataGenerator] to construct the generator.
@@ -221,10 +162,33 @@ fun CxxConfigurationModel.abiJsonFile(abi : Abi): File {
  * Phase (2) may be run with the freshly created [CxxConfigurationModel] or from a version that
  * was deserialized from the task graph.
  */
-fun tryCreateCxxConfigurationModel(
-        variant: VariantImpl,
-        allDefaultAbis: Boolean = true
-) : CxxConfigurationModel? {
+fun tryCreateCxxConfigurationModel(variant: VariantImpl) : CxxConfigurationModel? {
+    IssueReporterLoggingEnvironment(variant.services.issueReporter).use {
+        return tryCreateCxxConfigurationModelImpl(variant)
+    }
+}
+
+@VisibleForTesting
+fun tryCreateCxxConfigurationModelImpl(variant: VariantImpl) : CxxConfigurationModel? {
+    val global = variant.globalScope
+    val parameters =
+        tryCreateConfigurationParameters(variant) ?: return null
+    val sdkComponents = global.sdkComponents.get()
+    val module = createCxxModuleModel(sdkComponents, parameters)
+    val variant = createCxxVariantModel(parameters, module)
+    val (active, unused) = Abi.getDefaultValues().map { abi ->
+            createCxxAbiModel(sdkComponents, parameters, variant, abi)
+                .rewriteCxxAbiModelWithCMakeSettings()
+        }.partition { variant.validAbiList.contains(it.abi) }
+    return CxxConfigurationModel(variant, active, unused)
+}
+
+/**
+ * Try to create C/C++ model configuration parameters [CxxConfigurationParameters].
+ * Return null when there is no C/C++ in the user's project or if there is some other kind of error.
+ * In the latter case, an error will have been reported.
+ */
+fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationParameters? {
     val global = variant.globalScope
 
     val (buildSystem, makeFile, buildStagingFolder) =
@@ -259,40 +223,43 @@ fun tryCreateCxxConfigurationModel(
      */
     val enableProfileJson = option(ENABLE_PROFILE_JSON)
     val chromeTraceJsonFolder = if (enableProfileJson) {
-            val gradle = global.project.gradle
-            val profileDir = option(PROFILE_OUTPUT_DIR)
-                ?.let { gradle.rootProject.file(it) }
-                ?: gradle.rootProject.buildDir.resolve(PROFILE_DIRECTORY)
-            profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
-        } else {
-            null
-        }
+        val gradle = global.project.gradle
+        val profileDir = option(PROFILE_OUTPUT_DIR)
+            ?.let { gradle.rootProject.file(it) }
+            ?: gradle.rootProject.buildDir.resolve(PROFILE_DIRECTORY)
+        profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
+    } else {
+        null
+    }
     val prefabTargets = when (val extension = variant.globalScope.extension) {
-            is LibraryExtension -> extension.prefab.map { it.name }.toSet()
-            else -> emptySet()
-        }
+        is LibraryExtension -> extension.prefab.map { it.name }.toSet()
+        else -> emptySet()
+    }
 
     /**
      * Prefab settings.
      */
     val prefabPackageDirectoryList = if (variant.buildFeatures.prefab) {
-            variant.variantDependencies.getArtifactCollection(
-                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                AndroidArtifacts.ArtifactScope.ALL,
-                AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
-            ).artifactFiles
-        } else {
-            null
-        }
+        variant.variantDependencies.getArtifactCollection(
+            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.ALL,
+            AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
+        ).artifactFiles
+    } else {
+        null
+    }
 
     val prefabClassPath = if (variant.buildFeatures.prefab) {
-            getPrefabFromMaven(variant.globalScope)
-        } else {
-            null
-        }
+        getPrefabFromMaven(variant.globalScope)
+    } else {
+        null
+    }
 
-    return CxxConfigurationModel(
-        allDefaultAbis = allDefaultAbis,
+    return CxxConfigurationParameters(
+        cxxFolder = findCxxFolder(
+            global.project.projectDir,
+            buildStagingFolder,
+            global.project.buildFile),
         buildSystem = buildSystem,
         makeFile = makeFile,
         buildStagingFolder = buildStagingFolder,
@@ -300,7 +267,7 @@ fun tryCreateCxxConfigurationModel(
         buildDir = global.project.buildDir,
         rootDir = global.project.rootDir,
         buildFile = global.project.buildFile,
-        isDebuggable = variant.variantDslInfo.isDebuggable,
+        isDebuggable = variant.debuggable,
         minSdkVersion = variant.variantBuilder.minSdkVersion.toSharedAndroidVersion(),
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,
@@ -358,7 +325,6 @@ private fun getProjectPath(config: ExternalNativeBuild)
  * phase by [tryCreateCxxConfigurationModel].
  */
 fun createCxxMetadataGenerator(
-    sdkComponents: SdkComponentsBuildService,
     configurationModel: CxxConfigurationModel,
     analyticsService: AnalyticsService
 ): CxxMetadataGenerator {
@@ -367,29 +333,12 @@ fun createCxxMetadataGenerator(
             "Should not call createCxxMetadataGenerator(...) at configuration time"
         }
     }
-    val module =
-        createCxxModuleModel(
-            sdkComponents,
-            configurationModel
-        )
-    val variant =
-        createCxxVariantModel(
-            configurationModel,
-            module
-        )
-    val abiTypes =
-        if (configurationModel.allDefaultAbis) Abi.getDefaultValues() else variant.validAbiList
-    val abis = abiTypes.map { abi ->
-        createCxxAbiModel(
-            sdkComponents,
-            configurationModel,
-            variant,
-            abi
-        ).rewriteCxxAbiModelWithCMakeSettings()
-    }
+
+    val (variant, abis) = configurationModel
+
     val variantBuilder = analyticsService.getVariantBuilder(
         variant.module.gradleModulePathName, variant.variantName)
-    return when (module.buildSystem) {
+    return when (variant.module.buildSystem) {
         NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
             variant,
             abis,
@@ -416,8 +365,8 @@ fun createCxxMetadataGenerator(
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15
             if (isPreCmakeFileApiVersion ||
-                !configurationModel.isV2NativeModelEnabled ||
-                !configurationModel.isPreferCmakeFileApiEnabled) {
+                !variant.module.project.isV2NativeModelEnabled ||
+                !variant.module.cmake!!.isPreferCmakeFileApiEnabled) {
                 return CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
             }
             return CmakeQueryMetadataGenerator(variant, abis, variantBuilder)

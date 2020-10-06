@@ -95,6 +95,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:signingConfigWriterDebug",
                     ":app:validateSigningDebug",
                     ":app:writeDebugAppMetadata",
+                    ":app:writeDebugSigningConfigVersions",
 
                     ":feature1:checkDebugAarMetadata",
                     ":feature1:checkDebugDuplicateClasses",

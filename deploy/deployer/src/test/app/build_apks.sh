@@ -2,12 +2,12 @@
 
 set -e
 set -x
-if [ -z ${ANDROID_SDK+x} ]; then 
+if [ -z ${ANDROID_SDK+x} ]; then
   echo "ANDROID_SDK is not set"
   exit 1
 fi
 
-BUILD_TOOLS_VERSION=30.0.0
+BUILD_TOOLS_VERSION=30.0.2
 SDK_VERSION=28
 AAPT2="$ANDROID_SDK/build-tools/$BUILD_TOOLS_VERSION/aapt2"
 DX="$ANDROID_SDK/build-tools/$BUILD_TOOLS_VERSION/dx"
@@ -49,9 +49,9 @@ function build_apk() {
     $AAPT2 link -o $BIN/base.apk --java $GEN_SRC --manifest $GEN_SRC/AndroidManifest.xml -I $PLATFORM $FLATS/*
   else
     echo "AAPT2 linking (and create R.java) ..."
-    $AAPT2 link -o $BIN/base.apk --manifest $GEN_SRC/AndroidManifest.xml -I $PLATFORM 
+    $AAPT2 link -o $BIN/base.apk --manifest $GEN_SRC/AndroidManifest.xml -I $PLATFORM
   fi
-  
+
 
   echo "Compiling source..."
   if [ "$HAS_RESOURCES" = "true" ]; then

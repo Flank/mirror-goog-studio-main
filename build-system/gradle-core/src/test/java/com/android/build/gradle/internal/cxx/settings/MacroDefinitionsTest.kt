@@ -21,22 +21,21 @@ import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class MacroDefinitionsTest {
     @Test
     fun `macro lookup checks`() {
-        Truth.assertThat(Macro.lookup("thisFile")).isEqualTo(Macro.ENV_THIS_FILE)
-        Truth.assertThat(Macro.lookup("env.thisFile")).isEqualTo(Macro.ENV_THIS_FILE)
-        Truth.assertThat(Macro.lookup("ndk.version")).isEqualTo(Macro.NDK_VERSION)
+        assertThat(Macro.lookup("thisFile")).isEqualTo(Macro.ENV_THIS_FILE)
+        assertThat(Macro.lookup("env.thisFile")).isEqualTo(Macro.ENV_THIS_FILE)
+        assertThat(Macro.lookup("ndk.version")).isEqualTo(Macro.NDK_VERSION)
     }
 
     @Test
     fun `descriptions must end in period`() {
         Macro.values().forEach { macro->
-            Truth.assertThat(macro.description)
+            assertThat(macro.description)
                 .endsWith(".")
         }
     }
@@ -44,7 +43,7 @@ class MacroDefinitionsTest {
     @Test
     fun `only allow forward slashes in example`() {
         Macro.values().forEach { macro->
-            Truth.assertThat(macro.description)
+            assertThat(macro.description)
                 .doesNotContain("\\")
         }
     }
@@ -91,16 +90,16 @@ class MacroDefinitionsTest {
             // Walk all vals in the model and invoke them
             val module = createCxxModuleModel(
                 it.sdkComponents,
-                it.configurationModel,
+                it.configurationParameters,
                 it.cmakeFinder
             )
             val variant = createCxxVariantModel(
-                it.configurationModel,
+                it.configurationParameters,
                 module
             )
             val abi = createCxxAbiModel(
                 it.sdkComponents,
-                it.configurationModel,
+                it.configurationParameters,
                 variant,
                 Abi.X86_64
             )
@@ -125,7 +124,7 @@ class MacroDefinitionsTest {
                             }
                             is Token.MacroToken -> {
                                 val tokenMacro = Macro.lookup(token.macro)
-                                Truth.assertThat(tokenMacro)
+                                assertThat(tokenMacro)
                                     .named("${token.macro} in ${macro.example}")
                                     .isNotNull()
                                 example.append(abi.resolveMacroValue(tokenMacro!!))
@@ -133,7 +132,7 @@ class MacroDefinitionsTest {
                         }
                     }
 
-                    Truth.assertThat(resolved.replace('\\', '/').replace(".exe", ""))
+                    assertThat(resolved.replace('\\', '/').replace(".exe", ""))
                         .named(macro.ref)
                         .isEqualTo(example.toString().replace('\\', '/').replace(".exe", ""))
                 }

@@ -18,8 +18,8 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariantBuilder
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.variant.DynamicFeatureVariantBuilder
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -36,13 +36,12 @@ open class DynamicFeatureVariantBuilderImpl @Inject constructor(
     variantApiServices
 ), DynamicFeatureVariantBuilder {
 
-    override fun createUserVisibleVariantObject(
+    override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariantBuilder =
+            stats: GradleBuildVariant.Builder): T =
             projectServices.objectFactory.newInstance(
                     AnalyticsEnabledDynamicFeatureVariantBuilder::class.java,
                     this,
                     stats
-            )
+            ) as T
 }

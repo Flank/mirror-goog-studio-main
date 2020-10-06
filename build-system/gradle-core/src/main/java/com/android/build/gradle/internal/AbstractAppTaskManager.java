@@ -86,7 +86,9 @@ public abstract class AbstractAppTaskManager<
 
     protected void createCommonTasks(
             @NonNull ComponentInfo<VariantBuilderT, VariantT> variant,
-            @NonNull List<ComponentInfo<VariantBuilderT, VariantT>> allComponentsWithLint) {
+            @NonNull
+                    List<? extends ComponentInfo<VariantBuilderT, VariantT>>
+                            allComponentsWithLint) {
         VariantT appVariantProperties = variant.getVariant();
         ApkCreationConfig apkCreationConfig = (ApkCreationConfig) appVariantProperties;
 
@@ -138,8 +140,7 @@ public abstract class AbstractAppTaskManager<
         createAidlTask(appVariantProperties);
 
         // Add external native build tasks
-        createExternalNativeBuildJsonGenerators(variant.getVariantBuilder(), appVariantProperties);
-        createExternalNativeBuildTasks(variant.getVariantBuilder(), appVariantProperties);
+        createExternalNativeBuildTasks(appVariantProperties);
 
         maybeExtractProfilerDependencies(apkCreationConfig);
 

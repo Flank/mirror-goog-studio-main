@@ -351,7 +351,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_core-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.2-dev:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.4-dev:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1915,4 +1915,20 @@ maven_java_library(
         ":com.google.flatbuffers_flatbuffers-java",
         ":org.checkerframework_checker-qual",
     ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "xerces_xercesImpl",
+    export_artifact = "//prebuilts/tools/common/m2/repository/xerces/xercesImpl/2.12.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":xml-apis_xml-apis"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "xml-apis_xml-apis",
+    export_artifact = "//prebuilts/tools/common/m2/repository/xml-apis/xml-apis/1.4.01:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
 )

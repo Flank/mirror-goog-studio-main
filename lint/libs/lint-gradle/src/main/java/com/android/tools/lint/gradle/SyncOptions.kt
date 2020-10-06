@@ -96,7 +96,7 @@ fun syncTo(
     flags.isCheckGeneratedSources = options.checkGeneratedSources
     flags.isCheckDependencies = options.checkDependencies
     flags.isShowEverything = options.showAll
-    flags.defaultConfiguration = options.lintConfig
+    flags.lintConfig = options.lintConfig
     flags.isExplainIssues = options.explainIssues
     flags.baselineFile = options.baselineFile
     val severityOverrides = options.severityOverrides

@@ -255,7 +255,7 @@ abstract class R8Task: ProguardConfigurableTask() {
             task.minSdkVersion
                 .set(creationConfig.minSdkVersionWithTargetDeviceApi.apiLevel)
             task.debuggable
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+                .setDisallowChanges(creationConfig.debuggable)
             task.disableTreeShaking.set(disableTreeShaking)
             task.disableMinification.set(disableMinification)
             task.messageReceiver = creationConfig.globalScope.messageReceiver

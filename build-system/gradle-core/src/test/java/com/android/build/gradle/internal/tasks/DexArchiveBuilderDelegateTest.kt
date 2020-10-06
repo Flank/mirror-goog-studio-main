@@ -253,13 +253,32 @@ class DexArchiveBuilderDelegateTest(
             it.resolve("module-info.class").writeBytes("should be ignored".toByteArray())
         }
 
+        val inputJarHashes = tmpDir.newFile()
         getDelegate(
                 projectClasses = setOf(input),
-                projectOutput = out.toFile()
+                projectOutput = out.toFile(),
+                inputJarHashesFile = inputJarHashes
         ).doProcess()
 
         assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isFile()
         assertThat(FileUtils.find(out.toFile(), "C.dex").orNull()).isNull()
+
+        // Remove module-info.class, the build should succeed (regression test for bug 164036336)
+        val moduleInfoClass = input.resolve("module-info.class")
+        FileUtils.delete(moduleInfoClass)
+        @Suppress("UnstableApiUsage")
+        getDelegate(
+                isIncremental = true,
+                projectClasses = setOf(input),
+                projectOutput = out.toFile(),
+                projectChanges = setOf(FakeFileChange(
+                        moduleInfoClass,
+                        ChangeType.REMOVED,
+                        FileType.FILE,
+                        "module-info.class"
+                )),
+                inputJarHashesFile = inputJarHashes
+        ).doProcess()
     }
 
     @Test

@@ -331,7 +331,7 @@ fun getDexingArtifactConfigurations(components: Collection<ComponentCreationConf
 fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
         minSdk = creationConfig.minSdkVersionWithTargetDeviceApi.getFeatureLevel(),
-        isDebuggable = creationConfig.variantDslInfo.isDebuggable,
+        isDebuggable = creationConfig.debuggable,
         enableDesugaring = creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.D8,
         enableCoreLibraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,

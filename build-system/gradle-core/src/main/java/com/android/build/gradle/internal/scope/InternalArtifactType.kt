@@ -36,8 +36,6 @@ InternalArtifactType<T : FileSystemLocation>(
     // module: InternalArtifactType<RegularFile>(FILE), Replaceable use AnchorOutputType.ALL_CLASSES
     // Javac task output.
     object JAVAC: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // Classes with recalculated stack frames information (RecalculateStackFrames task)
-    object FIXED_STACK_FRAMES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- Published classes ---
     // Class-type task output for tasks that generate published classes.
@@ -142,6 +140,10 @@ InternalArtifactType<T : FileSystemLocation>(
     // variantProperties.transformClassesWith
     // This is a temporary artifact until we have a transformable project classes artifact
     object ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // [ASM_INSTRUMENTED_PROJECT_CLASSES] after recalculating the stack frames of all project classes
+    object FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES : InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // [ASM_INSTRUMENTED_PROJECT_JARS] after recalculating the stack frames of all project jars
+    object FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS : InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
     // --- android res ---
     // output of the resource merger ready for aapt.
@@ -389,10 +391,13 @@ InternalArtifactType<T : FileSystemLocation>(
     // The name of a dynamic or legacy instant feature`
     object FEATURE_NAME: InternalArtifactType<RegularFile>(FILE), Replaceable
 
-    // The signing configuration the feature module should be using: InternalArtifactType<RegularFile>(FILE), Replaceable which is taken from the
+    // The signing configuration data the feature modules should be using which is taken from the
     // application module. Also used for androidTest variants (bug 118611693). This has already
     // been validated
-    object SIGNING_CONFIG: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object SIGNING_CONFIG_DATA: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // The information about which signature versions the application module is using. The feature
+    // modules should use the same versions.
+    object SIGNING_CONFIG_VERSIONS: InternalArtifactType<RegularFile>(FILE), Replaceable
     // The validated signing config output: InternalArtifactType<RegularFile>(FILE), Replaceable to allow the task to be up to date: InternalArtifactType<RegularFile>(FILE), Replaceable and for allowing
     // other tasks to depend on the output.
     object VALIDATE_SIGNING_CONFIG: InternalArtifactType<Directory>(DIRECTORY), Replaceable

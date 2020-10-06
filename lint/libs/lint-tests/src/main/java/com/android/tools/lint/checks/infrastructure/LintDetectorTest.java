@@ -58,9 +58,9 @@ import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.LintXmlConfiguration;
@@ -311,14 +311,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return new TestLintClient();
     }
 
-    protected TestConfiguration getConfiguration(LintClient client, Project project) {
-        return (TestConfiguration)
-                client.getConfigurations()
-                        .getConfigurationForProject(
-                                project,
-                                (lintClient, file) -> new TestConfiguration(lintClient, project));
-    }
-
     protected void configureDriver(LintDriver driver) {}
 
     /**
@@ -433,6 +425,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return TestFiles.kotlin(source);
     }
 
+    @SuppressWarnings("UnknownLanguage")
     @NonNull
     public static TestFile kts(@NonNull @Language("kotlin-script") String source) {
         //noinspection LanguageMismatch
@@ -936,8 +929,37 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @NonNull
         @Override
         public Configuration getConfiguration(
-                @NonNull Project project, @Nullable LintDriver driver) {
-            return LintDetectorTest.this.getConfiguration(this, project);
+                @NonNull com.android.tools.lint.detector.api.Project project,
+                @Nullable final LintDriver driver) {
+            return getConfigurations()
+                    .getConfigurationForProject(
+                            project,
+                            (file, defaultConfiguration) ->
+                                    createConfiguration(project, defaultConfiguration));
+        }
+
+        private Configuration createConfiguration(
+                @NonNull com.android.tools.lint.detector.api.Project project,
+                @NonNull Configuration defaultConfiguration) {
+            // Ensure that we have a fallback configuration which disables everything
+            // except the relevant issues
+            ConfigurationHierarchy configurations = getConfigurations();
+            return configurations.createChainedConfigurations(
+                    project,
+                    null,
+                    () -> new TestConfiguration(configurations),
+                    () -> {
+                        File lintConfigXml =
+                                ConfigurationHierarchy.Companion.getLintXmlFile(project.getDir());
+                        if (lintConfigXml.isFile()) {
+                            LintXmlConfiguration configuration =
+                                    LintXmlConfiguration.create(configurations, lintConfigXml);
+                            configuration.setFileLevel(false);
+                            return configuration;
+                        } else {
+                            return null;
+                        }
+                    });
         }
 
         @Override
@@ -1255,16 +1277,16 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
     }
 
-    public class TestConfiguration extends LintXmlConfiguration {
-        protected TestConfiguration(@NonNull LintClient client, @NonNull Project project) {
-            super(client, project);
+    public class TestConfiguration extends Configuration {
+        protected TestConfiguration(@NonNull ConfigurationHierarchy configurations) {
+            super(configurations);
         }
 
+        @Nullable
         @Override
-        @NonNull
-        protected Severity getDefaultSeverity(@NonNull Issue issue) {
+        public Severity getDefinedSeverity(@NonNull Issue issue, @NonNull Configuration source) {
             // In unit tests, include issues that are ignored by default
-            Severity severity = super.getDefaultSeverity(issue);
+            Severity severity = issue.getDefaultSeverity();
             if (severity == Severity.IGNORE) {
                 if (issue.getDefaultSeverity() != Severity.IGNORE) {
                     return issue.getDefaultSeverity();
@@ -1279,6 +1301,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return LintDetectorTest.this.isEnabled(issue);
         }
 
+        @Nullable
+        @Override
+        public File getBaselineFile() {
+            return null;
+        }
+
         @Override
         public void ignore(
                 @NonNull Context context,
@@ -1290,6 +1318,21 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @Override
         public void setSeverity(@NonNull Issue issue, @Nullable Severity severity) {
+            fail("Not supported in tests.");
+        }
+
+        @Override
+        public void setBaselineFile(@Nullable File baselineFile) {
+            fail("Not supported in tests.");
+        }
+
+        @Override
+        public void ignore(@NonNull Issue issue, @NonNull File file) {
+            fail("Not supported in tests.");
+        }
+
+        @Override
+        public void ignore(@NonNull String issueId, @NonNull File file) {
             fail("Not supported in tests.");
         }
     }

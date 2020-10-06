@@ -17,8 +17,12 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.gradle.internal.dsl.PackagingOptions
+import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.createDslServices
+import com.android.build.gradle.internal.services.createProjectServices
 import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.sdklib.AndroidVersion.VersionCodes.M
+import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -26,44 +30,68 @@ import org.junit.Test
 class JniLibsApkPackagingOptionsImplTest {
 
     private lateinit var dslPackagingOptions: PackagingOptions
-    private val variantPropertiesApiServices = createVariantPropertiesApiServices()
+    private val projectServices = createProjectServices()
+    private val dslServices: DslServices = createDslServices(projectServices)
+    private val variantPropertiesApiServices = createVariantPropertiesApiServices(projectServices)
 
     @Before
     fun setUp() {
-        dslPackagingOptions = PackagingOptions()
+        dslPackagingOptions = PackagingOptions(dslServices)
     }
 
     @Test
     fun testExcludes() {
         dslPackagingOptions.excludes.add("foo")
         dslPackagingOptions.jniLibs.excludes.add("bar")
+        // test setExcludes method too
+        val dslJniLibsPackagingOptionsImpl =
+            dslPackagingOptions.jniLibs
+                as com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
+        dslJniLibsPackagingOptionsImpl.setExcludes(
+            Sets.union(dslPackagingOptions.jniLibs.excludes, setOf("baz"))
+        )
 
         val jniLibsApkPackagingOptions =
             JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, M)
 
-        assertThat(jniLibsApkPackagingOptions.excludes.get()).containsExactly("foo", "bar")
+        assertThat(jniLibsApkPackagingOptions.excludes.get()).containsExactly("foo", "bar", "baz")
     }
 
     @Test
     fun testPickFirsts() {
         dslPackagingOptions.pickFirsts.add("foo")
         dslPackagingOptions.jniLibs.pickFirsts.add("bar")
+        // test setPickFirsts method too
+        val dslJniLibsPackagingOptionsImpl =
+            dslPackagingOptions.jniLibs
+                as com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
+        dslJniLibsPackagingOptionsImpl.setPickFirsts(
+            Sets.union(dslPackagingOptions.jniLibs.pickFirsts, setOf("baz"))
+        )
 
         val jniLibsApkPackagingOptions =
             JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, M)
 
-        assertThat(jniLibsApkPackagingOptions.pickFirsts.get()).containsExactly("foo", "bar")
+        assertThat(jniLibsApkPackagingOptions.pickFirsts.get()).containsExactly("foo", "bar", "baz")
     }
 
     @Test
     fun testKeepDebugSymbols() {
         dslPackagingOptions.doNotStrip.add("foo")
         dslPackagingOptions.jniLibs.keepDebugSymbols.add("bar")
+        // test setKeepDebugSymbols method too
+        val dslJniLibsPackagingOptionsImpl =
+            dslPackagingOptions.jniLibs
+                as com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
+        dslJniLibsPackagingOptionsImpl.setKeepDebugSymbols(
+            Sets.union(dslPackagingOptions.jniLibs.keepDebugSymbols, setOf("baz"))
+        )
 
         val jniLibsApkPackagingOptions =
             JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, M)
 
-        assertThat(jniLibsApkPackagingOptions.keepDebugSymbols.get()).containsExactly("foo", "bar")
+        assertThat(jniLibsApkPackagingOptions.keepDebugSymbols.get())
+            .containsExactly("foo", "bar", "baz")
     }
 
     @Test

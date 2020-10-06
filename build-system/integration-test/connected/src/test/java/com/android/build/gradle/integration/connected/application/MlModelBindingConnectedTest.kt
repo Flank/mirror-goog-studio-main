@@ -38,11 +38,7 @@ class MlModelBindingConnectedTest {
 
     @Rule
     @JvmField
-    var project =
-        builder().fromTestProject("mlModelBinding")
-            // b/146163513
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .create()
+    var project = builder().fromTestProject("mlModelBinding").create()
 
     @Before
     fun setup() {
@@ -81,6 +77,9 @@ class MlModelBindingConnectedTest {
 
         // fail fast if no response
         project.addAdbTimeOutInMs()
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll")
     }
 
     @Test

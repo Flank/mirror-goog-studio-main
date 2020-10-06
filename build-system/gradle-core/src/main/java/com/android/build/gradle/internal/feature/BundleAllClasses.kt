@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.feature
 
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
@@ -137,18 +138,33 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
             if (creationConfig.registeredProjectClassesVisitors.isNotEmpty()) {
-                task.inputDirs.from(
-                    creationConfig.artifacts.get(
-                        InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES
-                    )
-                )
-                task.inputJars.from(
-                    creationConfig.services.fileCollection(
+                if (creationConfig.asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
+                    task.inputDirs.from(
                         creationConfig.artifacts.get(
-                            InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS
+                            InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES
                         )
-                    ).asFileTree
-                )
+                    )
+                    task.inputJars.from(
+                        creationConfig.services.fileCollection(
+                            creationConfig.artifacts.get(
+                                InternalArtifactType.FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS
+                            )
+                        ).asFileTree
+                    )
+                } else {
+                    task.inputDirs.from(
+                        creationConfig.artifacts.get(
+                            InternalArtifactType.ASM_INSTRUMENTED_PROJECT_CLASSES
+                        )
+                    )
+                    task.inputJars.from(
+                        creationConfig.services.fileCollection(
+                            creationConfig.artifacts.get(
+                                InternalArtifactType.ASM_INSTRUMENTED_PROJECT_JARS
+                            )
+                        ).asFileTree
+                    )
+                }
             } else {
                 task.inputDirs.from(
                     creationConfig.artifacts.get(InternalArtifactType.JAVAC),

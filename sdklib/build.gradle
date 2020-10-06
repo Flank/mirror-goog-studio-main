@@ -186,8 +186,8 @@ task initSdkForConnectedTestsStableChannel(type: JavaExec) {
             'system-images;android-19;default;x86',
             'tools',
             'platform-tools',
-            'build-tools;30.0.0',
-            'platforms;android-29',
+            'build-tools;30.0.2',
+            'platforms;android-30',
             'platforms;android-27',
             'platforms;android-25',
             'platforms;android-24',
@@ -218,7 +218,7 @@ task initSdkForConnectedTestsUnstableChannel(type: JavaExec) {
     args = ['--sdk_root=' + System.getenv("ANDROID_SDK_ROOT"),
             '--channel=2',
             '--verbose',
-            'platforms;android-29',
+            'platforms;android-30',
     ]
 }
 

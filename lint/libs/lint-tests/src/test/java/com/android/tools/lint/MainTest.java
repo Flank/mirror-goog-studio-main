@@ -17,6 +17,7 @@
 package com.android.tools.lint;
 
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
+import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
@@ -695,6 +696,98 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {"--check", "HardcodedText", project.getPath()});
+    }
+
+    public void testFatalOnly() throws Exception {
+        // This is a lint infrastructure test to make sure we correctly include issues
+        // with fatal only
+        File project =
+                getProjectDir(
+                        null,
+                        manifest().minSdk(1),
+                        xml(
+                                "lint.xml",
+                                ""
+                                        + "<lint>\n"
+                                        + "    <issue id=\"DuplicateDefinition\" severity=\"fatal\"/>\n"
+                                        + "</lint>\n"),
+                        xml(
+                                "res/layout/test.xml",
+                                ""
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <Button android:id='@+id/duplicated'/>"
+                                        + "    <Button android:id='@+id/duplicated'/>"
+                                        + "</LinearLayout>\n"),
+                        xml(
+                                "res/values/duplicates.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <item type=\"id\" name=\"name\" />\n"
+                                        + "    <item type=\"id\" name=\"name\" />\n"
+                                        + "</resources>\n"),
+                        kotlin("val path = \"/sdcard/path\""));
+
+        // Without --fatalOnly: Both errors and warnings are reported.
+        checkDriver(
+                ""
+                        + "res/layout/test.xml:2: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
+                        + "    <Button android:id='@+id/duplicated'/>    <Button android:id='@+id/duplicated'/></LinearLayout>\n"
+                        + "                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/layout/test.xml:2: Duplicate id @+id/duplicated originally defined here\n"
+                        + "res/values/duplicates.xml:3: Error: name has already been defined in this folder [DuplicateDefinition]\n"
+                        + "    <item type=\"id\" name=\"name\" />\n"
+                        + "                    ~~~~~~~~~~~\n"
+                        + "    res/values/duplicates.xml:2: Previously defined here\n"
+                        + "src/test.kt:1: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "val path = \"/sdcard/path\"\n"
+                        + "            ~~~~~~~~~~~~\n"
+                        + "res/layout/test.xml:1: Warning: The resource R.layout.test appears to be unused [UnusedResources]\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "^\n"
+                        + "2 errors, 2 warnings",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "--quiet",
+                    "--disable",
+                    "LintError",
+                    "--disable",
+                    "UsesMinSdkAttributes",
+                    project.getPath()
+                });
+
+        // WITH --fatalOnly: Only the DuplicateDefinition issue is flagged, since it is fatal.
+        checkDriver(
+                // Both an implicitly fatal issue (DuplicateIds) and an error severity issue
+                // configured to be fatal via lint.xml (DuplicateDefinition)
+                ""
+                        + "res/layout/test.xml:2: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
+                        + "    <Button android:id='@+id/duplicated'/>    <Button android:id='@+id/duplicated'/></LinearLayout>\n"
+                        + "                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/layout/test.xml:2: Duplicate id @+id/duplicated originally defined here\n"
+                        + "res/values/duplicates.xml:3: Error: name has already been defined in this folder [DuplicateDefinition]\n"
+                        + "    <item type=\"id\" name=\"name\" />\n"
+                        + "                    ~~~~~~~~~~~\n"
+                        + "    res/values/duplicates.xml:2: Previously defined here\n"
+                        + "2 errors, 0 warnings",
+                "",
+                ERRNO_ERRORS,
+
+                // Args
+                new String[] {
+                    "--quiet",
+                    "--disable",
+                    "LintError",
+                    "--disable",
+                    "UsesMinSdkAttributes",
+                    "--fatalOnly",
+                    "--exitcode",
+                    project.getPath()
+                });
     }
 
     public void testValidateOutput() throws Exception {

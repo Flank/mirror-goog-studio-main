@@ -32,13 +32,13 @@ class BuiltInCmakeSettingsJsonKtTest {
         BasicCmakeMock().let {
             val module = createCxxModuleModel(
                 it.sdkComponents,
-                it.configurationModel)
+                it.configurationParameters)
             val variant = createCxxVariantModel(
-                it.configurationModel,
+                it.configurationParameters,
                 module)
             val abi = createCxxAbiModel(
                 it.sdkComponents,
-                it.configurationModel,
+                it.configurationParameters,
                 variant,
                 Abi.X86)
             abi.getNdkMetaCmakeSettingsJson().toJsonString()

@@ -37,17 +37,17 @@ class SigningConfigWriterTaskTest {
 
     internal lateinit var project: Project
     internal lateinit var task: SigningConfigWriterTask
-    lateinit var outputDirectory : File
+    lateinit var outputFile : File
 
     @Before
     @Throws(IOException::class)
     fun setUp() {
         val testDir = temporaryFolder.newFolder()
-        outputDirectory = temporaryFolder.newFolder()
+        outputFile = temporaryFolder.newFile()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         task = project.tasks.create("test", SigningConfigWriterTask::class.java)
-        task.outputDirectory.set(outputDirectory)
+        task.outputFile.set(outputFile)
     }
 
     @Test
@@ -55,19 +55,12 @@ class SigningConfigWriterTaskTest {
     fun testTask() {
         val signingConfig = SigningConfig("signingConfig_name")
         signingConfig.storePassword = "foobar"
-        signingConfig.isV1SigningEnabled = true
-        task.signingConfigData =
-            SigningConfigData.fromSigningConfig(
-                signingConfig = signingConfig,
-                minSdk = 1,
-                targetApi = null
-            )
+        signingConfig.enableV1Signing = true
+        task.signingConfigData = SigningConfigData.fromSigningConfig(signingConfig)
 
         task.doTaskAction()
-        val files = outputDirectory.listFiles()
-        assertThat(files).hasLength(1)
 
-        val config = SigningConfigUtils.load(files[0])
-        assertThat(config).isEqualTo(task.signingConfigData)
+        val loadedSigningConfigData = SigningConfigUtils.loadSigningConfigData(outputFile)
+        assertThat(loadedSigningConfigData).isEqualTo(task.signingConfigData)
     }
 }

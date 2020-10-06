@@ -38,6 +38,7 @@ public class ImlModule extends BazelRule {
     private List<String> resources = new LinkedList<>();
     private List<String> exclude = new LinkedList<>();
     private List<String> imlFiles = new LinkedList<>();
+    private List<String> javacOpts = new LinkedList<>();
     private Map<String, String> prefixes = new LinkedHashMap<>();
     private Map<BazelRule, List<Tag>> dependencyTags = new HashMap<>();
     private Set<BazelRule> runtimeDeps = Sets.newLinkedHashSet();
@@ -67,6 +68,7 @@ public class ImlModule extends BazelRule {
         call.setArgument("deps", tagDependencies(dependencies));
         call.setArgument("exports", exported);
         call.setArgument("iml_files", imlFiles);
+        call.setArgument("javacopts_from_jps", javacOpts);
         call.setArgument("package_prefixes", prefixes);
         call.setArgument("runtime_deps", runtimeDeps);
         call.setArgument("test_runtime_deps", testRuntimeDeps);
@@ -158,5 +160,9 @@ public class ImlModule extends BazelRule {
 
     public void addExclude(String exclude) {
         this.exclude.add(exclude);
+    }
+
+    public void addJavacOption(String option) {
+        javacOpts.add(option);
     }
 }

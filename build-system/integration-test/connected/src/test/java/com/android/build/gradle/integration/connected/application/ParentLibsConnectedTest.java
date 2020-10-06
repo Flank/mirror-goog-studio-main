@@ -35,11 +35,7 @@ public class ParentLibsConnectedTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("parentLibsTest")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+            GradleTestProject.builder().fromTestProject("parentLibsTest").create();
 
     @Before
     public void setUp() throws IOException {
@@ -48,6 +44,9 @@ public class ParentLibsConnectedTest {
                 project.getSubproject("app").file(SdkConstants.FN_LOCAL_PROPERTIES));
         // fail fast if no response
         project.getSubproject(":app:application").addAdbTimeOutInMs();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.getSubproject("app").execute("uninstallAll");
     }
 
     @Test

@@ -36,7 +36,12 @@ class KeepDebugSymbolsTest {
             .appendToBuild(
                 """
                     android {
-                        packagingOptions.jniLibs.keepDebugSymbols.add('**/dslDoNotStrip.so')
+                        packagingOptions.jniLibs.keepDebugSymbols.add('**/dslDoNotStrip1.so')
+                        packagingOptions {
+                            jniLibs {
+                                keepDebugSymbols += '**/dslDoNotStrip2.so'
+                            }
+                        }
                         onVariantProperties.withName('debug') {
                             packagingOptions.jniLibs.keepDebugSymbols.add('**/debugDoNotStrip.so')
                         }
@@ -59,7 +64,8 @@ class KeepDebugSymbolsTest {
     fun testKeepDebugSymbols() {
         // add native libs to app
         createAbiFile("x86", "strip.so")
-        createAbiFile("x86", "dslDoNotStrip.so")
+        createAbiFile("x86", "dslDoNotStrip1.so")
+        createAbiFile("x86", "dslDoNotStrip2.so")
         createAbiFile("x86", "debugDoNotStrip.so")
         createAbiFile("x86", "releaseDoNotStrip.so")
 
@@ -67,14 +73,18 @@ class KeepDebugSymbolsTest {
 
         val debugApk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         TruthHelper.assertThatApk(debugApk).contains("lib/x86/strip.so")
-        TruthHelper.assertThatApk(debugApk).contains("lib/x86/dslDoNotStrip.so")
+        TruthHelper.assertThatApk(debugApk).contains("lib/x86/dslDoNotStrip1.so")
+        TruthHelper.assertThatApk(debugApk).contains("lib/x86/dslDoNotStrip2.so")
         TruthHelper.assertThatApk(debugApk).contains("lib/x86/debugDoNotStrip.so")
         TruthHelper.assertThatApk(debugApk).contains("lib/x86/releaseDoNotStrip.so")
         TruthHelper.assertThatNativeLib(
             ZipHelper.extractFile(debugApk, "lib/x86/strip.so")
         ).isStripped()
         TruthHelper.assertThatNativeLib(
-            ZipHelper.extractFile(debugApk, "lib/x86/dslDoNotStrip.so")
+            ZipHelper.extractFile(debugApk, "lib/x86/dslDoNotStrip1.so")
+        ).isNotStripped()
+        TruthHelper.assertThatNativeLib(
+            ZipHelper.extractFile(debugApk, "lib/x86/dslDoNotStrip2.so")
         ).isNotStripped()
         TruthHelper.assertThatNativeLib(
             ZipHelper.extractFile(debugApk, "lib/x86/debugDoNotStrip.so")
@@ -85,14 +95,18 @@ class KeepDebugSymbolsTest {
 
         val releaseApk = project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE)
         TruthHelper.assertThatApk(releaseApk).contains("lib/x86/strip.so")
-        TruthHelper.assertThatApk(releaseApk).contains("lib/x86/dslDoNotStrip.so")
+        TruthHelper.assertThatApk(releaseApk).contains("lib/x86/dslDoNotStrip1.so")
+        TruthHelper.assertThatApk(releaseApk).contains("lib/x86/dslDoNotStrip2.so")
         TruthHelper.assertThatApk(releaseApk).contains("lib/x86/debugDoNotStrip.so")
         TruthHelper.assertThatApk(releaseApk).contains("lib/x86/releaseDoNotStrip.so")
         TruthHelper.assertThatNativeLib(
             ZipHelper.extractFile(releaseApk, "lib/x86/strip.so")
         ).isStripped()
         TruthHelper.assertThatNativeLib(
-            ZipHelper.extractFile(releaseApk, "lib/x86/dslDoNotStrip.so")
+            ZipHelper.extractFile(releaseApk, "lib/x86/dslDoNotStrip1.so")
+        ).isNotStripped()
+        TruthHelper.assertThatNativeLib(
+            ZipHelper.extractFile(releaseApk, "lib/x86/dslDoNotStrip2.so")
         ).isNotStripped()
         TruthHelper.assertThatNativeLib(
             ZipHelper.extractFile(releaseApk, "lib/x86/debugDoNotStrip.so")

@@ -20,6 +20,8 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
+import com.android.build.gradle.internal.packaging.defaultExcludes
+import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.builder.errors.EvalIssueException
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
@@ -307,6 +309,33 @@ class KotlinDslTest {
         assertThat(android.productFlavors.getByName("two").customExtension.customSetting).isTrue()
     }
 
+    @Test
+    fun `java resource packaging options`() {
+        android.packagingOptions {
+            resources {
+                excludes += "a"
+                assertThat(excludes).containsExactlyElementsIn(defaultExcludes.plus("a"))
+                pickFirsts += "b"
+                assertThat(pickFirsts).containsExactly("b")
+                merges += "c"
+                assertThat(merges).containsExactlyElementsIn(defaultMerges.plus("c"))
+            }
+        }
+    }
+
+    @Test
+    fun `native libs packaging options`() {
+        android.packagingOptions {
+            jniLibs {
+                excludes += "a"
+                assertThat(excludes).containsExactly("a")
+                pickFirsts += "b"
+                assertThat(pickFirsts).containsExactly("b")
+                keepDebugSymbols += "c"
+                assertThat(keepDebugSymbols).containsExactly("c")
+            }
+        }
+    }
 
     private fun assertThatPath(file: File?): StringSubject {
         return assertThat(file?.path)

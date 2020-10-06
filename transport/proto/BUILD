@@ -14,5 +14,6 @@ cc_grpc_proto_library(
     name = "cc_proto",
     srcs = glob(["**/*.proto"]),
     grpc_support = 1,
+    include_prefix = "proto",
     tags = ["no_windows"],
 )

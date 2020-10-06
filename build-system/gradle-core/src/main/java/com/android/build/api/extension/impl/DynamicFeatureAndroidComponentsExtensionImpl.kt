@@ -23,14 +23,12 @@ import com.android.build.gradle.internal.services.DslServices
 
 open class DynamicFeatureAndroidComponentsExtensionImpl(
         dslServices: DslServices,
-        variantBuilderOperations: OperationsRegistrar<DynamicFeatureVariantBuilder>,
-        variantOperations: OperationsRegistrar<DynamicFeatureVariant>
+        variantApiOperationsRegistrar: VariantApiOperationsRegistrar<DynamicFeatureVariantBuilder, DynamicFeatureVariant>
 
 ):
         DynamicFeatureAndroidComponentsExtension,
         AndroidComponentsExtensionImpl<DynamicFeatureVariantBuilder, DynamicFeatureVariant>(
                 dslServices,
-                variantBuilderOperations,
-                variantOperations
+                variantApiOperationsRegistrar
         )
 

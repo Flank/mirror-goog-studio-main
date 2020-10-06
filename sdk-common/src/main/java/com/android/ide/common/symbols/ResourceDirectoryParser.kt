@@ -22,7 +22,6 @@ import com.android.SdkConstants.DOT_XML
 import com.android.ide.common.resources.FileResourceNameValidator
 import com.android.ide.common.resources.MergingException
 import com.android.ide.common.resources.configuration.FolderConfiguration
-import com.android.resources.Density
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.utils.SdkUtils
@@ -31,7 +30,6 @@ import com.google.common.io.Files
 import org.w3c.dom.Document
 import org.xml.sax.SAXParseException
 import java.io.File
-import java.io.IOException
 import java.io.InputStream
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
@@ -80,7 +78,8 @@ fun parseResourceSourceSetDirectory(
         directory: File,
         idProvider: IdProvider,
         platformAttrSymbols: SymbolTable?,
-        tablePackage: String? = null
+        tablePackage: String? = null,
+        validation: Boolean = true
 ): SymbolTable {
     Preconditions.checkArgument(directory.isDirectory, "!directory.isDirectory()")
 
@@ -101,7 +100,13 @@ fun parseResourceSourceSetDirectory(
         }
 
         parseResourceDirectory(
-                resourceDirectory, builder, idProvider, documentBuilder, platformAttrSymbols)
+                resourceDirectory,
+                builder,
+                idProvider,
+                documentBuilder,
+                platformAttrSymbols,
+                validation
+        )
     }
 
     if (tablePackage != null) {
@@ -124,7 +129,8 @@ private fun parseResourceDirectory(
         builder: SymbolTable.Builder,
         idProvider: IdProvider,
         documentBuilder: DocumentBuilder,
-        platformAttrSymbols: SymbolTable?
+        platformAttrSymbols: SymbolTable?,
+        validation: Boolean
 ) {
     assert(resourceDirectory.isDirectory)
 
@@ -143,7 +149,14 @@ private fun parseResourceDirectory(
 
     resourceFiles.forEach {
         parseResourceFile(
-            it, folderResourceType!!, builder, documentBuilder, platformAttrSymbols, idProvider)
+                it,
+                folderResourceType!!,
+                builder,
+                documentBuilder,
+                platformAttrSymbols,
+                idProvider,
+                validation
+        )
     }
 }
 
@@ -153,7 +166,8 @@ fun parseResourceFile(
     builder: SymbolTable.Builder,
     documentBuilder: DocumentBuilder,
     platformAttrSymbols: SymbolTable?,
-    idProvider: IdProvider = IdProvider.constant()) {
+    idProvider: IdProvider = IdProvider.constant(),
+    validation: Boolean) {
 
     if (maybeResourceFile.isDirectory) {
         return
@@ -170,23 +184,25 @@ fun parseResourceFile(
         val domTree: Document
         try {
             domTree = documentBuilder.parse(maybeResourceFile)
-            val parsedXml = parseValuesResource(domTree, idProvider, platformAttrSymbols)
+            val parsedXml =
+                    parseValuesResource(domTree, idProvider, platformAttrSymbols, validation)
             parsedXml.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
         } catch (e: Exception) {
             throw ResourceDirectoryParseException(
-                "Failed to parse XML resource file '${maybeResourceFile.absolutePath}'",
-                e)
+                "Failed to parse XML resource file '${maybeResourceFile.absolutePath}'", e)
         }
 
     } else {
-        // We do not need to validate the filenames of files inside the `values` directory as
-        // they do not get parsed into Symbols; but we need to validate the filenames of files
-        // inside non-values directories.
-        try {
-            FileResourceNameValidator.validate(maybeResourceFile, folderResourceType!!)
-        } catch (e: MergingException) {
-            throw ResourceDirectoryParseException(
-                "Failed file name validation for file ${maybeResourceFile.absolutePath}", e)
+        if (validation) {
+            // We do not need to validate the filenames of files inside the `values` directory as
+            // they do not get parsed into Symbols; but we need to validate the filenames of files
+            // inside non-values directories.
+            try {
+                FileResourceNameValidator.validate(maybeResourceFile, folderResourceType)
+            } catch (e: MergingException) {
+                throw ResourceDirectoryParseException(
+                        "Failed file name validation for file ${maybeResourceFile.absolutePath}", e)
+            }
         }
 
         val fileName = maybeResourceFile.name
@@ -196,9 +212,10 @@ fun parseResourceFile(
 
         val resourceType = FolderTypeRelationship
             .getNonIdRelatedResourceType(folderResourceType)
+
         addIfNotExisting(
             builder,
-            Symbol.createAndValidateSymbol(resourceType, symbolName, idProvider))
+            Symbol.createSymbol(resourceType, symbolName, idProvider, validation = validation))
 
         if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
             && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {
@@ -206,7 +223,8 @@ fun parseResourceFile(
             // search of lazy constructions like `@+id/name` that also declare resources.
             try {
                 val domTree = documentBuilder.parse(maybeResourceFile)
-                val extraSymbols = parseResourceForInlineResources(domTree, idProvider)
+                val extraSymbols =
+                        parseResourceForInlineResources(domTree, idProvider, validation)
                 extraSymbols.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
             } catch (e: Exception) {
                 throw ResourceDirectoryParseException(
@@ -306,7 +324,7 @@ fun SymbolTable.Builder.parseAarZipEntry(
             .getNonIdRelatedResourceType(folderResourceType)
         addIfNotExisting(
             this,
-            Symbol.createAndValidateSymbol(resourceType, symbolName, IdProvider.constant()))
+            Symbol.createSymbol(resourceType, symbolName, IdProvider.constant()))
 
         if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
             && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {

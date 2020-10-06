@@ -156,7 +156,7 @@ protected constructor() {
             }
 
             val implementation = issue.implementation
-            var detectorClass: Class<out Detector> = implementation.detectorClass
+            val detectorClass: Class<out Detector> = implementation.detectorClass
             val issueScope = implementation.scope
             if (!detectorClasses.contains(detectorClass)) {
                 // Determine if the issue is enabled
@@ -164,8 +164,8 @@ protected constructor() {
                     continue
                 }
 
+                //noinspection ExpensiveAssertion
                 assert(implementation.isAdequate(scope)) // Ensured by getIssuesForScope above
-                detectorClass = client.replaceDetector(detectorClass)
                 detectorClasses.add(detectorClass)
             }
 
@@ -459,20 +459,6 @@ protected constructor() {
             category = Category.LINT,
             priority = 1,
             severity = Severity.WARNING,
-            implementation = EMPTY_IMPLEMENTATION
-        )
-
-        /**
-         * Issue reported when lint is canceled
-         */
-        @JvmField // temporarily
-        val CANCELLED = Issue.create(
-            id = "LintCanceled",
-            briefDescription = "Lint Canceled",
-            explanation = "Lint canceled by user; the issue report may not be complete.",
-            category = Category.LINT,
-            priority = 0,
-            severity = Severity.INFORMATIONAL,
             implementation = EMPTY_IMPLEMENTATION
         )
 

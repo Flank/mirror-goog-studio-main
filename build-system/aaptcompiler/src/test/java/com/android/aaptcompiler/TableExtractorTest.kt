@@ -6,7 +6,6 @@ import com.android.resources.ResourceVisibility
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.util.regex.Pattern
 
 const val XML_PREAMBLE = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 
@@ -66,7 +65,7 @@ class TableExtractorTest {
 
   @Test
   fun failToParseWithNoRoot() {
-    val input = """$XML_PREAMBLE<attr name="foo"/>""" 
+    val input = """$XML_PREAMBLE<attr name="foo"/>"""
     val mockLogger = BlameLoggerTest.MockLogger()
     val blameLogger = getMockBlameLogger(mockLogger)
     val extractor =
@@ -92,7 +91,7 @@ class TableExtractorTest {
       assertThat(testParse(input, mockLogger = mockLogger)).isFalse()
       assertThat(mockLogger.errors).hasSize(1)
       val errorMsg = mockLogger.errors.single().first
-      
+
       assertThat(errorMsg).contains(
           "test.xml.rewritten:7:1: Duplicate symbol 'id/bar' defined here:")
       assertThat(errorMsg).contains(
@@ -367,6 +366,123 @@ class TableExtractorTest {
 
     str = getValue("string/foo2") as BasicString
     assertThat(str.toString()).isEqualTo("  This is what   I think  ")
+    assertThat(str.untranslatables).isEmpty()
+
+    assertThat(
+      testParse("""<string name="foo3">"\nHello world\n\n"</string>"""))
+
+    str = getValue("string/foo3") as BasicString
+    assertThat(str.toString()).isEqualTo("\nHello world\n\n")
+    assertThat(str.untranslatables).isEmpty()
+  }
+
+  @Test
+  fun testParseStringWithExplicitNewLines() {
+    assertThat(testParse("""<string name="foo">\n\nTest\n\n</string>"""))
+
+    var str = getValue("string/foo") as BasicString
+    assertThat(str.toString()).isEqualTo("\n\nTest\n\n")
+    assertThat(str.untranslatables).isEmpty()
+
+    assertThat(testParse("""<string name="foo2">      \n      </string>"""))
+
+    str = getValue("string/foo2") as BasicString
+    assertThat(str.toString()).isEqualTo("\n")
+    assertThat(str.untranslatables).isEmpty()
+
+     assertThat(testParse("""<string name="foo3">\n\n\n\n\n\n\n\n\n</string>"""))
+
+    str = getValue("string/foo3") as BasicString
+    assertThat(str.toString()).isEqualTo("\n\n\n\n\n\n\n\n\n")
+    assertThat(str.untranslatables).isEmpty()
+  }
+
+  @Test
+  fun testParseStringWithBasicLineBreaking() {
+    assertThat(testParse("""
+    <string name="foo">
+
+          Hello
+          world
+
+
+    </string>""".trimMargin()))
+
+    val str = getValue("string/foo") as BasicString
+    assertThat(str.toString()).isEqualTo("Hello world")
+    assertThat(str.untranslatables).isEmpty()
+  }
+
+  @Test
+  fun testStringOfWhitespaces() {
+    assertThat(testParse("""<string name="foo">      </string>"""))
+
+    var str = getValue("string/foo") as BasicString
+    assertThat(str.toString()).isEmpty()
+    assertThat(str.untranslatables).isEmpty()
+
+    assertThat(testParse("""
+        <string name="foo2">
+
+
+
+        </string>
+    """.trimMargin()))
+
+    str = getValue("string/foo2") as BasicString
+    assertThat(str.toString()).isEmpty()
+    assertThat(str.untranslatables).isEmpty()
+  }
+
+  @Test
+  fun testEmptyString() {
+    assertThat(testParse("""<string name="foo"></string>"""))
+
+    val str = getValue("string/foo") as BasicString
+    assertThat(str.toString()).isEmpty()
+    assertThat(str.untranslatables).isEmpty()
+  }
+
+  @Test
+  fun testShortStrings() {
+    assertThat(testParse("""<string name="foo">a</string>"""))
+
+    var str = getValue("string/foo") as BasicString
+    assertThat(str.toString()).isEqualTo("a")
+    assertThat(str.untranslatables).isEmpty()
+
+    assertThat(testParse("""<string name="foo2">\n</string>"""))
+
+    str = getValue("string/foo2") as BasicString
+    assertThat(str.toString()).isEqualTo("\n")
+    assertThat(str.untranslatables).isEmpty()
+
+    assertThat(testParse("""<string name="foo3">"</string>"""))
+
+    str = getValue("string/foo3") as BasicString
+    //AAPT2 removes the single quotes, so should be empty.
+    assertThat(str.toString()).isEmpty()
+    assertThat(str.untranslatables).isEmpty()
+  }
+
+  @Test
+  fun testStringWithSlash() {
+    assertThat(testParse("""<string name="foo">\</string>"""))
+
+    var str = getValue("string/foo") as BasicString
+    assertThat(str.toString()).isEqualTo("")
+    assertThat(str.untranslatables).isEmpty()
+
+    assertThat(testParse("""<string name="foo2">\woo\</string>"""))
+
+    str = getValue("string/foo2") as BasicString
+    assertThat(str.toString()).isEqualTo("woo")
+    assertThat(str.untranslatables).isEmpty()
+
+    assertThat(testParse("""<string name="foo3">\@\'\\</string>"""))
+
+    str = getValue("string/foo3") as BasicString
+    assertThat(str.toString()).isEqualTo("@'\\")
     assertThat(str.untranslatables).isEmpty()
   }
 

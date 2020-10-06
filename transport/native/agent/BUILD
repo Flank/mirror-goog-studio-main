@@ -3,13 +3,15 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 # Generic agent for managing communications between app and daemon
 cc_library(
     name = "agent",
-    srcs = ["agent.cc"],
+    srcs = [
+        "agent.cc",
+        "agent.h",
+    ],
     hdrs = ["agent.h"],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport/native",
-        "-I$(GENDIR)/tools/base/transport",
     ],
+    include_prefix = "agent",
     tags = [
         "no_windows",
     ],
@@ -24,14 +26,17 @@ cc_library(
 # Common helper used by both perfa_lib and JVMTI agent.
 cc_library(
     name = "jvmti_helper",
-    srcs = ["jvmti_helper.cc"],
+    srcs = [
+        "jvmti_helper.cc",
+        "jvmti_helper.h",
+        "scoped_local_ref.h",
+    ],
     hdrs = [
         "jvmti_helper.h",
         "scoped_local_ref.h",
     ],
-    copts = ANDROID_COPTS + [
-        "-Itools/base/transport/native",
-    ],
+    copts = ANDROID_COPTS,
+    include_prefix = "agent",
     tags = [
         "no_windows",
     ],
@@ -46,6 +51,8 @@ cc_library(
 cc_library(
     name = "jni_wrappers",
     srcs = ["jni_wrappers.h"],
+    hdrs = ["jni_wrappers.h"],
+    include_prefix = "agent",
     tags = [
         "no_windows",
     ],
@@ -64,11 +71,9 @@ cc_binary(
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/agent",
-        "-Itools/base/transport/native",
         "-Itools/base/echo-sample",
         "-Itools/base/dynamic-layout-inspector/src/main/native/agent",
         "-Itools/base/app-inspection/native/include",
-        "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,

@@ -16,15 +16,14 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
-import com.android.build.api.component.analytics.AnalyticsEnabledVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
-import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.LibraryPackagingOptions
-import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.*
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -115,15 +114,19 @@ open class  LibraryVariantImpl @Inject constructor(
     override val dexingType: DexingType
         get() = delegate.dexingType
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariant =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledLibraryVariant::class.java,
-            this,
-            stats
-        )
+    override val debuggable: Boolean
+        get() = variantDslInfo.isDebuggable
+
+    override fun <T : Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledLibraryVariant::class.java,
+                    this,
+                    stats
+            ) as T
 
     override val codeShrinker: CodeShrinker?
         get() = delegate.getCodeShrinker()

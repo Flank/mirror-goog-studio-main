@@ -20,26 +20,27 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 
 /**
- * Task that writes the SigningConfig information to a file.
+ * Task that writes the SigningConfig information to a file, excluding the information about which
+ * signature versions are enabled, which is handled by [SigningConfigVersionsWriterTask].
  */
 @CacheableTask
 abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
-    @get:OutputDirectory
-    abstract val outputDirectory: DirectoryProperty
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -60,7 +61,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
         internal set
 
     public override fun doTaskAction() {
-        SigningConfigUtils.save(outputDirectory.get().asFile, signingConfigData)
+        SigningConfigUtils.saveSigningConfigData(outputFile.get().asFile, signingConfigData)
     }
 
     class CreationAction(creationConfig: VariantCreationConfig) :
@@ -78,10 +79,12 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             taskProvider: TaskProvider<SigningConfigWriterTask>
         ) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts.setInitialProvider(
-                taskProvider,
-                SigningConfigWriterTask::outputDirectory
-            ).on(InternalArtifactType.SIGNING_CONFIG)
+            creationConfig.artifacts
+                .setInitialProvider(
+                    taskProvider,
+                    SigningConfigWriterTask::outputFile
+                ).withName("signing-config-data.json")
+                .on(InternalArtifactType.SIGNING_CONFIG_DATA)
         }
 
         override fun configure(
@@ -96,13 +99,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
             task.signingConfigData = creationConfig.variantDslInfo.signingConfig?.let {
                 task.storeFilePath = it.storeFile?.path
-                SigningConfigData.fromSigningConfig(
-                    it,
-                    creationConfig.minSdkVersion.apiLevel,
-                    creationConfig.globalScope
-                        .projectOptions
-                        .get(IntegerOption.IDE_TARGET_DEVICE_API)
-                )
+                SigningConfigData.fromSigningConfig(it)
             }
         }
     }

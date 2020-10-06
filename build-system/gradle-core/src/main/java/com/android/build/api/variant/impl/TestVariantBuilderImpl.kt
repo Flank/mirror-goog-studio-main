@@ -19,6 +19,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariantBuilder
 import com.android.build.api.variant.TestVariantBuilder
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -31,13 +32,14 @@ open class TestVariantBuilderImpl @Inject constructor(
     variantApiServices: VariantApiServices
 ) : VariantBuilderImpl(variantDslInfo, variantConfiguration, variantApiServices),
     TestVariantBuilder {
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledTestVariantBuilder =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledTestVariantBuilder::class.java,
-            this,
-            stats
-        )
+
+    override fun <T : VariantBuilder> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledTestVariantBuilder::class.java,
+                    this,
+                    stats
+            ) as T
 }

@@ -17,9 +17,9 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariantBuilder
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.dsl.DependenciesInfo
 import com.android.build.api.variant.ApplicationVariantBuilder
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
@@ -63,13 +63,14 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
         action.execute(dependenciesInfo)
     }
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledVariantBuilder =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledApplicationVariantBuilder::class.java,
-            this,
-            stats
-        )
+    @Suppress("UNCHECKED_CAST")
+    override fun <T: VariantBuilder> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            stats: GradleBuildVariant.Builder,): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledApplicationVariantBuilder::class.java,
+                    this,
+                    stats
+            ) as T
+
 }

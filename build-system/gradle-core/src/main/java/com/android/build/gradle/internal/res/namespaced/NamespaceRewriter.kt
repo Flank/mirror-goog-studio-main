@@ -30,10 +30,6 @@ import com.android.io.nonClosing
 import com.android.resources.NamespaceReferenceRewriter
 import com.android.utils.forEach
 import com.android.resources.ResourceType
-import com.android.tools.build.apkzlib.zip.StoredEntryType
-import com.android.tools.build.apkzlib.zip.ZFile
-import com.android.tools.build.apkzlib.zip.ZFileOptions
-import com.android.utils.PathUtils
 import com.android.utils.PositionXmlParser
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
@@ -50,7 +46,6 @@ import org.objectweb.asm.Opcodes.ASM5
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -561,7 +556,7 @@ class NamespaceRewriter(
                 // Now add a styleable with the new children keeping the old values.
                 symbol as Symbol.StyleableSymbol
                 val newStyleable =
-                    Symbol.createAndValidateStyleableSymbol(
+                    Symbol.createStyleableSymbol(
                         symbol.name, symbol.values, newChildren.build())
                 fixedTable.add(newStyleable)
             }

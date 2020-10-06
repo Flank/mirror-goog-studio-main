@@ -97,17 +97,6 @@ public final class FoundryTest {
         }
     }
 
-    @Test
-    public void testArmLinuxLinker() {
-        if (REMOTE_PROP) {
-            execute("prebuilts/studio/sdk/linux/build-tools/30.0.0/lld -flavor ld --help");
-        }
-    }
-
-    private void execute(String command) {
-        execute(command, null, 0);
-    }
-
     private void execute(String command, String[] env, int expectedExitValue) {
         try {
             Process proc =

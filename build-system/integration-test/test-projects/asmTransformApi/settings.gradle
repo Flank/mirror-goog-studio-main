@@ -1,0 +1,4 @@
+include ':app'
+include ':feature'
+include ':instrumentationLib'
+include ':lib'

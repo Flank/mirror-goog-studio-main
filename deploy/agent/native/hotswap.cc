@@ -211,12 +211,14 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     error_num = (*extension)(jvmti_, num_modified_classes, def);
 
     std::string error_msg = "no error";
-    SwapResult::Status variableCheck =
-        var_reinit.ReinitializeVariables(&error_msg);
-    if (variableCheck != SwapResult::SUCCESS) {
-      result.status = variableCheck;
-      result.error_details = error_msg;
-      return result;
+    if (error_num == JVMTI_ERROR_NONE) {
+      SwapResult::Status variableCheck =
+          var_reinit.ReinitializeVariables(&error_msg);
+      if (variableCheck != SwapResult::SUCCESS) {
+        result.status = variableCheck;
+        result.error_details = error_msg;
+        return result;
+      }
     }
 
     suspend_error = suspend.ResumeSuspendedThreads();

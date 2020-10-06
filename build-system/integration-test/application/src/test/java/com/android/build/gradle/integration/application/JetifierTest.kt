@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.ANDROID_ARCH_VERSION
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
@@ -238,6 +239,40 @@ class JetifierTest(private val withKotlin: Boolean) {
             .run("assembleDebug")
     }
 
+    /** Regression test for bug 168038088. */
+    @Test
+    fun `test invalid android_arch dependencies are not replaced`() {
+        // It's enough to test without Kotlin (to save test execution time)
+        assumeFalse(withKotlin)
+
+        prepareProjectForAndroidX()
+        // Add android.arch dependencies
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").buildFile,
+                """
+                dependencies {
+                    // Invalid dependency
+                    annotationProcessor 'android.arch.persistence.room:compiler:2.0.0'
+                    // Valid dependency
+                    annotationProcessor 'android.arch.persistence.room:common:$ANDROID_ARCH_VERSION'
+                }
+                """.trimIndent()
+        )
+
+        val result = project.executor()
+                .with(BooleanOption.USE_ANDROID_X, true)
+                .with(BooleanOption.ENABLE_JETIFIER, true)
+                .expectFailure()
+                .run("assembleDebug")
+
+        // Check that an error was thrown for the invalid dependency, but not for the valid
+        // dependency
+        assertThat(result.failureMessage)
+                .contains("Could not find android.arch.persistence.room:compiler:2.0.0")
+        assertThat(result.failureMessage)
+                .doesNotContain("Could not find android.arch.persistence.room:common:$ANDROID_ARCH_VERSION")
+    }
+
     /**
      * Adds a check that dependencies are resolved lazily during the task execution phase and not
      * during the configuration or task graph creation phase.
@@ -277,7 +312,7 @@ class JetifierTest(private val withKotlin: Boolean) {
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app").buildFile,
             "compileSdkVersion rootProject.latestCompileSdk",
-            "compileSdkVersion \"android-29\""
+            "compileSdkVersion \"android-30\""
         )
         TestFileUtils.searchAndReplace(
             project.getSubproject(":app")

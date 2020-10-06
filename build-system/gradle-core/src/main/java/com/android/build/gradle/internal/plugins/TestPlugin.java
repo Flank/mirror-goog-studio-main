@@ -21,8 +21,8 @@ import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.extension.TestAndroidComponentsExtension;
-import com.android.build.api.extension.impl.OperationsRegistrar;
 import com.android.build.api.extension.impl.TestAndroidComponentsExtensionImpl;
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.gradle.BaseExtension;
@@ -113,16 +113,16 @@ public class TestPlugin
     @Override
     protected TestAndroidComponentsExtension createComponentExtension(
             @NonNull DslServices dslServices,
-            @NonNull OperationsRegistrar<TestVariantBuilderImpl> variantBuilderOperationsRegistrar,
-            @NonNull OperationsRegistrar<TestVariantImpl> variantOperationsRegistrar) {
+            @NonNull
+                    VariantApiOperationsRegistrar<TestVariantBuilderImpl, TestVariantImpl>
+                            variantApiOperationsRegistrar) {
         return project.getExtensions()
                 .create(
                         TestAndroidComponentsExtension.class,
                         "androidComponents",
                         TestAndroidComponentsExtensionImpl.class,
                         dslServices,
-                        variantBuilderOperationsRegistrar,
-                        variantOperationsRegistrar);
+                        variantApiOperationsRegistrar);
     }
 
     @NonNull

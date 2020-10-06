@@ -45,7 +45,7 @@ internal class DynamicFeatureTaskManager(
 
     override fun doCreateTasksForVariant(
             variantInfo: ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>,
-            allVariants: MutableList<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
+            allVariants: List<ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>>
     ) {
         createCommonTasks(variantInfo, allVariants)
 
@@ -77,7 +77,7 @@ internal class DynamicFeatureTaskManager(
 
         taskFactory.register(PerModuleBundleTask.CreationAction(variantProperties))
 
-        if (!variantProperties.variantDslInfo.isDebuggable) {
+        if (!variantProperties.debuggable) {
             taskFactory.register(PerModuleReportDependenciesTask.CreationAction(variantProperties))
         }
     }

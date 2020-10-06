@@ -85,6 +85,9 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
     abstract val inputResourcesDir: DirectoryProperty
 
     @get:Input
+    abstract val validateResources: Property<Boolean>
+
+    @get:Input
     abstract val enablePartialRIncrementalBuilds: Property<Boolean>
 
     @get:OutputFile
@@ -111,6 +114,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
             it.changedResources.set(changedResources)
             it.partialRDir.set(partialRDir)
             it.enablePartialRIncrementalBuilds.set(enablePartialRIncrementalBuilds)
+            it.validateResources.set(validateResources)
         }
     }
 
@@ -122,6 +126,7 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
         abstract val changedResources: ListProperty<SerializableChange>
         abstract val partialRDir: DirectoryProperty
         abstract val enablePartialRIncrementalBuilds: Property<Boolean>
+        abstract val validateResources: Property<Boolean>
     }
 
     abstract class ParseResourcesRunnable : ProfileAwareWorkAction<ParseResourcesParams>() {
@@ -182,6 +187,10 @@ abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
                     InternalArtifactType.PACKAGED_RES,
                     task.inputResourcesDir
             )
+
+            task.validateResources.setDisallowChanges(
+                    !creationConfig.services.projectOptions[
+                            BooleanOption.DISABLE_RESOURCE_VALIDATION])
         }
     }
 }
@@ -200,8 +209,11 @@ internal fun doFullTaskAction(parseResourcesParams: ParseLibraryResourcesTask.Pa
                 parseResourcesParams.platformAttrsRTxt.asFile.get())
         val documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
         val resourceFileSymbolTables: SortedSet<SymbolTableWithContextPath> =
-                getResourceDirectorySymbolTables(parseResourcesParams.inputResDir.asFile.get(),
-                        androidPlatformAttrSymbolTable, documentBuilder)
+                getResourceDirectorySymbolTables(
+                        parseResourcesParams.inputResDir.asFile.get(),
+                        androidPlatformAttrSymbolTable,
+                        documentBuilder,
+                        parseResourcesParams.validateResources.get())
         writeSymbolTablesToPartialRFiles(resourceFileSymbolTables, partialRDirectory)
         // Write in the format of R-def.txt since the IDs do not matter. The symbols will be
         // written in a deterministic way (sorted by type, then by canonical name).
@@ -214,7 +226,8 @@ internal fun doFullTaskAction(parseResourcesParams: ParseLibraryResourcesTask.Pa
                 parseResourcesParams.inputResDir.asFile.get(),
                 IdProvider.constant(),
                 getAndroidAttrSymbols(parseResourcesParams.platformAttrsRTxt.asFile.get()),
-                "local"
+                "local",
+                parseResourcesParams.validateResources.get()
         )
         // Write in the format of R-def.txt since the IDs do not matter. The symbols will be
         // written in a deterministic way (sorted by type, then by canonical name).
@@ -247,7 +260,15 @@ internal fun doIncrementalRDefTaskAction(
         // need to reprocess them if they're new - if only their contents changed we don't
         // need to do anything.
         if (fileChange.fileStatus == FileStatus.NEW) {
-            parseResourceFile(file, type, newSymbols, documentBuilder, platformSymbols)
+            parseResourceFile(
+                    file,
+                    type,
+                    newSymbols,
+                    documentBuilder,
+                    platformSymbols,
+                    IdProvider.constant(),
+                    parseResourcesParams.validateResources.get()
+            )
         }
     }
 
@@ -280,7 +301,10 @@ internal fun doIncrementalPartialRTaskAction(
         when (incrementalRes.fileStatus) {
             FileStatus.NEW -> {
                 val createdPartialRFile = getPartialRFromResource(
-                        incrementalRes.file, platformSymbols, documentBuilder)
+                        incrementalRes.file,
+                        platformSymbols,
+                        documentBuilder,
+                        parseResourcesParams.validateResources.get())
                 val fileToAdd = File(partialRDir, createdPartialRFile.name)
                 FileUtils.writeToFile(fileToAdd, createdPartialRFile.contents)
                 updateLibrarySymbolsFile = true
@@ -291,7 +315,10 @@ internal fun doIncrementalPartialRTaskAction(
 
                 val changedFileExists = maybeExistingPartialRFile.exists()
                 val createdPartialRFile = getPartialRFromResource(
-                        incrementalRes.file, platformSymbols, documentBuilder)
+                        incrementalRes.file,
+                        platformSymbols,
+                        documentBuilder,
+                        parseResourcesParams.validateResources.get())
                 // Only update changed partial R file if the contents are not the same as the
                 // previously saved file.
                 val updateChangedFile: Boolean =
@@ -333,12 +360,10 @@ internal fun canBeProcessedIncrementallyWithRDef(fileChange: SerializableChange)
         val file = fileChange.file
         val folderType = ResourceFolderType.getFolderType(file.parentFile.name)
                 ?: error("Invalid type '${file.parentFile.name}' for file ${file.absolutePath}")
-        if (canGenerateSymbols(folderType, file)) {
-            // ID generating files (e.g. values or XML layouts) can generate resources
-            // within them, if they were modified we cannot tell if a resource was removed
-            // so we need to reprocess everything.
-            return false
-        }
+        // ID generating files (e.g. values or XML layouts) can generate resources
+        // within them, if they were modified we cannot tell if a resource was removed
+        // so we need to reprocess everything.
+        return !canGenerateSymbols(folderType, file)
     }
     return true
 }
@@ -352,7 +377,9 @@ private fun getAndroidAttrSymbols(platformAttrsRTxt: File): SymbolTable =
 internal fun getResourceDirectorySymbolTables(
         resourceDirectory: File,
         platformAttrsSymbolTable: SymbolTable?,
-        documentBuilder: DocumentBuilder): SortedSet<SymbolTableWithContextPath> {
+        documentBuilder: DocumentBuilder,
+        validateResource: Boolean = true
+): SortedSet<SymbolTableWithContextPath> {
     val resourceSymbolTables =
             TreeSet<SymbolTableWithContextPath> { a, b -> a.path.compareTo(b.path) }
     resourceDirectory
@@ -363,7 +390,7 @@ internal fun getResourceDirectorySymbolTables(
                     val symbolTable: SymbolTable.Builder = SymbolTable.builder()
                     symbolTable.tablePackage("local")
                     parseResourceFile(it, folderType, symbolTable, documentBuilder,
-                            platformAttrsSymbolTable)
+                            platformAttrsSymbolTable, IdProvider.constant(), validateResource)
                     resourceSymbolTables.add(SymbolTableWithContextPath(
                             it.relativeTo(resourceDirectory).path, symbolTable.build()))
                 }
@@ -408,13 +435,16 @@ private fun getPartialRFilesFromDirectory(partialRDirectory: File) = partialRDir
 private fun getPartialRFromResource(
         resourceFile: File,
         platformAttrsSymbolTable: SymbolTable?,
-        documentBuilder: DocumentBuilder): PartialRFileNameContents {
+        documentBuilder: DocumentBuilder,
+        resourceValidation: Boolean): PartialRFileNameContents {
     val symbolTable = SymbolTable.builder().tablePackage("local")
     parseResourceFile(resourceFile,
             ResourceFolderType.getFolderType(resourceFile.parentFile.name)!!,
             symbolTable,
             documentBuilder,
-            platformAttrsSymbolTable)
+            platformAttrsSymbolTable,
+            IdProvider.constant(),
+            resourceValidation)
     val partialRContents = getPartialRContentsAsString(symbolTable.build())
     return PartialRFileNameContents(getPartialRFileName(resourceFile), partialRContents)
 }

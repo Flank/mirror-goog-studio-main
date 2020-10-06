@@ -32,6 +32,7 @@ import com.android.annotations.NonNull;
 import com.android.apksig.ApkVerifier;
 import com.android.apksig.ApkVerifier.IssueWithParams;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -124,7 +125,7 @@ public class SigningTest {
     }
 
     @NonNull
-    private static ApkVerifier.Result assertApkSignaturesVerify(@NonNull Apk apk, int minSdkVersion)
+    public static ApkVerifier.Result assertApkSignaturesVerify(@NonNull Apk apk, int minSdkVersion)
             throws Exception {
         ApkVerifier.Builder builder =
                 new ApkVerifier.Builder(apk.getFile().toFile())
@@ -227,7 +228,7 @@ public class SigningTest {
 
     @Test
     public void signingDsl() throws Exception {
-        project.execute("assembleDebug");
+        GradleBuildResult result = project.executor().run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
@@ -236,25 +237,24 @@ public class SigningTest {
 
         // Check that signing config is not written to disk when passed from the build script (bug
         // 137210434)
-        File signingConfigDir =
-                ArtifactTypeUtil.getOutputDir(
-                        InternalArtifactType.SIGNING_CONFIG.INSTANCE, project.getBuildDir());
-        assertThat(signingConfigDir).doesNotExist();
+        assertThat(result.getTasks()).doesNotContain(":signingConfigWriterDebug");
+        assertThat(result.getTasks()).contains(":writeDebugSigningConfigVersions");
     }
 
     @Test
     public void assembleWithInjectedSigningConfig() throws Exception {
         // add prop args for signing override.
-        project.executor()
-                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
-                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
-                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
-                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
-                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
-                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
-                // http://b/149978740 and http://b/146208910
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("assembleRelease");
+        GradleBuildResult result =
+                project.executor()
+                        .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                        .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                        .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                        .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                        .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+                        .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
+                        // http://b/149978740 and http://b/146208910
+                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .run("assembleRelease");
         Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
         // Check for signing file inside the archive.
@@ -264,10 +264,8 @@ public class SigningTest {
         assertTrue(verificationResult.isVerifiedUsingV1Scheme());
 
         // Check that signing config is not written to disk when passed from the IDE (bug 137210434)
-        File signingConfigDir =
-                ArtifactTypeUtil.getOutputDir(
-                        InternalArtifactType.SIGNING_CONFIG.INSTANCE, project.getBuildDir());
-        assertThat(signingConfigDir).doesNotExist();
+        assertThat(result.getTasks()).doesNotContain(":signingConfigWriterRelease");
+        assertThat(result.getTasks()).contains(":writeReleaseSigningConfigVersions");
     }
 
     @Test
@@ -627,6 +625,128 @@ public class SigningTest {
                 assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 28));
         assertThat(verificationResult.isVerifiedUsingV1Scheme()).isFalse();
         assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
+    }
+
+    /**
+     * Test that injecting signing config data doesn't change which signature versions are enabled
+     * if signature versions aren't injected.
+     *
+     * This test is a corner case for v1 and v2 because the IDE currently always injects non-null
+     * values for both of them when it injects signing config info.
+     *
+     * But this is an important regression test for v3 and v4. Previously, if the IDE injected
+     * signing config info, then we wouldn't sign with v3 or v4 even if they were enabled via the
+     * DSL.
+     */
+    @Test
+    public void signingWithDslVersionsWithInjectedSigningConfig() throws Exception {
+        // v4 and v3 signing are not supported by apkzlib
+        Assume.assumeTrue(apkCreatorType == APK_FLINGER);
+        // set enableV1Signing and enableV2Signing to false below because we're testing that
+        // they're not being overridden by the "injected" null values which would cause v1 and v2
+        // signing to be enabled by default.
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(),
+                "customDebug {",
+                ""
+                        + "customDebug {\n"
+                        + "    enableV1Signing false\n"
+                        + "    enableV2Signing false\n"
+                        + "    enableV3Signing true\n"
+                        + "    enableV4Signing true\n");
+        project.executor()
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).doesNotContain("META-INF/" + certEntryName);
+        assertThat(apk).doesNotContain("META-INF/CERT.SF");
+        assertThat(apk).containsApkSigningBlock();
+        ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, 24);
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isFalse();
+        assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
+    }
+
+    @Test
+    public void enableSigningWithVariantApi() throws Exception {
+        // v4 and v3 signing are not supported by apkzlib
+        Assume.assumeTrue(apkCreatorType == APK_FLINGER);
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "   onVariantProperties.withName('debug') {\n"
+                        + "       signingConfig.enableV1Signing.set(true)\n"
+                        + "       signingConfig.enableV2Signing.set(true)\n"
+                        + "       signingConfig.enableV3Signing.set(true)\n"
+                        + "       signingConfig.enableV4Signing.set(true)\n"
+                        + "   }\n"
+                        + "}\n");
+
+        project.executor()
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).contains("META-INF/" + certEntryName);
+        assertThat(apk).contains("META-INF/CERT.SF");
+        assertThat(apk).containsApkSigningBlock();
+        ApkVerifier.Result verificationResult =
+                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 23));
+        assertThat(verificationResult.isVerifiedUsingV1Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
+    }
+
+    @Test
+    public void injectedValuesOverrideVariantApi() throws Exception {
+        // v4 and v3 signing are not supported by apkzlib
+        Assume.assumeTrue(apkCreatorType == APK_FLINGER);
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "   onVariantProperties.withName('debug') {\n"
+                        + "       signingConfig.enableV1Signing.set(false)\n"
+                        + "       signingConfig.enableV2Signing.set(false)\n"
+                        + "       signingConfig.enableV3Signing.set(true)\n"
+                        + "       signingConfig.enableV4Signing.set(true)\n"
+                        + "   }\n"
+                        + "}\n");
+
+        project.executor()
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
+                // http://b/149978740 and http://b/146208910
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+
+        assertThat(apk).contains("META-INF/" + certEntryName);
+        assertThat(apk).contains("META-INF/CERT.SF");
+        assertThat(apk).containsApkSigningBlock();
+        ApkVerifier.Result verificationResult =
+                assertApkSignaturesVerify(apk, Math.max(minSdkVersion, 23));
+        assertThat(verificationResult.isVerifiedUsingV1Scheme()).isTrue();
+        assertThat(verificationResult.isVerifiedUsingV2Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV3Scheme()).isTrue();
         assertThat(verificationResult.isVerifiedUsingV4Scheme()).isTrue();
     }

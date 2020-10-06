@@ -31,18 +31,16 @@ public class ApiConnectedTest {
     @ClassRule public static final Emulator emulator = EmulatorUtils.getEmulator();
 
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("api")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+    public GradleTestProject project = GradleTestProject.builder().fromTestProject("api").create();
 
     @Before
     public void setUp() throws IOException {
         // fail fast if no response
         project.getSubproject("app").addAdbTimeOutInMs();
         project.getSubproject("lib").addAdbTimeOutInMs();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
     @Test

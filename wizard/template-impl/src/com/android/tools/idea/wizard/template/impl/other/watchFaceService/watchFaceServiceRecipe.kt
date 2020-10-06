@@ -39,7 +39,6 @@ fun RecipeExecutor.watchFaceServiceRecipe(
   packageName: String
 ) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
-  val appCompatVersion = moduleData.apis.appCompatVersion
   val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
@@ -53,7 +52,10 @@ fun RecipeExecutor.watchFaceServiceRecipe(
   mergeXml(watchFaceXml(), resOut.resolve("xml/watch_face.xml"))
 
   if (watchFaceStyle == WatchFaceStyle.Analog) {
-    addDependency("com.android.support:palette-v7:${appCompatVersion}.+")
+    when (projectData.language) {
+      Language.Java -> addDependency("androidx.palette:palette:+")
+      Language.Kotlin -> addDependency("androidx.palette:palette-ktx:+")
+    }
     copy(File("preview_analog.png"), resOut.resolve("drawable-nodpi/preview_analog.png"))
     copy(File("watchface_service_bg.png"), resOut.resolve("drawable-nodpi/watchface_service_bg.png"))
   }

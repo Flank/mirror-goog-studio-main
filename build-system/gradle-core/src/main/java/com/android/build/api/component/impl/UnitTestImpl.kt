@@ -17,9 +17,13 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.Component
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -86,6 +90,9 @@ open class UnitTestImpl @Inject constructor(
     override val testedApplicationId: Provider<String>
         get() = testedConfig.applicationId
 
+    override val debuggable: Boolean
+        get() = testedConfig.debuggable
+
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val instrumentationRunner: Provider<String>
@@ -107,15 +114,16 @@ open class UnitTestImpl @Inject constructor(
     override val minSdkVersion: AndroidVersion
         get() = testedVariant.variantBuilder.minSdkVersion
 
-    override fun createUserVisibleVariantObject(
-        projectServices: ProjectServices,
-        stats: GradleBuildVariant.Builder
-    ): AnalyticsEnabledUnitTest =
-        projectServices.objectFactory.newInstance(
-            AnalyticsEnabledUnitTest::class.java,
-            this,
-            stats
-        )
+    override fun <T : Component> createUserVisibleVariantObject(
+            projectServices: ProjectServices,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            stats: GradleBuildVariant.Builder
+    ): T =
+            projectServices.objectFactory.newInstance(
+                    AnalyticsEnabledUnitTest::class.java,
+                    this,
+                    stats
+            ) as T
 
     /**
      * for unit tests, the placeholders are always empty.

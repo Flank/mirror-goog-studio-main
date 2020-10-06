@@ -23,20 +23,19 @@ import java.util.Locale;
 /** Information about available SDK Versions */
 public class SdkVersionInfo {
     /**
-     * The highest known API level. Note that the tools may also look at the
-     * installed platforms to see if they can find more recently released
-     * platforms, e.g. when the tools have not yet been updated for a new
-     * release. This number is used as a baseline and any more recent platforms
+     * The highest known API level. Note that the tools may also look at the installed platforms to
+     * see if they can find more recently released platforms, e.g. when the tools have not yet been
+     * updated for a new release. This number is used as a baseline and any more recent platforms
      * found can be used to increase the highest known number.
      */
-    public static final int HIGHEST_KNOWN_API = 29;
+    public static final int HIGHEST_KNOWN_API = 30;
 
     /**
      * Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms.
      *
      * <p>Make sure to keep this in sync with the value in TestUtils.
      */
-    public static final int HIGHEST_KNOWN_STABLE_API = 29;
+    public static final int HIGHEST_KNOWN_STABLE_API = 30;
 
     /**
      * The lowest active API level in the ecosystem. This number will change over time as the

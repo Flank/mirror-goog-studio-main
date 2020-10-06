@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION
 import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -34,26 +35,25 @@ import java.io.File
  */
 fun createCxxProjectModel(
     sdkComponents: SdkComponentsBuildService,
-    configurationModel: CxxConfigurationModel
+    configurationParameters: CxxConfigurationParameters
 ) : CxxProjectModel {
     fun localPropertyFile(property : String) : File? {
-        val path = gradleLocalProperties(configurationModel.rootDir)
+        val path = gradleLocalProperties(configurationParameters.rootDir)
             .getProperty(property) ?: return null
         return File(path)
     }
-    return object : CxxProjectModel {
-        override val rootBuildGradleFolder = configurationModel.rootDir
-        override val sdkFolder by lazy { sdkComponents.sdkDirectoryProvider.get().asFile }
-        override val isNativeCompilerSettingsCacheEnabled = configurationModel.isNativeCompilerSettingsCacheEnabled
-        override val isBuildOnlyTargetAbiEnabled = configurationModel.isBuildOnlyTargetAbiEnabled
-        override val ideBuildTargetAbi = configurationModel.ideBuildTargetAbi
-        override val isCmakeBuildCohabitationEnabled = configurationModel.isCmakeBuildCohabitationEnabled
-        override val compilerSettingsCacheFolder by lazy {
-            localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
-            join(configurationModel.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
-        }
-        override val chromeTraceJsonFolder = configurationModel.chromeTraceJsonFolder
-        override val isPrefabEnabled = configurationModel.isPrefabEnabled
-        override val isV2NativeModelEnabled: Boolean = configurationModel.isV2NativeModelEnabled
-    }
+    return CxxProjectModel(
+        rootBuildGradleFolder = configurationParameters.rootDir,
+        cxxFolder = join(configurationParameters.rootDir, ".cxx"),
+        sdkFolder = sdkComponents.sdkDirectoryProvider.get().asFile,
+        isNativeCompilerSettingsCacheEnabled = configurationParameters.isNativeCompilerSettingsCacheEnabled,
+        isBuildOnlyTargetAbiEnabled = configurationParameters.isBuildOnlyTargetAbiEnabled,
+        ideBuildTargetAbi = configurationParameters.ideBuildTargetAbi,
+        isCmakeBuildCohabitationEnabled = configurationParameters.isCmakeBuildCohabitationEnabled,
+        compilerSettingsCacheFolder = localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
+            join(configurationParameters.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
+        chromeTraceJsonFolder = configurationParameters.chromeTraceJsonFolder,
+        isPrefabEnabled = configurationParameters.isPrefabEnabled,
+        isV2NativeModelEnabled = configurationParameters.isV2NativeModelEnabled
+    )
 }

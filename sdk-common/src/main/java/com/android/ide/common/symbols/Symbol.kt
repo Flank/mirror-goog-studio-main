@@ -75,25 +75,25 @@ sealed class Symbol {
         /**
          * Creates a new non-stylable symbol.
          *
-         * Validates that the `name` of the symbol is a valid resource name.
-         *
          * The `cannonicalName` of the symbol will be the sanitized resource
          * name (See [canonicalizeValueResourceName].)
          * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
          * @param idProvider the provider for the value of the symbol
+         * @param validation the `name` of the symbol is a valid resource name.
          */
-        @JvmStatic @JvmOverloads fun createAndValidateSymbol(
+        @JvmStatic @JvmOverloads fun createSymbol(
             resourceType: ResourceType,
             name: String,
             idProvider: IdProvider,
-            isMaybeDefinition: Boolean = false): Symbol {
-            return createAndValidateSymbol(
-                resourceType, name, idProvider.next(resourceType), isMaybeDefinition)
+            isMaybeDefinition: Boolean = false,
+            validation: Boolean = true): Symbol {
+            return createSymbol(
+                resourceType, name, idProvider.next(resourceType), isMaybeDefinition, validation)
         }
 
         /**
-         * Creates a new non-stylable symbol. 
+         * Creates a new non-stylable symbol.
          *
          * Validates that the `name` of the symbol is a valid resource name.
          *
@@ -103,12 +103,15 @@ sealed class Symbol {
          * @param name the sanitized name of the symbol
          * @param value the value of the symbol
          */
-        @JvmStatic @JvmOverloads fun createAndValidateSymbol(
+        @JvmStatic @JvmOverloads fun createSymbol(
                 resourceType: ResourceType,
                 name: String,
                 value: Int,
-                isMaybeDefinition: Boolean = false): Symbol {
-            validateSymbol(name, resourceType)
+                isMaybeDefinition: Boolean = false,
+                validation: Boolean = true): Symbol {
+            if (validation) {
+                validateSymbol(name, resourceType)
+            }
             return if (resourceType == ResourceType.ATTR) {
                 attributeSymbol(
                     name = name,
@@ -124,9 +127,7 @@ sealed class Symbol {
         }
 
         /**
-         * Creates a new styleable symbol. 
-         *
-         * Validates that the `name` of the symbol is a valid resource name.
+         * Creates a new styleable symbol.
          *
          * The `cannonicalName` of the symbol will be the sanitized resource
          * name (See [canonicalizeValueResourceName].)
@@ -141,12 +142,16 @@ sealed class Symbol {
          *  `[0x7f040001,0x7f040002]` and children `["attr1", "attr2"]`.
          *
          * @param name the sanitized name of the symbol
+         * @param validation check the `name` of the symbol is a valid resource name.
          */
-        @JvmStatic fun createAndValidateStyleableSymbol(
+        @JvmStatic fun createStyleableSymbol(
             name: String,
             values: ImmutableList<Int>,
-            children: List<String> = ImmutableList.of()): StyleableSymbol {
-            validateSymbol(name, ResourceType.STYLEABLE)
+            children: List<String> = emptyList(),
+            validation: Boolean = true): StyleableSymbol {
+            if (validation) {
+                validateSymbol(name, ResourceType.STYLEABLE)
+            }
             return styleableSymbol(
                 name = name,
                 canonicalName = canonicalizeValueResourceName(name),

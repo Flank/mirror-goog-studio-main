@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -47,6 +48,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * TaskManager for standalone test application that lives in a separate module from the tested
@@ -67,8 +69,10 @@ public class TestApplicationTaskManager
 
     @Override
     protected void doCreateTasksForVariant(
-            @NonNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
+            @NotNull ComponentInfo<TestVariantBuilderImpl, TestVariantImpl> variantInfo,
+            @NotNull
+                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                            allVariants) {
         createCommonTasks(variantInfo, allVariants);
 
         TestVariantImpl testVariantProperties = variantInfo.getVariant();
@@ -90,7 +94,10 @@ public class TestApplicationTaskManager
 
         configureTestData(testVariantProperties, testData);
 
+        // create tasks to validate signing and produce signing config versions file.
         createValidateSigningTask(testVariantProperties);
+        taskFactory.register(
+                new SigningConfigVersionsWriterTask.CreationAction(testVariantProperties));
 
         // create the test connected check task.
         TaskProvider<DeviceProviderInstrumentTestTask> instrumentTestTask =
@@ -133,15 +140,19 @@ public class TestApplicationTaskManager
 
     @Override
     public void createLintTasks(
-            @NonNull TestVariantImpl testVariant,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
+            @NotNull TestVariantImpl variantProperties,
+            @NotNull
+                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                            allVariants) {
         // do nothing
     }
 
     @Override
     public void maybeCreateLintVitalTask(
             @NonNull TestVariantImpl variant,
-            @NonNull List<ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>> allVariants) {
+            @NonNull
+                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
+                            allVariants) {
         // do nothing
     }
 

@@ -392,7 +392,7 @@ class SdkDirectLoadingStrategyTest {
 
         assertThat(
             directLoader.getSystemImageLibFolder(
-                "system-images;android-29;google-apis-playstore;x86"))
+                "system-images;android-30;google-apis-playstore;x86"))
             .isNull()
         // A missing system image should not interfere with whether or not the loader is successful.
         assertThat(directLoader.loadedSuccessfully()).isTrue()
@@ -404,25 +404,25 @@ class SdkDirectLoadingStrategyTest {
         configureSdkDirectory(
             systemImageInfos = listOf(
                 SystemImageInfo(
-                    29,
+                    30,
                     "google-apis-playstore",
                     "x86",
-                    "system-images/android-29/google-apis-playstore/x86"),
+                    "system-images/android-30/google-apis-playstore/x86"),
                 SystemImageInfo(
-                    29,
+                    30,
                     "default",
                     "x86",
-                    "system-images/android-29/default/x86")))
+                    "system-images/android-30/default/x86")))
 
         val directLoader = getDirectLoader()
 
         assertThat(
             directLoader.getSystemImageLibFolder(
-                "system-images;android-29;google-apis-playstore;x86"))
+                "system-images;android-30;google-apis-playstore;x86"))
             .isNotNull()
         assertThat(
             directLoader.getSystemImageLibFolder(
-                "system-images;android-29;default;x86"))
+                "system-images;android-30;default;x86"))
             .isNotNull()
         assertThat(
             directLoader.getSystemImageLibFolder(
@@ -435,23 +435,23 @@ class SdkDirectLoadingStrategyTest {
         configureSdkDirectory(
             systemImageInfos = listOf(
                 SystemImageInfo(
-                    29,
+                    30,
                     "google-apis-playstore",
                     "x86",
-                    "system-images/android-29/google-apis-playstore/x86")))
+                    "system-images/android-30/google-apis-playstore/x86")))
 
         val directLoader = getDirectLoader()
 
         assertThat(
             directLoader.getSystemImageLibFolder(
-                "system-images;android-29;google-apis-playstore;x86"))
+                "system-images;android-30;google-apis-playstore;x86"))
             .isNotNull()
 
         testFolder.root.resolve("system-images").deleteRecursively()
 
         assertThat(
             directLoader.getSystemImageLibFolder(
-                "system-images;android-29;google-apis-playstore;x86"))
+                "system-images;android-30;google-apis-playstore;x86"))
             .isNotNull()
     }
 
@@ -630,7 +630,7 @@ class SdkDirectLoadingStrategyTest {
         assertThat(sdkDirectLoadingStrategy.getTargetBootClasspath()).containsExactly(
             sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
 
-        val buildToolDirectory = sdkRoot.resolve("build-tools/30.0.0")
+        val buildToolDirectory = sdkRoot.resolve("build-tools/30.0.2")
         assertThat(sdkDirectLoadingStrategy.getBuildToolsRevision()).isEqualTo(
             ToolsRevisionUtils.MIN_BUILD_TOOLS_REV)
         assertThat(sdkDirectLoadingStrategy.getAidlExecutable()).isEqualTo(

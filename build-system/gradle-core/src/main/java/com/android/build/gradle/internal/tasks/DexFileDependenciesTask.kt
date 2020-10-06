@@ -183,7 +183,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         ) {
             super.configure(task)
             task.debuggable
-                .setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+                .setDisallowChanges(creationConfig.debuggable)
             task.classes.from(
                 creationConfig.variantDependencies.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

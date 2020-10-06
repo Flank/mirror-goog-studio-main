@@ -84,6 +84,7 @@ def coverage_java_library(name, srcs = [], tags = [], **kwargs):
     native.java_library(
         name = name,
         srcs = srcs,
+        javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
         tags = tags,
         **kwargs
     )

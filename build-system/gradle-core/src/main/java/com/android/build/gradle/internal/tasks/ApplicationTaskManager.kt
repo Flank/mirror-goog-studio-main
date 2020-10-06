@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
@@ -58,9 +59,9 @@ class ApplicationTaskManager(
 ) {
 
     override fun doCreateTasksForVariant(
-        variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
-        allVariants: MutableList<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>
-    ) {
+            variantInfo: ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>,
+            allVariants: List<ComponentInfo<ApplicationVariantBuilderImpl, ApplicationVariantImpl>>)
+    {
         createCommonTasks(variantInfo, allVariants)
 
         val variant = variantInfo.variant
@@ -69,8 +70,9 @@ class ApplicationTaskManager(
         taskFactory.register(FeatureSetMetadataWriterTask.CreationAction(variant))
 
         createValidateSigningTask(variant)
-        // Add a task to produce the signing config file.
+        // Add tasks to produce the signing config files.
         taskFactory.register(SigningConfigWriterTask.CreationAction(variant))
+        taskFactory.register(SigningConfigVersionsWriterTask.CreationAction(variant))
 
         // Add a task to produce the app-metadata.properties file
         taskFactory.register(AppMetadataTask.CreationAction(variant))
@@ -274,9 +276,10 @@ class ApplicationTaskManager(
             taskFactory.register(BundleToStandaloneApkTask.CreationAction(variant))
             taskFactory.register(ExtractApksTask.CreationAction(variant))
 
-            val mergeNativeDebugMetadataTask =
-                taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variant))
-            variant.taskContainer.assembleTask.dependsOn(mergeNativeDebugMetadataTask)
+            taskFactory.register(MergeNativeDebugMetadataTask.CreationAction(variant))
+            variant.taskContainer.assembleTask.configure { task ->
+                task.dependsOn(variant.artifacts.get(InternalArtifactType.MERGED_NATIVE_DEBUG_METADATA))
+            }
         }
     }
 

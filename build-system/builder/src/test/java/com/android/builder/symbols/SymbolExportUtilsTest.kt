@@ -43,12 +43,12 @@ class SymbolExportUtilsTest {
         val depSymbolTable =
             SymbolTable.builder()
                 .tablePackage("com.example.lib")
-                .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "libstring", 0))
+                .add(Symbol.createSymbol(ResourceType.STRING, "libstring", 0))
                 .build()
         val librarySymbols =
             SymbolTable.builder()
                 .tablePackage("com.example.mylib")
-                .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "mystring", 0))
+                .add(Symbol.createSymbol(ResourceType.STRING, "mystring", 0))
                 .build()
 
         val processedSymbols = processLibraryMainSymbolTable(
@@ -84,12 +84,12 @@ class SymbolExportUtilsTest {
         val depSymbolTable =
             SymbolTable.builder()
                 .tablePackage("com.example.lib")
-                .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "libstring", 0))
+                .add(Symbol.createSymbol(ResourceType.STRING, "libstring", 0))
                 .build()
         val librarySymbols =
             SymbolTable.builder()
                 .tablePackage("com.example.mylib")
-                .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "mystring", 0))
+                .add(Symbol.createSymbol(ResourceType.STRING, "mystring", 0))
                 .build()
 
         val processedSymbols = processLibraryMainSymbolTable(
@@ -117,10 +117,10 @@ class SymbolExportUtilsTest {
     fun testWriteSymbolListWithPackageName() {
         val librarySymbols = SymbolTable.builder()
             .tablePackage("com.example.mylib")
-            .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "my_string", 0))
-            .add(Symbol.createAndValidateSymbol(ResourceType.STRING, "my_other_string", 0))
+            .add(Symbol.createSymbol(ResourceType.STRING, "my_string", 0))
+            .add(Symbol.createSymbol(ResourceType.STRING, "my_other_string", 0))
             .add(
-                Symbol.createAndValidateStyleableSymbol(
+                Symbol.createStyleableSymbol(
                     "my_styleable",
                     ImmutableList.of(),
                     ImmutableList.of("child1", "child2")

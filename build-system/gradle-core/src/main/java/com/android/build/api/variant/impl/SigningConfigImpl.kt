@@ -18,7 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.SigningConfig
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
-import com.android.build.gradle.internal.signing.SigningConfigData
+import com.android.build.gradle.internal.signing.SigningConfigVersions
 import java.util.concurrent.Callable
 
 class SigningConfigImpl(
@@ -33,7 +33,7 @@ class SigningConfigImpl(
             Boolean::class.java,
             when {
                 // Don't sign with v4 if we're installing on a device that doesn't support it.
-                targetApi != null && targetApi < SigningConfigData.MIN_V4_SDK -> false
+                targetApi != null && targetApi < SigningConfigVersions.MIN_V4_SDK -> false
                 // Otherwise, sign with v4 if it's enabled explicitly.
                 else -> dslSigningConfig?.enableV4Signing ?: false
             },
@@ -45,7 +45,7 @@ class SigningConfigImpl(
             Boolean::class.java,
             when {
                 // Don't sign with v3 if we're installing on a device that doesn't support it.
-                targetApi != null && targetApi < SigningConfigData.MIN_V3_SDK -> false
+                targetApi != null && targetApi < SigningConfigVersions.MIN_V3_SDK -> false
                 // Otherwise, sign with v3 if it's enabled explicitly.
                 else -> dslSigningConfig?.enableV3Signing ?: false
             },
@@ -60,12 +60,12 @@ class SigningConfigImpl(
                 val effectiveMinSdk = targetApi ?: minSdk
                 return@Callable when {
                     // Don't sign with v2 if we're installing on a device that doesn't support it.
-                    targetApi != null && targetApi < SigningConfigData.MIN_V2_SDK -> false
+                    targetApi != null && targetApi < SigningConfigVersions.MIN_V2_SDK -> false
                     // Otherwise, sign with v2 if it's enabled explicitly.
                     enableV2Signing != null -> enableV2Signing
                     // We sign with v2 if minSdk < MIN_V3_SDK, even if we're also signing with v1,
                     // because v2 signatures can be verified faster than v1 signatures.
-                    effectiveMinSdk < SigningConfigData.MIN_V3_SDK -> true
+                    effectiveMinSdk < SigningConfigVersions.MIN_V3_SDK -> true
                     // If minSdk >= MIN_V3_SDK, sign with v2 only if we're not signing with v3.
                     else -> !enableV3Signing.get()
                 }
@@ -83,11 +83,11 @@ class SigningConfigImpl(
                     // Sign with v1 if it's enabled explicitly.
                     enableV1Signing != null -> enableV1Signing
                     // We need v1 if minSdk < MIN_V2_SDK.
-                    effectiveMinSdk < SigningConfigData.MIN_V2_SDK -> true
+                    effectiveMinSdk < SigningConfigVersions.MIN_V2_SDK -> true
                     // We don't need v1 if minSdk >= MIN_V2_SDK and we're signing with v2.
                     enableV2Signing.get() -> false
                     // We need v1 if we're not signing with v2 and minSdk < MIN_V3_SDK.
-                    effectiveMinSdk < SigningConfigData.MIN_V3_SDK -> true
+                    effectiveMinSdk < SigningConfigVersions.MIN_V3_SDK -> true
                     // If minSdk >= MIN_V3_SDK, sign with v1 only if we're not signing with v3.
                     else -> !enableV3Signing.get()
                 }

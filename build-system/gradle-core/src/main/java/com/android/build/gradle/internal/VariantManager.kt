@@ -19,7 +19,6 @@ import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.ge
 import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.gradle.options.ProjectOptions
-import com.android.build.api.extension.impl.OperationsRegistrar
 import com.android.build.gradle.internal.manifest.LazyManifestParser
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.api.attributes.ProductFlavorAttr
@@ -33,7 +32,11 @@ import com.android.build.api.component.ComponentIdentity
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.UnitTest
+import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.component.impl.*
+import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
@@ -70,9 +73,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         private val project: Project,
         private val projectOptions: ProjectOptions,
         private val extension: BaseExtension,
-
-    private val variantBuilderOperationsRegistrar: OperationsRegistrar<VariantBuilder>,
-        private val variantOperationsRegistrar: OperationsRegistrar<Variant>,
+        private val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
         private val variantFactory: VariantFactory<VariantBuilderT, VariantT>,
         private val variantInputModel: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
         private val projectServices: ProjectServices) {
@@ -182,7 +183,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             buildTypeData: BuildTypeData<BuildType>,
             productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
             variantType: VariantType,
-            buildFeatureValues: BuildFeatureValues): ComponentInfo<VariantBuilderT, VariantT>? {
+            buildFeatureValues: BuildFeatureValues): VariantComponentInfo<VariantBuilderT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
         // in order to do this, we need access to the VariantDslInfo, to create a
@@ -232,11 +233,14 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         val commonExtension =
                 extension as ActionableVariantObjectOperationsExecutor<VariantBuilder, Variant>
         val userVisibleVariantBuilder =
-                variantBuilder.createUserVisibleVariantObject(projectServices, profileEnabledVariantBuilder)
+                variantBuilder.createUserVisibleVariantObject<VariantBuilder>(
+                        projectServices,
+                        profileEnabledVariantBuilder,
+                )
         commonExtension.executeVariantBuilderOperations(userVisibleVariantBuilder)
 
         // execute the new API
-        variantBuilderOperationsRegistrar.executeOperations(userVisibleVariantBuilder)
+        variantApiOperationsRegistrar.variantBuilderOperations.executeOperations(userVisibleVariantBuilder)
         if (!variantBuilder.enabled) {
             return null
         }
@@ -333,11 +337,17 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
         // Run the VariantProperties actions
         val userVisibleVariant = (variantApiObject as VariantImpl)
-                .createUserVisibleVariantObject(projectServices, profileEnabledVariantBuilder)
+                .createUserVisibleVariantObject<Variant>(projectServices,
+                        variantApiOperationsRegistrar,
+                        profileEnabledVariantBuilder)
         commonExtension.executeVariantOperations(userVisibleVariant)
-        variantOperationsRegistrar.executeOperations(userVisibleVariant)
-        return ComponentInfo(
-                variantBuilder, variantApiObject, profileEnabledVariantBuilder, userVisibleVariantBuilder)
+        variantApiOperationsRegistrar.variantOperations.executeOperations(userVisibleVariant)
+        return VariantComponentInfo(
+                variantBuilder,
+                variantApiObject,
+                profileEnabledVariantBuilder,
+                userVisibleVariantBuilder as AnalyticsEnabledVariantBuilder,
+                variantApiOperationsRegistrar)
     }
 
     private fun createCompoundSourceSets(
@@ -368,7 +378,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             dimensionCombination: DimensionCombination,
             buildTypeData: BuildTypeData<BuildType>,
             productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
-            testedComponentInfo: ComponentInfo<VariantBuilderT, VariantT>,
+            testedComponentInfo: VariantComponentInfo<VariantBuilderT, VariantT>,
             variantType: VariantType): ComponentInfo<TestComponentBuilderImpl, TestComponentImpl>? {
 
         // handle test variant
@@ -410,24 +420,30 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         val apiAccessStats = testedComponentInfo.stats
         // this is ANDROID_TEST
         val component = if (variantType.isApk) {
-            val androidTestVariant = variantFactory.createAndroidTestBuilder(
+            val androidTestVariantBuilder = variantFactory.createAndroidTestBuilder(
                     variantDslInfo.componentIdentity,
                     variantDslInfo,
                     variantApiServices)
 
+            // run actions registed at the extension level.
+            testedComponentInfo.variantApiOperationsRegistrar.androidTestBuilderOperations
+                    .executeOperations(androidTestVariantBuilder)
             // run the action registered on the tested variant via androidTest {}
-            testedComponentInfo.userVisibleVariant?.executeAndroidTestActions(androidTestVariant)
-            androidTestVariant
+            testedComponentInfo.userVisibleVariant.executeAndroidTestActions(androidTestVariantBuilder)
+            androidTestVariantBuilder
         } else {
             // this is UNIT_TEST
-            val unitTestVariant = variantFactory.createUnitTestBuilder(
+            val unitTestVariantBuilder = variantFactory.createUnitTestBuilder(
                     variantDslInfo.componentIdentity,
                     variantDslInfo,
                     variantApiServices)
 
-            // run the action registered on the tested variant via unitTest {}
-            testedComponentInfo.userVisibleVariant?.executeUnitTestActions(unitTestVariant)
-            unitTestVariant
+            // run actions registered in the extension level.
+            testedComponentInfo.variantApiOperationsRegistrar.unitTestBuilderOperations
+                    .executeOperations(unitTestVariantBuilder)
+            // run the actions registered on the tested variant via unitTest {}
+            testedComponentInfo.userVisibleVariant.executeUnitTestActions(unitTestVariantBuilder)
+            unitTestVariantBuilder
         }
         if (!component.enabled) {
             return null
@@ -514,13 +530,13 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantPropertiesApiServices,
                 globalScope,
                 taskContainer)
-        val componentProperties: TestComponentImpl
+        val testComponent: TestComponentImpl
         val buildFeatureValues = variantFactory.createTestBuildFeatureValues(
                 extension.buildFeatures, extension.dataBinding, projectOptions)
 
         // this is ANDROID_TEST
-        componentProperties = if (variantType.isApk) {
-            val androidTestProperties = variantFactory.createAndroidTest(
+        testComponent = if (variantType.isApk) {
+            val androidTest = variantFactory.createAndroidTest(
                     (component as AndroidTestBuilderImpl),
                     buildFeatureValues,
                     variantDslInfo,
@@ -535,18 +551,20 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     variantPropertiesApiServices,
                     taskCreationServices)
 
-            // also execute the delayed actions registered on the Component via
-            // androidTest { onProperties {} }
             val userVisibleVariant =
-                    androidTestProperties.createUserVisibleVariantObject(
-                            projectServices, apiAccessStats)
-            // or on the tested variant via unitTest {}
-            testedComponentInfo.userVisibleVariant
-                    ?.executeAndroidTestPropertiesActions(userVisibleVariant)
-            androidTestProperties
+                    androidTest.createUserVisibleVariantObject<AndroidTest>(
+                            projectServices, variantApiOperationsRegistrar, apiAccessStats)
+            // execute the actions registered at the extension level.
+            testedComponentInfo.variantApiOperationsRegistrar.androidTestOperations
+                    .executeOperations(userVisibleVariant)
+            // and those registered the tested variant via unitTest {}
+            testedComponentInfo.userVisibleVariant.executeAndroidTestPropertiesActions(
+                    userVisibleVariant
+            )
+            androidTest
         } else {
             // this is UNIT_TEST
-            val unitTestProperties = variantFactory.createUnitTest(
+            val unitTest = variantFactory.createUnitTest(
                     (component as UnitTestBuilderImpl),
                     buildFeatureValues,
                     variantDslInfo,
@@ -561,23 +579,22 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     variantPropertiesApiServices,
                     taskCreationServices)
 
-            // execute the delayed actions registered on the Component via
-            // unitTest { onProperties {} }
             val userVisibleVariant =
-                    unitTestProperties.createUserVisibleVariantObject(
-                            projectServices, apiAccessStats)
-            // or on the tested variant via unitTestProperties {}
-            testedComponentInfo.userVisibleVariant
-                    ?.executeUnitTestPropertiesActions(userVisibleVariant)
-            unitTestProperties
+                    unitTest.createUserVisibleVariantObject<UnitTest>(
+                            projectServices, variantApiOperationsRegistrar, apiAccessStats)
+            // execute the actions registered at the extension level.
+            testedComponentInfo.variantApiOperationsRegistrar.unitTestOperations
+                    .executeOperations(userVisibleVariant)
+            // and those on the tested variant via unitTestProperties {}
+            testedComponentInfo.userVisibleVariant.executeUnitTestPropertiesActions(userVisibleVariant)
+            unitTest
         }
 
         // register
         testedComponentInfo
                 .variant
-                .testComponents[variantDslInfo.variantType] = componentProperties
-        return ComponentInfo(
-                component, componentProperties, testedComponentInfo.stats, null)
+                .testComponents[variantDslInfo.variantType] = testComponent
+        return ComponentInfo(component, testComponent, testedComponentInfo.stats)
     }
 
     /**
@@ -707,7 +724,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
 
     private fun createSigningOverride(): SigningConfig? {
         SigningOptions.readSigningOptions(projectOptions)?.let { signingOptions ->
-            val signingConfigDsl = SigningConfig("externalOverride")
+            val signingConfigDsl = SigningConfig(SigningOptions.SIGNING_CONFIG_NAME)
             signingConfigDsl.storeFile(File(signingOptions.storeFile))
             signingConfigDsl.storePassword(signingOptions.storePassword)
             signingConfigDsl.keyAlias(signingOptions.keyAlias)
@@ -716,15 +733,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 signingConfigDsl.storeType(it)
             }
             signingOptions.v1Enabled?.let {
-                @Suppress("DEPRECATION")
-                signingConfigDsl.isV1SigningEnabled = it
+                signingConfigDsl.enableV1Signing = it
             }
             signingOptions.v2Enabled?.let {
-                @Suppress("DEPRECATION")
-                signingConfigDsl.isV2SigningEnabled = it
+                signingConfigDsl.enableV2Signing = it
             }
-            signingConfigDsl.enableV3Signing = signingOptions.enableV3Signing
-            signingConfigDsl.enableV4Signing = signingOptions.enableV4Signing
             return signingConfigDsl
         }
         return null

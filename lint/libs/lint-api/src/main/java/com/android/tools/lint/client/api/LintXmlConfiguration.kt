@@ -21,6 +21,7 @@ import com.android.SdkConstants.SUPPRESS_ALL
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.util.PathString
+import com.android.tools.lint.client.api.ConfigurationHierarchy.Companion.getLintXmlFile
 import com.android.tools.lint.client.api.LintClient.Companion.report
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
@@ -120,23 +121,19 @@ import kotlin.math.max
  */
 @Beta
 open class LintXmlConfiguration protected constructor(
-    val client: LintClient,
+    configurations: ConfigurationHierarchy,
     val configFile: File,
-    override val dir: File = configFile.parentFile ?: File("."),
-    /**
-     * Whether this configuration corresponds to a project folder or higher.
-     * Certain configuration is not allowed in individual source file folders,
-     * such as enabling disabled lint checks.
-     */
-    override var projectLevel: Boolean = false
-) : Configuration() {
-
-    private val parent: Configuration? get() = client.getParentConfiguration(this)
+    dir: File? = configFile.parentFile,
+    override var fileLevel: Boolean = true
+) : Configuration(configurations) {
+    init {
+        this.dir = dir
+    }
 
     protected constructor(
-        client: LintClient,
+        configurations: ConfigurationHierarchy,
         project: Project
-    ) : this(client, File(project.dir, CONFIG_FILE_NAME), project.dir, true)
+    ) : this(configurations, project.dir.getLintXmlFile(), project.dir, true)
 
     private var bulkEditing = false
 
@@ -286,7 +283,8 @@ open class LintXmlConfiguration protected constructor(
         for (issueMap in issueMaps) {
             issueMap[VALUE_ALL]?.options?.get(name)?.let { return it }
         }
-        return default
+
+        return parent?.getOption(issue, name, default) ?: default
     }
 
     override fun getOptionAsFile(
@@ -474,11 +472,7 @@ open class LintXmlConfiguration protected constructor(
         return false
     }
 
-    protected open fun getDefaultSeverity(issue: Issue): Severity {
-        return if (!issue.isEnabledByDefault()) Severity.IGNORE else issue.defaultSeverity
-    }
-
-    override fun getSeverity(issue: Issue): Severity {
+    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
         if (issue.suppressNames != null) {
             // Not allowed to suppress this issue via lint.xml.
             // Consider reporting this as well (not easy here since we don't have
@@ -526,7 +520,7 @@ open class LintXmlConfiguration protected constructor(
         }
 
         // or inherited?
-        return parent?.getSeverity(issue) ?: getDefaultSeverity(issue)
+        return parent?.getDefinedSeverity(issue, source)
     }
 
     private fun ensureInitialized() {
@@ -659,7 +653,7 @@ open class LintXmlConfiguration protected constructor(
                                         if (applies())
                                             abortOnError = value.asBoolean()
                                     "lintJar", "lintJars" -> {
-                                        if (!projectLevel) {
+                                        if (fileLevel) {
                                             reportError("`lintJar` can only be specified for lint.xml files at the module level or higher", parser)
                                         } else if (applies()) {
                                             // Using ; instead of File.pathSeparator here
@@ -733,6 +727,8 @@ open class LintXmlConfiguration protected constructor(
                                 val severity = Severity.fromName(severityString)
                                     ?: if (severityString == "hide" || severityString == "hidden") {
                                         Severity.IGNORE
+                                    } else if (severityString == "info" || severityString == "information") {
+                                        Severity.INFORMATIONAL
                                     } else null
                                 if (severity != null) {
                                     // TODO: If !projectLevel and we're turning on a check
@@ -1445,10 +1441,10 @@ open class LintXmlConfiguration protected constructor(
          */
         @JvmStatic
         fun create(
-            client: LintClient,
+            configurations: ConfigurationHierarchy,
             lintFile: File
         ): LintXmlConfiguration {
-            return LintXmlConfiguration(client, lintFile)
+            return LintXmlConfiguration(configurations, lintFile)
         }
 
         fun getUnknownIssueIdErrorMessage(id: String, issueRegistry: IssueRegistry): String {

@@ -35,7 +35,7 @@ data class VariantInfoImpl(
                 _variantName = creationConfig.name,
                 _buildTypeName = creationConfig.buildType,
                 _flavorNames = creationConfig.productFlavors.map { it.second }.toImmutableList(),
-                _isDebuggable = creationConfig.variantDslInfo.isDebuggable
+                _isDebuggable = creationConfig.debuggable
             )
 
     override fun isTest(): Boolean = _isTest

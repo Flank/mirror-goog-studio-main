@@ -435,13 +435,7 @@ public class Deployer {
     }
 
     public boolean supportsNewPipeline() {
-        // New API level is not yet determined yet so this is only for fake android tests:
-        if (adb.getVersion().getApiLevel() > 29) {
-            return true;
-        }
-
-        // This check works on real device only.
-        String codeName = adb.getVersion().getCodename();
-        return options.useOptimisticSwap && codeName != null && codeName.equals("R");
+        return options.useOptimisticSwap
+                && adb.getVersion().getApiLevel() >= AndroidVersion.VersionCodes.R;
     }
 }

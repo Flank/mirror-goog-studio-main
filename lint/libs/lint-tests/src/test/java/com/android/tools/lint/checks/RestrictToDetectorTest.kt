@@ -1474,6 +1474,37 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun test169255669() {
+        // Regression test for 169255669: ClassCastException in RestrictToDetector.
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.support.annotation.RestrictTo
+
+                class Foo {
+                    @RestrictTo(RestrictTo.Scope.SUBCLASSES)
+                    constructor()
+                }
+
+                @RestrictTo(RestrictTo.Scope.SUBCLASSES)
+                val foo = Foo()
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Foo.kt:11: Error: Foo can only be called from subclasses [RestrictedApi]
+            val foo = Foo()
+                      ~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     companion object {
         /*
                 Compiled version of these 5 files (and the RestrictTo annotation);

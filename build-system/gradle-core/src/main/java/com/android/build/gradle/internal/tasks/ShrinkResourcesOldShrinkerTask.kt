@@ -206,7 +206,7 @@ abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
 
             task.buildTypeName = creationConfig.variantDslInfo.componentIdentity.buildType
 
-            task.debuggableBuildType.setDisallowChanges(creationConfig.variantDslInfo.isDebuggable)
+            task.debuggableBuildType.setDisallowChanges(creationConfig.debuggable)
 
             task.artifactTransformationRequest.setDisallowChanges(artifactTransformationRequest)
 

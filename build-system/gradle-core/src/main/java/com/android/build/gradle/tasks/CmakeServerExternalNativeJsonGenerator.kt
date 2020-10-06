@@ -97,7 +97,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
 
-        builder.setExecutable(cmake.cmakeExe)
+        builder.setExecutable(cmake.cmakeExe!!)
         val arguments = mutableListOf<CommandLineArgument>()
         arguments.addAll(abi.getFinalCmakeCommandLineArguments())
         builder.addArgs(arguments.convertCmakeCommandLineArgumentsToStringList())
@@ -134,7 +134,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                         message!!
                     )
                 }
-            val cmakeBinFolder = cmake.cmakeExe.parentFile
+            val cmakeBinFolder = cmake.cmakeExe!!.parentFile
             val cmakeServer =
                 ServerFactory.create(cmakeBinFolder, serverReceiver)
             if (cmakeServer == null) {
@@ -307,11 +307,11 @@ internal class CmakeServerExternalNativeJsonGenerator(
         nativeBuildConfigValue.buildFiles!!.addAll(getBuildFiles(cmakeServer))
         assert(nativeBuildConfigValue.cleanCommandsComponents != null)
         nativeBuildConfigValue.cleanCommandsComponents!!.add(
-            CmakeUtils.getCleanCommand(cmake.cmakeExe, abi.cxxBuildFolder)
+            CmakeUtils.getCleanCommand(cmake.cmakeExe!!, abi.cxxBuildFolder)
         )
         assert(nativeBuildConfigValue.buildTargetsCommandComponents != null)
         nativeBuildConfigValue.buildTargetsCommandComponents = CmakeUtils.getBuildTargetsCommand(
-            cmake.cmakeExe,
+            cmake.cmakeExe!!,
             abi.cxxBuildFolder,
             abi.getBuildCommandArguments()
         )
@@ -379,7 +379,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         strings: StringTable
     ): NativeLibraryValue {
         return getNativeLibraryValue(
-            cmake.cmakeExe,
+            cmake.cmakeExe!!,
             abi.cxxBuildFolder,
             variant.isDebuggableEnabled,
             { abi.cmake!!.compileCommandsJsonFile.reader(StandardCharsets.UTF_8) },

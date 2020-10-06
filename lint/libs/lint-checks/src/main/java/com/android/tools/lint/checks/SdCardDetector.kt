@@ -27,7 +27,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULiteralExpression
-import org.jetbrains.uast.getValueIfStringLiteral
+import org.jetbrains.uast.evaluateString
 
 /**
  * Looks for hardcoded references to /sdcard/.
@@ -65,8 +65,8 @@ class SdCardDetector : Detector(), SourceCodeScanner {
     override fun createUastHandler(context: JavaContext): UElementHandler? =
         object : UElementHandler() {
             override fun visitLiteralExpression(node: ULiteralExpression) {
-                val s = node.getValueIfStringLiteral()
-                if (s != null && !s.isEmpty()) {
+                val s = node.evaluateString()
+                if (s != null && s.isNotEmpty()) {
                     val c = s[0]
                     if (c != '/' && c != 'f') {
                         return

@@ -29,7 +29,6 @@ import com.android.builder.profile.Recorder
 import com.android.builder.profile.ThreadRecorder
 import com.android.tools.analytics.Anonymizer
 import com.android.tools.analytics.CommonMetricsData
-import com.android.tools.analytics.Environment
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Strings
@@ -89,11 +88,10 @@ class AnalyticsResourceManager(
     private val threadRecorder: Recorder = ThreadRecorder()
     private val analyticsWriter = AnalyticsProfileWriter()
 
-    fun writeAndFinish(environment: Environment) {
+    fun writeAndFinish() {
         analyticsWriter.writeAndFinish(
             getFinalProfile(),
             otherEvents,
-            environment,
             profileDir,
             enableProfileJson
         )

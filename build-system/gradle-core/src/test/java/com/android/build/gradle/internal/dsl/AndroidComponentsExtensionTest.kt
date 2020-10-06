@@ -41,142 +41,118 @@ class AndroidComponentsExtensionTest {
 
     @Test
     fun testApplicationModuleNoSelection() {
-        val variantBuilderOperationsRegistrar = OperationsRegistrar<ApplicationVariantBuilder>()
-        val variantOperationsRegistrar = OperationsRegistrar<ApplicationVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
         testNoSelection(
                 ApplicationAndroidComponentsExtensionImpl(
                         dslServices,
-                        variantBuilderOperationsRegistrar,
-                        variantOperationsRegistrar
+                        variantApiOperationsRegistrar
                 ),
-                variantBuilderOperationsRegistrar,
+                variantApiOperationsRegistrar,
                 ApplicationVariantBuilder::class.java)
     }
 
     @Test
     fun testLibraryModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<LibraryVariantBuilder>()
-        val variantBuilderOperationsRegistrar = OperationsRegistrar<LibraryVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<LibraryVariantBuilder, LibraryVariant>()
         testNoSelection(
                 LibraryAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar,
-                        variantBuilderOperationsRegistrar
+                        variantApiOperationsRegistrar
                 ),
-                operationsRegistrar,
+                variantApiOperationsRegistrar,
                 LibraryVariantBuilder::class.java)
     }
 
     @Test
     fun testDynamicFeatureModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariantBuilder>()
-        val variantOperationsRegistrar = OperationsRegistrar<DynamicFeatureVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<DynamicFeatureVariantBuilder, DynamicFeatureVariant>()
         testNoSelection(
                 DynamicFeatureAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar,
-                        variantOperationsRegistrar
+                        variantApiOperationsRegistrar,
                 ),
-                operationsRegistrar,
+                variantApiOperationsRegistrar,
                 DynamicFeatureVariantBuilder::class.java)
     }
 
     @Test
     fun testTestModuleNoSelection() {
-        val operationsRegistrar = OperationsRegistrar<TestVariantBuilder>()
-        val variantOperationsRegistrar = OperationsRegistrar<TestVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<TestVariantBuilder, TestVariant>()
         testNoSelection(
                 TestAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar,
-                        variantOperationsRegistrar),
-                operationsRegistrar,
+                        variantApiOperationsRegistrar),
+                variantApiOperationsRegistrar,
                 TestVariantBuilder::class.java)
     }
 
     @Test
     fun testApplicationModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<ApplicationVariantBuilder>()
-        val variantOperationsRegistrar = OperationsRegistrar<ApplicationVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
         testAllSelection(
                 ApplicationAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar,
-                        variantOperationsRegistrar),
-                operationsRegistrar,
+                        variantApiOperationsRegistrar),
+                variantApiOperationsRegistrar,
                 ApplicationVariantBuilder::class.java)
     }
 
     @Test
     fun testLibraryModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<LibraryVariantBuilder>()
-        val variantOperationsRegistrar = OperationsRegistrar<LibraryVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<LibraryVariantBuilder, LibraryVariant>()
         testAllSelection(
                 LibraryAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar,
-                        variantOperationsRegistrar
+                        variantApiOperationsRegistrar
                 ),
-                operationsRegistrar,
+                variantApiOperationsRegistrar,
                 LibraryVariantBuilder::class.java)
     }
 
     @Test
     fun testDynamicFeatureModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<DynamicFeatureVariantBuilder>()
-        val variantOperationsRegistrar = OperationsRegistrar<DynamicFeatureVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<DynamicFeatureVariantBuilder, DynamicFeatureVariant>()
         testAllSelection(
                 DynamicFeatureAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar,
-                        variantOperationsRegistrar
+                        variantApiOperationsRegistrar
                 ),
-                operationsRegistrar,
+                variantApiOperationsRegistrar,
                 DynamicFeatureVariantBuilder::class.java)
     }
 
     @Test
     fun testTestModuleAllSelection() {
-        val operationsRegistrar = OperationsRegistrar<TestVariantBuilder>()
-        val variantOperationsRegistrar = OperationsRegistrar<TestVariant>()
-        @Suppress("UNCHECKED_CAST")
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<TestVariantBuilder, TestVariant>()
         testAllSelection(
                 TestAndroidComponentsExtensionImpl(
                         dslServices,
-                        operationsRegistrar,
-                        variantOperationsRegistrar
+                        variantApiOperationsRegistrar
                 ),
-                operationsRegistrar,
+                variantApiOperationsRegistrar,
                 TestVariantBuilder::class.java)
     }
 
     private fun  <VariantBuilderT: VariantBuilder, VariantT: Variant> testAllSelection(
             extension: AndroidComponentsExtensionImpl<VariantBuilderT, VariantT>,
-            operationsRegistrar: OperationsRegistrar<VariantBuilderT>,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>,
             variantType: Class<VariantBuilderT>) {
         val visitedVariants = mutableListOf<VariantBuilderT>()
-        extension.beforeVariants(extension.selector<VariantBuilderT>().all()) {
+        extension.beforeVariants(extension.selector().all()) {
             visitedVariants.add(it)
         }
         @Suppress("UNCHECKED_CAST")
-        operationsRegistrar.executeOperations(Mockito.mock(variantType))
+        operationsRegistrar.variantBuilderOperations.executeOperations(Mockito.mock(variantType))
         assertThat(visitedVariants).hasSize(1)
     }
 
     private fun <VariantBuilderT: VariantBuilder, VariantT: Variant> testNoSelection(
             extension: AndroidComponentsExtensionImpl<VariantBuilderT, VariantT>,
-            operationsRegistrar: OperationsRegistrar<VariantBuilderT>,
+            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>,
             variantType: Class<VariantBuilderT>) {
         val visitedVariants = mutableListOf<VariantBuilderT>()
         extension.beforeVariants { variant -> visitedVariants.add(variant)}
-        operationsRegistrar.executeOperations(Mockito.mock(variantType))
+        operationsRegistrar.variantBuilderOperations.executeOperations(Mockito.mock(variantType))
         assertThat(visitedVariants).hasSize(1)
     }
 }

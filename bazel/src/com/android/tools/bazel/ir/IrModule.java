@@ -39,6 +39,7 @@ public class IrModule extends IrNode {
     private List<File> excludes = new ArrayList<>();
     private String name;
     private Path baseDir;
+    private String compilerOptions;
 
     public IrModule(String name) {
         this.name = name;
@@ -77,6 +78,10 @@ public class IrModule extends IrNode {
 
     public Path getBaseDir() {
         return baseDir;
+    }
+
+    public String getCompilerOptions() {
+        return compilerOptions;
     }
 
     public List<File> getSources() {
@@ -145,6 +150,10 @@ public class IrModule extends IrNode {
 
     public void setBaseDir(Path baseDir) {
         this.baseDir = baseDir;
+    }
+
+    public void setCompilerOptions(String compilerOptions) {
+        this.compilerOptions = compilerOptions;
     }
 
     public enum Scope {

@@ -58,8 +58,9 @@ public class CombinedAbiDensitySplits {
 
     @Test
     public void testCombinedDensityAndAbiPureSplits() throws Exception {
+        project.executor().run("clean", "assembleDebug");
         AndroidProject projectBuildOutput =
-                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+                project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModel();
         VariantBuildInformation debugBuildOutput =
                 ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
