@@ -51,9 +51,17 @@ internal fun verifyIDEIsNotOld(
     val parsedInjected = parseVersion(injectedVersion)
         ?: throw InvalidUserDataException("Invalid injected android support version '$injectedVersion', expected to be of the form 'w.x.y.z'")
 
-    if (parsedInjected < androidGradlePluginVersion) {
+    // for AGP 7.0 and above, the minimum version of Studio that is required to open
+    // the project is different from the plugin version itself.
+    // For now, maintain a table, but this will be changed in the future.
+    val minRequiredVersion = when (androidGradlePluginVersion) {
+        MajorMinorVersion(7,0) -> MajorMinorVersion(4, 3)
+        else -> androidGradlePluginVersion
+    }
+
+    if (parsedInjected < minRequiredVersion) {
         throw RuntimeException(
-            "This version of the Android Support plugin for IntelliJ IDEA (or Android Studio) cannot open this project, please retry with version $androidGradlePluginVersion or newer."
+            "This version of the Android Support plugin for IntelliJ IDEA (or Android Studio) cannot open this project, please retry with version $minRequiredVersion or newer."
         )
     }
 }
