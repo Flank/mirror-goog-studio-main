@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.UnitTest
-import com.android.build.api.component.analytics.AnalyticsEnabledVariantBuilder
 import com.android.build.api.component.impl.*
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -237,19 +236,13 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
         val profileEnabledVariantBuilder = configuratorService.getVariantBuilder(
                 project.path, variantBuilder.name)
 
-        // HACK, we need access to the new type rather than the old. This will go away in the
-        // future
-        @Suppress("UNCHECKED_CAST")
-        val commonExtension =
-                extension as ActionableVariantObjectOperationsExecutor<VariantBuilder, Variant>
         val userVisibleVariantBuilder =
                 variantBuilder.createUserVisibleVariantObject<VariantBuilder>(
                         projectServices,
                         profileEnabledVariantBuilder,
                 )
-        commonExtension.executeVariantBuilderOperations(userVisibleVariantBuilder)
 
-        // execute the new API
+        // execute the Variant API
         variantApiOperationsRegistrar.variantBuilderOperations.executeOperations(userVisibleVariantBuilder)
         if (!variantBuilder.enabled) {
             return null
@@ -350,13 +343,11 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 .createUserVisibleVariantObject<Variant>(projectServices,
                         variantApiOperationsRegistrar,
                         profileEnabledVariantBuilder)
-        commonExtension.executeVariantOperations(userVisibleVariant)
         variantApiOperationsRegistrar.variantOperations.executeOperations(userVisibleVariant)
         return VariantComponentInfo(
                 variantBuilder,
                 variantApiObject,
                 profileEnabledVariantBuilder,
-                userVisibleVariantBuilder as AnalyticsEnabledVariantBuilder,
                 variantApiOperationsRegistrar)
     }
 
@@ -435,11 +426,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     variantDslInfo,
                     variantApiServices)
 
-            // run actions registed at the extension level.
+            // run actions registered at the extension level.
             testedComponentInfo.variantApiOperationsRegistrar.androidTestBuilderOperations
                     .executeOperations(androidTestVariantBuilder)
-            // run the action registered on the tested variant via androidTest {}
-            testedComponentInfo.userVisibleVariant.executeAndroidTestActions(androidTestVariantBuilder)
             androidTestVariantBuilder
         } else {
             // this is UNIT_TEST
@@ -451,8 +440,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             // run actions registered in the extension level.
             testedComponentInfo.variantApiOperationsRegistrar.unitTestBuilderOperations
                     .executeOperations(unitTestVariantBuilder)
-            // run the actions registered on the tested variant via unitTest {}
-            testedComponentInfo.userVisibleVariant.executeUnitTestActions(unitTestVariantBuilder)
             unitTestVariantBuilder
         }
         if (!component.enabled) {
@@ -567,10 +554,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             // execute the actions registered at the extension level.
             testedComponentInfo.variantApiOperationsRegistrar.androidTestOperations
                     .executeOperations(userVisibleVariant)
-            // and those registered the tested variant via unitTest {}
-            testedComponentInfo.userVisibleVariant.executeAndroidTestPropertiesActions(
-                    userVisibleVariant
-            )
             androidTest
         } else {
             // this is UNIT_TEST
@@ -595,8 +578,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             // execute the actions registered at the extension level.
             testedComponentInfo.variantApiOperationsRegistrar.unitTestOperations
                     .executeOperations(userVisibleVariant)
-            // and those on the tested variant via unitTestProperties {}
-            testedComponentInfo.userVisibleVariant.executeUnitTestPropertiesActions(userVisibleVariant)
             unitTest
         }
 

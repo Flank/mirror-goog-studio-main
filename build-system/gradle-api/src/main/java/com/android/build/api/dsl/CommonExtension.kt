@@ -16,7 +16,6 @@
 
 package com.android.build.api.dsl
 
-import com.android.build.api.component.GenericFilteredComponentActionRegistrar
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
 import org.gradle.api.Action
@@ -358,46 +357,6 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
     fun testOptions(action: TestOptions.() -> Unit)
-
-    /**
-     * Adds an [Action] to be performed on all [VariantBuilderT] objects associated with this module
-     */
-    fun onVariants(action: Action<VariantBuilderT>)
-
-    /**
-     * Adds a lambda function to be performed on all [VariantBuilderT] objects associated with this module
-     */
-    fun onVariants(action: VariantBuilderT.() -> Unit)
-
-    /**
-     * A registrar to apply actions on subsets of [VariantBuilderT] via filters.
-     *
-     * @return a [GenericFilteredComponentActionRegistrar] of [VariantBuilderT]
-     */
-    val onVariants: GenericFilteredComponentActionRegistrar<VariantBuilderT>
-
-    /**
-     * Adds an [Action] to be performed on all [VariantT] objects associated with this
-     * module
-     *
-     * @param action a lambda taking a [VariantBuilderT] as a parameter.
-     */
-    fun onVariantProperties(action: Action<VariantT>)
-
-    /**
-     * Adds a lambda function to be performed on all [VariantT] objects associated with
-     * this module.
-     *
-     * @param action a lambda taking a [Variant] as a parameter.
-     */
-    fun onVariantProperties(action: VariantT.() -> Unit)
-
-    /**
-     * A registrar to apply actions on subsets of [VariantT] via filters.
-     *
-     * @areturn a [GenericFilteredComponentActionRegistrar] of [VariantT]
-     */
-    val onVariantProperties: GenericFilteredComponentActionRegistrar<VariantT>
 
     /**
      * Specifies configurations for

@@ -105,13 +105,13 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
 
     @Test
     fun `filtering via new api using generic callback on build type names`() {
-        given {
+        withAndroidComponents {
             """
-                |    onVariants {
+                |    beforeVariants(selector().all(), {
                 |        if (buildType.equals("debug")) {
                 |            enabled = false
                 |        }
-                |    }
+                |    })
             """
         }
 
@@ -125,11 +125,12 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
 
     @Test
     fun `filtering via new api using buildtype callback`() {
-        given {
+        given {""}
+        withAndroidComponents {
             """
-                |    onVariants.withBuildType("debug") {
+                |    beforeVariants(selector().withBuildType("debug"), {
                 |        enabled = false
-                |    }
+                |    })
             """
         }
 
@@ -154,9 +155,14 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |            dimension "one"
                 |        }
                 |    }
-                |    onVariants.withFlavor(new kotlin.Pair("one", "flavor1")) {
+            """
+        }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector().withFlavor(new kotlin.Pair("one", "flavor1")), {
                 |        enabled = false
-                |    }
+                |    })
             """
         }
 
@@ -188,13 +194,19 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |            dimension "two"
                 |        }
                 |    }
-                |    onVariants
-                |            .withFlavor(new kotlin.Pair("one", "flavor1"))
-                |            .withFlavor(new kotlin.Pair("two", "flavorA")) {
-                |        enabled = false
-                |    }
             """
         }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withFlavor(new kotlin.Pair("one", "flavor1"))
+                |          .withFlavor(new kotlin.Pair("two", "flavorA")), {
+                |        enabled = false
+                |    })
+            """
+        }
+
 
         expect {
             variant { name = "flavor1FlavorBDebug" }
@@ -228,11 +240,16 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |            dimension "one"
                 |        }
                 |    }
-                |    onVariants
-                |            .withFlavor(new kotlin.Pair("one", "flavor1"))
-                |            .withBuildType("debug") {
+            """
+        }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withFlavor(new kotlin.Pair("one", "flavor1"))
+                |          .withBuildType("debug"), {
                 |        enabled = false
-                |    }
+                |    })
             """
         }
 
@@ -262,11 +279,16 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |            dimension "one"
                 |        }
                 |    }
-                |    onVariants
-                |            .withBuildType("debug")
-                |            .withFlavor(new kotlin.Pair("one", "flavor1")) {
+            """
+        }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withBuildType("debug")
+                |          .withFlavor(new kotlin.Pair("one", "flavor1")), {
                 |        enabled = false
-                |    }
+                |    })
             """
         }
 
@@ -302,12 +324,17 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |            dimension "two"
                 |        }
                 |    }
-                |    onVariants
-                |            .withFlavor(new kotlin.Pair("one", "flavor1"))
-                |            .withFlavor(new kotlin.Pair("two", "flavorA"))
-                |            .withBuildType("debug") {
+            """
+        }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withFlavor(new kotlin.Pair("one", "flavor1"))
+                |          .withFlavor(new kotlin.Pair("two", "flavorA"))
+                |          .withBuildType("debug"), {
                 |        enabled = false
-                |    }
+                |    })
             """
         }
 
@@ -353,12 +380,17 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |            dimension "two"
                 |        }
                 |    }
-                |    onVariants
-                |            .withBuildType("debug")
-                |            .withFlavor(new kotlin.Pair("one", "flavor1"))
-                |            .withFlavor(new kotlin.Pair("two", "flavorA")) {
+            """
+        }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withBuildType("debug")
+                |          .withFlavor(new kotlin.Pair("one", "flavor1"))
+                |          .withFlavor(new kotlin.Pair("two", "flavorA")), {
                 |        enabled = false
-                |    }
+                |    })
             """
         }
 
@@ -399,9 +431,15 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |            dimension "one"
                 |        }
                 |    }
-                |    onVariants.withName("flavor1Debug") {
+            """
+        }
+
+        withAndroidComponents {
+            """
+                |    beforeVariants(selector()
+                |          .withName("flavor1Debug"), {
                 |        enabled = false
-                |    }
+                |    })
             """
         }
 
@@ -420,13 +458,12 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
 
     @Test
     fun `unit-test filtering via new api using buildtype callback`() {
-        given {
+        withAndroidComponents {
             """
-                |    onVariants.withBuildType("debug") {
-                |        unitTest {
-                |            enabled = false
-                |        }
-                |    }
+                |    beforeUnitTest(selector()
+                |          .withBuildType("debug"), {
+                |        enabled = false
+                |    })
             """
         }
 
@@ -444,13 +481,12 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
 
     @Test
     fun `android-test filtering via new api using buildtype callback`() {
-        given {
+        withAndroidComponents {
             """
-                |    onVariants.withBuildType("debug") {
-                |        androidTest {
-                |            enabled = false
-                |        }
-                |    }
+                |    beforeAndroidTest(selector()
+                |          .withBuildType("debug"), {
+                |        enabled = false
+                |    })
             """
         }
 
@@ -469,6 +505,19 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
 
     // ---------------------------------------------------------------------------------------------
 
+    var androidComponentsBlock: (() -> String)? = null
+    fun withAndroidComponents(action: () -> String) {
+        androidComponentsBlock = action
+        state = TestState.GIVEN
+    }
+
+    override fun noGivenData(): String {
+        // it's ok to not have any given data, if there is some androidComponents customization.
+        if (androidComponentsBlock!=null)
+            return ""
+        else
+            throw RuntimeException("No given data")
+    }
 
     override fun defaultWhen(given: String): List<VariantInfo>? {
         project.buildFile.appendText(
@@ -476,8 +525,17 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
                 |android {
                 |${given.trimMargin()}
                 |}
-            """.trimMargin()
-        )
+            """.trimMargin())
+        this.androidComponentsBlock?.let {
+            project.buildFile.appendText(
+            """
+                |
+                |androidComponents {
+                |${it().trimMargin()}
+                |}
+            """.trimMargin())
+        }
+
 
         return project.model().fetchAndroidProjects().onlyModel.variants.map {
             VariantInfo(

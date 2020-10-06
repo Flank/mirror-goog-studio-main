@@ -20,6 +20,7 @@ import com.android.build.api.component.ActionableComponentObject
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.extension.VariantSelector
 import org.gradle.api.Action
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Registrar object to keep track of Variant API operations registered on the [Component]
@@ -34,15 +35,25 @@ class OperationsRegistrar<Component: ComponentIdentity> {
     private val operations= mutableListOf<Operation<Component>>()
 
     private val noSelector = VariantSelectorImpl().all()
+    private val actionsExecuted = AtomicBoolean(false)
 
     fun addOperation(
             callback: Action<Component>,
             selector: VariantSelector = noSelector
     ) {
+        if (actionsExecuted.get()) {
+            throw RuntimeException("""
+                It is too late to add actions as the callbacks already executed.
+                Did you try to call onVariants or onVariantProperties from the old variant API
+                'applicationVariants' for instance ? you should always call onVariants or
+                onVariantProperties directly from the android DSL block.
+                """)
+        }
         operations.add(Operation(selector as VariantSelectorImpl, callback))
     }
 
     fun executeOperations(variant: Component) {
+        actionsExecuted.set(true)
         operations.forEach { operation ->
             if (operation.selector.appliesTo(variant)) {
                 operation.callBack.execute(variant)

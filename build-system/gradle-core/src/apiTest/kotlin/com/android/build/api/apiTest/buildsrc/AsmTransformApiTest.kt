@@ -53,7 +53,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
 
                         val android = project.extensions.getByType(CommonExtension::class.java)
 
-                        android.onVariantProperties {
+                        androidComponents.onVariants {
                             transformClassesWith(ExampleClassVisitorFactory::class.java,
                                                  InstrumentationScope.ALL) {
                                 it.writeToStdout.set(true)

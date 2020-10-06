@@ -16,11 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.component.AndroidTestBuilder
-import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentIdentity
-import com.android.build.api.component.UnitTestBuilder
-import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.ComponentBuilderImpl
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.VariantBuilder
@@ -28,7 +24,6 @@ import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.Action
 
 abstract class VariantBuilderImpl(
     variantDslInfo: VariantDslInfo,
@@ -50,42 +45,9 @@ abstract class VariantBuilderImpl(
 
     override var maxSdkVersion: Int? = variantDslInfo.maxSdkVersion
 
-    override fun unitTest(action: UnitTestBuilder.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
-    fun unitTest(action: Action<UnitTestBuilder>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
-    override fun unitTestProperties(action: UnitTest.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
-    fun unitTestProperties(action: Action<UnitTest>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
-    override fun androidTest(action: AndroidTestBuilder.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
-    fun androidTest(action: Action<AndroidTestBuilder>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
-    override fun androidTestProperties(action: AndroidTest.() -> Unit) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
-    fun androidTestProperties(action: Action<AndroidTest>) {
-        throw RuntimeException("Actions can only be registered through DSL aware objects.")
-    }
-
     abstract fun <T: VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             stats: GradleBuildVariant.Builder): T
-
 
     override var renderscriptTargetApi: Int = -1
         get() {

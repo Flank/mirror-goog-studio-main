@@ -59,7 +59,7 @@ abstract class CustomTask extends DefaultTask {
         FileWriter versionCodeWriter = new FileWriter(getVersionCodeOutputFile().getAsFile().get())
         versionCodeWriter.write(versionCode)
         versionCodeWriter.close()
-      
+
         FileWriter versionNameWriter = new FileWriter(getVersionNameOutputFile().getAsFile().get())
         versionNameWriter.write(versionName)
         versionNameWriter.close()
@@ -67,8 +67,8 @@ abstract class CustomTask extends DefaultTask {
 }
 
 
-android {
-    onVariantProperties {  
+androidComponents {
+    onVariants(selector().all(), {
         TaskProvider customTaskProvider = tasks.register(name + "CustomTask", CustomTask.class) {
             task ->
                 task.setVersionCode("123")
@@ -88,7 +88,7 @@ android {
             fr.close()
             return value;
         })
-    }
+    })
 }""")
 
     @JvmField
