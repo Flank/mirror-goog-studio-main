@@ -1087,6 +1087,67 @@ class DynamicAppTest {
         }
     }
 
+    @Test
+    fun `test extracting _ALL_ apks`() {
+        val apkFromBundleTaskName = getApkFromBundleTaskName("debug")
+
+        // -------------
+        // build apks for API 27
+        // create a small json file with device filtering
+        var jsonFile = getJsonFile(27)
+        project
+            .executor()
+            .with(StringOption.IDE_APK_SELECT_CONFIG, jsonFile.toString())
+            .with(StringOption.IDE_INSTALL_DYNAMIC_MODULES_LIST, "_ALL_")
+            .run("app:$apkFromBundleTaskName")
+
+        // fetch the build output model
+        var apkFolder = getApkFolderOutput("debug").apkFolder
+        FileSubject.assertThat(apkFolder).isDirectory()
+
+        var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
+        Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
+            .containsExactly(
+                "base-master.apk",
+                "base-xxhdpi.apk",
+                "feature1-master.apk",
+                "feature1-xxhdpi.apk",
+                "feature2-master.apk",
+                "feature2-xxhdpi.apk")
+    }
+
+    // make sure two flags can be passed to bundleTool simultaneously
+    @Test
+    fun `test flag local_testing and extracting _ALL_ apks`() {
+        val apkFromBundleTaskName = getApkFromBundleTaskName("debug")
+
+        // -------------
+        // build apks for API 27
+        // create a small json file with device filtering
+        var jsonFile = getJsonFile(27)
+        project
+            .executor()
+            .with(StringOption.IDE_APK_SELECT_CONFIG, jsonFile.toString())
+            .with(StringOption.IDE_INSTALL_DYNAMIC_MODULES_LIST, "_ALL_")
+            .with(BooleanOption.ENABLE_LOCAL_TESTING, true)
+            .run("app:$apkFromBundleTaskName")
+
+        var apkFolder = getApkFolderOutput("debug").apkFolder
+        FileSubject.assertThat(apkFolder).isDirectory()
+
+        var apkFileArray = apkFolder.list() ?: fail("No files at $apkFolder")
+        Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
+            .containsExactly(
+                "base-master.apk",
+                "base-xxhdpi.apk",
+                "feature1-master.apk",
+                "feature1-xxhdpi.apk",
+                "feature2-master.apk",
+                "feature2-xxhdpi.apk")
+        val baseApk: File = apkFolder.listFiles().first { it.name == "base-master.apk" }
+        assertThat(ApkSubject.getManifestContent(baseApk.toPath()).joinToString()).contains("local_testing_dir")
+    }
+
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
