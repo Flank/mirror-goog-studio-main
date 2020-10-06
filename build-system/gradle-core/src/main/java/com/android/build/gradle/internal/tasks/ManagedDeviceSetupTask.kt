@@ -106,64 +106,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
                 parameters.deviceName.get(),
                 parameters.hardwareProfile.get()).get()
 
-            if (parameters.avdService.get().deviceSnapshotCreated(parameters.deviceName.get())) {
-                // Snapshot is already there, don't need to create with emulator.
-                loggerWrapper.info("Snapshot already exists for device " +
-                        "${parameters.deviceName.get()}.")
-                return
-            }
-
-            loggerWrapper.info("Creating snapshot for ${parameters.deviceName.get()}")
-            val emulatorDir = versionedSdkLoader.emulatorDirectoryProvider.orNull?.asFile
-                ?: error("Emulator is missing.")
-            val emulatorExecutable = emulatorDir.resolve("emulator")
-            val processBuilder = ProcessBuilder(
-                listOf(
-                    emulatorExecutable.absolutePath,
-                    "@${parameters.deviceName.get()}",
-                    "-no-window",
-                    "-read-only",
-                    "-no-boot-anim"
-                )
-            )
-            val environment = processBuilder.environment()
-            environment["ANDROID_AVD_HOME"] =
-                parameters.avdService.get().parameters.avdLocation.get().asFile.absolutePath
-            val process = processBuilder.start()
-
-            try {
-                GrabProcessOutput.grabProcessOutput(
-                    process,
-                    GrabProcessOutput.Wait.ASYNC,
-                    object : GrabProcessOutput.IProcessOutput {
-                        override fun out(line: String?) {
-                            line ?: return
-                            if (line.contains("boot completed")) {
-                                Thread.sleep(WAIT_AFTER_BOOT_MS)
-                                process.destroyForcibly()
-                            }
-                        }
-
-                        override fun err(line: String?) {}
-                    }
-                )
-                if (!process.waitFor(DEVICE_BOOT_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-                    process.destroyForcibly()
-                    process.waitFor()
-                    if (!parameters.avdService.get().deviceSnapshotCreated(
-                            parameters.deviceName.get())) {
-                        error("Failed to generate snapshot for device.")
-                    }
-                } else {
-                    loggerWrapper.info(
-                        "Successfully created snapshot for ${parameters.deviceName.get()}")
-                }
-            } catch (e : Exception) {
-                process.destroyForcibly()
-                process.waitFor()
-                throw RuntimeException(e)
-            }
-
+            parameters.avdService.get().ensureLoadableSnapshot(
+                parameters.deviceName.get())
         }
     }
 

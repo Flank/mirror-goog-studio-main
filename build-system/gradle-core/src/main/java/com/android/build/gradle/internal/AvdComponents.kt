@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.repository.Revision
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.sdklib.repository.AndroidSdkHandler
+import com.android.utils.ILogger
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -41,6 +42,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
 ) :
         BuildService<AvdComponentsBuildService.Parameters> {
 
+    private val logger: ILogger = LoggerWrapper.getLogger(AvdComponentsBuildService::class.java)
+
     interface Parameters : BuildServiceParameters {
         val sdkService: Property<SdkComponentsBuildService>
         val compileSdkVersion: Property<String>
@@ -60,7 +63,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
                 locationsService,
                 parameters.sdkService.get().sdkDirectoryProvider.get().asFile.toPath()
             ),
-            locationsService
+            locationsService,
+            AvdSnapshotHandler()
         )
     }
 
@@ -105,8 +109,21 @@ abstract class AvdComponentsBuildService @Inject constructor(
             avdManager.createOrRetrieveAvd(imageProvider, imageHash, deviceName, hardwareProfile)
         })
 
-    fun deviceSnapshotCreated(deviceName: String): Boolean =
-        avdManager.deviceSnapshotCreated(deviceName)
+    /**
+     * Ensures that a given AVD has a loadable snapshot for the current emulator version.
+     *
+     * Checks to make sure the default_boot snapshot on a given avd is loadable with the current
+     * emulator version. If not, a new snapshot is created which will replace any old snapshot if
+     * it existed.
+     *
+     * If a snapshot fails to be created, an error is thrown.
+     *
+     * @param deviceName The name of the avd to check. This avd should have already been created via
+     * a call to get() on the provider returned by [avdProvider].
+     */
+    fun ensureLoadableSnapshot(deviceName: String) {
+        avdManager.loadSnapshotIfNeeded(deviceName)
+    }
 
     class RegistrationAction(
         project: Project,
