@@ -36,7 +36,7 @@ import java.io.File
 val automotiveMessagingServiceTemplate
   get() = template {
     revision = 1
-    name = "Messaging service"
+    name = "Messaging Service"
     description = "Create a service that sends notifications compatible with Android Auto"
     minApi = 21
 
