@@ -62,7 +62,6 @@ readonly invocation_id="$(uuidgen)"
   "${detect_flake_args[@]}" \
   -- \
   //tools/adt/idea/studio:android-studio \
-  //tools/adt/idea/studio:android-studio.linux.tar.gz \
   //tools/adt/idea/studio:updater_deploy.jar \
   //tools/adt/idea/updater-ui:sdk-patcher.zip \
   //tools/adt/idea/native/installer:android-studio-bundle-data \
@@ -100,13 +99,12 @@ if [[ -d "${DIST_DIR}" ]]; then
   readonly artifacts_dir="${DIST_DIR}/artifacts"
   mkdir -p ${artifacts_dir}
 
-  build_txt="$(unzip -p ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip android-studio/build.txt)"
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.tar.gz ${DIST_DIR}/android-studio-${build_txt:3}.tar.gz
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${DIST_DIR}/android-studio-${build_txt:3}.win.zip
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${DIST_DIR}/android-studio-${build_txt:3}.mac.zip
-  cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${DIST_DIR}/android-studio-updater.jar
-  cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${DIST_DIR}
-  cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${DIST_DIR}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
+  cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
 
   cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
