@@ -2861,7 +2861,7 @@ class LintDriver(
         names: Collection<String>?
     ) {
         var message = "Issue `${issue.id}` is not allowed to be suppressed"
-        if (names != null) {
+        if (names?.isNotEmpty() == true) {
             message += " (but can be with ${
             formatList(
                 names.map { "`@${it.substring(it.lastIndexOf('.') + 1)}`" }.toList(),
