@@ -68,12 +68,12 @@ class AaptOptionsTest {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
-                android {
-                    onVariantProperties {
+                androidComponents {
+                    onVariants(selector().all(), {
                         aaptOptions.additionalParameters.addAll(
                             ["--trace-folder", "$windowsFriendlyFilePath"]
                         )
-                    }
+                    })
                 }
                 """.trimIndent()
         )
@@ -127,10 +127,10 @@ class AaptOptionsTest {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
-                android {
-                    onVariantProperties {
+                androidComponents {
+                    onVariants(selector().all(), {
                         aaptOptions.ignoreAssetsPatterns.add("ignored")
-                    }
+                    })
                 }
                 """.trimIndent()
         )
@@ -188,10 +188,11 @@ class AaptOptionsTest {
                         noCompress "noCompressDsl"
                         ignoreAssetsPattern ".ignoreAssetsPatternDsl"
                     }
-
-                    onVariantProperties {
+                }
+                androidComponents {
+                    onVariants(selector().all(), {
                         aaptOptions.ignoreAssetsPatterns.add(".ignoreAssetsPatternApi")
-                    }
+                    })
                 }
                 """.trimIndent()
         )

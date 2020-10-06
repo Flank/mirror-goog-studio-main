@@ -22,7 +22,6 @@ import com.android.build.api.dsl.DefaultConfig
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.Variant
-import com.android.build.api.variant.impl.VariantOperations
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.CompileOptions
 import com.android.build.gradle.internal.coverage.JacocoOptions
@@ -52,7 +51,7 @@ abstract class CommonExtensionImpl<
         DefaultConfigT,
         ProductFlavorT,
         VariantBuilderT,
-        VariantT>, ActionableVariantObjectOperationsExecutor<VariantBuilderT, VariantT> {
+        VariantT> {
 
     private val sourceSetManager = dslContainers.sourceSetManager
 
@@ -99,9 +98,6 @@ abstract class CommonExtensionImpl<
     override fun buildFeatures(action: BuildFeaturesT.() -> Unit) {
         action(buildFeatures)
     }
-
-    protected val variantOperations = VariantOperations<VariantBuilderT>()
-    protected val variantPropertiesOperations = VariantOperations<VariantT>()
 
     override val compileOptions: CompileOptions =
         dslServices.newInstance(CompileOptions::class.java)
@@ -228,30 +224,6 @@ abstract class CommonExtensionImpl<
 
     override fun testOptions(action: com.android.build.api.dsl.TestOptions.() -> Unit) {
         action.invoke(testOptions)
-    }
-
-    override fun onVariants(action: Action<VariantBuilderT>) {
-        variantOperations.addAction(action)
-    }
-
-    override fun onVariants(action: VariantBuilderT.() -> Unit) {
-        variantOperations.addAction(Action { action.invoke(it) } )
-    }
-
-    override fun onVariantProperties(action: Action<VariantT>) {
-        variantPropertiesOperations.addAction(action)
-    }
-
-    override fun onVariantProperties(action: (VariantT) -> Unit) {
-        variantPropertiesOperations.addAction(Action { action.invoke(it) })
-    }
-
-    override fun executeVariantBuilderOperations(variant: VariantBuilderT) {
-        variantOperations.executeActions(variant)
-    }
-
-    override fun executeVariantOperations(variant: VariantT) {
-        variantPropertiesOperations.executeActions(variant)
     }
 
     override val flavorDimensions: MutableList<String> = mutableListOf()

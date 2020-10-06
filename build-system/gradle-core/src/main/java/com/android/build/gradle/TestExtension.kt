@@ -1,8 +1,6 @@
 package com.android.build.gradle
 
 import com.android.build.api.dsl.TestBuildFeatures
-import com.android.build.api.variant.TestVariantBuilder
-import com.android.build.api.variant.TestVariant
 import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.BaseVariantOutput
@@ -10,7 +8,6 @@ import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.dependency.SourceSetManager
-import com.android.build.gradle.internal.dsl.ActionableVariantObjectOperationsExecutor
 import com.android.build.gradle.internal.dsl.InternalTestExtension
 import com.android.build.gradle.internal.dsl.TestExtensionImpl
 import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl
@@ -38,8 +35,7 @@ open class TestExtension(
     extraModelInfo,
     false
 ), TestAndroidConfig,
-    InternalTestExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<TestVariantBuilder, TestVariant> by publicExtensionImpl {
+    InternalTestExtension by publicExtensionImpl {
 
     private val applicationVariantList: DomainObjectSet<ApplicationVariant> =
         dslServices.domainObjectSet(ApplicationVariant::class.java)

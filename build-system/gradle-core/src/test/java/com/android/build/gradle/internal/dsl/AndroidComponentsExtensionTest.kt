@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.extension.impl.*
 import com.android.build.api.variant.*
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -23,9 +24,11 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Action
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
+import java.util.regex.Pattern
 
 class AndroidComponentsExtensionTest {
     private lateinit var dslServices: DslServices
@@ -131,6 +134,39 @@ class AndroidComponentsExtensionTest {
                 ),
                 variantApiOperationsRegistrar,
                 TestVariantBuilder::class.java)
+    }
+
+
+    @Test
+    fun testBeforeVariants() {
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
+        val appExtension = ApplicationAndroidComponentsExtensionImpl(dslServices, variantApiOperationsRegistrar)
+        val fooVariant = appExtension.selector().withName(Pattern.compile("foo"))
+        appExtension.beforeVariants {
+                    it.minSdkVersion = AndroidVersion(23)
+        }
+
+        appExtension.beforeVariants(fooVariant) {
+                    it.enabled = false
+        }
+    }
+
+    @Test
+    fun testOnVariantsProperties() {
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
+        val appExtension = ApplicationAndroidComponentsExtensionImpl(dslServices, variantApiOperationsRegistrar)
+        val fooVariant = appExtension.selector().withName(Pattern.compile("foo"))
+
+        appExtension.onVariants(fooVariant, Action { it.artifacts.get(ArtifactType.APK) })
+        val f1Variant = appExtension.selector().withFlavor("f1" to "dim1")
+        appExtension.onVariants(f1Variant, Action { it.artifacts.get(ArtifactType.APK) })
+
+        val debugF1Variant = appExtension.selector()
+                .withBuildType("debug")
+                .withFlavor("f1" to "dim1")
+        appExtension.onVariants(debugF1Variant) {
+                    it.artifacts.get(ArtifactType.APK)
+        }
     }
 
     private fun  <VariantBuilderT: VariantBuilder, VariantT: Variant> testAllSelection(

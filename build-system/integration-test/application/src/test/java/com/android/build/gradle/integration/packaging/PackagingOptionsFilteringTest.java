@@ -431,30 +431,26 @@ public class PackagingOptionsFilteringTest {
     @Test
     public void addExcludePatternsViaVariantPropertiesApi() throws Exception {
         // modify app's build file
-        appendBuild(app, "android {");
-        appendBuild(app, "    onVariantProperties.withName('debug') {");
+        appendBuild(app, "androidComponents {");
+        appendBuild(app, "    onVariants(selector().withName('debug'), {");
         appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.debugExclude')");
-        appendBuild(app, "    }");
-        appendBuild(app, "    onVariantProperties.withName('release') {");
+        appendBuild(app, "    })");
+        appendBuild(app, "    onVariants(selector().withName('release'), {");
         appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.releaseExclude')");
-        appendBuild(app, "    }");
-        appendBuild(app, "    onVariants {");
-        appendBuild(app, "        androidTestProperties {");
-        appendBuild(app, "            packagingOptions.resources.excludes.add('**/*.testExclude')");
-        appendBuild(app, "        }");
-        appendBuild(app, "    }");
+        appendBuild(app, "    })");
+        appendBuild(app, "    androidTest(selector().all(), {");
+        appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.testExclude')");
+        appendBuild(app, "    })");
         appendBuild(app, "}");
 
         // modify lib's build file
-        appendBuild(lib, "android {");
-        appendBuild(lib, "    onVariantProperties {");
+        appendBuild(lib, "androidComponents {");
+        appendBuild(lib, "    onVariants(selector().all(), {");
         appendBuild(lib, "        packagingOptions.resources.excludes.add('**/*.libExclude')");
-        appendBuild(lib, "    }");
-        appendBuild(lib, "    onVariants {");
-        appendBuild(lib, "        androidTestProperties {");
-        appendBuild(lib, "            packagingOptions.resources.excludes.add('**/*.testExclude')");
-        appendBuild(lib, "        }");
-        appendBuild(lib, "    }");
+        appendBuild(lib, "    })");
+        appendBuild(lib, "    androidTest(selector().all(), {");
+        appendBuild(lib, "        packagingOptions.resources.excludes.add('**/*.testExclude')");
+        appendBuild(lib, "    })");
         appendBuild(lib, "}");
 
         byte[] c0 = new byte[] { 0, 1, 2, 3 };
@@ -517,10 +513,10 @@ public class PackagingOptionsFilteringTest {
      */
     @Test
     public void addPickFirstPatternsViaVariantPropertiesApi() throws Exception {
-        appendBuild(app, "android {");
-        appendBuild(app, "    onVariantProperties {");
+        appendBuild(app, "androidComponents {");
+        appendBuild(app, "    onVariants(selector().all(), {");
         appendBuild(app, "        packagingOptions.resources.pickFirsts.add('**/*.pickFirst')");
-        appendBuild(app, "    }");
+        appendBuild(app, "    })");
         appendBuild(app, "}");
 
         byte[] c0 = new byte[] { 0, 1, 2, 3 };
@@ -541,10 +537,10 @@ public class PackagingOptionsFilteringTest {
      */
     @Test
     public void addMergePatternsViaVariantPropertiesApi() throws Exception {
-        appendBuild(app, "android {");
-        appendBuild(app, "    onVariantProperties {");
+        appendBuild(app, "androidComponents {");
+        appendBuild(app, "    onVariants(selector().all(), {");
         appendBuild(app, "        packagingOptions.resources.merges.add('**/*.merge')");
-        appendBuild(app, "    }");
+        appendBuild(app, "    })");
         appendBuild(app, "}");
 
         // add java resources to app and lib

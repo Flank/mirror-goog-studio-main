@@ -42,8 +42,7 @@ internal open class DynamicFeatureExtension(
     dslServices,
      globalScope,
     buildOutputs, sourceSetManager, extraModelInfo, false
-), InternalDynamicFeatureExtension by publicExtensionImpl,
-    ActionableVariantObjectOperationsExecutor<DynamicFeatureVariantBuilder, DynamicFeatureVariant> by publicExtensionImpl {
+), InternalDynamicFeatureExtension by publicExtensionImpl {
 
     override val viewBinding: ViewBindingOptions =
         dslServices.newInstance(
