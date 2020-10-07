@@ -39,13 +39,13 @@ interface Component: ComponentIdentity,
      * Example:
      *
      * ```
-     *  androidExtension.onVariantProperties {
+     *  androidComponentsExtension.onVariants(selector().all(), {
      *      transformClassesWith(AsmClassVisitorFactoryImpl.class,
      *                           InstrumentationScope.Project) { params ->
      *          params.x = "value"
      *      }
      *      setAsmFramesComputationMode(COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS)
-     *  }
+     *  })
      * ```
      *
      * This API is experimental and subject to breaking change and we strongly suggest you don't

@@ -42,18 +42,19 @@ import java.io.Serializable
  *    val listOfStrings: ListProperty<String>
  *  }
  *
- *  androidExtension.onVariantProperties {
+ *  androidComponentsExtension.onVariants(selector().all(), {
  *      transformClassesWith(AsmClassVisitorFactoryImpl.class,
  *                           InstrumentationScope.Project) { params ->
  *          // parameters configuration
  *          params.intValue.set(1)
  *          params.listOfStrings.set(listOf("a", "b"))
  *      }
- *  }
+ *  })
  * ```
  */
 @Incubating
-interface InstrumentationParameters : Serializable {
+interface InstrumentationParameters : Serializable
+{
 
     @Incubating
     class None : InstrumentationParameters
