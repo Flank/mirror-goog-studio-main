@@ -34,6 +34,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileSystemLocationProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -94,6 +95,16 @@ class ArtifactsImpl(
      */
     internal fun <T: FileSystemLocation> getOutputPath(type: Artifact<T>, vararg paths: String)=
         type.getOutputPath(buildDirectory, identifier, *paths)
+
+    /**
+     * Returns a [RegularFile] that can be used to output a [SingleArtifact]
+     * @param type expect output [ArtifactType]
+     * @param paths the extra folder to add when constructing the file path.
+     */
+    internal fun getOutputRegularFile(
+            type: SingleArtifact<RegularFile>,
+            vararg paths: String) =
+            buildDirectory.file(type.getOutputPath(buildDirectory, identifier, *paths).absolutePath)
 
     /**
      * Returns the [ArtifactContainer] for the passed [type]. The instance may be allocated as part

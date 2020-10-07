@@ -19,7 +19,7 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 /**
- * Read-only object to access dependencies information properties during [com.android.build.api.dsl.CommonExtension.onVariantProperties]
+ * Read-only object to access dependencies information properties during [com.android.build.api.extension.AndroidComponentsExtension#onVariants]
  */
 @Incubating
 interface DependenciesInfo {

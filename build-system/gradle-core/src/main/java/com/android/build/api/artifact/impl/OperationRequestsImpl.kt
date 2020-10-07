@@ -21,11 +21,13 @@ import com.android.build.api.artifact.Artifact.MultipleArtifact
 import com.android.build.api.artifact.Artifact.SingleArtifact
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.ArtifactTransformationRequest
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.CombiningOperationRequest
 import com.android.build.api.artifact.InAndOutDirectoryOperationRequest
 import com.android.build.api.artifact.InAndOutFileOperationRequest
 import com.android.build.api.artifact.OutOperationRequest
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -142,6 +144,16 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
             builtArtifactsReference
         )
 
+        // if this is a public type with an associated listing file used by studio, automatically
+        // adjust the listing file provider to be the new task. In order for Studio to use this
+        // new location, a successful sync must be performed.
+        publicTypesToIdeModelTypeMap[type]?.let {
+            val ideModelContainer = artifacts.getArtifactContainer(it)
+            ideModelContainer.replace(taskProvider.flatMap { task ->
+                into(task).file(BuiltArtifactsImpl.METADATA_FILE_NAME)
+            })
+        }
+
         return ArtifactTransformationRequestImpl(
             builtArtifactsReference,
             inputLocation = from,
@@ -199,6 +211,16 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
             "toTransform or toTransformMany methods were never invoked"
 
     companion object {
+
+        /**
+         * Map of public [ArtifactType] of [Directory] that have an associated listing file used
+         * by Android Studio and passed through the model. The key is the artifact type and the
+         * value is the [InternalArtifactType] of [RegularFile] for the listing file artifact.
+         */
+        val publicTypesToIdeModelTypeMap:
+                Map<SingleArtifact<Directory>, InternalArtifactType<RegularFile>>
+                = mapOf(ArtifactType.APK to InternalArtifactType.APK_IDE_MODEL,
+        )
 
         /**
          * Keep this method as a static to avoid all possible unwanted variable capturing from
