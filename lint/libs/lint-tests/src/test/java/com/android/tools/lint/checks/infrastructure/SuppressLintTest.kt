@@ -310,6 +310,56 @@ class SuppressLintTest {
     }
 
     @Test
+    fun checkNeverSuppressible() {
+        lint()
+            .allowCompilationErrors()
+            .files(
+                kotlin(
+                    """
+                    fun forbidden() {
+                        forbidden()
+                    }"""
+                ).indented()
+            )
+            .issues(MySecurityDetector.TEST_ISSUE_NEVER_SUPPRESSIBLE)
+            .baseline(
+                xml(
+                    "baseline.xml",
+                    """
+                    <issues format="5" by="lint 3.3.0">
+                        <issue
+                            id="_SecureIssue2"
+                            severity="Warning"
+                            message="Some error message here"
+                            category="Security"
+                            priority="10"
+                            summary="Some important security issue"
+                            explanation="Blahdiblah"
+                            errorLine1="    forbidden()"
+                            errorLine2="    ~~~~~~~~~~~">
+                            <location
+                                file="src/test.kt"
+                                line="2"
+                                column="5"/>
+                        </issue>
+                    </issues>
+                """
+                ).indented()
+            )
+            .sdkHome(TestUtils.getSdk())
+            .run()
+            .expect(
+                """
+                baseline.xml: Error: Issue _SecureIssue2 is not allowed to be suppressed [LintError]
+                src/test.kt:2: Warning: Some error message here [_SecureIssue2]
+                    forbidden()
+                    ~~~~~~~~~~~
+                1 errors, 1 warnings
+                """
+            )
+    }
+
+    @Test
     fun checkForbiddenSuppressWithLintOptions() {
         lint()
             .allowCompilationErrors()
@@ -340,7 +390,10 @@ class SuppressLintTest {
                 src/main/kotlin/test.kt:2: Warning: Some error message here [_SecureIssue]
                     forbidden()
                     ~~~~~~~~~~~
-                0 errors, 1 warnings
+                src/main/kotlin/test.kt:2: Warning: Some error message here [_SecureIssue2]
+                    forbidden()
+                    ~~~~~~~~~~~
+                0 errors, 2 warnings
                 """
             )
     }
@@ -362,6 +415,7 @@ class SuppressLintTest {
             val message = "Some error message here"
             val location = context.getLocation(node)
             context.report(TEST_ISSUE, node, location, message)
+            context.report(TEST_ISSUE_NEVER_SUPPRESSIBLE, node, location, message)
         }
 
         override fun createUastHandler(context: JavaContext) = AssertjDetectorHandler(context)
@@ -387,6 +441,20 @@ class SuppressLintTest {
                 explanation = "Blahdiblah",
                 category = Category.SECURITY, priority = 10, severity = Severity.WARNING,
                 suppressAnnotations = listOf("foo.bar.MyOwnAnnotation"),
+                implementation = Implementation(
+                    MySecurityDetector::class.java,
+                    Scope.JAVA_FILE_SCOPE
+                )
+            )
+
+            @Suppress("SpellCheckingInspection")
+            @JvmField
+            val TEST_ISSUE_NEVER_SUPPRESSIBLE = Issue.create(
+                id = "_SecureIssue2",
+                briefDescription = "Some important security issue",
+                explanation = "Blahdiblah",
+                category = Category.SECURITY, priority = 10, severity = Severity.WARNING,
+                suppressAnnotations = emptyList(),
                 implementation = Implementation(
                     MySecurityDetector::class.java,
                     Scope.JAVA_FILE_SCOPE

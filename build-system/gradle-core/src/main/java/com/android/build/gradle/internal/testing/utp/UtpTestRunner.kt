@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.testing.BaseTestRunner
 import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.LAUNCHER
-import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.builder.testing.api.DeviceConnector
 import com.android.ddmlib.testrunner.TestIdentifier
 import com.android.ide.common.process.JavaProcessExecutor
@@ -79,7 +78,7 @@ class UtpTestRunner @JvmOverloads constructor(
             val utpTestRunLogDir = Files.createTempDir()
             val runnerConfigProtoFile = File.createTempFile("runnerConfig", ".pb").also { file ->
                 FileOutputStream(file).use { writer ->
-                    configFactory.createRunnerConfigProto(
+                    configFactory.createRunnerConfigProtoForLocalDevice(
                             deviceConnector,
                             testData,
                             apks.union(helperApks) + testData.testApk,

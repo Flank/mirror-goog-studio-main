@@ -111,6 +111,7 @@ import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
 import com.android.build.gradle.internal.tasks.LintCompile
 import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
+import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
 import com.android.build.gradle.internal.tasks.MergeClassesTask
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
@@ -1555,6 +1556,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(
                 ManagedDeviceCleanTask.CreationAction(
                         "cleanManagedDevices", globalScope, managedDevices.toList()))
+
+        for (device in managedDevices) {
+            taskFactory.register(
+                ManagedDeviceSetupTask.CreationAction(
+                    setupTaskName(device),
+                    device,
+                    globalScope))
+        }
     }
 
     protected fun createConnectedTestForVariant(androidTestProperties: AndroidTestImpl) {

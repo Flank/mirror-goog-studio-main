@@ -19,6 +19,7 @@ if [[ $BUILD_NUMBER =~ ^[0-9]+$ ]];
 then
   IS_POST_SUBMIT=true
 fi
+AS_BUILD_NUMBER="${BUILD_NUMBER/P/0}"  # for AB presubmit: satisfy Integer.parseInt in BuildNumber.parseBuildNumber
 
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
@@ -31,15 +32,11 @@ config_options="--config=dynamic"
 # Generate a UUID for use as the bazel test invocation id
 readonly invocation_id="$(uuidgen)"
 
-# Temporary hack to switch to the "unb" rules:
-mv "${script_dir}/project.bzl" "${script_dir}/project.bzl.bak"
-echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
-
 # Run Bazel
-# --keep_going \
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
+  --keep_going \
   ${config_options} \
   --worker_max_instances=${WORKER_INSTANCES} \
   --invocation_id=${invocation_id} \
@@ -48,7 +45,7 @@ echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
   --define=meta_android_build_number="${BUILD_NUMBER}" \
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
-  --embed_label="${BUILD_NUMBER}" \
+  --embed_label="${AS_BUILD_NUMBER}" \
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
   -- \
@@ -61,22 +58,11 @@ echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
   //tools/adt/idea/studio:searchable_options_test \
-  //tools/... \
-  //prebuilts/tools/... \
-  //prebuilts/studio/...
-
-# $(< "${script_dir}/targets") contains:
-  # @blaze//:aswb_tests \
-  # //prebuilts/studio/... \
-  # //prebuilts/tools/... \
-  # //tools/... \
+  $(< "${script_dir}/targets")
 # Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
 # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
 # This has the side effect of running it twice, but as it only takes a few seconds that seems ok.
 readonly bazel_status=$?
-
-mv "${script_dir}/project.bzl.bak" "${script_dir}/project.bzl"
-
 
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
 if [[ -d "${DIST_DIR}" ]]; then

@@ -93,5 +93,10 @@ public class Compressor {
         return new InflaterInputStream(inputStream, inflater);
     }
 
+    @NonNull
+    static Deflater getDeflater(int compressionLevel) {
+        return new Deflater(compressionLevel, true);
+    }
+
     private Compressor() {}
 }

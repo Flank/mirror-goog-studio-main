@@ -151,6 +151,18 @@ class VariantPropertiesApiServicesImpl(
         }
     }
 
+    override fun <T> setPropertyOf(type: Class<T>, value: Collection<T>): SetProperty<T> {
+        return projectServices.objectFactory.setProperty(type).also {
+            it.set(value)
+            it.finalizeValueOnRead()
+
+            // FIXME when Gradle supports this
+            // it.preventGet()
+
+            delayedLock(it)
+        }
+    }
+
     override fun <K, V> mapPropertyOf(
         keyType: Class<K>,
         valueType: Class<V>,

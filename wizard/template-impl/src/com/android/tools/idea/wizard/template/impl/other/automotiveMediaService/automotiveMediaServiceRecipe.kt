@@ -82,7 +82,7 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
     sharedPackageName = packageName
     addDependency("com.android.support:support-media-compat:${appCompatVersion}.+")
   }
-  /* Create media service */
+  /* Create Media Service */
   mergeXml(androidManifestXml(customThemeName, mediaBrowserServiceName, sharedPackageName, useCustomTheme),
            serviceManifestOut.resolve("AndroidManifest.xml"))
 

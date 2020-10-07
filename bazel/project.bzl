@@ -5,4 +5,4 @@
 # the same value in their project attribute. The current acceptable
 # values are "" (empty) for the default project, and "unb" for the
 # unbundled one.
-PROJECT = ""
+PROJECT = "unb"

@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.agent.app.inspection;
 
-import android.os.Looper;
+package com.android.build.api.variant
 
-public class ClassLoaderUtils {
-    /**
-     * Iterates through threads presented in the app and looks for a thread with name "main". It can
-     * return {@code null} in case if thread with a name "main" is missing.
-     */
-    public static ClassLoader mainThreadClassLoader() {
-        return Looper.getMainLooper().getThread().getContextClassLoader();
-    }
+import org.gradle.api.Incubating
 
-    public static final String optimizedDirectory = System.getProperty("java.io.tmpdir");
-}
+/**
+ * Interface for ndk-build per-variant info.
+ *
+ * see [com.android.build.api.dsl.ExternalNativeNdkBuildOptions] for expanded documentation
+ * on each of these fields.
+ */
+@Incubating
+interface ExternalNativeNdkBuildOptions: ExternalNativeGenericOptions
