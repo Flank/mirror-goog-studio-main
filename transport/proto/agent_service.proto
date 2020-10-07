@@ -89,16 +89,6 @@ message EmptyResponse {}
 // The message itself is created and pushed to device from Studio
 // and can be access via profiler::Config::Instance().
 message AgentConfig {
-  enum AttachAgentMethod {
-    // The default value results in the JVMTI being initiated when 
-    // the BEGIN_SESSION command is sent.
-    UNSPECIFIED = 0;
-    // Triggers JVMTI instrumentation as soon as the agent is initialized.
-    INSTANT = 1;
-    // Triggers JVMTI instrumentation only when |attach_command| is
-    // received. 
-    ON_COMMAND = 2;
-  }
   message MemoryConfig {
     // equivalent to profiler.livealloc flag in Studio.
     bool use_live_alloc = 1;
@@ -115,11 +105,8 @@ message AgentConfig {
   MemoryConfig mem = 2;
   // equivalent to StudioFlags.PROFILER_CPU_API_TRACING.
   bool cpu_api_tracing_enabled = 3;
-  // How the agent should attach when advanced profiling.
-  AttachAgentMethod attach_method = 4;
-  // If |method| is ON_COMMAND this field should be set to
-  // the comamnd to listen to.
-  Command.CommandType attach_command = 5;
+  // whether the agent should initialize advanced profiling on attach.
+  bool startup_profiling_enabled = 4;
 }
 
 message RegisterAgentRequest {

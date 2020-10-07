@@ -321,21 +321,16 @@ void InitializeProfiler(JavaVM* vm, jvmtiEnv* jvmti_env,
 
 void SetupPerfa(JavaVM* vm, jvmtiEnv* jvmti_env,
                 const AgentConfig& agent_config) {
-  if (agent_config.attach_method() == AgentConfig::INSTANT) {
+  if (agent_config.startup_profiling_enabled()) {
     InitializeProfiler(vm, jvmti_env, agent_config);
   } else {
-    // If the method is not specified for backwards compatibility we default
-    // attach when BEGIN_SESSION command is sent.
-    Command::CommandType command = Command::BEGIN_SESSION;
-    if (agent_config.attach_method() == AgentConfig::ON_COMMAND) {
-      command = agent_config.attach_command();
-    }
-    // We delay performing the agent initiailization (e.g. BCI, memory tracking)
-    // until we receive the |BEGIN_SESSION| command (default). Or a specified
-    // command defined in the config. Attaching the agent could interfear with
-    // other features and we don't want to always enable profiling right away.
+    // If startup profiling is not enabled, then we delay performing the agent
+    // initiailization (e.g. BCI, memory tracking) to until we receive the
+    // |BEGIN_SESSION| command. The agent could be attached for other features
+    // and we don't want to always enable profiling right away.
     Agent::Instance().RegisterCommandHandler(
-        command, [vm, jvmti_env, agent_config](const Command* command) -> void {
+        Command::BEGIN_SESSION,
+        [vm, jvmti_env, agent_config](const Command* command) -> void {
           if (!Agent::Instance().IsProfilerInitalized()) {
             InitializeProfiler(vm, jvmti_env, agent_config);
           }
