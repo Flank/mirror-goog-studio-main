@@ -21,6 +21,17 @@ then
 fi
 AS_BUILD_NUMBER="${BUILD_NUMBER/P/0}"  # for AB presubmit: satisfy Integer.parseInt in BuildNumber.parseBuildNumber
 
+declare -a detect_flake_args
+for arg in "$@"
+do
+  if [[ "${arg}" == "--detect_flakes" ]];
+  then
+    detect_flake_args+=(--runs_per_test=20)
+    detect_flake_args+=(--runs_per_test_detects_flakes)
+    detect_flake_args+=(--nocache_test_results)
+  fi
+done
+
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
@@ -48,6 +59,7 @@ readonly invocation_id="$(uuidgen)"
   --embed_label="${AS_BUILD_NUMBER}" \
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
+  "${detect_flake_args[@]}" \
   -- \
   //tools/adt/idea/studio:android-studio \
   //tools/adt/idea/studio:android-studio.linux.tar.gz \
