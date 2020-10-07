@@ -58,15 +58,7 @@ readonly invocation_id="$(uuidgen)"
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
   //tools/adt/idea/studio:searchable_options_test \
-  //tools/... \
-  //prebuilts/tools/... \
-  //prebuilts/studio/...
-
-# $(< "${script_dir}/targets") contains:
-  # @blaze//:aswb_tests \
-  # //prebuilts/studio/... \
-  # //prebuilts/tools/... \
-  # //tools/... \
+  $(< "${script_dir}/targets")
 # Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
 # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
 # This has the side effect of running it twice, but as it only takes a few seconds that seems ok.
