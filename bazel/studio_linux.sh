@@ -32,15 +32,11 @@ config_options="--config=dynamic"
 # Generate a UUID for use as the bazel test invocation id
 readonly invocation_id="$(uuidgen)"
 
-# Temporary hack to switch to the "unb" rules:
-mv "${script_dir}/project.bzl" "${script_dir}/project.bzl.bak"
-echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
-
 # Run Bazel
-# --keep_going \
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
+  --keep_going \
   ${config_options} \
   --worker_max_instances=${WORKER_INSTANCES} \
   --invocation_id=${invocation_id} \
@@ -75,9 +71,6 @@ echo "PROJECT = \"unb\"" > "${script_dir}/project.bzl"
 # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
 # This has the side effect of running it twice, but as it only takes a few seconds that seems ok.
 readonly bazel_status=$?
-
-mv "${script_dir}/project.bzl.bak" "${script_dir}/project.bzl"
-
 
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
 if [[ -d "${DIST_DIR}" ]]; then
