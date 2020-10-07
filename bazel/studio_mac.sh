@@ -227,9 +227,6 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
         -//tools/data-binding:runtimeLibraries \
         -//tools/data-binding:runtimeLibrariesAndroidX \
         -//tools/data-binding:runtimeLibrariesSupport \
-        -//tools/idea/community-main-tests:intellij.idea.community.main.tests \
-        -//tools/idea/community-main-tests:intellij.idea.community.main.tests_runtime \
-        -//tools/idea/community-main-tests:intellij.idea.community.main.tests_testlib \
         -//tools/vendor/google/android-apk:android-apk.tests \
         -//tools/vendor/google/android-apk:android-apk.tests_runtime \
         -//tools/vendor/google/android-apk:android-apk.tests_testlib \
