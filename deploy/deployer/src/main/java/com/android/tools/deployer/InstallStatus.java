@@ -15,7 +15,7 @@
  */
 package com.android.tools.deployer;
 
-enum InstallStatus {
+public enum InstallStatus {
     OK,
 
     // All possible INSTALL_FAIL / INSTALL_PARSE_FAIL from PackageManager.java

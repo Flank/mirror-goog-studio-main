@@ -16,7 +16,15 @@
 
 package com.android.tools.deployer;
 
-import com.android.ddmlib.*;
+import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.Client;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.IShellOutputReceiver;
+import com.android.ddmlib.InstallException;
+import com.android.ddmlib.InstallMetrics;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
+import com.android.ddmlib.SyncException;
+import com.android.ddmlib.TimeoutException;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.tracer.Trace;
@@ -45,7 +53,7 @@ public class AdbClient {
         this.logger = logger;
     }
 
-    static class InstallResult {
+    public static class InstallResult {
         public final InstallStatus status;
         public final String reason;
         public final InstallMetrics metrics;
