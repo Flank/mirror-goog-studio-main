@@ -24,7 +24,7 @@ import java.io.Serializable
  * Parameters for a registered [AsmClassVisitorFactory].
  *
  * Build authors should extend this interface with any additional inputs needed for their ASM
- * visitor.
+ * visitor, or use [InstrumentationParameters.None] if no parameters are needed.
  *
  * The parameters will be instantiated using [ObjectFactory.newInstance], configured using the
  * given config when registering the visitor, and injected to the factory on instantiation.
@@ -53,4 +53,8 @@ import java.io.Serializable
  * ```
  */
 @Incubating
-interface InstrumentationParameters : Serializable
+interface InstrumentationParameters : Serializable {
+
+    @Incubating
+    class None : InstrumentationParameters
+}

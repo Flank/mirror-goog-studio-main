@@ -807,7 +807,7 @@ com.android.build.api.extension.VariantSelector.withBuildType: com.android.build
 com.android.build.api.extension.VariantSelector.withFlavor: com.android.build.api.extension.VariantSelector (kotlin.Pair<java.lang.String, java.lang.String>)
 com.android.build.api.extension.VariantSelector.withName: com.android.build.api.extension.VariantSelector (java.util.regex.Pattern)
 com.android.build.api.instrumentation.AsmClassVisitorFactory implements java.io.Serializable
-com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassData, org.objectweb.asm.ClassVisitor)
+com.android.build.api.instrumentation.AsmClassVisitorFactory.createClassVisitor: org.objectweb.asm.ClassVisitor (com.android.build.api.instrumentation.ClassData, com.android.build.api.instrumentation.ClassDataLoader, org.objectweb.asm.ClassVisitor)
 com.android.build.api.instrumentation.AsmClassVisitorFactory.getInstrumentationContext: com.android.build.api.instrumentation.InstrumentationContext ()
 com.android.build.api.instrumentation.AsmClassVisitorFactory.getParameters: org.gradle.api.provider.Property<ParametersT> ()
 com.android.build.api.instrumentation.AsmClassVisitorFactory.isInstrumentable: boolean (com.android.build.api.instrumentation.ClassData)
@@ -816,12 +816,16 @@ com.android.build.api.instrumentation.ClassData.getClassAnnotations: java.util.L
 com.android.build.api.instrumentation.ClassData.getClassName: java.lang.String ()
 com.android.build.api.instrumentation.ClassData.getInterfaces: java.util.List<java.lang.String> ()
 com.android.build.api.instrumentation.ClassData.getSuperClasses: java.util.List<java.lang.String> ()
+com.android.build.api.instrumentation.ClassDataLoader
+com.android.build.api.instrumentation.ClassDataLoader.loadClassData: com.android.build.api.instrumentation.ClassData (java.lang.String)
 com.android.build.api.instrumentation.FramesComputationMode extends java.lang.Enum
 com.android.build.api.instrumentation.FramesComputationMode.valueOf: com.android.build.api.instrumentation.FramesComputationMode (java.lang.String)
 com.android.build.api.instrumentation.FramesComputationMode.values: com.android.build.api.instrumentation.FramesComputationMode[] ()
 com.android.build.api.instrumentation.InstrumentationContext implements java.io.Serializable
 com.android.build.api.instrumentation.InstrumentationContext.getApiVersion: org.gradle.api.provider.Property<java.lang.Integer> ()
 com.android.build.api.instrumentation.InstrumentationParameters implements java.io.Serializable
+com.android.build.api.instrumentation.InstrumentationParameters$None implements com.android.build.api.instrumentation.InstrumentationParameters
+com.android.build.api.instrumentation.InstrumentationParameters$None.<init>: com.android.build.api.instrumentation.InstrumentationParameters$None ()
 com.android.build.api.instrumentation.InstrumentationScope extends java.lang.Enum
 com.android.build.api.instrumentation.InstrumentationScope.valueOf: com.android.build.api.instrumentation.InstrumentationScope (java.lang.String)
 com.android.build.api.instrumentation.InstrumentationScope.values: com.android.build.api.instrumentation.InstrumentationScope[] ()
