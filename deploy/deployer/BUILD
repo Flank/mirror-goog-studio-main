@@ -50,6 +50,7 @@ iml_module(
         "//tools/base/deploy/installer/tests:fake_device_proto[test]",
         "//tools/idea/.idea/libraries:studio-grpc[test]",
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
+        "//tools/idea/.idea/libraries:hamcrest[test]",
     ],
 )
 
@@ -142,6 +143,7 @@ coverage_java_test(
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger",
+        "//tools/idea/.idea/libraries:hamcrest",
         "//tools/idea/.idea/libraries:studio-grpc",
         "//tools/idea/.idea/libraries:studio-proto",
     ],

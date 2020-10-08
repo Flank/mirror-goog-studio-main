@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -37,6 +39,24 @@ class ComposeHelloWorldTest {
 
         executor.run("assembleDebug")
         // run once again to test configuration caching
+        executor.run("clean", "assembleDebug")
+    }
+
+    @Test
+    fun testLiveLiterals() {
+        val executor =
+                project.executor()
+                        .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=25")
+
+        // Run compilation with live literals on
+        TestFileUtils.appendToFile(project.getSubproject("app").buildFile,
+                "android.composeOptions.useLiveLiterals = true")
+        executor.run("assembleDebug")
+
+        // Turn off live literals and run again
+        TestFileUtils.searchAndReplace(project.getSubproject("app").buildFile,
+                "android.composeOptions.useLiveLiterals = true",
+                "android.composeOptions.useLiveLiterals = false")
         executor.run("clean", "assembleDebug")
     }
 }

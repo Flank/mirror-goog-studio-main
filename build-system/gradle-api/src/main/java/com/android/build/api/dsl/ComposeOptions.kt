@@ -34,4 +34,9 @@ interface ComposeOptions {
      * the default one.
      */
     var kotlinCompilerExtensionVersion: String?
+
+    /**
+     * Enables live literals in Compose
+     */
+    var useLiveLiterals: Boolean
 }

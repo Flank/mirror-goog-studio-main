@@ -37,7 +37,7 @@ class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
                 addSource(
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
-                    """ 
+                    """
                 import org.gradle.api.Plugin
                 import org.gradle.api.Project
                 import java.io.File
@@ -76,6 +76,19 @@ class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
                 testingElements.addManifest(this)
                 testingElements.addMainActivity(this)
             }
+        }
+        withDocs {
+            index =
+                    // language=markdown
+                    """
+# Test TransformationRequest
+
+This sample shows how to transform the artifact.
+It copies the build apk to the specified directory.
+
+## To Run
+./gradlew copydebugApks
+            """.trimIndent()
         }
         check {
             assertNotNull(this)

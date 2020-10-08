@@ -42,11 +42,6 @@ public class DebuggerInterceptor implements Interceptor {
   }
 
   @Override
-  public boolean filterToClient(@NonNull JdwpProxyClient to, @NonNull byte[] dataToSend, int len) {
-    return !(mAttachedClient == null || mAttachedClient == to);
-  }
-
-  @Override
   public boolean filterToClient(@NonNull JdwpProxyClient to, @NonNull JdwpPacket packet) {
     return !(mAttachedClient == null || mAttachedClient == to);
   }

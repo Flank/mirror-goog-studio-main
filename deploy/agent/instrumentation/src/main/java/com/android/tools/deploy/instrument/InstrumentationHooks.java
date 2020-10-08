@@ -104,7 +104,10 @@ public final class InstrumentationHooks {
         // a second time.
         List existingLoaders = (List) call(resources, "getLoaders");
         if (!existingLoaders.contains(resources)) {
-            ResourceOverlays.addResourceOverlays(resources);
+            // TODO: This is commented out to prevent crashes, until IWI-run supports resources.
+            // Lack of resource support means no resources.arsc, which apparently causes issues down
+            // the line when we try to load an arsc file during swap.
+            // ResourceOverlays.addResourceOverlays(resources);
         }
         return resources;
     }

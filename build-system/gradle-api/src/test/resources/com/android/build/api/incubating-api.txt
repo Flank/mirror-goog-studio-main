@@ -402,8 +402,10 @@ com.android.build.api.dsl.CompileOptions.targetCompatibility: void (java.lang.Ob
 com.android.build.api.dsl.ComposeOptions
 com.android.build.api.dsl.ComposeOptions.getKotlinCompilerExtensionVersion: java.lang.String ()
 com.android.build.api.dsl.ComposeOptions.getKotlinCompilerVersion: java.lang.String ()
+com.android.build.api.dsl.ComposeOptions.getUseLiveLiterals: boolean ()
 com.android.build.api.dsl.ComposeOptions.setKotlinCompilerExtensionVersion: void (java.lang.String)
 com.android.build.api.dsl.ComposeOptions.setKotlinCompilerVersion: void (java.lang.String)
+com.android.build.api.dsl.ComposeOptions.setUseLiveLiterals: void (boolean)
 com.android.build.api.dsl.DataBinding
 com.android.build.api.dsl.DataBinding.getAddDefaultAdapters: boolean ()
 com.android.build.api.dsl.DataBinding.getVersion: java.lang.String ()

@@ -83,8 +83,7 @@ public class OptimisticApkSwapper {
         final DexComparator.ChangedClasses dexOverlays = overlayUpdate.dexOverlays;
         final Map<ApkEntry, ByteString> fileOverlays = overlayUpdate.fileOverlays;
 
-        OverlayId nextOverlayId =
-                new OverlayId(cachedDump.getOverlayId(), dexOverlays, fileOverlays.keySet());
+        OverlayId.Builder overlayIdBuilder = OverlayId.builder(cachedDump.getOverlayId());
 
         OverlayId expectedOverlayId = cachedDump.getOverlayId();
         Deploy.OverlaySwapRequest.Builder request =
@@ -94,7 +93,6 @@ public class OptimisticApkSwapper {
                         .setArch(arch)
                         .setExpectedOverlayId(
                                 expectedOverlayId.isBaseInstall() ? "" : expectedOverlayId.getSha())
-                        .setOverlayId(nextOverlayId.getSha())
                         .setAlwaysUpdateOverlay(options.fastRestartOnSwapFail);
 
         boolean hasDebuggerAttached = false;
@@ -117,6 +115,7 @@ public class OptimisticApkSwapper {
                     Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code)));
+            overlayIdBuilder.addSwappedDex(clazz.name, clazz.checksum);
         }
 
         for (DexClass clazz : dexOverlays.modifiedClasses) {
@@ -125,6 +124,7 @@ public class OptimisticApkSwapper {
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code))
                             .addAllFields(clazz.variableStates));
+            overlayIdBuilder.addSwappedDex(clazz.name, clazz.checksum);
         }
 
         for (Map.Entry<ApkEntry, ByteString> entry : fileOverlays.entrySet()) {
@@ -132,10 +132,15 @@ public class OptimisticApkSwapper {
                     Deploy.OverlayFile.newBuilder()
                             .setPath(entry.getKey().getQualifiedPath())
                             .setContent(entry.getValue()));
+            overlayIdBuilder.addOverlayFile(
+                    entry.getKey().getQualifiedPath(), entry.getKey().getChecksum());
         }
 
         request.setStructuralRedefinition(options.useStructuralRedefinition);
         request.setVariableReinitialization(options.useVariableReinitialization);
+
+        OverlayId overlayId = overlayIdBuilder.build();
+        request.setOverlayId(overlayId.getSha());
 
         Deploy.OverlaySwapRequest swapRequest = request.build();
 
@@ -195,7 +200,7 @@ public class OptimisticApkSwapper {
                 throw new IllegalStateException("Unknown swap status");
         }
 
-        return new SwapResult(nextOverlayId, successStatus == SuccessStatus.OK);
+        return new SwapResult(overlayId, successStatus == SuccessStatus.OK);
     }
 
     private SuccessStatus sendSwapRequest(

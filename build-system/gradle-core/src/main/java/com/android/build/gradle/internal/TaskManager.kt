@@ -454,6 +454,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 globalScope.extension.composeOptions.kotlinCompilerExtensionVersion
         val kotlinCompilerDependency = ("org.jetbrains.kotlin:kotlin-compiler-embeddable:"
                 + (kotlinCompilerVersionInDsl ?: COMPOSE_KOTLIN_COMPILER_VERSION))
+
+        val useLiveLiterals = globalScope.extension.composeOptions.useLiveLiterals
+
         project.configurations
                 .maybeCreate(KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME)
                 .withDependencies { configuration: DependencySet ->
@@ -486,7 +489,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
                 compileKotlin.configure {
                     addComposeArgsToKotlinCompile(
-                            it, creationConfig, project.files(kotlinExtension))
+                            it, creationConfig, project.files(kotlinExtension), useLiveLiterals)
                 }
             } catch (e: UnknownTaskException) {
                 // ignore

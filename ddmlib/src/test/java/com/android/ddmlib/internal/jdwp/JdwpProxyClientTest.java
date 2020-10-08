@@ -16,9 +16,11 @@
 
 package com.android.ddmlib.internal.jdwp;
 
+import static com.android.ddmlib.internal.jdwp.JdwpConnectionReader.JDWP_DISCONNECT;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.times;
 
+import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.JdwpHandshake;
 import java.net.InetAddress;
@@ -42,8 +44,7 @@ public class JdwpProxyClientTest {
                                 "localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT));
         Selector selector = Selector.open();
         JdwpProxyClient client =
-                new JdwpProxyClient(
-                        channel, new JdwpClientManagerFactory(selector, new byte[1]), new byte[1]);
+                new JdwpProxyClient(channel, new JdwpClientManagerFactory(selector));
         assertThat(client.isHandshakeComplete()).isFalse();
         client.setHandshakeComplete();
         assertThat(client.isHandshakeComplete()).isTrue();
@@ -61,8 +62,7 @@ public class JdwpProxyClientTest {
                                 "localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT));
         Selector selector = Selector.open();
         JdwpProxyClient client =
-                new JdwpProxyClient(
-                        channel, new JdwpClientManagerFactory(selector, new byte[1]), new byte[1]);
+                new JdwpProxyClient(channel, new JdwpClientManagerFactory(selector));
         assertThat(client.isConnected()).isTrue();
         client.shutdown();
         assertThat(client.isConnected()).isFalse();
@@ -71,10 +71,9 @@ public class JdwpProxyClientTest {
 
     @Test
     public void validateDisconnectCommandNoClients() throws Throwable {
-        byte[] buffer = new byte[1024];
         verifyCommand(
-                new JdwpClientManagerFactory(null, buffer),
-                ("0000" + JdwpProxyClient.JDWP_DISCONNECT + "0:0").getBytes(),
+                new JdwpClientManagerFactory(null),
+                AdbHelper.formAdbRequest(JDWP_DISCONNECT + "0:0"),
                 "FAIL".getBytes());
     }
 
@@ -85,7 +84,7 @@ public class JdwpProxyClientTest {
         Mockito.when(factory.getConnection("DEVICEID", 1234)).thenReturn(clientManager);
         verifyCommand(
                 factory,
-                ("0000" + JdwpProxyClient.JDWP_DISCONNECT + "DEVICEID:1234").getBytes(),
+                AdbHelper.formAdbRequest(JDWP_DISCONNECT + "DEVICEID:1234"),
                 "OKAY".getBytes());
         Mockito.verify(clientManager, times(1)).shutdown();
     }
@@ -101,13 +100,12 @@ public class JdwpProxyClientTest {
     private void verifyCommand(JdwpClientManagerFactory factory, byte[] command, byte[] response)
             throws Throwable {
         SimpleServer server = new SimpleServer(command);
-        byte[] buffer = new byte[1024];
         Thread serverThread = new Thread(server);
         serverThread.start();
         SocketChannel channel = SocketChannel.open();
         channel.connect(
                 new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
-        JdwpProxyClient client = new JdwpProxyClient(channel, factory, buffer);
+        JdwpProxyClient client = new JdwpProxyClient(channel, factory);
         client.read();
         serverThread.join();
         // If the client sends more than one bit of data back sometimes it can be appended to

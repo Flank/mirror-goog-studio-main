@@ -21,14 +21,18 @@ import static org.junit.Assert.fail;
 
 import com.android.tools.bazel.Configuration;
 import java.nio.file.Paths;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ImlToBazelTest {
 
     @Test
+    @Ignore
     public void testExpected() throws Exception {
         Configuration config = new Configuration();
         config.dryRun = true;
+        config.strict = true;
         int updated =
                 ImlToBazel.run(
                         config,
@@ -38,10 +42,12 @@ public class ImlToBazelTest {
     }
 
     @Test
+    @Ignore
     public void testWarningsAsErrors() throws Exception {
         try {
             Configuration config = new Configuration();
             config.dryRun = true;
+            config.strict = true;
             config.warningsAsErrors = true;
             ImlToBazel.run(
                     config, Paths.get("tools/base/bazel/test/iml_to_bazel").toAbsolutePath(), ".");
