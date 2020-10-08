@@ -2306,6 +2306,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     override fun configure(task: Task) {
                         task.description = "Assembles bundle for variant " + component.name
                         task.dependsOn(component.artifacts.get(ArtifactType.BUNDLE))
+                        task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL))
                     }
                 },
                 object: TaskProviderCallback<Task> {
