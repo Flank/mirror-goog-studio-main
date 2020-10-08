@@ -94,6 +94,12 @@ class OptimisticApkInstaller {
         metrics.finish();
 
         metrics.start(DIFF_METRIC);
+
+        // Quick and dirty fallback on to normal install if we see a swap has happened.
+        // TODO: Remove this when we properly diff w/ overlays.
+        if (!entry.getOverlayId().getSwappedDexFiles().isEmpty()) {
+            throw DeployerException.runAfterSwapNotSupported();
+        }
         List<FileDiff> diffs = new ApkDiffer().specDiff(entry, apks);
 
         // Ensure that we currently have IWI support enabled for every change; otherwise, throw an

@@ -314,6 +314,12 @@ public class DeployerException extends Exception {
                 "",
                 ResolutionAction.NONE),
 
+        IWI_RUN_AFTER_SWAP_NOT_SUPPORTED(
+                "Run after swap is not supported by the IWI pipeline. Deployment should fall back to regular installation",
+                "",
+                "",
+                ResolutionAction.NONE),
+
         OPERATION_NOT_SUPPORTED("Operation not supported.", "%s", "", ResolutionAction.NONE),
 
         RUN_TIME_EXCEPTION("Runtime Exception.", "%s", "Retry", ResolutionAction.RETRY);
@@ -595,6 +601,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException changeNotSupportedByIWI(ChangeType type) {
         return new DeployerException(Error.UNSUPPORTED_IWI_CHANGE, type, NO_ARGS, NO_ARGS);
+    }
+
+    public static DeployerException runAfterSwapNotSupported() {
+        return new DeployerException(Error.IWI_RUN_AFTER_SWAP_NOT_SUPPORTED, NO_ARGS, NO_ARGS);
     }
 
     public static DeployerException operationNotSupported(String reason) {
