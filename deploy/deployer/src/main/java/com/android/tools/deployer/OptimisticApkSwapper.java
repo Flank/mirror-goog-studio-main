@@ -115,7 +115,7 @@ public class OptimisticApkSwapper {
                     Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code)));
-            overlayIdBuilder.addOverlayFile(clazz.name, clazz.checksum);
+            overlayIdBuilder.addSwappedDex(clazz.name, clazz.checksum);
         }
 
         for (DexClass clazz : dexOverlays.modifiedClasses) {
@@ -124,7 +124,7 @@ public class OptimisticApkSwapper {
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code))
                             .addAllFields(clazz.variableStates));
-            overlayIdBuilder.addOverlayFile(clazz.name, clazz.checksum);
+            overlayIdBuilder.addSwappedDex(clazz.name, clazz.checksum);
         }
 
         for (Map.Entry<ApkEntry, ByteString> entry : fileOverlays.entrySet()) {
