@@ -34,6 +34,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
                 import com.android.build.api.dsl.CommonExtension
                 import com.android.build.api.instrumentation.AsmClassVisitorFactory
                 import com.android.build.api.instrumentation.ClassData
+                import com.android.build.api.instrumentation.ClassDataLoader
                 import com.android.build.api.instrumentation.FramesComputationMode
                 import com.android.build.api.instrumentation.InstrumentationParameters
                 import com.android.build.api.instrumentation.InstrumentationScope
@@ -71,6 +72,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
 
                         override fun createClassVisitor(
                             classData: ClassData,
+                            classDataLoader: ClassDataLoader,
                             nextClassVisitor: ClassVisitor
                         ): ClassVisitor {
                             return if (parameters.get().writeToStdout.get()) {
