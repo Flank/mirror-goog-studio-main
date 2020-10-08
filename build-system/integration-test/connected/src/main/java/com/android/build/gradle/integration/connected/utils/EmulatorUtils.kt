@@ -17,7 +17,7 @@
 @file:JvmName("EmulatorUtils")
 package com.android.build.gradle.integration.connected.utils
 
-import com.android.tools.bazel.avd.Emulator;
+import com.android.tools.bazel.avd.Emulator
 
 /**
  * Path to the executable that the avd rule generates.
