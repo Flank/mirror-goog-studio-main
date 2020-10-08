@@ -68,7 +68,8 @@ public class BazelLintWrapper {
         if (args.length > 1) {
             baseline = Paths.get(args[1]);
         }
-        new BazelLintWrapper().run(projectXml, baseline);
+        boolean update = System.getenv("UPDATE_LINT_BASELINE") != null;
+        new BazelLintWrapper().run(projectXml, baseline, update);
     }
 
     private final DocumentBuilder documentBuilder;
@@ -100,7 +101,7 @@ public class BazelLintWrapper {
         return sandboxBase != null ? sandboxBase.relativize(path) : path;
     }
 
-    private void run(Path projectXml, Path originalBaseline) throws IOException {
+    private void run(Path projectXml, Path originalBaseline, boolean update) throws IOException {
         if (!Files.exists(projectXml)) {
             System.err.println("Cannot find project XML: " + projectXml);
             System.exit(1);
@@ -109,7 +110,13 @@ public class BazelLintWrapper {
 
         // Lint will update the baseline file, and putting it in undeclared outputs means we can
         // download it from the CI server.
-        if (originalBaseline != null) {
+        if (update) {
+            if (originalBaseline == null) {
+                throw new IllegalArgumentException(
+                        "Cannot update a baseline file that does not exist.");
+            }
+            newBaseline = originalBaseline;
+        } else if (originalBaseline != null) {
             newBaseline = outputDir.resolve(originalBaseline.getFileName());
             Files.copy(originalBaseline, newBaseline);
         } else {
@@ -159,21 +166,44 @@ public class BazelLintWrapper {
             Files.delete(lintConfig);
         }
 
-        boolean targetShouldPass = checkOutput(outputXml, newBaseline);
-        if (!targetShouldPass) {
-            System.out.println(
-                    "Lint found new issues or the baseline was out of date. "
-                            + "See "
-                            + relativize(testXml));
-            System.exit(1);
+        Result result = checkOutput(outputXml, newBaseline);
+        switch (result) {
+            case PASS:
+                return;
+            case BASELINE_CONTAINS_FIXED_ISSUES:
+                if (update) {
+                    System.out.print("Lint baseline updated.");
+                    return;
+                }
+                System.out.print("Lint baseline contains issues that are now fixed. See ");
+                System.out.println(relativize(testXml));
+                System.out.println();
+                System.out.println("Execute ");
+                System.out.println("  bazel run \\");
+                System.out.println("    --test_env=UPDATE_LINT_BASELINE=1 \\");
+                System.out.print("    ");
+                System.out.println(System.getenv("TEST_TARGET"));
+                System.out.println("to update the baseline file in place.");
+                System.exit(1);
+                break;
+            case NEW_ISSUES_FOUND:
+                System.out.println("Lint found new issues. See " + relativize(testXml));
+                System.exit(1);
+                break;
         }
     }
 
-    private boolean checkOutput(Path outputXml, Path newBaseline) {
+    private enum Result {
+        PASS,
+        BASELINE_CONTAINS_FIXED_ISSUES,
+        NEW_ISSUES_FOUND,
+    }
+
+    private Result checkOutput(Path outputXml, Path newBaseline) {
         try {
             Document lintXmlReport = documentBuilder.parse(outputXml.toFile());
             Document junitXml = documentBuilder.newDocument();
-            boolean targetShouldPass = createJUnitXml(junitXml, lintXmlReport, newBaseline);
+            Result result = createJUnitXml(junitXml, lintXmlReport, newBaseline);
 
             try (FileWriter fileWriter = new FileWriter(testXml.toFile())) {
                 Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -184,7 +214,7 @@ public class BazelLintWrapper {
                 throw new RuntimeException(e);
             }
 
-            return targetShouldPass;
+            return result;
         } catch (SAXException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -200,7 +230,9 @@ public class BazelLintWrapper {
                     + "Do not add anything new to the baseline file; suppress new issues with "
                     + "@SuppressWarnings in Java or @Suppress in Kotlin.\n\n"
                     + ""
-                    + "If you want to regenerate the file, run `bazel test %1$s` and find the new file in %2$s. "
+                    + "If you want to regenerate the file, run\n"
+                    + "  bazel run --test_env=UPDATE_LINT_BASELINE=1 \\\n"
+                    + "    %1$s\n"
                     + "You can also find the regenerated file in your presubmit results for the %1$s target, "
                     + "under the Artifacts tab, in Archives/undeclared_outputs.zip";
 
@@ -210,8 +242,8 @@ public class BazelLintWrapper {
      *
      * @return true if the target should pass, false otherwise
      */
-    private boolean createJUnitXml(Document junitXml, Document lintXmlReport, Path newBaseline) {
-        boolean targetShouldPass = true;
+    private Result createJUnitXml(Document junitXml, Document lintXmlReport, Path newBaseline) {
+        Result result = Result.PASS;
 
         Table<File, String, List<String>> messagesByFileAndSummary = HashBasedTable.create();
         NodeList issues = lintXmlReport.getElementsByTagName("issue");
@@ -233,16 +265,14 @@ public class BazelLintWrapper {
                 }
                 if (message.contains("perhaps they have been fixed")) {
                     // Custom message.
-                    targetShouldPass = false;
+                    if (result == Result.PASS) {
+                        result = Result.BASELINE_CONTAINS_FIXED_ISSUES;
+                    }
                     String summary = "Baseline out of date";
                     messagesByFileAndSummary.put(
                             newBaseline.toFile(), summary, Collections.emptyList());
                     explanations.put(
-                            summary,
-                            String.format(
-                                    BASELINE_MESSAGE,
-                                    System.getenv("TEST_TARGET"),
-                                    relativize(outputDir.resolve("outputs.zip"))));
+                            summary, String.format(BASELINE_MESSAGE, System.getenv("TEST_TARGET")));
                     continue;
                 }
             }
@@ -278,7 +308,7 @@ public class BazelLintWrapper {
             }
             strings.add(fullMessage.toString());
             explanations.putIfAbsent(summary, explanation);
-            targetShouldPass = false;
+            result = Result.NEW_ISSUES_FOUND;
         }
 
         Element testSuites = junitXml.createElement("testsuites");
@@ -310,6 +340,6 @@ public class BazelLintWrapper {
             }
         }
 
-        return targetShouldPass;
+        return result;
     }
 }
