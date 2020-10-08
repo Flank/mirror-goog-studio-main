@@ -78,6 +78,11 @@ class OptimisticApkInstaller {
     }
 
     private OverlayId tracedInstall(String packageName, List<Apk> apks) throws DeployerException {
+        // Fall back to normal install if it looks like we're handling an instrumented test.
+        if (apks.stream().anyMatch(apk -> !apk.targetPackages.isEmpty())) {
+            throw DeployerException.runTestsNotSupported();
+        }
+
         final String deviceSerial = adb.getSerial();
         final Deploy.Arch targetArch = getArch(apks);
 
