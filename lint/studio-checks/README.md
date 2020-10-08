@@ -48,9 +48,16 @@ even if no new code is written.
 
 To get your change to pass pre-submit checks, you can either delete the relevant sections of the
 baseline file by hand, or (if it's not clear how to find them) replace the whole file with the new
-baseline generated during the Lint run. The regenerated baseline can be found under bazel-out when
-running locally (see output from the `bazel test` run for the exact path) or downloaded when running
-on CI (under Artifacts/Archives/undeclared_outputs.zip).
+baseline generated during the Lint run. The baseline can be updated in place locally by running
+```
+bazel run --test_env=UPDATE_LINT_BASELINE=1 //example/module:module_lint_test
+```
+or downloaded when running on CI (under Artifacts/Archives/undeclared_outputs.zip).
+
+When making a large refactoring you can update all baselines by running
+```
+bazel run --test_env=UPDATE_LINT_BASELINE=1  $(bazel query --output=label 'kind(.*lint_test, //tools/...)')
+```
 
 ### Which checks are run?
 We run all the default checks that come with the Lint tool as well as a few custom checks, which you

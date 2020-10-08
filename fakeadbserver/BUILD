@@ -8,8 +8,7 @@ iml_module(
     name = "studio.android.sdktools.fakeadbserver",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.fakeadbserver.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    project = "unb",
+    lint_baseline = "lint_baseline.xml",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

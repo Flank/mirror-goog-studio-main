@@ -5,7 +5,7 @@ iml_module(
     name = "studio.intellij.android.wizardTemplate.plugin",
     srcs = ["src"],
     iml_files = ["intellij.android.wizardTemplate.plugin.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    lint_baseline = "lint_baseline.xml",
     project = "unb",
     test_srcs = ["testSrc"],
     visibility = ["//visibility:public"],

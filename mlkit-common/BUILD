@@ -10,7 +10,7 @@ iml_module(
         "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc2:unb.tensorflow-lite-metadata",
     ],
     iml_files = ["android.sdktools.mlkit-common.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    lint_baseline = "lint_baseline.xml",
     project = "unb",
     test_data = ["//prebuilts/tools/common/mlkit/testData"],
     test_srcs = ["src/test/java"],

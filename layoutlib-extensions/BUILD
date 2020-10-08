@@ -7,7 +7,7 @@ iml_module(
     name = "studio.android.sdktools.layoutlib-extensions",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.layoutlib-extensions.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    lint_baseline = "lint_baseline.xml",
     project = "unb",
     resources = ["src/main/resources"],
     visibility = ["//visibility:public"],

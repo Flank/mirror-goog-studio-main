@@ -19,7 +19,7 @@ iml_module(
         "-source 6",
         "-target 6",
     ],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    lint_baseline = "lint_baseline.xml",
     project = "unb",
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
