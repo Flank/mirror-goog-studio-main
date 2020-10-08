@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Objects;
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -307,9 +308,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
      */
     @Override
     public String toString() {
-        String s = String.format("API %1$d", mApiLevel);        //$NON-NLS-1$
+        String s = String.format(Locale.US, "API %1$d", mApiLevel); // $NON-NLS-1$
         if (isPreview()) {
-            s += String.format(", %1$s preview", mCodename);    //$NON-NLS-1$
+            s += String.format(Locale.US, ", %1$s preview", mCodename); // $NON-NLS-1$
         }
         return s;
     }
