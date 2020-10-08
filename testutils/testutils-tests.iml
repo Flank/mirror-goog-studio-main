@@ -12,13 +12,11 @@
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.common" scope="TEST" />
-    <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="library" scope="TEST" name="Guava" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="dexlib2" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="library" scope="TEST" name="kotlin-stdlib-jdk8" level="project" />
-    <orderEntry type="library" scope="TEST" name="kotlin-test" level="project" />
     <orderEntry type="library" name="truth-java8-extension" level="project" />
   </component>
 </module>
