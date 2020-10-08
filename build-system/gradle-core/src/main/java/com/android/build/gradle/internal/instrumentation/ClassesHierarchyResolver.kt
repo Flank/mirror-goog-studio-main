@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.instrumentation
 
+import com.android.build.api.instrumentation.ClassData
 import java.io.File
 
 /**
@@ -39,6 +40,20 @@ class ClassesHierarchyResolver(classesDataCache: ClassesDataCache, sources: Set<
         }
 
         return null
+    }
+
+    fun maybeLoadClassDataForClass(className: String): ClassData? {
+        val classInternalName = className.replace('.', '/')
+        val superclasses = getAllSuperClasses(classInternalName)
+        if (superclasses.isEmpty() && className != Object::class.java.name) {
+            return null
+        }
+        return ClassDataImpl(
+                className = className,
+                classAnnotations = getAnnotations(classInternalName),
+                interfaces = getAllInterfaces(classInternalName),
+                superClasses = superclasses
+        )
     }
 
     fun getAnnotations(className: String): List<String> {

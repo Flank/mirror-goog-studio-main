@@ -81,6 +81,12 @@ class ClassesHierarchyResolverTest(private val testMode: TestMode) {
     @Test
     fun testClassesHierarchyData() {
         assertClassDataIsCorrect(
+            clazz = Object::class.java,
+            expectedAnnotations = emptyList(),
+            expectedSuperclasses = emptyList(),
+            expectedInterfaces = emptyList()
+        )
+        assertClassDataIsCorrect(
             clazz = I::class.java,
             expectedAnnotations = emptyList(),
             expectedSuperclasses = listOf(Object::class.java),
@@ -131,13 +137,29 @@ class ClassesHierarchyResolverTest(private val testMode: TestMode) {
         expectedSuperclasses: List<Class<*>>,
         expectedInterfaces: List<Class<*>>
     ) {
+        val classData =
+                classesHierarchyResolver.maybeLoadClassDataForClass(clazz.name)!!
+
+        assertThat(classData.className).isEqualTo(clazz.name)
+
         assertThat(classesHierarchyResolver.getAnnotations(Type.getInternalName(clazz))).isEqualTo(
             expectedAnnotations.map(Class<*>::getName)
         )
+        assertThat(classData.classAnnotations).isEqualTo(
+            expectedAnnotations.map(Class<*>::getName)
+        )
+
         assertThat(classesHierarchyResolver.getAllSuperClasses(Type.getInternalName(clazz))).isEqualTo(
             expectedSuperclasses.map(Class<*>::getName)
         )
+        assertThat(classData.superClasses).isEqualTo(
+            expectedSuperclasses.map(Class<*>::getName)
+        )
+
         assertThat(classesHierarchyResolver.getAllInterfaces(Type.getInternalName(clazz))).isEqualTo(
+            expectedInterfaces.map(Class<*>::getName)
+        )
+        assertThat(classData.interfaces).isEqualTo(
             expectedInterfaces.map(Class<*>::getName)
         )
     }
