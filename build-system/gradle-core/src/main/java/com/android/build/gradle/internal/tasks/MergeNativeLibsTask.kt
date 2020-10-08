@@ -156,8 +156,8 @@ abstract class MergeNativeLibsTask
         ) {
             super.configure(task)
 
-            task.excludes.setDisallowChanges(creationConfig.packagingOptions.jniLibs.excludes)
-            task.pickFirsts.setDisallowChanges(creationConfig.packagingOptions.jniLibs.pickFirsts)
+            task.excludes.setDisallowChanges(creationConfig.packaging.jniLibs.excludes)
+            task.pickFirsts.setDisallowChanges(creationConfig.packaging.jniLibs.pickFirsts)
             task.intermediateDir =
                     creationConfig.paths.getIncrementalDir(
                         "${creationConfig.name}-mergeNativeLibs")

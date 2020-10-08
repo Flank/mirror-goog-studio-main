@@ -41,10 +41,10 @@ interface DynamicFeatureVariant : Variant {
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    override val packagingOptions: ApkPackagingOptions
+    override val packaging: ApkPackaging
 
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    fun packagingOptions(action: ApkPackagingOptions.() -> Unit)
+    fun packaging(action: ApkPackaging.() -> Unit)
 }

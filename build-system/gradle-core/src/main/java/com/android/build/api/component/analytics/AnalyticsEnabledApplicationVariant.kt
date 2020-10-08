@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.SigningConfig
@@ -82,22 +82,22 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
         delegate.signingConfig(action)
     }
 
-    private val userVisiblePackagingOptions: ApkPackagingOptions by lazy {
+    private val userVisiblePackagingOptions: ApkPackaging by lazy {
         objectFactory.newInstance(
-            AnalyticsEnabledApkPackagingOptions::class.java,
-            delegate.packagingOptions,
+            AnalyticsEnabledApkPackaging::class.java,
+            delegate.packaging,
             stats
         )
     }
 
-    override val packagingOptions: ApkPackagingOptions
+    override val packaging: ApkPackaging
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return userVisiblePackagingOptions
         }
 
-    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+    override fun packaging(action: ApkPackaging.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
         action.invoke(userVisiblePackagingOptions)

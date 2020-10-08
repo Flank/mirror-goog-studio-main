@@ -18,7 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AaptOptions
-import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.JniLibsApkPackagingOptions
 import com.android.build.api.variant.ResourcesPackagingOptions
@@ -244,15 +244,15 @@ class AnalyticsEnabledAndroidTestTest {
 
     @Test
     fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(ApkPackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(ApkPackaging::class.java)
         val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
+        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
         // simulate a user configuring packaging options for jniLibs and resources
-        proxy.packagingOptions.jniLibs
-        proxy.packagingOptions.resources
+        proxy.packaging.jniLibs
+        proxy.packaging.resources
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
         Truth.assertThat(
@@ -265,22 +265,22 @@ class AnalyticsEnabledAndroidTestTest {
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
             )
         )
-        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
+        Mockito.verify(delegate, Mockito.times(1)).packaging
     }
 
     @Test
     fun packagingOptionsActions() {
-        val packagingOptions = Mockito.mock(ApkPackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(ApkPackaging::class.java)
         val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
-        val action: ApkPackagingOptions.() -> Unit = {
+        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
+        val action: ApkPackaging.() -> Unit = {
             this.jniLibs {}
             this.resources {}
         }
-        proxy.packagingOptions(action)
+        proxy.packaging(action)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
         Truth.assertThat(
@@ -292,6 +292,6 @@ class AnalyticsEnabledAndroidTestTest {
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_ACTION_VALUE
             )
         )
-        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
+        Mockito.verify(delegate, Mockito.times(1)).packaging
     }
 }

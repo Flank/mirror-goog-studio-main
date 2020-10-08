@@ -19,11 +19,19 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 /**
- * Defines a library variant's packaging options.
+ * Defines an APK variant's packaging options.
  */
 @Incubating
-interface LibraryPackagingOptions : PackagingOptions {
+interface ApkPackaging : Packaging {
+
+    /** PackagingOptions for dex files. Initialized from the corresponding DSL. */
+    val dex: DexPackagingOptions
+
+    /** PackagingOptions for dex files. Initialized from the corresponding DSL. */
+    fun dex(action: DexPackagingOptions.() -> Unit)
+
+    override val jniLibs: JniLibsApkPackagingOptions
 
     /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
-    fun jniLibs(action: JniLibsPackagingOptions.() -> Unit)
+    fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit)
 }

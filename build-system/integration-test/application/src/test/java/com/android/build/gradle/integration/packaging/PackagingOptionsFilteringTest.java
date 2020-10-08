@@ -433,23 +433,23 @@ public class PackagingOptionsFilteringTest {
         // modify app's build file
         appendBuild(app, "androidComponents {");
         appendBuild(app, "    onVariants(selector().withName('debug'), {");
-        appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.debugExclude')");
+        appendBuild(app, "        packaging.resources.excludes.add('**/*.debugExclude')");
         appendBuild(app, "    })");
         appendBuild(app, "    onVariants(selector().withName('release'), {");
-        appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.releaseExclude')");
+        appendBuild(app, "        packaging.resources.excludes.add('**/*.releaseExclude')");
         appendBuild(app, "    })");
         appendBuild(app, "    androidTest(selector().all(), {");
-        appendBuild(app, "        packagingOptions.resources.excludes.add('**/*.testExclude')");
+        appendBuild(app, "        packaging.resources.excludes.add('**/*.testExclude')");
         appendBuild(app, "    })");
         appendBuild(app, "}");
 
         // modify lib's build file
         appendBuild(lib, "androidComponents {");
         appendBuild(lib, "    onVariants(selector().all(), {");
-        appendBuild(lib, "        packagingOptions.resources.excludes.add('**/*.libExclude')");
+        appendBuild(lib, "        packaging.resources.excludes.add('**/*.libExclude')");
         appendBuild(lib, "    })");
         appendBuild(lib, "    androidTest(selector().all(), {");
-        appendBuild(lib, "        packagingOptions.resources.excludes.add('**/*.testExclude')");
+        appendBuild(lib, "        packaging.resources.excludes.add('**/*.testExclude')");
         appendBuild(lib, "    })");
         appendBuild(lib, "}");
 
@@ -515,7 +515,7 @@ public class PackagingOptionsFilteringTest {
     public void addPickFirstPatternsViaVariantPropertiesApi() throws Exception {
         appendBuild(app, "androidComponents {");
         appendBuild(app, "    onVariants(selector().all(), {");
-        appendBuild(app, "        packagingOptions.resources.pickFirsts.add('**/*.pickFirst')");
+        appendBuild(app, "        packaging.resources.pickFirsts.add('**/*.pickFirst')");
         appendBuild(app, "    })");
         appendBuild(app, "}");
 
@@ -539,7 +539,7 @@ public class PackagingOptionsFilteringTest {
     public void addMergePatternsViaVariantPropertiesApi() throws Exception {
         appendBuild(app, "androidComponents {");
         appendBuild(app, "    onVariants(selector().all(), {");
-        appendBuild(app, "        packagingOptions.resources.merges.add('**/*.merge')");
+        appendBuild(app, "        packaging.resources.merges.add('**/*.merge')");
         appendBuild(app, "    })");
         appendBuild(app, "}");
 

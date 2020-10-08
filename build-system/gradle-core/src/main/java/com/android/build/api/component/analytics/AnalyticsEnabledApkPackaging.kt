@@ -16,17 +16,17 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.JniLibsApkPackagingOptions
 import com.android.build.api.variant.DexPackagingOptions
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
-open class AnalyticsEnabledApkPackagingOptions @Inject constructor(
-    override val delegate: ApkPackagingOptions,
+open class AnalyticsEnabledApkPackaging @Inject constructor(
+    override val delegate: ApkPackaging,
     stats: GradleBuildVariant.Builder
-) : AnalyticsEnabledPackagingOptions(delegate, stats), ApkPackagingOptions {
+) : AnalyticsEnabledPackaging(delegate, stats), ApkPackaging {
 
     override val dex: DexPackagingOptions
         get() {

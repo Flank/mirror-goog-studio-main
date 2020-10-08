@@ -19,17 +19,11 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 /**
- * Defines a variant's packaging options.
+ * Defines a library variant's packaging options.
  */
 @Incubating
-interface PackagingOptions {
+interface LibraryPackaging : Packaging {
 
     /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
-    val jniLibs: JniLibsPackagingOptions
-
-    /** PackagingOptions for java resources. Initialized from the corresponding DSL. */
-    val resources: ResourcesPackagingOptions
-
-    /** PackagingOptions for java resources. Initialized from the corresponding DSL. */
-    fun resources(action: ResourcesPackagingOptions.() -> Unit)
+    fun jniLibs(action: JniLibsPackagingOptions.() -> Unit)
 }

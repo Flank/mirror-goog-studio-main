@@ -85,7 +85,7 @@ interface Variant : Component {
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    val packagingOptions: PackagingOptions
+    val packaging: Packaging
 
     /**
      * Variant's [ExternalNativeCmakeOptions], initialized by merging the product flavor values

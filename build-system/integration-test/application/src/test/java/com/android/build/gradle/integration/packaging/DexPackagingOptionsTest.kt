@@ -48,7 +48,7 @@ class DexPackagingOptionsTest {
                     }
                     androidComponents {
                         onVariants(selector().withName("debug"), {
-                            packagingOptions.dex.useLegacyPackaging.set(false)
+                            packaging.dex.useLegacyPackaging.set(false)
                         })
                     }
                     """.trimIndent()

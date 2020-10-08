@@ -17,16 +17,16 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.JniLibsPackagingOptions
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
-open class AnalyticsEnabledPackagingOptions @Inject constructor(
-    open val delegate: PackagingOptions,
-    val stats: GradleBuildVariant.Builder
-) : PackagingOptions {
+open class AnalyticsEnabledPackaging @Inject constructor(
+        open val delegate: Packaging,
+        val stats: GradleBuildVariant.Builder
+) : Packaging {
 
     override val jniLibs: JniLibsPackagingOptions
         get() {

@@ -19,7 +19,7 @@ package com.android.build.api.component.analytics
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.SigningConfig
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -134,24 +134,24 @@ open class AnalyticsEnabledAndroidTest @Inject constructor(
         delegate.signingConfig(action)
     }
 
-    private val userVisiblePackagingOptions: ApkPackagingOptions by lazy {
+    private val userVisiblePackaging: ApkPackaging by lazy {
         objectFactory.newInstance(
-            AnalyticsEnabledApkPackagingOptions::class.java,
-            delegate.packagingOptions,
+            AnalyticsEnabledApkPackaging::class.java,
+            delegate.packaging,
             stats
         )
     }
 
-    override val packagingOptions: ApkPackagingOptions
+    override val packaging: ApkPackaging
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return userVisiblePackagingOptions
+            return userVisiblePackaging
         }
 
-    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
+    override fun packaging(action: ApkPackaging.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
-        action.invoke(userVisiblePackagingOptions)
+        action.invoke(userVisiblePackaging)
     }
 }

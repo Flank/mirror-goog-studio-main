@@ -32,10 +32,10 @@ interface LibraryVariant : Variant {
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    override val packagingOptions: LibraryPackagingOptions
+    override val packaging: LibraryPackaging
 
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    fun packagingOptions(action: LibraryPackagingOptions.() -> Unit)
+    fun packaging(action: LibraryPackaging.() -> Unit)
 }

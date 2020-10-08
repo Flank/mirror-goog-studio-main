@@ -53,17 +53,17 @@ class NativeSoPackagingOptionsTest {
                     }
                     androidComponents {
                         onVariants(selector().withName('debug'), {
-                            packagingOptions.jniLibs.excludes.add('**/debugExclude.so')
+                            packaging.jniLibs.excludes.add('**/debugExclude.so')
                         })
                         onVariants(selector().withName('release'), {
-                            packagingOptions.jniLibs.excludes.add('**/releaseExclude.so')
-                            packagingOptions.jniLibs.useLegacyPackaging.set(false)
+                            packaging.jniLibs.excludes.add('**/releaseExclude.so')
+                            packaging.jniLibs.useLegacyPackaging.set(false)
                         })
                         onVariants(selector().all(), {
-                            packagingOptions.jniLibs.pickFirsts.add('**/variantPickFirst.so')
+                            packaging.jniLibs.pickFirsts.add('**/variantPickFirst.so')
                         })
                         androidTest(selector().all(), {
-                            packagingOptions.jniLibs.excludes.add('**/testExclude.so')
+                            packaging.jniLibs.excludes.add('**/testExclude.so')
                         })
                     }
                     """.trimIndent()
@@ -85,10 +85,10 @@ class NativeSoPackagingOptionsTest {
                     }
                     androidComponents {
                         onVariants(selector().all(), {
-                            packagingOptions.jniLibs.excludes.add('**/libExclude.so')
+                            packaging.jniLibs.excludes.add('**/libExclude.so')
                         })
                         androidTest(selector().all(), {
-                            packagingOptions.jniLibs.excludes.add('**/testExclude.so')
+                            packaging.jniLibs.excludes.add('**/testExclude.so')
                         })
                     }
                     """.trimIndent()

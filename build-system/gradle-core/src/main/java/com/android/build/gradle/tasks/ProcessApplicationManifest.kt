@@ -372,7 +372,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.optionalFeatures.set(project.provider { getOptionalFeatures(creationConfig) })
             task.optionalFeatures.disallowChanges()
             task.jniLibsUseLegacyPackaging.setDisallowChanges(
-                creationConfig.packagingOptions.jniLibs.useLegacyPackaging
+                creationConfig.packaging.jniLibs.useLegacyPackaging
             )
             task.variantOutput.setDisallowChanges(
                 creationConfig.outputs.getMainSplit()

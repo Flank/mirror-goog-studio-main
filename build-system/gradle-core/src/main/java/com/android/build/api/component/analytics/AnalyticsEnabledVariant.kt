@@ -19,7 +19,7 @@ package com.android.build.api.component.analytics
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ExternalNativeCmakeOptions
 import com.android.build.api.variant.ExternalNativeNdkBuildOptions
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.Variant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -85,19 +85,19 @@ abstract class AnalyticsEnabledVariant (
             return delegate.manifestPlaceholders
         }
 
-    private val userVisiblePackagingOptions: PackagingOptions by lazy {
+    private val userVisiblePackaging: Packaging by lazy {
         objectFactory.newInstance(
-            AnalyticsEnabledPackagingOptions::class.java,
-            delegate.packagingOptions,
+            AnalyticsEnabledPackaging::class.java,
+            delegate.packaging,
             stats
         )
     }
 
-    override val packagingOptions: PackagingOptions
+    override val packaging: Packaging
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
-            return userVisiblePackagingOptions
+            return userVisiblePackaging
         }
 
     private val userVisibleCmakeOptions: AnalyticsEnabledExternalNativeCmakeOptions? by lazy {

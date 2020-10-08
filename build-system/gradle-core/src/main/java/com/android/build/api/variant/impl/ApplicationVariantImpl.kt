@@ -112,16 +112,16 @@ open class ApplicationVariantImpl @Inject constructor(
         action.invoke(signingConfig)
     }
 
-    override val packagingOptions: ApkPackagingOptions by lazy {
-        ApkPackagingOptionsImpl(
+    override val packaging: ApkPackaging by lazy {
+        ApkPackagingImpl(
             globalScope.extension.packagingOptions,
             internalServices,
             minSdkVersion.apiLevel
         )
     }
 
-    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
-        action.invoke(packagingOptions)
+    override fun packaging(action: ApkPackaging.() -> Unit) {
+        action.invoke(packaging)
     }
 
     override val minifiedEnabled: Boolean

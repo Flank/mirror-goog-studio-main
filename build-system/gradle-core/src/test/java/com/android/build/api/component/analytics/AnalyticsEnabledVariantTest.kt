@@ -18,7 +18,7 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.JniLibsPackagingOptions
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResourcesPackagingOptions
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
@@ -147,15 +147,15 @@ class AnalyticsEnabledVariantTest {
 
     @Test
     fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(PackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(Packaging::class.java)
         val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
         val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
+        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
         // simulate a user configuring packaging options for jniLibs and resources
-        proxy.packagingOptions.jniLibs
-        proxy.packagingOptions.resources
+        proxy.packaging.jniLibs
+        proxy.packaging.resources
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
         Truth.assertThat(
@@ -168,6 +168,6 @@ class AnalyticsEnabledVariantTest {
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
             )
         )
-        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
+        Mockito.verify(delegate, Mockito.times(1)).packaging
     }
 }
