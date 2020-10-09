@@ -179,6 +179,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                 // order and result in a bug (see
                 // https://issuetracker.google.com/119064593#comment11 and commit
                 // f4db68dccf76c35f5cdbd2cf3be3fb13b8abb767).
+                check(dir.isDirectory) { "Directory does not exist: ${dir.path}" }
                 dir.listFiles()!!.filter { isJarFile(it) }.sorted()
             }
         val dexDirsOrJars = dexDirs + dexJars
