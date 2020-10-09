@@ -16,7 +16,7 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.SigningConfig
@@ -40,12 +40,12 @@ interface AndroidTest : TestComponent {
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    val aaptOptions: AaptOptions
+    val aapt: Aapt
 
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    fun aaptOptions(action: AaptOptions.() -> Unit)
+    fun aaptOptions(action: Aapt.() -> Unit)
 
     /**
      * The package name into which some classes are generated.

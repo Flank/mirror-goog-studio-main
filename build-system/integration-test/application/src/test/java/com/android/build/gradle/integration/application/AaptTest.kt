@@ -17,7 +17,7 @@ import org.junit.rules.TemporaryFolder
 import java.util.zip.ZipEntry
 
 /** Tests for DSL AAPT options.  */
-class AaptOptionsTest {
+class AaptTest {
     @get:Rule  var temporaryFolder = TemporaryFolder()
 
     @get:Rule
@@ -70,7 +70,7 @@ class AaptOptionsTest {
             """
                 androidComponents {
                     onVariants(selector().all(), {
-                        aaptOptions.additionalParameters.addAll(
+                        aapt.additionalParameters.addAll(
                             ["--trace-folder", "$windowsFriendlyFilePath"]
                         )
                     })
@@ -129,7 +129,7 @@ class AaptOptionsTest {
             """
                 androidComponents {
                     onVariants(selector().all(), {
-                        aaptOptions.ignoreAssetsPatterns.add("ignored")
+                        aapt.ignoreAssetsPatterns.add("ignored")
                     })
                 }
                 """.trimIndent()
@@ -191,7 +191,7 @@ class AaptOptionsTest {
                 }
                 androidComponents {
                     onVariants(selector().all(), {
-                        aaptOptions.ignoreAssetsPatterns.add(".ignoreAssetsPatternApi")
+                        aapt.ignoreAssetsPatterns.add(".ignoreAssetsPatternApi")
                     })
                 }
                 """.trimIndent()

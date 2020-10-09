@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.DependenciesInfo
@@ -56,14 +56,14 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             return delegate.dependenciesInfo
         }
 
-    override val aaptOptions: AaptOptions
+    override val aapt: Aapt
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.AAPT_OPTIONS_VALUE
-            return delegate.aaptOptions
+            return delegate.aapt
         }
 
-    override fun aaptOptions(action: AaptOptions.() -> Unit) {
+    override fun aaptOptions(action: Aapt.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.AAPT_OPTIONS_ACTION_VALUE
         delegate.aaptOptions(action)

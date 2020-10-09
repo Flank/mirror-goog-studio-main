@@ -88,15 +88,15 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override val dependenciesInfo: DependenciesInfo = variantDependencyInfo
 
-    override val aaptOptions: AaptOptions by lazy {
+    override val aapt: Aapt by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
             internalServices
         )
     }
 
-    override fun aaptOptions(action: AaptOptions.() -> Unit) {
-        action.invoke(aaptOptions)
+    override fun aaptOptions(action: Aapt.() -> Unit) {
+        action.invoke(aapt)
     }
 
     override val signingConfig: SigningConfig by lazy {

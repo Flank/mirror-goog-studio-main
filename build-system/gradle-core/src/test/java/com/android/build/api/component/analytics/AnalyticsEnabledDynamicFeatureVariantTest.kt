@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.api.variant.JniLibsApkPackaging
@@ -46,21 +46,21 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
 
     @Test
     fun getAaptOptions() {
-        val aaptOptions = Mockito.mock(AaptOptions::class.java)
-        Mockito.`when`(delegate.aaptOptions).thenReturn(aaptOptions)
-        Truth.assertThat(proxy.aaptOptions).isEqualTo(aaptOptions)
+        val aaptOptions = Mockito.mock(Aapt::class.java)
+        Mockito.`when`(delegate.aapt).thenReturn(aaptOptions)
+        Truth.assertThat(proxy.aapt).isEqualTo(aaptOptions)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.AAPT_OPTIONS_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .aaptOptions
+            .aapt
     }
 
     @Test
     fun aaptOptionsAction() {
-        val function = { param : AaptOptions -> println(param) }
+        val function = { param : Aapt -> println(param) }
         proxy.aaptOptions(function)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)

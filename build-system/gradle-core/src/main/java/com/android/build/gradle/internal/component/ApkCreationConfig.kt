@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.provider.MapProperty
@@ -26,7 +26,7 @@ import org.gradle.api.provider.MapProperty
  */
 interface ApkCreationConfig: ConsumableCreationConfig {
 
-    val aaptOptions: AaptOptions
+    val aapt: Aapt
 
     val manifestPlaceholders: MapProperty<String, String>
 

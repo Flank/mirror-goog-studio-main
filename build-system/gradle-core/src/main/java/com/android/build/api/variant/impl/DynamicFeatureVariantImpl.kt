@@ -21,7 +21,7 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.DynamicFeatureVariant
@@ -99,15 +99,15 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val applicationId: Provider<String> =
         internalServices.providerOf(String::class.java, baseModuleMetadata.map { it.applicationId })
 
-    override val aaptOptions: AaptOptions by lazy {
+    override val aapt: Aapt by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
             internalServices
         )
     }
 
-    override fun aaptOptions(action: AaptOptions.() -> Unit) {
-        action.invoke(aaptOptions)
+    override fun aaptOptions(action: Aapt.() -> Unit) {
+        action.invoke(aapt)
     }
 
     override val minifiedEnabled: Boolean

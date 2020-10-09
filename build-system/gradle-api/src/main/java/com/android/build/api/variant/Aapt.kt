@@ -23,7 +23,7 @@ import org.gradle.api.provider.ListProperty
  * Defines a variant's aapt options.
  */
 @Incubating
-interface AaptOptions {
+interface Aapt {
 
     /**
      * The list of patterns describing assets to be ignored.

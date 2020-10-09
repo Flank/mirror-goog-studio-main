@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.ide;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.Test;
 
-public class AaptOptionsImplTest {
+public class AaptImplTest {
 
     @Test
     public void equals() throws Exception {

@@ -32,12 +32,12 @@ interface TestVariant: Variant {
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    val aaptOptions: AaptOptions
+    val aapt: Aapt
 
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    fun aaptOptions(action: AaptOptions.() -> Unit)
+    fun aaptOptions(action: Aapt.() -> Unit)
 
     /**
      * The application of the app under tests.
