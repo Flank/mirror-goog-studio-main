@@ -38,10 +38,10 @@ void OverlaySwapCommand::ParseParameters(
   ready_to_run_ = true;
 }
 
-proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
-    proto::SwapResponse* response) {
+std::unique_ptr<proto::SwapRequest>
+OverlaySwapCommand::PrepareAndBuildRequest() {
   Phase p("PreSwap");
-  proto::SwapRequest request;
+  std::unique_ptr<proto::SwapRequest> request(new proto::SwapRequest());
 
   std::string version = workspace_.GetVersion() + "-";
   std::string code_cache = "/data/data/" + package_name_ + "/code_cache/";
@@ -59,8 +59,10 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
   std::string agent_path = startup_path + version + agent;
 
   std::unordered_set<std::string> missing_files;
-  // TODO: Error checking
-  CheckFilesExist({startup_path, studio_path, agent_path}, &missing_files);
+  if (!CheckFilesExist({startup_path, studio_path, agent_path},
+                       &missing_files)) {
+    return nullptr;
+  }
 
   RunasExecutor run_as(package_name_, workspace_.GetExecutor());
   std::string error;
@@ -75,50 +77,46 @@ proto::SwapRequest OverlaySwapCommand::PrepareAndBuildRequest(
   // be found in it, we assume another agent is present and delete it.
   if (!missing_startup && missing_agent) {
     if (!run_as.Run("rm", {"-f", "-r", startup_path}, nullptr, &error)) {
-      response->set_status(proto::SwapResponse::SETUP_FAILED);
       ErrEvent("Could not remove old agents: " + error);
-      return request;
+      return nullptr;
     }
     missing_startup = true;
   }
 
   if (missing_startup &&
       !run_as.Run("mkdir", {startup_path}, nullptr, &error)) {
-    response->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Could not create startup agent directory: " + error);
-    return request;
+    return nullptr;
   }
 
   if (missing_files.find(studio_path) != missing_files.end() &&
       !run_as.Run("mkdir", {studio_path}, nullptr, &error)) {
-    response->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Could not create .studio directory: " + error);
-    return request;
+    return nullptr;
   }
 
   if (missing_agent &&
       !run_as.Run("cp", {"-F", workspace_.GetTmpFolder() + agent, agent_path},
                   nullptr, &error)) {
-    response->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Could not copy binaries: " + error);
-    return request;
+    return nullptr;
   }
 
   SetAgentPath(agent_path);
 
   for (auto& clazz : request_.new_classes()) {
-    request.add_new_classes()->CopyFrom(clazz);
+    request->add_new_classes()->CopyFrom(clazz);
   }
 
   for (auto& clazz : request_.modified_classes()) {
-    request.add_modified_classes()->CopyFrom(clazz);
+    request->add_modified_classes()->CopyFrom(clazz);
   }
 
-  request.set_package_name(package_name_);
-  request.set_restart_activity(request_.restart_activity());
-  request.set_structural_redefinition(request_.structural_redefinition());
-  request.set_variable_reinitialization(request_.variable_reinitialization());
-  request.set_overlay_swap(true);
+  request->set_package_name(package_name_);
+  request->set_restart_activity(request_.restart_activity());
+  request->set_structural_redefinition(request_.structural_redefinition());
+  request->set_variable_reinitialization(request_.variable_reinitialization());
+  request->set_overlay_swap(true);
   return request;
 }
 

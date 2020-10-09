@@ -39,8 +39,7 @@ class OverlaySwapCommand : public BaseSwapCommand {
   virtual void ParseParameters(const proto::InstallerRequest& request) override;
 
  protected:
-  virtual proto::SwapRequest PrepareAndBuildRequest(
-      proto::SwapResponse* response) override;
+  virtual std::unique_ptr<proto::SwapRequest> PrepareAndBuildRequest() override;
   virtual void ProcessResponse(proto::SwapResponse* response) override;
 
  private:
