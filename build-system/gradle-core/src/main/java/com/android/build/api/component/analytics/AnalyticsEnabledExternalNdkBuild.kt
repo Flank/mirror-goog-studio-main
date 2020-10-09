@@ -16,51 +16,50 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.ExternalNativeCmakeOptions
+import com.android.build.api.variant.ExternalNdkBuild
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
 import javax.inject.Inject
 
-open class AnalyticsEnabledExternalNativeCmakeOptions @Inject constructor(
-        val delegate: ExternalNativeCmakeOptions,
+open class AnalyticsEnabledExternalNdkBuild @Inject constructor(
+        val delegate: ExternalNdkBuild,
         val stats: GradleBuildVariant.Builder
-) : ExternalNativeCmakeOptions {
+) : ExternalNdkBuild {
 
     override val abiFilters: SetProperty<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.CMAKE_OPTIONS_ABI_FILTERS_VALUE
+                    VariantPropertiesMethodType.NDK_BUILD_OPTIONS_ABI_FILTERS_VALUE
             return delegate.abiFilters
         }
 
     override val arguments: ListProperty<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.CMAKE_OPTIONS_ARGUMENTS_VALUE
+                    VariantPropertiesMethodType.NDK_BUILD_OPTIONS_ARGUMENTS_VALUE
             return delegate.arguments
         }
 
     override val cFlags: ListProperty<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.CMAKE_OPTIONS_C_FLAGS_VALUE
+                    VariantPropertiesMethodType.NDK_BUILD_OPTIONS_C_FLAGS_VALUE
             return delegate.cFlags
         }
 
     override val cppFlags: ListProperty<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.CMAKE_OPTIONS_CPP_FLAGS_VALUE
+                    VariantPropertiesMethodType.NDK_BUILD_OPTIONS_CPP_FLAGS_VALUE
             return delegate.cppFlags
         }
 
     override val targets: SetProperty<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                    VariantPropertiesMethodType.CMAKE_OPTIONS_TARGETS_VALUE
+                    VariantPropertiesMethodType.NDK_BUILD_OPTIONS_TARGETS_VALUE
             return delegate.targets
         }
-
 }

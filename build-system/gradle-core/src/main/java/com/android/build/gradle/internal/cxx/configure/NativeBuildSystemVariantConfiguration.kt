@@ -52,9 +52,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val externalNativeBuildAbiFilters: Set<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            variant.cmakeNativeBuildOptions?.abiFilters?.get() ?: setOf()
+            variant.externalCmake?.abiFilters?.get() ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
-            variant.ndkBuildNativeBuildOptions?.abiFilters?.get() ?: setOf()
+            variant.externalNdkBuild?.abiFilters?.get() ?: setOf()
     }
 
     /**
@@ -86,9 +86,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val arguments: List<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            variant.cmakeNativeBuildOptions?.arguments?.get() ?: listOf()
+            variant.externalCmake?.arguments?.get() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            variant.ndkBuildNativeBuildOptions?.arguments?.get() ?: listOf()
+            variant.externalNdkBuild?.arguments?.get() ?: listOf()
     }
 
     /**
@@ -106,9 +106,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val cFlags: List<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            variant.cmakeNativeBuildOptions?.cFlags?.get() ?: listOf()
+            variant.externalCmake?.cFlags?.get() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            variant.ndkBuildNativeBuildOptions?.cFlags?.get() ?: listOf()
+            variant.externalNdkBuild?.cFlags?.get() ?: listOf()
     }
 
     /**
@@ -126,9 +126,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val cppFlags: List<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            variant.cmakeNativeBuildOptions?.cppFlags?.get() ?: listOf()
+            variant.externalCmake?.cppFlags?.get() ?: listOf()
         NativeBuildSystem.NDK_BUILD ->
-            variant.ndkBuildNativeBuildOptions?.cppFlags?.get() ?: listOf()
+            variant.externalNdkBuild?.cppFlags?.get() ?: listOf()
     }
 
     /**
@@ -146,9 +146,9 @@ fun createNativeBuildSystemVariantConfig(
      */
     val targets: Set<String> = when (buildSystem) {
         NativeBuildSystem.CMAKE ->
-            variant.cmakeNativeBuildOptions?.targets?.get() ?: setOf()
+            variant.externalCmake?.targets?.get() ?: setOf()
         NativeBuildSystem.NDK_BUILD ->
-            variant.ndkBuildNativeBuildOptions?.targets?.get() ?: setOf()
+            variant.externalNdkBuild?.targets?.get() ?: setOf()
     }
 
     return NativeBuildSystemVariantConfig(

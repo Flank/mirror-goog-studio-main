@@ -124,18 +124,18 @@ abstract class VariantImpl(
     }
 
 
-    override val cmakeNativeBuildOptions: ExternalNativeCmakeOptions? by lazy {
+    override val externalCmake: ExternalCmake? by lazy {
         variantDslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
-            ExternalNativeCmakeOptionsImpl(
+            ExternalCmakeImpl(
                     it,
                     variantPropertiesApiServices
             )
         }
     }
 
-    override val ndkBuildNativeBuildOptions: ExternalNativeNdkBuildOptions? by lazy {
+    override val externalNdkBuild: ExternalNdkBuild? by lazy {
         variantDslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
-            ExternalNativeNdkBuildOptionsImpl(
+            ExternalNdkBuildImpl(
                     it,
                     variantPropertiesApiServices
             )

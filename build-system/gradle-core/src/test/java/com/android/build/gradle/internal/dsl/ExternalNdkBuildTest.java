@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant
+package com.android.build.gradle.internal.dsl;
 
-import org.gradle.api.Incubating
+import com.android.testutils.internal.CopyOfTester;
+import org.junit.Test;
 
-/**
- * Interface for ndk-build per-variant info.
- *
- * see [com.android.build.api.dsl.ExternalNativeNdkBuildOptions] for expanded documentation
- * on each of these fields.
- */
-@Incubating
-interface ExternalNativeNdkBuildOptions: ExternalNativeGenericOptions
+public class ExternalNdkBuildTest {
+
+    @Test
+    public void _initWith() throws Exception {
+        CopyOfTester.assertAllGettersCalled(
+                ExternalNativeNdkBuildOptions.class,
+                new ExternalNativeNdkBuildOptions(),
+                original -> new ExternalNativeNdkBuildOptions()._initWith(original));
+    }
+}

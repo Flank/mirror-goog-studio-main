@@ -17,8 +17,8 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ExternalNativeCmakeOptions
-import com.android.build.api.variant.ExternalNativeNdkBuildOptions
+import com.android.build.api.variant.ExternalCmake
+import com.android.build.api.variant.ExternalNdkBuild
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.Variant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -100,34 +100,34 @@ abstract class AnalyticsEnabledVariant (
             return userVisiblePackaging
         }
 
-    private val userVisibleCmakeOptions: AnalyticsEnabledExternalNativeCmakeOptions? by lazy {
-        delegate.cmakeNativeBuildOptions?.let {
+    private val userVisibleCmakeOptions: AnalyticsEnabledExternalCmake? by lazy {
+        delegate.externalCmake?.let {
             objectFactory.newInstance(
-                    AnalyticsEnabledExternalNativeCmakeOptions::class.java,
+                    AnalyticsEnabledExternalCmake::class.java,
                     it,
                     stats
             )
         }
     }
 
-    override val cmakeNativeBuildOptions: ExternalNativeCmakeOptions?
+    override val externalCmake: ExternalCmake?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.CMAKE_NATIVE_OPTIONS_VALUE
             return userVisibleCmakeOptions
         }
 
-    private val userVisibleNdkBuildOptions: AnalyticsEnabledExternalNativeNdkBuildOptions? by lazy {
-        delegate.ndkBuildNativeBuildOptions?.let {
+    private val userVisibleNdkBuildOptions: AnalyticsEnabledExternalNdkBuild? by lazy {
+        delegate.externalNdkBuild?.let {
             objectFactory.newInstance(
-                    AnalyticsEnabledExternalNativeNdkBuildOptions::class.java,
+                    AnalyticsEnabledExternalNdkBuild::class.java,
                     it,
                     stats
             )
         }
     }
 
-    override val ndkBuildNativeBuildOptions: ExternalNativeNdkBuildOptions?
+    override val externalNdkBuild: ExternalNdkBuild?
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.NDK_BUILD_NATIVE_OPTIONS_VALUE

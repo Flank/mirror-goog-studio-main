@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.testutils.internal.CopyOfTester;
 import org.junit.Test;
 
-public class ExternalNativeCmakeOptionsTest {
+public class ExternalCmakeTest {
 
     @Test
     public void _initWith() throws Exception {

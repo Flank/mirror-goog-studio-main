@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.api.variant.ExternalNativeCmakeOptions
-import com.android.build.api.variant.ExternalNativeNdkBuildOptions
+import com.android.build.api.variant.ExternalCmake
+import com.android.build.api.variant.ExternalNdkBuild
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
@@ -172,10 +172,10 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
     val externalNativeNdkBuildOptions = mock(
-        ExternalNativeNdkBuildOptions::class.java
+        ExternalNdkBuild::class.java
     )
     val externalNativeCmakeOptions = mock(
-        ExternalNativeCmakeOptions::class.java
+        ExternalCmake::class.java
     )
     val mergedNdkConfig = mock(
         MergedNdkConfig::class.java,
@@ -305,8 +305,8 @@ open class BasicModuleModelMock {
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
 
         doReturn(coreExternalNativeBuildOptions).`when`(variantDslInfo).externalNativeBuildOptions
-        doReturn(externalNativeNdkBuildOptions).`when`(variantImpl).ndkBuildNativeBuildOptions
-        doReturn(externalNativeCmakeOptions).`when`(this.variantImpl).cmakeNativeBuildOptions
+        doReturn(externalNativeNdkBuildOptions).`when`(variantImpl).externalNdkBuild
+        doReturn(externalNativeCmakeOptions).`when`(this.variantImpl).externalCmake
         doReturn(mergedNdkConfig).`when`(variantDslInfo).ndkConfig
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters

@@ -25,4 +25,4 @@ import org.gradle.api.Incubating
  * these fields.
  */
 @Incubating
-interface ExternalNativeCmakeOptions: ExternalNativeGenericOptions
+interface ExternalCmake: ExternalNativeGenericOptions

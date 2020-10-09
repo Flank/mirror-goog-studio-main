@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.ExternalNativeNdkBuildOptions
+import com.android.build.api.variant.ExternalCmake
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -28,17 +28,18 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 
-class AnalyticsEnabledExternalNativeNdkBuildOptionsTest {
+class AnalyticsEnabledExternalCmakeTest {
+
     @Mock
-    lateinit var delegate: ExternalNativeNdkBuildOptions
+    lateinit var delegate: ExternalCmake
 
     private val stats = GradleBuildVariant.newBuilder()
-    private lateinit var proxy: AnalyticsEnabledExternalNativeNdkBuildOptions
+    private lateinit var proxy: AnalyticsEnabledExternalCmake
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        proxy = AnalyticsEnabledExternalNativeNdkBuildOptions(delegate, stats)
+        proxy = AnalyticsEnabledExternalCmake(delegate, stats)
     }
 
     @Test
@@ -51,7 +52,7 @@ class AnalyticsEnabledExternalNativeNdkBuildOptionsTest {
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
                 stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.NDK_BUILD_OPTIONS_ABI_FILTERS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.CMAKE_OPTIONS_ABI_FILTERS_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).abiFilters
         Mockito.verifyNoMoreInteractions(delegate)
     }
@@ -66,7 +67,7 @@ class AnalyticsEnabledExternalNativeNdkBuildOptionsTest {
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
                 stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.NDK_BUILD_OPTIONS_TARGETS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.CMAKE_OPTIONS_TARGETS_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).targets
         Mockito.verifyNoMoreInteractions(delegate)
     }
@@ -81,7 +82,7 @@ class AnalyticsEnabledExternalNativeNdkBuildOptionsTest {
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
                 stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.NDK_BUILD_OPTIONS_ARGUMENTS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.CMAKE_OPTIONS_ARGUMENTS_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).arguments
         Mockito.verifyNoMoreInteractions(delegate)
     }
@@ -96,7 +97,7 @@ class AnalyticsEnabledExternalNativeNdkBuildOptionsTest {
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
                 stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.NDK_BUILD_OPTIONS_C_FLAGS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.CMAKE_OPTIONS_C_FLAGS_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).cFlags
         Mockito.verifyNoMoreInteractions(delegate)
     }
@@ -111,7 +112,7 @@ class AnalyticsEnabledExternalNativeNdkBuildOptionsTest {
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
                 stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.NDK_BUILD_OPTIONS_CPP_FLAGS_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.CMAKE_OPTIONS_CPP_FLAGS_VALUE)
         Mockito.verify(delegate, Mockito.times(1)).cppFlags
         Mockito.verifyNoMoreInteractions(delegate)
     }
