@@ -35,7 +35,7 @@ android {
         xmlReport true
         xmlOutput file("lint-report.xml")
         textReport true
-        textOutput file("lint-results.txt")
+        textOutput file("$reportsDir/lint-results.txt")
         error 'SyntheticAccessor'
         error 'KotlinPropertyAccess'
     }
