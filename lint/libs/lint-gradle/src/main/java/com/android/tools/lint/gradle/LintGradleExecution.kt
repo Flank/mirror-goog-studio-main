@@ -134,7 +134,7 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
             """.trimIndent()
         }
         if (incidents != null && client != null && // See if there aren't any text reporters
-            client.flags.reporters.asSequence().none { reporter -> reporter is TextReporter }
+            client.flags.reporters.none { reporter -> reporter is TextReporter }
         ) {
             var errors = incidents.asSequence()
                 .filter { warning -> warning.severity.isError }

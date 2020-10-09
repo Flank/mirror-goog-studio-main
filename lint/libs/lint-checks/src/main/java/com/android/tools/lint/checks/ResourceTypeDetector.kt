@@ -186,7 +186,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         return
                     }
 
-                    val expression = usage.getParentOfType<UExpression>(
+                    val expression = usage.getParentOfType(
                         UExpression::class.java, true
                     )
                     // Crap - how do we avoid double-checking here, we can't limit ourselves
@@ -218,8 +218,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                     val types = ResourceEvaluator.getTypesFromAnnotations(annotations)
                     if (types != null) {
-                        if (types.contains(ResourceType.STYLEABLE) &&
-                            type == AnnotationUsageType.ASSIGNMENT
+                        if (types.contains(STYLEABLE) &&
+                            type == AnnotationUsageType.ASSIGNMENT_LHS
                         ) {
                             // Allow assigning constants to R.styleable; this is done
                             // for example in the support library
@@ -472,7 +472,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val name = expression.methodName
             if (name != null && "obtainStyledAttributes" == name) {
                 val expressions = expression.valueArguments
-                if (!expressions.isEmpty()) {
+                if (expressions.isNotEmpty()) {
                     var arg: Int
                     if (expressions.size == 1) {
                         // obtainStyledAttributes(int[] attrs)

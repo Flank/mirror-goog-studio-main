@@ -370,7 +370,7 @@ public class ApkInstaller {
         }
     }
 
-    private String message(AdbClient.InstallResult result) {
+    public static String message(AdbClient.InstallResult result) {
         switch (result.status) {
             case INSTALL_FAILED_VERSION_DOWNGRADE:
                 return "The device already has a newer version of this application.";
@@ -400,7 +400,9 @@ public class ApkInstaller {
             case INSTALL_FAILED_INVALID_APK:
                 return "The APKs are invalid.";
             default:
-                return "Installation failed due to: '" + result.reason + "'";
+                return "Installation failed due to: '"
+                        + (result.reason == null ? result.status.toString() : result.reason)
+                        + "'";
         }
     }
 }

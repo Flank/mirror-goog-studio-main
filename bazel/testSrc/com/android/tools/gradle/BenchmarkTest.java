@@ -27,6 +27,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -288,13 +289,12 @@ public class BenchmarkTest {
         }
 
         File projectRoot = new File(src, testProjectGradleRootFromSourceRoot);
+        addJvmArgs(new File(projectRoot, "gradle.properties"));
         try (Gradle gradle = new Gradle(projectRoot, out, distribution)) {
             gradle.addRepo(repo);
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
             gradle.addArgument("-Duser.home=" + home.getAbsolutePath());
-            // Potential fix for performance regression (b/163462113)
-            gradle.addArgument("-Dorg.gradle.jvmargs=-XX:+UseParallelGC");
             if (fromStudio) {
                 gradle.addArgument("-Pandroid.injected.invoked.from.ide=true");
                 gradle.addArgument("-Pandroid.injected.testOnly=true");
@@ -356,6 +356,23 @@ public class BenchmarkTest {
                 perfData.addBenchmark(benchmark);
                 perfData.commit();
             }
+        }
+    }
+
+    private static void addJvmArgs(File gradleProperties) throws Exception {
+        Properties p = new Properties();
+
+        if (gradleProperties.exists()) {
+            try (FileInputStream fis = new FileInputStream(gradleProperties)) {
+                p.load(fis);
+            }
+        }
+
+        String jvmArgs = p.getProperty("org.gradle.jvmargs", "");
+        jvmArgs += " -XX:+UseParallelGC";
+        p.put("org.gradle.jvmargs", jvmArgs);
+        try (FileWriter fw = new FileWriter(gradleProperties)) {
+            p.store(fw, "");
         }
     }
 

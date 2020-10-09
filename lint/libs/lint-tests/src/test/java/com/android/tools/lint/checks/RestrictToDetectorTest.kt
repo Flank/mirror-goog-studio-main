@@ -1505,6 +1505,71 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test169610406() {
+        // 169610406: Strange warning from RestrictToDetector for Kotlin property
+        //            initialized by constructor call
+        lint().files(
+            kotlin(
+                """
+                import android.support.annotation.RestrictTo;
+                import android.support.annotation.RestrictTo.Scope.SUBCLASSES;
+
+                class Foo
+
+                class Bar {
+                    @RestrictTo(SUBCLASSES)
+                    val foo = Foo()
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testAssignment() {
+        // Make sure we flag @VisibleForTesting assignment mismatches
+        lint().files(
+            java(
+                "" +
+                    "package test.pkg;\n" +
+                    "\n" +
+                    "import java.io.File;\n" +
+                    "\n" +
+                    "@SuppressWarnings({\"FieldCanBeLocal\", \"unused\"})\n" +
+                    "public class LegacyLocalRepoLoader {\n" +
+                    "    private final LocalSdk mLocalSdk;\n" +
+                    "\n" +
+                    "    public LegacyLocalRepoLoader(File root, String fop) {\n" +
+                    "        mLocalSdk = new LocalSdk(fop);\n" +
+                    "    }\n" +
+                    "}"
+            ).indented(),
+            java(
+                "" +
+                    "package test.pkg;\n" +
+                    "import android.support.annotation.VisibleForTesting;\n" +
+                    "@Deprecated\n" +
+                    "public class LocalSdk {\n" +
+                    "    private final String mFileOp;\n" +
+                    "    @VisibleForTesting\n" +
+                    "    public LocalSdk(String fileOp) {\n" +
+                    "        mFileOp = fileOp;\n" +
+                    "    }\n" +
+                    "}\n" +
+                    ""
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            "" +
+                "src/test/pkg/LegacyLocalRepoLoader.java:10: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]\n" +
+                "        mLocalSdk = new LocalSdk(fop);\n" +
+                "                    ~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings"
+        )
+    }
+
     companion object {
         /*
                 Compiled version of these 5 files (and the RestrictTo annotation);

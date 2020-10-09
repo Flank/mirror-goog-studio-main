@@ -1,7 +1,7 @@
 # Line format: <sdk package>[:include-glob[:exclude-glob]]
 
 # Match both adb and adb.exe.
-platform-tools:{adb*,api/*,package.xml,*.dll}
+platform-tools:{adb*,api/*,package.xml,*.dll,sqlite3*}
 
 # Build tools
 build-tools;30.0.2

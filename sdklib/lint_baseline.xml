@@ -14,7 +14,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/internal/avd/AvdInfo.java"
-            line="275"/>
+            line="281"/>
     </issue>
 
     <issue
@@ -191,14 +191,6 @@
         <location
             file="src/main/java/com/android/sdklib/tool/sdkmanager/TableFormatter.java"
             line="68"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/sdklib/repository/legacy/LegacyLocalRepoLoader.java"
-            line="82"/>
     </issue>
 
     <issue

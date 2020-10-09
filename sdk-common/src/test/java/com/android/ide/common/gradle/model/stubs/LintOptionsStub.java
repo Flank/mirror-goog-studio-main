@@ -33,6 +33,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     @Nullable private final File myTextOutput;
     @Nullable private final File myHtmlOutput;
     @Nullable private final File myXmlOutput;
+    @Nullable private final File mySarifOutput;
     @Nullable private final File myBaselineFile;
     @Nullable private final Map<String, Integer> mySeverityOverrides;
     private final boolean myAbortOnError;
@@ -50,6 +51,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     private final boolean myTextReport;
     private final boolean myHtmlReport;
     private final boolean myXmlReport;
+    private final boolean mySarifReport;
     private final boolean myCheckReleaseBuilds;
     private final boolean myCheckDependencies;
 
@@ -62,6 +64,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
                 new File("textOutput"),
                 new File("htmlOutput"),
                 new File("xmlOutput"),
+                new File("sarifOutput"),
                 new File("baselineFile"),
                 ImmutableMap.of("key", 1),
                 true,
@@ -79,6 +82,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
                 false,
                 true,
                 true,
+                false,
                 true,
                 false);
     }
@@ -91,6 +95,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
             @Nullable File textOutput,
             @Nullable File htmlOutput,
             @Nullable File xmlOutput,
+            @Nullable File sarifOutput,
             @Nullable File baselineFile,
             @Nullable Map<String, Integer> overrides,
             boolean abortOnError,
@@ -108,6 +113,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
             boolean textReport,
             boolean htmlReport,
             boolean xmlReport,
+            boolean sarifReport,
             boolean checkReleaseBuilds,
             boolean checkDependencies) {
         myDisable = disable;
@@ -117,6 +123,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
         myTextOutput = textOutput;
         myHtmlOutput = htmlOutput;
         myXmlOutput = xmlOutput;
+        mySarifOutput = sarifOutput;
         myBaselineFile = baselineFile;
         mySeverityOverrides = overrides;
         myAbortOnError = abortOnError;
@@ -134,6 +141,7 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
         myTextReport = textReport;
         myHtmlReport = htmlReport;
         myXmlReport = xmlReport;
+        mySarifReport = sarifReport;
         myCheckReleaseBuilds = checkReleaseBuilds;
         myCheckDependencies = checkDependencies;
     }
@@ -178,6 +186,12 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     @Nullable
     public File getXmlOutput() {
         return myXmlOutput;
+    }
+
+    @Override
+    @Nullable
+    public File getSarifOutput() {
+        return mySarifOutput;
     }
 
     @Override
@@ -265,6 +279,11 @@ public class LintOptionsStub extends BaseStub implements LintOptions {
     @Override
     public boolean getXmlReport() {
         return myXmlReport;
+    }
+
+    @Override
+    public boolean getSarifReport() {
+        return mySarifReport;
     }
 
     @Override

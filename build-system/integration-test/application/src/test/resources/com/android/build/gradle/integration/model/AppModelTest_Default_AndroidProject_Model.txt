@@ -553,6 +553,8 @@
        - htmlOutput              = (null)
        - xmlReport               = true
        - xmlOutput               = (null)
+       - sarifReport             = false
+       - sarifOutput             = (null)
        - isCheckReleaseBuilds    = false
        - isCheckDependencies     = false
        - baselineFile            = (null)

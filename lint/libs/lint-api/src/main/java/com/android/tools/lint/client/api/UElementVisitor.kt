@@ -1152,6 +1152,12 @@ internal class UElementVisitor constructor(
 
             return super.visitClass(node)
         }
+
+        override fun visitBinaryExpression(node: UBinaryExpression): Boolean {
+            annotationHandler?.visitBinaryExpression(mContext, node)
+
+            return super.visitBinaryExpression(node)
+        }
     }
 
     companion object {

@@ -591,8 +591,10 @@
        - textOutput              = stdout{!}
        - htmlReport              = true
        - htmlOutput              = {PROJECT}/lint-report.html{!}
-       - xmlReport               = false
+       - xmlReport               = true
        - xmlOutput               = {PROJECT}/lint-report.xml{!}
+       - sarifReport             = false
+       - sarifOutput             = (null)
        - isCheckReleaseBuilds    = true
        - isCheckDependencies     = false
        - baselineFile            = (null)

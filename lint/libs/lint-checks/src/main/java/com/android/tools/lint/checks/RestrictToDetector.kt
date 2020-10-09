@@ -22,6 +22,8 @@ import com.android.tools.lint.checks.AnnotationDetector.GUAVA_VISIBLE_FOR_TESTIN
 import com.android.tools.lint.checks.AnnotationDetector.RESTRICT_TO_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.VISIBLE_FOR_TESTING_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationUsageType
+import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_LHS
+import com.android.tools.lint.detector.api.AnnotationUsageType.ASSIGNMENT_RHS
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -69,6 +71,11 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun inheritAnnotation(annotation: String): Boolean {
         // Require restriction annotations to be annotated everywhere
         return false
+    }
+
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+        return type != ASSIGNMENT_LHS && type != ASSIGNMENT_RHS &&
+            super.isApplicableAnnotationUsage(type)
     }
 
     override fun visitAnnotationUsage(

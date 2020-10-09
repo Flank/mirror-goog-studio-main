@@ -2591,7 +2591,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     @@ -5 +5
                     -         targetSdkVersion 28
                     +         targetSdkVersion 30
-                    """)
+                    """
+                )
         } finally {
             GradleDetector.calendar = null
         }
@@ -2634,7 +2635,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     @@ -5 +5
                     -         targetSdkVersion 17
                     +         targetSdkVersion 30
-                    """)
+                    """
+                )
         } finally {
             GradleDetector.calendar = null
         }
@@ -2650,13 +2652,13 @@ class GradleDetectorTest : AbstractCheckTest() {
             lint().files(
                 gradle(
                     "" +
-                            "apply plugin: 'com.android.application'\n" +
-                            "\n" +
-                            "android {\n" +
-                            "    defaultConfig {\n" +
-                            "        targetSdkVersion 'O'\n" +
-                            "    }\n" +
-                            "}\n"
+                        "apply plugin: 'com.android.application'\n" +
+                        "\n" +
+                        "android {\n" +
+                        "    defaultConfig {\n" +
+                        "        targetSdkVersion 'O'\n" +
+                        "    }\n" +
+                        "}\n"
                 )
             )
                 .issues(EXPIRED_TARGET_SDK_VERSION, EXPIRING_TARGET_SDK_VERSION)
@@ -2677,7 +2679,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     @@ -5 +5
                     -         targetSdkVersion 'O'
                     +         targetSdkVersion 30
-                    """)
+                    """
+                )
         } finally {
             GradleDetector.calendar = null
         }
