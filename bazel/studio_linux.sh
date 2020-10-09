@@ -3,6 +3,9 @@
 # Build and test a set of targets via bazel using RBE.
 
 # http://g3doc/wireless/android/build_tools/g3doc/public/buildbot#environment-variables
+# AS_BUILD_NUMBER is the same as BUILD_NUMBER but omits the P for presubmit
+AS_BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
+AS_BUILD_NUMBER="${BUILD_NUMBER/P/0}"  # for AB presubmit: satisfy Integer.parseInt in BuildNumber.parseBuildNumber
 BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
 
 if [[ $BUILD_NUMBER != SNAPSHOT ]];
@@ -19,7 +22,6 @@ if [[ $BUILD_NUMBER =~ ^[0-9]+$ ]];
 then
   IS_POST_SUBMIT=true
 fi
-AS_BUILD_NUMBER="${BUILD_NUMBER/P/0}"  # for AB presubmit: satisfy Integer.parseInt in BuildNumber.parseBuildNumber
 
 declare -a detect_flake_args
 for arg in "$@"
