@@ -70,6 +70,7 @@ cc_test(
         "fake_simpleperf.h",
         "simpleperf_manager_test.cc",
         "simpleperf_test.cc",
+        "thread_parser_test.cc",
         "trace_manager_test.cc",
     ],
     copts = [
