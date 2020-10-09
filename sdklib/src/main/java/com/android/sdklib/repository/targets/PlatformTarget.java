@@ -307,6 +307,8 @@ public class PlatformTarget implements IAndroidTarget {
                         SdkConstants.FN_INTENT_CATEGORIES;
             case ANT:
                 return getLocation() + SdkConstants.OS_PLATFORM_ANT_FOLDER;
+            case CORE_FOR_SYSTEM_MODULES_JAR:
+                return getLocation() + SdkConstants.FN_CORE_FOR_SYSTEM_MODULES;
             default:
                 return getLocation();
         }

@@ -17,8 +17,10 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
+import com.android.SdkConstants.FN_CORE_FOR_SYSTEM_MODULES
 import com.android.aapt.Resources
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
+import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.repository.Revision
@@ -31,6 +33,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.file.Path
 import java.util.Properties
 
 class SdkDirectLoadingStrategyTest {
@@ -257,6 +260,13 @@ class SdkDirectLoadingStrategyTest {
         </ns2:repository>
     """.trimIndent()
 
+    private fun createCoreForSystemModulesJar(jarFile: Path, platformApiLevel: Int) {
+        // A empty fake jar represents core-for-system-modules.jar available from android sdk 30
+        if (platformApiLevel >= 30) {
+            JarCreatorFactory.make(jarFile).use {  }
+        }
+    }
+
     @get:Rule
     val testFolder = TemporaryFolder()
 
@@ -475,6 +485,16 @@ class SdkDirectLoadingStrategyTest {
         assertThat(directLoader.getEmulatorLibFolder()).isNotNull()
     }
 
+    @Test
+    fun loadCoreForSystemModulesJar() {
+        val platformVersion = "android-30"
+        configureSdkDirectory(platformDirectory = platformVersion, platformApiLevel = 30)
+
+        val directLoader = getDirectLoader(platformVersion)
+        assertThat(directLoader.loadedSuccessfully()).isTrue()
+        assertAllComponentsArePresent(directLoader, platformVersion)
+    }
+
     private fun getDirectLoader(
         platformHash: String = "android-28",
         buildTools: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION): SdkDirectLoadingStrategy {
@@ -516,6 +536,7 @@ class SdkDirectLoadingStrategyTest {
             val optionalJson = optionalDir.resolve("optional.json")
             optionalJson.createNewFile()
             optionalJson.writeText(PLATFORM_28_OPTIONAL_JSON)
+            createCoreForSystemModulesJar(platformRoot.resolve(FN_CORE_FOR_SYSTEM_MODULES).toPath(), platformApiLevel)
         }
 
         if (configureBuildTools) {
@@ -628,6 +649,11 @@ class SdkDirectLoadingStrategyTest {
             AndroidTargetHash.getVersionFromHash(platformHash))
         assertThat(sdkDirectLoadingStrategy.getTargetBootClasspath()).containsExactly(
             sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
+        if (platformHash.largerThanAndroidSdk30()) {
+            assertThat(sdkDirectLoadingStrategy.getCoreForSystemModulesJar()).isEqualTo(
+                sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_CORE_FOR_SYSTEM_MODULES}")
+            )
+        }
 
         val buildToolDirectory = sdkRoot.resolve("build-tools/30.0.2")
         assertThat(sdkDirectLoadingStrategy.getBuildToolsRevision()).isEqualTo(
@@ -654,5 +680,9 @@ class SdkDirectLoadingStrategyTest {
             "android.test.mock.jar",
             "android.test.base.jar",
             "android.test.runner.jar").map { optionalDir.resolve(it).absoluteFile }
+    }
+
+    private fun String.largerThanAndroidSdk30(): Boolean {
+        return this.split("-").last().toInt() >= 30
     }
 }

@@ -68,6 +68,8 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     int ANT                 = 24;
     /** OS path to the "uiautomator.jar" file. */
     int UI_AUTOMATOR_JAR    = 27;
+    /** OS path to the "core-for-system-modules.jar" file */
+    int CORE_FOR_SYSTEM_MODULES_JAR = 28;
 
     /**
      * Returns the target location.
