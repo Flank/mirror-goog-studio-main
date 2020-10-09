@@ -16,16 +16,16 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.JniLibsApkPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import com.android.sdklib.AndroidVersion.VersionCodes.M
 
-class JniLibsApkPackagingOptionsImpl(
+class JniLibsApkPackagingImpl(
     dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices,
     minSdk: Int
-) : JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices),
-    JniLibsApkPackagingOptions {
+) : JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices),
+    JniLibsApkPackaging {
 
     override val useLegacyPackaging =
         variantPropertiesApiServices.propertyOf(

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.packaging
 
-import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.ANDROIDTEST_DEBUG
@@ -34,7 +34,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
- * Integration tests for [JniLibsPackagingOptions]
+ * Integration tests for [JniLibsPackaging]
  */
 class NativeSoPackagingOptionsTest {
 

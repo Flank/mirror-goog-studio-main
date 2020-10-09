@@ -30,8 +30,8 @@ interface ApkPackaging : Packaging {
     /** PackagingOptions for dex files. Initialized from the corresponding DSL. */
     fun dex(action: DexPackagingOptions.() -> Unit)
 
-    override val jniLibs: JniLibsApkPackagingOptions
+    override val jniLibs: JniLibsApkPackaging
 
     /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
-    fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit)
+    fun jniLibs(action: JniLibsApkPackaging.() -> Unit)
 }

@@ -28,7 +28,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
 
-class ResourcesPackagingOptionsImplTest {
+class ResourcesPackagingImplTest {
 
     private lateinit var dslPackagingOptions: PackagingOptions
     private val projectServices = createProjectServices()
@@ -55,7 +55,7 @@ class ResourcesPackagingOptionsImplTest {
         )
 
         val resourcesPackagingOptionsImpl =
-            ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         val expectedExcludes = defaultExcludes.toMutableSet()
         expectedExcludes.addAll(listOf("foo", "bar", "baz"))
@@ -77,7 +77,7 @@ class ResourcesPackagingOptionsImplTest {
         )
 
         val resourcesPackagingOptionsImpl =
-            ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         assertThat(resourcesPackagingOptionsImpl.pickFirsts.get())
             .containsExactly("foo", "bar", "baz")
@@ -96,7 +96,7 @@ class ResourcesPackagingOptionsImplTest {
         )
 
         val resourcesPackagingOptionsImpl =
-            ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         val expectedMerges = defaultMerges.toMutableSet()
         expectedMerges.addAll(listOf("foo", "bar", "baz"))
@@ -111,7 +111,7 @@ class ResourcesPackagingOptionsImplTest {
         dslPackagingOptions.resources.merges.add("bar")
 
         val resourcesPackagingOptionsImpl =
-            ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         val expectedMerges = defaultMerges.toMutableSet()
         expectedMerges.addAll(listOf("foo", "bar"))
@@ -127,7 +127,7 @@ class ResourcesPackagingOptionsImplTest {
         dslPackagingOptions.resources.merges.remove("/META-INF/services/**")
 
         val resourcesPackagingOptionsImpl =
-            ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         val expectedMerges = defaultMerges.toMutableSet()
         expectedMerges.addAll(listOf("foo", "bar"))

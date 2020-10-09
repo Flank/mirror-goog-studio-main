@@ -23,7 +23,7 @@ import org.gradle.api.provider.Property
  * Defines an APK variant's packaging options for native library (.so) files.
  */
 @Incubating
-interface JniLibsApkPackagingOptions : JniLibsPackagingOptions {
+interface JniLibsApkPackaging : JniLibsPackaging {
 
     /**
      * Whether to use the legacy convention of compressing all .so files in the APK.

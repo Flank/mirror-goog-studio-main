@@ -16,16 +16,16 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.packaging.defaultMerges
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import java.util.concurrent.Callable
 
-open class ResourcesPackagingOptionsImpl(
+open class ResourcesPackagingImpl(
     private val dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
-) : ResourcesPackagingOptions {
+) : ResourcesPackaging {
 
     override val excludes =
         variantPropertiesApiServices.setPropertyOf(

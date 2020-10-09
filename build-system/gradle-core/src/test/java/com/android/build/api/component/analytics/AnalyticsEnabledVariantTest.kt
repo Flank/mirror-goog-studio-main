@@ -17,9 +17,9 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.Packaging
-import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -148,8 +148,8 @@ class AnalyticsEnabledVariantTest {
     @Test
     fun getPackagingOptions() {
         val packagingOptions = Mockito.mock(Packaging::class.java)
-        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackaging::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)

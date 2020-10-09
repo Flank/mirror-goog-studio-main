@@ -17,7 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.JniLibsApkPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.api.variant.DexPackagingOptions
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -41,14 +41,14 @@ open class AnalyticsEnabledApkPackaging @Inject constructor(
         delegate.dex(action)
     }
 
-    override val jniLibs: JniLibsApkPackagingOptions
+    override val jniLibs: JniLibsApkPackaging
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_VALUE
             return delegate.jniLibs
         }
 
-    override fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit) {
+    override fun jniLibs(action: JniLibsApkPackaging.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_ACTION_VALUE
         delegate.jniLibs(action)

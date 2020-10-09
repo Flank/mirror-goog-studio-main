@@ -25,11 +25,11 @@ import org.gradle.api.Incubating
 interface Packaging {
 
     /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
-    val jniLibs: JniLibsPackagingOptions
+    val jniLibs: JniLibsPackaging
 
     /** PackagingOptions for java resources. Initialized from the corresponding DSL. */
-    val resources: ResourcesPackagingOptions
+    val resources: ResourcesPackaging
 
     /** PackagingOptions for java resources. Initialized from the corresponding DSL. */
-    fun resources(action: ResourcesPackagingOptions.() -> Unit)
+    fun resources(action: ResourcesPackaging.() -> Unit)
 }

@@ -18,8 +18,8 @@ package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackaging
-import com.android.build.api.variant.JniLibsApkPackagingOptions
-import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackaging
+import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.api.variant.TestVariant
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
@@ -154,8 +154,8 @@ class AnalyticsEnabledTestVariantTest {
     @Test
     fun getPackagingOptions() {
         val packagingOptions = Mockito.mock(ApkPackaging::class.java)
-        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
@@ -180,8 +180,8 @@ class AnalyticsEnabledTestVariantTest {
     @Test
     fun packagingOptionsActions() {
         val packagingOptions = Mockito.mock(ApkPackaging::class.java)
-        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)

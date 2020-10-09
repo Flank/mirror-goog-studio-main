@@ -17,7 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.Packaging
-import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 
 open class PackagingImpl(
@@ -26,12 +26,12 @@ open class PackagingImpl(
 ) : Packaging {
 
     override val jniLibs =
-        JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+        JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
     override val resources =
-        ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+        ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
-    override fun resources(action: ResourcesPackagingOptions.() -> Unit) {
+    override fun resources(action: ResourcesPackaging.() -> Unit) {
         action.invoke(resources)
     }
 }

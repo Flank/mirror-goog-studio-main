@@ -18,7 +18,7 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.DexPackagingOptions
-import com.android.build.api.variant.JniLibsApkPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackaging
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 
 class ApkPackagingImpl(
@@ -35,12 +35,12 @@ class ApkPackagingImpl(
     }
 
     override val jniLibs =
-        JniLibsApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices, minSdk)
+        JniLibsApkPackagingImpl(dslPackagingOptions, variantPropertiesApiServices, minSdk)
 
-    override fun jniLibs(action: JniLibsApkPackagingOptions.() -> Unit) {
+    override fun jniLibs(action: JniLibsApkPackaging.() -> Unit) {
         action.invoke(jniLibs)
     }
 
     override val resources =
-        ResourcesApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+        ResourcesApkPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 }

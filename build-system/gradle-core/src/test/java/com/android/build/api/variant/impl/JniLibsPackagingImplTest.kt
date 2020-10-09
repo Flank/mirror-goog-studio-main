@@ -26,7 +26,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
 
-class JniLibsPackagingOptionsImplTest {
+class JniLibsPackagingImplTest {
 
     private lateinit var dslPackagingOptions: PackagingOptions
     private val projectServices = createProjectServices()
@@ -51,7 +51,7 @@ class JniLibsPackagingOptionsImplTest {
         )
 
         val jniLibsPackagingOptions =
-            JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         assertThat(jniLibsPackagingOptions.excludes.get()).containsExactly("foo", "bar", "baz")
     }
@@ -69,7 +69,7 @@ class JniLibsPackagingOptionsImplTest {
         )
 
         val jniLibsPackagingOptions =
-            JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         assertThat(jniLibsPackagingOptions.pickFirsts.get()).containsExactly("foo", "bar", "baz")
     }
@@ -87,7 +87,7 @@ class JniLibsPackagingOptionsImplTest {
         )
 
         val jniLibsPackagingOptions =
-            JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         assertThat(jniLibsPackagingOptions.keepDebugSymbols.get())
             .containsExactly("foo", "bar", "baz")

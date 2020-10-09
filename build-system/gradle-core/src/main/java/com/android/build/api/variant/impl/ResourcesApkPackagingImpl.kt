@@ -19,10 +19,10 @@ package com.android.build.api.variant.impl
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import java.util.concurrent.Callable
 
-class ResourcesApkPackagingOptionsImpl(
+class ResourcesApkPackagingImpl(
     dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
-) : ResourcesPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices) {
+) : ResourcesPackagingImpl(dslPackagingOptions, variantPropertiesApiServices) {
 
     override val excludes =
         variantPropertiesApiServices.setPropertyOf(

@@ -19,8 +19,8 @@ package com.android.build.api.component.analytics
 import com.android.build.api.variant.AaptOptions
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.DynamicFeatureVariant
-import com.android.build.api.variant.JniLibsApkPackagingOptions
-import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.JniLibsApkPackaging
+import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
@@ -74,8 +74,8 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
     @Test
     fun getPackagingOptions() {
         val packagingOptions = Mockito.mock(ApkPackaging::class.java)
-        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
@@ -100,8 +100,8 @@ class AnalyticsEnabledDynamicFeatureVariantTest {
     @Test
     fun packagingOptionsActions() {
         val packagingOptions = Mockito.mock(ApkPackaging::class.java)
-        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackagingOptions::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        val jniLibsApkPackagingOptions = Mockito.mock(JniLibsApkPackaging::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsApkPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
         Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)

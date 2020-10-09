@@ -20,7 +20,7 @@ import org.gradle.api.Incubating
 import org.gradle.api.provider.SetProperty
 
 @Incubating
-interface ResourcesPackagingOptions {
+interface ResourcesPackaging {
 
     /**
      * The set of excluded patterns. Java resources matching any of these patterns do not get

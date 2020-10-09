@@ -16,7 +16,7 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 
@@ -27,9 +27,9 @@ class LibraryPackagingImpl(
     LibraryPackaging {
 
     override val jniLibs =
-        JniLibsPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+        JniLibsPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
-    override fun jniLibs(action: JniLibsPackagingOptions.() -> Unit) {
+    override fun jniLibs(action: JniLibsPackaging.() -> Unit) {
         action.invoke(jniLibs)
     }
 }

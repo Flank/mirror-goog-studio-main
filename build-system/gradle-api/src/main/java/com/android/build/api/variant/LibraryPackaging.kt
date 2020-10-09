@@ -25,5 +25,5 @@ import org.gradle.api.Incubating
 interface LibraryPackaging : Packaging {
 
     /** PackagingOptions for native libraries. Initialized from the corresponding DSL. */
-    fun jniLibs(action: JniLibsPackagingOptions.() -> Unit)
+    fun jniLibs(action: JniLibsPackaging.() -> Unit)
 }

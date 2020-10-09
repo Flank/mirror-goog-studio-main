@@ -16,15 +16,15 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
 import java.util.concurrent.Callable
 
-open class JniLibsPackagingOptionsImpl(
+open class JniLibsPackagingImpl(
     dslPackagingOptions: com.android.build.gradle.internal.dsl.PackagingOptions,
     variantPropertiesApiServices: VariantPropertiesApiServices
-) : JniLibsPackagingOptions {
+) : JniLibsPackaging {
 
     override val excludes =
         variantPropertiesApiServices.setPropertyOf(

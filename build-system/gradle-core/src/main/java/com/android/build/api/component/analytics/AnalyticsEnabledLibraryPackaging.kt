@@ -16,7 +16,7 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.api.variant.LibraryPackaging
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -27,7 +27,7 @@ open class AnalyticsEnabledLibraryPackaging @Inject constructor(
         stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledPackaging(delegate, stats), LibraryPackaging {
 
-    override fun jniLibs(action: JniLibsPackagingOptions.() -> Unit) {
+    override fun jniLibs(action: JniLibsPackaging.() -> Unit) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.JNI_LIBS_PACKAGING_OPTIONS_ACTION_VALUE
         delegate.jniLibs(action)
