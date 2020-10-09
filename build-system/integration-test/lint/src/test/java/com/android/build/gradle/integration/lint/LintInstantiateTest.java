@@ -49,7 +49,7 @@ public class LintInstantiateTest {
         File lintReport = project.file("app/lint-results.txt");
         assertThat(lintReport).contains("No issues found.");
 
-        File sarifFile = project.file("app/lint-results.sarif");
+        File sarifFile = new File(project.getSubproject("app").getBuildDir(), "reports/lint-results.sarif");
         assertThat(sarifFile).exists();
         assertThat(sarifFile).contains("\"$schema\" : \"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/");
     }

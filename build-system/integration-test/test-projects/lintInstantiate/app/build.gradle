@@ -39,7 +39,7 @@ android {
         checkDependencies true
         ignoreTestSources true
         abortOnError true
-        sarifOutput file("lint-results.sarif")
+        sarifOutput file("$reportsDir/lint-results.sarif")
     }
 
 }
