@@ -43,7 +43,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
-import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.StringOption
@@ -107,7 +106,6 @@ data class CxxConfigurationParameters(
     val splitsAbiFilterSet: Set<String>,
     val intermediatesFolder: File,
     val gradleModulePathName: String,
-    val isNativeCompilerSettingsCacheEnabled: Boolean,
     val isBuildOnlyTargetAbiEnabled: Boolean,
     val ideBuildTargetAbi: String?,
     val isCmakeBuildCohabitationEnabled: Boolean,
@@ -280,7 +278,6 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,
         gradleModulePathName = global.project.path,
-        isNativeCompilerSettingsCacheEnabled = option(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE),
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),
         isCmakeBuildCohabitationEnabled = option(ENABLE_CMAKE_BUILD_COHABITATION),

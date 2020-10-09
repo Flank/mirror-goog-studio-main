@@ -372,8 +372,6 @@ open class BasicModuleModelMock {
 
             doReturn(FakeGradleProvider(FakeGradleDirectory(sdkDir))).`when`(sdkComponents).sdkDirectoryProvider
             doReturn(false).`when`(projectOptions)
-                .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)
-            doReturn(false).`when`(projectOptions)
                 .get(BooleanOption.ENABLE_PROFILE_JSON)
             doReturn(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION.defaultValue).`when`(projectOptions)
                 .get(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION)

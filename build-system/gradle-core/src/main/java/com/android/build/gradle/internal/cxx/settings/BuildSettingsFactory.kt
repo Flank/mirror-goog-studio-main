@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+// Null checks are required here because Gson deserialization may return null
+@file:Suppress("UselessCallOnCollection", "UselessCallOnNotNull")
+
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment

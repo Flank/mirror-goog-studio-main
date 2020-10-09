@@ -44,7 +44,6 @@ fun createCxxProjectModel(
       rootBuildGradleFolder = configurationParameters.rootDir,
       cxxFolder = join(configurationParameters.rootDir, ".cxx"),
       sdkFolder = sdkComponents.sdkDirectoryProvider.get().asFile,
-      isNativeCompilerSettingsCacheEnabled = configurationParameters.isNativeCompilerSettingsCacheEnabled,
       isBuildOnlyTargetAbiEnabled = configurationParameters.isBuildOnlyTargetAbiEnabled,
       ideBuildTargetAbi = configurationParameters.ideBuildTargetAbi,
       isCmakeBuildCohabitationEnabled = configurationParameters.isCmakeBuildCohabitationEnabled,

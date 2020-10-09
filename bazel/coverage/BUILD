@@ -88,7 +88,6 @@ coverage_report(
     tests = [
         "//tools/base/build-system/gradle-core:tests.test",
         "//tools/base/build-system/integration-test/native:CmakeBasicProjectTest",
-        "//tools/base/build-system/integration-test/native:CmakeExtensionsTest",
         "//tools/base/build-system/integration-test/native:CmakeGradleTargetsTest",
         "//tools/base/build-system/integration-test/native:CmakeInjectedAbiSplitTest",
         "//tools/base/build-system/integration-test/native:CmakeJniLibTest",
@@ -671,7 +670,6 @@ coverage_report(
         "//tools/base/build-system/integration-test/databinding:tests",
         "//tools/base/build-system/integration-test/framework:framework_tests.test",
         "//tools/base/build-system/integration-test/native:CmakeBasicProjectTest",
-        "//tools/base/build-system/integration-test/native:CmakeExtensionsTest",
         "//tools/base/build-system/integration-test/native:CmakeGradleTargetsTest",
         "//tools/base/build-system/integration-test/native:CmakeInjectedAbiSplitTest",
         "//tools/base/build-system/integration-test/native:CmakeJniLibTest",

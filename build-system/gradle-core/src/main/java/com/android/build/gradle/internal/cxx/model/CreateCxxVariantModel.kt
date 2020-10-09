@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.gradle.generator.*
-import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment.Companion.requireExplicitLogger
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
 import java.io.File

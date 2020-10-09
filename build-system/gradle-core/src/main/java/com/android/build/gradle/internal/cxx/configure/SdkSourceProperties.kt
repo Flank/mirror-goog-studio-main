@@ -83,7 +83,7 @@ data class SdkSourceProperties(private val map : Map<String, String>) {
             if (!folder.isDirectory || !sourcePropertiesFile(folder).isFile) {
                 return null
             }
-            val properties = SdkSourceProperties.fromInstallFolder(folder)
+            val properties = fromInstallFolder(folder)
             return properties.getValue(SdkSourceProperty.SDK_PKG_REVISION)
         }
 

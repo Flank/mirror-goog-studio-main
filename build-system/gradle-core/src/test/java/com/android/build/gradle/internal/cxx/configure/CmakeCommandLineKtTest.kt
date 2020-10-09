@@ -95,7 +95,7 @@ class CmakeCommandLineKtTest {
 
     @Test
     fun hasBooleanPropertySet() {
-        val prop = ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED
+        val prop = C_TEST_WAS_RUN
         val definedTrue = DefineProperty.from(prop, "true")
         val definedFalse = DefineProperty.from(prop, "false")
         assertThat(listOf<CommandLineArgument>().getCmakeBooleanProperty(prop)).isNull()

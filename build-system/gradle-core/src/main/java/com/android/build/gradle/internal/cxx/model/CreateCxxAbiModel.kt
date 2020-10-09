@@ -56,7 +56,6 @@ fun createCxxAbiModel(
                 CxxCmakeAbiModel(
                     cmakeServerLogFile = join(cxxBuildFolder, "cmake_server_log.txt"),
                     effectiveConfiguration = CMakeSettingsConfiguration(),
-                    cmakeWrappingBaseFolder = join(variant.gradleBuildOutputFolder, abi.tag),
                     cmakeArtifactsBaseFolder = cxxBuildFolder
                 )
             } else {

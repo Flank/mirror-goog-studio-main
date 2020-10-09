@@ -45,7 +45,7 @@ class JsonGenerationInvalidationState(
                 !ExternalNativeBuildTaskUtils.fileIsUpToDate(buildFile, expectedJson)
             }
         }
-    private val rebuildDueToDependentBuildFileChanged = !dependentBuildFilesChanged.isEmpty()
+    private val rebuildDueToDependentBuildFileChanged = dependentBuildFilesChanged.isNotEmpty()
     private val rebuildDueToPrefabConfigurationChange =
         currentPrefabConfiguration != previousPrefabConfiguration
     val softRegeneration = rebuildDueToDependentBuildFileChanged

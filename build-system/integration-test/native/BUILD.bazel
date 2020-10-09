@@ -79,14 +79,6 @@ WINDOWS_DISABLED_TAG = [
 ]
 
 single_gradle_integration_test(
-    name = "CmakeExtensionsTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
     name = "CmakeBasicProjectTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,

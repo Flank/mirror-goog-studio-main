@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.SdkConstants.FN_LOCAL_PROPERTIES
-import com.android.build.gradle.internal.cxx.logging.infoln
 import com.google.common.base.Charsets
 import java.io.File
 import java.io.FileInputStream

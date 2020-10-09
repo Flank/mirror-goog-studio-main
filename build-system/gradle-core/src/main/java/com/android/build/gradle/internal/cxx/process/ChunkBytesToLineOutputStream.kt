@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.process
 
-import org.gradle.api.logging.Logging
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.Arrays
@@ -58,7 +57,7 @@ class ChunkBytesToLineOutputStream(
 
     private fun writeByteToBuffer(b: Int) {
         if (nextByteIndex == buffer.size) {
-            buffer = Arrays.copyOf(buffer, buffer.size * 2)
+            buffer = buffer.copyOf(buffer.size * 2)
         }
         buffer[nextByteIndex] = b.toByte()
         nextByteIndex++
