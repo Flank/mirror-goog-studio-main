@@ -4,32 +4,28 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.repository",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.repository.iml"],
     lint_baseline = "lint_baseline.xml",
+    project = "unb",
     test_resources = ["src/test/resources"],
     test_srcs = [
         "src/test/java",
         "src/testFixtures/java",
     ],
     visibility = ["//visibility:public"],
-    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/idea/.idea/libraries:Guava",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:commons-compress",
-        "//tools/idea/.idea/libraries:jimfs[test]",
-        "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/idea/.idea/libraries:mockito[test]",
-        "//tools/idea/.idea/libraries:Objenesis[test]",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
-        "//tools/idea/.idea/libraries:jaxb-api",
-        "//tools/idea/.idea/libraries:jaxb-runtime",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
+        "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
+        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
+        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )
 
@@ -103,29 +99,4 @@ coverage_java_test(
     jvm_flags = ["-Dtest.suite.jar=tools.testlib.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [":tools.testlib"],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.repository",
-    srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.repository.iml"],
-    lint_baseline = "lint_baseline.xml",
-    project = "unb",
-    test_resources = ["src/test/resources"],
-    test_srcs = [
-        "src/test/java",
-        "src/testFixtures/java",
-    ],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
-        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-    ],
 )

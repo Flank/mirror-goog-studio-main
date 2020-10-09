@@ -12,46 +12,22 @@ android_java_proto_library(
     visibility = ["//visibility:public"],
 )
 
-# managed by go/iml_to_build
-iml_module(
-    name = "studio.android.sdktools.deploy.service",
-    srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.deploy.service.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    test_srcs = ["src/test/java"],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    deps = [
-        "//tools/idea/.idea/libraries:studio-grpc",
-        "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/idea/.idea/libraries:protobuf",
-        "//tools/idea/.idea/libraries:studio-proto",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/idea/.idea/libraries:easymock[test]",
-        "//tools/idea/.idea/libraries:Objenesis[test]",
-        "//tools/idea/.idea/libraries:mockito[test]",
-        "//tools/base/deploy/service:deploy-service-proto",
-        "//tools/base/deploy/deployer:tools.deployer",
-    ],
-)
-
 java_binary(
     name = "deploy.service",
-    main_class = "com.android.deploy.service.DeployServiceMain",
     srcs = glob([
         "src/main/**/*.java",
     ]),
+    main_class = "com.android.deploy.service.DeployServiceMain",
     visibility = ["//visibility:public"],
     deps = [
         ":deploy-service-proto",
         "//tools/base/annotations",
+        "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/deploy/deployer:tools.deployer",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:protobuf",
         "//tools/idea/.idea/libraries:studio-grpc",
         "//tools/idea/.idea/libraries:studio-proto",
-        "//tools/base/common:studio.android.sdktools.common",
-        "//tools/base/deploy/deployer:tools.deployer",
     ],
 )

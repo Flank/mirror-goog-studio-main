@@ -59,15 +59,6 @@ sh_test(
 
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
-# managed by go/iml_to_build
-iml_module(
-    name = "studio.android.sdktools.tracer",
-    srcs = ["src"],
-    iml_files = ["android.sdktools.tracer.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    visibility = ["//visibility:public"],
-)
-
 # managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.tracer",

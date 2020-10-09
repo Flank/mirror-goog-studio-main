@@ -10,7 +10,7 @@ fileset(
     mappings = {"//tools/buildSrc/base:": "com/android/builder/model/"},
 )
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.builder-model",
     srcs = ["src/main/java"],
@@ -20,15 +20,16 @@ iml_module(
         "-target 6",
     ],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    project = "unb",
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
-        "//tools/idea/.idea/libraries:Guava[test]",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:unb.Guava[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )
@@ -77,29 +78,5 @@ kotlin_test(
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
-    ],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.builder-model",
-    srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.builder-model.iml"],
-    javacopts = [
-        "-source 6",
-        "-target 6",
-    ],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    project = "unb",
-    test_resources = ["src/test/resources"],
-    test_srcs = ["src/test/java"],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:unb.Guava[test]",
-        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )

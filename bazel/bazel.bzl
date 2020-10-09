@@ -570,9 +570,6 @@ def iml_module(
         back_deps = [],
         bundled_deps = [],
         exec_properties = {}):
-    if project != PROJECT:
-        return
-
     prod_deps = []
     test_deps = []
     for dep in deps:

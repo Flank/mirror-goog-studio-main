@@ -2,28 +2,27 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.layoutlib-api",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.layoutlib-api.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    project = "unb",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/idea/.idea/libraries:kxml2",
-        "//tools/idea/.idea/libraries:JUnit4",
+        "//tools/adt/idea/.idea/libraries:unb.kxml2",
         "//tools/base/annotations:studio.android.sdktools.android-annotations",
     ],
     # do not sort: must match IML order
     deps = [
-        "//tools/idea/.idea/libraries:kxml2",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/adt/idea/.idea/libraries:unb.kxml2",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/idea/.idea/libraries:Guava",
-        "//tools/idea/.idea/libraries:jetbrains-annotations",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
     ],
 )
 
@@ -60,29 +59,5 @@ coverage_java_test(
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
-    ],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.layoutlib-api",
-    srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.layoutlib-api.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    project = "unb",
-    test_srcs = ["src/test/java"],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    exports = [
-        "//tools/adt/idea/.idea/libraries:unb.kxml2",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations",
-    ],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:unb.kxml2",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
     ],
 )

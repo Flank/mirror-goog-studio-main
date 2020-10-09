@@ -1,15 +1,21 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.deployer",
     srcs = ["src/main/java"],
     bundle_data = [
         "//tools/base/deploy/installer:android-installer",
     ],
+    bundled_deps = [
+        "//tools/base/deploy/deployer:unb.deploy_java_proto",
+        "//prebuilts/r8:unb.r8",
+        "//tools/base/deploy/deployer:unb.libjava_version",
+    ],
     iml_files = ["android.sdktools.deployer.iml"],
     lint_baseline = "lint_baseline.xml",
+    project = "unb",
     tags = [
         "no_mac",
     ],
@@ -25,32 +31,30 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/base/deploy/proto:deploy_java_proto",
-        "//tools/idea/.idea/libraries:protobuf",
+        "//tools/base/deploy/deployer:unb.deploy_java_proto",
+        "//tools/adt/idea/.idea/libraries:unb.protobuf",
     ],
     # do not sort: must match IML order
     deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/deploy/proto:deploy_java_proto",
-        "//tools/idea/.idea/libraries:protobuf",
-        "//prebuilts/r8",
-        "//tools/base/deploy/deployer:java_version",
-        "//tools/idea/.idea/libraries:sqlite",
-        "//tools/idea/.idea/libraries:mockito[test]",
-        "//tools/idea/.idea/libraries:Objenesis[test]",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
+        "//tools/base/deploy/deployer:unb.deploy_java_proto",
+        "//tools/adt/idea/.idea/libraries:unb.protobuf",
+        "//prebuilts/r8:unb.r8",
+        "//tools/base/deploy/deployer:unb.libjava_version",
+        "//tools/adt/idea/.idea/libraries:unb.sqlite",
+        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
         "//tools/base/tracer:studio.android.sdktools.tracer[module]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
-        "//tools/idea/.idea/libraries:studio-proto",
+        "//tools/adt/idea/.idea/libraries:unb.studio-proto",
         "//tools/base/perf-logger:studio.perf-logger[module, test]",
-        "//tools/base/deploy/installer/tests:fake_device_proto[test]",
-        "//tools/idea/.idea/libraries:studio-grpc[test]",
+        "//tools/base/deploy/deployer:unb.fake_device_proto[test]",
+        "//tools/adt/idea/.idea/libraries:unb.studio-grpc[test]",
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
-        "//tools/idea/.idea/libraries:hamcrest[test]",
     ],
 )
 
@@ -180,61 +184,4 @@ java_import(
         "unb",
     ],
     visibility = ["//visibility:public"],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.deployer",
-    srcs = ["src/main/java"],
-    bundle_data = [
-        "//tools/base/deploy/installer:android-installer",
-    ],
-    bundled_deps = [
-        "//tools/base/deploy/deployer:unb.deploy_java_proto",
-        "//prebuilts/r8:unb.r8",
-        "//tools/base/deploy/deployer:unb.libjava_version",
-    ],
-    iml_files = ["android.sdktools.deployer.iml"],
-    lint_baseline = "lint_baseline.xml",
-    project = "unb",
-    tags = [
-        "no_mac",
-    ],
-    test_data = glob(["src/test/resource/**"]) + select({
-        "//tools/base/bazel:windows": [],
-        "//conditions:default": [
-            "//tools/base/deploy/installer:test-installer",
-            "//tools/base/deploy/installer/tests:artifacts",
-        ],
-    }),
-    test_resources = ["src/test/resource"],
-    test_srcs = ["src/test/java"],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    exports = [
-        "//tools/base/deploy/deployer:unb.deploy_java_proto",
-        "//tools/adt/idea/.idea/libraries:unb.protobuf",
-    ],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/deploy/deployer:unb.deploy_java_proto",
-        "//tools/adt/idea/.idea/libraries:unb.protobuf",
-        "//prebuilts/r8:unb.r8",
-        "//tools/base/deploy/deployer:unb.libjava_version",
-        "//tools/adt/idea/.idea/libraries:unb.sqlite",
-        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
-        "//tools/base/tracer:studio.android.sdktools.tracer[module]",
-        "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.studio-proto",
-        "//tools/base/perf-logger:studio.perf-logger[module, test]",
-        "//tools/base/deploy/deployer:unb.fake_device_proto[test]",
-        "//tools/adt/idea/.idea/libraries:unb.studio-grpc[test]",
-        "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
-    ],
 )

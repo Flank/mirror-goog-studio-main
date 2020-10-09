@@ -3,22 +3,23 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:utils.bzl", "replace_manifest")
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.lint-model",
     srcs = ["libs/lint-model/src/main/java"],
     iml_files = ["libs/lint-model/android.sdktools.lint-model.iml"],
     lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    project = "unb",
     visibility = ["//visibility:public"],
-    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
         "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model[module]",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
-        "//tools/idea/.idea/libraries:kxml2",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:unb.kxml2",
     ],
 )
 
@@ -56,91 +57,38 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
     iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
     lint_baseline = "libs/lint-api/empty_baseline.xml",
-    # do not sort: must match IML order
-    test_runtime_deps = [
-        "//tools/idea/plugins/IntelliLang/intellilang-jps-plugin:intellij.java.langInjection.jps",
-        "//tools/idea/plugins/groovy/jps-plugin:intellij.groovy.jps",
-        "//tools/idea/plugins/java-decompiler/plugin:intellij.java.decompiler",
-        "//tools/idea/plugins/properties:intellij.properties",
-        "//tools/idea/jvm/jvm-analysis-java-tests:intellij.jvm.analysis.java.tests",
-        "//tools/idea/uast/uast-tests:intellij.platform.uast.tests",
-        "//tools/idea/java/typeMigration:intellij.java.typeMigration",
-        "//tools/idea/java/manifest:intellij.java.manifest",
-        "//tools/idea/plugins/java-i18n:intellij.java.i18n",
-        "//tools/idea/plugins/IntelliLang:intellij.java.langInjection",
-        "//tools/idea/plugins/testng:intellij.testng",
-        "//tools/idea/plugins/junit:intellij.junit",
-        "//tools/idea:intellij.java.ui.tests",
-        "//tools/idea/plugins/coverage:intellij.java.coverage",
-        "//tools/idea/plugins/ui-designer:intellij.java.guiForms.designer",
-        "//tools/idea/plugins/groovy/groovy-psi:intellij.groovy.psi",
-        "//tools/idea/plugins/eclipse:intellij.eclipse",
-        "//tools/idea/java/plugin:intellij.java.plugin",
-        "//tools/idea/java/compiler/instrumentation-util-8:intellij.java.compiler.instrumentationUtil.java8",
-        "//tools/idea/.idea/libraries:precompiled_jshell-frontend",
-    ],
+    project = "unb",
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/idea/.idea/libraries:asm-tools",
+        "//tools/adt/idea/.idea/libraries:unb.asm-tools",
         "//tools/base/annotations:studio.android.sdktools.android-annotations",
-        "//tools/idea/.idea/libraries:Guava",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
         "//tools/base/lint:studio.android.sdktools.lint-model",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
-        "//tools/idea/java/java-psi-api:intellij.java.psi",
-        "//tools/idea/java/java-psi-impl:intellij.java.psi.impl",
         "//tools/base/build-system:studio.android.sdktools.manifest-merger",
-        "//tools/idea/uast/uast-common:intellij.platform.uast",
-        "//tools/idea/uast/uast-java:intellij.java.uast",
-        "//tools/idea/.idea/libraries:kotlin-plugin",
-    ],
-    # do not sort: must match IML order
-    runtime_deps = [
-        "//tools/idea/.idea/libraries:javax.activation",
-        "//tools/idea/.idea/libraries:delight-rhino-sandbox",
-        "//tools/idea/.idea/libraries:rhino",
-        "//tools/idea/.idea/libraries:netty-handler-proxy",
-        "//tools/idea/jvm/jvm-analysis-impl:intellij.jvm.analysis.impl",
-        "//tools/idea/platform/credential-store:intellij.platform.credentialStore",
-        "//tools/idea/platform/lvcs-impl:intellij.platform.lvcs.impl",
-        "//tools/idea/platform/statistics/devkit:intellij.platform.statistics.devkit",
-        "//tools/idea/platform/workspaceModel/ide:intellij.platform.workspaceModel.ide",
-        "//tools/idea/platform/tasks-platform-impl:intellij.platform.tasks.impl",
-        "//tools/idea/platform/diagnostic:intellij.platform.diagnostic",
-        "//tools/idea/.idea/libraries:error-prone-annotations",
-        "//tools/idea/.idea/libraries:javax.annotation-api",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-jsr223",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-json",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-templates",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-xml",
-        "//tools/idea/java/ide-resources:intellij.java.ide.resources",
-        "//prebuilts/tools/common/m2/repository/com/jetbrains/intellij/documentation/tips-intellij-idea-community/202.13:jar",
     ],
     # do not sort: must match IML order
     deps = [
-        "//tools/idea/.idea/libraries:asm-tools",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
+        "//tools/adt/idea/.idea/libraries:unb.asm-tools",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/idea/.idea/libraries:Guava",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
         "//tools/base/lint:studio.android.sdktools.lint-model[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",
-        "//tools/idea/java/java-psi-api:intellij.java.psi[module]",
-        "//tools/idea/java/java-psi-impl:intellij.java.psi.impl[module]",
         "//tools/base/build-system:studio.android.sdktools.manifest-merger[module]",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
-        "//tools/idea/.idea/libraries:kotlin-reflect",
-        "//tools/idea/uast/uast-common:intellij.platform.uast[module]",
-        "//tools/idea/uast/uast-java:intellij.java.uast[module]",
-        "//tools/idea/.idea/libraries:kotlin-plugin",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )
 
@@ -192,65 +140,22 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
     iml_files = ["libs/lint-checks/android.sdktools.lint-checks.iml"],
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
+    project = "unb",
     resources = ["libs/lint-checks/src/main/resources"],
-    # do not sort: must match IML order
-    test_runtime_deps = [
-        "//tools/idea/plugins/IntelliLang/intellilang-jps-plugin:intellij.java.langInjection.jps",
-        "//tools/idea/plugins/groovy/jps-plugin:intellij.groovy.jps",
-        "//tools/idea/plugins/java-decompiler/plugin:intellij.java.decompiler",
-        "//tools/idea/plugins/properties:intellij.properties",
-        "//tools/idea/jvm/jvm-analysis-java-tests:intellij.jvm.analysis.java.tests",
-        "//tools/idea/uast/uast-tests:intellij.platform.uast.tests",
-        "//tools/idea/java/typeMigration:intellij.java.typeMigration",
-        "//tools/idea/java/manifest:intellij.java.manifest",
-        "//tools/idea/plugins/java-i18n:intellij.java.i18n",
-        "//tools/idea/plugins/IntelliLang:intellij.java.langInjection",
-        "//tools/idea/plugins/testng:intellij.testng",
-        "//tools/idea/plugins/junit:intellij.junit",
-        "//tools/idea:intellij.java.ui.tests",
-        "//tools/idea/plugins/coverage:intellij.java.coverage",
-        "//tools/idea/plugins/ui-designer:intellij.java.guiForms.designer",
-        "//tools/idea/plugins/groovy/groovy-psi:intellij.groovy.psi",
-        "//tools/idea/plugins/eclipse:intellij.eclipse",
-        "//tools/idea/java/plugin:intellij.java.plugin",
-        "//tools/idea/java/compiler/instrumentation-util-8:intellij.java.compiler.instrumentationUtil.java8",
-        "//tools/idea/.idea/libraries:precompiled_jshell-frontend",
-    ],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/lint:studio.android.sdktools.lint-api"],
     # do not sort: must match IML order
-    runtime_deps = [
-        "//tools/idea/.idea/libraries:javax.activation",
-        "//tools/idea/.idea/libraries:delight-rhino-sandbox",
-        "//tools/idea/.idea/libraries:rhino",
-        "//tools/idea/.idea/libraries:netty-handler-proxy",
-        "//tools/idea/jvm/jvm-analysis-impl:intellij.jvm.analysis.impl",
-        "//tools/idea/platform/credential-store:intellij.platform.credentialStore",
-        "//tools/idea/platform/lvcs-impl:intellij.platform.lvcs.impl",
-        "//tools/idea/platform/statistics/devkit:intellij.platform.statistics.devkit",
-        "//tools/idea/platform/workspaceModel/ide:intellij.platform.workspaceModel.ide",
-        "//tools/idea/platform/tasks-platform-impl:intellij.platform.tasks.impl",
-        "//tools/idea/platform/diagnostic:intellij.platform.diagnostic",
-        "//tools/idea/.idea/libraries:error-prone-annotations",
-        "//tools/idea/.idea/libraries:javax.annotation-api",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-jsr223",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-json",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-templates",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy-xml",
-        "//tools/idea/java/ide-resources:intellij.java.ide.resources",
-        "//prebuilts/tools/common/m2/repository/com/jetbrains/intellij/documentation/tips-intellij-idea-community/202.13:jar",
-    ],
-    # do not sort: must match IML order
     deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
         "//tools/base/lint:studio.android.sdktools.lint-api[module]",
-        "//tools/idea/.idea/libraries:Trove4j",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )
 
@@ -493,78 +398,4 @@ kotlin_test(
 exports_files(
     srcs = ["studio-checks/empty_baseline.xml"],
     visibility = ["//visibility:public"],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.lint-model",
-    srcs = ["libs/lint-model/src/main/java"],
-    iml_files = ["libs/lint-model/android.sdktools.lint-model.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    project = "unb",
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
-        "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:unb.kxml2",
-    ],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.lint-api",
-    srcs = ["libs/lint-api/src/main/java"],
-    iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
-    lint_baseline = "libs/lint-api/empty_baseline.xml",
-    project = "unb",
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    exports = [
-        "//tools/adt/idea/.idea/libraries:unb.asm-tools",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/lint:studio.android.sdktools.lint-model",
-        "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
-        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
-        "//tools/base/build-system:studio.android.sdktools.manifest-merger",
-    ],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
-        "//tools/adt/idea/.idea/libraries:unb.asm-tools",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/lint:studio.android.sdktools.lint-model[module]",
-        "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
-        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
-        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",
-        "//tools/base/build-system:studio.android.sdktools.manifest-merger[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-    ],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.lint-checks",
-    srcs = ["libs/lint-checks/src/main/java"],
-    iml_files = ["libs/lint-checks/android.sdktools.lint-checks.iml"],
-    lint_baseline = "libs/lint-checks/lint_baseline.xml",
-    project = "unb",
-    resources = ["libs/lint-checks/src/main/resources"],
-    visibility = ["//visibility:public"],
-    exports = ["//tools/base/lint:studio.android.sdktools.lint-api"],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//prebuilts/studio/intellij-sdk:studio-sdk-plugin-Kotlin",
-        "//tools/base/lint:studio.android.sdktools.lint-api[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-    ],
 )
