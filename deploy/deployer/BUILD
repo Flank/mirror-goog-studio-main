@@ -80,13 +80,13 @@ coverage_java_library(
         "//tools/base/annotations",
         "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/bazel:langtools",
+        "//tools/base/bazel:studio-proto",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger",
         "//tools/idea/.idea/libraries:sqlite",
-        "//tools/idea/.idea/libraries:studio-proto",
     ],
 )
 
@@ -136,6 +136,8 @@ coverage_java_test(
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/annotations",
+        "//tools/base/bazel:studio-grpc",
+        "//tools/base/bazel:studio-proto",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/installer/tests:fake_device_proto",
@@ -148,8 +150,6 @@ coverage_java_test(
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger",
         "//tools/idea/.idea/libraries:hamcrest",
-        "//tools/idea/.idea/libraries:studio-grpc",
-        "//tools/idea/.idea/libraries:studio-proto",
     ],
 )
 

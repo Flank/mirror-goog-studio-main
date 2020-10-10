@@ -22,12 +22,12 @@ java_binary(
     deps = [
         ":deploy-service-proto",
         "//tools/base/annotations",
+        "//tools/base/bazel:studio-grpc",
+        "//tools/base/bazel:studio-proto",
         "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/deployer:tools.deployer",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:protobuf",
-        "//tools/idea/.idea/libraries:studio-grpc",
-        "//tools/idea/.idea/libraries:studio-proto",
     ],
 )

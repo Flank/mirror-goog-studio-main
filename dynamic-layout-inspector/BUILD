@@ -30,15 +30,15 @@ kotlin_test(
         ":fake_android",
         "//prebuilts/studio/sdk:platforms/latest_runtime_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
+        "//tools/base/bazel:studio-grpc",
+        "//tools/base/bazel:studio-proto",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
+        "//tools/base/transport/proto:transport_java_proto",
         "//tools/base/transport/test-framework",
-        "//tools/idea/.idea/libraries:studio-grpc",
-        "//tools/idea/.idea/libraries:studio-proto",
-        "//tools/idea/.idea/libraries:transport-proto",
     ],
 )
 
