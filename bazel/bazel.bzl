@@ -4,7 +4,6 @@ load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_compile")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
-load(":project.bzl", "PROJECT")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
 # This is a custom implementation of label "tags".
