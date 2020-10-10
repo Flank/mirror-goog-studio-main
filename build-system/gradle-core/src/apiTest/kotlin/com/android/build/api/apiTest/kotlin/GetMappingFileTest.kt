@@ -63,10 +63,11 @@ class GetMappingFileTest: VariantApiBaseTest(TestType.Script) {
                         isMinifyEnabled = true
                     }
                 }
-
-                onVariantProperties {
-                    project.tasks.register<MappingFileUploadTask>("${ '$' }{name}MappingFileUpload") {
-                        mappingFile.set(artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))
+            }
+            androidComponents {
+                onVariants { variant ->
+                    project.tasks.register<MappingFileUploadTask>("${ '$' }{variant.name}MappingFileUpload") {
+                        mappingFile.set(variant.artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))
                     }
                 }
             }
@@ -81,7 +82,7 @@ class GetMappingFileTest: VariantApiBaseTest(TestType.Script) {
 # artifacts.get in Kotlin
 
 This sample shows how to obtain the obfuscation mapping file from the AGP.
-The [onVariantProperties] block will wire the [MappingFileUploadTask] input property (apkFolder) by using
+The [onVariants] block will wire the [MappingFileUploadTask] input property (apkFolder) by using
 the [Artifacts.get] call with the right [ArtifactType]
 `mapping.set(artifacts.get(ArtifactType.OBFUSCATION_MAPPING_FILE))`
 ## To Run

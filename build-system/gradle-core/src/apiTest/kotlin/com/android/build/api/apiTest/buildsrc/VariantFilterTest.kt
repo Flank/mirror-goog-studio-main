@@ -31,8 +31,8 @@ class VariantFilterTest:  VariantApiBaseTest(
                 addSource("src/main/kotlin/CustomPlugin.kt",
                     // language=kotlin
                     """
-                        import com.android.build.api.dsl.ApplicationExtension
-                        import com.android.build.api.dsl.LibraryExtension
+                        import com.android.build.api.extension.ApplicationAndroidComponentsExtension
+                        import com.android.build.api.extension.LibraryAndroidComponentsExtension
                         import com.android.build.gradle.AppPlugin
                         import com.android.build.gradle.LibraryPlugin
                         import org.gradle.api.Plugin
@@ -41,33 +41,23 @@ class VariantFilterTest:  VariantApiBaseTest(
                         class CustomPlugin: Plugin<Project> {
                             override fun apply(project: Project) {
                                 project.plugins.withType(AppPlugin::class.java) {
-                                    val extension = project.extensions.getByName("android") as ApplicationExtension<*, *, *, *, *>
-
-                                    extension.onVariants {
+                                    val extension = project.extensions.getByName("androidComponents") as ApplicationAndroidComponentsExtension
+                                    extension.beforeUnitTest {
                                         // disable all unit tests for apps (only using instrumentation tests)
-                                        unitTest {
-                                            enabled = false
-                                        }
+                                        it.enabled = false
                                     }
                                 }
-
                                 project.plugins.withType(LibraryPlugin::class.java) {
-                                    val extension = project.extensions.getByName("android") as LibraryExtension<*, *, *, *, *>
-
-                                    extension.onVariants.withBuildType("debug") {
+                                    val extension = project.extensions.getByName("androidComponents") as LibraryndroidComponentsExtension
+                                    extension.beforeAndroidTest(extension.selector().withBuildType("debug")) {
                                         // Disable instrumentation for debug
-                                        androidTest {
-                                            enabled = false
-                                        } 
+                                        it.enabled = false
                                     }
+                                    extension.beforeUnitTest(extension.selector().withBuildType("release")) {
+                                        // disable all unit tests for apps (only using instrumentation tests)
+                                        it.enabled = false
+                                    }                                }
 
-                                    extension.onVariants.withBuildType("release") {
-                                        // Disable unit test for release
-                                        unitTest {
-                                            enabled = false
-                                        }
-                                    }
-                                }
                             }
                         }
                     """.trimIndent())

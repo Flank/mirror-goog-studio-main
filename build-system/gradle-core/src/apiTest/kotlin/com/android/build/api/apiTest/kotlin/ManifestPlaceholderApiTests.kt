@@ -65,7 +65,7 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
                 fun taskAction() {
 
                     val manifest = mergedManifest.asFile.get().readText()
-                    // ensure that merged manifest contains the right activity name. 
+                    // ensure that merged manifest contains the right activity name.
                     if (!manifest.contains("activity android:name=\"com.android.build.example.minimal.MyRealName\""))
                         throw RuntimeException("Manifest Placeholder not replaced successfully")
                 }
@@ -73,12 +73,13 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{name}ManifestReader") { 
-                        mergedManifest.set(artifacts.get(ArtifactType.MERGED_MANIFEST))
+            }
+            androidComponents {
+                onVariants {
+                    val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{it.name}ManifestReader") {
+                        mergedManifest.set(it.artifacts.get(ArtifactType.MERGED_MANIFEST))
                     }
-                    manifestPlaceholders.put("MyName", "MyRealName")
+                    it.manifestPlaceholders.put("MyName", "MyRealName")
                 }
             }
                 """.trimIndent()
@@ -91,7 +92,7 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
 # Adding a manifest file placeholder in Kotlin.
 
 See [manifest placeholder documentation](https://developer.android.com/studio/build/manifest-build-variables) for details
-This sample show how to add a manifest placeholder value through the variant API. The value is 
+This sample show how to add a manifest placeholder value through the variant API. The value is
 known at configuration time.
             """.trimIndent()
         }
@@ -131,7 +132,7 @@ known at configuration time.
                     kotlin("android")
                     kotlin("android.extensions")
             }
-            
+
             import org.gradle.api.DefaultTask
             import org.gradle.api.file.RegularFileProperty
             import org.gradle.api.tasks.InputFile
@@ -157,7 +158,7 @@ known at configuration time.
                 @TaskAction
                 fun taskAction() {
                     val manifest = mergedManifest.asFile.get().readText()
-                    // ensure that merged manifest contains the right activity name. 
+                    // ensure that merged manifest contains the right activity name.
                     if (!manifest.contains("activity android:name=\"com.android.build.example.minimal.NameWithGit-"))
                         throw RuntimeException("Manifest Placeholder not replaced successfully")
                 }
@@ -165,12 +166,13 @@ known at configuration time.
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{name}ManifestReader") { 
-                        mergedManifest.set(artifacts.get(ArtifactType.MERGED_MANIFEST))
+            }
+            androidComponents {
+                onVariants {
+                    val manifestReader = tasks.register<ManifestReaderTask>("${'$'}{it.name}ManifestReader") {
+                        mergedManifest.set(it.artifacts.get(ArtifactType.MERGED_MANIFEST))
                     }
-                    manifestPlaceholders.put("MyName", gitVersionProvider.map { task ->
+                    it.manifestPlaceholders.put("MyName", gitVersionProvider.map { task ->
                         "NameWithGit-" + task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)
                     })
                 }
@@ -183,7 +185,7 @@ known at configuration time.
                 """
 # Adding a BuildConfig field in Kotlin
 
-This sample show how to add a field in the BuildConfig class for which the value is not known at 
+This sample show how to add a field in the BuildConfig class for which the value is not known at
 configuration time.
 
 The added field is used in the MainActivity.kt file.

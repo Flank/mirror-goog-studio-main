@@ -47,11 +47,12 @@ class BuildConfigApiTests: VariantApiBaseTest(
             }
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    addBuildConfigField("FloatValue", "\"1f\"", "Float Value")
-                    addBuildConfigField("LongValue", "\"1L\"", "Long Value")
-                    addBuildConfigField("VariantName", "\"${'$'}{name}\"", "Variant Name")
+            }
+            androidComponents {
+                onVariants {
+                    it.addBuildConfigField("FloatValue", "\"1f\"", "Float Value")
+                    it.addBuildConfigField("LongValue", "\"1L\"", "Long Value")
+                    it.addBuildConfigField("VariantName", "\"${'$'}{name}\"", "Variant Name")
                 }
             }
                 """.trimIndent()
@@ -141,12 +142,13 @@ The added field is used in the MainActivity.kt file.
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    buildConfigFields.put("GitVersion", gitVersionProvider.map {  task ->
+            }
+            androidComponents {
+                onVariants {
+                    it.buildConfigFields.put("GitVersion", gitVersionProvider.map {  task ->
                         BuildConfigField(
                             "String",
-                            "\"{task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)}\"", 
+                            "\"{task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)}\"",
                             "Git Version")
                     })
                 }
@@ -180,7 +182,7 @@ The added field is used in the MainActivity.kt file.
                 """
 # Adding a BuildConfig field in Kotlin
 
-This sample show how to add a field in the BuildConfig class for which the value is not known at 
+This sample show how to add a field in the BuildConfig class for which the value is not known at
 configuration time.
 
 The added field is used in the MainActivity.kt file.

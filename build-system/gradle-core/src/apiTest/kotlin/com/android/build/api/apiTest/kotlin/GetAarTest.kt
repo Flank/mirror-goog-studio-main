@@ -59,10 +59,11 @@ class GetAarTest: VariantApiBaseTest(TestType.Script) {
             }
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    project.tasks.register<AarUploadTask>("${ '$' }{name}AarUpload") {
-                        aar.set(artifacts.get(ArtifactType.AAR))
+            }
+            androidComponents {
+                onVariants { variant ->
+                    project.tasks.register<AarUploadTask>("${ '$' }{variant.name}AarUpload") {
+                        aar.set(variant.artifacts.get(ArtifactType.AAR))
                     }
                 }
             }
@@ -77,7 +78,7 @@ class GetAarTest: VariantApiBaseTest(TestType.Script) {
 # artifacts.get in Kotlin
 
 This sample shows how to obtain the aar from the AGP.
-The [onVariantProperties] block will wire the [AarUploadTask] input property (apkFolder) by using
+The [onVariants] block will wire the [AarUploadTask] input property (apkFolder) by using
 the [Artifacts.get] call with the right [ArtifactType]
 `aar.set(artifacts.get(ArtifactType.AAR))`
 ## To Run
