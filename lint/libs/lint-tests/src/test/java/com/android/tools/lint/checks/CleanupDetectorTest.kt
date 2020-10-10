@@ -1987,6 +1987,8 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
     fun testAnimation() {
         // 36991569: Lint warning for animation created but not .start()ed
+        // (ViewPropertyAnimator itself is no longer flagged because of b/169690812,
+        // but continuing to report ValueAnimators, ObjectAnimators, etc.
         lint().files(
             kotlin(
                 """
@@ -2000,7 +2002,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 import android.widget.TextView
 
                 fun viewAnimator(view: View) {
-                    view.animate().translationX(100.0f) // ERROR
+                    view.animate().translationX(100.0f) // Also OK, see 169690812
                     view.animate().translationX(100.0f).start(); // OK
                 }
 
@@ -2059,9 +2061,6 @@ class CleanupDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             "" +
-                "src/test/pkg/test.kt:11: Warning: This animation should be started with #start() [Recycle]\n" +
-                "    view.animate().translationX(100.0f) // ERROR\n" +
-                "         ~~~~~~~\n" +
                 "src/test/pkg/test.kt:23: Warning: This animation should be started with #start() [Recycle]\n" +
                 "    ValueAnimator.ofFloat(0f, 100f).apply { // ERROR\n" +
                 "                  ~~~~~~~\n" +
@@ -2074,7 +2073,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 "src/test/pkg/test.kt:36: Warning: This animation should be started with #start() [Recycle]\n" +
                 "    val animatorSet = AnimatorSet()  // ERROR\n" +
                 "                      ~~~~~~~~~~~\n" +
-                "0 errors, 5 warnings"
+                "0 errors, 4 warnings"
         )
     }
 

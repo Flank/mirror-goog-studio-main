@@ -63,13 +63,18 @@ public class FakeAdbTestRule extends ExternalResource {
 
   @Override
   public void after() {
-    try {
-      myServer.stop();
-      myServer.awaitServerTermination(1000, TimeUnit.MILLISECONDS);
-      AndroidDebugBridge.terminate();
-    } catch (InterruptedException ex) {
-      // disregard
-    }
+      try {
+          // mServer can be null if the FakeAdbTestRule is not being used as a rule but instead
+          // as a helper class to setup Adb. This is sometimes done when test want to control the
+          // timing of when an adb server is started / stopped
+          if (myServer != null) {
+              myServer.stop();
+              myServer.awaitServerTermination(1000, TimeUnit.MILLISECONDS);
+          }
+          AndroidDebugBridge.terminate();
+      } catch (InterruptedException ex) {
+          // disregard
+      }
   }
 
   public FakeAdbServer getServer() {

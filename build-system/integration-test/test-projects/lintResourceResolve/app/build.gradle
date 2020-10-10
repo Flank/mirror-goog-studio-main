@@ -34,10 +34,9 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
     lintOptions {
-        xmlReport true
-        textReport true
         textOutput file("lint-report.txt")
         xmlOutput file("lint-report.xml")
+        sarifReport true
         warningsAsErrors true
         checkOnly 'SupportAnnotationUsage'
     }

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-9bc07bac286bf52e789e7ed981ccc9a72facbb7d50fd5dcddb33d51a926d876b
+18142b07b2d70b96db6c63742e5075f459e43071de5cfc80fff7cc8a01e090d2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -230,6 +230,8 @@ com.android.builder.model.LintOptions.getEnable: java.util.Set<java.lang.String>
 com.android.builder.model.LintOptions.getHtmlOutput: java.io.File ()
 com.android.builder.model.LintOptions.getHtmlReport: boolean ()
 com.android.builder.model.LintOptions.getLintConfig: java.io.File ()
+com.android.builder.model.LintOptions.getSarifOutput: java.io.File ()
+com.android.builder.model.LintOptions.getSarifReport: boolean ()
 com.android.builder.model.LintOptions.getSeverityOverrides: java.util.Map<java.lang.String, java.lang.Integer> ()
 com.android.builder.model.LintOptions.getTextOutput: java.io.File ()
 com.android.builder.model.LintOptions.getTextReport: boolean ()
@@ -638,6 +640,8 @@ com.android.builder.model.v2.ide.LintOptions.getEnable: java.util.Set<java.lang.
 com.android.builder.model.v2.ide.LintOptions.getHtmlOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getHtmlReport: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getLintConfig: java.io.File ()
+com.android.builder.model.v2.ide.LintOptions.getSarifOutput: java.io.File ()
+com.android.builder.model.v2.ide.LintOptions.getSarifReport: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getSeverityOverrides: java.util.Map<java.lang.String, java.lang.Integer> ()
 com.android.builder.model.v2.ide.LintOptions.getTextOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getTextReport: boolean ()

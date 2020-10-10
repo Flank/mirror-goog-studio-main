@@ -29,13 +29,9 @@ import java.util.Map;
 public class JdwpClientManagerFactory {
 
     private Map<JdwpClientManagerId, JdwpClientManager> myConnections = new HashMap<>();
-
-    byte[] mBuffer;
-
     Selector selector;
 
-    public JdwpClientManagerFactory(Selector selector, byte[] buffer) {
-        mBuffer = buffer;
+    public JdwpClientManagerFactory(Selector selector) {
         this.selector = selector;
     }
 
@@ -47,7 +43,7 @@ public class JdwpClientManagerFactory {
             throws AdbCommandRejectedException, TimeoutException, IOException {
         JdwpClientManager connection = myConnections.get(id);
         if (connection == null) {
-            connection = new JdwpClientManager(id, selector, mBuffer);
+            connection = new JdwpClientManager(id, selector);
             connection.addShutdownListener(() -> myConnections.remove(id));
             myConnections.put(id, connection);
         }

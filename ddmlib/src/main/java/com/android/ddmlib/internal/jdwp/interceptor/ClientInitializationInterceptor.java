@@ -126,7 +126,7 @@ public class ClientInitializationInterceptor implements Interceptor {
         if (mCachePacketFilter.contains(type)) {
             ByteBuffer buffer = ByteBuffer.allocate(packet.getLength());
             buffer.order(CHUNK_ORDER);
-            packet.move(buffer);
+            packet.copy(buffer);
             mCachedPackets.put(type, buffer.array());
             for (ClientRequestId pending : mPendingPackets.get(type)) {
                 sendCachedPacket(pending.client, type, pending.requestId);
@@ -158,7 +158,7 @@ public class ClientInitializationInterceptor implements Interceptor {
             throws IOException, TimeoutException {
         ByteBuffer buffer = ByteBuffer.allocate(packet.getLength());
         buffer.order(CHUNK_ORDER);
-        packet.move(buffer);
+        packet.copy(buffer);
         buffer.putInt(PACKET_ID_OFFSET, id);
         to.write(buffer.array(), buffer.limit());
     }

@@ -44,4 +44,6 @@ interface IdeLintOptions {
     val htmlOutput: File?
     val xmlReport: Boolean
     val xmlOutput: File?
+    val sarifReport: Boolean
+    val sarifOutput: File?
 }

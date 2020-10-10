@@ -16,7 +16,7 @@
 
 package com.android.ddmlib.internal.jdwp.interceptor;
 
-import static com.android.ddmlib.internal.jdwp.interceptor.InterceptorTest.makePacket;
+import static com.android.ddmlib.internal.jdwp.JdwpTest.makePacket;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,10 +44,8 @@ public class DebuggerInterceptorTest {
     assertThat(interceptor.filterToDevice(mock, makePacket("HELO"))).isFalse();
     assertThat(interceptor.filterToDevice(mock, makePacket("HELO"))).isFalse();
     assertThat(interceptor.filterToClient(mock, makePacket("HELO"))).isFalse();
-    assertThat(interceptor.filterToClient(mock, new byte[0], 0)).isFalse();
 
     JdwpProxyClient mock2 = mock(JdwpProxyClient.class);
     assertThat(interceptor.filterToDevice(mock2, makePacket("HELO"))).isTrue();
-    assertThat(interceptor.filterToClient(mock2, new byte[0], 0)).isTrue();
   }
 }
