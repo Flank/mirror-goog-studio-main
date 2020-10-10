@@ -33,12 +33,12 @@ class ManifestUpdaterTest: BuildSrcScriptApiTest() {
                 addSource(
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
-                    """ 
+                    """
                 import com.android.build.api.artifact.ArtifactType
                 import org.gradle.api.Plugin
                 import org.gradle.api.Project
                 import java.io.File
-                import com.android.build.api.dsl.CommonExtension
+                import com.android.build.api.extension.AndroidComponentsExtension
 
                 abstract class ExamplePlugin: Plugin<Project> {
 
@@ -51,23 +51,23 @@ class ManifestUpdaterTest: BuildSrcScriptApiTest() {
                                 it.outputs.upToDateWhen { false }
                             }
 
-                        val android = project.extensions.getByType(CommonExtension::class.java)
+                        val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
 
-                        android.onVariantProperties {
+                        androidComponents.onVariants { variant ->
 
                             val manifestUpdater =
-                                project.tasks.register(name + "ManifestUpdater", ManifestTransformerTask::class.java) {
+                                project.tasks.register(variant.name + "ManifestUpdater", ManifestTransformerTask::class.java) {
                                     it.gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                                 }
-                            artifacts.use(manifestUpdater)
+                            variant.artifacts.use(manifestUpdater)
                                 .wiredWithFiles(
                                     ManifestTransformerTask::mergedManifest,
                                     ManifestTransformerTask::updatedManifest)
                                 .toTransform(ArtifactType.MERGED_MANIFEST)
-                
-                            project.tasks.register(name + "Verifier", VerifyManifestTask::class.java) {
-                                it.apkFolder.set(artifacts.get(ArtifactType.APK))
-                                it.builtArtifactsLoader.set(artifacts.getBuiltArtifactsLoader())
+
+                            project.tasks.register(variant.name + "Verifier", VerifyManifestTask::class.java) {
+                                it.apkFolder.set(variant.artifacts.get(ArtifactType.APK))
+                                it.builtArtifactsLoader.set(variant.artifacts.getBuiltArtifactsLoader())
                             }
                         }
                     }

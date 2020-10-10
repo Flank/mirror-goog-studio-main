@@ -91,12 +91,14 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
             defaultConfig {
                 versionCode = 3
             }
-            onVariantProperties {
-                val updateArtifact = project.tasks.register<UpdateArtifactTask>("${'$'}{name}UpdateArtifact")
-                val finalArtifact = project.tasks.register<ConsumeArtifactTask>("${'$'}{name}ConsumeArtifact") {
-                    finalArtifact.set(artifacts.get(ArtifactType.$artifact))
+        }
+        androidComponents {
+            onVariants {
+                val updateArtifact = project.tasks.register<UpdateArtifactTask>("${'$'}{it.name}UpdateArtifact")
+                val finalArtifact = project.tasks.register<ConsumeArtifactTask>("${'$'}{it.name}ConsumeArtifact") {
+                    finalArtifact.set(it.artifacts.get(ArtifactType.$artifact))
                 }
-                artifacts.use(updateArtifact)
+                it.artifacts.use(updateArtifact)
                     .wiredWithFiles(
                         UpdateArtifactTask::initialArtifact,
                         UpdateArtifactTask::updatedArtifact)

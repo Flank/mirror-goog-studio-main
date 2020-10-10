@@ -31,7 +31,7 @@ class VariantFilterTest:  VariantApiBaseTest(
                 addSource("src/main/kotlin/CustomPlugin.kt",
                     // language=kotlin
                     """
-                        import com.android.build.api.dsl.ApplicationExtension
+                        import com.android.build.api.extension.ApplicationAndroidComponentsExtension
                         import com.android.build.api.extension.LibraryAndroidComponentsExtension
                         import com.android.build.gradle.AppPlugin
                         import com.android.build.gradle.LibraryPlugin
@@ -41,16 +41,12 @@ class VariantFilterTest:  VariantApiBaseTest(
                         class CustomPlugin: Plugin<Project> {
                             override fun apply(project: Project) {
                                 project.plugins.withType(AppPlugin::class.java) {
-                                    val extension = project.extensions.getByName("android") as ApplicationExtension<*, *, *, *, *>
-
-                                    extension.onVariants {
+                                    val extension = project.extensions.getByName("androidComponents") as ApplicationAndroidComponentsExtension
+                                    extension.beforeUnitTest {
                                         // disable all unit tests for apps (only using instrumentation tests)
-                                        unitTest {
-                                            enabled = false
-                                        }
+                                        it.enabled = false
                                     }
                                 }
-
                                 project.plugins.withType(LibraryPlugin::class.java) {
                                     val extension = project.extensions.getByName("androidComponents") as LibraryAndroidComponentsExtension
                                     extension.beforeAndroidTest(extension.selector().withBuildType("debug")) {
@@ -60,8 +56,8 @@ class VariantFilterTest:  VariantApiBaseTest(
                                     extension.beforeUnitTest(extension.selector().withBuildType("release")) {
                                         // disable all unit tests for apps (only using instrumentation tests)
                                         it.enabled = false
-                                    }
-                                }
+                                    }                                }
+
                             }
                         }
                     """.trimIndent())

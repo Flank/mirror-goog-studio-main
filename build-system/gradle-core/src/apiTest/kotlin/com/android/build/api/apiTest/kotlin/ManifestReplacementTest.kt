@@ -46,17 +46,18 @@ class ManifestReplacementTest: VariantApiBaseTest(TestType.Script) {
             ${testingElements.getManifestProducerTask()}
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
+            }
+            androidComponents {
                 val gitVersionProvider = tasks.register<GitVersionTask>("gitVersionProvider") {
                     gitVersionOutputFile.set(
                         File(project.buildDir, "intermediates/gitVersionProvider/output"))
                     outputs.upToDateWhen { false }
                 }
-                onVariantProperties {
-                    val manifestProducer = tasks.register<ManifestProducerTask>("${'$'}{name}ManifestProducer") {
+                onVariants { variant ->
+                    val manifestProducer = tasks.register<ManifestProducerTask>("${'$'}{variant.name}ManifestProducer") {
                         gitInfoFile.set(gitVersionProvider.flatMap(GitVersionTask::gitVersionOutputFile))
                     }
-                    artifacts.use(manifestProducer)
+                    variant.artifacts.use(manifestProducer)
                         .wiredWith(ManifestProducerTask::outputManifest)
                         .toCreate(ArtifactType.MERGED_MANIFEST)
                 }
