@@ -77,6 +77,7 @@ coverage_java_library(
         "//prebuilts/r8",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/xerial/sqlite-jdbc/3.21.0.1:jar",
         "//tools/base/annotations",
         "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/bazel:langtools",
@@ -86,7 +87,6 @@ coverage_java_library(
         "//tools/base/deploy/proto:deploy_java_proto",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger",
-        "//tools/idea/.idea/libraries:sqlite",
     ],
 )
 
@@ -135,6 +135,7 @@ coverage_java_test(
         "//prebuilts/r8",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
         "//tools/base/annotations",
         "//tools/base/bazel:studio-grpc",
         "//tools/base/bazel:studio-proto",
@@ -149,7 +150,6 @@ coverage_java_test(
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger",
-        "//tools/idea/.idea/libraries:hamcrest",
     ],
 )
 
