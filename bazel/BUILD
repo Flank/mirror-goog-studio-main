@@ -100,14 +100,8 @@ java_library(
         "src/com/intellij/util/graph/*",
     ]),
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//tools/idea/.idea/libraries:JDOM",
-    ],
     deps = [
-        "//tools/idea/.idea/libraries:Guava",
-        "//tools/idea/.idea/libraries:Trove4j",
-        "//tools/idea/.idea/libraries:jetbrains-annotations-java5",
-        "//tools/idea/.idea/libraries:jps-build-script-dependencies-bootstrap",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
     ],
 )
 
