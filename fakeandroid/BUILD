@@ -5,7 +5,7 @@ java_library(
     srcs = glob(["srcs/com/android/tools/fakeandroid/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/idea/.idea/libraries:JUnit4",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 
@@ -18,7 +18,7 @@ java_library(
     neverlink = 1,
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/idea/.idea/libraries:Guava",
+        "//tools/base/third_party:com.google.guava_guava",
     ],
 )
 

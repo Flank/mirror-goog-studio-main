@@ -36,11 +36,11 @@ def swap_test(name, srcs):
         ],
         deps = [
             "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
+            "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
             "//tools/base/bazel:langtools",
             "//tools/base/bazel:studio-proto",
             "//tools/base/deploy/deployer:tools.deployer",
             "//tools/base/deploy/proto:deploy_java_proto",
             "//tools/base/fakeandroid",
-            "//tools/idea/.idea/libraries:JUnit4",
         ],
     )

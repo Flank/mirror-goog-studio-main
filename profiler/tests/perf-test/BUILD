@@ -16,7 +16,7 @@ perf_test(
     size = "small",
     srcs = ["testSrcs/com/android/tools/profiler/BasicTest.java"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//tools/idea/.idea/libraries:truth"],
+    deps = ["//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar"],
 )
 
 perf_test(
@@ -29,7 +29,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/network/UnifiedPipelineOkHttpTest.java",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//tools/idea/.idea/libraries:truth"],
+    deps = ["//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar"],
 )
 
 perf_test(
@@ -43,7 +43,7 @@ perf_test(
     ],
     app_runtime_deps = ["//tools/base/profiler/tests/test-app:libmemorynativetest.so"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//tools/idea/.idea/libraries:truth"],
+    deps = ["//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar"],
 )
 
 perf_test(
@@ -51,7 +51,7 @@ perf_test(
     size = "large",
     srcs = ["testSrcs/com/android/tools/profiler/event/EventProfilerTest.java"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//tools/idea/.idea/libraries:truth"],
+    deps = ["//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar"],
 )
 
 perf_test(
@@ -64,7 +64,7 @@ perf_test(
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = ["//tools/idea/.idea/libraries:truth"],
+    deps = ["//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar"],
 )
 
 perf_test(
@@ -73,8 +73,8 @@ perf_test(
     srcs = ["testSrcs/com/android/tools/profiler/performance/LiveAllocationTest.java"],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
+        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
-        "//tools/idea/.idea/libraries:truth",
     ],
 )
 
@@ -97,6 +97,6 @@ coverage_java_test(
         "//tools/base/perf-logger:studio.perf-logger_testlib",
         "//tools/base/testutils:studio.android.sdktools.testutils_testlib",
         "//tools/base/third_party:com.google.guava_guava",
-        "//tools/idea/.idea/libraries:JUnit4",
+        "//tools/base/third_party:junit_junit",
     ],
 )
