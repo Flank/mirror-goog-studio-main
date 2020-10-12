@@ -89,7 +89,7 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
     for (int i = 0; arguments[i] != nullptr; i++) {
       oss << " '" << arguments[i] << "'";
     }
-    Log::D(Log::Tag::TRANSPORT, oss.str().c_str());
+    Log::D(Log::Tag::TRANSPORT, "%s", oss.str().c_str());
 
     // run child process image
     execve(executable_path_.c_str(), (char* const*)arguments,
