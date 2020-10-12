@@ -352,6 +352,7 @@ public class GroovyGradleVisitor extends GradleVisitor {
                             @Nullable String parentParent,
                             BinaryExpression b) {
                         Expression rightExpression = b.getRightExpression();
+                        if (parent == null) parent = "";
                         if (rightExpression != null) {
                             String value = getText(rightExpression);
                             for (GradleScanner scanner : detectors) {
