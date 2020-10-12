@@ -69,7 +69,6 @@ import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -81,7 +80,6 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -398,13 +396,14 @@ abstract class VariantInputs {
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get().cache)
 
+        val checkDependencies = module.lintOptions.checkDependencies
         return DefaultLintModelVariant(
             module,
             name.get(),
             useSupportLibraryVectorDrawables = false,
-            mainArtifact = mainArtifact.toLintModel(dependencyCaches),
-            testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches),
-            androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches),
+            mainArtifact = mainArtifact.toLintModel(dependencyCaches, checkDependencies),
+            testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches, checkDependencies),
+            androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches, checkDependencies),
             mergedManifest = mergedManifest.orNull?.asFile,
             manifestMergeReport = manifestMergeReport.orNull?.asFile,
             `package` = packageName.get(),
@@ -651,13 +650,13 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         ))
     }
 
-    internal fun toLintModel(dependencyCaches: DependencyCaches): LintModelAndroidArtifact {
+    internal fun toLintModel(dependencyCaches: DependencyCaches, checkDependencies: Boolean): LintModelAndroidArtifact {
         return DefaultLintModelAndroidArtifact(
             applicationId.get(),
             generatedResourceFolders.get(),
             generatedSourceFolders.get(),
             classesOutputDirectories.files.toList(),
-            computeDependencies(dependencyCaches)
+            computeDependencies(dependencyCaches, checkDependencies)
         )
     }
 }
@@ -730,10 +729,10 @@ abstract class JavaArtifactInput : ArtifactInput() {
     }
 
 
-    internal fun toLintModel(dependencyCaches: DependencyCaches): LintModelJavaArtifact {
+    internal fun toLintModel(dependencyCaches: DependencyCaches, checkDependencies: Boolean): LintModelJavaArtifact {
         return DefaultLintModelJavaArtifact(
             classesOutputDirectories.files.toList(),
-            computeDependencies(dependencyCaches)
+            computeDependencies(dependencyCaches, checkDependencies)
         )
     }
 }
@@ -758,11 +757,19 @@ abstract class ArtifactInput {
     @get:Internal
     var projectDependencyExplodedAars: ArtifactCollection? = null
 
-    internal fun computeDependencies(dependencyCaches: DependencyCaches): LintModelDependencies {
+    internal fun computeDependencies(dependencyCaches: DependencyCaches, checkDependencies: Boolean): LintModelDependencies {
 
         val artifactCollectionsInputs = artifactCollectionsInputs.get()
 
-        val artifactHandler: ArtifactHandler<LintModelLibrary> = // TODO: CheckDependencies case
+        val artifactHandler: ArtifactHandler<LintModelLibrary> =
+            if (checkDependencies) {
+                // TODO(b/160392650): Maybe add the java library project dependency models as an
+                //   input here, and then treat the library as external if there is no corresponding
+                //   lint model (as the build author now needs to apply the standalone lint plugin)
+                //   This could help to ease the transition to this new approach.
+                LintModelArtifactHandler(dependencyCaches)
+            } else {
+                // When not checking dependencies, treat all dependencies as external.
                 ExternalLintModelArtifactHandler.create(
                     dependencyCaches,
                     projectDependencyExplodedAars,
@@ -770,6 +777,7 @@ abstract class ArtifactInput {
                     artifactCollectionsInputs.compileClasspath.projectJars,
                     buildMapping = artifactCollectionsInputs.buildMapping
                 )
+            }
         val modelBuilder = LintDependencyModelBuilder(
             artifactHandler = artifactHandler, libraryMap = dependencyCaches.libraryMap
         )

@@ -40,7 +40,6 @@ import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
-import com.android.build.gradle.internal.lint.LintModelDependenciesWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocation
 import com.android.build.gradle.internal.pipeline.OriginalStream
@@ -1287,7 +1286,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             variantProperties: VariantT,
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
         if (lintTaskManager.useNewLintModel) {
-            taskFactory.register(LintModelDependenciesWriterTask.CreationAction(variantProperties))
             return
         }
         taskFactory.register(

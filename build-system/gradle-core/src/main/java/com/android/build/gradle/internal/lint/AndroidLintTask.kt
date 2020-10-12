@@ -42,9 +42,12 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.Collections
@@ -101,6 +104,20 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Nested
     abstract val variantInputs: VariantInputs
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    abstract val mainDependencyLintModels: ConfigurableFileCollection
+
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    abstract val androidTestDependencyLintModels: ConfigurableFileCollection
+
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    abstract val unitTestDependencyLintModels: ConfigurableFileCollection
+
     override fun doTaskAction() {
         writeLintModelFile()
         workerExecutor.noIsolation().submit(AndroidLintWorkAction::class.java) { parameters ->
@@ -112,10 +129,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     }
 
     private fun writeLintModelFile() {
-        if (checkDependencies.get()) {
-            throw RuntimeException("Check dependencies is not implemented in a configuration-caching compatible way yet.")
-        }
-
         val module = projectInputs.convertToLintModelModule()
 
         val variant = variantInputs.toLintModel(module)
@@ -145,16 +158,15 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         val models = LinkedHashSet<String>(1)
         models += lintModelDirectory.get().asFile.absolutePath
 
-        // TODO: Add extra models when check dependencies is enabled.
-//        for (model in variantInputs.mainDependencyLintModels) {
-//            models.add(model.absolutePath)
-//        }
-//        for (model in variantInputs.androidTestDependenciesLintModels) {
-//            models.add(model.absolutePath)
-//        }
-//        for (model in variantInputs.unitTestDependenciesLintModels) {
-//            models.add(model.absolutePath)
-//        }
+        for (model in mainDependencyLintModels) {
+            models.add(model.absolutePath)
+        }
+        for (model in androidTestDependencyLintModels) {
+            models.add(model.absolutePath)
+        }
+        for (model in unitTestDependencyLintModels) {
+            models.add(model.absolutePath)
+        }
 
         check(checkDependencies.get() || models.size == 1) {
             "Dependency models should not be an input unless check dependencies is being used."
@@ -240,6 +252,36 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             })
             task.projectInputs.initialize(variant)
             task.variantInputs.initialize(variant, checkDependencies)
+            if (checkDependencies) {
+                task.mainDependencyLintModels.from(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
+                        AndroidArtifacts.ArtifactType.LINT_MODEL
+                    )
+                )
+                variant.androidTest?.let {
+                    task.androidTestDependencyLintModels.from(
+                        it.variantDependencies.getArtifactFileCollection (
+                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.LINT_MODEL
+                        )
+                    )
+                }
+                variant.unitTest?.let {
+                    task.unitTestDependencyLintModels.from(
+                        it.variantDependencies.getArtifactFileCollection (
+                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.LINT_MODEL
+                        )
+                    )
+                }
+            }
+            task.mainDependencyLintModels.disallowChanges()
+            task.androidTestDependencyLintModels.disallowChanges()
+            task.unitTestDependencyLintModels.disallowChanges()
             // TODO(b/160392650) Clean this up to use a detached configuration
             task.lintClasspath.fromDisallowChanges(
                 creationConfig.globalScope.project.configurations.getByName(

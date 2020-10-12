@@ -63,6 +63,9 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         val variantLintTaskToLintVitalTask = mutableMapOf<String, TaskProvider<AndroidLintTask>>()
 
         for (variantWithTests in variantsWithTests.values) {
+            if (variantType.isAar) { // Export lint models to support checkDependencies.
+                taskFactory.register(LintModelWriterTask.CreationAction(variantWithTests.main))
+            }
             val variantLintTask =
                 taskFactory.register(AndroidLintTask.SingleVariantCreationAction(variantWithTests))
 
