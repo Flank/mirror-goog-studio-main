@@ -34,7 +34,7 @@ interface GradleScanner : FileScanner {
         context: GradleContext,
         property: String,
         value: String,
-        parent: String?,
+        parent: String,
         parentParent: String?,
         valueCookie: Any,
         statementCookie: Any
@@ -57,7 +57,7 @@ interface GradleScanner : FileScanner {
         context: GradleContext,
         property: String,
         value: String,
-        parent: String?,
+        parent: String,
         parentParent: String?,
         propertyCookie: Any,
         valueCookie: Any,
