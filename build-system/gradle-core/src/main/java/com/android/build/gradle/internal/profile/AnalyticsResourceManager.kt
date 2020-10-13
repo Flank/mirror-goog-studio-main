@@ -298,7 +298,8 @@ class AnalyticsResourceManager(
             profileBuilder.configurationCachingEnabled = configCachingEnabled
         }
 
-        rootProjectPath = project.rootProject.projectDir.absolutePath
+        // Use 'platform independent' path to match AS behaviour.
+        rootProjectPath = project.rootProject.projectDir.absolutePath.replace('\\', '/')
         enableProfileJson = projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON)
         profileDir = getProfileDir(projectOptions, project.gradle)?.toFile()
     }
