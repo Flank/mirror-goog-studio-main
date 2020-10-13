@@ -23,41 +23,30 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.fixture.app.SimpleNativeLib
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
-import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Cmake test with multiple modules.
  */
-@RunWith(Parameterized::class)
-class CmakeMultiModuleTest(useV2NativeModel: Boolean) {
+class CmakeMultiModuleTest {
 
     @get:Rule
     val project =
-        GradleTestProject.builder()
-            .fromTestApp(
-                MultiModuleTestProject(
-                    mapOf(
-                        "app" to HelloWorldJniApp.builder().withCmake().build(),
-                        "lib" to SimpleNativeLib()
-                    )
-                )
+      GradleTestProject.builder()
+        .fromTestApp(
+          MultiModuleTestProject(
+            mapOf(
+              "app" to HelloWorldJniApp.builder().withCmake().build(),
+              "lib" to SimpleNativeLib()
             )
-            .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
-            .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-            .setWithCmakeDirInLocalProp(true)
-            .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
-            .create()
-
-    companion object {
-        @Parameterized.Parameters(name = "useV2NativeModel={0}")
-        @JvmStatic
-        fun data() = arrayOf(arrayOf(false), arrayOf(true))
-    }
+          )
+        )
+        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .setWithCmakeDirInLocalProp(true)
+        .create()
 
     @Before
     fun setUp() {

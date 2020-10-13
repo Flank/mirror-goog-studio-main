@@ -23,36 +23,25 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Test injected ABI with ndk.abiFilters in a library project.
  */
-@RunWith(Parameterized::class)
-class InjectedAbiNativeLibraryTest(useV2NativeModel: Boolean) {
+class InjectedAbiNativeLibraryTest {
 
-    val testapp = HelloWorldLibraryApp.create()
+    private val testapp = HelloWorldLibraryApp.create()
 
     @Rule
     @JvmField
     val project = GradleTestProject.builder().fromTestApp(testapp)
-        .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
-        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .setWithCmakeDirInLocalProp(true)
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
-        .create()
-
-    companion object {
-        @Parameterized.Parameters(name = "useV2NativeModel={1}")
-        @JvmStatic
-        fun data() = arrayOf(arrayOf(false), arrayOf(true))
-    }
+      .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
+      .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+      .setWithCmakeDirInLocalProp(true)
+      .create()
 
     init {
         val lib = testapp.getSubproject(":lib") as GradleProject

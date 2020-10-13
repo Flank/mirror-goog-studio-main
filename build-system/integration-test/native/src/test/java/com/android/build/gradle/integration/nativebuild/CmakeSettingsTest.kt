@@ -34,8 +34,6 @@ import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
-import com.android.build.gradle.options.BooleanOption
-import com.android.builder.model.NativeAndroidProject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth
@@ -46,31 +44,28 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
-class CmakeSettingsTest(private val cmakeVersionInDsl: String, private val useV2NativeModel: Boolean) {
+class CmakeSettingsTest(private val cmakeVersionInDsl: String) {
 
     @Rule
     @JvmField
     var project = GradleTestProject.builder()
-        .fromTestApp(
-            HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
-        )
-        // TODO(159233213) Turn to ON when release configuration is cacheable
-        // TODO(159998570) Figure out flakiness before turning to WARN or ON
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+      .fromTestApp(
+        HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
+      )
+      // TODO(159233213) Turn to ON when release configuration is cacheable
+      // TODO(159998570) Figure out flakiness before turning to WARN or ON
+      .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .create()
 
 
     companion object {
-        @Parameterized.Parameters(name = "version={0} useV2NativeModel={1}")
+        @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
         fun data() = arrayOf(
-            // CMakeSettings.json doesn't work with fork CMake version 3.6.0
-            arrayOf(DEFAULT_CMAKE_VERSION, false),
-            arrayOf(BAKING_CMAKE_VERSION, false),
-            arrayOf(DEFAULT_CMAKE_VERSION, true),
-            arrayOf(BAKING_CMAKE_VERSION, true)
+          // CMakeSettings.json doesn't work with fork CMake version 3.6.0
+          arrayOf(DEFAULT_CMAKE_VERSION),
+          arrayOf(BAKING_CMAKE_VERSION)
         )
     }
 
@@ -135,22 +130,16 @@ class CmakeSettingsTest(private val cmakeVersionInDsl: String, private val useV2
         project.execute("clean", "assemble")
         val abis = 2
         val buildTypes = 4
-        if (useV2NativeModel) {
-            val model = project.modelV2().fetchNativeModules(emptyList(), emptyList())
-            val allBuildOutputs = model.container.singleModel.variants.flatMap { variant ->
-                variant.abis.flatMap { abi ->
-                    abi.symbolFolderIndexFile.readAsFileIndex().flatMap {
-                        it.list()!!.toList()
-                    }
+        val model = project.modelV2().fetchNativeModules(emptyList(), emptyList())
+        val allBuildOutputs = model.container.singleModel.variants.flatMap { variant ->
+            variant.abis.flatMap { abi ->
+                abi.symbolFolderIndexFile.readAsFileIndex().flatMap {
+                    it.list()!!.toList()
                 }
             }
-            Truth.assertThat(allBuildOutputs).hasSize(abis * buildTypes)
-            Truth.assertThat(allBuildOutputs.toSet()).containsExactly("libhello-jni.so")
-        } else {
-            val model = project.model().fetch(NativeAndroidProject::class.java)
-            assertThat(model).hasBuildOutputCountEqualTo(abis * buildTypes)
-            assertThat(model).allBuildOutputsExist()
         }
+        Truth.assertThat(allBuildOutputs).hasSize(abis * buildTypes)
+        Truth.assertThat(allBuildOutputs.toSet()).containsExactly("libhello-jni.so")
         val projectRoot = project.buildFile.parentFile
         assertThat(join(projectRoot, "cmake/android/debug")).isDirectory()
         assertThat(join(projectRoot, "cmake/android/release")).isDirectory()

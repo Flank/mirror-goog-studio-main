@@ -20,13 +20,9 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
-import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.options.BooleanOption
-import com.android.builder.model.NativeAndroidProject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -65,7 +61,6 @@ class HeaderInCmakeListsTest(private val cmakeVersionInDsl: String) {
                 .build()
         )
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=true")
         .create()
 
     @Before

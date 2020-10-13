@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth
 import org.junit.Rule
@@ -37,7 +36,6 @@ class NdkBuildVariantApiTest {
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
             .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
-            .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=true")
             .create()
 
     @Test

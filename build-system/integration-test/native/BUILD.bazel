@@ -208,14 +208,6 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
-    name = "V1NativeModelTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
     name = "V2NativeModelTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,

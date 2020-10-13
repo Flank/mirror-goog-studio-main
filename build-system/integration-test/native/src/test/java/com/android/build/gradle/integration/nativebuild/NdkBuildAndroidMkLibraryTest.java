@@ -25,23 +25,17 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test that a library Android.mk referenced from a base Android.mk builds correctly. This
  * reproduces the conditions of b.android.com/219225.
  */
-@RunWith(Parameterized.class)
 public class NdkBuildAndroidMkLibraryTest {
 
     private static final TestSourceFile includedAndroidMkFoo =
@@ -88,7 +82,7 @@ public class NdkBuildAndroidMkLibraryTest {
 
     @Rule public GradleTestProject project;
 
-    public NdkBuildAndroidMkLibraryTest(boolean useV2NativeModel) {
+    public NdkBuildAndroidMkLibraryTest() {
         project =
                 GradleTestProject.builder()
                         .fromTestApp(HelloWorldJniApp.builder().build())
@@ -97,16 +91,7 @@ public class NdkBuildAndroidMkLibraryTest {
                         .addFile(includedAndroidMkBar)
                         .addFile(includingAndroidMk)
                         .addFile(applicationMk)
-                        .addGradleProperties(
-                                BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
-                                        + "="
-                                        + useV2NativeModel)
                         .create();
-    }
-
-    @Parameterized.Parameters(name = "useV2NativeModel={0}")
-    public static Collection<Object[]> data() {
-        return ImmutableList.of(new Object[] {false}, new Object[] {true});
     }
 
     @Before

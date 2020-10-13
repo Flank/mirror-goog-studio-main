@@ -25,34 +25,23 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.AssumeUtil
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.io.IOException
 
-@RunWith(Parameterized::class)
-class NdkBuildBuildSettingsTest(useV2NativeModel: Boolean) {
+class NdkBuildBuildSettingsTest {
     @Rule
     @JvmField
     val project = GradleTestProject.builder()
-        .fromTestApp(HelloWorldJniApp.builder().build())
-        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
-        .create()
-
-    companion object {
-        @Parameterized.Parameters(name = "useV2NativeModel={0}")
-        @JvmStatic
-        fun data() = arrayOf(arrayOf(false), arrayOf(true))
-    }
+      .fromTestApp(HelloWorldJniApp.builder().build())
+      .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+      .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
+      .create()
 
     @Before
     @Throws(IOException::class)

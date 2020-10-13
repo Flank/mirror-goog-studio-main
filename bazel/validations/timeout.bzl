@@ -7,7 +7,6 @@ APPROVED_ETERNAL_TESTS = [
     "//tools/vendor/google/android-apk:android-apk.tests_tests",
     "//tools/base/build-system/integration-test/native:VulkanTest",
     "//tools/base/build-system/integration-test/native:V2NativeModelTest",
-    "//tools/base/build-system/integration-test/native:V1NativeModelTest",
     "//tools/base/build-system/integration-test/native:RsSupportModeTest",
     "//tools/base/build-system/integration-test/native:RsEnabledAnnotationTest",
     "//tools/base/build-system/integration-test/native:RenderscriptNdkTest",

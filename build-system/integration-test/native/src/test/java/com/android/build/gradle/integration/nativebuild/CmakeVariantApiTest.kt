@@ -21,8 +21,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.options.BooleanOption
-import com.android.builder.model.NativeAndroidProject
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth
 import org.junit.Rule
@@ -37,7 +35,6 @@ class CmakeVariantApiTest {
             // TODO(b/159233213) Turn to ON when release configuration is cacheable
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
             .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-            .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=true")
             .create()
 
     @Test

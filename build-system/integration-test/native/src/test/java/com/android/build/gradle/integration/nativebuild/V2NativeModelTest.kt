@@ -31,7 +31,6 @@ import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.build.gradle.integration.common.fixture.model.dumpCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -75,7 +74,6 @@ class V2NativeModelTest : ModelComparator() {
     fun `test basic model information`() {
         val result = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .with(BooleanOption.ENABLE_V2_NATIVE_MODEL, true)
             .fetchNativeModules(emptyList(), emptyList())
         val nativeModule = result.container.singleModel
         val normalizer = result.normalizer
@@ -97,7 +95,6 @@ class V2NativeModelTest : ModelComparator() {
     fun `test generate build information`() {
         val modelBuilder: ModelBuilderV2 = project.modelV2()
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-            .with(BooleanOption.ENABLE_V2_NATIVE_MODEL, true)
         val result = modelBuilder
             .fetchNativeModules(listOf("debug"), listOf("x86"))
         val nativeModule = result.container.singleModel
