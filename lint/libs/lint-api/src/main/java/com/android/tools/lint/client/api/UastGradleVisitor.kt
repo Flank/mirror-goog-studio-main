@@ -59,7 +59,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
             val hierarchy = getPropertyHierarchy(node.leftOperand)
             val target = hierarchy.firstOrNull() ?: return
             val hierarchyWithParents = hierarchy + getParent(node) + getParentN(node, 2)
-            val parentName = hierarchyWithParents[1]
+            val parentName = hierarchyWithParents[1] ?: ""
             val parentParentName = hierarchyWithParents[2]
             val value = node.rightOperand.asSourceString()
             for (scanner in detectors) {
@@ -106,7 +106,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                         // Some sort of DSL property?
                         // Parent should be block, its parent lambda, its parent a call -
                         // the name is the parent
-                        val parentName = getParent(node)
+                        val parentName = getParent(node) ?: ""
                         val parentParentName = getParentN(node, 2)
                         val value = arg.asSourceString()
                         for (scanner in detectors) {
@@ -168,7 +168,7 @@ class UastGradleVisitor(private val javaContext: JavaContext) : GradleVisitor() 
                         context,
                         propertyName,
                         value,
-                        parentName,
+                        parentName ?: "",
                         parentParentName,
                         node.methodIdentifier ?: node,
                         valueArguments[0],
