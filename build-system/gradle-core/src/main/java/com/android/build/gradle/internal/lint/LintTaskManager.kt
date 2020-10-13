@@ -15,7 +15,6 @@ import com.android.build.gradle.tasks.LintGlobalTask
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
 import org.gradle.api.Project
-import org.gradle.api.internal.StartParameterInternal
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.TaskProvider
 
@@ -80,12 +79,16 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
                 // If lint is being run, we do not need to run lint vital.
                 variantLintTaskToLintVitalTask[getTaskPath(variantLintTask)] = lintVitalTask
             }
+            taskFactory.register(AndroidLintTask.FixSingleVariantCreationAction(variantWithTests))
         }
 
         val defaultVariant = variantModel.defaultVariant
-        taskFactory.configure(AndroidLintGlobalTask.GlobalCreationAction.name, AndroidLintGlobalTask::class.java) { globalTask ->
-            defaultVariant?.let { defaultVariant ->
+        if (defaultVariant != null) {
+            taskFactory.configure(AndroidLintGlobalTask.GlobalCreationAction.name, AndroidLintGlobalTask::class.java) { globalTask ->
                 globalTask.dependsOn("lint".appendCapitalized(defaultVariant))
+            }
+            taskFactory.configure(AndroidLintGlobalTask.LintFixCreationAction.name, AndroidLintGlobalTask::class.java) { globalFixTask ->
+                globalFixTask.dependsOn("lintFix".appendCapitalized(defaultVariant))
             }
         }
 

@@ -68,6 +68,7 @@ import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCache
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService;
 import com.android.build.gradle.internal.ide.v2.NativeModelBuilder;
+import com.android.build.gradle.internal.lint.LintFixBuildService;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
@@ -396,6 +397,7 @@ public abstract class BasePlugin<
 
         new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();
         new ClassesHierarchyBuildService.RegistrationAction(project).execute();
+        new LintFixBuildService.RegistrationAction(project).execute();
 
         projectOptions
                 .getAllOptions()

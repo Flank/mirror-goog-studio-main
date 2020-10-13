@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCache
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService
 import com.android.build.gradle.internal.lint.AndroidLintTask
+import com.android.build.gradle.internal.lint.LintFixBuildService
 import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.plugins.BasePlugin
@@ -272,5 +273,6 @@ abstract class LintPlugin : Plugin<Project> {
             project.provider { null },
             project.provider { null },
         ).execute()
+        LintFixBuildService.RegistrationAction(project).execute()
     }
 }

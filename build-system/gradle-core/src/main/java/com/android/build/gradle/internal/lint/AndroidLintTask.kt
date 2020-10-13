@@ -86,6 +86,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Input
     abstract val autoFix: Property<Boolean>
 
+    @get:Internal
+    abstract val lintFixBuildService: Property<LintFixBuildService>
+
     @get:Input
     abstract val checkDependencies: Property<Boolean>
 
@@ -125,6 +128,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             parameters.classpath.from(lintClasspath)
             parameters.android.set(android)
             parameters.fatalOnly.set(fatalOnly)
+            parameters.lintFixBuildService.set(lintFixBuildService)
         }
     }
 
@@ -198,16 +202,29 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     class SingleVariantCreationAction(variant: VariantWithTests) : VariantCreationAction(variant) {
         override val name: String = creationConfig.computeTaskName("lint")
         override val fatalOnly: Boolean get() = false
+        override val autoFix: Boolean get() = false
         override val description: String get() = "Run lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
     }
+
+    /** Creates the lintFix task. . */
+    class FixSingleVariantCreationAction(variant: VariantWithTests) : VariantCreationAction(variant) {
+        override val name: String = creationConfig.computeTaskName("lintFix")
+        override val fatalOnly: Boolean get() = false
+        override val autoFix: Boolean get() = true
+        override val description: String get() = "Fix lint on the ${creationConfig.name} variant"
+        override val checkDependencies: Boolean
+            get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+    }
+
 
     /** CreationAction for the lintVital task. Does not use the variant with tests. */
     class LintVitalCreationAction(variant: ConsumableCreationConfig) :
             VariantCreationAction(VariantWithTests(variant, androidTest = null, unitTest = null)) {
         override val name: String = creationConfig.computeTaskName("lintVital")
         override val fatalOnly: Boolean get() = true
+        override val autoFix: Boolean get() = false
         override val description: String get() = "Run lint with only the fatal issues enabled on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() = false
@@ -222,6 +239,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         final override val type: Class<AndroidLintTask> get() = AndroidLintTask::class.java
 
         abstract val fatalOnly: Boolean
+        abstract val autoFix: Boolean
         abstract val description: String
         abstract val checkDependencies: Boolean
 
@@ -244,8 +262,12 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     )
             )
             task.lintRulesJar.disallowChanges()
-            task.fatalOnly.set(fatalOnly)
-            task.autoFix.set(false)
+            task.fatalOnly.setDisallowChanges(fatalOnly)
+            task.autoFix.setDisallowChanges(autoFix)
+            if (autoFix) {
+                task.lintFixBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
+            }
+            task.lintFixBuildService.disallowChanges()
             task.checkDependencies.setDisallowChanges(checkDependencies)
             task.checkOnly.set(creationConfig.services.provider {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
@@ -344,6 +366,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         this.fatalOnly.setDisallowChanges(fatalOnly)
         this.autoFix.setDisallowChanges(autoFix)
+        if (autoFix) {
+            this.lintFixBuildService.set(getBuildService(project.gradle.sharedServices))
+        }
+        this.lintFixBuildService.disallowChanges()
         this.checkDependencies.setDisallowChanges(false)
         this.checkOnly.setDisallowChanges(project.provider { lintOptions.checkOnly })
         this.lintClasspath.fromDisallowChanges(project.configurations.getByName("lintClassPath"))
