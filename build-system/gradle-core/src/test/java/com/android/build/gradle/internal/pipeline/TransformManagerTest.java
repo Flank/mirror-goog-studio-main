@@ -56,7 +56,7 @@ public class TransformManagerTest extends TaskTestUtils {
         super.setUp();
         File projectDirectory = java.nio.file.Files.createTempDirectory(getClass().getName()).toFile();
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
-        TestProjects.loadGradleProperties(project, ImmutableMap.of());
+        TestProjects.prepareProject(project, ImmutableMap.of());
         fileCollection = project.files(new File("my file")).builtBy(MY_FAKE_DEPENDENCY_TASK_NAME);
     }
 

@@ -31,14 +31,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.gradle.api.Project;
 import org.gradle.api.internal.project.DefaultProject;
+import org.gradle.api.provider.Provider;
+import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.initialization.GradlePropertiesController;
+import org.gradle.internal.service.DefaultServiceRegistry;
+import org.gradle.internal.service.scopes.GradleScopeServices;
+import org.gradle.internal.service.scopes.ProjectScopeServices;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.gradle.tooling.events.OperationCompletionListener;
 
 public class TestProjects {
 
@@ -172,7 +182,7 @@ public class TestProjects {
                 project.getExtensions().getExtraProperties().set(entry.getKey(), entry.getValue());
             }
 
-            loadGradleProperties(project, properties);
+            prepareProject(project, properties);
 
             project.apply(ImmutableMap.of("plugin", plugin.getPluginName()));
 
@@ -180,9 +190,60 @@ public class TestProjects {
         }
     }
 
+    static class FakeBuildEventsListenerRegistry implements BuildEventsListenerRegistry {
+        @Override
+        public void onTaskCompletion(Provider<? extends OperationCompletionListener> provider) {}
+    }
+
+    public static void prepareProject(
+            @NonNull Project project, @NonNull Map<String, String> gradleProperties) {
+        try {
+            addFakeService(project);
+            loadGradleProperties(project, gradleProperties);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * In Gradle 6.7-rc-1 BuildEventsListenerRegistry service is not created in we need it in order
+     * to instantiate AGP. This creates a fake one and injects it - http://b/168630734.
+     */
+    private static void addFakeService(Project project) {
+        try {
+            ProjectScopeServices gss =
+                    (ProjectScopeServices) ((DefaultProject) project).getServices();
+            Field state = ProjectScopeServices.class.getSuperclass().getDeclaredField("state");
+            state.setAccessible(true);
+            AtomicReference<Object> stateValue = (AtomicReference<Object>) state.get(gss);
+            Class<?> enumClass = Class.forName(DefaultServiceRegistry.class.getName() + "$State");
+            stateValue.set(enumClass.getEnumConstants()[0]);
+
+            Field ownServices =
+                    GradleScopeServices.class.getSuperclass().getDeclaredField("ownServices");
+            ownServices.setAccessible(true);
+            Object ownServicesValue = ownServices.get(gss);
+            Field analyser = ownServicesValue.getClass().getDeclaredField("analyser");
+            analyser.setAccessible(true);
+            Class<?> providerAnalyserClass =
+                    Class.forName(ownServicesValue.getClass().getName() + "$ProviderAnalyser");
+            Constructor<?> ctor =
+                    providerAnalyserClass.getDeclaredConstructor(ownServicesValue.getClass());
+            ctor.setAccessible(true);
+            Object newProviderAnalyser = ctor.newInstance(ownServicesValue);
+            analyser.set(ownServicesValue, newProviderAnalyser);
+
+            gss.add(BuildEventsListenerRegistry.class, new FakeBuildEventsListenerRegistry());
+            stateValue.set(enumClass.getEnumConstants()[1]);
+            analyser.set(ownServicesValue, null);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // TODO(bingran) remove this workaround when gradle issue #13122 is fixed
     // https://github.com/gradle/gradle/issues/13122
-    public static void loadGradleProperties(
+    private static void loadGradleProperties(
             @NonNull Project project, @NonNull Map<String, String> gradleProperties)
             throws IOException {
         File propertiesFile = new File(project.getProjectDir(), "gradle.properties");

@@ -95,7 +95,7 @@ public class TaskTestUtils {
         File projectDirectory = temporaryFolder.newFolder();
         FileUtils.mkdirs(projectDirectory);
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
-        TestProjects.loadGradleProperties(project, ImmutableMap.of());
+        TestProjects.prepareProject(project, ImmutableMap.of());
         creationConfig = getCreationConfig();
         issueReporter = new FakeSyncIssueReporter();
         transformManager = new TransformManager(project, issueReporter);

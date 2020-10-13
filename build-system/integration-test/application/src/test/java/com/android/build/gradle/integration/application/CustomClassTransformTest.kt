@@ -42,7 +42,6 @@ class CustomClassTransformTest {
     @JvmField
     val project =
         GradleTestProject.builder().fromTestApp(MinimalSubProject.app("com.example.test"))
-                .setTargetGradleVersion("6.7-20200825220036+0000")
                 .create()
 
     @Test
