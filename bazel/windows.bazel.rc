@@ -4,6 +4,10 @@ import %workspace%/tools/base/bazel/common.bazel.rc
 # required for dynamic scheduling.
 startup --windows_enable_symlinks
 
+# Disables verbose failures to avoid triggering --materialize_param_files, see
+# b/160150358#comment30
+test --verbose_failures=no
+
 build --enable_runfiles
 
 build:remote --config=remote_common
