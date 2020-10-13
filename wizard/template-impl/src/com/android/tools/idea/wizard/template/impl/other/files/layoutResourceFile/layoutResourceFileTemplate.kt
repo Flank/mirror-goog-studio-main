@@ -32,7 +32,6 @@ import java.io.File
 
 val layoutResourceFileTemplate
   get() = template {
-    revision = 1
     name = "Layout XML File"
     description = "Creates a new XML layout file"
     minApi = MIN_API

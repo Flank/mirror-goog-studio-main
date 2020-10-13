@@ -41,7 +41,6 @@ import java.io.File
 
 val blankWearActivityTemplate
   get() = template {
-    revision = 1
     name = "Blank Activity"
     minApi = 23
     minBuildApi = 23

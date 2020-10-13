@@ -40,7 +40,6 @@ import java.io.File
 
 val googleMapsWearActivityTemplate
   get() = template {
-    revision = 1
     name = "Google Maps Activity"
     minApi = 23
     minBuildApi = 25

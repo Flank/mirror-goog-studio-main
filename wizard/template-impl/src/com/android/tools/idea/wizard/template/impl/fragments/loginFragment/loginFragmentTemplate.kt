@@ -37,7 +37,6 @@ import java.io.File
 
 val loginFragmentTemplate
   get() = template {
-    revision = 1
     name = "Login Fragment"
     description = "Creates a new login fragment, allowing users to enter an email address and password to log in or to register with your application"
     minApi = MIN_API

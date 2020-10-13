@@ -33,7 +33,6 @@ import java.io.File
 
 val aidlFileTemplate
   get() = template {
-    revision = 1
     name = "AIDL File"
     description = "Creates a new Android Interface Description Language file"
     minApi = MIN_API

@@ -34,7 +34,6 @@ import java.io.File
 
 val settingsFragmentTemplate
   get() = template {
-    revision = 1
     name = "Settings Fragment"
     description = "Creates a new fragment that allows a user to configure application settings"
     minApi = MIN_API

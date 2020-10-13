@@ -38,7 +38,6 @@ import java.util.Locale
 
 val primaryDetailFlowTemplate
   get() = template {
-    revision = 1
     name = "Primary/Detail Flow"
     minApi = MIN_API
     minBuildApi = MIN_API

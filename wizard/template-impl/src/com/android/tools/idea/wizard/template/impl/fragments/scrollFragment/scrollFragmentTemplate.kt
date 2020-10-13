@@ -37,7 +37,6 @@ import java.io.File
 
 val scrollFragmentTemplate
   get() = template {
-    revision = 1
     name = "Scrolling Fragment"
     minApi = MIN_API
     minBuildApi = 22

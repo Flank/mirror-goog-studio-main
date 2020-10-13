@@ -50,7 +50,6 @@ enum class AdFormat {
 
 val googleAdMobAdsFragmentTemplate
   get() = template {
-    revision = 1
     name = "Google AdMob Ads Fragment"
     constraints = listOf(TemplateConstraint.AndroidX)
     minApi = MIN_API

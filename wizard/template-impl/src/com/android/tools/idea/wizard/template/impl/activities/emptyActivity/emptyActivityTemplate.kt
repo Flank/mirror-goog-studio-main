@@ -39,7 +39,6 @@ import com.android.tools.idea.wizard.template.template
 import java.io.File
 
 val emptyActivityTemplate get() = template {
-  revision = 1
   name = "Empty Activity"
   minApi = MIN_API
   minBuildApi = MIN_API

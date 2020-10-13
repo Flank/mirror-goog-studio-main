@@ -36,7 +36,6 @@ import java.io.File
 
 val contentProviderTemplate
   get() = template {
-    revision = 1
     name = "Content Provider"
     description = "Creates a new content provider component and adds it to your Android manifest"
 

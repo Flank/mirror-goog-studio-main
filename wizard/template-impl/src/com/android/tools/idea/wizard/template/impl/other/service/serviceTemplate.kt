@@ -35,7 +35,6 @@ import java.io.File
 
 val serviceTemplate
   get() = template {
-    revision = 1
     name = "Service"
     minApi = MIN_API
     minBuildApi = MIN_API

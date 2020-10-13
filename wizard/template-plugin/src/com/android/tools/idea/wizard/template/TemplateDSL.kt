@@ -18,7 +18,6 @@ package com.android.tools.idea.wizard.template
 import java.io.File
 
 internal data class TemplateImpl(
-  override val revision: Int,
   override val name: String,
   override val description: String,
   override val documentationUrl: String?,
@@ -71,7 +70,6 @@ class TemplateBuilder {
   }
 
   internal fun build(): Template {
-    checkNotNull(revision) { "Template must have a revision." }
     checkNotNull(name) { "Template must have a name." }
     checkNotNull(description) { "Template must have a description." }
     checkNotNull(category) { "Template have to specify category." }
@@ -79,7 +77,6 @@ class TemplateBuilder {
     checkNotNull(recipe) { "Template must have a recipe to run." }
 
     return TemplateImpl(
-      revision!!,
       name!!,
       description!!,
       documentationUrl,

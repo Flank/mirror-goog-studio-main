@@ -33,7 +33,6 @@ import java.io.File
 
 val androidManifestTemplate
   get() = template {
-    revision = 1
     name = "Android Manifest File"
     minApi = MIN_API
     minBuildApi = MIN_API

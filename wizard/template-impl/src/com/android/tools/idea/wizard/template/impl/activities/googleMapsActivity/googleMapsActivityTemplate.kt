@@ -41,7 +41,6 @@ import java.io.File
 
 val googleMapsActivityTemplate
   get() = template {
-    revision = 1
     name = "Google Maps Activity"
     description = "Creates a new activity with a Google Map"
     minApi = MIN_API

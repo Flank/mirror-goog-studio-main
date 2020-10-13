@@ -47,7 +47,6 @@ import java.util.Locale
 
 val googleAdMobAdsActivityTemplate
   get() = template {
-    revision = 1
     name = "Google AdMob Ads Activity"
     constraints = listOf(TemplateConstraint.AndroidX)
     minApi = MIN_API

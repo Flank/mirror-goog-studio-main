@@ -39,7 +39,6 @@ import java.io.File
 
 val googleMapsFragmentTemplate
   get() = template {
-    revision = 1
     name = "Google Maps Fragment"
     description = "Creates a new fragment with a Google Map"
     minApi = MIN_API

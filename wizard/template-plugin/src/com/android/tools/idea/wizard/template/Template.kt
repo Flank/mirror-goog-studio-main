@@ -81,15 +81,11 @@ interface Template {
   val parameters: Collection<Parameter<*>> get() = widgets.filterIsInstance<ParameterWidget<*>>().map { it.parameter }
   /**
    * A template name which is also used as identified.
-   *
-   * @see revision
    */
   val name: String
   /**
-   * If there are multiple templates with the same name, a template with the highest [revision] will be used.
-   * It provides an ability to override default templates with the custom ones.
+   * A textual description which is shown in wizards UIs.
    */
-  val revision: Int
   val description: String
   /**
    * Address of an external website with more details about the template.
@@ -129,7 +125,6 @@ interface Template {
     override val uiContexts: Collection<WizardUiContext> get() = listOf(WizardUiContext.ActivityGallery)
     override val constraints: Collection<TemplateConstraint> = listOf()
     override val recipe: Recipe get() = throw UnsupportedOperationException()
-    override val revision: Int = 1
     override val name: String = "No Activity"
     override val description: String = "Creates a new empty project"
     override val documentationUrl: String? = null

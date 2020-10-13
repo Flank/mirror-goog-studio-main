@@ -40,7 +40,6 @@ import java.io.File
 
 val bottomNavigationActivityTemplate
   get() = template {
-    revision = 1
     name = "Bottom Navigation Activity"
     description = "Creates a new activity with bottom navigation"
     minApi = MIN_API

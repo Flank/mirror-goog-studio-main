@@ -35,7 +35,6 @@ import com.android.tools.idea.wizard.template.template
 import java.io.File
 
 val navigationDrawerActivityTemplate = template {
-  revision = 1
   name = "Navigation Drawer Activity"
   minApi = MIN_API
   minBuildApi = MIN_API

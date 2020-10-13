@@ -38,7 +38,6 @@ import java.io.File
 
 val loginActivityTemplate
   get() = template {
-    revision = 1
     name = "Login Activity"
     description = "Creates a new login activity, allowing users to enter an email address and password to log in or to register with your application"
     minApi = MIN_API

@@ -35,7 +35,6 @@ import java.io.File
 private fun getSourceSetFolderTemplate(
   _name: String, _description: String, sourceSetType: SourceSetType, dirName: String
 ) = template {
-  revision = 1
   name = _name
   minApi = MIN_API
   minBuildApi = MIN_API
@@ -93,7 +92,6 @@ private fun getSourceSetFolderTemplate(
 private fun getSimpleFolderTemplate(
   _name: String, _description: String, dirName: String
 ) = template {
-  revision = 1
   name = _name
   minApi = MIN_API
   minBuildApi = MIN_API

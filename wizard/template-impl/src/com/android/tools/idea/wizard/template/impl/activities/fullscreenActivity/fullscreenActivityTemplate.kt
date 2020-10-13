@@ -40,7 +40,6 @@ import java.io.File
 
 val fullscreenActivityTemplate
   get() = template {
-    revision = 1
     name = "Fullscreen Activity"
     description = "Creates a new activity that toggles the visibility of the system UI (status and navigation bars) and action bar upon user interaction"
     minApi = MIN_API
