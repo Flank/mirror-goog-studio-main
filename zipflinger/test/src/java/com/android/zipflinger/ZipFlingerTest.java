@@ -1002,7 +1002,6 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
             archive.add(s);
             Assert.fail("Tmp file collision not detected");
         } catch (IllegalStateException e) {
-            e.printStackTrace();
         }
     }
 
