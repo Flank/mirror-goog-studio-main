@@ -36,7 +36,6 @@ val aidlFileTemplate
     name = "AIDL File"
     description = "Creates a new Android Interface Description Language file"
     minApi = MIN_API
-    minBuildApi = MIN_API
     category = Category.AIDL
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.MenuEntry)

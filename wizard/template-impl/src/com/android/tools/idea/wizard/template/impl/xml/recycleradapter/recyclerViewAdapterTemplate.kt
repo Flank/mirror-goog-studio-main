@@ -51,8 +51,6 @@ val recyclerViewAdapterFragmentTemplate
     name = "Adapter with Fragment"
     description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level $MIN_API"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.Fragment
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)
@@ -125,8 +123,6 @@ val recyclerViewAdapterNoFragmentTemplate
     name = "Adapter Only"
     description = "Generates RecyclerView adapter and other boilerplate codes. Compatible back to API level $MIN_API"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.XML
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)

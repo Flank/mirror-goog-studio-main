@@ -37,7 +37,6 @@ private fun getSourceSetFolderTemplate(
 ) = template {
   name = _name
   minApi = MIN_API
-  minBuildApi = MIN_API
   description = _description
 
   category = Category.Folder
@@ -94,7 +93,6 @@ private fun getSimpleFolderTemplate(
 ) = template {
   name = _name
   minApi = MIN_API
-  minBuildApi = MIN_API
   description = _description
 
   category = Category.Folder

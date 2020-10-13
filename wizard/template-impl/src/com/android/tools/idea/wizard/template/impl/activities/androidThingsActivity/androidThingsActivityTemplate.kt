@@ -42,7 +42,6 @@ val androidThingsActivityTemplate
   get() = template {
     name = "Android Things Empty Activity"
     minApi = 24
-    minBuildApi = 24
     description = "Creates a new empty activity for Android Things"
 
     category = Category.Activity

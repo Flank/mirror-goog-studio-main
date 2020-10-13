@@ -22,7 +22,6 @@ internal data class TemplateImpl(
   override val description: String,
   override val documentationUrl: String?,
   override val minSdk: Int,
-  override val minCompileSdk: Int,
   override val category: Category,
   override val formFactor: FormFactor,
   override val widgets: Collection<Widget<*>>,
@@ -46,7 +45,6 @@ class TemplateBuilder {
   var description: String? = null
   var documentationUrl: String? = null
   var minApi: Int = 1
-  var minBuildApi: Int = 1
   var category: Category? = null
   var formFactor: FormFactor? = null
   @Suppress("RedundantCompanionReference")
@@ -81,7 +79,6 @@ class TemplateBuilder {
       description!!,
       documentationUrl,
       minApi,
-      minBuildApi,
       category!!,
       formFactor!!,
       widgets,

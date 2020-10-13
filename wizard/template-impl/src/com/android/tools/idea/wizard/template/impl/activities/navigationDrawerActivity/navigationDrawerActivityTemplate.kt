@@ -37,7 +37,6 @@ import java.io.File
 val navigationDrawerActivityTemplate = template {
   name = "Navigation Drawer Activity"
   minApi = MIN_API
-  minBuildApi = MIN_API
   description = "Creates a new Activity with a Navigation Drawer"
 
   category = Category.Activity

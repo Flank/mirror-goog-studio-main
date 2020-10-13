@@ -62,8 +62,6 @@ val appWidgetTemplate
     name = "App Widget"
     description = "Creates a new App Widget"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     formFactor = FormFactor.Mobile
     category = Category.Widget
     screens = listOf(WizardUiContext.MenuEntry)

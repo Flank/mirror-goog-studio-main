@@ -43,7 +43,6 @@ val scrollActivityTemplate
   get() = template {
     name = "Scrolling Activity"
     minApi = MIN_API
-    minBuildApi = 22
     description = "Creates a new vertical scrolling activity"
 
     category = Category.Activity

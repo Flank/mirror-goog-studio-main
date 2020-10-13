@@ -37,7 +37,6 @@ val serviceTemplate
   get() = template {
     name = "Service"
     minApi = MIN_API
-    minBuildApi = MIN_API
     description = "Creates a new service component and adds it to your Android manifest"
 
     formFactor = FormFactor.Mobile

@@ -34,7 +34,6 @@ val appActionsResourceFileTemplate
     name = "App Actions XML File"
     description = "Creates an App Actions XML file. Note: Do not create more than one per app"
     minApi = MIN_API
-    minBuildApi = MIN_API
     category = Category.XML
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.MenuEntry)

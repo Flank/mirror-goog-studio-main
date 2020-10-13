@@ -44,8 +44,6 @@ val modalBottomSheetTemplate
     name = "Modal Bottom Sheet"
     description = "Creates a new modal bottom sheet fragment containing a list that can be rendered as a grid. Compatible back to API level $MIN_API"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.Fragment
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)

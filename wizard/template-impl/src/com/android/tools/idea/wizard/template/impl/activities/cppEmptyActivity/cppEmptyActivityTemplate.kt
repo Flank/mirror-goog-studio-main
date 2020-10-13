@@ -49,7 +49,6 @@ val cppEmptyActivityTemplate
   get() = template {
     name = "Native C++"
     minApi = MIN_API
-    minBuildApi = MIN_API
     description = "Creates a new project with an Empty Activity configured to use JNI"
     documentationUrl = DOCUMENTATION_URL
 

@@ -38,8 +38,6 @@ val blankFragmentTemplate
     name = "Fragment (Blank)"
     description = "Creates a blank fragment that is compatible back to API level $MIN_API"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.Fragment
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)

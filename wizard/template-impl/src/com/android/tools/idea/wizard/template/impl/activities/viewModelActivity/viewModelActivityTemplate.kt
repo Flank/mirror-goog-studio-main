@@ -43,7 +43,6 @@ val viewModelActivityTemplate
   get() = template {
     name = "Fragment + ViewModel"
     minApi = MIN_API
-    minBuildApi = MIN_API
     description = "Creates a new activity and a fragment with view model"
 
     category = Category.Activity

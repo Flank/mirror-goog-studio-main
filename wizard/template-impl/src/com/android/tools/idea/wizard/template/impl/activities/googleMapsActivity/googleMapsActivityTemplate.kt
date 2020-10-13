@@ -44,7 +44,6 @@ val googleMapsActivityTemplate
     name = "Google Maps Activity"
     description = "Creates a new activity with a Google Map"
     minApi = MIN_API
-    minBuildApi = MIN_API
     constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Google

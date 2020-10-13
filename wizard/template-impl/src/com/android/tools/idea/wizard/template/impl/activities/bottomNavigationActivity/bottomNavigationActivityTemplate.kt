@@ -43,8 +43,6 @@ val bottomNavigationActivityTemplate
     name = "Bottom Navigation Activity"
     description = "Creates a new activity with bottom navigation"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.Activity
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.ActivityGallery, WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)

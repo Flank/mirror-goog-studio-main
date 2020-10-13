@@ -39,7 +39,6 @@ val scrollFragmentTemplate
   get() = template {
     name = "Scrolling Fragment"
     minApi = MIN_API
-    minBuildApi = 22
     description = "Creates a new vertical scrolling fragment"
 
     category = Category.Fragment

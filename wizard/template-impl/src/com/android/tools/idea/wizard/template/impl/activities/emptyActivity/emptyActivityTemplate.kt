@@ -41,7 +41,6 @@ import java.io.File
 val emptyActivityTemplate get() = template {
   name = "Empty Activity"
   minApi = MIN_API
-  minBuildApi = MIN_API
   description = "Creates a new empty activity"
 
   category = Category.Activity

@@ -42,7 +42,6 @@ val googleMapsFragmentTemplate
     name = "Google Maps Fragment"
     description = "Creates a new fragment with a Google Map"
     minApi = MIN_API
-    minBuildApi = MIN_API
     constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Fragment

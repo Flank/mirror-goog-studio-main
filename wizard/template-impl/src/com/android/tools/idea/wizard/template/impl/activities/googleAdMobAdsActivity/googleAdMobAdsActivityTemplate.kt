@@ -50,7 +50,6 @@ val googleAdMobAdsActivityTemplate
     name = "Google AdMob Ads Activity"
     constraints = listOf(TemplateConstraint.AndroidX)
     minApi = MIN_API
-    minBuildApi = MIN_API
     description = "Creates an activity with AdMob Ad fragment"
 
     category = Category.Google

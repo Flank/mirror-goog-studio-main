@@ -36,7 +36,6 @@ import java.io.File
 val sliceProviderTemplate
   get() = template {
     name = "Slice Provider"
-    minBuildApi = 28
     constraints = listOf(TemplateConstraint.AndroidX)
     description = "Creates a new SliceProvider component and adds it to your Android manifest"
 

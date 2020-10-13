@@ -35,7 +35,6 @@ val androidManifestTemplate
   get() = template {
     name = "Android Manifest File"
     minApi = MIN_API
-    minBuildApi = MIN_API
     description = "Creates an Android Manifest XML File"
 
     category = Category.Other
