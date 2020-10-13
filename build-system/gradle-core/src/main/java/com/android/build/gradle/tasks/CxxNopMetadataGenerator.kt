@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
-import com.android.build.gradle.internal.cxx.gradle.generator.NativeAndroidProjectBuilder
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -39,5 +38,4 @@ class CxxNopMetadataGenerator(
             forceGeneration: Boolean,
             abiName: String?): List<Callable<Unit>> = listOf()
 
-    override fun addCurrentMetadata(builder: NativeAndroidProjectBuilder) { }
 }

@@ -64,10 +64,10 @@ import com.android.build.gradle.internal.errors.IncompatibleProjectOptionsReport
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl;
 import com.android.build.gradle.internal.ide.ModelBuilder;
-import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService;
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService;
+import com.android.build.gradle.internal.ide.v2.NativeModelBuilder;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
@@ -515,17 +515,10 @@ public abstract class BasePlugin<
 
         // Register a builder for the native tooling model
 
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_V2_NATIVE_MODEL)) {
-            com.android.build.gradle.internal.ide.v2.NativeModelBuilder nativeModelBuilderV2 =
-                    new com.android.build.gradle.internal.ide.v2.NativeModelBuilder(
-                            projectServices.getIssueReporter(), globalScope, variantModel);
-            registry.register(nativeModelBuilderV2);
-        } else {
-            NativeModelBuilder nativeModelBuilder =
-                    new NativeModelBuilder(
-                            projectServices.getIssueReporter(), globalScope, variantModel);
-            registry.register(nativeModelBuilder);
-        }
+        NativeModelBuilder nativeModelBuilderV2 =
+                new NativeModelBuilder(
+                        projectServices.getIssueReporter(), globalScope, variantModel);
+        registry.register(nativeModelBuilderV2);
     }
 
     @NonNull

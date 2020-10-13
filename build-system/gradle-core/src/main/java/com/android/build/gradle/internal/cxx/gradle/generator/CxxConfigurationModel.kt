@@ -45,7 +45,6 @@ import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
-import com.android.build.gradle.options.BooleanOption.ENABLE_V2_NATIVE_MODEL
 import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
@@ -60,13 +59,13 @@ import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
-import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
+import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileCollection
 import java.io.File
-import java.util.Objects
+import java.util.*
 
 /**
  * The createCxxMetadataGenerator(...) function is meant to be use at
@@ -119,7 +118,6 @@ data class CxxConfigurationParameters(
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
-    val isV2NativeModelEnabled: Boolean,
     val isPreferCmakeFileApiEnabled: Boolean
 )
 
@@ -295,7 +293,6 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, variant, variant.variantDslInfo
         ),
-        isV2NativeModelEnabled = option(ENABLE_V2_NATIVE_MODEL),
         isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API)
     )
 }
@@ -380,7 +377,6 @@ fun createCxxMetadataGenerator(
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15
             if (isPreCmakeFileApiVersion ||
-                !variant.module.project.isV2NativeModelEnabled ||
                 !variant.module.cmake!!.isPreferCmakeFileApiEnabled
             ) {
                 return CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)

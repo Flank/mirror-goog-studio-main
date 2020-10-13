@@ -54,15 +54,5 @@ interface CxxMetadataGenerator {
         forceGeneration: Boolean,
         abiName : String? = null
     ): List<Callable<Unit>>
-
-    /**
-     * Append all currently available C/C++ metadata to the builder without
-     * running any slow processes to create metadata that isn't there. If
-     * the caller needs to ensure metadata is available then first call
-     * [getMetadataGenerators] and invoke futures.
-     *
-     * Build metadata is added to [builder].
-     */
-    fun addCurrentMetadata(builder: NativeAndroidProjectBuilder)
     //endregion
 }

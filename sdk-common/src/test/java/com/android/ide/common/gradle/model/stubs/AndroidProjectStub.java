@@ -17,7 +17,21 @@ package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.*;
+import com.android.builder.model.AaptOptions;
+import com.android.builder.model.AndroidGradlePluginProjectFlags;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ArtifactMetaData;
+import com.android.builder.model.BuildTypeContainer;
+import com.android.builder.model.DependenciesInfo;
+import com.android.builder.model.JavaCompileOptions;
+import com.android.builder.model.LintOptions;
+import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.SigningConfig;
+import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildInformation;
+import com.android.builder.model.ViewBindingOptions;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -44,7 +58,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final Collection<String> myFlavorDimensions;
     @NonNull private final String myCompileTarget;
     @NonNull private final Collection<String> myBootClasspath;
-    @NonNull private final Collection<NativeToolchain> myNativeToolchains;
     @NonNull private final Collection<SigningConfig> mySigningConfigs;
     @NonNull private final LintOptions myLintOptions;
     @NonNull private final List<File> myLintRuleJars;
@@ -80,7 +93,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 Lists.newArrayList("flavorDimension"),
                 "compileTarget",
                 Lists.newArrayList("bootClasspath"),
-                Lists.newArrayList(new NativeToolchainStub()),
                 Lists.newArrayList(new SigningConfigStub()),
                 new LintOptionsStub(),
                 ImmutableList.of(),
@@ -116,7 +128,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull Collection<String> flavorDimensions,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClasspath,
-            @NonNull Collection<NativeToolchain> nativeToolchains,
             @NonNull Collection<SigningConfig> signingConfigs,
             @NonNull LintOptions lintOptions,
             @NonNull List<File> lintRuleJars,
@@ -149,7 +160,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myFlavorDimensions = flavorDimensions;
         myCompileTarget = compileTarget;
         myBootClasspath = bootClasspath;
-        myNativeToolchains = nativeToolchains;
         mySigningConfigs = signingConfigs;
         myLintOptions = lintOptions;
         myLintRuleJars = lintRuleJars;
@@ -274,7 +284,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @Override
     @NonNull
     public Collection<NativeToolchain> getNativeToolchains() {
-        return myNativeToolchains;
+        throw new UnsupportedOperationException(
+                "NativeToolchain is deprecated in favor of V2 native models.");
     }
 
     @Override
@@ -498,8 +509,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + '\''
                 + ", myBootClasspath="
                 + myBootClasspath
-                + ", myNativeToolchains="
-                + myNativeToolchains
                 + ", mySigningConfigs="
                 + mySigningConfigs
                 + ", myLintOptions="

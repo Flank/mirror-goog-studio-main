@@ -385,8 +385,6 @@ open class BasicModuleModelMock {
             doReturn(null)
                 .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
             doReturn(false)
-                .`when`(projectOptions).get(BooleanOption.ENABLE_V2_NATIVE_MODEL)
-            doReturn(false)
                 .`when`(projectOptions).get(BooleanOption.PREFER_CMAKE_FILE_API)
 
             doReturn(defaultCmakeVersion.toString()).`when`(cmake).version

@@ -79,6 +79,4 @@ data class CxxProjectModel(
      * Feature flag enabling prefab for the project.
      */
     val isPrefabEnabled: Boolean = false,
-
-    val isV2NativeModelEnabled: Boolean = false
 )
