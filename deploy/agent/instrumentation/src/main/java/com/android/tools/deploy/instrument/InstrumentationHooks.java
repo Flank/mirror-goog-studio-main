@@ -99,16 +99,10 @@ public final class InstrumentationHooks {
     }
 
     public static Resources addResourceOverlays(Resources resources) throws Exception {
-        // LoadedApk maintains a single Resources object, which it returns when getResources() is
-        // called. If we've already added the loader to that object, don't bother trying to add it
-        // a second time.
-        List existingLoaders = (List) call(resources, "getLoaders");
-        if (!existingLoaders.contains(resources)) {
-            // TODO: This is commented out to prevent crashes, until IWI-run supports resources.
-            // Lack of resource support means no resources.arsc, which apparently causes issues down
-            // the line when we try to load an arsc file during swap.
-            // ResourceOverlays.addResourceOverlays(resources);
-        }
+        // TODO: This is commented out to prevent crashes, until IWI-run supports resources.
+        // Lack of resource support means no resources.arsc, which apparently causes issues down
+        // the line when we try to load an arsc file during swap.
+        // ResourceOverlays.addResourceOverlays(resources);
         return resources;
     }
 
