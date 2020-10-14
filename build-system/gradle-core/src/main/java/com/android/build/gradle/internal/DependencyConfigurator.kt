@@ -24,6 +24,7 @@ import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.dependency.ANDROID_JDK_IMAGE
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
 import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
@@ -39,6 +40,7 @@ import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
 import com.android.build.gradle.internal.dependency.JetifyTransform
+import com.android.build.gradle.internal.dependency.JdkImageTransform
 import com.android.build.gradle.internal.dependency.CollectResourceSymbolsTransform
 import com.android.build.gradle.internal.dependency.CollectClassesTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
@@ -49,6 +51,8 @@ import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransf
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform.Companion.registerRecalculateStackFramesTransformForComponent
 import com.android.build.gradle.internal.dependency.VersionedCodeShrinker.Companion.of
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfigurations
+import com.android.build.gradle.internal.dependency.getJavaHome
+import com.android.build.gradle.internal.dependency.getJdkId
 import com.android.build.gradle.internal.dependency.registerDexingOutputSplitTransform
 import com.android.build.gradle.internal.dsl.BaseFlavor
 import com.android.build.gradle.internal.dsl.BuildType
@@ -219,6 +223,17 @@ class DependencyConfigurator(
             AndroidArtifacts.ArtifactType.JAR.type,
             AndroidArtifacts.TYPE_PLATFORM_ATTR
         )
+
+        // transform to create the JDK image from core-for-system-modules.jar
+        registerTransform(
+            JdkImageTransform::class.java,
+            AndroidArtifacts.ArtifactType.JAR.type,
+            ANDROID_JDK_IMAGE
+        ) { params ->
+            params.jdkId.setDisallowChanges(getJdkId(project))
+            params.javaHome.setDisallowChanges(getJavaHome(project))
+        }
+
         val sharedLibSupport = globalScope
             .projectOptions[BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES]
 

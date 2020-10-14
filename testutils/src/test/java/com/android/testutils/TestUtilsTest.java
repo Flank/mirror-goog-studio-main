@@ -297,4 +297,14 @@ public class TestUtilsTest {
             assertThat(e.getMessage()).contains(TestUtils.getLatestAndroidPlatform());
         }
     }
+
+    @Test
+    public void testRunningWithJdk11Plus() {
+        assertThat(TestUtils.runningWithJdk11Plus("11.0.8")).isTrue();
+        assertThat(TestUtils.runningWithJdk11Plus("12.0.0")).isTrue();
+
+        assertThat(TestUtils.runningWithJdk11Plus("10.0.0")).isFalse();
+        assertThat(TestUtils.runningWithJdk11Plus("9.0.0")).isFalse();
+        assertThat(TestUtils.runningWithJdk11Plus("1.8.0_242-release")).isFalse();
+    }
 }

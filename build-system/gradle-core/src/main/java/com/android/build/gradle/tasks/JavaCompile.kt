@@ -107,7 +107,7 @@ class JavaCompileCreationAction(
         task.dependsOn(creationConfig.taskContainer.preBuildTask)
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, creationConfig.name)
 
-        task.configureProperties(creationConfig)
+        task.configureProperties(creationConfig, task)
         // Set up the annotation processor classpath even when Kapt is used, because Java compiler
         // plugins like ErrorProne share their classpath with annotation processors (see
         // https://github.com/gradle/gradle/issues/6573), and special annotation processors like
