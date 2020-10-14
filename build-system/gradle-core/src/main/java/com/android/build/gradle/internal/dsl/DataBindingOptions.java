@@ -67,7 +67,7 @@ public class DataBindingOptions
                 .reportDeprecatedUsage(
                         "android.buildFeatures.dataBinding",
                         "android.dataBinding.enabled",
-                        DeprecationReporter.DeprecationTarget.VERSION_5_0);
+                        DeprecationReporter.DeprecationTarget.VERSION_7_0);
         final BuildFeatures buildFeatures = featuresProvider.get();
         Boolean bool = false;
         if (buildFeatures instanceof ApplicationBuildFeatures) {
@@ -92,7 +92,7 @@ public class DataBindingOptions
                 .reportDeprecatedUsage(
                         "android.buildFeatures.dataBinding",
                         "android.dataBinding.enabled",
-                        DeprecationReporter.DeprecationTarget.VERSION_5_0);
+                        DeprecationReporter.DeprecationTarget.VERSION_7_0);
 
         final BuildFeatures buildFeatures = featuresProvider.get();
         if (buildFeatures instanceof ApplicationBuildFeatures) {

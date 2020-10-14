@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -62,9 +63,7 @@ class AnnotationProcessorCompileClasspathTest {
         result.stdout.use {
             ScannerSubject.assertThat(it).contains(
                 "DSL element 'annotationProcessorOptions.includeCompileClasspath' is obsolete.\n"
-                        + "It will be removed in version 5.0 of the Android Gradle plugin.\n"
-                        + "It does not do anything and AGP no longer includes annotation processors added on your project's compile classpath"
-
+                        + DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH.getDeprecationTargetMessage()
             )
         }
     }
