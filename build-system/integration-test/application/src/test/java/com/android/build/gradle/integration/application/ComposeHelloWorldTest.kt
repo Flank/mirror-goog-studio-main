@@ -57,6 +57,7 @@ class ComposeHelloWorldTest {
         TestFileUtils.searchAndReplace(project.getSubproject("app").buildFile,
                 "android.composeOptions.useLiveLiterals = true",
                 "android.composeOptions.useLiveLiterals = false")
-        executor.run("clean", "assembleDebug")
+        val result = executor.run("assembleDebug")
+        assertThat(result.didWorkTasks).contains(":app:compileDebugKotlin")
     }
 }

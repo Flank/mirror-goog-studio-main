@@ -94,6 +94,9 @@ fun addComposeArgsToKotlinCompile(
             .withPropertyName("composeCompilerExtension")
             .withNormalizer(ClasspathNormalizer::class.java)
 
+    // Add useLiveLiterals as an input
+    task.inputs.property("useLiveLiterals", useLiveLiterals)
+
     val debuggable = if (creationConfig is ApkCreationConfig) {
         creationConfig.debuggable
     } else {
