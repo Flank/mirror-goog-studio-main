@@ -115,11 +115,14 @@ def single_gradle_integration_test_per_source(
         if target_name.lower() in lowercase_split_targets:
             # prepend part of package name to make unique
             target_name = src.split("/")[-2] + "." + target_name
-        split_targets.append(target_name)
         lowercase_split_targets.append(target_name.lower())
         is_flaky = target_name in flaky_targets
         if is_flaky:
             num_flaky_applied += 1
+
+        # For coverage to work with the test suite, test targets need a <suite>__ prefix
+        target_name = name + "__" + target_name
+        split_targets.append(target_name)
 
         gradle_integration_test(
             name = target_name,

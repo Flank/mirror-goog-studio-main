@@ -5,7 +5,7 @@ the allowlisted targets below can set "flaky" to true.
 """
 
 APPROVED_FLAKY_TESTS = [
-    "//tools/base/build-system/integration-test/application:GradlePluginMemoryLeakTest",  # b/153972155
+    "//tools/base/build-system/integration-test/application:tests__GradlePluginMemoryLeakTest",  # b/153972155
     "//tools/base/build-system/integration-test/connected:ParentLibsConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:NdkJniLibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MlModelBindingConnectedTest",  # b/148626301
