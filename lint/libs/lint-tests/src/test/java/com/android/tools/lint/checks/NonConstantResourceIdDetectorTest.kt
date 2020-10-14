@@ -57,10 +57,10 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
             )
         ).run().expect(
             """
-            src/test/pkg/SwitchTest.java:13: Warning: Resource IDs will be non-final in Android Gradle Plugin version 5.0, avoid using them in switch case statements [NonConstantResourceId]
+            src/test/pkg/SwitchTest.java:13: Warning: Resource IDs will be non-final in Android Gradle Plugin version 7.0, avoid using them in switch case statements [NonConstantResourceId]
                                         case R.styleable.FontFamilyFont_android_fontWeight: someValue = 1; break;
                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/SwitchTest.java:17: Warning: Resource IDs will be non-final in Android Gradle Plugin version 5.0, avoid using them in switch case statements [NonConstantResourceId]
+            src/test/pkg/SwitchTest.java:17: Warning: Resource IDs will be non-final in Android Gradle Plugin version 7.0, avoid using them in switch case statements [NonConstantResourceId]
                                         case R.id.text: someValue = 3; break;
                                              ~~~~~~~~~
             0 errors, 2 warnings
@@ -131,10 +131,10 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
             )
         ).run().expect(
             """
-            src/test/pkg/JavaAnnotationTest.java:8: Warning: Resource IDs will be non-final in Android Gradle Plugin version 5.0, avoid using them as annotation attributes [NonConstantResourceId]
+            src/test/pkg/JavaAnnotationTest.java:8: Warning: Resource IDs will be non-final in Android Gradle Plugin version 7.0, avoid using them as annotation attributes [NonConstantResourceId]
                                 @TestAnnotation(resourceId = R.styleable.FontFamilyFont_android_fontWeight)
                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/JavaAnnotationTest.java:13: Warning: Resource IDs will be non-final in Android Gradle Plugin version 5.0, avoid using them as annotation attributes [NonConstantResourceId]
+            src/test/pkg/JavaAnnotationTest.java:13: Warning: Resource IDs will be non-final in Android Gradle Plugin version 7.0, avoid using them as annotation attributes [NonConstantResourceId]
                                 @TestAnnotation(resourceId = R.id.text)
                                                              ~~~~~~~~~
             0 errors, 2 warnings
@@ -171,10 +171,10 @@ class NonConstantResourceIdDetectorTest : AbstractCheckTest() {
             )
         ).run().expect(
             """
-            src/test/pkg/KtAnnotationTest.kt:5: Warning: Resource IDs will be non-final in Android Gradle Plugin version 5.0, avoid using them as annotation attributes [NonConstantResourceId]
+            src/test/pkg/KtAnnotationTest.kt:5: Warning: Resource IDs will be non-final in Android Gradle Plugin version 7.0, avoid using them as annotation attributes [NonConstantResourceId]
                                 @TestAnnotation(resourceId = R.styleable.FontFamilyFont_android_fontWeight)
                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/KtAnnotationTest.kt:8: Warning: Resource IDs will be non-final in Android Gradle Plugin version 5.0, avoid using them as annotation attributes [NonConstantResourceId]
+            src/test/pkg/KtAnnotationTest.kt:8: Warning: Resource IDs will be non-final in Android Gradle Plugin version 7.0, avoid using them as annotation attributes [NonConstantResourceId]
                                 @TestAnnotation(resourceId = R.id.text)
                                                              ~~~~~~~~~
             0 errors, 2 warnings
