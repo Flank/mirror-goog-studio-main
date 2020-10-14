@@ -19,78 +19,56 @@ package com.android.tools.deploy.instrument;
 import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
 
 import android.content.res.Resources;
+import android.content.res.loader.ResourcesLoader;
+import android.content.res.loader.ResourcesProvider;
 import java.io.File;
-import java.lang.ref.Reference;
-import java.lang.reflect.Array;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public final class ResourceOverlays {
     private static final String TAG = "studio.deploy";
 
-    // ResourceLoaders are containers for supplying ResourcesProviders to Resources objects.
-    // ResourcesLoaders are added to Resources objects to supply additional resources and assets or
-    // modify the values of existing resources and assets.
-    private static Class<?> resourcesLoaderClass =
-            findClassOrNull("android.content.res.loader.ResourcesLoader");
-    private static Class<?> resourcesProviderClass =
-            findClassOrNull("android.content.res.loader.ResourcesProvider");
-    private static Class<?> assetsProviderClass =
-            findClassOrNull("android.content.res.loader.AssetsProvider");
-
-    // The ResourcesLoader that holds all of the overlaid resources.
-    private static Object resourcesLoader = null;
+    // The loader that holds all of the overlaid resources.
+    private static ResourcesLoader resourcesLoader = null;
 
     public static void addResourceOverlays(Resources resources) throws Exception {
         updateLoader();
-        Object[] loaderList = (Object[]) Array.newInstance(resourcesLoaderClass, 1);
-        loaderList[0] = resourcesLoader;
-        call(resources, "addLoaders", arg(loaderList));
+        resources.addLoaders(resourcesLoader);
     }
 
     public static void addResourceOverlays(Object resourcesManager) throws Exception {
         updateLoader();
-        Object[] loaderList = (Object[]) Array.newInstance(resourcesLoaderClass, 1);
-        loaderList[0] = resourcesLoader;
 
         // Enumerate every Resources object that currently exists in the application. Add our
         // resources loader to each one.
-        Object resourcesRefs = getDeclaredField(resourcesManager, "mResourceReferences");
-        for (Object ref : (Collection) resourcesRefs) {
-            Object resources = call(ref, Reference.class, "get");
+        ArrayList<WeakReference<Resources>> refs =
+                (ArrayList<WeakReference<Resources>>)
+                        getDeclaredField(resourcesManager, "mResourceReferences");
+        for (WeakReference<Resources> ref : refs) {
+            Resources resources = ref.get();
             if (resources == null) {
                 continue;
             }
-            call(resources, "addLoaders", arg(loaderList));
+            resources.addLoaders(resourcesLoader);
         }
     }
 
     private static void updateLoader() throws Exception {
         if (resourcesLoader == null) {
-            resourcesLoader = resourcesLoaderClass.newInstance();
+            resourcesLoader = new ResourcesLoader();
         }
 
         Object activityThread = getActivityThread();
         Overlay overlay = new Overlay(getPackageName(activityThread));
 
-        List<Object> providers = new ArrayList<>();
+        List<ResourcesProvider> providers = new ArrayList<>();
         for (File apkDir : overlay.getApkDirs()) {
-            Arg path = arg(apkDir.getAbsolutePath());
-            Arg assets = arg(null, assetsProviderClass);
-            providers.add(call(resourcesProviderClass, "loadFromDirectory", path, assets));
+            providers.add(ResourcesProvider.loadFromDirectory(apkDir.getAbsolutePath(), null));
         }
 
         // This will update every AssetManager that currently references our loader.
-        call(resourcesLoader, "setProviders", arg(providers, List.class));
-    }
-
-    private static Class<?> findClassOrNull(String name) {
-        try {
-            return Class.forName(name);
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
+        resourcesLoader.setProviders(providers);
     }
 
     private static Object getActivityThread() throws Exception {
