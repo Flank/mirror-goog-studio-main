@@ -79,7 +79,7 @@ class CreateCxxModuleModelTest {
     fun `remap of buildStagingDirectory`() {
         BasicCmakeMock().let {
             PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
-                doReturn(File("my-build-staging-directory"))
+                doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val componentModel =
                     tryCreateCxxConfigurationModel(
