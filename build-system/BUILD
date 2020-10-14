@@ -123,6 +123,12 @@ filegroup(
 )
 
 filegroup(
+    name = "gradle-distrib-6.1.1",
+    srcs = ["//tools/external/gradle:gradle-distrib-6.1.1"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "gradle-distrib-5.5",
     srcs = ["//tools/external/gradle:gradle-distrib-5.5"],
     visibility = ["//visibility:public"],
