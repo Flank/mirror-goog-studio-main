@@ -430,7 +430,7 @@ public class TestUtils {
                 hostDir = "linux";
                 break;
             case DARWIN:
-                hostDir = "mac";
+                hostDir = "mac/Contents/Home";
                 break;
             case WINDOWS:
                 hostDir = "win";
