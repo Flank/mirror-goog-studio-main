@@ -47,7 +47,6 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   Phase p("Overlay ID Push");
 
   if (!ExtractBinaries(workspace_.GetTmpFolder(), {kInstallServer})) {
-    // TODO Error Handling
     ErrEvent("Extracting binaries failed");
     return;
   }
@@ -67,12 +66,13 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
       request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_) {
-    // TODO Error Handling
+    ErrEvent("OverlayIdPushCommand error: No client");
     return;
   }
 
   if (!client_->Write(install_request)) {
-    // TODO Error Handling.
+    ErrEvent(
+        "OverlayIdPushCommand error: Unable to write request to AppServer");
     return;
   }
 
@@ -82,13 +82,15 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  if (install_response.overlay_response().status() !=
-      proto::OverlayUpdateResponse::OK) {
-    // TODO Error Handling.
+  proto::OverlayUpdateResponse_Status status =
+      install_response.overlay_response().status();
+  if (status != proto::OverlayUpdateResponse::OK) {
+    ErrEvent("OverlayIdPushCommand error: Bad status (" + to_string(status) +
+             ")");
   }
 
   if (!client_->KillServerAndWait(&install_response)) {
-    // TODO Error Handling.
+    ErrEvent("OverlayIdPushCommand error: Unable to kill AppServer");
     return;
   }
 

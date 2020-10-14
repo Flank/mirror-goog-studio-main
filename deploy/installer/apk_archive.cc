@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <cstring>
 
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/trace.h"
 
@@ -137,9 +138,7 @@ bool ApkArchive::Prepare(const std::string& path) noexcept {
 
   start_ = (uint8_t*)mmap(0, size_, PROT_READ, MAP_PRIVATE, fd, 0);
   if (start_ == MAP_FAILED) {
-    std::cerr << "Unable to mmap file '" << path << "'" << std::endl;
-    // TODO: (Valid for entire project), ALL errors must explicitly logged to
-    // offer as much diagnostic information as possible.
+    ErrEvent("Unable to mmap file '" + path + "'");
     close(fd);
     return false;
   }
@@ -160,7 +159,7 @@ Dump ApkArchive::ExtractMetadata() noexcept {
 
   Dump dump;
   if (!ready_) {
-    // TODO Log errors better than this!
+    ErrEvent("Unable to ExtracMetadata (not ready)");
     return dump;
   }
 
