@@ -18,20 +18,22 @@ package com.android.build.api.instrumentation
 
 import org.gradle.api.Incubating
 
-/**
- * A service that helps with loading information about a particular class.
- */
 @Incubating
-interface ClassDataLoader {
+interface ClassContext {
+
+    /**
+     * Contains information about the class that will be instrumented.
+     */
+    val currentClassData: ClassData
 
     /**
      * Loads the class data for the class with given [className].
      *
      * Returns null if a class named [className] couldn't be found in the runtime classpath of the
-     * class being visited. See [AsmClassVisitorFactory.createClassVisitor].
+     * class defined by the [currentClassData].
      *
      * @param className the fully qualified name of the class,
-     *                  (e.g. "com.android.build.api.instrumentation.ClassDataLoader")
+     *                  (e.g. "com.android.build.api.instrumentation.ClassContext")
      */
     fun loadClassData(className: String): ClassData?
 }
