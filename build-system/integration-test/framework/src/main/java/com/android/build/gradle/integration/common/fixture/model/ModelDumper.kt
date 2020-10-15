@@ -150,6 +150,7 @@ private fun NativeAbi.writeToBuilder(builder: DumpBuilder) {
         item("sourceFlagsFile", sourceFlagsFile)
         item("symbolFolderIndexFile", symbolFolderIndexFile)
         item("buildFileIndexFile", buildFileIndexFile)
+        item("additionalProjectFilesIndexFile", additionalProjectFilesIndexFile)
     }
 }
 

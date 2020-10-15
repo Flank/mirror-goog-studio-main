@@ -285,7 +285,8 @@ public class HelloWorldJniApp extends GradleProject {
                         + "target_link_libraries(hello-jni log)");
     }
 
-    public static TestSourceFile cmakeListsWithExecutables(String folder) {
+    public static TestSourceFile cmakeListsWithExecutables(
+            String folder, String... additionalFiles) {
         return new TestSourceFile(
                 folder,
                 "CMakeLists.txt",
@@ -296,7 +297,9 @@ public class HelloWorldJniApp extends GradleProject {
                         + "message(\"${SRC}\")\n"
                         + "file(GLOB_RECURSE EXEC src/main/cxx/executable/*.cpp)\n"
                         + "set(CMAKE_VERBOSE_MAKEFILE ON)\n"
-                        + "add_library(hello-jni SHARED ${SRC})\n"
+                        + "add_library(hello-jni SHARED ${SRC} "
+                        + String.join(" ", additionalFiles)
+                        + ")\n"
                         + "add_executable(hello-executable ${EXEC})\n"
                         + "\n"
                         + "# Include a nice standard set of libraries to link against by default\n"

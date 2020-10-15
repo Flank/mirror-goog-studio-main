@@ -56,4 +56,16 @@ interface NativeAbi: AndroidModel {
      * This file is generated if requested in [NativeModelBuilderParameter].
      */
     val buildFileIndexFile: File
+
+    /**
+     * Text file containing a list of additional project files that are known to the build system.
+     *
+     * For example, if CMake is used, this file contains explicitly listed header files for a user
+     * library.
+     *
+     * This file is generated if requested in [NativeModelBuilderParameter].
+     *
+     * @since 7.0
+     */
+    val additionalProjectFilesIndexFile: File
 }

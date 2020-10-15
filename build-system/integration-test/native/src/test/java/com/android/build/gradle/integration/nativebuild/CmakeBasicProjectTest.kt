@@ -257,48 +257,57 @@ class CmakeBasicProjectTest(
         // Request build details for debug-x86_64
         val fetchResult =
           project.modelV2().fetchNativeModules(listOf("debug"), listOf("x86_64"))
+
+        // TODO(tgeng): Update this when CMake server supports populating additional project files.
+        val additionalProjectFileStatus = if (cmakeVersionInDsl == BAKING_CMAKE_VERSION) {
+            "F"
+        } else {
+            "!"
+        }
         // note that only build files for the requested variant and ABI exists.
         Truth.assertThat(fetchResult.dump()).isEqualTo(
-          """
-            [:]
-            > NativeModule:
-                - name                    = "project"
-                > variants:
-                   * NativeVariant:
-                      * name = "debug"
-                      > abis:
-                         * NativeAbi:
-                            * name                  = "armeabi-v7a"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
-                         * NativeAbi:
-                            * name                  = "x86_64"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
-                      < abis
-                   * NativeVariant:
-                      * name = "release"
-                      > abis:
-                         * NativeAbi:
-                            * name                  = "armeabi-v7a"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
-                         * NativeAbi:
-                            * name                  = "x86_64"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
-                      < abis
-                < variants
-                - nativeBuildSystem       = CMAKE
-                - ndkVersion              = "{DEFAULT_NDK_VERSION}"
-                - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
-                - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
-            < NativeModule
-            """.trimIndent()
+          """[:]
+> NativeModule:
+    - name                    = "project"
+    > variants:
+       * NativeVariant:
+          * name = "debug"
+          > abis:
+             * NativeAbi:
+                * name                            = "armeabi-v7a"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/additional_project_files.txt{!}
+             * NativeAbi:
+                * name                            = "x86_64"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
+          < abis
+       * NativeVariant:
+          * name = "release"
+          > abis:
+             * NativeAbi:
+                * name                            = "armeabi-v7a"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/additional_project_files.txt{!}
+             * NativeAbi:
+                * name                            = "x86_64"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/additional_project_files.txt{!}
+          < abis
+    < variants
+    - nativeBuildSystem       = CMAKE
+    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
+    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
+    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
+< NativeModule"""
         )
     }
 
@@ -306,46 +315,48 @@ class CmakeBasicProjectTest(
     fun checkModel() {
         val fetchResult = project.modelV2().fetchNativeModules(emptyList(), emptyList())
         Truth.assertThat(fetchResult.dump()).isEqualTo(
-          """
-            [:]
-            > NativeModule:
-                - name                    = "project"
-                > variants:
-                   * NativeVariant:
-                      * name = "debug"
-                      > abis:
-                         * NativeAbi:
-                            * name                  = "armeabi-v7a"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
-                         * NativeAbi:
-                            * name                  = "x86_64"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}
-                      < abis
-                   * NativeVariant:
-                      * name = "release"
-                      > abis:
-                         * NativeAbi:
-                            * name                  = "armeabi-v7a"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
-                         * NativeAbi:
-                            * name                  = "x86_64"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
-                      < abis
-                < variants
-                - nativeBuildSystem       = CMAKE
-                - ndkVersion              = "{DEFAULT_NDK_VERSION}"
-                - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
-                - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
-            < NativeModule
-            """.trimIndent()
+          """[:]
+> NativeModule:
+    - name                    = "project"
+    > variants:
+       * NativeVariant:
+          * name = "debug"
+          > abis:
+             * NativeAbi:
+                * name                            = "armeabi-v7a"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/additional_project_files.txt{!}
+             * NativeAbi:
+                * name                            = "x86_64"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/additional_project_files.txt{!}
+          < abis
+       * NativeVariant:
+          * name = "release"
+          > abis:
+             * NativeAbi:
+                * name                            = "armeabi-v7a"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/additional_project_files.txt{!}
+             * NativeAbi:
+                * name                            = "x86_64"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/additional_project_files.txt{!}
+          < abis
+    < variants
+    - nativeBuildSystem       = CMAKE
+    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
+    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
+    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
+< NativeModule"""
         )
     }
 
@@ -357,48 +368,57 @@ class CmakeBasicProjectTest(
 
         // We specify to not generate the build information for any variants or ABIs here.
         val result = project.modelV2().fetchNativeModules(emptyList(), emptyList())
+
+        // TODO(tgeng): Update this when CMake server supports populating additional project files.
+        val additionalProjectFileStatus = if (cmakeVersionInDsl == BAKING_CMAKE_VERSION) {
+            "F"
+        } else {
+            "!"
+        }
         // The files still appear to exist because we have already built the project.
         Truth.assertThat(result.dump()).isEqualTo(
-          """
-            [:]
-            > NativeModule:
-                - name                    = "project"
-                > variants:
-                   * NativeVariant:
-                      * name = "debug"
-                      > abis:
-                         * NativeAbi:
-                            * name                  = "armeabi-v7a"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{F}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{F}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{F}
-                         * NativeAbi:
-                            * name                  = "x86_64"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
-                      < abis
-                   * NativeVariant:
-                      * name = "release"
-                      > abis:
-                         * NativeAbi:
-                            * name                  = "armeabi-v7a"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{F}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{F}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{F}
-                         * NativeAbi:
-                            * name                  = "x86_64"
-                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{F}
-                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{F}
-                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{F}
-                      < abis
-                < variants
-                - nativeBuildSystem       = CMAKE
-                - ndkVersion              = "{DEFAULT_NDK_VERSION}"
-                - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
-                - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
-            < NativeModule
-            """.trimIndent()
+          """[:]
+> NativeModule:
+    - name                    = "project"
+    > variants:
+       * NativeVariant:
+          * name = "debug"
+          > abis:
+             * NativeAbi:
+                * name                            = "armeabi-v7a"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{F}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{F}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{F}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/additional_project_files.txt{$additionalProjectFileStatus}
+             * NativeAbi:
+                * name                            = "x86_64"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
+          < abis
+       * NativeVariant:
+          * name = "release"
+          > abis:
+             * NativeAbi:
+                * name                            = "armeabi-v7a"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{F}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{F}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{F}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/additional_project_files.txt{$additionalProjectFileStatus}
+             * NativeAbi:
+                * name                            = "x86_64"
+                * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{F}
+                * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{F}
+                * buildFileIndexFile              = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{F}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/additional_project_files.txt{$additionalProjectFileStatus}
+          < abis
+    < variants
+    - nativeBuildSystem       = CMAKE
+    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
+    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
+    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
+< NativeModule"""
         )
         modelV2 = result.container.singleModel
         val outputFiles = modelV2.variants.flatMap { variant ->
@@ -441,21 +461,22 @@ class CmakeBasicProjectTest(
 
         // Change the build file to only have "x86_64"
         TestFileUtils.appendToFile(
-            project.buildFile,
-            "\n"
-                    + "apply plugin: 'com.android.application'\n"
-                    + "\n"
-                    + "    android {\n"
-                    + "        defaultConfig {\n"
-                    + "          externalNativeBuild {\n"
-                    + "              cmake {\n"
-                    + "                abiFilters.clear();\n"
-                    + "                abiFilters.addAll(\"x86_64\");\n"
-                    + "              }\n"
-                    + "          }\n"
-                    + "        }\n"
-                    + "    }\n"
-                    + "\n"
+          project.buildFile,
+          """
+apply plugin: 'com.android.application'
+
+    android {
+        defaultConfig {
+          externalNativeBuild {
+              cmake {
+                abiFilters.clear();
+                abiFilters.addAll("x86_64");
+              }
+          }
+        }
+    }
+
+"""
         )
         project.execute("clean")
 

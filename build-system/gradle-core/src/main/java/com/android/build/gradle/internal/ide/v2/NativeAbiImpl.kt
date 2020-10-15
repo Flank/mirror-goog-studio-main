@@ -24,5 +24,6 @@ data class NativeAbiImpl(
     override val name: String,
     override val sourceFlagsFile: File,
     override val symbolFolderIndexFile: File,
-    override val buildFileIndexFile: File
+    override val buildFileIndexFile: File,
+    override val additionalProjectFilesIndexFile: File
 ) : NativeAbi, Serializable

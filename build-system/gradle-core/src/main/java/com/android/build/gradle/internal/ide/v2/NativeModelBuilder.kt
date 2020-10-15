@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
@@ -99,10 +99,11 @@ class NativeModelBuilder(
         val variants: List<NativeVariant> = generators.map { generator ->
             NativeVariantImpl(generator.variant.variantName, generator.abis.map { cxxAbiModel ->
                 NativeAbiImpl(
-                    cxxAbiModel.abi.tag,
-                    cxxAbiModel.compileCommandsJsonBinFile.canonicalFile,
-                    cxxAbiModel.symbolFolderIndexFile.canonicalFile,
-                    cxxAbiModel.buildFileIndexFile.canonicalFile
+                  cxxAbiModel.abi.tag,
+                  cxxAbiModel.compileCommandsJsonBinFile.canonicalFile,
+                  cxxAbiModel.symbolFolderIndexFile.canonicalFile,
+                  cxxAbiModel.buildFileIndexFile.canonicalFile,
+                  cxxAbiModel.additionalProjectFilesIndexFile
                 )
             })
         }

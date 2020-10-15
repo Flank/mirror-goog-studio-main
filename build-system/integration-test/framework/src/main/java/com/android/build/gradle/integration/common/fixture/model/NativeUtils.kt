@@ -55,7 +55,9 @@ fun File.readCompileCommandsJsonBin(normalizer: FileNormalizer): List<CompileCom
 }
 
 fun File.dumpCompileCommandsJsonBin(normalizer: FileNormalizer): String =
-    readCompileCommandsJsonBin(normalizer).joinToString("\n\n") { (sourceFile: String, compiler: String, workingDir: String, flags: List<String>) ->
+  readCompileCommandsJsonBin(normalizer)
+    .sortedBy { it.toString() }
+    .joinToString("\n\n") { (sourceFile: String, compiler: String, workingDir: String, flags: List<String>) ->
         """
             sourceFile: $sourceFile
             compiler:   $compiler
