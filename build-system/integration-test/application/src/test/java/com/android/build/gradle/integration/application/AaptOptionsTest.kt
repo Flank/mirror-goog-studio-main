@@ -64,7 +64,7 @@ class AaptOptionsTest {
         // Check that ids file is not generated
         Truth.assertThat(tracesFolder.listFiles()).isEmpty()
 
-        // Test the same additional parameters specified via onVariantProperties
+        // Test the same additional parameters specified via onVariants
         TestFileUtils.appendToFile(
             project.buildFile,
             """
