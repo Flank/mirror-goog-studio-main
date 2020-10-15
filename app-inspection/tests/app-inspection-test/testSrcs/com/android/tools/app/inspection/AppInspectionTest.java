@@ -21,6 +21,9 @@ import static com.android.tools.app.inspection.AppInspection.CreateInspectorResp
 import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.LIBRARY_MISSING;
 import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.SUCCESS;
 import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE;
+import static com.android.tools.app.inspection.AppInspectionRule.injectInspectorDex;
+import static com.android.tools.app.inspection.Asserts.*;
+import static com.android.tools.app.inspection.Commands.*;
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.annotation.NonNull;
@@ -28,40 +31,19 @@ import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status;
-import com.android.tools.app.inspection.AppInspection.CreateInspectorCommand;
-import com.android.tools.app.inspection.AppInspection.DisposeInspectorCommand;
 import com.android.tools.app.inspection.AppInspection.LaunchMetadata;
-import com.android.tools.app.inspection.AppInspection.RawCommand;
-import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.fakeandroid.ProcessRunner;
-import com.android.tools.idea.protobuf.ByteString;
+import com.android.tools.app.inspection.AppInspection.VersionParams;
 import com.android.tools.transport.device.SdkLevel;
-import com.google.common.collect.Lists;
-import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import test.inspector.api.NoReplyInspectorApi;
 import test.inspector.api.TestExecutorsApi;
 import test.inspector.api.TestInspectorApi;
-import test.inspector.api.TodoInspectorApi;
 
-@RunWith(Parameterized.class)
 public final class AppInspectionTest {
-    @Parameterized.Parameters
-    public static Collection<SdkLevel> parameters() {
-        // Enter/exit hook implementation slightly changes between O and P
-        // findInstances has different implementation in Q
-        return Lists.newArrayList(SdkLevel.O, SdkLevel.P, SdkLevel.Q);
-    }
-
     private static final String TODO_ACTIVITY = "com.activity.todo.TodoActivity";
     private static final String EXPECTED_INSPECTOR_PREFIX = "TEST INSPECTOR ";
     private static final String EXPECTED_INSPECTOR_CREATED = EXPECTED_INSPECTOR_PREFIX + "CREATED";
@@ -70,18 +52,9 @@ public final class AppInspectionTest {
     private static final String EXPECTED_INSPECTOR_COMMAND_PREFIX =
             EXPECTED_INSPECTOR_PREFIX + "COMMAND: ";
 
-    @Rule public final AppInspectionRule appInspectionRule;
-
-    private FakeAndroidDriver androidDriver;
-
-    public AppInspectionTest(@NonNull SdkLevel level) {
-        appInspectionRule = new AppInspectionRule(TODO_ACTIVITY, level);
-    }
-
-    @Before
-    public void setUp() {
-        androidDriver = appInspectionRule.transportRule.getAndroidDriver();
-    }
+    @Rule
+    public final AppInspectionRule appInspectionRule =
+            new AppInspectionRule(TODO_ACTIVITY, SdkLevel.Q);
 
     @Test
     public void createThenDispose() throws Exception {
@@ -184,13 +157,15 @@ public final class AppInspectionTest {
         String inspectorId = "test.inspector";
         assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex(), "project.A")),
+                        createInspector(
+                                inspectorId, injectInspectorDex(), launchMetadata("project.A"))),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
 
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex(), "project.B"));
+                        createInspector(
+                                inspectorId, injectInspectorDex(), launchMetadata("project.B")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage())
                 .startsWith(
@@ -201,9 +176,20 @@ public final class AppInspectionTest {
         // If creation by force is requested, an exception will not be thrown
         assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex(), "project.A", true)),
+                        createInspector(
+                                inspectorId,
+                                injectInspectorDex(),
+                                launchMetadata("project.A", true))),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+    }
+
+    private static LaunchMetadata launchMetadata(String projectName) {
+        return launchMetadata(projectName, false);
+    }
+
+    private static LaunchMetadata launchMetadata(String projectName, boolean force) {
+        return LaunchMetadata.newBuilder().setLaunchedByName(projectName).setForce(force).build();
     }
 
     @Test
@@ -224,438 +210,6 @@ public final class AppInspectionTest {
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage())
                 .isEqualTo("Inspector with id test.inspector wasn't previously created");
-    }
-
-    /**
-     * The inspector framework includes features for finding object instances on the heap. This test
-     * indirectly verifies it works.
-     *
-     * <p>See the {@code TodoInspector} in the test-inspector project for the relevant code.
-     */
-    @Test
-    public void findInstancesWorks() throws Exception {
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
-
-        String inspectorId = "todo.inspector";
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-        appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
-
-        // Ensure you can find object instances that were created before the inspector was attached.
-        assertRawResponse(
-                appInspectionRule.sendCommandAndGetResponse(
-                        rawCommandInspector(
-                                inspectorId,
-                                TodoInspectorApi.Command.COUNT_TODO_GROUPS.toByteArray())),
-                new byte[] {(byte) 2});
-
-        assertRawResponse(
-                appInspectionRule.sendCommandAndGetResponse(
-                        rawCommandInspector(
-                                inspectorId,
-                                TodoInspectorApi.Command.COUNT_TODO_ITEMS.toByteArray())),
-                new byte[] {(byte) 3});
-
-        // Add more objects and ensure those instances get picked up as well
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newRedItem");
-
-        assertRawResponse(
-                appInspectionRule.sendCommandAndGetResponse(
-                        rawCommandInspector(
-                                inspectorId,
-                                TodoInspectorApi.Command.COUNT_TODO_GROUPS.toByteArray())),
-                new byte[] {(byte) 4});
-
-        assertRawResponse(
-                appInspectionRule.sendCommandAndGetResponse(
-                        rawCommandInspector(
-                                inspectorId,
-                                TodoInspectorApi.Command.COUNT_TODO_ITEMS.toByteArray())),
-                new byte[] {(byte) 7});
-
-        // This test generates a bunch of events, but we don't care about checking those here;
-        // we'll look into those more in the following test.
-        while (appInspectionRule.hasEventToCollect()) {
-            appInspectionRule.consumeCollectedEvent();
-        }
-    }
-
-    // TODO: b/159250979; Expand tests once it is correctly supported
-    @Test
-    public void exitHooksOverloadWork() throws Exception {
-        String inspectorId = "todo.inspector";
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group #1
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newHighPriorityGroup"); // High Priority Group
-
-        { // Group #1 enter
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATING.toByteArray());
-        }
-
-        { // Group #1 exit
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
-        }
-
-        { // Group #2 exit
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
-        }
-
-        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
-    }
-
-    @Test
-    public void enterAndExitHooksWork() throws Exception {
-        String inspectorId = "todo.inspector";
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-
-        // In order to generate a bunch of events, create a bunch of to-do items and groups.
-        //
-        // First, create a new item, which creates a default group as a side effect. This means we
-        // will enter "newItem" first, then enter "newGroup", then exit "newGroup", then exit
-        // "newItem"
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item #1 (and Group #1, indirectly)
-
-        // Next, create misc groups and items
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group #2
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item #1
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item #2
-
-        { // Item #1 enter
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
-        }
-
-        { // Group #1 enter
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATING.toByteArray());
-        }
-
-        { // Group #1 exit
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
-        }
-
-        { // Item #1 exit
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
-        }
-
-        { // Group #2 enter
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATING.toByteArray());
-        }
-
-        { // Group #2 exit
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_GROUP_CREATED.toByteArray());
-        }
-
-        { // Item #2 enter
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
-        }
-
-        { // Item #2 exit
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
-        }
-
-        { // Item #3 enter
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATING.toByteArray());
-        }
-
-        { // Item #3 exit
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEM_CREATED.toByteArray());
-        }
-
-        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
-    }
-
-    @Test
-    public void enterHookCanAlsoCaptureParameters() throws Exception {
-        // Create a bunch of groups up front that we'll remove from in a little bit
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[0]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0] in Group[0]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[1]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[2]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[3]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[4]
-
-        String inspectorId = "todo.inspector";
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "logFirstItem");
-
-        // Remove groups - each method we call below calls "removeGroup(idx)"
-        // indirectly, which triggers an event that includes the index.
-        androidDriver.triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "removeOldestGroup");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "removeNewestGroup");
-
-        { // logFirstItem
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_LOGGING_ITEM.toByteArrayWithArg((byte) 2));
-        }
-
-        { // removeNewestGroup: Group[4] removed. Group[3] is now the last group
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
-                                    (byte) 4));
-        }
-
-        { // removeOldestGroup: Group[0] removed. Group[2] is now the last group.
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
-                                    (byte) 0));
-        }
-
-        { // removeNewestGroup: Group[2] removed.
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GROUP_REMOVING.toByteArrayWithArg(
-                                    (byte) 2));
-        }
-
-        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
-    }
-
-    @Test
-    public void exitHooksSupportVoidAndPrimitives() throws Exception {
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[0]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[1]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[2]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup"); // Group[3]
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newItem"); // Item[0]
-
-        String inspectorId = "todo.inspector";
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "getItemsCount");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "getByteItemsCount");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "getShortItemsCount");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "getLongItemsCount");
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "getActiveGroupTrailingChar");
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "getAverageItemCount");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "getDoubleAverageItemCount");
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "hasEmptyTodoList");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "clearAllItems");
-        androidDriver.triggerMethod(TODO_ACTIVITY, "hasEmptyTodoList");
-
-        { // getItemsCount
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GOT_ITEMS_COUNT.toByteArrayWithArg(
-                                    (byte) 3));
-        }
-
-        { // getByteItemsCount
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GOT_BYTE_ITEMS_COUNT.toByteArrayWithArg(
-                                    (byte) 3));
-        }
-
-        { // getShortItemsCount
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GOT_SHORT_ITEMS_COUNT.toByteArrayWithArg(
-                                    (byte) 3));
-        }
-
-        { // getLongItemsCount
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GOT_LONG_ITEMS_COUNT.toByteArrayWithArg(
-                                    (byte) 3));
-        }
-
-        { // getActiveGroupTrailingChar
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GOT_GROUP_TRAILING_CHAR.toByteArrayWithArg(
-                                    (byte) '4')); // "Group #4"
-        }
-
-        { // getAverageItemCount
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GOT_AVERAGE_ITEMS_COUNT.toByteArrayWithArg(
-                                    ByteBuffer.allocate(4)
-                                            .putFloat(0.75f)
-                                            .array())); // 3 items across four groups
-        }
-
-        { // getDoubleAverageItemCount
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_GOT_DOUBLE_AVERAGE_ITEMS_COUNT
-                                    .toByteArrayWithArg(
-                                            ByteBuffer.allocate(8).putDouble(0.75).array()));
-        }
-
-        { // hasEmptyTodoList
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST.toByteArrayWithArg(
-                                    (byte) 0));
-        }
-
-        { // clearAllItems
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_CLEARED_ALL_ITEMS.toByteArray());
-        }
-
-        { // hasEmptyTodoList
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_HAS_EMPTY_TODO_LIST.toByteArrayWithArg(
-                                    (byte) 1));
-        }
-    }
-
-    @Test
-    public void entryHookWithHighRegisties() throws Exception {
-        String inspectorId = "todo.inspector";
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "prefillItems");
-
-        { // prefillItems entry
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(TodoInspectorApi.Event.TODO_ITEMS_PREFILLING.toByteArray());
-        }
-
-        assertThat(appInspectionRule.hasEventToCollect()).isFalse();
-    }
-
-    @Test
-    public void entryAndExitHooksDisposed() throws Exception {
-        String inspectorId = "todo.inspector";
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-
-        // doesn't fail
-        androidDriver.triggerMethod(TODO_ACTIVITY, "selectFirstGroup");
-
-        assertDisposeInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(disposeInspector(inspectorId)),
-                Status.SUCCESS);
-
-        // hooks will throw if they are called but inspection is disposed
-        androidDriver.triggerMethod(TODO_ACTIVITY, "selectFirstGroup");
-    }
-
-    @Test
-    public void entryAndExitDoubleHooks() throws Exception {
-        String inspectorId = "todo.inspector";
-        androidDriver.triggerMethod(TODO_ACTIVITY, "newGroup");
-        assertCreateInspectorResponseStatus(
-                appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(inspectorId, injectInspectorDex())),
-                SUCCESS);
-
-        androidDriver.triggerMethod(TODO_ACTIVITY, "selectLastGroup");
-        {
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTING.toByteArrayWithArg(
-                                    (byte) 0));
-        }
-        {
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTING.toByteArrayWithArg(
-                                    (byte) 1));
-        }
-
-        {
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTED.toByteArrayWithArg(
-                                    (byte) 0));
-        }
-
-        {
-            AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
-            assertThat(event.getRawEvent().getContent().toByteArray())
-                    .isEqualTo(
-                            TodoInspectorApi.Event.TODO_LAST_ITEM_SELECTED.toByteArrayWithArg(
-                                    (byte) 1));
-        }
     }
 
     @Test
@@ -750,10 +304,8 @@ public final class AppInspectionTest {
                                 inspectorId,
                                 NoReplyInspectorApi.Command.LOG_AND_NO_REPLY.toByteArray()));
         appInspectionRule.assertInput("Command received");
-        AppInspectionResponse gcResponse =
-                appInspectionRule.sendCommandAndGetResponse(
-                        rawCommandInspector(
-                                inspectorId, NoReplyInspectorApi.Command.RUN_GC.toByteArray()));
+        appInspectionRule.sendCommandAndGetResponse(
+                rawCommandInspector(inspectorId, NoReplyInspectorApi.Command.RUN_GC.toByteArray()));
         appInspectionRule.assertInput("Garbage collected");
 
         AppInspection.AppInspectionEvent crashEvent = appInspectionRule.consumeCollectedEvent();
@@ -771,12 +323,14 @@ public final class AppInspectionTest {
     }
 
     @Test
-    public void createInspectorForFramework() throws Exception {
+    public void createLibraryInspectorSuccessfully() throws Exception {
         String onDevicePath = injectInspectorDex();
         assertCreateInspectorResponseStatus(
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(
-                                "test.inspector", onDevicePath, "test.project", null, null, false)),
+                        createLibraryInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                versionParams("test.library_test.version", "0.0.1"))),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
     }
@@ -786,16 +340,20 @@ public final class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(
+                        createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                "test.project",
-                                "test.library_test.version",
-                                "3.0.0",
-                                false));
+                                versionParams("test.library_test.version", "3.0.0")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getCreateInspectorResponse().getStatus())
                 .isEqualTo(AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE);
+    }
+
+    private static VersionParams versionParams(String versionFileName, String minVersion) {
+        return VersionParams.newBuilder()
+                .setMinVersion(minVersion)
+                .setVersionFileName(versionFileName)
+                .build();
     }
 
     @Test
@@ -803,13 +361,10 @@ public final class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(
+                        createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                "test.project",
-                                "test.library_test.version",
-                                "3.a",
-                                false));
+                                versionParams("test.library_test.version", "3.a")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage())
                 .isEqualTo("Failed to parse provided min version 3.a");
@@ -822,13 +377,10 @@ public final class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(
+                        createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                "test.project",
-                                "non-existent.version",
-                                "1.0.0",
-                                false));
+                                versionParams("non-existent.version", "1.0.0")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage()).startsWith("Failed to find version file");
         assertThat(response.getCreateInspectorResponse().getStatus()).isEqualTo(LIBRARY_MISSING);
@@ -839,13 +391,10 @@ public final class AppInspectionTest {
         String onDevicePath = injectInspectorDex();
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
-                        createInspector(
+                        createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                "test.project",
-                                "test.invalid_test.version",
-                                "1.0.0",
-                                false));
+                                versionParams("test.invalid_test.version", "1.0.0")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage()).startsWith("Failed to parse version string");
         assertThat(response.getCreateInspectorResponse().getStatus())
@@ -854,35 +403,34 @@ public final class AppInspectionTest {
 
     @Test
     public void getLibraryVersions() throws Exception {
-        String onDevicePath = injectInspectorDex();
-        List<AppInspection.VersionParams> targetVersions = new ArrayList<>();
+        List<VersionParams> targetVersions = new ArrayList<>();
         // SUCCESS
         targetVersions.add(
-                AppInspection.VersionParams.newBuilder()
+                VersionParams.newBuilder()
                         .setMinVersion("1.0.0")
                         .setVersionFileName("test.library_test.version")
                         .build());
         // NOT FOUND
         targetVersions.add(
-                AppInspection.VersionParams.newBuilder()
+                VersionParams.newBuilder()
                         .setMinVersion("1.0.0")
                         .setVersionFileName("does_not_exist.version")
                         .build());
         // SERVICE ERROR
         targetVersions.add(
-                AppInspection.VersionParams.newBuilder()
+                VersionParams.newBuilder()
                         .setMinVersion("1.0.0")
                         .setVersionFileName("test.invalid_test.version")
                         .build());
         // INCOMPATIBLE
         targetVersions.add(
-                AppInspection.VersionParams.newBuilder()
+                VersionParams.newBuilder()
                         .setMinVersion("2.0.0")
                         .setVersionFileName("test.library_test.version")
                         .build());
         // INVALID MIN VERSION
         targetVersions.add(
-                AppInspection.VersionParams.newBuilder()
+                VersionParams.newBuilder()
                         .setMinVersion("12das")
                         .setVersionFileName("test.library_test.version")
                         .build());
@@ -933,18 +481,6 @@ public final class AppInspectionTest {
     }
 
     @NonNull
-    private static AppInspectionCommand rawCommandInspector(
-            @NonNull String inspectorId, @NonNull byte[] commandData) {
-        return AppInspectionCommand.newBuilder()
-                .setInspectorId(inspectorId)
-                .setRawInspectorCommand(
-                        RawCommand.newBuilder()
-                                .setContent(ByteString.copyFrom(commandData))
-                                .build())
-                .build();
-    }
-
-    @NonNull
     private static AppInspectionCommand cancellationCommand(int cancelledCommandId) {
         return AppInspectionCommand.newBuilder()
                 .setCancellationCommand(
@@ -955,85 +491,12 @@ public final class AppInspectionTest {
     }
 
     @NonNull
-    private AppInspectionCommand createInspector(String inspectorId, String dexPath) {
-        return createInspector(inspectorId, dexPath, "test.project");
-    }
-
-    @NonNull
-    private AppInspectionCommand createInspector(
-            String inspectorId, String dexPath, String project) {
-        return createInspector(inspectorId, dexPath, project, false);
-    }
-
-    @NonNull
-    private AppInspectionCommand createInspector(
-            String inspectorId, String dexPath, String project, Boolean force) {
-        return createInspector(
-                inspectorId, dexPath, project, "test.library_test.version", "0.0.1", force);
-    }
-
-    @NonNull
-    private static AppInspectionCommand createInspector(
-            String inspectorId,
-            String dexPath,
-            String project,
-            String versionFile,
-            String minVersion,
-            boolean force) {
-
-        LaunchMetadata.Builder metadata =
-                LaunchMetadata.newBuilder().setLaunchedByName(project).setForce(force);
-        if (versionFile != null && minVersion != null) {
-            metadata.setVersionParams(
-                    AppInspection.VersionParams.newBuilder()
-                            .setVersionFileName(versionFile)
-                            .setMinVersion(minVersion)
-                            .build());
-        }
-        return AppInspectionCommand.newBuilder()
-                .setInspectorId(inspectorId)
-                .setCreateInspectorCommand(
-                        CreateInspectorCommand.newBuilder()
-                                .setDexPath(dexPath)
-                                .setLaunchMetadata(metadata)
-                                .build())
-                .build();
-    }
-
-    @NonNull
-    private static AppInspectionCommand getLibraryVersions(
-            List<AppInspection.VersionParams> targetVersions) {
+    private static AppInspectionCommand getLibraryVersions(List<VersionParams> targetVersions) {
         return AppInspectionCommand.newBuilder()
                 .setGetLibraryVersionsCommand(
                         AppInspection.GetLibraryVersionsCommand.newBuilder()
                                 .addAllTargetVersions(targetVersions))
                 .build();
-    }
-
-    @NonNull
-    private static AppInspectionCommand disposeInspector(@NonNull String inspectorId) {
-        return AppInspectionCommand.newBuilder()
-                .setInspectorId(inspectorId)
-                .setDisposeInspectorCommand(DisposeInspectorCommand.newBuilder().build())
-                .build();
-    }
-
-    private static void assertCreateInspectorResponseStatus(
-            @NonNull AppInspection.AppInspectionResponse response,
-            @NonNull AppInspection.CreateInspectorResponse.Status expected) {
-        assertThat(response.hasCreateInspectorResponse()).isTrue();
-        assertThat(response.getCreateInspectorResponse().getStatus()).isEqualTo(expected);
-        if (expected == SUCCESS) {
-            assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
-        } else {
-            assertThat(response.getStatus()).isEqualTo(ERROR);
-        }
-    }
-
-    private static void assertDisposeInspectorResponseStatus(
-            @NonNull AppInspection.AppInspectionResponse response, @NonNull Status expected) {
-        assertThat(response.hasDisposeInspectorResponse()).isTrue();
-        assertThat(response.getStatus()).isEqualTo(expected);
     }
 
     private static void assertCrashEvent(
@@ -1043,21 +506,5 @@ public final class AppInspectionTest {
         assertThat(event.hasCrashEvent()).isTrue();
         assertThat(event.getInspectorId()).isEqualTo(inspectorId);
         assertThat(event.getCrashEvent().getErrorMessage()).isEqualTo(message);
-    }
-
-    private static void assertRawResponse(
-            @NonNull AppInspection.AppInspectionResponse response, byte[] responseContent) {
-        assertThat(response.hasRawResponse()).isTrue();
-        assertThat(response.getRawResponse().getContent().toByteArray()).isEqualTo(responseContent);
-    }
-
-    @NonNull
-    private static String injectInspectorDex() {
-        File onHostinspector = new File(ProcessRunner.getProcessPath("test.inspector.dex.location"));
-        assertThat(onHostinspector.exists()).isTrue();
-        File onDeviceInspector = new File(onHostinspector.getName());
-        // Should have already been copied over by the underlying transport test framework
-        assertThat(onDeviceInspector.exists()).isTrue();
-        return onDeviceInspector.getAbsolutePath();
     }
 }

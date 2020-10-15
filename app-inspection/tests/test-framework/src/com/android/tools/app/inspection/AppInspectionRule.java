@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import androidx.annotation.NonNull;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
+import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.profiler.proto.Commands;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Transport.ExecuteRequest;
@@ -29,6 +30,7 @@ import com.android.tools.profiler.proto.TransportServiceGrpc;
 import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceBlockingStub;
 import com.android.tools.transport.TransportRule;
 import com.android.tools.transport.device.SdkLevel;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -89,6 +91,18 @@ public final class AppInspectionRule extends ExternalResource implements Runnabl
     public Statement apply(Statement base, Description description) {
         return RuleChain.outerRule(transportRule)
                 .apply(super.apply(base, description), description);
+    }
+
+    /** Returns "on-device" path to the inspector's dex and checks its validity.k */
+    @NonNull
+    public static String injectInspectorDex() {
+        File onHostinspector =
+                new File(ProcessRunner.getProcessPath("test.inspector.dex.location"));
+        assertThat(onHostinspector.exists()).isTrue();
+        File onDeviceInspector = new File(onHostinspector.getName());
+        // Should have already been copied over by the underlying transport test framework
+        assertThat(onDeviceInspector.exists()).isTrue();
+        return onDeviceInspector.getAbsolutePath();
     }
 
     boolean hasEventToCollect() {

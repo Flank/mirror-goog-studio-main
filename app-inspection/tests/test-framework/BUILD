@@ -1,7 +1,11 @@
-java_library(
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+
+kotlin_library(
     name = "test-framework",
+    testonly = True,
     srcs = glob([
         "src/**/*.java",
+        "src/**/*.kt",
     ]),
     visibility = ["//visibility:public"],
     deps = [
