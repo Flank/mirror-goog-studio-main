@@ -16,7 +16,7 @@
 
 package com.android.aaptcompiler
 
-class Source(val path: String, val line: Int? = null, private val archive: String? = null) {
+data class Source(val path: String, val line: Int? = null, private val archive: String? = null) {
 
   override fun toString(): String {
     var s = path
@@ -29,20 +29,13 @@ class Source(val path: String, val line: Int? = null, private val archive: Strin
     return s
   }
 
-  override fun equals(other: Any?): Boolean {
-    if (other is Source) {
-      return path == other.path && line == other.line
-    }
-    return false
-  }
-
   fun isNotEmpty() = this != EMPTY
 
   fun withLine(line: Int?) : Source {
     return Source(path, line, archive)
   }
 
-  companion object {
+    companion object {
     val EMPTY = Source("")
   }
 }

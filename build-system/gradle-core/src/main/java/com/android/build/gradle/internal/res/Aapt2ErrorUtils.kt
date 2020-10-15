@@ -32,6 +32,7 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.blame.parser.aapt.AbstractAaptOutputParser
 import com.android.ide.common.resources.CompileResourceRequest
+import com.android.tools.build.bundletool.model.utils.files.FileUtils
 import com.android.utils.ILogger
 import com.android.utils.StdLogger
 import com.google.common.base.Charsets
@@ -156,15 +157,16 @@ fun blameLoggerFor(
     if (request.blameMap.isEmpty()) {
         if (request.mergeBlameFolder != null) {
             val mergingLog = MergingLog(request.mergeBlameFolder!!)
-            return BlameLogger(logger) {
+            return BlameLogger(logger, request.identifiedSourceSetMap) {
                 val sourceFile = it.toSourceFilePosition()
                 BlameLogger.Source.fromSourceFilePosition(mergingLog.find(sourceFile))
             }
         }
-        return BlameLogger(logger)
+        return BlameLogger(logger, request.identifiedSourceSetMap)
     }
-    return BlameLogger(logger) {
-        if (it.file.absolutePath == request.originalInputFile.absolutePath) {
+    return BlameLogger(logger, request.identifiedSourceSetMap) {
+        if (FileUtils.getPath(it.sourcePath).toAbsolutePath() ==
+            request.originalInputFile.toPath().toAbsolutePath()) {
             val sourceFile = it.toSourceFilePosition()
             val foundSource = MergingLog.find(sourceFile.position, request.blameMap)
             if (foundSource == null) {
