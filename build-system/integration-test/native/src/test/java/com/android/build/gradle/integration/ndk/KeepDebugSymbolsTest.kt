@@ -42,11 +42,13 @@ class KeepDebugSymbolsTest {
                                 keepDebugSymbols += '**/dslDoNotStrip2.so'
                             }
                         }
-                        onVariantProperties.withName('debug') {
-                            packagingOptions.jniLibs.keepDebugSymbols.add('**/debugDoNotStrip.so')
+                    }
+                    androidComponents {
+                        onVariants(selector().withName('debug')) {
+                            packaging.jniLibs.keepDebugSymbols.add('**/debugDoNotStrip.so')
                         }
-                        onVariantProperties.withName('release') {
-                            packagingOptions.jniLibs.keepDebugSymbols.add('**/releaseDoNotStrip.so')
+                        onVariants(selector().withName('release')) {
+                            packaging.jniLibs.keepDebugSymbols.add('**/releaseDoNotStrip.so')
                         }
                     }
                     """.trimIndent()

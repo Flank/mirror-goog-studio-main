@@ -156,9 +156,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             createVariantsFromCombination(variant, testBuildTypeData, buildFeatureValues)
         }
 
-        // FIXME we should lock the variant API properties after all the onVariants, and
-        // before any onVariantProperties to avoid cross access between the two.
-        // This means changing the way to run onVariants vs onVariantProperties.
+        // FIXME we should lock the variant API properties after all the beforeVariants, and
+        // before any onVariants to avoid cross access between the two.
+        // This means changing the way to run beforeVariants vs onVariants.
         variantApiServices.lockValues()
     }
 
