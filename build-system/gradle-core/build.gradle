@@ -224,7 +224,7 @@ apiTest {
     // the version Android Studio bundles. This is usually not an issue, but when generating
     // build.gradle.kts files, we need to use the bundled Android Studio version so all dependencies
     // are present in prebuilts.
-    environment("KOTLIN_PLUGIN", libs.kotlin_gradle_plugin)
+    //environment("KOTLIN_PLUGIN", libs.kotlin_gradle_plugin)
 
     maxParallelForks = Runtime.runtime.availableProcessors()
 

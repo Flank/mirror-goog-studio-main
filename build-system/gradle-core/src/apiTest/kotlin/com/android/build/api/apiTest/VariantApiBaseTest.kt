@@ -48,11 +48,12 @@ open class VariantApiBaseTest(
     AbstractBuildGivenBuildCheckTest<VariantApiBaseTest.GivenBuilder, BuildResult>() {
 
     companion object {
+
         /**
          * AGP version which can be overridden when invoking the test execution.
          */
         val agpVersion = System.getenv("API_TESTS_VERSION")
-            ?: com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+                ?: com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 
         /**
          * If running within a build system, make sure to use the expected version when generating
@@ -61,12 +62,12 @@ open class VariantApiBaseTest(
         val kotlinVersion: String by lazy {
             System.getenv("KOTLIN_PLUGIN")?.split(':')?.last()
             // fall back, use the version I am running against.
-                ?: KotlinVersion.CURRENT.toString()
+                    ?: KotlinVersion.CURRENT.toString()
         }
 
-        val generalRepos= listOf(
-            "google()",
-            "jcenter()")
+        val generalRepos = listOf(
+                "google()",
+                "jcenter()")
 
         /**
          * List of custom repositories where all projects dependencies can be satisfied.
@@ -81,10 +82,12 @@ open class VariantApiBaseTest(
      * Type of test.
      */
     enum class TestType {
+
         /**
          * In [Script] tests, all build logic is expressed in build file scripts.
          */
         Script {
+
             override fun getDirName(test: VariantApiBaseTest): String {
                 return test.scriptingLanguage.name
             }
@@ -115,8 +118,9 @@ open class VariantApiBaseTest(
          * Kotlin scripting languages,
          */
         Kotlin("build.gradle.kts", "settings.gradle.kts") {
+
             override fun configureBuildFile(repositories: List<String>) =
-"""
+                    """
 buildscript {
 ${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
@@ -132,7 +136,7 @@ allprojects {
             // we should not have to add the gobalRepos below but because of
             // https://github.com/gradle/gradle/issues/1055
             override fun configureBuildSrcBuildFile(globalRepos: List<String>, localRepos: List<String>) =
-"""
+                    """
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -153,18 +157,20 @@ dependencies {
 """
 
             private fun addRepositories(repositories: List<String>) =
-"""
+                    """
 repositories {
-${repositories.joinToString(
-            separator = "\")\n    maven(\"",
-            prefix = "    maven(\"",
-            postfix = "\")"
-            )}
+${
+                        repositories.joinToString(
+                                separator = "\")\n    maven(\"",
+                                prefix = "    maven(\"",
+                                postfix = "\")"
+                        )
+                    }
 }
 """
 
             override fun configureInitScript(repositories: List<String>): String =
-                """
+                    """
 allprojects {
     buildscript {
     ${addRepositories(repositories).prependIndent("        ")}
@@ -178,8 +184,9 @@ allprojects {
             }
         },
         Groovy("build.gradle", "settings.gradle") {
+
             override fun configureBuildFile(repositories: List<String>) =
-"""
+                    """
 buildscript {
 ${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
@@ -192,11 +199,11 @@ allprojects {
 """
 
             override fun configureBuildSrcBuildFile(globalRepos: List<String>, localRepos: List<String>) =
-"""
+                    """
 """
 
             override fun configureInitScript(repositories: List<String>): String =
-"""
+                    """
 allprojects {
     buildscript {
 ${addRepositories(repositories).prependIndent("        ")}
@@ -210,23 +217,25 @@ ${addRepositories(repositories).prependIndent("    ")}
             }
 
             private fun addRepositories(repositories: List<String>) =
-"""
+                    """
 repositories {
-${repositories.joinToString(
-            separator = "\'}\n    maven { url \'",
-            prefix = "    maven { url \'",
-            postfix = "\'}"
-        )}
+${
+                        repositories.joinToString(
+                                separator = "\'}\n    maven { url \'",
+                                prefix = "    maven { url \'",
+                                postfix = "\'}"
+                        )
+                    }
 }
 """
         };
 
         protected fun addGlobalRepositories(repositories: List<String>) =
-            repositories.joinToString(
-                separator = "\n    ",
-                prefix = "repositories {\n    ",
-                postfix = "\n}"
-            )
+                repositories.joinToString(
+                        separator = "\n    ",
+                        prefix = "repositories {\n    ",
+                        postfix = "\n}"
+                )
 
         /**
          * Configure a module build file for the [scriptingLanguage].
@@ -261,22 +270,26 @@ ${repositories.joinToString(
     }
 
     @Rule
-    @JvmField val testName= TestName()
+    @JvmField
+    val testName = TestName()
 
     @Rule
-    @JvmField val testProjectDir = if (System.getenv("API_TESTS_OUTDIR") != null) {
+    @JvmField
+    val testProjectDir = if (System.getenv("API_TESTS_OUTDIR") != null) {
         ApiTestFolder(File(System.getenv("API_TESTS_OUTDIR")), testType.getDirName(this))
     } else {
         TemporaryFolder()
     }
 
     @Rule
-    @JvmField val privateTestProjectDir = TemporaryFolder()
+    @JvmField
+    val privateTestProjectDir = TemporaryFolder()
 
     @Rule
-    @JvmField val testBuildDir = TemporaryFolder()
+    @JvmField
+    val testBuildDir = TemporaryFolder()
 
-    val testingElements= TestingElements(scriptingLanguage)
+    val testingElements = TestingElements(scriptingLanguage)
 
     open fun sdkLocation(): String = TestUtils.getSdk().absolutePath
 
@@ -313,28 +326,53 @@ ${repositories.joinToString(
                 File(folder, "src/main").apply {
                     mkdirs()
                     File(
-                        this,
-                        SdkConstants.ANDROID_MANIFEST_XML
+                            this,
+                            SdkConstants.ANDROID_MANIFEST_XML
                     ).writeText(manifest!!.trimIndent())
                 }
             }
 
             sourceFiles.forEach {
+                val isSource = it.first.endsWith(".java") || it.first.endsWith(".kt")
                 File(folder, it.first).apply {
                     parentFile.mkdirs()
-                    writeText(it.second.trimIndent())
+                    if (isSource) {
+                        writeText("${license()}\n${it.second.trimIndent()}")
+                    } else {
+                        writeText(it.second.replaceIndent())
+                    }
                 }
             }
-
         }
+
         internal open fun addBuildFile(folder: File) {
             File(folder, scriptingLanguage.buildFileName).apply {
                 writeText(scriptingLanguage.configureBuildFile(generalRepos) + (buildFile ?: ""))
             }
         }
+
+        internal fun license() =
+                """
+            /*
+             * Copyright (C) 2019 The Android Open Source Project
+             *
+             * Licensed under the Apache License, Version 2.0 (the "License");
+             * you may not use this file except in compliance with the License.
+             * You may obtain a copy of the License at
+             *
+             *      http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             */
+            """.trimIndent()
     }
 
-    open class GivenBuilder(scriptingLanguage: ScriptingLanguage)
+    open class GivenBuilder(scriptingLanguage: ScriptingLanguage,
+            val testName: TestName? = null)
         : ModuleGivenBuilder(scriptingLanguage) {
 
         private val modules = mutableListOf<Pair<String, GivenBuilder>>()
@@ -397,10 +435,10 @@ ${repositories.joinToString(
             )
 
             settingsFile.writeText(
-                """
-            $includeList
-            rootProject.name = "${javaClass.simpleName}"
-            """.trimIndent())
+"""
+$includeList
+rootProject.name = "${testName?.methodName ?: javaClass.simpleName}"
+""")
 
             super.writeModule(folder)
 
@@ -490,7 +528,7 @@ ${repositories.joinToString(
         return gradleRunner.build()
     }
 
-    override fun instantiateGiven(): GivenBuilder = GivenBuilder(scriptingLanguage)
+    override fun instantiateGiven(): GivenBuilder = GivenBuilder(scriptingLanguage, testName)
 
     protected fun onVariantStats(block : (GradleBuildVariant) -> Unit) {
         val androidProfile =
