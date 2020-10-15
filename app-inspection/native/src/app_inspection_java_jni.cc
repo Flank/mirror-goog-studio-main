@@ -17,6 +17,7 @@
 
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
+#include "app_inspection_common.h"
 #include "app_inspection_service.h"
 #include "unistd.h"
 #include "utils/log.h"
@@ -24,7 +25,7 @@
 using app_inspection::AppInspectionEvent;
 using app_inspection::AppInspectionResponse;
 using app_inspection::CreateInspectorResponse;
-using app_inspection::LibraryVersionResponse;
+using app_inspection::LibraryCompatibilityInfo;
 using profiler::Log;
 
 namespace app_inspection {
@@ -101,11 +102,12 @@ void EnqueueAppInspectionRawResponse(JNIEnv *env, int32_t command_id,
   }
 }
 
-void EnqueueAppInspectionGetLibraryVersionsResponse(
+void EnqueueAppInspectionGetLibraryCompatibilityInfoResponse(
     JNIEnv *env, int32_t command_id, AppInspectionResponse::Status status,
     jobjectArray results, int32_t length, jstring error_message) {
-  app_inspection::GetLibraryVersionsResponse *get_library_versions_response =
-      new app_inspection::GetLibraryVersionsResponse();
+  app_inspection::GetLibraryCompatibilityInfoResponse
+      *get_library_compatibility_info_responses =
+          new app_inspection::GetLibraryCompatibilityInfoResponse();
   for (int i = 0; i < length; ++i) {
     jobject result = env->GetObjectArrayElement(results, i);
     jclass result_class = env->GetObjectClass(result);
@@ -126,44 +128,66 @@ void EnqueueAppInspectionGetLibraryVersionsResponse(
         env->GetFieldID(result_class, "message", "Ljava/lang/String;");
     jstring jmessage = (jstring)env->GetObjectField(result, message_field);
 
-    // Get version_file_name field
-    jfieldID version_file_field =
-        env->GetFieldID(result_class, "versionFileName", "Ljava/lang/String;");
-    jstring jversion_file =
-        (jstring)env->GetObjectField(result, version_file_field);
+    // Get the targeted library which contains min version.
+    jfieldID targetLibraryField = env->GetFieldID(
+        result_class, "artifactCoordinate", ARTIFACT_COORDINATE_TYPE.c_str());
+
+    jobject jTargetLibrary = env->GetObjectField(result, targetLibraryField);
+
+    jclass artifactCoordinateClass = env->GetObjectClass(jTargetLibrary);
+    jfieldID group_id_field = env->GetFieldID(artifactCoordinateClass,
+                                              "groupId", "Ljava/lang/String;");
+    jstring jgroup_id =
+        (jstring)env->GetObjectField(jTargetLibrary, group_id_field);
+
+    jfieldID artifact_id_field = env->GetFieldID(
+        artifactCoordinateClass, "artifactId", "Ljava/lang/String;");
+    jstring jartifact_id =
+        (jstring)env->GetObjectField(jTargetLibrary, artifact_id_field);
+
+    jfieldID min_version_field = env->GetFieldID(
+        artifactCoordinateClass, "version", "Ljava/lang/String;");
+    jstring jmin_version =
+        (jstring)env->GetObjectField(jTargetLibrary, min_version_field);
 
     // Get version string field
     jfieldID version_field =
         env->GetFieldID(result_class, "version", "Ljava/lang/String;");
     jstring jversion = (jstring)env->GetObjectField(result, version_field);
 
-    auto *response = get_library_versions_response->add_responses();
+    auto *response = get_library_compatibility_info_responses->add_responses();
     switch (jstatus_value) {
       case 0:  // COMPATIBLE
-        response->set_status(LibraryVersionResponse::COMPATIBLE);
+        response->set_status(LibraryCompatibilityInfo::COMPATIBLE);
         break;
       case 1:  // INCOMPATIBLE
-        response->set_status(LibraryVersionResponse::INCOMPATIBLE);
+        response->set_status(LibraryCompatibilityInfo::INCOMPATIBLE);
         break;
       case 2:  // Missing library
-        response->set_status(LibraryVersionResponse::LIBRARY_MISSING);
+        response->set_status(LibraryCompatibilityInfo::LIBRARY_MISSING);
         break;
       case 3:  // Error
-        response->set_status(LibraryVersionResponse::SERVICE_ERROR);
+        response->set_status(LibraryCompatibilityInfo::SERVICE_ERROR);
         break;
     }
-    profiler::JStringWrapper version_file(env, jversion_file);
-    response->set_version_file_name(version_file.get().c_str());
     profiler::JStringWrapper message(env, jmessage);
     response->set_error_message(message.get().c_str());
     profiler::JStringWrapper version(env, jversion);
     response->set_version(version.get().c_str());
+    auto *target = response->mutable_target_library();
+    profiler::JStringWrapper group_id(env, jgroup_id);
+    target->set_group_id(group_id.get().c_str());
+    profiler::JStringWrapper artifact_id(env, jartifact_id);
+    target->set_artifact_id(artifact_id.get().c_str());
+    profiler::JStringWrapper min_version(env, jmin_version);
+    target->set_version(min_version.get().c_str());
   }
   EnqueueAppInspectionResponse(
       env, command_id, status, error_message,
-      [get_library_versions_response](AppInspectionResponse *response) {
-        response->set_allocated_library_versions_response(
-            get_library_versions_response);
+      [get_library_compatibility_info_responses](
+          AppInspectionResponse *response) {
+        response->set_allocated_get_library_compatibility_response(
+            get_library_compatibility_info_responses);
       });
 }
 
@@ -341,10 +365,10 @@ Java_com_android_tools_agent_app_inspection_NativeTransport_sendRawResponseSucce
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_agent_app_inspection_NativeTransport_sendGetLibraryVersionsResponse(
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendGetLibraryCompatibilityInfoResponse(
     JNIEnv *env, jobject obj, jint command_id, jobjectArray results,
     jint length) {
-  app_inspection::EnqueueAppInspectionGetLibraryVersionsResponse(
+  app_inspection::EnqueueAppInspectionGetLibraryCompatibilityInfoResponse(
       env, command_id, AppInspectionResponse::SUCCESS, results, length,
       nullptr);
 }

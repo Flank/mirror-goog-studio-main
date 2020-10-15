@@ -18,15 +18,20 @@
 
 package com.android.tools.app.inspection
 
-import com.android.tools.app.inspection.AppInspection.*
+import com.android.tools.app.inspection.AppInspection.AppInspectionCommand
+import com.android.tools.app.inspection.AppInspection.ArtifactCoordinate
+import com.android.tools.app.inspection.AppInspection.CreateInspectorCommand
+import com.android.tools.app.inspection.AppInspection.DisposeInspectorCommand
+import com.android.tools.app.inspection.AppInspection.LaunchMetadata
+import com.android.tools.app.inspection.AppInspection.RawCommand
 import com.android.tools.idea.protobuf.ByteString
 
 fun createLibraryInspector(
     inspectorId: String,
     dexPath: String,
-    versionParams: VersionParams
+    minLibrary: ArtifactCoordinate
 ): AppInspectionCommand {
-    val metadata = LaunchMetadata.newBuilder().setVersionParams(versionParams).build()
+    val metadata = LaunchMetadata.newBuilder().setMinLibrary(minLibrary).build()
     return createInspector(inspectorId, dexPath, metadata)
 }
 

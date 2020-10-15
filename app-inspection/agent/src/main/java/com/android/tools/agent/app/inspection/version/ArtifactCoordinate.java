@@ -22,14 +22,19 @@ package com.android.tools.agent.app.inspection.version;
  * <p>Note: This data structure is also initialized and used in the JNI layer. Changes to this may
  * require updating app_inspection_agent_command.cc.
  */
-public class VersionTargetInfo {
+public class ArtifactCoordinate {
 
-    String versionFileName;
+    String groupId;
+    String artifactId;
+    String version;
 
-    String minVersion;
+    public ArtifactCoordinate(String groupId, String artifactId, String version) {
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+        this.version = version;
+    }
 
-    public VersionTargetInfo(String versionFileName, String minVersion) {
-        this.versionFileName = versionFileName;
-        this.minVersion = minVersion;
+    public String toVersionFileName() {
+        return groupId + "_" + artifactId + ".version";
     }
 }

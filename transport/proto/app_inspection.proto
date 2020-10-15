@@ -36,7 +36,7 @@ message AppInspectionCommand {
     DisposeInspectorCommand dispose_inspector_command = 4;
     RawCommand raw_inspector_command = 5;
     CancellationCommand cancellation_command = 6;
-    GetLibraryVersionsCommand get_library_versions_command = 7;
+    GetLibraryCompatibilityInfoCommand get_library_compatibility_info_command = 7;
   }
 }
 
@@ -49,14 +49,12 @@ message CreateInspectorCommand {
   LaunchMetadata launch_metadata = 2;
 }
 
-message VersionParams {
-  // The full name of the version file in the APK's META-INF folder.
-  string version_file_name = 1;
-  // The minimum version of the library this inspector is compatible with.
-  //
-  // Format is the same as what Gradle uses, e.g. 1.2.3-alpha04
-  // See also: https://docs.gradle.org/current/userguide/single_versions.html
-  string min_version = 2;
+// Represents the maven coordinate of an artifact.
+message ArtifactCoordinate {
+  string group_id = 1;
+  string artifact_id = 2;
+  // This adheres to the gradle version format.
+  string version = 3;
 }
 
 // Metadata about the launch of an inspector.
@@ -66,8 +64,8 @@ message LaunchMetadata {
   string launched_by_name = 1;
   // If true, force launching the inspector, even if one is already running.
   bool force = 2;
-
-  VersionParams version_params = 3;
+  // Represents the coordinates of minimum supported library.
+  ArtifactCoordinate min_library = 3;
 }
 
 // A command to dispose the inspector.
@@ -88,8 +86,11 @@ message CancellationCommand {
     uint32 cancelled_command_id = 1;
 }
 
-message GetLibraryVersionsCommand {
-  repeated VersionParams target_versions = 1;
+message GetLibraryCompatibilityInfoCommand {
+  // A list of target libraries to verify version information.
+  // These represent the minimum version of the libraries their
+  // inspectors are compatible with.
+  repeated ArtifactCoordinate target_libraries = 1;
 }
 
 // A response is sent from the device to answer a command.
@@ -107,7 +108,7 @@ message AppInspectionResponse {
     CreateInspectorResponse create_inspector_response = 4;
     DisposeInspectorResponse dispose_inspector_response = 5;
     RawResponse raw_response = 6;
-    GetLibraryVersionsResponse library_versions_response = 7;
+    GetLibraryCompatibilityInfoResponse get_library_compatibility_response = 7;
   }
 }
 
@@ -143,7 +144,7 @@ message CreateInspectorResponse {
 message DisposeInspectorResponse {
 }
 
-message LibraryVersionResponse {
+message LibraryCompatibilityInfo {
   enum Status {
     COMPATIBLE = 0;
     INCOMPATIBLE = 1;
@@ -151,13 +152,13 @@ message LibraryVersionResponse {
     SERVICE_ERROR = 3;
   }
   Status status = 1;
-  string version_file_name = 2;
+  ArtifactCoordinate target_library = 2;
   string version = 3;
   string error_message = 4;
 }
 
-message GetLibraryVersionsResponse {
-  repeated LibraryVersionResponse responses = 1;
+message GetLibraryCompatibilityInfoResponse {
+  repeated LibraryCompatibilityInfo responses = 1;
 }
 
 // Opaque response from an inspector.

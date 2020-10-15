@@ -44,17 +44,17 @@ public class VersionCheckerResult {
     /** Interesting message set when the check fails or encounters an error. */
     public String message;
 
-    /** The version file that we checked. */
-    public String versionFileName;
+    /** The coordinate of the library that was used to check compatibility. */
+    public ArtifactCoordinate artifactCoordinate;
 
     /** The version of the library. Null if it couldn't be read. */
     public String version;
 
     public VersionCheckerResult(
-            Status status, String message, String versionFileName, String version) {
+            Status status, String message, ArtifactCoordinate artifactCoordinate, String version) {
         this.status = status;
         this.message = message;
-        this.versionFileName = versionFileName;
+        this.artifactCoordinate = artifactCoordinate;
         this.version = version;
     }
 }

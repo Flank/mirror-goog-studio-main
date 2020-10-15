@@ -29,9 +29,9 @@ import static com.android.tools.agent.app.inspection.NativeTransport.sendRawResp
 import androidx.inspection.ArtTooling;
 import androidx.inspection.ArtTooling.EntryHook;
 import androidx.inspection.ArtTooling.ExitHook;
+import com.android.tools.agent.app.inspection.version.ArtifactCoordinate;
 import com.android.tools.agent.app.inspection.version.VersionChecker;
 import com.android.tools.agent.app.inspection.version.VersionCheckerResult;
-import com.android.tools.agent.app.inspection.version.VersionTargetInfo;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,15 +111,14 @@ public class AppInspectionService {
      * @param inspectorId the unique id of the inspector being launched
      * @param dexPath the path to the .dex file of the inspector
      * @param projectName the name of the studio project that is trying to launch the inspector
-     * @param target specifies the information required to locate and read the version file of the
-     *     library
+     * @param libraryCoordinate represents the targeted library artifact.
      * @param force if true, create the inspector even if one is already running
      * @param commandId unique id of this command in the context of app inspection service
      */
     public void createInspector(
             String inspectorId,
             String dexPath,
-            VersionTargetInfo target,
+            ArtifactCoordinate libraryCoordinate,
             String projectName,
             boolean force,
             int commandId) {
@@ -143,7 +142,7 @@ public class AppInspectionService {
             doDispose(inspectorId);
         }
 
-        if (!doCheckVersion(commandId, target)) {
+        if (!doCheckVersion(commandId, libraryCoordinate)) {
             return;
         }
 
@@ -208,15 +207,16 @@ public class AppInspectionService {
      * that are present in this app.
      *
      * @param commandId the unique commandId associated with this command
-     * @param targets the libraries Studio wants version information for
+     * @param coordinates the libraries Studio wants version information for
      */
-    public void getLibraryVersionsCommand(int commandId, VersionTargetInfo[] targets) {
+    public void getLibraryCompatibilityInfoCommand(
+            int commandId, ArtifactCoordinate[] coordinates) {
         List<VersionCheckerResult> results = new ArrayList<>();
-        for (VersionTargetInfo target : targets) {
-            VersionCheckerResult result = versionChecker.checkVersion(target);
+        for (ArtifactCoordinate coordinate : coordinates) {
+            VersionCheckerResult result = versionChecker.checkVersion(coordinate);
             results.add(result);
         }
-        NativeTransport.sendGetLibraryVersionsResponse(
+        NativeTransport.sendGetLibraryCompatibilityInfoResponse(
                 commandId, results.toArray(), results.size());
     }
 
@@ -242,15 +242,15 @@ public class AppInspectionService {
      * any way. In other words, callers don't need to send a response if this method returns false.
      *
      * @param commandId the id of the command
-     * @param versionTarget contains the version compatibility and location of the library. Null if
-     *     inspector does not target any particular library.
+     * @param libraryCoordinate represents the minimum supported library artifact. Null if the
+     *     inspector is not targeting any particular library.
      * @return true if check passed. false if check failed for any reason.
      */
-    private boolean doCheckVersion(int commandId, VersionTargetInfo versionTarget) {
-        if (versionTarget == null) {
+    private boolean doCheckVersion(int commandId, ArtifactCoordinate libraryCoordinate) {
+        if (libraryCoordinate == null) {
             return true;
         }
-        VersionCheckerResult versionResult = versionChecker.checkVersion(versionTarget);
+        VersionCheckerResult versionResult = versionChecker.checkVersion(libraryCoordinate);
         if (versionResult.status == VersionCheckerResult.Status.INCOMPATIBLE) {
             sendCreateInspectorResponseVersionIncompatible(commandId, versionResult.message);
             return false;
