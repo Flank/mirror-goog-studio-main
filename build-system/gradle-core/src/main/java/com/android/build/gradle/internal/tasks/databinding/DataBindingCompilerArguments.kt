@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
@@ -29,8 +30,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.Directory
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -113,7 +116,29 @@ class DataBindingCompilerArguments constructor(
     val isEnabledForTests: Boolean,
 
     @get:Input
-    val isEnableV2: Boolean
+    val isEnableV2: Boolean,
+
+    @get:Input
+    var isNonTransitiveR: Boolean,
+
+    // Package-aware R.txt files from our dependencies - they contain the package of the module/lib
+    // and a list of resources defined in that module/lib. Used for generating non-transitive or
+    // resource namespace aware R class references.
+    // See [com.android.ide.common.symbols.SymbolIo] for read/write instructions.
+    @get:Optional
+    @get:InputFiles
+    @get:Classpath
+    val dependenciesLocalRFiles: FileCollection?,
+
+    // Package-aware R.txt file for the given module. Instead of actual package it will contain the
+    // keyword "local". Adittionally, first line is a comment. For generating references to this
+    // local R the default package of this module
+    // should be used.
+    // See [com.android.ide.common.symbols.SymbolIo] for read/write instructions.
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    val localRFile: Provider<RegularFile>?,
 ) : CommandLineArgumentProvider {
 
     override fun asArguments(): Iterable<String> {
@@ -134,7 +159,9 @@ class DataBindingCompilerArguments constructor(
             printEncodedErrorLogs = printEncodedErrorLogs,
             isTestVariant = isTestVariant,
             isEnabledForTests = isEnabledForTests,
-            isEnableV2 = isEnableV2
+            isEnableV2 = isEnableV2,
+            localR = localRFile?.orNull?.asFile,
+            dependenciesRFiles = dependenciesLocalRFiles?.files?.toList()
         ).toMap()
 
         // Don't need to sort the returned list as the order shouldn't matter to Gradle.
@@ -153,6 +180,21 @@ class DataBindingCompilerArguments constructor(
         ): DataBindingCompilerArguments {
             val globalScope = creationConfig.globalScope
             val artifacts = creationConfig.artifacts
+
+            val isNonTransitiveR = creationConfig.services.projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
+
+            val localRFile =
+                    if (isNonTransitiveR)
+                        artifacts.get(InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST)
+                    else null
+
+            val dependenciesLocalRFiles =
+                    if (isNonTransitiveR)
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.ALL,
+                                AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
+                    else null
 
             return DataBindingCompilerArguments(
                 incremental = creationConfig.services.projectOptions
@@ -182,7 +224,10 @@ class DataBindingCompilerArguments constructor(
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = creationConfig.variantType.isTestComponent,
                 isEnabledForTests = globalScope.extension.dataBinding.isEnabledForTests,
-                isEnableV2 = true
+                isEnableV2 = true,
+                isNonTransitiveR = isNonTransitiveR,
+                dependenciesLocalRFiles = dependenciesLocalRFiles,
+                localRFile = localRFile,
             )
         }
 

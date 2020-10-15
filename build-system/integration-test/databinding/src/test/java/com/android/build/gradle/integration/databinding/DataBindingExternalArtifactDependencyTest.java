@@ -33,6 +33,7 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DataBindingExternalArtifactDependencyTest {
     private static final String MAVEN_REPO_ARG_PREFIX = "-Pmaven_repo=";
+    private final boolean useNonTransitiveR;
 
     @Rule public GradleTestProject library;
 
@@ -40,29 +41,30 @@ public class DataBindingExternalArtifactDependencyTest {
 
     @Rule public TemporaryFolder mavenRepo = new TemporaryFolder();
 
-    public DataBindingExternalArtifactDependencyTest(boolean useAndroidX) {
-        String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
-        String enableJetifier = BooleanOption.ENABLE_JETIFIER.getPropertyName() + "=" + useAndroidX;
+    public DataBindingExternalArtifactDependencyTest(boolean useNonTransitiveR) {
+        String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + Boolean.TRUE;
+        String enableJetifier =
+                BooleanOption.ENABLE_JETIFIER.getPropertyName() + "=" + Boolean.TRUE;
+        this.useNonTransitiveR = useNonTransitiveR;
 
         library =
                 GradleTestProject.builder()
-                        .fromDataBindingIntegrationTest("IndependentLibrary", useAndroidX)
+                        .fromDataBindingIntegrationTest("IndependentLibrary", true)
                         .addGradleProperties(useX)
                         .create();
         app =
                 GradleTestProject.builder()
-                        .fromDataBindingIntegrationTest("MultiModuleTestApp", useAndroidX)
+                        .fromDataBindingIntegrationTest("MultiModuleTestApp", true)
                         .addGradleProperties(useX)
                         .addGradleProperties(enableJetifier)
                         .create();
-
     }
 
-    @Parameterized.Parameters(name = "useAndroidX_{0}")
+    @Parameterized.Parameters(name = "useNonTransitiveR_{0}")
     public static Iterable<Boolean[]> params() {
         ImmutableList.Builder<Boolean[]> builder = ImmutableList.builder();
-        for (boolean useAndroidX : new boolean[] {true, false}) {
-            builder.add(new Boolean[] {useAndroidX});
+        for (boolean useNonTransitiveR : new boolean[] {true, false}) {
+            builder.add(new Boolean[] {useNonTransitiveR});
         }
         return builder.build();
     }
@@ -94,7 +96,15 @@ public class DataBindingExternalArtifactDependencyTest {
     @Test
     public void runTest() throws Exception {
         List<String> args = createLibraryArtifact();
-        app.executor().withFailOnWarning(false).withArguments(args).run("assembleDebug");
-        app.executor().withFailOnWarning(false).withArguments(args).run("assembleDebugAndroidTest");
+        app.executor()
+                .withFailOnWarning(false)
+                .with(BooleanOption.NON_TRANSITIVE_R_CLASS, useNonTransitiveR)
+                .withArguments(args)
+                .run("assembleDebug");
+        app.executor()
+                .withFailOnWarning(false)
+                .with(BooleanOption.NON_TRANSITIVE_R_CLASS, useNonTransitiveR)
+                .withArguments(args)
+                .run("assembleDebugAndroidTest");
     }
 }
