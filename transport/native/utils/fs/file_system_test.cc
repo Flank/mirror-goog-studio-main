@@ -242,6 +242,27 @@ TEST(FileSystem, NonExistantFilesAlwaysHaveZeroModificationAge) {
   EXPECT_EQ(f->GetModificationAge(), 0);
 }
 
+TEST(FileSystem, FileSystemWalkDirWorks) {
+  MemoryFileSystem fs;
+  auto root = fs.NewDir("/mock/root");
+
+  auto d = root->NewDir("d");
+  d->NewFile("f1");
+  d->NewFile("f2");
+  d->NewFile("a/b/c/f3");
+
+  int path_count = 0;
+  fs.WalkDir("/mock/root/d",
+             [&path_count](const PathStat &pstat) { ++path_count; }, 100);
+  EXPECT_EQ(6, path_count);
+
+  // WalkDir shouldn't change the file system. Walk though the system again.
+  path_count = 0;
+  fs.WalkDir("/mock/root/d",
+             [&path_count](const PathStat &pstat) { ++path_count; }, 100);
+  EXPECT_EQ(6, path_count);
+}
+
 TEST(FileSystem, WalkDirectoriesWorks) {
   MemoryFileSystem fs;
   auto root = fs.NewDir("/mock/root");
