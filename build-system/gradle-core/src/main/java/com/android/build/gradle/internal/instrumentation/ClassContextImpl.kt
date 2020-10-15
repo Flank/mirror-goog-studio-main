@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.internal.instrumentation
 
-import com.android.build.api.instrumentation.ClassDataLoader
+import com.android.build.api.instrumentation.ClassContext
+import com.android.build.api.instrumentation.ClassData
 
-class ClassDataLoaderImpl(val classesHierarchyResolver: ClassesHierarchyResolver) :
-        ClassDataLoader {
+class ClassContextImpl(
+        override val currentClassData: ClassData,
+        val classesHierarchyResolver: ClassesHierarchyResolver
+) : ClassContext {
 
     @Synchronized
     override fun loadClassData(className: String) =
