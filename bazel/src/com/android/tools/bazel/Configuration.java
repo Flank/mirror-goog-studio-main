@@ -21,7 +21,6 @@ public class Configuration {
 
     public boolean strict;
     public boolean dryRun;
-    public boolean warningsAsErrors;
     public String imlGraph;
 
     public String nameRule(String pkg, String rel, String name) {

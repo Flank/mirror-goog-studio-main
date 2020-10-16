@@ -19,7 +19,6 @@ package com.android.tools.bazel;
 import com.android.tools.bazel.ir.IrLibrary;
 import com.android.tools.bazel.ir.IrModule;
 import com.android.tools.bazel.ir.IrProject;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -29,16 +28,12 @@ import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jetbrains.jps.model.JpsCompositeElement;
-import org.jetbrains.jps.model.JpsElement;
 import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.JpsElementReference;
 import org.jetbrains.jps.model.JpsProject;
@@ -76,17 +71,6 @@ import org.jetbrains.jps.model.serialization.JpsProjectLoader;
  */
 public class ImlToIr {
 
-    private static final Comparator<JpsModule> BY_NUM_ORDER_ENTRIES =
-            Comparator.comparingInt(module -> module.getDependenciesList().getDependencies().size());
-    public static final ImmutableSet<JpsJavaDependencyScope> RUNTIME_COMPILE_SCOPE = ImmutableSet
-            .of(JpsJavaDependencyScope.COMPILE, JpsJavaDependencyScope.RUNTIME);
-    public static final ImmutableSet<JpsJavaDependencyScope> TEST_COMPILE_SCOPE = ImmutableSet
-            .of(JpsJavaDependencyScope.TEST, JpsJavaDependencyScope.COMPILE);
-    public static final ImmutableSet<JpsJavaDependencyScope> COMPILE_SCOPE = ImmutableSet
-            .of(JpsJavaDependencyScope.COMPILE);
-    public static final ImmutableSet<JpsJavaDependencyScope> RUNTIME_TEST_COMPILE_SCOPE = ImmutableSet
-            .of(JpsJavaDependencyScope.TEST, JpsJavaDependencyScope.COMPILE, JpsJavaDependencyScope.RUNTIME);
-
     // This is the public API of ImlToIr, keeping it an instance method in case we ever need to
     // mock it or write another implementation.
     @SuppressWarnings("MethodMayBeStatic")
@@ -116,30 +100,18 @@ public class ImlToIr {
                 compilerConfiguration.getCompilerOptions(compilerConfiguration.getJavaCompilerId());
         List<File> excludedFiles = excludedFiles(excludes);
 
-        JpsGraph compileGraph = new JpsGraph(project, COMPILE_SCOPE, logger);
-        JpsGraph testCompileGraph = new JpsGraph(project, TEST_COMPILE_SCOPE, logger);
-        JpsGraph runtimeGraph = new JpsGraph(project, RUNTIME_COMPILE_SCOPE, logger);
-        JpsGraph testCompileRuntimeGraph =
-                new JpsGraph(project, RUNTIME_TEST_COMPILE_SCOPE, logger);
-
+        JpsGraph graph = new JpsGraph(project, logger);
         Dot dot = new Dot("iml_graph");
-
-        printCycleWarnings(logger, testCompileGraph);
-
-        // We have to create the IrModules first because even iterating in topological order,
-        // we do so on a test+compile scope, but there are still runtime dependency cycles.
-        Map<JpsModule, IrModule> imlToIr = new HashMap<>();
-        Map<JpsLibrary, IrLibrary> libraryToIr = new HashMap<>();
-        for (List<JpsModule> component : testCompileGraph.getConnectedComponents()) {
-            IrModule irModule = createIrModule(component, compilerOptions);
-            irProject.modules.add(irModule);
-            for (JpsModule module : component) {
-                imlToIr.put(module, irModule);
-            }
+        if (logger.getErrorCount() > 0) {
+            return irProject;
         }
 
-        for (JpsModule jpsModule : testCompileGraph.getModules()) {
-            IrModule module = imlToIr.get(jpsModule);
+        Map<JpsModule, IrModule> imlToIr = new HashMap<>();
+        Map<JpsLibrary, IrLibrary> libraryToIr = new HashMap<>();
+        for (JpsModule jpsModule : graph.getModulesInTopologicalOrder()) {
+            IrModule module = createIrModule(jpsModule, compilerOptions);
+            irProject.modules.add(module);
+            imlToIr.put(jpsModule, module);
 
             // Check if this is a test module with an associated production module that should be
             // treated as a Kotlin friend. I.e., detect an iml line like this:
@@ -246,10 +218,6 @@ public class ImlToIr {
                                 } else {
                                     dependencyDescription = "Library " + libraryName;
                                 }
-                                logger.warning(
-                                        dependencyDescription
-                                                + " points to non existing file: "
-                                                + file);
                             }
                             if (!Files.getFileExtension(file.getName()).equals("jar")
                                     || file.getName().endsWith("-sources.jar")) {
@@ -295,94 +263,11 @@ public class ImlToIr {
             }
         }
 
-        Map<JpsModule, Set<JpsElement>> runtimeDeps =
-                calculateNewDependencies(compileGraph, runtimeGraph);
-
-        // Add extra runtime dependencies:
-        for (Map.Entry<JpsModule, Set<JpsElement>> entry : runtimeDeps.entrySet()) {
-            IrModule from = imlToIr.get(entry.getKey());
-            for (JpsElement element : entry.getValue()) {
-                if (element instanceof JpsModule) {
-                    JpsModule module = (JpsModule) element;
-                    IrModule to = imlToIr.get(module);
-                    if (to != from) {
-                        from.addDependency(to, false, IrModule.Scope.RUNTIME);
-                        dot.addEdge(from.getName(), to.getName(), "blue", "dashed");
-                    }
-                } else if (element instanceof JpsLibrary) {
-                    JpsLibrary library = (JpsLibrary) element;
-                    IrLibrary lib = libraryToIr.get(library);
-                    from.addDependency(lib, false, IrModule.Scope.RUNTIME);
-                    dot.addEdge(from.getName(), lib.name, "blue", "dashed");
-                } else {
-                    throw new IllegalStateException(
-                            "Unexpected dependency type "
-                                    + element.getClass()
-                                    + " for "
-                                    + entry.getKey().getName());
-                }
-            }
-        }
-
-        Map<JpsModule, Set<JpsElement>> testRuntimeDeps =
-                calculateNewDependencies(testCompileGraph, testCompileRuntimeGraph);
-        for (Map.Entry<JpsModule, Set<JpsElement>> entry : testRuntimeDeps.entrySet()) {
-            IrModule from = imlToIr.get(entry.getKey());
-            Set<JpsElement> deps = new LinkedHashSet<>(entry.getValue());
-            deps.removeAll(runtimeDeps.get(entry.getKey()));
-            for (JpsElement element : deps) {
-                if (element instanceof JpsModule) {
-                    JpsModule module = (JpsModule) element;
-                    IrModule to = imlToIr.get(module);
-                    if (to != from) {
-                        from.addDependency(to, false, IrModule.Scope.TEST_RUNTIME);
-                        dot.addEdge(from.getName(), to.getName(), "green", "dashed");
-                    }
-                } else if (element instanceof JpsLibrary) {
-                    JpsLibrary library = (JpsLibrary) element;
-                    IrLibrary lib = libraryToIr.get(library);
-                    from.addDependency(lib, false, IrModule.Scope.TEST_RUNTIME);
-                    dot.addEdge(from.getName(), lib.name, "green", "dashed");
-                } else {
-                    throw new IllegalStateException(
-                            "Unexpected dependency type "
-                                    + element.getClass()
-                                    + " for "
-                                    + entry.getKey().getName());
-                }
-            }
-        }
-
         if (config.imlGraph != null) {
             dot.saveTo(new File(config.imlGraph));
         }
 
         return irProject;
-    }
-
-    private static void printCycleWarnings(BazelToolsLogger logger, JpsGraph graph) {
-        for (List<JpsModule> component : graph.getConnectedComponents()) {
-            // If the component has more than one element, there is a cycle:
-            if (component.size() > 1 && !isCycleAllowed(component)) {
-                StringBuilder message = new StringBuilder();
-                message.append("Found circular module dependency: ")
-                        .append(component.size())
-                        .append(" modules");
-                for (JpsModule module : component) {
-                    message.append("        ").append(module.getName());
-                }
-
-                logger.warning(message.toString());
-            }
-        }
-    }
-
-    /**
-     * Checks if a circular dependency is something in the platform (which we know contains such
-     * cycles) or if it involves our code as well.
-     */
-    private static boolean isCycleAllowed(List<JpsModule> cycle) {
-        return cycle.stream().map(JpsModule::getName).allMatch(ImlToIr::ignoreWarnings);
     }
 
     /**
@@ -420,105 +305,60 @@ public class ImlToIr {
         return "";
     }
 
-    private static Map<JpsModule, Set<JpsElement>> calculateNewDependencies(
-            JpsGraph partial, JpsGraph complete) {
-        Map<JpsModule, Set<JpsElement>> runtimeDeps = new LinkedHashMap<>();
-        for (JpsModule module : partial.getModules()) {
-            Set<JpsElement> newRuntimeDeps = new LinkedHashSet<>();
-            Set<JpsElement> target = new LinkedHashSet<>(complete.getClosure(module));
-            Set<JpsElement> current = partial.getClosure(module);
-            target.removeAll(current);
-            while (!target.isEmpty()) {
-                JpsElement missing = target.iterator().next();
-                newRuntimeDeps.add(missing);
-                if (missing instanceof JpsModule) {
-                    target.removeAll(partial.getClosure((JpsModule) missing));
-                } else if (missing instanceof JpsLibrary) {
-                    target.remove(missing);
-                }
-            }
-
-            runtimeDeps.put(module, newRuntimeDeps);
-        }
-        return runtimeDeps;
-    }
-
     private static IrModule createIrModule(
-            List<JpsModule> modules, JpsJavaCompilerOptions jpsCompilerOptions) {
-        String jpsModuleName =
-                modules.stream()
-                        .max(BY_NUM_ORDER_ENTRIES)
-                        .orElseThrow(() -> new IllegalStateException("empty list of JpsModule"))
-                        .getName();
-        String name = jpsModuleName + (modules.size() == 1 ? "" : "_and_others");
-        IrModule irModule = new IrModule(name);
+            JpsModule module, JpsJavaCompilerOptions jpsCompilerOptions) {
 
-        Path baseDir = null;
-        // Find the common ancestor of all the modules
-        for (JpsModule module : modules) {
-            File base = JpsModelSerializationDataService.getBaseDirectory(module);
-            if (base == null) {
+        File base = JpsModelSerializationDataService.getBaseDirectory(module);
+        if (base == null) {
+            throw new IllegalStateException(
+                    "Cannot determine base directory of module " + module.getName());
+        }
+        File moduleFile = new File(base, module.getName() + ".iml");
+        if (!moduleFile.exists()) {
+            throw new IllegalStateException("Cannot find module iml file: " + moduleFile);
+        }
+        IrModule irModule = new IrModule(module.getName(), moduleFile, base);
+
+        String additionalOptions =
+                jpsCompilerOptions.ADDITIONAL_OPTIONS_OVERRIDE.getOrDefault(
+                        module.getName(), jpsCompilerOptions.ADDITIONAL_OPTIONS_STRING);
+        if (additionalOptions != null && !additionalOptions.isEmpty()) {
+            String currentOptions = irModule.getCompilerOptions();
+            if (currentOptions == null) {
+                irModule.setCompilerOptions(additionalOptions);
+            } else if (!currentOptions.equals(additionalOptions)) {
                 throw new IllegalStateException(
-                        "Cannot determine base directory of module " + module.getName());
+                        "Conflicting compiler options specified by module " + module.getName());
             }
-            File moduleFile = new File(base, module.getName() + ".iml");
-            if (!moduleFile.exists()) {
-                throw new IllegalStateException("Cannot find module iml file: " + moduleFile);
-            }
-            irModule.addIml(moduleFile);
+        }
 
-            Path path = base.toPath();
-            if (baseDir == null) {
-                baseDir = path;
-            } else {
-                // Move common "up" until it covers the current module
-                while (!path.startsWith(baseDir)) {
-                    baseDir = baseDir.getParent();
+        for (JpsModuleSourceRoot root : module.getSourceRoots()) {
+            File file = root.getFile();
+            if (file.exists()) {
+                boolean source = false;
+                if (root.getRootType().equals(JavaSourceRootType.TEST_SOURCE)) {
+                    irModule.addTestSource(file);
+                    source = true;
                 }
-            }
-
-            String additionalOptions =
-                    jpsCompilerOptions.ADDITIONAL_OPTIONS_OVERRIDE.getOrDefault(
-                            module.getName(), jpsCompilerOptions.ADDITIONAL_OPTIONS_STRING);
-            if (additionalOptions != null && !additionalOptions.isEmpty()) {
-                String currentOptions = irModule.getCompilerOptions();
-                if (currentOptions == null) {
-                    irModule.setCompilerOptions(additionalOptions);
-                } else if (!currentOptions.equals(additionalOptions)) {
-                    throw new IllegalStateException(
-                            "Conflicting compiler options specified by module " + module.getName());
+                if (root.getRootType().equals(JavaSourceRootType.SOURCE)) {
+                    irModule.addSource(file);
+                    source = true;
                 }
-            }
+                if (source) {
+                    String prefix =
+                            ((JavaSourceRootProperties) root.getProperties()).getPackagePrefix();
+                    if (!prefix.isEmpty()) {
+                        irModule.addPrefix(file, prefix);
+                    }
+                }
 
-            for (JpsModuleSourceRoot root : module.getSourceRoots()) {
-                File file = root.getFile();
-                if (file.exists()) {
-                    boolean source = false;
-                    if (root.getRootType().equals(JavaSourceRootType.TEST_SOURCE)) {
-                        irModule.addTestSource(file);
-                        source = true;
-                    }
-                    if (root.getRootType().equals(JavaSourceRootType.SOURCE)) {
-                        irModule.addSource(file);
-                        source = true;
-                    }
-                    if (source) {
-                        String prefix = ((JavaSourceRootProperties) root.getProperties())
-                                .getPackagePrefix();
-                        if (!prefix.isEmpty()) {
-                            irModule.addPrefix(file, prefix);
-                        }
-                    }
-
-                    if (root.getRootType().equals(JavaResourceRootType.TEST_RESOURCE)) {
-                        irModule.addTestResource(file);
-                    } else if (root.getRootType().equals(JavaResourceRootType.RESOURCE)) {
-                        irModule.addResource(file);
-                    }
+                if (root.getRootType().equals(JavaResourceRootType.TEST_RESOURCE)) {
+                    irModule.addTestResource(file);
+                } else if (root.getRootType().equals(JavaResourceRootType.RESOURCE)) {
+                    irModule.addResource(file);
                 }
             }
         }
-        irModule.setBaseDir(baseDir);
         return irModule;
     }
 

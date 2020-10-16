@@ -28,21 +28,23 @@ import java.util.Map;
  */
 public class IrModule extends IrNode {
 
-    private List<File> imls = new ArrayList<>();
-    private List<File> testSources = new ArrayList<>();
-    private List<File> sources = new ArrayList<>();
-    private List<File> testResources = new ArrayList<>();
-    private List<File> resources = new ArrayList<>();
-    private Map<File, String> prefixes = new LinkedHashMap<>();
-    private List<Dependency<? extends IrNode>> dependencies = new ArrayList<>();
-    private List<IrModule> testFriends = new ArrayList<>();
-    private List<File> excludes = new ArrayList<>();
-    private String name;
-    private Path baseDir;
+    private final List<File> imls = new ArrayList<>();
+    private final List<File> testSources = new ArrayList<>();
+    private final List<File> sources = new ArrayList<>();
+    private final List<File> testResources = new ArrayList<>();
+    private final List<File> resources = new ArrayList<>();
+    private final Map<File, String> prefixes = new LinkedHashMap<>();
+    private final List<Dependency<? extends IrNode>> dependencies = new ArrayList<>();
+    private final List<IrModule> testFriends = new ArrayList<>();
+    private final List<File> excludes = new ArrayList<>();
+    private final String name;
+    private final Path baseDir;
     private String compilerOptions;
 
-    public IrModule(String name) {
+    public IrModule(String name, File iml, File base) {
         this.name = name;
+        imls.add(iml);
+        this.baseDir = base.toPath();
     }
 
     public void addDependency(IrModule dep, boolean exported, Scope scope) {
@@ -124,10 +126,6 @@ public class IrModule extends IrNode {
         return excludes;
     }
 
-    public void addIml(File file) {
-        imls.add(file);
-    }
-
     public void addTestSource(File file) {
         testSources.add(file);
     }
@@ -146,10 +144,6 @@ public class IrModule extends IrNode {
 
     public void addResource(File file) {
         resources.add(file);
-    }
-
-    public void setBaseDir(Path baseDir) {
-        this.baseDir = baseDir;
     }
 
     public void setCompilerOptions(String compilerOptions) {

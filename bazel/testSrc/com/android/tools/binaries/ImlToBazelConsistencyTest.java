@@ -16,11 +16,9 @@
 
 package com.android.tools.binaries;
 
-import com.android.tools.bazel.BazelToolsLogger;
 import com.android.tools.bazel.Configuration;
+import com.android.tools.bazel.StringBuilderLogger;
 import com.android.tools.utils.WorkspaceUtils;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
 
 /**
@@ -37,7 +35,6 @@ public class ImlToBazelConsistencyTest {
             Configuration config = new Configuration();
             config.dryRun = true;
             config.strict = true;
-            config.warningsAsErrors = true;
             int updated =
                     ImlToBazel.run(
                             config,
@@ -66,29 +63,4 @@ public class ImlToBazelConsistencyTest {
                 cause);
     }
 
-    private static class StringBuilderLogger extends BazelToolsLogger {
-        private final List<String> output = new ArrayList<String>();
-
-        @Override
-        public void error(String message, Object... args) {
-            super.error(message, args);
-            output.add(String.format(message, args));
-        }
-
-        @Override
-        public void warning(String message, Object... args) {
-            super.warning(message, args);
-            output.add(String.format(message, args));
-        }
-
-        @Override
-        public void info(String message, Object... args) {
-            super.info(message, args);
-            output.add(String.format(message, args));
-        }
-
-        public List<String> getOutput() {
-            return output;
-        }
-    }
 }
