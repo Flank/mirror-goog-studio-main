@@ -209,11 +209,7 @@ void LiveLiteralUpdateCommand::ProcessResponse(
     return;
   }
 
-  // Convert proto events to events.
-  for (int i = 0; i < install_response.events_size(); i++) {
-    const proto::Event& event = install_response.events(i);
-    AddRawEvent(ConvertProtoEventToEvent(event));
-  }
+  ConvertProtoEventsToEvents(install_response.events());
 }
 
 // TODO: Refactor this which is mostly identical to
@@ -346,12 +342,7 @@ void LiveLiteralUpdateCommand::Update(
 
   const auto& agent_server_response = server_response.send_response();
   for (const auto& agent_response : agent_server_response.agent_responses()) {
-    // Convert proto events to events.
-    for (int i = 0; i < agent_response.events_size(); i++) {
-      const proto::Event& event = agent_response.events(i);
-      AddRawEvent(ConvertProtoEventToEvent(event));
-    }
-
+    ConvertProtoEventsToEvents(agent_response.events());
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = response->add_failed_agents();
       *failed_agent = agent_response;

@@ -259,11 +259,7 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
 
     agent_responses.emplace(agent_response.pid(), agent_response);
 
-    // Convert proto events to events.
-    for (int i = 0; i < agent_response.events_size(); i++) {
-      const proto::Event& event = agent_response.events(i);
-      AddRawEvent(ConvertProtoEventToEvent(event));
-    }
+    ConvertProtoEventsToEvents(agent_response.events());
 
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = response_->add_failed_agents();

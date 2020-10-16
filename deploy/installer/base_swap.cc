@@ -140,12 +140,7 @@ bool BaseSwapCommand::Swap(
 
   const auto& agent_server_response = server_response.send_response();
   for (const auto& agent_response : agent_server_response.agent_responses()) {
-    // Convert proto events to events.
-    for (int i = 0; i < agent_response.events_size(); i++) {
-      const proto::Event& event = agent_response.events(i);
-      AddRawEvent(ConvertProtoEventToEvent(event));
-    }
-
+    ConvertProtoEventsToEvents(agent_response.events());
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = swap_response->add_failed_agents();
       *failed_agent = agent_response;

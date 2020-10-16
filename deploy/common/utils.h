@@ -55,8 +55,12 @@ inline const std::string operator"" _s(const char* c, std::size_t size) {
   return std::string(c, size);
 }
 
+void ConvertProtoEventsToEvents(
+    const google::protobuf::RepeatedPtrField<proto::Event>& events);
+
 deploy::Event ConvertProtoEventToEvent(
     const proto::Event& proto_event) noexcept;
+
 void ConvertEventToProtoEvent(deploy::Event& event,
                               proto::Event* proto_event) noexcept;
 

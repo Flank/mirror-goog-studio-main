@@ -86,10 +86,7 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  for (int i = 0; i < install_response.events_size(); i++) {
-    const proto::Event& event = install_response.events(i);
-    AddRawEvent(ConvertProtoEventToEvent(event));
-  }
+  ConvertProtoEventsToEvents(install_response.events());
 }
 
 void OverlayInstallCommand::SetUpAgent(
