@@ -2,13 +2,12 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.builder-test-api",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.builder-test-api.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/ddmlib:studio.android.sdktools.ddmlib"],
@@ -16,8 +15,8 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:Guava",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )
 
