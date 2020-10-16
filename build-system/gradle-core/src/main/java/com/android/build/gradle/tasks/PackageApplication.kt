@@ -136,7 +136,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
                 metrics.resourcesApSize = resourcesApSize
             }
             metrics.metricsTimeNs = System.nanoTime() - metricsStartTime
-            analyticsService.getProjectBuillder(projectPath!!).setMetrics(metrics)
+            analyticsService.getProjectBuillder(projectPath!!)?.setMetrics(metrics)
         }
 
         private fun getSize(file: File?): Long? {

@@ -299,11 +299,15 @@ public abstract class BasePlugin<
 
         configuratorService.createAnalyticsService(project, listenerRegistry);
 
-        configuratorService.getProjectBuilder(project.getPath())
-                .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
-                .setAndroidPlugin(getAnalyticsPluginType())
-                .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
-                .setOptions(AnalyticsUtil.toProto(projectOptions));
+        GradleBuildProject.Builder projectBuilder =
+                configuratorService.getProjectBuilder(project.getPath());
+        if (projectBuilder != null) {
+            projectBuilder
+                    .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+                    .setAndroidPlugin(getAnalyticsPluginType())
+                    .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
+                    .setOptions(AnalyticsUtil.toProto(projectOptions));
+        }
 
         configuratorService.recordBlock(
                 ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
@@ -650,16 +654,21 @@ public abstract class BasePlugin<
         extension.disableWrite();
         dslServices.getVariableFactory().disableWrite();
 
-        configuratorService.getProjectBuilder(project.getPath())
-                .setCompileSdk(extension.getCompileSdkVersion())
-                .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
-                .setSplits(AnalyticsUtil.toProto(extension.getSplits()));
+        GradleBuildProject.Builder projectBuilder =
+                configuratorService.getProjectBuilder(project.getPath());
 
-        String kotlinPluginVersion = getKotlinPluginVersion();
-        if (kotlinPluginVersion != null) {
-            configuratorService.getProjectBuilder(project.getPath())
-                    .setKotlinPluginVersion(kotlinPluginVersion);
+        if (projectBuilder != null) {
+            projectBuilder
+                    .setCompileSdk(extension.getCompileSdkVersion())
+                    .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
+                    .setSplits(AnalyticsUtil.toProto(extension.getSplits()));
+
+            String kotlinPluginVersion = getKotlinPluginVersion();
+            if (kotlinPluginVersion != null) {
+                projectBuilder.setKotlinPluginVersion(kotlinPluginVersion);
+            }
         }
+
         AnalyticsUtil.recordFirebasePerformancePluginVersion(project);
 
         // create the build feature object that will be re-used everywhere

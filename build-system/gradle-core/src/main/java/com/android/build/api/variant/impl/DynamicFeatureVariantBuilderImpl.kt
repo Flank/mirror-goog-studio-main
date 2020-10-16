@@ -38,10 +38,14 @@ open class DynamicFeatureVariantBuilderImpl @Inject constructor(
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder): T =
+            stats: GradleBuildVariant.Builder?): T =
+        if (stats == null) {
+            this as T
+        } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledDynamicFeatureVariantBuilder::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledDynamicFeatureVariantBuilder::class.java,
+                this,
+                stats
             ) as T
+        }
 }

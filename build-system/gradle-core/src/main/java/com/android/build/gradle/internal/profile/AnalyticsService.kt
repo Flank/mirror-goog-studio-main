@@ -71,7 +71,16 @@ abstract class AnalyticsService :
     @get:Inject
     abstract val provider: ProviderFactory
 
-    private val resourceManager = AnalyticsResourceManager(
+    private val resourceManager: AnalyticsResourceManager = initializeResourceManager()
+
+    private val gradleEnvironment: Environment = GradleAnalyticsEnvironment(provider)
+
+    init {
+        initializeAnalyticsSettings()
+    }
+
+    protected open fun initializeResourceManager(): AnalyticsResourceManager {
+        return AnalyticsResourceManager(
             reconstructProfileBuilder(),
             ConcurrentHashMap(parameters.projects.get()),
             parameters.enableProfileJson.get(),
@@ -79,10 +88,9 @@ abstract class AnalyticsService :
             ConcurrentHashMap(parameters.taskMetadata.get()),
             parameters.rootProjectPath.get()
         )
+    }
 
-    private val gradleEnvironment: Environment = GradleAnalyticsEnvironment(provider)
-
-    init {
+    protected open fun initializeAnalyticsSettings() {
         AnalyticsSettings.initialize(
             LoggerWrapper.getLogger(AnalyticsService::class.java), null, gradleEnvironment)
         // Initialize UsageTracker because some tasks(e.g. lint) need to record analytics with
@@ -121,7 +129,7 @@ abstract class AnalyticsService :
     }
 
     @Synchronized
-    override fun getProjectBuillder(projectPath: String): GradleBuildProject.Builder {
+    override fun getProjectBuillder(projectPath: String): GradleBuildProject.Builder? {
         return resourceManager.getProjectBuilder(projectPath)
     }
 
@@ -129,7 +137,7 @@ abstract class AnalyticsService :
     override fun getVariantBuilder(
         projectPath: String,
         variantName: String
-    ) : GradleBuildVariant.Builder {
+    ) : GradleBuildVariant.Builder? {
         return resourceManager.getVariantBuilder(projectPath, variantName)
     }
 

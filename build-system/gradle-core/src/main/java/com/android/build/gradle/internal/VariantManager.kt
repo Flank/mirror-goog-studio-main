@@ -643,7 +643,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                                     variant.name))
                 }
                 val variantBuilder = variantInfo.stats
-                variantBuilder
+                variantBuilder?.let {
+                    it
                         .setIsDebug(buildType.isDebuggable)
                         .setMinSdkVersion(AnalyticsUtil.toProto(variantInfo.variant.minSdkVersion))
                         .setMinifyEnabled(variant.codeShrinker != null)
@@ -653,27 +654,26 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         .setDexBuilder(AnalyticsUtil.toProto(variantScope.dexer))
                         .setDexMerger(AnalyticsUtil.toProto(variantScope.dexMerger))
                         .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled)
-                        .testExecution = AnalyticsUtil.toProto(
-                                globalScope
-                                        .extension
-                                        .testOptions
-                                        .getExecutionEnum())
-                variant.codeShrinker?.let {
-                    variantBuilder.codeShrinker = AnalyticsUtil.toProto(it)
-                }
-                if (variantDslInfo.targetSdkVersion.apiLevel > 0) {
-                    variantBuilder.targetSdkVersion =
+                        .testExecution = AnalyticsUtil.toProto(globalScope.extension.testOptions.getExecutionEnum())
+
+                    variant.codeShrinker?.let {
+                        variantBuilder.codeShrinker = AnalyticsUtil.toProto(it)
+                    }
+                    if (variantDslInfo.targetSdkVersion.apiLevel > 0) {
+                        variantBuilder.targetSdkVersion =
                             AnalyticsUtil.toProto(variantDslInfo.targetSdkVersion)
-                }
-                variantDslInfo.maxSdkVersion?.let {
-                    variantBuilder.setMaxSdkVersion(
+                    }
+                    variantDslInfo.maxSdkVersion?.let {
+                        variantBuilder.setMaxSdkVersion(
                             ApiVersion.newBuilder().setApiLevel(it.toLong()))
-                }
-                val supportType = variant.getJava8LangSupportType()
-                if (supportType != VariantScope.Java8LangSupport.INVALID
+                    }
+                    val supportType = variant.getJava8LangSupportType()
+                    if (supportType != VariantScope.Java8LangSupport.INVALID
                         && supportType != VariantScope.Java8LangSupport.UNUSED) {
-                    variantBuilder.java8LangSupport = AnalyticsUtil.toProto(supportType)
+                        variantBuilder.java8LangSupport = AnalyticsUtil.toProto(supportType)
+                    }
                 }
+
                 if (variantFactory.variantType.hasTestComponents) {
                     if (buildTypeData == testBuildTypeData) {
                         val androidTest = createTestComponents(

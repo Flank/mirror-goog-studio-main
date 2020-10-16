@@ -56,7 +56,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
 
     private var state = State.COLLECTING_DATA
 
-    fun getProjectBuilder(projectPath: String) : GradleBuildProject.Builder {
+    open fun getProjectBuilder(projectPath: String) : GradleBuildProject.Builder? {
         if (state == State.ANALYTICS_SERVICE_CREATED) {
             error("Accessing GradleBuildProject.Builder through AnalyticsConfiguratorService " +
                     "is not allowed after AnalyticsService is created.")
@@ -64,7 +64,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
         return resourcesManager.getProjectBuilder(projectPath)
     }
 
-    fun getVariantBuilder(projectPath: String, variantName: String) : GradleBuildVariant.Builder {
+    open fun getVariantBuilder(projectPath: String, variantName: String) : GradleBuildVariant.Builder? {
         if (state == State.ANALYTICS_SERVICE_CREATED) {
             error("Accessing GradleBuildVariant.Builder through AnalyticsConfiguratorService " +
                     "is not allowed after AnalyticsService is created.")
@@ -76,7 +76,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
      * Records the time elapsed while executing a void block and saves the resulting
      * [GradleBuildProfileSpan].
      */
-    fun recordBlock(
+    open fun recordBlock(
         executionType: GradleBuildProfileSpan.ExecutionType,
         projectPath: String,
         variant: String?,
@@ -86,7 +86,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
     }
 
     @Synchronized
-    fun createAnalyticsService(project: Project, registry: BuildEventsListenerRegistry) {
+    open fun createAnalyticsService(project: Project, registry: BuildEventsListenerRegistry) {
         if (state == State.CALLBACK_REGISTERED) {
             return
         }

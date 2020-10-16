@@ -50,7 +50,7 @@ import java.nio.file.Files
 internal class NdkBuildExternalNativeJsonGenerator(
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>,
-    variantBuilder: GradleBuildVariant.Builder
+    variantBuilder: GradleBuildVariant.Builder?
 ) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
 
     /**
@@ -298,7 +298,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
         listOf(ndkBuild) + getBaseArgs(abi, removeJobsFlag)
 
     init {
-        variantBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD
+        variantBuilder?.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD
 
         // Do some basic sync time checks.
         if (this.variant.module.makeFile.isDirectory) {

@@ -31,7 +31,7 @@ import java.util.concurrent.Callable
 class CxxNopMetadataGenerator(
         override val variant: CxxVariantModel,
         override val abis: List<CxxAbiModel>,
-        override val variantBuilder: GradleBuildVariant.Builder
+        override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
     override fun getMetadataGenerators(
             ops: ExecOperations,

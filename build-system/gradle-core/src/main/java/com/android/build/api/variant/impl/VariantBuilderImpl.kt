@@ -56,7 +56,7 @@ abstract class VariantBuilderImpl(
 
     abstract fun <T: VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder): T
+            stats: GradleBuildVariant.Builder?): T
 
     override var renderscriptTargetApi: Int = -1
         get() {

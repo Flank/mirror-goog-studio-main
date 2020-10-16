@@ -120,13 +120,17 @@ open class  LibraryVariantImpl @Inject constructor(
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
-            stats: GradleBuildVariant.Builder
+            stats: GradleBuildVariant.Builder?
     ): T =
+        if (stats == null) {
+            this as T
+        } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledLibraryVariant::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledLibraryVariant::class.java,
+                this,
+                stats
             ) as T
+        }
 
     override val codeShrinker: CodeShrinker?
         get() = delegate.getCodeShrinker()

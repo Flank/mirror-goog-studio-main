@@ -358,7 +358,7 @@ fun createCxxMetadataGenerator(
                 return CxxNopMetadataGenerator(variant, abis, variantBuilder)
             }
             val cmakeRevision = cmake.minimumCmakeVersion
-            variantBuilder.nativeCmakeVersion = cmakeRevision.toString()
+            variantBuilder?.nativeCmakeVersion = cmakeRevision.toString()
             if (cmakeRevision.isCmakeForkVersion()) {
                 return CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis, variantBuilder)
             }

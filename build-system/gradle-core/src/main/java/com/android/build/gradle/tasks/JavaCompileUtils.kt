@@ -253,7 +253,7 @@ fun recordAnnotationProcessorsForAnalytics(
         val builder = AnnotationProcessorInfo.newBuilder()
         builder.spec = processor.key
         builder.isIncremental = processor.value
-        variant.addAnnotationProcessors(builder)
+        variant?.addAnnotationProcessors(builder)
     }
-    variant.isAnnotationProcessingIncremental = !processors.values.contains(false)
+    variant?.isAnnotationProcessingIncremental = !processors.values.contains(false)
 }

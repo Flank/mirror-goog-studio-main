@@ -195,13 +195,17 @@ open class ApplicationVariantImpl @Inject constructor(
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
-            stats: GradleBuildVariant.Builder
+            stats: GradleBuildVariant.Builder?
     ): T =
+        if (stats == null) {
+            this as T
+        } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledApplicationVariant::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledApplicationVariant::class.java,
+                this,
+                stats
             ) as T
+        }
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi

@@ -72,10 +72,10 @@ import java.util.*
 internal class CmakeServerExternalNativeJsonGenerator(
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>,
-    variantBuilder: GradleBuildVariant.Builder
+    variantBuilder: GradleBuildVariant.Builder?
 ) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
     init {
-        variantBuilder.nativeBuildSystemType = CMAKE
+        variantBuilder?.nativeBuildSystemType = CMAKE
         cmakeMakefileChecks(variant)
     }
 

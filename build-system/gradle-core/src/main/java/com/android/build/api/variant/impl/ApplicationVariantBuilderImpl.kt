@@ -66,11 +66,14 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
     @Suppress("UNCHECKED_CAST")
     override fun <T: VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder,): T =
+            stats: GradleBuildVariant.Builder?,): T =
+        if (stats == null) {
+            this as T
+        } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledApplicationVariantBuilder::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledApplicationVariantBuilder::class.java,
+                this,
+                stats
             ) as T
-
+        }
 }

@@ -28,7 +28,7 @@ open class ComponentInfo<
         ComponentT : ComponentImpl>(
     val variantBuilder: ComponentBuilderT,
     val variant: ComponentT,
-    val stats: GradleBuildVariant.Builder
+    val stats: GradleBuildVariant.Builder?
 )
 
 class VariantComponentInfo<
@@ -37,6 +37,6 @@ class VariantComponentInfo<
 (
         variantBuilder: VariantBuilderT,
         variant: VariantT,
-        stats: GradleBuildVariant.Builder,
+        stats: GradleBuildVariant.Builder?,
         val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<in VariantBuilderT, in VariantT>
 ) : ComponentInfo<VariantBuilderT, VariantT>(variantBuilder, variant, stats)

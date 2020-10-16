@@ -120,13 +120,18 @@ open class UnitTestImpl @Inject constructor(
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
-            stats: GradleBuildVariant.Builder
+            stats: GradleBuildVariant.Builder?
     ): T =
+        if (stats == null) {
+             this as T
+        } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledUnitTest::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledUnitTest::class.java,
+                this,
+                stats
             ) as T
+        }
+
 
     /**
      * for unit tests, the placeholders are always empty.

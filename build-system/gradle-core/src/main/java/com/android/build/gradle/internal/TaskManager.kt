@@ -473,7 +473,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         getBuildService(
                 project.gradle.sharedServices, AnalyticsConfiguratorService::class.java)
                 .get()
-                .getProjectBuilder(project.path).composeEnabled = true
+                .getProjectBuilder(project.path)?.composeEnabled = true
 
         // Create a project configuration that holds the androidx compose kotlin
         // compiler extension

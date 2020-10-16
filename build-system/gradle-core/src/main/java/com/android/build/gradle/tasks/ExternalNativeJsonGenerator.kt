@@ -79,7 +79,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
     final override val variant: CxxVariantModel,
     @get:Internal override val abis: List<CxxAbiModel>,
-    @get:Internal override val variantBuilder: GradleBuildVariant.Builder
+    @get:Internal override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
 
     // TODO(153964094) Reconcile this with jsonGenerationDependencyFiles
@@ -250,19 +250,22 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         )
                     }
 
-                    synchronized(variantBuilder) {
-                        // Related to https://issuetracker.google.com/69408798
-                        // Targets may have been removed or there could be other orphaned extra
-                        // .so files. Remove these and rely on the build step to replace them
-                        // if they are legitimate. This is to prevent unexpected .so files from
-                        // being packaged in the APK.
-                        removeUnexpectedSoFiles(
-                            abi.soFolder,
-                            AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                abi.jsonFile, variantBuilder
+                    variantBuilder?.let {
+                        synchronized(it) {
+                            // Related to https://issuetracker.google.com/69408798
+                            // Targets may have been removed or there could be other orphaned extra
+                            // .so files. Remove these and rely on the build step to replace them
+                            // if they are legitimate. This is to prevent unexpected .so files from
+                            // being packaged in the APK.
+                            removeUnexpectedSoFiles(
+                                abi.soFolder,
+                                AndroidBuildGradleJsons.getNativeBuildMiniConfig(
+                                    abi.jsonFile, it
+                                )
                             )
-                        )
+                        }
                     }
+
 
                     // Write the ProcessInfo to a file, this has all the flags used to generate the
                     // JSON. If any of these change later the JSON will be regenerated.
@@ -304,8 +307,10 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                 throw e
             } finally {
                 variantStats.generationDurationMs = System.currentTimeMillis() - startTime
-                synchronized(variantBuilder) {
-                    variantBuilder.addNativeBuildConfig(variantStats)
+                variantBuilder?.let {
+                    synchronized(it) {
+                        it.addNativeBuildConfig(variantStats)
+                    }
                 }
                 abi.jsonGenerationLoggingRecordFile.parentFile.mkdirs()
                 Files.write(

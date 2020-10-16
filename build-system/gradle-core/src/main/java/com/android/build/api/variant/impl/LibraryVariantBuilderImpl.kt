@@ -38,11 +38,15 @@ open class LibraryVariantBuilderImpl @Inject constructor(
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder
+            stats: GradleBuildVariant.Builder?
     ): T =
+        if (stats == null) {
+            this as T
+        } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledLibraryVariantBuilder::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledLibraryVariantBuilder::class.java,
+                this,
+                stats
             ) as T
+        }
 }

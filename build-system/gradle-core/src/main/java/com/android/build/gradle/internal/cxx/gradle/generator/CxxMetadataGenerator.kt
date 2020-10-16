@@ -35,7 +35,7 @@ interface CxxMetadataGenerator {
     val abis: List<CxxAbiModel>
 
     @get:Internal
-    val variantBuilder: GradleBuildVariant.Builder
+    val variantBuilder: GradleBuildVariant.Builder?
     //endregion
 
     //region Build metadata generation
