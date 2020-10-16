@@ -256,7 +256,6 @@ public class AvdManager {
     public static final String AVD_INI_FORCE_CHOSEN_SNAPSHOT_BOOT_MODE = "fastboot.forceChosenSnapshotBoot";
     public static final String AVD_INI_FORCE_FAST_BOOT_MODE = "fastboot.forceFastBoot";
     public static final String AVD_INI_CHOSEN_SNAPSHOT_FILE = "fastboot.chosenSnapshotFile";
-    public static final String AVD_INI_COLD_BOOT_ONCE = "once"; // Key value in addition to "yes" and "no"
 
     /**
      * AVD/config.ini key name representing how to emulate the front facing camera
