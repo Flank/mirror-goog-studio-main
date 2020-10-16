@@ -217,6 +217,11 @@ public class ImlToIr {
                             Collections.sort(files);
                         }
                         for (File file : files) {
+                            if (file.getPath().contains("$SDK_PLATFORM$")) {
+                                // Libraries containing these files cannot be resolved and will
+                                // point to unmanaged rules.
+                                continue;
+                            }
                             // "KotlinPlugin" is the library that upstream IntelliJ uses that points
                             // to
                             // files under idea/build that we usually don't create, they are copied

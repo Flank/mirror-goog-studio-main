@@ -48,8 +48,7 @@ public class ImlToBazelConsistencyTest {
                 fail("IML and build files are inconsistent", logger, null);
             }
         } catch (Exception e) {
-            // TODO: Remove all warnings in generating tools/adt/idea rules
-            // fail("IML to build tool threw an exception", logger, e);
+             fail("IML to build tool threw an exception", logger, e);
         }
     }
 
