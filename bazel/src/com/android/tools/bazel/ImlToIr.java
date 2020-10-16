@@ -251,8 +251,7 @@ public class ImlToIr {
                                                 + " points to non existing file: "
                                                 + file);
                             }
-                            if (!file.exists()
-                                    || !Files.getFileExtension(file.getName()).equals("jar")
+                            if (!Files.getFileExtension(file.getName()).equals("jar")
                                     || file.getName().endsWith("-sources.jar")) {
                                 continue;
                             }
