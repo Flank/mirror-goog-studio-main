@@ -120,21 +120,19 @@ class DynamicAppSigningConfigTest {
 
         project.getSubproject("app").buildFile.appendText(
             """
-                android {
-                    onVariantProperties.withName('debug') {
+                androidComponents {
+                    onVariants(selector().withName('debug'), {
                         signingConfig.enableV1Signing.set(true)
                         signingConfig.enableV2Signing.set(true)
                         signingConfig.enableV3Signing.set(true)
                         signingConfig.enableV4Signing.set(true)
-                    }
-                    onVariants {
-                        androidTestProperties {
-                            signingConfig.enableV1Signing.set(true)
-                            signingConfig.enableV2Signing.set(true)
-                            signingConfig.enableV3Signing.set(true)
-                            signingConfig.enableV4Signing.set(true)
-                        }
-                    }
+                    })
+                    androidTest(selector().all(), {
+                        signingConfig.enableV1Signing.set(true)
+                        signingConfig.enableV2Signing.set(true)
+                        signingConfig.enableV3Signing.set(true)
+                        signingConfig.enableV4Signing.set(true)
+                    })
                 }
             """.trimIndent()
         )

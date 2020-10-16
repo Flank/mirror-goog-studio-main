@@ -101,6 +101,7 @@ public class Main {
     private static final String ARG_CHECK = "--check";
     private static final String ARG_AUTO_FIX = "--apply-suggestions";
     private static final String ARG_DESCRIBE_FIXES = "--describe-suggestions";
+    private static final String ARG_ABORT_IF_SUGGESTIONS_APPLIED = "--abort-if-suggestions-applied";
     private static final String ARG_FATAL = "--fatal";
     private static final String ARG_ERROR = "--error";
     private static final String ARG_WARNING = "--warning";
@@ -128,6 +129,7 @@ public class Main {
     private static final String ARG_FATAL_ONLY = "--fatalOnly";
     private static final String ARG_PROJECT = "--project";
     private static final String ARG_LINT_MODEL = "--lint-model";
+    private static final String ARG_LINT_RULE_JARS = "--lint-rule-jars";
     private static final String ARG_VARIANT = "--variant";
     private static final String ARG_CLASSES = "--classpath";
     private static final String ARG_SOURCES = "--sources";
@@ -271,7 +273,8 @@ public class Main {
                     @Override
                     public Configuration getConfiguration(
                             @NonNull final Project project, @Nullable LintDriver driver) {
-                        if (project.isGradleProject()) {
+                        if (project.isGradleProject()
+                                && !(project instanceof LintModelModuleProject)) {
                             // Don't report any issues when analyzing a Gradle project from the
                             // non-Gradle runner; they are likely to be false, and will hide the
                             // real problem reported above. We also need to turn off overrides
@@ -890,6 +893,8 @@ public class Main {
                         }
                     }
                 }
+            } else if (arg.equals(ARG_ABORT_IF_SUGGESTIONS_APPLIED)) {
+                flags.setAbortOnAutoFix(true);
             } else if (arg.equals(ARG_CLASSES)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing class folder name");
@@ -1059,7 +1064,7 @@ public class Main {
                         LintModelModule module =
                                 reader.readModule(
                                         input,
-                                        Collections.emptyList(),
+                                        null,
                                         // TODO: Define any path variables Gradle may be setting!
                                         true,
                                         Collections.emptyList());
@@ -1073,6 +1078,20 @@ public class Main {
                         return ERRNO_INVALID_ARGS;
                     }
                 }
+            } else if (arg.equals(ARG_LINT_RULE_JARS)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing lint rule jar");
+                    return ERRNO_INVALID_ARGS;
+                }
+                List<File> lintRuleJarsOverride = new ArrayList<>();
+                List<File> currentOverrides = flags.getLintRuleJarsOverride();
+                if (currentOverrides != null) {
+                    lintRuleJarsOverride.addAll(currentOverrides);
+                }
+                for (String path : Lint.splitPath(args[++index])) {
+                    lintRuleJarsOverride.add(getInArgumentPath(path));
+                }
+                flags.setLintRuleJarsOverride(lintRuleJarsOverride);
             } else if (arg.equals(ARG_SDK_HOME)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing SDK home directory");
@@ -1143,7 +1162,12 @@ public class Main {
             }
         }
 
-        if (files.isEmpty() && flags.getProjectDescriptorOverride() == null) {
+        if (!modules.isEmpty()) {
+            // Sync the first lint model's lint options.
+            SyncOptions.syncTo(modules.get(0), client, flags, variantName, null, true);
+        }
+
+        if (files.isEmpty() && modules.isEmpty() && flags.getProjectDescriptorOverride() == null) {
             System.err.println("No files to analyze.");
             return ERRNO_INVALID_ARGS;
         } else if (files.size() > 1

@@ -20,19 +20,21 @@ import com.google.common.base.Strings;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * JsonSerializer and Deserializer for {@link SourceFile}.
  *
- * The JsonDeserialiser accepts either a string of the file path or a json object of the form
+ * <p>The JsonDeserialiser accepts either a string of the file path or a json object of the form
+ *
  * <pre>{
  *     "path":"/path/to/file.java",
- *     "description": "short human-readable description"
- * }</pre> where both
- * properties are optionally present, so unknown is represented by the empty object.
+ *     "description": "short `human-readable description"
+ * }</pre>
+ *
+ * where both properties are optionally present, so unknown is represented by the empty object.
  */
 public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
 
@@ -42,20 +44,19 @@ public class SourceFileJsonTypeAdapter extends TypeAdapter<SourceFile> {
 
     @Override
     public void write(JsonWriter out, SourceFile src) throws IOException {
-        File file = src.getSourceFile();
+        Path path = src.getSourcePath();
         String description = src.getDescription();
 
-        if (description == null && file != null) {
-            out.value(file.getAbsolutePath());
+        if (description == null && path != null) {
+            out.value(path.toString());
             return;
         }
-
         out.beginObject();
         if (description != null) {
             out.name(DESCRIPTION).value(description);
         }
-        if (file != null) {
-            out.name(PATH).value(file.getAbsolutePath());
+        if (path != null) {
+            out.name(PATH).value(path.toString());
         }
         out.endObject();
     }

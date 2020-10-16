@@ -155,6 +155,9 @@ public final class SdkConstants {
     public static final String FN_GRADLE_WRAPPER_JAR = "gradle-wrapper.jar"; //$NON-NLS-1$
     /** Name of the framework library, i.e. "android.jar" */
     public static final String FN_FRAMEWORK_LIBRARY = "android.jar"; //$NON-NLS-1$
+    /** Name of the library containing the packages that should be included in the system modules */
+    public static final String FN_CORE_FOR_SYSTEM_MODULES =
+            "core-for-system-modules.jar"; //$NON-NLS-1$
     /** Name of the framework library, i.e. "uiautomator.jar" */
     public static final String FN_UI_AUTOMATOR_LIBRARY = "uiautomator.jar"; //$NON-NLS-1$
     /** Name of the layout attributes, i.e. "attrs.xml" */
@@ -2773,7 +2776,7 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "6.6.1";
+    public static final String GRADLE_MINIMUM_VERSION = "6.7-rc-4";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

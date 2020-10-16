@@ -88,15 +88,15 @@ open class ApplicationVariantImpl @Inject constructor(
 
     override val dependenciesInfo: DependenciesInfo = variantDependencyInfo
 
-    override val aaptOptions: AaptOptions by lazy {
+    override val aapt: Aapt by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
             internalServices
         )
     }
 
-    override fun aaptOptions(action: AaptOptions.() -> Unit) {
-        action.invoke(aaptOptions)
+    override fun aaptOptions(action: Aapt.() -> Unit) {
+        action.invoke(aapt)
     }
 
     override val signingConfig: SigningConfig by lazy {
@@ -112,16 +112,16 @@ open class ApplicationVariantImpl @Inject constructor(
         action.invoke(signingConfig)
     }
 
-    override val packagingOptions: ApkPackagingOptions by lazy {
-        ApkPackagingOptionsImpl(
+    override val packaging: ApkPackaging by lazy {
+        ApkPackagingImpl(
             globalScope.extension.packagingOptions,
             internalServices,
             minSdkVersion.apiLevel
         )
     }
 
-    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
-        action.invoke(packagingOptions)
+    override fun packaging(action: ApkPackaging.() -> Unit) {
+        action.invoke(packaging)
     }
 
     override val minifiedEnabled: Boolean

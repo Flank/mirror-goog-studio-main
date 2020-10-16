@@ -28,7 +28,10 @@ import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
-import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_INVALID
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_PACKAGES_SDK
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import java.io.File
 import java.io.IOException
 import java.util.function.Consumer
@@ -175,10 +178,7 @@ private fun getSdkCmakePackages(
     val androidSdkHandler = AndroidSdkHandler.getInstance(sdkFolder)
     val sdkManager = androidSdkHandler.getSdkManager(
         LoggerProgressIndicatorWrapper(
-            ThreadLoggingEnvironment.getILogger(
-                CxxDiagnosticCode.UNKNOWN,
-                CxxDiagnosticCode.UNKNOWN
-            )
+            ThreadLoggingEnvironment.getILogger(CMAKE_PACKAGES_SDK, CMAKE_PACKAGES_SDK)
         )
     )
     val packages = sdkManager.packages
@@ -262,17 +262,26 @@ data class CmakeVersionRequirements(val cmakeVersionFromDsl : String?) {
                 val result = Revision.parseRevision(withoutPlus)
                 when {
                     result.major < 3 || (result.major == 3 && result.minor < 6) -> {
-                        errorln("CMake version '$result' is too low. Use 3.7.0 or higher.")
+                        errorln(
+                            CMAKE_VERSION_IS_UNSUPPORTED,
+                            "CMake version '$result' is too low. Use 3.7.0 or higher."
+                        )
                         defaultCmakeVersion
                     }
                     result.toIntArray(true).size < 3 -> {
-                        errorln("CMake version '$result' does not have enough precision. Use major.minor.micro in version.")
+                        errorln(
+                            CMAKE_VERSION_IS_INVALID,
+                            "CMake version '$result' does not have enough precision. Use major.minor.micro in version."
+                        )
                         defaultCmakeVersion
                     }
                     else -> result
                 }
             } catch (e: NumberFormatException) {
-                errorln("CMake version '$cmakeVersionFromDsl' is not formatted correctly.")
+                errorln(
+                    CMAKE_VERSION_IS_INVALID,
+                    "CMake version '$cmakeVersionFromDsl' is not formatted correctly."
+                )
                 defaultCmakeVersion
             }
         }
@@ -310,7 +319,10 @@ fun findCmakePathLogic(
         val version = versionGetter(cmakePathFromLocalProperties.resolve("bin"))
         when {
             version == null ->
-                errorln("Could not get version from cmake.dir path '$cmakePathFromLocalProperties'.")
+                errorln(
+                    CMAKE_VERSION_IS_INVALID,
+                    "Could not get version from cmake.dir path '$cmakePathFromLocalProperties'."
+                )
             cmakeVersionFromDsl == null ->
                 // If there is a valid CMake in cmake.dir then don't enforce the default CMake version
                 return cmakePathFromLocalProperties
@@ -380,21 +392,29 @@ fun findCmakePathLogic(
         if (downloader != null && dsl.downloadVersion != null) {
             downloader.accept(dsl.downloadVersion)
             return findCmakePathLogic(
-                    cmakeVersionFromDsl,
-                    cmakePathFromLocalProperties,
-                    null,
-                    environmentPaths,
-                    sdkFolders,
-                    cmakeVersionGetter,
-                    repositoryPackages
+                cmakeVersionFromDsl,
+                cmakePathFromLocalProperties,
+                null,
+                environmentPaths,
+                sdkFolders,
+                cmakeVersionGetter,
+                repositoryPackages
             )
         }
 
         // No downloader, so issue error(s)
-        errorln("CMake ${dsl.humanReadableVersionLanguage} was not found in SDK, PATH, or by cmake.dir property.")
+        errorln(
+            CMAKE_IS_MISSING,
+            "CMake ${dsl.humanReadableVersionLanguage} was not found in SDK, PATH, or by cmake.dir property."
+        )
         nonsatisfiers
-                .distinct()
-                .onEach { errorln("- CMake $it did not satisfy requested version.") }
+            .distinct()
+            .onEach {
+                errorln(
+                    CMAKE_VERSION_IS_INVALID,
+                    "- CMake $it did not satisfy requested version."
+                )
+            }
         return null
     }
 

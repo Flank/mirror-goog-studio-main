@@ -40,9 +40,10 @@ class ResValuesApiTests: VariantApiBaseTest(
             }
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    addResValue("VariantName", "string", name, "Variant Name")
+            }
+            androidComponents {
+                onVariants {
+                    it.addResValue("VariantName", "string", name, "Variant Name")
                 }
             }
                 """.trimIndent()
@@ -118,11 +119,12 @@ The added field is used in the MainActivity.kt file.
 
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    addResValue( "GitVersion", "string", gitVersionProvider.map {  task ->
+            }
+            androidComponents {
+                onVariants {
+                    it.addResValue( "GitVersion", "string", gitVersionProvider.map {  task ->
                             task.gitVersionOutputFile.get().asFile.readText(Charsets.UTF_8)
-                        }, 
+                        },
                         "git version")
                 }
             }""".trimIndent()
@@ -154,7 +156,7 @@ The added field is used in the MainActivity.kt file.
                 """
 # Adding a ResValue field in Kotlin
 
-This sample show how to add a resource value for which the value is not known at 
+This sample show how to add a resource value for which the value is not known at
 configuration time and will be calculated by a Task.
 
 The added field is used in the MainActivity.kt file.

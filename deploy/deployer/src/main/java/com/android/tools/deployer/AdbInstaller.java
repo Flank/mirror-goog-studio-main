@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -287,9 +286,10 @@ public class AdbInstaller implements Installer {
         ByteBuffer request = wrap(installerRequest);
         Deploy.InstallerResponse response = null;
 
-        SocketChannel channel = channelsProvider.getChannel(adb, getVersion());
-        if (writeRequest(channel, request, timeOut, timeUnit)) {
-            response = readResponse(channel, timeOut, timeUnit);
+        long timeOutMs = timeUnit.toMillis(timeOut);
+        AdbInstallerChannel channel = channelsProvider.getChannel(adb, getVersion());
+        if (writeRequest(channel, request, timeOutMs)) {
+            response = readResponse(channel, timeOutMs);
         }
 
         // Handle the case where the executable is not present on the device.
@@ -324,11 +324,9 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
-    private boolean writeRequest(
-            SocketChannel channel, ByteBuffer request, long timeOut, TimeUnit timeUnit) {
-        // TODO use timeOut and timeUnit here with Selector
+    private boolean writeRequest(AdbInstallerChannel channel, ByteBuffer request, long timeOutMs) {
         try {
-            channel.write(request);
+            channel.write(request, timeOutMs);
         } catch (IOException e) {
             // If the connection has been broken an IOException 'broken pipe' will be received here.
             return false;
@@ -336,14 +334,11 @@ public class AdbInstaller implements Installer {
         return request.remaining() == 0;
     }
 
-    private Deploy.InstallerResponse readResponse(
-            SocketChannel channel, long timeOut, TimeUnit timeUnit) {
+    private Deploy.InstallerResponse readResponse(AdbInstallerChannel channel, long timeOutMs) {
         try {
-            // TODO use timeOut and timeUnit here with Selector
             ByteBuffer bufferMarker = ByteBuffer.allocate(MAGIC_NUMBER.length);
-            if (!readIntoBuffer(channel, bufferMarker)) {
-                return null;
-            }
+            channel.read(bufferMarker, timeOutMs);
+
             if (!Arrays.equals(MAGIC_NUMBER, bufferMarker.array())) {
                 String garbage = new String(bufferMarker.array(), Charsets.UTF_8);
                 logger.info("Read '" + garbage + "' from socket");
@@ -352,37 +347,20 @@ public class AdbInstaller implements Installer {
 
             ByteBuffer bufferSize =
                     ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-            if (!readIntoBuffer(channel, bufferSize)) {
-                return null;
-            }
-
-            bufferSize.rewind();
+            channel.read(bufferSize, timeOutMs);
             int responseSize = bufferSize.getInt();
             if (responseSize < 0) {
                 return null;
             }
 
             ByteBuffer bufferPayload = ByteBuffer.allocate(responseSize);
-            if (!readIntoBuffer(channel, bufferPayload)) {
-                return null;
-            }
-
+            channel.read(bufferPayload, timeOutMs);
             return unwrap(bufferPayload);
         } catch (IOException e) {
             // If the connection has been broken an IOException 'broken pipe' will be received here.
+            logger.error(e, "Error while reading InstallerChannel");
             return null;
         }
-    }
-
-    private static boolean readIntoBuffer(SocketChannel channel, ByteBuffer buffer)
-            throws IOException {
-        while (buffer.remaining() != 0) {
-            int read = channel.read(buffer);
-            if (read == -1) {
-                break;
-            }
-        }
-        return buffer.remaining() == 0;
     }
 
     private void prepare() throws IOException {

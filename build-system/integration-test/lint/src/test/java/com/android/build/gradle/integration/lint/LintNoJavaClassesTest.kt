@@ -43,7 +43,7 @@ class LintNoJavaClassesTest(lintInvocationType: LintInvocationType) {
 
     @get:Rule
     val project: GradleTestProject =
-        lintInvocationType.testProjectBuilder()
+        lintInvocationType.testProjectBuilder(87)
             .fromTestProject("lintNoJavaClasses")
             .create()
 

@@ -8,26 +8,25 @@ load(
     "maven_repo",
 )
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
     lint_baseline = "lint_baseline.xml",
+    project = "unb",
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
-    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:gson",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
-        "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )
 
@@ -109,11 +108,17 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.6.1"
+GRADLE_VERSION = "6.7-rc-4"
 
 filegroup(
     name = "gradle-distrib",
     srcs = ["//tools/external/gradle:gradle-distrib-" + GRADLE_VERSION],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gradle-distrib-6.1.1",
+    srcs = ["//tools/external/gradle:gradle-distrib-6.1.1"],
     visibility = ["//visibility:public"],
 )
 
@@ -126,12 +131,6 @@ filegroup(
 filegroup(
     name = "gradle-distrib-5.3.1",
     srcs = ["//tools/external/gradle:gradle-distrib-5.3.1"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gradle-distrib-6.7-20200825220036+0000",
-    srcs = ["//tools/external/gradle:gradle-distrib-6.7-20200825220036+0000"],
     visibility = ["//visibility:public"],
 )
 
@@ -245,26 +244,4 @@ maven_repo(
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     include_sources = True,
     visibility = ["//visibility:public"],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.manifest-merger",
-    srcs = ["manifest-merger/src/main/java"],
-    iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
-    lint_baseline = "lint_baseline.xml",
-    project = "unb",
-    test_srcs = ["manifest-merger/src/test/java"],
-    visibility = ["//visibility:public"],
-    exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
-        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
-        "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
-        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-    ],
 )

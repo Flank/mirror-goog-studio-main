@@ -41,18 +41,31 @@ import org.gradle.api.logging.Logging
 /**
  * Report an error.
  */
-fun errorln(format: String, vararg args: Any) = errorln(CxxDiagnosticCode.UNKNOWN, format, *args)
+fun errorln(format: String, vararg args: Any) =
+    ThreadLoggingEnvironment.reportFormattedErrorToCurrentLogger(
+        checkedFormat(format, args), null
+    )
 
 fun errorln(diagnosticCode: CxxDiagnosticCode, format: String, vararg args: Any) =
-    ThreadLoggingEnvironment.reportFormattedErrorToCurrentLogger(checkedFormat(format, args), diagnosticCode)
+    ThreadLoggingEnvironment.reportFormattedErrorToCurrentLogger(
+        checkedFormat(format, args),
+        diagnosticCode
+    )
 
 /**
  * Report a warning.
  */
-fun warnln(format: String, vararg args: Any) = warnln(CxxDiagnosticCode.UNKNOWN, format, *args)
+fun warnln(format: String, vararg args: Any) =
+    ThreadLoggingEnvironment.reportFormattedWarningToCurrentLogger(
+        checkedFormat(format, args),
+        null
+    )
 
 fun warnln(diagnosticCode: CxxDiagnosticCode, format: String, vararg args: Any) =
-    ThreadLoggingEnvironment.reportFormattedWarningToCurrentLogger(checkedFormat(format, args), diagnosticCode)
+    ThreadLoggingEnvironment.reportFormattedWarningToCurrentLogger(
+        checkedFormat(format, args),
+        diagnosticCode
+    )
 
 /**
  * Report a non-error/non-warning message that should be displayed during normal gradle build
@@ -180,13 +193,19 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
         /**
          * Report an error.
          */
-        fun reportFormattedErrorToCurrentLogger(message: String, diagnosticCode: CxxDiagnosticCode) =
+        fun reportFormattedErrorToCurrentLogger(
+            message: String,
+            diagnosticCode: CxxDiagnosticCode?
+        ) =
             logger.log(errorRecordOf(message, diagnosticCode))
 
         /**
          * Report a warning.
          */
-        fun reportFormattedWarningToCurrentLogger(message: String, diagnosticCode: CxxDiagnosticCode) =
+        fun reportFormattedWarningToCurrentLogger(
+            message: String,
+            diagnosticCode: CxxDiagnosticCode?
+        ) =
             logger.log(warnRecordOf(message, diagnosticCode))
 
         /**

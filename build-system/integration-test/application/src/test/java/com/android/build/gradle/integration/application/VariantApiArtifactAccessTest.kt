@@ -41,7 +41,7 @@ abstract class CustomTask extends DefaultTask {
 
     @OutputFile
     abstract RegularFileProperty getOutputFile()
-    
+
     @InputFiles
     abstract DirectoryProperty getApkLocation()
 
@@ -49,7 +49,7 @@ abstract class CustomTask extends DefaultTask {
     public void provideVersionCode() {
       System.out.println("Custom Task invoked, writing at " + getOutputFile().getAsFile().get().getAbsolutePath())
       FileWriter fw = new FileWriter(getOutputFile().getAsFile().get())
-      apkLocation.asFile.get().listFiles().each { file -> 
+      apkLocation.asFile.get().listFiles().each { file ->
         if (file.getName().endsWith(".apk")) {
           fw.write(file.getAbsolutePath())
         }
@@ -60,8 +60,8 @@ abstract class CustomTask extends DefaultTask {
 }
 
 
-android {
-    onVariantProperties {
+androidComponents {
+    onVariants(selector().all(), {
         TaskProvider customTaskProvider = tasks.register(name + "CustomTask", CustomTask.class)
         customTaskProvider.configure {
             task ->
@@ -69,7 +69,7 @@ android {
                 Provider<Directory> outputDir = getProject().getLayout().getBuildDirectory()
                 task.getOutputFile().set(outputDir.file(name + "/out.txt"))
         }
-    }
+    })
 }
     """.trimIndent())
 

@@ -54,7 +54,7 @@ class ResourcesApkPackagingOptionsImplTest {
         )
 
         val resourcesPackagingOptionsImpl =
-            ResourcesApkPackagingOptionsImpl(dslPackagingOptions, variantPropertiesApiServices)
+            ResourcesApkPackagingImpl(dslPackagingOptions, variantPropertiesApiServices)
 
         val expectedExcludes = defaultExcludes.plus("/META-INF/*.kotlin_module").toMutableSet()
         expectedExcludes.addAll(listOf("foo", "bar", "baz"))

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_CORRUPTED
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
@@ -29,10 +30,10 @@ data class NdkMetaPlatforms(
 
     init {
         if (!potentialPlatforms.contains(min)) {
-            errorln("potentialPlatforms range needs to include $min")
+            errorln(NDK_CORRUPTED, "potentialPlatforms range needs to include $min")
         }
         if (!potentialPlatforms.contains(max)) {
-            errorln("potentialPlatforms range needs to include $max")
+            errorln(NDK_CORRUPTED, "potentialPlatforms range needs to include $max")
         }
     }
 

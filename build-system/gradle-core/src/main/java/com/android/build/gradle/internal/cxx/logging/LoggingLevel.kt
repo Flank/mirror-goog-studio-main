@@ -21,10 +21,4 @@ enum class LoggingLevel {
     LIFECYCLE,
     WARN,
     ERROR;
-    fun log(message : String) = when(this) {
-        INFO -> infoln(message)
-        LIFECYCLE -> lifecycleln(message)
-        WARN -> warnln(message)
-        ERROR -> errorln(message)
-    }
 }

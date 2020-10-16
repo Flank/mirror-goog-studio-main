@@ -22,6 +22,9 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.options.StringOption
+import com.android.utils.cxx.CxxDiagnosticCode.ABI_HAS_ONLY_32_BIT_SUPPORT
+import com.android.utils.cxx.CxxDiagnosticCode.ABI_IS_INVALID
+import com.android.utils.cxx.CxxDiagnosticCode.ABI_IS_UNSUPPORTED
 
 data class AbiConfigurationKey(
     val ndkHandlerSupportedAbis: Collection<Abi>,
@@ -68,10 +71,13 @@ class AbiConfigurator(
                     userChosenAbis subtract ndkHandlerSupportedAbiStrings
                 if (userMistakes.isNotEmpty()) {
                     errorln(
+                        ABI_IS_UNSUPPORTED,
                         "ABIs [${sortAndJoinAbiStrings(userMistakes)}] are not supported for platform. " +
-                                "Supported ABIs are [${sortAndJoinAbiStrings(
-                                    ndkHandlerSupportedAbiStrings
-                                )}]."
+                                "Supported ABIs are [${
+                                    sortAndJoinAbiStrings(
+                                        ndkHandlerSupportedAbiStrings
+                                    )
+                                }]."
                     )
                 }
 
@@ -113,6 +119,7 @@ class AbiConfigurator(
                         // since there's nothing to build. Fall back to the ABIs from build.gradle so
                         // that there's something to show the user.
                         errorln(
+                            ABI_IS_UNSUPPORTED,
                             "ABIs [$ideBuildTargetAbi] set by " +
                                     "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
                                     "flag is not supported. Supported ABIs " +
@@ -125,6 +132,7 @@ class AbiConfigurator(
                             // The user (or android studio) selected some illegal ABIs. Give a warning and
                             // continue on.
                             warnln(
+                                ABI_IS_INVALID,
                                 "ABIs [$ideBuildTargetAbi] set by " +
                                         "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
                                         "flag contained '${sortAndJoinAbiStrings(invalidAbis)}' which is invalid."
@@ -162,6 +170,7 @@ class AbiConfigurator(
                     // See: https://android-developers.googleblog.com/2019/01/get-your-apps-ready-for-64-bit.html
                     if (validAbis.isNotEmpty() && !validAbis.any { it.supports64Bits() }) {
                         warnln(
+                            ABI_HAS_ONLY_32_BIT_SUPPORT,
                             "This app only has 32-bit [${validAbis.joinToString(",") { it.tag }}] " +
                                     "native libraries. Beginning August 1, 2019 Google Play store requires " +
                                     "that all apps that include native libraries must provide 64-bit versions. " +

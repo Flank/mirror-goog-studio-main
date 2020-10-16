@@ -48,6 +48,8 @@ import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils.isSameFile
 import com.android.utils.FileUtils.join
+import com.android.utils.cxx.CxxDiagnosticCode.NO_STL_FOUND
+import com.android.utils.cxx.CxxDiagnosticCode.REQUIRED_BUILD_TARGETS_MISSING
 import com.google.common.base.Joiner
 import com.google.common.base.Preconditions.checkElementIndex
 import com.google.common.base.Preconditions.checkNotNull
@@ -143,7 +145,7 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
                 val stlName = argument.split("=".toRegex(), 2).toTypedArray()[1]
                 stl = Stl.fromArgumentName(stlName)
                 if (stl == null) {
-                    errorln("Unrecognized STL in arguments: %s", stlName)
+                    errorln(NO_STL_FOUND, "Unrecognized STL in arguments: %s", stlName)
                 }
             }
         }
@@ -440,7 +442,10 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
 
         implicitTargets.removeAll(librariesToBuild.map { it.artifactName })
         if (implicitTargets.isNotEmpty()) {
-            errorln("did not find implicitly required targets: ${implicitTargets.joinToString(", ")}")
+            errorln(
+                REQUIRED_BUILD_TARGETS_MISSING,
+                "did not find implicitly required targets: ${implicitTargets.joinToString(", ")}"
+            )
         }
         return librariesToBuild
     }

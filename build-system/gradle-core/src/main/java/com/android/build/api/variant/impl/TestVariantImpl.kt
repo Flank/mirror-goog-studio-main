@@ -21,9 +21,9 @@ import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.TestVariantCreationConfigImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.SigningConfig
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
@@ -89,15 +89,15 @@ open class TestVariantImpl @Inject constructor(
     override val applicationId: Property<String> =
         internalServices.propertyOf(String::class.java, variantDslInfo.applicationId)
 
-    override val aaptOptions: AaptOptions by lazy {
+    override val aapt: Aapt by lazy {
         initializeAaptOptionsFromDsl(
             globalScope.extension.aaptOptions,
             internalServices
         )
     }
 
-    override fun aaptOptions(action: AaptOptions.() -> Unit) {
-        action.invoke(aaptOptions)
+    override fun aaptOptions(action: Aapt.() -> Unit) {
+        action.invoke(aapt)
     }
 
     override val testedApplicationId: Provider<String> = calculateTestedApplicationId(variantDependencies)
@@ -117,16 +117,16 @@ open class TestVariantImpl @Inject constructor(
     override val testLabel: Property<String?> =
         internalServices.nullablePropertyOf(String::class.java, variantDslInfo.testLabel)
 
-    override val packagingOptions: ApkPackagingOptions by lazy {
-        ApkPackagingOptionsImpl(
+    override val packaging: ApkPackaging by lazy {
+        ApkPackagingImpl(
             globalScope.extension.packagingOptions,
             internalServices,
             minSdkVersion.apiLevel
         )
     }
 
-    override fun packagingOptions(action: ApkPackagingOptions.() -> Unit) {
-        action.invoke(packagingOptions)
+    override fun packaging(action: ApkPackaging.() -> Unit) {
+        action.invoke(packaging)
     }
 
     // ---------------------------------------------------------------------------------------------

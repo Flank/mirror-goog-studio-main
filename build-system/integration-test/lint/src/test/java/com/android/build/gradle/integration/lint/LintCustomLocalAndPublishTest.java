@@ -44,9 +44,11 @@ public class LintCustomLocalAndPublishTest {
     public final GradleTestProject project;
 
     public LintCustomLocalAndPublishTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintCustomLocalAndPublishRules")
-                .create();
+        this.project =
+                lintInvocationType
+                        .testProjectBuilder(2)
+                        .fromTestProject("lintCustomLocalAndPublishRules")
+                        .create();
     }
 
     @Test
@@ -56,39 +58,7 @@ public class LintCustomLocalAndPublishTest {
         // Run twice to catch issues with configuration caching
         project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
         project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
-        project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
-        String appexpected =
-                "build.gradle:15: Warning: Unknown issue id \"UnitTestLintCheck2\". Did you mean:\n" +
-                        "'UnitTestLintCheck' (Custom Lint Check)\n" +
-                        "'UnitTestLintCheck3' (Custom Lint Check)\n" +
-                        "? [UnknownIssueId]\n"
-                        + "        checkOnly 'UnitTestLintCheck2'\n"
-                        + "                   ~~~~~~~~~~~~~~~~~~\n"
-                        + "\n"
-                        + "   Explanation for issues of type \"UnknownIssueId\":\n"
-                        + "   Lint will report this issue if it is configured with an issue id it does\n"
-                        + "   not recognize in for example Gradle files or lint.xml configuration files.\n"
-                        + "\n"
-                        + "src"
-                        + File.separator
-                        + "main"
-                        + File.separator
-                        + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck]\n"
-                        + "        <activity android:name=\".MainActivity\">\n"
-                        + "        ^\n"
-                        + "\n"
-                        + "   Explanation for issues of type \"UnitTestLintCheck\":\n"
-                        + "   This app should not have any activities.\n"
-                        + "\n"
-                        + FileUtils.toSystemDependentPath("src/main/java/com/example/app/Util.java")
-                        + ":5: Error: Do not implement java.util.Set directly [UnitTestLintCheck3]\n"
-                        + "public abstract class Util implements Set {}\n"
-                        + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "\n"
-                        + "   Explanation for issues of type \"UnitTestLintCheck3\":\n"
-                        + "   This app should not implement java.util.Set.\n"
-                        + "\n"
-                        + "2 errors, 1 warnings";
+
         String libexpected =
                 "build.gradle:16: Warning: Unknown issue id \"UnitTestLintCheck\". Did you mean 'UnitTestLintCheck2' (Custom Lint Check) ? [UnknownIssueId]\n"
                         + "        checkOnly 'UnitTestLintCheck'\n"
@@ -118,16 +88,52 @@ public class LintCustomLocalAndPublishTest {
                         + "   This app should not have implement java.util.List.\n"
                         + "\n"
                         + "1 errors, 1 warnings";
-        File applintfile =
-                new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
+
         File liblintfile =
                 new File(
                         project.getSubproject("library").getProjectDir(),
                         "library-lint-results.txt");
-        assertThat(applintfile).exists();
         assertThat(liblintfile).exists();
-        assertThat(applintfile).contentWithUnixLineSeparatorsIsExactly(appexpected);
         assertThat(liblintfile).contentWithUnixLineSeparatorsIsExactly(libexpected);
+        project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
+        project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
+
+        String appExpected =
+                "build.gradle:15: Warning: Unknown issue id \"UnitTestLintCheck2\". Did you mean:\n"
+                        + "'UnitTestLintCheck' (Custom Lint Check)\n"
+                        + "'UnitTestLintCheck3' (Custom Lint Check)\n"
+                        + "? [UnknownIssueId]\n"
+                        + "        checkOnly 'UnitTestLintCheck2'\n"
+                        + "                   ~~~~~~~~~~~~~~~~~~\n"
+                        + "\n"
+                        + "   Explanation for issues of type \"UnknownIssueId\":\n"
+                        + "   Lint will report this issue if it is configured with an issue id it does\n"
+                        + "   not recognize in for example Gradle files or lint.xml configuration files.\n"
+                        + "\n"
+                        + "src"
+                        + File.separator
+                        + "main"
+                        + File.separator
+                        + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck]\n"
+                        + "        <activity android:name=\".MainActivity\">\n"
+                        + "        ^\n"
+                        + "\n"
+                        + "   Explanation for issues of type \"UnitTestLintCheck\":\n"
+                        + "   This app should not have any activities.\n"
+                        + "\n"
+                        + FileUtils.toSystemDependentPath("src/main/java/com/example/app/Util.java")
+                        + ":5: Error: Do not implement java.util.Set directly [UnitTestLintCheck3]\n"
+                        + "public abstract class Util implements Set {}\n"
+                        + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "\n"
+                        + "   Explanation for issues of type \"UnitTestLintCheck3\":\n"
+                        + "   This app should not implement java.util.Set.\n"
+                        + "\n"
+                        + "2 errors, 1 warnings";
+        File appLintFile =
+                new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
+        assertThat(appLintFile).exists();
+        assertThat(appLintFile).contentWithUnixLineSeparatorsIsExactly(appExpected);
     }
 
     @Test

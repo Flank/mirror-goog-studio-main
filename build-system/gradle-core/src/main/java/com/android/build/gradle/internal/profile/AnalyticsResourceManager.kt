@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.profile
 
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.options.BooleanOption
@@ -292,12 +293,13 @@ class AnalyticsResourceManager(
             .setMaxMemory(Runtime.getRuntime().maxMemory())
             .setGradleVersion(Strings.nullToEmpty(project.gradle.gradleVersion))
 
-        val configCachingEnabled = isConfigCachingEnabled(project.gradle)
+        val configCachingEnabled = project.gradle.startParameter.isConfigurationCache
         if (configCachingEnabled != null) {
             profileBuilder.configurationCachingEnabled = configCachingEnabled
         }
 
-        rootProjectPath = project.rootProject.projectDir.absolutePath
+        // Use 'platform independent' path to match AS behaviour.
+        rootProjectPath = project.rootProject.projectDir.absolutePath.replace('\\', '/')
         enableProfileJson = projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON)
         profileDir = getProfileDir(projectOptions, project.gradle)?.toFile()
     }
@@ -449,19 +451,6 @@ class AnalyticsResourceManager(
             else -> {
                 null
             }
-        }
-    }
-
-    private fun isConfigCachingEnabled(gradle : Gradle): Boolean? {
-        return try {
-            //TODO(b/167384234) move away from using Gradle internal class when public API is available
-            val startParameters = gradle.startParameter as StartParameterInternal
-            startParameters.isConfigurationCache
-        } catch (e : Throwable) {
-            LoggerWrapper
-                .getLogger(AnalyticsResourceManager::class.java)
-                .warning("Unable to decide if config caching is enabled, details: %s", e.message)
-            return null
         }
     }
 }

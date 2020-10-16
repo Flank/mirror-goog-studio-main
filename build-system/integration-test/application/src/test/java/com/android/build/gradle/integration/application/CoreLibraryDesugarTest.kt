@@ -208,7 +208,10 @@ class CoreLibraryDesugarTest {
             android.compileOptions.coreLibraryDesugaringEnabled = false
             android.lintOptions.abortOnError = true
         """.trimIndent())
-        val result = executor().expectFailure().run("app:lintDebug")
+        val result =
+            executor()
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)  // http://b/146208910
+                .expectFailure().run("app:lintDebug")
         assertThat(result.failureMessage).contains(
             "Call requires API level 24 (current min is 21): java.util.Collection#stream [NewApi]")
     }

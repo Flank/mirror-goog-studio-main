@@ -41,9 +41,11 @@ public class LintResourceResolveTest {
     public final GradleTestProject project;
 
     public LintResourceResolveTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintResourceResolve")
-                .create();
+        this.project =
+                lintInvocationType
+                        .testProjectBuilder(44)
+                        .fromTestProject("lintResourceResolve")
+                        .create();
     }
 
     @Test

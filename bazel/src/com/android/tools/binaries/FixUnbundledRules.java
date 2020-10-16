@@ -105,6 +105,7 @@ public class FixUnbundledRules {
                     || p.getName().equals("tools/base/deploy/installer")
                     || p.getName().startsWith("tools/vendor/google3/")
                     || p.getName().startsWith("tools/external")
+                    || p.getName().startsWith("tools/base/bazel/test/iml_to_bazel")
                     || p.getName().startsWith("external")) {
                 continue;
             }
@@ -116,43 +117,46 @@ public class FixUnbundledRules {
                 throw e;
             }
             boolean update = false;
+            Map<Statement, Statement> replace = new HashMap<>();
+            Set<Statement> toDelete = new HashSet<>();
             for (Statement statement : buildFile.getStatements()) {
                 if (!(statement instanceof CallStatement)) {
                     continue;
                 }
                 CallExpression call = ((CallStatement) statement).getCall();
-                String name = call.getLiteralArgument("name");
-                if (name != null) {
-                    if (name.startsWith("\"" + PROJECT_ID + ".")
-                            || name.contains("/" + PROJECT_ID + ".")) {
-                        name = name.substring(PROJECT_ID.length() + 2, name.length() - 1);
-                    } else {
-                        name = name.substring(1, name.length() - 1);
-                    }
-                }
-                if (((CallStatement) statement).isManaged(PROJECT_ID)) {
-                    CallStatement oCall = buildFile.getCall(name, "");
-                    if (oCall != null) {
-                        if (!defined.containsKey(call.getLiteral())) {
+                final CallStatement callStatement = (CallStatement) statement;
+                if (call.getLiteral().equals("iml_module") && callStatement.isManaged("")) {
+                    String name = call.getLiteralArgument("name");
+                    boolean delete = true;
+                    for (Statement statement2 : buildFile.getStatements()) {
+                        if (!(statement2 instanceof CallStatement)) {
                             continue;
                         }
-                        Set<String> args = new HashSet<>();
-                        for (Argument a : call.getArguments()) {
-                            args.add(a.getName());
-                        }
-
-                        // For all arguments that are not managed, copy them to the new rule
-                        for (Argument a : oCall.getCall().getArguments()) {
-                            if (defined.get(call.getLiteral()).contains(a.getName())) {
-                                // Leave generated fields alone.
-                                continue;
+                        final CallStatement callStatement2 = (CallStatement) statement2;
+                        CallExpression call2 = callStatement2.getCall();
+                        if (call2.getLiteral().equals("iml_module") && callStatement2.isManaged(
+                                "unb")) {
+                            String name2 = call2.getLiteralArgument("name");
+                            if (name.equals(name2)) {
+                                replace.put(statement, statement2);
+                                delete = false;
                             }
-                            call.setArgument(a.getName(), a.getExpression());
-                            statement.setHidden(false);
-                            update = true;
                         }
                     }
+                    if (delete) {
+                        toDelete.add(statement);
+                    }
                 }
+            }
+            for (Map.Entry<Statement, Statement> e : replace.entrySet()) {
+                buildFile.getStatements().remove(e.getValue());
+                buildFile.addStatementBefore(e.getValue(), e.getKey());
+                buildFile.getStatements().remove(e.getKey());
+                update = true;
+            }
+            for (Statement statement : toDelete) {
+                buildFile.getStatements().remove(statement);
+                update = true;
             }
             if (update) {
                 File tmp = File.createTempFile("BUILD", "test");
@@ -162,6 +166,7 @@ public class FixUnbundledRules {
                         PrintWriter writer = new PrintWriter(outputStreamWriter)) {
                     buildFile.write(writer);
                 }
+//                System.out.println("gdiff " + p.findBuildFile().getAbsolutePath() + " " + tmp.getAbsolutePath());
                 Files.copy(
                         tmp.toPath(),
                         p.findBuildFile().toPath(),

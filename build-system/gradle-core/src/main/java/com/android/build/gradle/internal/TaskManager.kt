@@ -51,7 +51,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.dsl.DataBindingOptions
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.lint.LintModelDependenciesWriterTask
-import com.android.build.gradle.internal.lint.LintModelModuleWriterTask
+import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocation
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -157,6 +157,8 @@ import com.android.build.gradle.internal.utils.getKotlinCompile
 import com.android.build.gradle.internal.utils.recordIrBackendForAnalytics
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
+import com.android.build.gradle.internal.variant.VariantInputModel
+import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask
@@ -260,6 +262,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     @JvmField
     protected val taskFactory: TaskFactory = TaskFactoryImpl(project.tasks)
+    protected val lintTaskManager: LintTaskManager = LintTaskManager(globalScope, taskFactory)
     @JvmField
     protected val variantPropertiesList: List<VariantT> =
             variants.map(ComponentInfo<VariantBuilderT, VariantT>::variant)
@@ -276,7 +279,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      * This creates the tasks for all the variants and all the test components
      */
     fun createTasks(
-            variantType: VariantType, buildFeatures: BuildFeatureValues) {
+            variantType: VariantType, variantModel: VariantModel) {
         // this is call before all the variants are created since they are all going to depend
         // on the global LINT_PUBLISH_JAR task output
         // setup the task that reads the config and put the lint jar in the intermediate folder
@@ -301,13 +304,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         for (testComponent in testComponents) {
             createTasksForTest(testComponent)
         }
-        taskFactory.register(
-                LintModelModuleWriterTask.CreationAction(
-                        globalScope,
-                        variantPropertiesList,
-                        testComponentPropertiesList,
-                        variantType,
-                        buildFeatures))
+        lintTaskManager.createLintTasks(
+            variantType,
+            variantModel,
+            variantPropertiesList,
+            testComponentPropertiesList
+        )
         createReportTasks()
     }
 
@@ -420,7 +422,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     // this is run after all the variants are created.
     protected open fun configureGlobalLintTask() {
-
+        if (lintTaskManager.useNewLintModel) {
+            return;
+        }
         // configure the global lint tasks.
         taskFactory.configure(
                 LINT,
@@ -1403,13 +1407,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     open fun createLintTasks(
             variantProperties: VariantT,
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
+        if (lintTaskManager.useNewLintModel) {
+            taskFactory.register(LintModelDependenciesWriterTask.CreationAction(variantProperties))
+            return
+        }
         taskFactory.register(
                 LintPerVariantTask.CreationAction(
                         variantProperties,
                         allVariants.stream()
                                 .map(ComponentInfo<VariantBuilderT, VariantT>::variant)
                                 .collect(Collectors.toList())))
-        taskFactory.register(LintModelDependenciesWriterTask.CreationAction(variantProperties))
     }
 
     /** Returns the full path of a task given its name.  */
@@ -1420,6 +1427,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     open fun maybeCreateLintVitalTask(
             variant: VariantT,
             allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
+        if (lintTaskManager.useNewLintModel) {
+            return;
+        }
         if (variant.debuggable
                 || !extension.lintOptions.isCheckReleaseBuilds()) {
             return
@@ -2296,6 +2306,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     override fun configure(task: Task) {
                         task.description = "Assembles bundle for variant " + component.name
                         task.dependsOn(component.artifacts.get(ArtifactType.BUNDLE))
+                        task.dependsOn(component.artifacts.get(InternalArtifactType.BUNDLE_IDE_MODEL))
                     }
                 },
                 object: TaskProviderCallback<Task> {
@@ -2884,12 +2895,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
             taskFactory.register(LintCompile.CreationAction(globalScope))
             if (!variantType.isForTesting) {
-                taskFactory.register(LINT, LintGlobalTask::class.java) { task: LintGlobalTask? -> }
-                taskFactory.configure(JavaBasePlugin.CHECK_TASK_NAME) { it: Task ->
-                    it.dependsOn(
-                            LINT)
-                }
-                taskFactory.register(LINT_FIX, LintFixTask::class.java) { task: LintFixTask? -> }
+                LintTaskManager(globalScope, taskFactory).createBeforeEvaluateLintTasks()
             }
 
             // create a single configuration to point to a project or a local file that contains

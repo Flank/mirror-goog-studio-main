@@ -57,43 +57,6 @@ class BuiltArtifactsImpl(
             it.outputType == variantOutputConfiguration.outputType &&
             it.filters == variantOutputConfiguration.filters }
 
-    /**
-     * Similar implementation of [BuiltArtifacts.transform] using the [WorkerExecutor]
-     *
-     * TODO : move those 2 APIs to TaskBaseOperationsImpl class.
-     */
-    internal fun <T: BuiltArtifacts.TransformParams> transform(
-        newArtifactType: Artifact<Directory>,
-        workerExecutor: WorkerExecutor,
-        transformRunnableClass: Class<out WorkAction<T>>,
-        parametersFactory: (builtArtifact: BuiltArtifact) -> T
-    ): Supplier<BuiltArtifacts> {
-
-        val parametersList = mutableMapOf<BuiltArtifact, T>()
-        elements.forEach { builtArtifact ->
-            workerExecutor.noIsolation().submit(transformRunnableClass) {
-                parametersFactory(builtArtifact).also {
-                    parametersList[builtArtifact] = it
-                }
-            }
-        }
-        return Supplier {
-            workerExecutor.await()
-            BuiltArtifactsImpl(
-                version,
-                newArtifactType,
-                applicationId,
-                variantName,
-                elements.map { builtArtifact ->
-                    builtArtifact.newOutput(
-                        parametersList[builtArtifact]?.output?.toPath()
-                            ?: throw java.lang.RuntimeException("Cannot find BuiltArtifact")
-                    )
-                }
-            )
-        }
-    }
-
     fun saveToDirectory(folder: File) =
         saveToFile(File(folder, METADATA_FILE_NAME))
 

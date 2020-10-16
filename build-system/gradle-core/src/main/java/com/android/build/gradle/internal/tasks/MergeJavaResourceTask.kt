@@ -250,9 +250,9 @@ abstract class MergeJavaResourceTask
             }
 
             task.mergeScopes = mergeScopes
-            task.excludes.setDisallowChanges(creationConfig.packagingOptions.resources.excludes)
-            task.pickFirsts.setDisallowChanges(creationConfig.packagingOptions.resources.pickFirsts)
-            task.merges.setDisallowChanges(creationConfig.packagingOptions.resources.merges)
+            task.excludes.setDisallowChanges(creationConfig.packaging.resources.excludes)
+            task.pickFirsts.setDisallowChanges(creationConfig.packaging.resources.pickFirsts)
+            task.merges.setDisallowChanges(creationConfig.packaging.resources.merges)
             task.intermediateDir =
                 creationConfig.paths.getIncrementalDir("${creationConfig.name}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")

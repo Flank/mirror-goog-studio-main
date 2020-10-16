@@ -49,7 +49,9 @@ class ArtifactReplacementTest {
                         minSdkVersion rootProject.supportLibMinSdk
                         testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
                     }
-                    onVariantProperties {
+                }
+                androidComponents {
+                    onVariants(selector().all(), {
                         TaskProvider produceTwoArtifacts = tasks.register(it.getName() + 'ProduceTwoArtifacts', ProduceTwoArtifacts) {
                             getOutputManifest().set(
                                 new File(project.buildDir, "intermediates/produceTwoArtifacts/manifest.xml")
@@ -83,7 +85,7 @@ class ArtifactReplacementTest {
                                 project.buildDir.toString()
                             )
                         }
-                    }
+                    })
                 }
                 import com.android.build.api.artifact.impl.ArtifactsImpl
                 import com.android.build.api.artifact.ArtifactType

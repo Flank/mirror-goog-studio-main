@@ -178,7 +178,8 @@ public class FileResourceNameValidatorTest {
             if (file == null) {
                 assertEquals("Error: " + expected, actual);
             } else {
-                assertEquals(file.getAbsolutePath() + ": Error: " + expected, actual);
+                String path = file.getAbsolutePath();
+                assertEquals(path + ": Error: " + expected, actual);
             }
         }
     }

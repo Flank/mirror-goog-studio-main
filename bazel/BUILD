@@ -31,33 +31,6 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
-java_library(
-    name = "groovy-compiler",
-    srcs = glob(["src/com/android/tools/groovy/*.java"]),
-    # Note that version 2.3 of groovy, embeds timestamps into the generated classes
-    # making it unsuitable for bazel or any other reasonable tool.
-    # TODO: Update and use the prebuilts dependency
-    deps = [
-        ":utils",
-        "//tools/idea/.idea/libraries:Ant",
-        "//tools/idea/.idea/libraries:org.codehaus.groovy_groovy",
-    ],
-)
-
-java_binary(
-    name = "groovy_stub_gen",
-    main_class = "com.android.tools.groovy.GroovyStubGenerator",
-    visibility = ["//visibility:public"],
-    runtime_deps = [":groovy-compiler"],
-)
-
-java_binary(
-    name = "groovyc",
-    main_class = "com.android.tools.groovy.GroovyCompiler",
-    visibility = ["//visibility:public"],
-    runtime_deps = [":groovy-compiler"],
-)
-
 java_binary(
     name = "unzipper",
     main_class = "com.android.tools.utils.Unzipper",
@@ -100,14 +73,8 @@ java_library(
         "src/com/intellij/util/graph/*",
     ]),
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//tools/idea/.idea/libraries:JDOM",
-    ],
     deps = [
-        "//tools/idea/.idea/libraries:Guava",
-        "//tools/idea/.idea/libraries:Trove4j",
-        "//tools/idea/.idea/libraries:jetbrains-annotations-java5",
-        "//tools/idea/.idea/libraries:jps-build-script-dependencies-bootstrap",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
     ],
 )
 

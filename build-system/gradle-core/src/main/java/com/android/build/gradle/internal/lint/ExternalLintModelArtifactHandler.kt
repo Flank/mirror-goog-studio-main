@@ -93,7 +93,7 @@ class ExternalLintModelArtifactHandler private constructor(
         addressSupplier: () -> String
     ): LintModelLibrary {
         val key = ProjectKey( buildId = buildId, projectPath = projectPath, variantName = variantName)
-        val folder = projectExplodedAarsMap[key] ?: throw IllegalStateException("unable to find project exploded aar for $buildId $projectPath")
+        val folder = projectExplodedAarsMap[key] ?: throw IllegalStateException("unable to find project exploded aar for $key")
         return DefaultLintModelAndroidLibrary(
             jarFiles = listOf(
                 FileUtils.join(
@@ -154,9 +154,8 @@ class ExternalLintModelArtifactHandler private constructor(
     )
 
     companion object {
-        fun create(
-            localJarCache: CreatingCache<File, List<File>>,
-            mavenCoordinatesCache: CreatingCache<ResolvedArtifact, MavenCoordinates>,
+        internal fun create(
+            dependencyCaches: DependencyCaches,
             projectExplodedAars: ArtifactCollection?,
             testedProjectExplodedAars: ArtifactCollection?,
             projectJars: ArtifactCollection,
@@ -168,8 +167,8 @@ class ExternalLintModelArtifactHandler private constructor(
                 projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectKeyedMap(buildMapping)
             }
             return ExternalLintModelArtifactHandler(
-                localJarCache,
-                mavenCoordinatesCache,
+                dependencyCaches.localJarCache,
+                dependencyCaches.mavenCoordinatesCache,
                 Collections.unmodifiableMap(projectExplodedAarsMap),
                 Collections.unmodifiableMap(projectJars.asProjectKeyedMap(buildMapping))
             )

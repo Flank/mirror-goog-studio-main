@@ -491,6 +491,7 @@ public abstract class BasePlugin<
         createAndroidTestUtilConfiguration();
     }
 
+
     protected void registerModels(
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
@@ -500,19 +501,7 @@ public abstract class BasePlugin<
             @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         // Register a builder for the custom tooling model
-        VariantModel variantModel =
-                new VariantModelImpl(
-                        variantInputModel,
-                        extension::getTestBuildType,
-                        () ->
-                                variantManager.getMainComponents().stream()
-                                        .map(ComponentInfo::getVariant)
-                                        .collect(Collectors.toList()),
-                        () ->
-                                variantManager.getTestComponents().stream()
-                                        .map(ComponentInfo::getVariant)
-                                        .collect(Collectors.toList()),
-                        dslServices.getIssueReporter());
+        VariantModel variantModel = createVariantModel();
 
         registerModelBuilder(registry, globalScope, variantModel, extension, extraModelInfo);
 
@@ -537,6 +526,22 @@ public abstract class BasePlugin<
                             projectServices.getIssueReporter(), globalScope, variantModel);
             registry.register(nativeModelBuilder);
         }
+    }
+
+    @NonNull
+    private VariantModel createVariantModel() {
+        return new VariantModelImpl(
+                variantInputModel,
+                extension::getTestBuildType,
+                () ->
+                        variantManager.getMainComponents().stream()
+                                .map(ComponentInfo::getVariant)
+                                .collect(Collectors.toList()),
+                () ->
+                        variantManager.getTestComponents().stream()
+                                .map(ComponentInfo::getVariant)
+                                .collect(Collectors.toList()),
+                dslServices.getIssueReporter());
     }
 
     /** Registers a builder for the custom tooling model. */
@@ -682,7 +687,7 @@ public abstract class BasePlugin<
                         globalScope,
                         extension);
 
-        taskManager.createTasks(variantFactory.getVariantType(), buildFeatureValues);
+        taskManager.createTasks(variantFactory.getVariantType(), createVariantModel());
 
         new DependencyConfigurator(
                         project, project.getName(), globalScope, variantInputModel, projectServices)

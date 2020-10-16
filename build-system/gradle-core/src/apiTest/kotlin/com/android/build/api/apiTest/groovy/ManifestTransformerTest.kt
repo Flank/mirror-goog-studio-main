@@ -69,6 +69,18 @@ class ManifestTransformerTest: VariantApiBaseTest(TestType.Script, ScriptingLang
                 testingElements.addMainActivity(this)
             }
         }
+        withDocs {
+            index =
+                    // language=markdown
+                    """
+# Test manifest transformation
+
+This sample shows how to transform the manifest file.
+
+## To Run
+./gradlew debugManifestUpdater
+            """.trimIndent()
+        }
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")

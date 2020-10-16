@@ -55,9 +55,13 @@ abstract class AbstractReturnGivenBuildResultTest<GivenT, ResultBuilderT: Abstra
      */
     fun expect(resultAction: ResultBuilderT.() -> Unit) {
         runTest(
-            givenAction?.invoke() ?: throw RuntimeException("No given data"),
+            givenAction?.invoke() ?: noGivenData(),
             instantiateResulBuilder().also { resultAction.invoke(it) }.toResult()
         )
+    }
+
+    open fun noGivenData(): GivenT {
+        throw RuntimeException("No given data")
     }
 
     abstract fun instantiateResulBuilder(): ResultBuilderT

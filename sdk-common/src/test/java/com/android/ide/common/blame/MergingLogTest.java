@@ -18,12 +18,14 @@ package com.android.ide.common.blame;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -203,6 +205,45 @@ public class MergingLogTest {
         assertThat(sourceFilePosition2.getFile().getSourceFile()).isEqualTo(sourceFile2);
         assertThat(sourceFilePosition2.getPosition().getEndLine())
                 .isEqualTo(position2.getPosition().getEndLine());
+    }
+
+    @Test
+    public void testAlternativeSourcePath() throws IOException {
+        SourceFile sourceFile1 = new SourceFile(absoluteFile("exploded/a/values/values.xml"));
+        sourceFile1.setOverrideSourcePath("alternative/a/values/values.xml");
+        final SourceFilePosition position1 =
+                new SourceFilePosition(sourceFile1, new SourcePosition(7, 8, 20));
+
+        File tempDir = mTemporaryFolder.newFolder();
+        MergingLog mergingLog = new MergingLog(tempDir);
+
+        mergingLog.logCopy(
+                absoluteFile("exploded/layout/a"),
+                "alternative/layout/a",
+                absoluteFile("merged/layout/a"));
+
+        Map<SourcePosition, SourceFilePosition> map = Maps.newLinkedHashMap();
+        SourcePosition sourcePosition = new SourcePosition(1, 2, 3, 7, 1, 120);
+        map.put(sourcePosition, position1);
+        mergingLog.logSource(new SourceFile(absoluteFile("merged/values/values.xml")), map);
+
+        mergingLog.write();
+        assertThat(map.get(sourcePosition).toString())
+                .isEqualTo("alternative/a/values/values.xml:8:9");
+
+        boolean blameSourceUsesAlternativePath = false;
+        File layoutJson = FileUtils.join(tempDir, "single", "layout.json");
+        try (Stream<String> stream = java.nio.file.Files.lines(layoutJson.toPath())) {
+            if (stream.parallel()
+                    .anyMatch(
+                            x ->
+                                    x.contains("\"source\": \"alternative/layout/a\"")
+                                            || x.contains(
+                                                    "\"source\": \"alternative\\\\layout\\\\a\""))) {
+                blameSourceUsesAlternativePath = true;
+            }
+        }
+        assertThat(blameSourceUsesAlternativePath).isTrue();
     }
 
     private File testPath;

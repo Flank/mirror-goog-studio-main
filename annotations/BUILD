@@ -1,14 +1,19 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.android-annotations",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.android-annotations.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    lint_baseline = "lint_baseline.xml",
+    project = "unb",
     visibility = ["//visibility:public"],
-    deps = ["//tools/idea/.idea/libraries:kotlin-stdlib-jdk8"],
+    # do not sort: must match IML order
+    deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+    ],
 )
 
 maven_java_library(
@@ -24,19 +29,4 @@ maven_pom(
     artifact = "annotations",
     group = "com.android.tools",
     source = "//tools/buildSrc/base:base_version",
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.android-annotations",
-    srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.android-annotations.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    project = "unb",
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-    ],
 )

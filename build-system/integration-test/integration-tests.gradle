@@ -27,6 +27,7 @@ ext.testEnvironment =
             key.startsWith("CUSTOM_") ||
                     key.startsWith("ACTD_") || // environment variables for uploading to Dana
                     key.startsWith("PERF_") || // environment variables for controlling perf tests
+                    key == "GENERATE_MODEL_GOLDEN_FILES" || // For updating model files
                     key == "USE_GRADLE_NIGHTLY" ||
                     key == "DEBUG_INNER_TEST" ||
                     // For NDK tests on Windows. See init.mk.

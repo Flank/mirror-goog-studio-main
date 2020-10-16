@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.utils.cxx.CxxDiagnosticCode
 import com.google.gson.annotations.SerializedName
 
 /** Information about an ABI.  */
@@ -31,7 +32,7 @@ data class AbiInfo(
     val isDefault: Boolean = true) {
     init {
         if (bitness != 32 && bitness != 64) {
-            errorln("ABI ${abi.tag} had an invalid value: $bitness")
+            errorln(CxxDiagnosticCode.ABI_IS_INVALID, "ABI ${abi.tag} had an invalid value: $bitness")
         }
     }
 }

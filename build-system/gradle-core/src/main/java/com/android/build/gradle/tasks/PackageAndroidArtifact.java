@@ -1120,20 +1120,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact
                     .getJniLibsUseLegacyPackaging()
-                    .set(
-                            creationConfig
-                                    .getPackagingOptions()
-                                    .getJniLibs()
-                                    .getUseLegacyPackaging());
+                    .set(creationConfig.getPackaging().getJniLibs().getUseLegacyPackaging());
             packageAndroidArtifact.getJniLibsUseLegacyPackaging().disallowChanges();
 
             packageAndroidArtifact
                     .getDexUseLegacyPackaging()
-                    .set(
-                            creationConfig
-                                    .getPackagingOptions()
-                                    .getDex()
-                                    .getUseLegacyPackaging());
+                    .set(creationConfig.getPackaging().getDex().getUseLegacyPackaging());
             packageAndroidArtifact.getDexUseLegacyPackaging().disallowChanges();
 
             packageAndroidArtifact.getManifests().set(manifests);

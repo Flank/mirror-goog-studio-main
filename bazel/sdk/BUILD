@@ -2,7 +2,6 @@ java_binary(
     name = "dev-sdk-updater",
     srcs = ["src/com/android/tools/utils/DevSdkUpdater.java"],
     main_class = "com.android.tools.utils.DevSdkUpdater",
-    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     deps = [
         "//tools/base/bazel:utils",
         "//tools/base/sdklib:studio.android.sdktools.sdklib",

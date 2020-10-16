@@ -1,10 +1,8 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
-load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_compile")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
-load(":project.bzl", "PROJECT")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
 # This is a custom implementation of label "tags".
@@ -73,7 +71,6 @@ def _iml_module_jar_impl(
         roots,
         java_srcs,
         kotlin_srcs,
-        groovy_srcs,
         form_srcs,
         resources,
         manifests,
@@ -92,17 +89,6 @@ def _iml_module_jar_impl(
 
     java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
-    groovy_jar = ctx.actions.declare_file(name + ".groovy.jar") if groovy_srcs else None
-
-    # Groovy
-    if groovy_srcs:
-        groovy_deps = [java_jar] if java_jar else []
-        groovy_deps += [kotlin_jar] if kotlin_jar else []
-        groovy_deps += transitive_runtime_jars.to_list()
-        stub_jar = ctx.actions.declare_file(name + ".groovy_stubs.src.jar")
-        groovy_impl(ctx, roots, groovy_srcs, groovy_deps, transitive_runtime_jars, groovy_jar, stub_jar)
-        sourcepath += [stub_jar]
-        jars += [groovy_jar]
 
     # Kotlin
     kotlin_providers = []
@@ -276,7 +262,6 @@ def _iml_module_impl(ctx):
         ctx.attr.roots,
         ctx.files.java_srcs,
         ctx.files.kotlin_srcs,
-        ctx.files.groovy_srcs,
         ctx.files.form_srcs,
         ctx.files.resources,
         ctx.attr.manifests,
@@ -297,7 +282,6 @@ def _iml_module_impl(ctx):
         ctx.attr.test_roots,
         ctx.files.java_test_srcs,
         ctx.files.kotlin_test_srcs,
-        ctx.files.groovy_test_srcs,
         ctx.files.form_test_srcs,
         ctx.files.test_resources,
         [],
@@ -338,11 +322,9 @@ _iml_module_ = rule(
         ),
         "java_srcs": attr.label_list(allow_files = True),
         "kotlin_srcs": attr.label_list(allow_files = True),
-        "groovy_srcs": attr.label_list(allow_files = True),
         "form_srcs": attr.label_list(allow_files = True),
         "java_test_srcs": attr.label_list(allow_files = True),
         "kotlin_test_srcs": attr.label_list(allow_files = True),
-        "groovy_test_srcs": attr.label_list(allow_files = True),
         "form_test_srcs": attr.label_list(allow_files = True),
         "javacopts": attr.string_list(),
         "resources": attr.label_list(allow_files = True),
@@ -384,16 +366,6 @@ _iml_module_ = rule(
         "_kotlin": attr.label(
             default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib"),
             allow_files = True,
-        ),
-        "_groovyc": attr.label(
-            default = Label("//tools/base/bazel:groovyc"),
-            cfg = "host",
-            executable = True,
-        ),
-        "_groovystub": attr.label(
-            default = Label("//tools/base/bazel:groovy_stub_gen"),
-            cfg = "host",
-            executable = True,
         ),
         "_formc": attr.label(
             executable = True,
@@ -570,9 +542,6 @@ def iml_module(
         back_deps = [],
         bundled_deps = [],
         exec_properties = {}):
-    if project != PROJECT:
-        return
-
     prod_deps = []
     test_deps = []
     for dep in deps:
@@ -589,7 +558,6 @@ def iml_module(
         visibility = visibility,
         java_srcs = srcs.javas,
         kotlin_srcs = srcs.kotlins,
-        groovy_srcs = srcs.groovies,
         form_srcs = srcs.forms,
         resources = srcs.resources,
         manifests = srcs.manifests,
@@ -597,7 +565,6 @@ def iml_module(
         roots = srcs.roots,
         java_test_srcs = split_test_srcs.javas,
         kotlin_test_srcs = split_test_srcs.kotlins,
-        groovy_test_srcs = split_test_srcs.groovies,
         form_test_srcs = split_test_srcs.forms,
         test_resources = split_test_srcs.resources,
         test_roots = split_test_srcs.roots,
@@ -872,9 +839,12 @@ def split_srcs(src_dirs, res_dirs, exclude):
         include = [src + "/**" for src in roots],
         exclude = excludes,
     )
+    groovies = native.glob([src + "/**/*.groovy" for src in src_dirs], exclude)
+    if groovies:
+        fail("Groovy is not supported")
+
     javas = native.glob([src + "/**/*.java" for src in src_dirs], exclude)
     kotlins = native.glob([src + "/**/*.kt" for src in src_dirs], exclude)
-    groovies = native.glob([src + "/**/*.groovy" for src in src_dirs], exclude)
     forms = native.glob([src + "/**/*.form" for src in src_dirs], exclude)
     manifests = native.glob([src + "/**/*.MF" for src in src_dirs], exclude)
     return struct(
@@ -882,7 +852,6 @@ def split_srcs(src_dirs, res_dirs, exclude):
         resources = resources,
         javas = javas,
         kotlins = kotlins,
-        groovies = groovies,
         forms = forms,
         manifests = manifests,
     )

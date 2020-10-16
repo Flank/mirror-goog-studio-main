@@ -41,9 +41,8 @@ public class LintKotlinTest {
     public final GradleTestProject project;
 
     public LintKotlinTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintKotlin")
-                .create();
+        this.project =
+                lintInvocationType.testProjectBuilder(4).fromTestProject("lintKotlin").create();
     }
 
     @Test
@@ -66,7 +65,7 @@ public class LintKotlinTest {
         assertThat(lintReport).contains("id=\"ValidFragment\"");
         assertThat(lintReport).doesNotContain("id=\"CallSuper\"");
 
-        File lintResults = project.file("app/lint-results.txt");
+        File lintResults = project.file("app/build/reports/lint-results.txt");
         assertThat(lintResults).contains("8 errors, 6 warnings");
     }
 }

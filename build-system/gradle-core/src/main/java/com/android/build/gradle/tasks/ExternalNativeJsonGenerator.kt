@@ -51,6 +51,7 @@ import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
 import com.android.utils.TokenizedCommandLineMap
 import com.android.utils.cxx.CompileCommandsEncoder
+import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_FAILURE
 import com.android.utils.cxx.STRIP_FLAGS_WITHOUT_ARG
 import com.android.utils.cxx.STRIP_FLAGS_WITH_ARG
 import com.android.utils.cxx.STRIP_FLAGS_WITH_IMMEDIATE_ARG
@@ -130,10 +131,19 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     try {
                         buildForOneConfiguration(ops, forceGeneration, abi)
                     } catch (e: GradleException) {
-                        errorln("exception while building Json %s", e.message!!)
+                        errorln(
+                            METADATA_GENERATION_FAILURE,
+                            "exception while building Json %s",
+                            e.message!!
+                        )
                     } catch (e: ProcessException) {
-                        errorln("error when building with %s using %s: %s",
-                            variant.module.buildSystem.tag, variant.module.makeFile, e.message!!)
+                        errorln(
+                            METADATA_GENERATION_FAILURE,
+                            "error when building with %s using %s: %s",
+                            variant.module.buildSystem.tag,
+                            variant.module.makeFile,
+                            e.message!!
+                        )
                     }
                 }
             )

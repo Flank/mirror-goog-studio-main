@@ -115,13 +115,15 @@ class AsmTransformApiFixFramesTest {
 
                     import com.android.build.api.instrumentation.AsmClassVisitorFactory
                     import com.android.build.api.instrumentation.ClassData
+                    import com.android.build.api.instrumentation.ClassDataLoader
                     import com.android.build.api.instrumentation.InstrumentationParameters
                     import org.objectweb.asm.ClassVisitor
 
                     abstract class FramesBreakingClassVisitorFactory:
-                            AsmClassVisitorFactory<InstrumentationParameters> {
+                            AsmClassVisitorFactory<InstrumentationParameters.None> {
                         override fun createClassVisitor(
                                 classData: ClassData,
+                                classDataLoader: ClassDataLoader,
                                 nextClassVisitor: ClassVisitor
                         ): ClassVisitor {
                             return FramesBreakingClassVisitor(
@@ -163,19 +165,17 @@ class AsmTransformApiFixFramesTest {
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":buildSrc")
                         .file("src/main/java/com/example/buildsrc/plugin/InstrumentationPlugin.kt"),
-                "val androidExt = project.extensions.getByType(CommonExtension::class.java)",
+                "val androidComponentsExt = project.extensions.getByType(AndroidComponentsExtension::class.java)",
                 // language=kotlin
                 """
-            val androidExt = project.extensions.getByType(CommonExtension::class.java)
-            androidExt.onVariants {
-                unitTestProperties {
-                    transformClassesWith(
+            val androidComponentsExt = project.extensions.getByType(AndroidComponentsExtension::class.java)
+            androidComponentsExt.unitTest {
+                    it.transformClassesWith(
                             FramesBreakingClassVisitorFactory::class.java,
                             InstrumentationScope.PROJECT
                     ) {}
-                    setAsmFramesComputationMode($framesMode)
+                    it.setAsmFramesComputationMode($framesMode)
                 }
-            }
                 """.trimIndent()
 
         )

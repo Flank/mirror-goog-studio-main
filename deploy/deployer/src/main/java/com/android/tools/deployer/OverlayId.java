@@ -16,12 +16,14 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -42,41 +44,44 @@ public class OverlayId implements Serializable {
     // this differently. This is also strict string comparison with no backward capability.
     public static final String SCHEMA_VERSION = "1.0";
 
-    // A mapping from each fully installed APK to its computed digest.
-    private final SortedMap<String, String> apks;
+    // The installed APKs backing this overlay.
+    private final ImmutableList<Apk> installedApks;
 
     // A mapping from each file in the overlay to its computed checksum. Each key value is the
     // file's full path within the overlay.
-    private final SortedMap<String, String> overlayFiles;
+    private final ImmutableSortedMap<String, String> overlayFiles;
 
     // The set of overlay files that are swapped dex classes from Apply Changes or Apply Code
     // Changes deployments. All files in this set are also keys in the overlayFiles map.
-    private final Set<String> swappedDex;
+    private final ImmutableSortedSet<String> swappedDex;
 
     private final String sha;
 
     // Distinguish between a "true" base install and an install that has OID but zero overlay file.
     private final boolean baseInstall;
 
-    public OverlayId(List<Apk> installedApk) throws DeployerException {
-        apks = new TreeMap<>();
+    public OverlayId(List<Apk> apks) throws DeployerException {
+        installedApks = ImmutableList.sortedCopyOf(Comparator.comparing(apk -> apk.name), apks);
         overlayFiles = ImmutableSortedMap.of();
-        swappedDex = ImmutableSet.of();
-        installedApk.forEach(apk -> apks.put(apk.name, apk.checksum));
+        swappedDex = ImmutableSortedSet.of();
         sha = computeShaHex(getRepresentation());
         baseInstall = true;
     }
 
     private OverlayId(
-            SortedMap<String, String> apks,
-            SortedMap<String, String> overlayFiles,
-            Set<String> swappedDex)
+            ImmutableList<Apk> installedApks,
+            ImmutableSortedMap<String, String> overlayFiles,
+            ImmutableSortedSet<String> swappedDex)
             throws DeployerException {
-        this.apks = apks;
+        this.installedApks = installedApks;
         this.overlayFiles = overlayFiles;
         this.swappedDex = swappedDex;
         sha = computeShaHex(getRepresentation());
         baseInstall = false;
+    }
+
+    public List<Apk> getInstalledApks() {
+        return installedApks;
     }
 
     public Set<String> getOverlayFiles() {
@@ -94,10 +99,8 @@ public class OverlayId implements Serializable {
         rep.append(SCHEMA_VERSION);
         rep.append("\n");
 
-        for (Map.Entry<String, String> apk : apks.entrySet()) {
-            rep.append(
-                    String.format(
-                            "Real APK %s has checksum of %s\n", apk.getKey(), apk.getValue()));
+        for (Apk apk : installedApks) {
+            rep.append(String.format("Real APK %s has checksum of %s\n", apk.name, apk.checksum));
         }
 
         for (Map.Entry<String, String> delta : overlayFiles.entrySet()) {
@@ -137,12 +140,12 @@ public class OverlayId implements Serializable {
     }
 
     public static class Builder {
-        private final SortedMap<String, String> apks;
+        private final ImmutableList<Apk> installedApks;
         private final SortedMap<String, String> overlayFiles;
         private final Set<String> swappedDex;
 
         private Builder(OverlayId prevOverlayId) {
-            apks = prevOverlayId.apks;
+            installedApks = prevOverlayId.installedApks;
             overlayFiles = new TreeMap<>(prevOverlayId.overlayFiles);
             swappedDex = new HashSet<>(prevOverlayId.swappedDex);
         }
@@ -166,7 +169,10 @@ public class OverlayId implements Serializable {
         }
 
         public OverlayId build() throws DeployerException {
-            return new OverlayId(apks, overlayFiles, swappedDex);
+            return new OverlayId(
+                    installedApks,
+                    ImmutableSortedMap.copyOfSorted(overlayFiles),
+                    ImmutableSortedSet.copyOf(swappedDex));
         }
     }
 }

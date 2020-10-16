@@ -159,7 +159,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
 
             creationConfig.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.keepDebugSymbols.setDisallowChanges(
-                creationConfig.packagingOptions.jniLibs.keepDebugSymbols
+                creationConfig.packaging.jniLibs.keepDebugSymbols
             )
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)

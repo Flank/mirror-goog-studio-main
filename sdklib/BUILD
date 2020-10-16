@@ -4,12 +4,13 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load(":sdk.bzl", "combine_licenses", "sdk_java_binary", "sdk_package")
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.sdklib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdklib.iml"],
     lint_baseline = "lint_baseline.xml",
+    project = "unb",
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -19,26 +20,18 @@ iml_module(
         "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/device_validator:studio.android.sdktools.dvlib",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
-        "//tools/idea/.idea/libraries:http-client",
-        "//tools/idea/.idea/libraries:commons-compress",
-        "//tools/idea/.idea/libraries:gson",
         "//tools/base/repository:studio.android.sdktools.repository",
     ],
-    runtime_deps = ["//tools/idea/.idea/libraries:javax.activation"],
     # do not sort: must match IML order
     deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/device_validator:studio.android.sdktools.dvlib[module]",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",
-        "//tools/idea/.idea/libraries:http-client",
-        "//tools/idea/.idea/libraries:commons-compress",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/idea/.idea/libraries:gson",
+        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
         "//tools/base/repository:studio.android.sdktools.repository[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
-        "//tools/idea/.idea/libraries:jaxb-api",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8[test]",
     ],
 )
 
@@ -220,35 +213,4 @@ sdk_package(
 test_suite(
     name = "commandlinetoolstest",
     tests = ["//tools/base/sdklib/src/integrationTest:integration-test.test"],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.sdklib",
-    srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.sdklib.iml"],
-    lint_baseline = "lint_baseline.xml",
-    project = "unb",
-    test_data = ["//prebuilts/studio/sdk:platforms/latest"],
-    test_resources = ["src/test/resources"],
-    test_srcs = ["src/test/java"],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    exports = [
-        "//tools/base/common:studio.android.sdktools.common",
-        "//tools/base/device_validator:studio.android.sdktools.dvlib",
-        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
-        "//tools/base/repository:studio.android.sdktools.repository",
-    ],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/base/device_validator:studio.android.sdktools.dvlib[module]",
-        "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api[module]",
-        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/base/repository:studio.android.sdktools.repository[module]",
-        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8[test]",
-    ],
 )

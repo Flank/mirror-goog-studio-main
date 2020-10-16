@@ -10,7 +10,7 @@ kotlin_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
+        "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar",
         "//tools/base/transport/test-framework",
-        "//tools/idea/.idea/libraries:truth",
     ],
 )

@@ -49,6 +49,7 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintModelModuleProject
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
@@ -239,7 +240,7 @@ open class LintCliClient : LintClient {
             val statistics = !flags.isQuiet
             val performer = LintFixPerformer(this, statistics)
             val fixed = performer.fix(incidents)
-            if (fixed && isGradle) {
+            if (fixed && flags.isAbortOnAutoFix) {
                 val message =
                     """
                        One or more issues were fixed in the source code.
@@ -485,7 +486,17 @@ open class LintCliClient : LintClient {
 
     override fun getUastParser(project: Project?): UastParser = LintCliUastParser(project)
 
-    override fun getGradleVisitor(): GradleVisitor = GradleVisitor()
+    override fun getGradleVisitor(): GradleVisitor {
+        // The cli client cannot currently have a direct dependency on the GroovyGradleVisitor
+        // Load it if it is present in the classpath.
+        return try {
+            GradleVisitor::class.java.classLoader
+                .loadClass("com.android.tools.lint.gradle.GroovyGradleVisitor")
+                .newInstance() as GradleVisitor
+        } catch (e: ClassNotFoundException) {
+            GradleVisitor()
+        }
+    }
 
     override fun report(
         context: Context,
@@ -582,6 +593,10 @@ open class LintCliClient : LintClient {
             map[project] = info
             info
         }
+    }
+
+    override fun findRuleJars(project: Project): Iterable<File> {
+        return flags.lintRuleJarsOverride ?: super.findRuleJars(project)
     }
 
     override fun getResourceFolders(project: Project): List<File> {

@@ -28,6 +28,15 @@ enum class LintInvocationType {
                 .addGradleProperties(BooleanOption.USE_NEW_LINT_MODEL.propertyName + "=false")
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
     },
+    NEW_LINT_MODEL {
+        override fun addGradleProperties(projectBuilder: GradleTestProjectBuilder, maxProblems: Int): GradleTestProjectBuilder =
+            projectBuilder
+                .withConfigurationCaching(
+                    if (maxProblems == 0)
+                        BaseGradleExecutor.ConfigurationCaching.ON else BaseGradleExecutor.ConfigurationCaching.WARN
+                )
+                .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=$maxProblems")
+    },
     ;
 
     protected abstract fun addGradleProperties(

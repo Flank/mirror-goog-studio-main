@@ -204,7 +204,7 @@ open class GradleDetector : Detector(), GradleScanner {
         context: GradleContext,
         property: String,
         value: String,
-        parent: String?,
+        parent: String,
         parentParent: String?,
         propertyCookie: Any,
         valueCookie: Any,
@@ -555,9 +555,9 @@ open class GradleDetector : Detector(), GradleScanner {
                     report(context, statementCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
                 }
             }
-        } else if ((parent == null || parent == "java") && property == "sourceCompatibility") {
+        } else if ((parent == "" || parent == "java") && property == "sourceCompatibility") {
             mDeclaredSourceCompatibility = true
-        } else if ((parent == null || parent == "java") && property == "targetCompatibility") {
+        } else if ((parent == "" || parent == "java") && property == "targetCompatibility") {
             mDeclaredTargetCompatibility = true
         }
     }

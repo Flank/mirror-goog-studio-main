@@ -47,9 +47,8 @@ public class LintBaselineTest {
     public final GradleTestProject project;
 
     public LintBaselineTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintBaseline")
-                .create();
+        this.project =
+                lintInvocationType.testProjectBuilder(23).fromTestProject("lintBaseline").create();
     }
 
     @Test

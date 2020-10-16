@@ -31,16 +31,20 @@ public class LintInstantiateTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
+        return new LintInvocationType[] {
+            LintInvocationType.REFLECTIVE_LINT_RUNNER
+        }; // TODO(b/160392650)
     }
 
     @Rule
     public final GradleTestProject project;
 
     public LintInstantiateTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintInstantiate")
-                .create();
+        this.project =
+                lintInvocationType
+                        .testProjectBuilder(87)
+                        .fromTestProject("lintInstantiate")
+                        .create();
     }
 
     @Test
@@ -49,7 +53,7 @@ public class LintInstantiateTest {
         File lintReport = project.file("app/lint-results.txt");
         assertThat(lintReport).contains("No issues found.");
 
-        File sarifFile = project.file("app/lint-results.sarif");
+        File sarifFile = new File(project.getSubproject("app").getBuildDir(), "reports/lint-results.sarif");
         assertThat(sarifFile).exists();
         assertThat(sarifFile).contains("\"$schema\" : \"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/");
     }

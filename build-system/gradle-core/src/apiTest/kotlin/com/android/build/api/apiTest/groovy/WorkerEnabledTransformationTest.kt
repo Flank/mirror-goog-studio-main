@@ -81,6 +81,19 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script, Scrip
                 testingElements.addManifest(this)
             }
         }
+        withDocs {
+            index =
+                    // language=markdown
+                    """
+# Test TransformationRequest
+
+This sample shows how to transform the artifact.
+It copies the build apk to the specified directory.
+
+## To Run
+./gradlew copydebugApks
+            """.trimIndent()
+        }
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")

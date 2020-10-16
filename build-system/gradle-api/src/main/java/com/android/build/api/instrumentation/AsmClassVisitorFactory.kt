@@ -61,15 +61,21 @@ interface AsmClassVisitorFactory<ParametersT : InstrumentationParameters> : Seri
      * given [classData] or for any other class in its hierarchy chain by a previous visitor will
      * not be reflected in the [classData] object.
      *
-     * This method should handle asynchronous calls.
+     * [classDataLoader] can be used to get the data for classes that are in the runtime classpath
+     * of the class being visited.
+     *
+     * This method must handle asynchronous calls.
      *
      * @param classData contains information about the class that will be instrumented by the
      *                  returned class visitor.
+     * @param classDataLoader helps in loading the class data for classes that are in the runtime
+     *                        classpath of the class being visited.
      * @param nextClassVisitor the [ClassVisitor] to which the created [ClassVisitor] must delegate
      *                         method calls.
      */
     fun createClassVisitor(
         classData: ClassData,
+        classDataLoader: ClassDataLoader,
         nextClassVisitor: ClassVisitor
     ): ClassVisitor
 

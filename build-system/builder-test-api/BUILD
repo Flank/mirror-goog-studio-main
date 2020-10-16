@@ -2,22 +2,22 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
-# managed by go/iml_to_build
+# managed by go/iml_to_build [unb]
 iml_module(
     name = "studio.android.sdktools.builder-test-api",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.builder-test-api.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    lint_baseline = "lint_baseline.xml",
+    project = "unb",
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
-    # do not sort: must match IML order
     exports = ["//tools/base/ddmlib:studio.android.sdktools.ddmlib"],
     # do not sort: must match IML order
     deps = [
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/idea/.idea/libraries:Guava",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:unb.Guava",
+        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )
 
@@ -52,24 +52,5 @@ coverage_java_test(
         ":tools.builder-test-api",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
-    ],
-)
-
-# managed by go/iml_to_build [unb]
-iml_module(
-    name = "studio.android.sdktools.builder-test-api",
-    srcs = ["src/main/java"],
-    iml_files = ["android.sdktools.builder-test-api.iml"],
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
-    project = "unb",
-    test_srcs = ["src/test/java"],
-    visibility = ["//visibility:public"],
-    exports = ["//tools/base/ddmlib:studio.android.sdktools.ddmlib"],
-    # do not sort: must match IML order
-    deps = [
-        "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
     ],
 )

@@ -20,9 +20,11 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.buildOutputFiles
+import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
@@ -32,6 +34,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.NativeAndroidProject
 import com.android.utils.FileUtils.join
+import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -44,7 +47,7 @@ import org.junit.runners.Parameterized
  * into the same build and lib folders.
  */
 @RunWith(Parameterized::class)
-class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String, useV2NativeModel: Boolean) {
+class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String, val useV2NativeModel: Boolean) {
 
     @Rule
     @JvmField
@@ -65,10 +68,11 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String, useV2NativeModel: 
         @JvmStatic
         fun data() = arrayOf(
             arrayOf("3.6.0", false),
-            arrayOf(DEFAULT_CMAKE_VERSION, false)
-            // TODO(b/134757616): Support V2 models. Currently since the build folder is shared,
-            // concurrently executing V2 sync fails since all compile_commands.json.bin are generated
-            // in the same location.
+            arrayOf("3.6.0", true),
+            arrayOf(DEFAULT_CMAKE_VERSION, false),
+            arrayOf(DEFAULT_CMAKE_VERSION, true),
+            arrayOf(BAKING_CMAKE_VERSION, false),
+            arrayOf(BAKING_CMAKE_VERSION, true)
         )
     }
 
@@ -123,12 +127,63 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String, useV2NativeModel: 
 
     @Test
     fun checkBuildFoldersRedirected() {
-        project.execute("assemble")
-        val model = project.model().fetch(NativeAndroidProject::class.java)
-        val abiCount = 4
-        val uniqueConfigurations = 3
-        assertThat(model.buildOutputFiles().distinct())
-            .hasSize(abiCount * uniqueConfigurations)
-        assertThat(model).allBuildOutputsExist()
+
+        if (useV2NativeModel) {
+            val result =
+                    project.modelV2().fetchNativeModules(listOf("debug", "release"), listOf("x86_64"))
+            // There are a lot of variants, just peek at the first several lines
+            val severalLines = result.dump().lines().take(40).joinToString("\n")
+            Truth.assertThat(severalLines).isEqualTo("""
+                [:]
+                > NativeModule:
+                    - name                    = "project"
+                    > variants:
+                       * NativeVariant:
+                          * name = "debug"
+                          > abis:
+                             * NativeAbi:
+                                * name                  = "armeabi-v7a"
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
+                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
+                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
+                             * NativeAbi:
+                                * name                  = "arm64-v8a"
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/arm64-v8a/compile_commands.json.bin{!}
+                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/arm64-v8a/symbol_folder_index.txt{!}
+                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/arm64-v8a/build_file_index.txt{!}
+                             * NativeAbi:
+                                * name                  = "x86"
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86/compile_commands.json.bin{!}
+                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86/symbol_folder_index.txt{!}
+                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86/build_file_index.txt{!}
+                             * NativeAbi:
+                                * name                  = "x86_64"
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}
+                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
+                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
+                          < abis
+                       * NativeVariant:
+                          * name = "release"
+                          > abis:
+                             * NativeAbi:
+                                * name                  = "armeabi-v7a"
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
+                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
+                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
+                             * NativeAbi:
+                                * name                  = "arm64-v8a"
+                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/arm64-v8a/compile_commands.json.bin{!}
+                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/arm64-v8a/symbol_folder_index.txt{!}
+                """.trimIndent()
+            )
+        } else {
+            project.execute("assemble")
+            val model = project.model().fetch(NativeAndroidProject::class.java)
+            val abiCount = 4
+            val uniqueConfigurations = 3
+            assertThat(model.buildOutputFiles().distinct())
+                    .hasSize(abiCount * uniqueConfigurations)
+            assertThat(model).allBuildOutputsExist()
+        }
     }
 }

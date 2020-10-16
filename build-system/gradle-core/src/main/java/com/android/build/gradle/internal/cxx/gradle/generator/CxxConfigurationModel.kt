@@ -29,7 +29,11 @@ import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnviron
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.*
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
+import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild
 import com.android.build.gradle.internal.ndk.NdkHandler
@@ -40,20 +44,25 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
-import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.ENABLE_V2_NATIVE_MODEL
+import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
-import com.android.build.gradle.tasks.*
 import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
+import com.android.build.gradle.tasks.CxxNopMetadataGenerator
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
+import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
+import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -306,7 +315,10 @@ private fun getProjectPath(config: ExternalNativeBuild)
 
     return when {
         externalProjectPaths.size > 1 -> {
-            errorln("More than one externalNativeBuild path specified")
+            errorln(
+                INVALID_EXTERNAL_NATIVE_BUILD_CONFIG,
+                "More than one externalNativeBuild path specified"
+            )
             null
         }
         externalProjectPaths.isEmpty() -> {
@@ -348,7 +360,7 @@ fun createCxxMetadataGenerator(
             val cmake =
                 Objects.requireNonNull(variant.module.cmake)!!
             if (!cmake.isValidCmakeAvailable) {
-                errorln("No valid CMake executable was found.")
+                errorln(CMAKE_IS_MISSING, "No valid CMake executable was found.")
                 return CxxNopMetadataGenerator(variant, abis, variantBuilder)
             }
             val cmakeRevision = cmake.minimumCmakeVersion
@@ -359,14 +371,18 @@ fun createCxxMetadataGenerator(
             if (cmakeRevision.major < 3
                 || cmakeRevision.major == 3 && cmakeRevision.minor <= 6
             ) {
-                errorln("Unsupported CMake version $cmakeRevision. Try 3.7.0 or later.")
+                errorln(
+                    CMAKE_VERSION_IS_UNSUPPORTED,
+                    "Unsupported CMake version $cmakeRevision. Try 3.7.0 or later."
+                )
                 return CxxNopMetadataGenerator(variant, abis, variantBuilder)
             }
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15
             if (isPreCmakeFileApiVersion ||
                 !variant.module.project.isV2NativeModelEnabled ||
-                !variant.module.cmake!!.isPreferCmakeFileApiEnabled) {
+                !variant.module.cmake!!.isPreferCmakeFileApiEnabled
+            ) {
                 return CmakeServerExternalNativeJsonGenerator(variant, abis, variantBuilder)
             }
             return CmakeQueryMetadataGenerator(variant, abis, variantBuilder)

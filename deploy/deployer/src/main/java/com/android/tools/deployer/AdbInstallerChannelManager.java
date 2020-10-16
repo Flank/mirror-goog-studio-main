@@ -26,7 +26,7 @@ import java.util.List;
 
 public class AdbInstallerChannelManager {
 
-    private static final HashMap<String, SocketChannel> channels = new HashMap<>();
+    private static final HashMap<String, AdbInstallerChannel> channels = new HashMap<>();
     private final ILogger logger;
     private final AdbInstaller.Mode mode;
 
@@ -35,18 +35,18 @@ public class AdbInstallerChannelManager {
         this.mode = mode;
     }
 
-    public synchronized SocketChannel getChannel(AdbClient client, String version)
+    public synchronized AdbInstallerChannel getChannel(AdbClient client, String version)
             throws IOException {
         String deviceId = client.getSerial();
         if (!channels.containsKey(deviceId)) {
             logger.info("Created SocketChannel to '" + deviceId + "'");
-            SocketChannel channel = createChannel(client, version);
+            AdbInstallerChannel channel = createChannel(client, version);
             channels.put(deviceId, channel);
         }
         return channels.get(deviceId);
     }
 
-    private synchronized SocketChannel createChannel(AdbClient client, String version)
+    private synchronized AdbInstallerChannel createChannel(AdbClient client, String version)
             throws IOException {
         SocketChannel channel = null;
         List<String> parameters = new ArrayList<>();
@@ -62,14 +62,13 @@ public class AdbInstallerChannelManager {
             try (SocketChannel c = channel) {}
             throw new IOException(e);
         }
-        channel.configureBlocking(true);
-        return channel;
+        return new AdbInstallerChannel(channel);
     }
 
     public synchronized void reset(AdbClient client) throws IOException {
         String serial = client.getSerial();
         logger.info("Reset SocketChannel to '" + serial + "'");
-        try (SocketChannel c = channels.get(serial)) {
+        try (AdbInstallerChannel c = channels.get(serial)) {
             channels.remove(serial);
         }
     }

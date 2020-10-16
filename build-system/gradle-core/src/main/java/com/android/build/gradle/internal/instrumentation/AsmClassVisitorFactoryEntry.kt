@@ -40,9 +40,13 @@ class AsmClassVisitorFactoryEntry<ParamT : InstrumentationParameters>(
         // Gradle currently can't figure out the class type of the parameters and instead
         // instantiates the parameters as InstrumentationParameters type. So we handle injecting
         // the correct parameters object on our own.
+        val paramsClass = getParamsImplClass(visitorFactoryClass)
         @Suppress("UNCHECKED_CAST")
-        val parameters =
-            objectFactory.newInstance(getParamsImplClass(visitorFactoryClass)) as ParamT
+        val parameters = if (paramsClass == InstrumentationParameters.None::class.java) {
+            InstrumentationParameters.None()
+        } else {
+            objectFactory.newInstance(paramsClass)
+        } as ParamT
         paramsConfig.invoke(parameters)
 
         visitorFactory = objectFactory.newInstance(visitorFactoryClass)

@@ -16,12 +16,15 @@
 
 package com.android.build.gradle.integration.api
 
+import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
+import kotlin.test.assertNotNull
 
 class BuiltArtifactsWithWorkerTest {
     @get:Rule
@@ -203,7 +206,7 @@ abstract class VerifierTask extends DefaultTask {
     }
 }
 
-android.onVariantProperties {
+androidComponents.onVariants(androidComponents.selector().all(), {
   TaskProvider outputTask = tasks.register(it.getName() + 'ProducerTask', ProducerTask) { task ->
     task.getVariantName().set(it.getName())
   }
@@ -222,7 +225,7 @@ android.onVariantProperties {
 
   consumerTask.configure { task ->
     task.replacementRequest = replacementRequest
-    task.getOutputDir().set(new File(project.layout.buildDir.getAsFile().get(), "build/acme_apks"))
+    task.getOutputDir().set(new File(project.layout.buildDir.getAsFile().get(), "acme_apks"))
     task.analyticsService.set(BuildServicesKt.getBuildService(task.project.gradle.sharedServices, AnalyticsService.class))
   }
 
@@ -232,11 +235,28 @@ android.onVariantProperties {
     )
     task.getArtifactsLoader().set(it.artifacts.getBuiltArtifactsLoader())
   }
-}
+})
         """.trimIndent()
         )
-        val result = project.executor().run("clean", "debugVerifier")
+        val model = project.executeAndReturnModel("clean")
+        val debugVariant = model.onlyModel.variants.filter { it.name == "debug" }.single()
+        val assembleTaskOutputListingFile = debugVariant.mainArtifact.assembleTaskOutputListingFile
+        // assert that the listing file location produced by the new task has been recorded in the
+        // model.
+        Truth.assertThat(assembleTaskOutputListingFile).contains("acme_apks")
+
+        val result = project.executor().run("debugVerifier")
         Truth.assertThat(result.didWorkTasks).containsExactly(
             ":debugProducerTask", ":debugConsumerTask", ":debugVerifier")
+
+        // and check the listing file content.
+        val listingFile = File(assembleTaskOutputListingFile)
+        val updatedApks =
+                BuiltArtifactsLoaderImpl.loadFromFile(listingFile, listingFile.parentFile.toPath())
+        assertNotNull(updatedApks)
+        Truth.assertThat(updatedApks.elements).hasSize(3)
+        updatedApks.elements.forEach { builtArtifact ->
+            Truth.assertThat(builtArtifact.outputFile).contains("acme_apks")
+        }
     }
 }

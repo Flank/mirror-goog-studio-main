@@ -16,9 +16,9 @@
 
 package com.android.build.api.component
 
-import com.android.build.api.variant.AaptOptions
+import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.ApkPackagingOptions
+import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.SigningConfig
 import org.gradle.api.Incubating
 import org.gradle.api.provider.MapProperty
@@ -40,12 +40,12 @@ interface AndroidTest : TestComponent {
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    val aaptOptions: AaptOptions
+    val aapt: Aapt
 
     /**
      * Variant's aaptOptions, initialized by the corresponding global DSL element.
      */
-    fun aaptOptions(action: AaptOptions.() -> Unit)
+    fun aaptOptions(action: Aapt.() -> Unit)
 
     /**
      * The package name into which some classes are generated.
@@ -117,10 +117,10 @@ interface AndroidTest : TestComponent {
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    val packagingOptions: ApkPackagingOptions
+    val packaging: ApkPackaging
 
     /**
      * Variant's packagingOptions, initialized by the corresponding global DSL element.
      */
-    fun packagingOptions(action: ApkPackagingOptions.() -> Unit)
+    fun packaging(action: ApkPackaging.() -> Unit)
 }

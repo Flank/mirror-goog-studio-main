@@ -56,6 +56,8 @@ class AsmInstrumentationManager(
     private val classesHierarchyResolver: ClassesHierarchyResolver,
     private val framesComputationMode: FramesComputationMode
 ) {
+    private val classDataService = ClassDataLoaderImpl(classesHierarchyResolver)
+
     private val classWriterFlags: Int =
         when (framesComputationMode) {
             FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS,
@@ -162,7 +164,7 @@ class AsmInstrumentationManager(
                 }
 
                 filteredVisitors.forEach { entry ->
-                    nextVisitor = entry.createClassVisitor(classData, nextVisitor)
+                    nextVisitor = entry.createClassVisitor(classData, classDataService, nextVisitor)
                 }
 
                 classReader.accept(nextVisitor, classReaderFlags)

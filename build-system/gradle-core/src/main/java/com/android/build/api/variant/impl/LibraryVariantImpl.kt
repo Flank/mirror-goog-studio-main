@@ -97,12 +97,12 @@ open class  LibraryVariantImpl @Inject constructor(
         super.transformClassesWith(classVisitorFactoryImplClass, scope, instrumentationParamsConfig)
     }
 
-    override val packagingOptions: LibraryPackagingOptions by lazy {
-        LibraryPackagingOptionsImpl(globalScope.extension.packagingOptions, internalServices)
+    override val packaging: LibraryPackaging by lazy {
+        LibraryPackagingImpl(globalScope.extension.packagingOptions, internalServices)
     }
 
-    override fun packagingOptions(action: LibraryPackagingOptions.() -> Unit) {
-        action.invoke(packagingOptions)
+    override fun packaging(action: LibraryPackaging.() -> Unit) {
+        action.invoke(packaging)
     }
 
     // ---------------------------------------------------------------------------------------------

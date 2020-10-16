@@ -94,16 +94,16 @@ abstract class LintModelDependenciesWriterTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         val artifactName = variantType.get() + "Artifact"
-        val jarCache = libraryDependencyCacheBuildService.get().localJarCache
-        val mavenCache = artifactCollectionsInputs.get().mavenCoordinatesCache.get().cache
+        val dependencyCaches = DependencyCaches(
+            libraryDependencyCacheBuildService.get().localJarCache,
+            artifactCollectionsInputs.get().mavenCoordinatesCache.get().cache)
 
         val artifactHandler: ArtifactHandler<LintModelLibrary> =
             if (checkDependencies.get()) {
-                LintModelArtifactHandler(jarCache, mavenCache)
+                LintModelArtifactHandler(dependencyCaches)
             } else {
                 ExternalLintModelArtifactHandler.create(
-                    jarCache,
-                    mavenCache,
+                    dependencyCaches,
                     projectDependencyExplodedAars,
                     testedProjectDependencyExplodedAars,
                     artifactCollectionsInputs.get().compileClasspath.projectJars,

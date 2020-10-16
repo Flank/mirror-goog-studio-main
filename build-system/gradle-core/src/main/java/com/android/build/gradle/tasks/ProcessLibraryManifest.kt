@@ -289,21 +289,12 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             super.configure(task)
             val variantSources = creationConfig.variantSources
             val project = creationConfig.globalScope.project
-            task.minSdkVersion
-                .set(project.provider { creationConfig.minSdkVersion.getApiString() })
-            task.minSdkVersion.disallowChanges()
+            task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.getApiString())
             task.targetSdkVersion
-                .set(
-                    project.provider {
-                        val targetSdkVersion =
-                            creationConfig.targetSdkVersion
-                        if (targetSdkVersion.apiLevel < 0) {
-                            return@provider null
-                        }
-                        targetSdkVersion.getApiString()
-                    }
+                .setDisallowChanges(
+                    if (creationConfig.targetSdkVersion.apiLevel < 1) null
+                    else creationConfig.targetSdkVersion.getApiString()
                 )
-            task.targetSdkVersion.disallowChanges()
             task.maxSdkVersion.setDisallowChanges(creationConfig.maxSdkVersion)
             task.mainSplit.set(project.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()

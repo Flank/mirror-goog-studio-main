@@ -59,10 +59,11 @@ class GetBundleTest: VariantApiBaseTest(TestType.Script)  {
                 defaultConfig {
                     versionCode = 3
                 }
-
-                onVariantProperties {
-                    project.tasks.register<DisplayBundleFileTask>("${ '$' }{name}DisplayBundleFile") {
-                        bundleFile.set(artifacts.get(ArtifactType.BUNDLE))
+            }
+            androidComponents {
+                onVariants { variant ->
+                    project.tasks.register<DisplayBundleFileTask>("${ '$' }{variant.name}DisplayBundleFile") {
+                        bundleFile.set(variant.artifacts.get(ArtifactType.BUNDLE))
                     }
                 }
             }
@@ -77,7 +78,7 @@ class GetBundleTest: VariantApiBaseTest(TestType.Script)  {
 # Artifacts.get in Kotlin
 
 This sample shows how to obtain the bundle file from the AGP.
-The [onVariantProperties] block will wire the [DisplayBundleFile] input property (bundleFile) by using
+The [onVariants] block will wire the [DisplayBundleFile] input property (bundleFile) by using
 the Artifacts.get call with the right ArtifactType
 `bundleFile.set(artifacts.get(ArtifactType.BUNDLE))`
 ## To Run

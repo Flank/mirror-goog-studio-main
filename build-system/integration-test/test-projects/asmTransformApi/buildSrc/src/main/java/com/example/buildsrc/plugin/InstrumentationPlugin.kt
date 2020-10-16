@@ -16,7 +16,7 @@
 
 package com.example.buildsrc.plugin
 
-import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -44,25 +44,25 @@ class InstrumentationPlugin : Plugin<Project> {
             instrumentDependencies = true
         }
 
-        val androidExt = project.extensions.getByType(CommonExtension::class.java)
+        val androidComponentsExt = project.extensions.getByType(AndroidComponentsExtension::class.java)
         val instrumentationExtension =
             project.extensions.create("instrumentation", InstrumentationPluginExtension::class.java)
 
         if (interfaceVisitorFirst) {
-            registerInterfaceAddingVisitorFactory(androidExt, instrumentationExtension)
-            registerAnnotationAddingVisitorFactory(androidExt, instrumentationExtension)
+            registerInterfaceAddingVisitorFactory(androidComponentsExt, instrumentationExtension)
+            registerAnnotationAddingVisitorFactory(androidComponentsExt, instrumentationExtension)
         } else {
-            registerAnnotationAddingVisitorFactory(androidExt, instrumentationExtension)
-            registerInterfaceAddingVisitorFactory(androidExt, instrumentationExtension)
+            registerAnnotationAddingVisitorFactory(androidComponentsExt, instrumentationExtension)
+            registerInterfaceAddingVisitorFactory(androidComponentsExt, instrumentationExtension)
         }
     }
 
     private fun registerAnnotationAddingVisitorFactory(
-        androidExt: CommonExtension<*, *, *, *, *, *, *, *>,
+        androidComponentsExt: AndroidComponentsExtension<*, *>,
         instrumentationExtension: InstrumentationPluginExtension
     ) {
-        androidExt.onVariantProperties {
-            transformClassesWith(
+        androidComponentsExt.onVariants {
+            it.transformClassesWith(
                 AnnotationAddingClassVisitorFactory::class.java,
                 if (instrumentDependencies) InstrumentationScope.ALL
                 else InstrumentationScope.PROJECT
@@ -79,32 +79,30 @@ class InstrumentationPlugin : Plugin<Project> {
             }
         }
 
-        androidExt.onVariants {
-            unitTestProperties {
-                transformClassesWith(
-                    AnnotationAddingClassVisitorFactory::class.java,
-                    InstrumentationScope.PROJECT
-                ) { params ->
-                    params.methodNamesToBeAnnotated.setDisallowChanges(
-                        instrumentationExtension.annotationAddingConfig.methodNamesToBeAnnotated
-                    )
-                    params.interfacesNamesToBeInstrumented.setDisallowChanges(
-                        instrumentationExtension.annotationAddingConfig.interfacesNamesToBeInstrumented
-                    )
-                    params.annotationClassDescriptor.setDisallowChanges(
-                        instrumentedAnnotationDescriptor
-                    )
-                }
+        androidComponentsExt.unitTest {
+            it.transformClassesWith(
+                AnnotationAddingClassVisitorFactory::class.java,
+                InstrumentationScope.PROJECT
+            ) { params ->
+                params.methodNamesToBeAnnotated.setDisallowChanges(
+                    instrumentationExtension.annotationAddingConfig.methodNamesToBeAnnotated
+                )
+                params.interfacesNamesToBeInstrumented.setDisallowChanges(
+                    instrumentationExtension.annotationAddingConfig.interfacesNamesToBeInstrumented
+                )
+                params.annotationClassDescriptor.setDisallowChanges(
+                    instrumentedAnnotationDescriptor
+                )
             }
         }
     }
 
     private fun registerInterfaceAddingVisitorFactory(
-        androidExt: CommonExtension<*, *, *, *, *, *, *, *>,
+        androidComponentsExt: AndroidComponentsExtension<*, *>,
         instrumentationExtension: InstrumentationPluginExtension
     ) {
-        androidExt.onVariantProperties.withBuildType("debug") {
-            transformClassesWith(
+        androidComponentsExt.onVariants(androidComponentsExt.selector().withBuildType("debug")) {
+            it.transformClassesWith(
                 InterfaceAddingClassVisitorFactory::class.java,
                 if (instrumentDependencies) InstrumentationScope.ALL
                 else InstrumentationScope.PROJECT
@@ -119,22 +117,20 @@ class InstrumentationPlugin : Plugin<Project> {
             }
         }
 
-        androidExt.onVariants {
-            unitTestProperties {
-                transformClassesWith(
-                    InterfaceAddingClassVisitorFactory::class.java,
-                    InstrumentationScope.PROJECT
-                ) { params ->
-                    params.enabled.setDisallowChanges(
-                        instrumentationExtension.interfaceAddingConfig.enabled
-                    )
-                    params.classesToInstrument.setDisallowChanges(
-                        instrumentationExtension.interfaceAddingConfig.classesToInstrument
-                    )
-                    params.interfaceInternalName.setDisallowChanges(
-                        instrumentedInterfaceInternalName
-                    )
-                }
+        androidComponentsExt.unitTest {
+            it.transformClassesWith(
+                InterfaceAddingClassVisitorFactory::class.java,
+                InstrumentationScope.PROJECT
+            ) { params ->
+                params.enabled.setDisallowChanges(
+                    instrumentationExtension.interfaceAddingConfig.enabled
+                )
+                params.classesToInstrument.setDisallowChanges(
+                    instrumentationExtension.interfaceAddingConfig.classesToInstrument
+                )
+                params.interfaceInternalName.setDisallowChanges(
+                    instrumentedInterfaceInternalName
+                )
             }
         }
     }

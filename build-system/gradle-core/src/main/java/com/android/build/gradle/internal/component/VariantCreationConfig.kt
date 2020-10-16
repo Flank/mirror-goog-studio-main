@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.PackagingOptions
+import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.impl.ResValue
 import org.gradle.api.provider.MapProperty
 
@@ -28,7 +28,7 @@ interface VariantCreationConfig: ComponentCreationConfig {
 
     val resValues: MapProperty<ResValue.Key, ResValue>
 
-    val packagingOptions: PackagingOptions
+    val packaging: Packaging
 
     override val needsMainDexListForBundle: Boolean
 

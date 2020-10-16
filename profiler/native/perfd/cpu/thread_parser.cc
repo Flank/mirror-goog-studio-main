@@ -87,6 +87,17 @@ bool ParseThreadStat(int32_t tid, const string& content, char* state,
     return false;
   }
 
+  // The name can have multiple parentheses to ensure we have the outer most set
+  // we move to the first space after the closing ).
+  // Example (SomeThread(1))  S
+  //                        /\ - is the position
+  size_t space_after_closing_parentheses =
+      content.find_first_of(' ', right_parentheses);
+  if (space_after_closing_parentheses == string::npos) {
+    return false;
+  }
+  right_parentheses = space_after_closing_parentheses - 1;
+
   // Sanity check on tid.
   // TODO: Use std::stoi() after we use libc++, and remove '.c_str()'.
   int32_t tid_from_file = atoi(content.substr(0, left_parentheses - 1).c_str());
@@ -97,7 +108,7 @@ bool ParseThreadStat(int32_t tid, const string& content, char* state,
                          right_parentheses - left_parentheses - 1);
   // After right parenthese is a space. After the space it is a char standing
   // for state.
-  *state = content[right_parentheses + 2];
+  *state = content[space_after_closing_parentheses + 1];
   return true;
 }
 

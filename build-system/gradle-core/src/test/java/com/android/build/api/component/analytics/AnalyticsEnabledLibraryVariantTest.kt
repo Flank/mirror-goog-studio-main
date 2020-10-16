@@ -16,10 +16,10 @@
 
 package com.android.build.api.component.analytics
 
-import com.android.build.api.variant.JniLibsPackagingOptions
-import com.android.build.api.variant.LibraryPackagingOptions
+import com.android.build.api.variant.JniLibsPackaging
+import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
-import com.android.build.api.variant.ResourcesPackagingOptions
+import com.android.build.api.variant.ResourcesPackaging
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -59,15 +59,15 @@ class AnalyticsEnabledLibraryVariantTest {
 
     @Test
     fun getPackagingOptions() {
-        val packagingOptions = Mockito.mock(LibraryPackagingOptions::class.java)
-        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(LibraryPackaging::class.java)
+        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackaging::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
+        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
         // simulate a user configuring packaging options for jniLibs and resources
-        proxy.packagingOptions.jniLibs
-        proxy.packagingOptions.resources
+        proxy.packaging.jniLibs
+        proxy.packaging.resources
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
         Truth.assertThat(
@@ -80,22 +80,22 @@ class AnalyticsEnabledLibraryVariantTest {
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_VALUE
             )
         )
-        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
+        Mockito.verify(delegate, Mockito.times(1)).packaging
     }
 
     @Test
     fun packagingOptionsActions() {
-        val packagingOptions = Mockito.mock(LibraryPackagingOptions::class.java)
-        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackagingOptions::class.java)
-        val resourcesPackagingOptions = Mockito.mock(ResourcesPackagingOptions::class.java)
+        val packagingOptions = Mockito.mock(LibraryPackaging::class.java)
+        val jniLibsPackagingOptions = Mockito.mock(JniLibsPackaging::class.java)
+        val resourcesPackagingOptions = Mockito.mock(ResourcesPackaging::class.java)
         Mockito.`when`(packagingOptions.jniLibs).thenReturn(jniLibsPackagingOptions)
         Mockito.`when`(packagingOptions.resources).thenReturn(resourcesPackagingOptions)
-        Mockito.`when`(delegate.packagingOptions).thenReturn(packagingOptions)
-        val action: LibraryPackagingOptions.() -> Unit = {
+        Mockito.`when`(delegate.packaging).thenReturn(packagingOptions)
+        val action: LibraryPackaging.() -> Unit = {
             this.jniLibs {}
             this.resources {}
         }
-        proxy.packagingOptions(action)
+        proxy.packaging(action)
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(3)
         Truth.assertThat(
@@ -107,6 +107,6 @@ class AnalyticsEnabledLibraryVariantTest {
                 VariantPropertiesMethodType.RESOURCES_PACKAGING_OPTIONS_ACTION_VALUE
             )
         )
-        Mockito.verify(delegate, Mockito.times(1)).packagingOptions
+        Mockito.verify(delegate, Mockito.times(1)).packaging
     }
 }

@@ -17,11 +17,13 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_CORRUPTED
+import com.android.utils.cxx.CxxDiagnosticCode.ABI_IS_INVALID
 import java.io.File
 import java.io.FileFilter
 import java.io.FileReader
@@ -96,7 +98,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
     ): Int {
 
         val abi = Abi.getByName(abiName) ?: run {
-            errorln("Specified abi='$abiName' is not recognized.")
+            errorln(ABI_IS_INVALID, "Specified abi='$abiName' is not recognized.")
             // Fall back so that processing can continue after the error
             return sensibleDefaultPlatformApiVersionForErrorCase
         }
@@ -110,7 +112,10 @@ class PlatformConfigurator(private val ndkRoot: File) {
             // for that ABI
             val platformDir = FileUtils.join(ndkRoot, "platforms")
             if (!platformDir.isDirectory) {
-                warnln("NDK folder '$ndkRoot' specified does not contain 'platforms'.")
+                warnln(
+                    NDK_CORRUPTED,
+                    "NDK folder '$ndkRoot' specified does not contain 'platforms'."
+                )
                 // Fall back so that processing can continue after the error
                 return sensibleDefaultPlatformApiVersionForErrorCase
             }
@@ -264,7 +269,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
                 version
             }
         if (versions.isEmpty()) {
-            errorln("Abi '$abi' is not recognized in '$ndkRoot'.")
+            errorln(ABI_IS_INVALID, "Abi '$abi' is not recognized in '$ndkRoot'.")
             // This should be impossible but fall back to a sensible default
             return sensibleDefaultPlatformApiVersionForErrorCase
         }

@@ -246,7 +246,7 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.noCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
             task.aaptAdditionalParameters.setDisallowChanges(
-                creationConfig.aaptOptions.additionalParameters
+                creationConfig.aapt.additionalParameters
             )
 
             task.excludeResSourcesForReleaseBundles

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.packaging
 
-import com.android.build.api.variant.JniLibsPackagingOptions
+import com.android.build.api.variant.JniLibsPackaging
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.ANDROIDTEST_DEBUG
@@ -34,7 +34,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
- * Integration tests for [JniLibsPackagingOptions]
+ * Integration tests for [JniLibsPackaging]
  */
 class NativeSoPackagingOptionsTest {
 
@@ -50,21 +50,21 @@ class NativeSoPackagingOptionsTest {
                                 useLegacyPackaging = true
                             }
                         }
-                        onVariantProperties.withName('debug') {
-                            packagingOptions.jniLibs.excludes.add('**/debugExclude.so')
-                        }
-                        onVariantProperties.withName('release') {
-                            packagingOptions.jniLibs.excludes.add('**/releaseExclude.so')
-                            packagingOptions.jniLibs.useLegacyPackaging.set(false)
-                        }
-                        onVariantProperties {
-                            packagingOptions.jniLibs.pickFirsts.add('**/variantPickFirst.so')
-                        }
-                        onVariants {
-                            androidTestProperties {
-                                packagingOptions.jniLibs.excludes.add('**/testExclude.so')
-                            }
-                        }
+                    }
+                    androidComponents {
+                        onVariants(selector().withName('debug'), {
+                            packaging.jniLibs.excludes.add('**/debugExclude.so')
+                        })
+                        onVariants(selector().withName('release'), {
+                            packaging.jniLibs.excludes.add('**/releaseExclude.so')
+                            packaging.jniLibs.useLegacyPackaging.set(false)
+                        })
+                        onVariants(selector().all(), {
+                            packaging.jniLibs.pickFirsts.add('**/variantPickFirst.so')
+                        })
+                        androidTest(selector().all(), {
+                            packaging.jniLibs.excludes.add('**/testExclude.so')
+                        })
                     }
                     """.trimIndent()
             ).withFile("src/main/jniLibs/x86/appKeep.so", "foo")
@@ -82,14 +82,14 @@ class NativeSoPackagingOptionsTest {
                 """
                     android {
                         packagingOptions.jniLibs.excludes += '**/dslExclude.so'
-                        onVariantProperties {
-                            packagingOptions.jniLibs.excludes.add('**/libExclude.so')
-                        }
-                        onVariants {
-                            androidTestProperties {
-                                packagingOptions.jniLibs.excludes.add('**/testExclude.so')
-                            }
-                        }
+                    }
+                    androidComponents {
+                        onVariants(selector().all(), {
+                            packaging.jniLibs.excludes.add('**/libExclude.so')
+                        })
+                        androidTest(selector().all(), {
+                            packaging.jniLibs.excludes.add('**/testExclude.so')
+                        })
                     }
                     """.trimIndent()
             ).withFile("src/main/jniLibs/x86/libKeep.so", "bar")

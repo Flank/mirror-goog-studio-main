@@ -1,0 +1,2 @@
+#Ensure the files are read in the same way on all platforms
+*.xml -text

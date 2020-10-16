@@ -67,6 +67,7 @@ public class LintCliFlags {
     private List<File> classes;
     private List<File> libraries;
     private List<File> resources;
+    private List<File> lintRuleJars;
     private String compileSdkVersion;
     private File baselineFile;
 
@@ -77,6 +78,7 @@ public class LintCliFlags {
     private boolean writeBaselineIfMissing = true;
     private boolean updateBaseline;
     private boolean autoFix = VALUE_TRUE.equals(System.getProperty("lint.autofix"));
+    private boolean abortOnAutoFix;
     private boolean includeXmlFixes;
     private boolean allowSuppress;
 
@@ -491,6 +493,17 @@ public class LintCliFlags {
         this.resources = resources;
     }
 
+    /** Gets the optional <b>manual override</b> of lint rule jars. Normally null. */
+    @Nullable
+    public List<File> getLintRuleJarsOverride() {
+        return lintRuleJars;
+    }
+
+    /** Sets the optional <b>manual override</b> of lint rule jars. Normally null. */
+    public void setLintRuleJarsOverride(@Nullable List<File> lintRuleJars) {
+        this.lintRuleJars = lintRuleJars;
+    }
+
     /**
      * Gets the optional <b>manual override</b> of the project hierarchy. Normally null.
      *
@@ -668,6 +681,14 @@ public class LintCliFlags {
     /** Sets whether to apply safe suggestions */
     public void setAutoFix(boolean autoFix) {
         this.autoFix = autoFix;
+    }
+
+    public boolean isAbortOnAutoFix() {
+        return abortOnAutoFix;
+    }
+
+    public void setAbortOnAutoFix(boolean abortOnAutoFix) {
+        this.abortOnAutoFix = abortOnAutoFix;
     }
 
     /** Whether XML reports should include descriptions of the quickfixes */

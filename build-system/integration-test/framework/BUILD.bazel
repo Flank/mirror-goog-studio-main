@@ -7,7 +7,7 @@ kotlin_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    lint_baseline = "//tools/base/lint:studio-checks/empty_baseline.xml",
+    lint_baseline = "lint_baseline.xml",
     visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",

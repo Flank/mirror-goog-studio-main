@@ -52,7 +52,19 @@ class GetApksTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Groovy)
                 testingElements.addManifest(this)
             }
         }
+        withDocs {
+            index =
+                    // language=markdown
+                    """
+# Test get operation
 
+This sample shows how to use the get operation, which provides the final version of the artifact.
+It shows the location of the apk for the all variants.
+
+## To Run
+./gradlew debugDisplayApks
+            """.trimIndent()
+        }
         check {
             assertNotNull(this)
             Truth.assertThat(output).contains("Got an APK")

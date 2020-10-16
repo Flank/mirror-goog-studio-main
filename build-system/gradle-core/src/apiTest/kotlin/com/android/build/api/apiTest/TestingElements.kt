@@ -59,7 +59,7 @@ class TestingElements(val language: ScriptingLanguage) {
             """
             import org.gradle.api.DefaultTask
             import org.gradle.api.file.RegularFileProperty
-            import org.gradle.api.tasks.InputFile 
+            import org.gradle.api.tasks.InputFile
             import org.gradle.api.tasks.OutputFile
             import org.gradle.api.tasks.TaskAction
             ${getGitVersionManifestTransformerTask()}
@@ -214,7 +214,7 @@ class TestingElements(val language: ScriptingLanguage) {
                 @TaskAction
                 fun taskAction() {
 
-                    // this would be the code to get the tip of tree version, 
+                    // this would be the code to get the tip of tree version,
                     // val firstProcess = ProcessBuilder("git","rev-parse --short HEAD").start()
                     // val error = firstProcess.errorStream.readBytes().decodeToString()
                     // if (error.isNotBlank()) {
@@ -222,7 +222,7 @@ class TestingElements(val language: ScriptingLanguage) {
                     // }
                     // var gitVersion = firstProcess.inputStream.readBytes().decodeToString()
 
-                    // but here, we are just hardcoding : 
+                    // but here, we are just hardcoding :
                     gitVersionOutputFile.get().asFile.writeText("1234")
                 }
             }
@@ -307,7 +307,7 @@ fun getManifestProducerTask() =
 
                 @TaskAction
                 void taskAction() {
-                    String manifest = '''<?xml version=\"1.0\" encoding=\"utf-8\"?>
+                    String manifest = ""${'"'}<?xml version="1.0" encoding="utf-8"?>
                     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                         package="com.android.build.example.minimal"
                         android:versionName="${'$'}{new String(getGitInfoFile().get().asFile.readBytes())}"
@@ -322,7 +322,7 @@ fun getManifestProducerTask() =
                             </activity>
                         </application>
                     </manifest>
-                        '''
+                        ""${'"'}
                     println("Writes to " + getOutputManifest().get().getAsFile().getAbsolutePath())
                     getOutputManifest().get().getAsFile().write(manifest)
                 }
@@ -522,7 +522,7 @@ fun getManifestProducerTask() =
             import com.android.build.api.artifact.ArtifactType
             import com.android.build.api.variant.BuiltArtifacts
             import org.gradle.api.provider.Property
-            import org.gradle.api.tasks.Internal 
+            import org.gradle.api.tasks.Internal
 
             abstract class DisplayApksTask extends DefaultTask {
 
@@ -584,7 +584,7 @@ fun getManifestProducerTask() =
                     Files.copy(
                         workItemParameters.getInputApkFile().getAsFile().get().toPath(),
                         workItemParameters.getOutputApkFile().get().getAsFile().toPath())
-                } 
+                }
             }
 
             abstract class CopyApksTask extends DefaultTask {
@@ -654,12 +654,12 @@ fun getManifestProducerTask() =
                 fun taskAction() {
 
                   transformationRequest.get().submit(
-                     this, 
+                     this,
                      workers.noIsolation(),
                      WorkItem::class.java) {
-                         builtArtifact: BuiltArtifact, 
-                         outputLocation: Directory, 
-                         param: WorkItemParameters -> 
+                         builtArtifact: BuiltArtifact,
+                         outputLocation: Directory,
+                         param: WorkItemParameters ->
                             val inputFile = File(builtArtifact.outputFile)
                             param.inputApkFile.set(inputFile)
                             param.outputApkFile.set(File(outputLocation.asFile, inputFile.name))
