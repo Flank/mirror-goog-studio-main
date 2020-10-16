@@ -106,6 +106,7 @@ public class CmakeStlMatrixTest {
                         + "        buildToolsVersion \""
                         + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                         + "\"\n"
+                        + "        lintOptions.checkReleaseBuilds = false // See b/160392650\n"
                         + "        defaultConfig {\n"
                         + "          externalNativeBuild {\n"
                         + "              cmake {\n"

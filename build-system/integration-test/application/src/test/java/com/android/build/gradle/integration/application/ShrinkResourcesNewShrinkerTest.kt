@@ -44,7 +44,7 @@ class ShrinkResourcesNewShrinkerTest {
     var project = builder().fromTestProject("shrink")
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // http://b/149978740
-        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=20")
+        .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=4")
         .create()
 
     @get:Rule

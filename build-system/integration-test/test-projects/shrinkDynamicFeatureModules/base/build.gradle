@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion rootProject.buildToolsVersion
+    lintOptions.checkReleaseBuilds = false // See b/160392650
 
     defaultConfig {
         applicationId "com.android.tests.shrink"

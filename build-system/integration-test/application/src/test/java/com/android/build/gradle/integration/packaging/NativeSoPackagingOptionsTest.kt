@@ -43,6 +43,9 @@ class NativeSoPackagingOptionsTest {
             .appendToBuild(
                 """
                     android {
+                        lintOptions {
+                            checkReleaseBuilds = false // TODO(b/146208910): Lint is not compatible with instant execution
+                        }   
                         packagingOptions {
                             jniLibs {
                                 excludes += '**/dslExclude.so'
@@ -81,6 +84,7 @@ class NativeSoPackagingOptionsTest {
             .appendToBuild(
                 """
                     android {
+                        lintOptions.checkReleaseBuilds = false // TODO(b/146208910): Lint is not compatible with instant execution
                         packagingOptions.jniLibs.excludes += '**/dslExclude.so'
                         onVariantProperties {
                             packagingOptions.jniLibs.excludes.add('**/libExclude.so')
@@ -114,7 +118,7 @@ class NativeSoPackagingOptionsTest {
             .fromTestApp(multiModuleTestProject)
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
             // b/149978740, b/146208910
-            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
+            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
             .create()
 
     @Test
