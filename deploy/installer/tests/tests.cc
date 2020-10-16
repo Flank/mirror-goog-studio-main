@@ -87,10 +87,10 @@ class GetProcessInfoExecutor : public Executor {
 class InstallerTest : public ::testing::Test {};
 
 TEST_F(InstallerTest, TestGetProcessInfo) {
-  Executor* exec = new GetProcessInfoExecutor(
+  GetProcessInfoExecutor exec(
       "tools/base/deploy/installer/tests/data/dumpOutput.txt");
   Workspace workspace("fakeversion");
-  CmdCommand cmd(workspace, *exec);
+  CmdCommand cmd(workspace, exec);
 
   std::vector<ProcessRecord> records;
   ASSERT_TRUE(cmd.GetProcessInfo("com.noah.clr", &records));
