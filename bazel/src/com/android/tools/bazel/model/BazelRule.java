@@ -84,7 +84,7 @@ public abstract class BazelRule {
     }
 
     boolean shouldUpdate() throws IOException {
-        CallStatement call = pkg.getBuildFile().getCall(name, "");
+        CallStatement call = pkg.getBuildFile().getCall(name);
         return (call == null) || !call.getPreComments().stream().anyMatch(
             (s) -> s.toLowerCase().contains("do not generate"));
     }
@@ -98,10 +98,10 @@ public abstract class BazelRule {
      * Gets the statement in the BUILD file that represents this rule. If the rule doesn't exist in
      * the BUILD file, a new one is created.
      */
-    protected final CallStatement getCallStatement(String type, String name, String id)
+    protected final CallStatement getCallStatement(String type, String name)
             throws IOException {
         Build build = pkg.getBuildFile();
-        CallStatement call = build.getCall(name, id);
+        CallStatement call = build.getCall(name);
         if (call == null) {
             call = new CallStatement(CallExpression.build(type, ImmutableMap.of("name", name)));
             build.addStatement(call);

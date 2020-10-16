@@ -96,7 +96,7 @@ public class Package {
         }
 
         if (buildFile != null) {
-            buildFile.hideNotUpdatedManagedStatements(workspace.id());
+            buildFile.hideNotUpdatedManagedStatements();
             File tmp = File.createTempFile("BUILD", "test");
             boolean keepFile = false;
             try {

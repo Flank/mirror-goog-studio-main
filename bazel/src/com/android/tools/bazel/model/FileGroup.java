@@ -32,8 +32,7 @@ public class FileGroup extends BazelRule {
 
     @Override
     public void update() throws IOException {
-        String id = getPackage().getWorkspace().id();
-        CallStatement statement = getCallStatement("filegroup", name, id);
+        CallStatement statement = getCallStatement("filegroup", name);
 
         CallExpression call = statement.getCall();
         call.setArgument("srcs", sources);
@@ -44,7 +43,7 @@ public class FileGroup extends BazelRule {
         String reason = "must match IML order";
         call.setDoNotSort("srcs", reason);
 
-        statement.setIsManaged(id);
+        statement.setIsManaged();
     }
 
     public void addSource(String source) {

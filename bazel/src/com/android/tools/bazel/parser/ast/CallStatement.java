@@ -56,22 +56,19 @@ public class CallStatement extends Statement {
         return updated;
     }
 
-    public boolean isManaged(String owner) {
-        return preComments.stream().anyMatch(s -> s.toLowerCase().equals(managedMark(owner)));
+    public boolean isManaged() {
+        return preComments.stream().anyMatch(s -> s.toLowerCase().contains(managedMark()));
     }
 
-    public void setIsManaged(String owner) {
-        if (!isManaged(owner)) {
-            preComments.add(managedMark(owner));
+    public void setIsManaged() {
+        if (isManaged()) {
+            preComments.clear();
         }
+        preComments.add(managedMark() + "\n");
         updated = true;
     }
 
-    private static String managedMark(String owner) {
-        String m = "managed by go/iml_to_build";
-        if (!owner.isEmpty()) {
-            m += " [" + owner + "]";
-        }
-        return "# " + m + "\n";
+    private static String managedMark() {
+        return "# managed by go/iml_to_build";
     }
 }

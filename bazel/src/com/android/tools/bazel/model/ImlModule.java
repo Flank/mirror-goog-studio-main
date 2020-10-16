@@ -52,14 +52,12 @@ public class ImlModule extends BazelRule {
 
     @Override
     public void update() throws IOException {
-        String id = getPackage().getWorkspace().id();
-        CallStatement statement = getCallStatement("iml_module", name, id);
+        CallStatement statement = getCallStatement("iml_module", name);
         if (getLoad(statement) == null) {
             addLoad("//tools/base/bazel:bazel.bzl", statement);
         }
 
         CallExpression call = statement.getCall();
-        call.setArgument("project", id);
         call.setArgument("srcs", sources);
         call.setArgument("test_srcs", testSources);
         call.setArgument("exclude", exclude);
@@ -87,7 +85,7 @@ public class ImlModule extends BazelRule {
         call.setDoNotSort("test_runtime_deps", reason);
         call.setDoNotSort("test_friends", reason);
 
-        statement.setIsManaged(id);
+        statement.setIsManaged();
     }
 
     private List<String> tagDependencies(Set<BazelRule> dependencies) {

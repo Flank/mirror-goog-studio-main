@@ -34,21 +34,15 @@ public class Workspace {
     private final File directory;
 
     private final Map<String, Package> packages = Maps.newLinkedHashMap();
-    private final String id;
 
-    public Workspace(File directory, String id) {
+    public Workspace(File directory) {
         this.directory = directory;
-        this.id = id;
     }
 
     public void generate(GenerationListener listener) throws IOException {
         for (Package pkg : packages.values()) {
             pkg.generate(listener);
         }
-    }
-
-    public String id() {
-        return this.id;
     }
 
     public Package getPackage(String name) {
