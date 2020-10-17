@@ -87,7 +87,6 @@ class UtpTestRunner @JvmOverloads constructor(
                             utpOutputDir,
                             utpTmpDir,
                             utpTestLogDir,
-                            utpTestRunLogDir,
                             retentionConfig).writeTo(writer)
                 }
             }
