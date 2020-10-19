@@ -333,8 +333,9 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       copyNewProperty(androidLibrary::getBuildId)
     )
     // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
-    return (buildFolderPath != null
-            && !FileUtils.isFileInDirectory(androidLibrary.bundle, buildFolderPath))
+    return (buildFolderPath != null &&
+            // Comparing two absolute paths received from Gradle and thus they don't need canonicalization.
+            !androidLibrary.bundle.path.startsWith(buildFolderPath.path))
   }
 
   fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
