@@ -22,6 +22,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Locale;
+import java.util.concurrent.locks.ReentrantLock;
 
 /** An abstraction layer over SocketChannel with timeout on both read and write. */
 class AdbInstallerChannel implements AutoCloseable {
@@ -33,6 +34,8 @@ class AdbInstallerChannel implements AutoCloseable {
 
     private final Selector writeSelector;
     private final SelectionKey writeKey;
+
+    private final ReentrantLock lock = new ReentrantLock(true);
 
     AdbInstallerChannel(SocketChannel c) throws IOException {
         channel = c;
@@ -54,6 +57,7 @@ class AdbInstallerChannel implements AutoCloseable {
      * @throws IOException If not enough data could be read from the socket before timeout.
      */
     void read(ByteBuffer buffer, long timeOutMs) throws IOException {
+        checkLock();
         while (buffer.remaining() != 0) {
             readSelector.select(timeOutMs);
             if (!readKey.isReadable()) {
@@ -87,6 +91,7 @@ class AdbInstallerChannel implements AutoCloseable {
      *     remotely closed
      */
     void write(ByteBuffer buffer, long timeOutMs) throws IOException {
+        checkLock();
         while (buffer.remaining() != 0) {
             writeSelector.select(timeOutMs);
             if (!writeKey.isWritable()) {
@@ -106,5 +111,19 @@ class AdbInstallerChannel implements AutoCloseable {
         try (Channel c = channel;
                 Selector r = readSelector;
                 Selector w = writeSelector) {}
+    }
+
+    public void lock() {
+        lock.lock();
+    }
+
+    public void unlock() {
+        lock.unlock();
+    }
+
+    public void checkLock() {
+        if (!lock.isHeldByCurrentThread()) {
+            throw new IllegalStateException("Channel lock must be acquired before read/write");
+        }
     }
 }

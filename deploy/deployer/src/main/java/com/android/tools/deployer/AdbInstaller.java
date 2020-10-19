@@ -288,8 +288,14 @@ public class AdbInstaller implements Installer {
 
         long timeOutMs = timeUnit.toMillis(timeOut);
         AdbInstallerChannel channel = channelsProvider.getChannel(adb, getVersion());
-        if (writeRequest(channel, request, timeOutMs)) {
-            response = readResponse(channel, timeOutMs);
+
+        channel.lock();
+        try {
+            if (writeRequest(channel, request, timeOutMs)) {
+                response = readResponse(channel, timeOutMs);
+            }
+        } finally {
+            channel.unlock();
         }
 
         // Handle the case where the executable is not present on the device.
