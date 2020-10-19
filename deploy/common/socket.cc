@@ -100,23 +100,25 @@ bool Socket::BindAndListen(const std::string& socket_name) {
   return true;
 }
 
-bool Socket::Accept(Socket* socket, int timeout_ms) {
+std::unique_ptr<Socket> Socket::Accept(int timeout_ms) {
   if (fd_ == -1) {
-    return false;
-  }
-
-  // If the other socket has already been opened, don't modify it.
-  if (socket->fd_ != -1) {
-    return false;
+    ErrEvent("Attempt to Accept() before Open()");
+    return nullptr;
   }
 
   pollfd pfd = {fd_, POLLIN, 0};
   if (poll(&pfd, 1, timeout_ms) != 1) {
-    return false;
+    ErrEvent("poll() before accept() timeout");
+    return nullptr;
   }
 
-  socket->fd_ = accept(fd_, NULL, NULL);
-  return socket->fd_ != -1;
+  std::unique_ptr<Socket> s(new Socket());
+  s->fd_ = accept(fd_, NULL, NULL);
+  if (s->fd_ == -1) {
+    return nullptr;
+  }
+
+  return s;
 }
 
 bool Socket::Connect(const std::string& socket_name) {

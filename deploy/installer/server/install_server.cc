@@ -186,10 +186,10 @@ void InstallServer::HandleSendMessageInner(
   const std::string request_bytes = request.agent_request().SerializeAsString();
   std::vector<std::unique_ptr<Socket>> agents;
   for (int i = 0; i < request.agent_count(); ++i) {
-    std::unique_ptr<Socket> agent(new Socket);
+    std::unique_ptr<Socket> agent;
     // 15 seconds since there is a chance we need to wait for the
     // host to attach an agent from the debugger.
-    if (!agent_server_.Accept(agent.get(), 15000)) {
+    if ((agent = agent_server_.Accept(15000)) == nullptr) {
       response->set_status(
           proto::SendAgentMessageResponse::AGENT_ACCEPT_FAILED);
       return;
