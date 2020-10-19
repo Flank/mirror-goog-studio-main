@@ -67,7 +67,7 @@ maven_repo(
     # keep sorted
     artifacts = [
         "//prebuilts/tools/common/m2/repository/de/undercouch/gradle-download-task/4.0.2:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/jvm/org.jetbrains.kotlin.jvm.gradle.plugin/1.4.10:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/jvm/org.jetbrains.kotlin.jvm.gradle.plugin/1.4.20:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.4.20:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.4.20:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.4.20:jar",
