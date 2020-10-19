@@ -223,7 +223,6 @@ class CoreLibraryDesugarTest {
     }
 
     @Test
-    @Ignore // TODO(b/168864902) Update to work on SDK 30
     fun testModelLintFileFetching() {
         var model = app.model().fetchAndroidProjects().rootBuildModelMap[":app"]
         Truth.assertThat(model!!.variants.first().desugaredMethods)
