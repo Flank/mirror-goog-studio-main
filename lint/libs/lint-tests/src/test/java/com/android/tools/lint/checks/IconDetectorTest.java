@@ -1090,7 +1090,7 @@ public class IconDetectorTest extends AbstractCheckTest {
     public void testWebpEligible() {
         String expected =
                 ""
-                        + "res/drawable-mdpi/random.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion (but launcher icons should use PNG) [ConvertToWebp]\n"
+                        + "res/drawable-mdpi/random.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion [ConvertToWebp]\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
                         manifest().minSdk(18),
@@ -1105,16 +1105,22 @@ public class IconDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest().minSdk(18),
                         image("res/drawable-mdpi/ic_launcher.png", 48, 48)
+                                .fill(10, 10, 20, 20, 0xFF00FFFF),
+                        image("res/drawable-mdpi/ic_launcher_foreground.png", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF))
                 .issues(WEBP_ELIGIBLE)
                 .run()
-                .expectClean();
+                // Normal launcher icons can be converted; not layer ones
+                .expect(
+                        ""
+                                + "res/drawable-mdpi/ic_launcher.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion [ConvertToWebp]\n"
+                                + "0 errors, 1 warnings");
     }
 
     public void testWebpUnsupported() {
         String expected =
                 ""
-                        + "res/drawable-mdpi/ic_launcher.webp: Error: Launcher icons must be in PNG format [WebpUnsupported]\n"
+                        + "res/drawable-mdpi/ic_launcher.webp: Error: WebP requires Android 4.0 (API 15); current minSdkVersion is 10 [WebpUnsupported]\n"
                         + "res/mipmap-mdpi/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 10 [WebpUnsupported]\n"
                         + "res/drawable-mdpi-v13/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 13 [WebpUnsupported]\n"
                         + "res/drawable-mdpi/my_lossy.webp: Error: WebP requires Android 4.0 (API 15); current minSdkVersion is 10 [WebpUnsupported]\n"
