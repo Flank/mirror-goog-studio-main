@@ -151,7 +151,7 @@ class ApplicationTaskManager(
      * but we still have an XML resource packaged, and a custom entry in the manifest. This is
      * triggered by passing a null [Configuration] object.
      *
-     * @param variantProperties the variant scope
+     * @param appVariant the variant scope
      * @param config an optional Configuration object. if non null, this will embed the micro apk,
      * if null this will trigger the unbundled mode.
      */

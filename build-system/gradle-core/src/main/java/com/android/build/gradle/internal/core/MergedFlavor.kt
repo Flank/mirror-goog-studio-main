@@ -45,7 +45,7 @@ class MergedFlavor(
             // consider throwing an exception instead, as this is not reliable.
             dslServices.deprecationReporter
                 .reportDeprecatedApi(
-                    "VariantProperties.getApplicationId()",
+                    "Variant.getApplicationId()",
                     "MergedFlavor.getApplicationId()",
                     BaseVariantImpl.USE_PROPERTIES_DEPRECATION_URL,
                     DeprecationReporter.DeprecationTarget.USE_PROPERTIES
