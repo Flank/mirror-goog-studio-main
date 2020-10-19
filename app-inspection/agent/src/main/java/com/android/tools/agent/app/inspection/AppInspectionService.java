@@ -17,21 +17,14 @@
 package com.android.tools.agent.app.inspection;
 
 import static com.android.tools.agent.app.inspection.InspectorContext.CrashListener;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendCrashEvent;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseError;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseLibraryMissing;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseSuccess;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendCreateInspectorResponseVersionIncompatible;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendDisposeInspectorResponseError;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendDisposeInspectorResponseSuccess;
-import static com.android.tools.agent.app.inspection.NativeTransport.sendRawResponseError;
+import static com.android.tools.agent.app.inspection.NativeTransport.*;
 
 import androidx.inspection.ArtTooling;
 import androidx.inspection.ArtTooling.EntryHook;
 import androidx.inspection.ArtTooling.ExitHook;
 import com.android.tools.agent.app.inspection.version.ArtifactCoordinate;
-import com.android.tools.agent.app.inspection.version.VersionChecker;
-import com.android.tools.agent.app.inspection.version.VersionCheckerResult;
+import com.android.tools.agent.app.inspection.version.CompatibilityChecker;
+import com.android.tools.agent.app.inspection.version.CompatibilityCheckerResult;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +43,7 @@ import java.util.function.Function;
 // Suppress rawtypes: Service doesn't care about specific types, works with Objects
 @SuppressWarnings({"Convert2Lambda", "unused", "rawtypes"})
 public class AppInspectionService {
+
     private static AppInspectionService sInstance;
 
     public static AppInspectionService instance() {
@@ -90,7 +84,7 @@ public class AppInspectionService {
                 }
             };
 
-    private final VersionChecker versionChecker = new VersionChecker();
+    private final CompatibilityChecker mCompatibilityChecker = new CompatibilityChecker();
 
     /**
      * Construct an instance referencing some native (JVMTI) resources.
@@ -211,9 +205,10 @@ public class AppInspectionService {
      */
     public void getLibraryCompatibilityInfoCommand(
             int commandId, ArtifactCoordinate[] coordinates) {
-        List<VersionCheckerResult> results = new ArrayList<>();
+        List<CompatibilityCheckerResult> results = new ArrayList<>();
         for (ArtifactCoordinate coordinate : coordinates) {
-            VersionCheckerResult result = versionChecker.checkVersion(coordinate);
+            CompatibilityCheckerResult result =
+                    mCompatibilityChecker.checkCompatibility(coordinate);
             results.add(result);
         }
         NativeTransport.sendGetLibraryCompatibilityInfoResponse(
@@ -250,15 +245,23 @@ public class AppInspectionService {
         if (libraryCoordinate == null) {
             return true;
         }
-        VersionCheckerResult versionResult = versionChecker.checkVersion(libraryCoordinate);
-        if (versionResult.status == VersionCheckerResult.Status.INCOMPATIBLE) {
+        CompatibilityCheckerResult versionResult =
+                mCompatibilityChecker.checkCompatibility(libraryCoordinate);
+        if (versionResult.status == CompatibilityCheckerResult.Status.INCOMPATIBLE) {
             sendCreateInspectorResponseVersionIncompatible(commandId, versionResult.message);
             return false;
-        } else if (versionResult.status == VersionCheckerResult.Status.NOT_FOUND) {
+        } else if (versionResult.status == CompatibilityCheckerResult.Status.NOT_FOUND) {
             sendCreateInspectorResponseLibraryMissing(commandId, versionResult.message);
             return false;
-        } else if (versionResult.status == VersionCheckerResult.Status.ERROR) {
+        } else if (versionResult.status == CompatibilityCheckerResult.Status.ERROR) {
             sendCreateInspectorResponseError(commandId, versionResult.message);
+            return false;
+        } else if ("androidx.work".equals(libraryCoordinate.groupId)) {
+            // TODO: Temporary. Remove it once 'androidx.work:work-runtime:2.5.0-beta02'
+            // is released
+            return true;
+        } else if (versionResult.status == CompatibilityCheckerResult.Status.PROGUARDED) {
+            sendCreateInspectorResponseAppProguarded(commandId, versionResult.message);
             return false;
         }
         return true;

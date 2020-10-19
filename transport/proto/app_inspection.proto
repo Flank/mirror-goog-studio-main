@@ -149,6 +149,8 @@ message CreateInspectorResponse {
     VERSION_INCOMPATIBLE = 2;
     // The targeted library is not found in the app.
     LIBRARY_MISSING = 3;
+    // The target app is proguarded, library inspectors can't safely run.
+    APP_PROGUARDED = 4;
   }
   Status status = 1;
 }
@@ -162,7 +164,8 @@ message LibraryCompatibilityInfo {
     COMPATIBLE = 0;
     INCOMPATIBLE = 1;
     LIBRARY_MISSING = 2;
-    SERVICE_ERROR = 3;
+    APP_PROGUARDED = 3;
+    SERVICE_ERROR = 4;
   }
   Status status = 1;
   ArtifactCoordinate target_library = 2;

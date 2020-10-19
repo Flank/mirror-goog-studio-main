@@ -22,11 +22,11 @@ package com.android.tools.agent.app.inspection.version;
  * <p>Note: This data structure is also initialized and used in the JNI layer. Changes to this may
  * require updating app_inspection_agent_command.cc.
  */
-public class ArtifactCoordinate {
+public final class ArtifactCoordinate {
 
-    String groupId;
-    String artifactId;
-    String version;
+    public final String groupId;
+    public final String artifactId;
+    public final String version;
 
     public ArtifactCoordinate(String groupId, String artifactId, String version) {
         this.groupId = groupId;
