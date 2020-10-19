@@ -39,7 +39,7 @@ fun blankActivityXml(
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="@dimen/inner_frame_layout_padding"
-        app:boxedEdges="all">
+        app:${if (useAndroidX) "layout_" else ""}boxedEdges="all">
 
         <TextView
             android:id="@+id/text"

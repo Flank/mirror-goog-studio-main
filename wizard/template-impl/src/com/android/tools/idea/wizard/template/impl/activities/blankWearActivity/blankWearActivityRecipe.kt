@@ -49,7 +49,7 @@ fun RecipeExecutor.blankWearActivityRecipe(
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXmlRound(), resOut.resolve("values-round/strings.xml"))
   save(blankActivityXml(activityClass, packageName, useAndroidX), resOut.resolve("layout/${layoutName}.xml"))
-  addDependency("com.android.support:wear:+")
+  addDependency("com.android.support:wear:+", minRev = if (useAndroidX) "1.1.0" else null)
 
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val blankActivity = when (projectData.language) {
