@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantHelper;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidArtifact;
@@ -39,8 +40,10 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildInformation;
+import com.android.testutils.truth.FileSubject;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -156,5 +159,26 @@ public class FlavorsTest {
                         .isNotNull();
             }
         }
+    }
+
+    @Test
+    public void checkFlavorSanitization() throws IOException, InterruptedException {
+        TestFileUtils.searchAndReplace(project.getBuildFile(), "group1", "foo.bar");
+
+        TestFileUtils.searchAndReplace(
+                project.file("src/main/java/com/android/tests/flavors/MainActivity.java"),
+                "FLAVOR_group1",
+                "FLAVOR_foo_bar");
+
+        project.executor().run("assembleDebug");
+
+        FileSubject.assertThat(
+                        project.file(
+                                "build/generated/source/buildConfig/f1Fa/debug/com/android/tests/flavors/BuildConfig.java"))
+                .contains("// From flavor dimension foo.bar");
+        FileSubject.assertThat(
+                        project.file(
+                                "build/generated/source/buildConfig/f1Fa/debug/com/android/tests/flavors/BuildConfig.java"))
+                .doesNotContain("// From flavor dimension group2");
     }
 }
