@@ -39,6 +39,22 @@ class BuiltArtifactsImpl(
     override val elements: Collection<BuiltArtifactImpl>)
     : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
+    init {
+        val (files, directories)  = elements
+                .asSequence()
+                .map { File(it.outputFile) }
+                .filter { it.exists() }
+                .partition { it.isFile }
+        if (files.isNotEmpty() && directories.isNotEmpty()) {
+                        throw IllegalArgumentException("""
+                You cannot store both files and directories as a single artifact.
+                ${display(files, "file", "files")}
+                ${display(directories, "directory", "directories")}
+            """.trimIndent())
+        }
+
+    }
+
     companion object {
         const val METADATA_FILE_NAME = "output-metadata.json"
     }
@@ -90,5 +106,11 @@ class BuiltArtifactsImpl(
                     )
                 }
             .toList()))
+    }
+
+    private fun display(files: Collection<File>, singular: String, plural: String): String {
+        return if (files.size > 1)
+            "${files.joinToString(",") { it.name }} are $plural"
+        else "${files.first().name} is a $singular"
     }
 }
