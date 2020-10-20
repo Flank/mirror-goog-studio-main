@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.integration.lint
 
+import com.android.Version
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
 import com.android.testutils.TestUtils
@@ -115,6 +116,9 @@ class LintModelIntegrationTest {
             for (repository in localRepositories) {
                 put(repository, "${"$"}{mavenRepo}")
             }
+            put(
+                "gradle=\"${Version.ANDROID_GRADLE_PLUGIN_VERSION}\"",
+                "gradle=\"${"$"}androidGradlePluginVersion\"")
             put(File.separator, "/")
             put(File.pathSeparator, ":")
         })
