@@ -46,5 +46,11 @@ data class GenericBuiltArtifacts(
     /**
      * Returns the [Collection] of [GenericBuiltArtifact].
      */
-    val elements: Collection<GenericBuiltArtifact>
+    val elements: Collection<GenericBuiltArtifact>,
+
+    /**
+     *  Type of file stored in [elements], can be "File" or "Directory", or null if there are
+     *  no elements.
+     */
+    val elementType: String?
 ): CommonBuiltArtifacts

@@ -20,6 +20,7 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.ide.common.build.GenericBuiltArtifactsLoader
 import com.android.utils.NullLogger
 import com.google.common.truth.Truth
@@ -48,7 +49,7 @@ class BuiltArtifactsImplTest {
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl.make(
-                    outputFile = File(outputFolder, "file1.apk").absolutePath,
+                    outputFile = createOutputFile(outputFolder, "file1.apk").absolutePath,
                     versionCode = 123,
                     versionName = "version_name"
                 )
@@ -60,7 +61,7 @@ class BuiltArtifactsImplTest {
         val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
         Truth.assertThat(jsonContent).isEqualTo(
             """{
-  "version": 2,
+  "version": 3,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
@@ -75,7 +76,51 @@ class BuiltArtifactsImplTest {
       "versionName": "version_name",
       "outputFile": "file1.apk"
     }
-  ]
+  ],
+  "elementType": "File"
+}"""
+        )
+    }
+
+    @Test
+    fun simpleDirectoryWriting() {
+        val outputFolder = tmpFolder.newFolder("some_folder")
+        val innerFolder = tmpFolder.newFolder("some_folder", "inner_folder")
+        BuiltArtifactsImpl(
+                artifactType = InternalArtifactType.EXTRACTED_APKS,
+                applicationId = "com.android.test",
+                variantName = "debug",
+                elements = listOf(
+                        BuiltArtifactImpl.make(
+                                outputFile = innerFolder.absolutePath,
+                                versionCode = 123,
+                                versionName = "version_name"
+                        )
+                )
+        ).save(FakeGradleDirectory(outputFolder))
+
+        val outputJsonFile = File(outputFolder, BuiltArtifactsImpl.METADATA_FILE_NAME)
+        Truth.assertThat(outputJsonFile.exists())
+        val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
+        Truth.assertThat(jsonContent).isEqualTo(
+                """{
+  "version": 3,
+  "artifactType": {
+    "type": "EXTRACTED_APKS",
+    "kind": "Directory"
+  },
+  "applicationId": "com.android.test",
+  "variantName": "debug",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "versionCode": 123,
+      "versionName": "version_name",
+      "outputFile": "inner_folder"
+    }
+  ],
+  "elementType": "Directory"
 }"""
         )
     }
@@ -89,7 +134,7 @@ class BuiltArtifactsImplTest {
             variantName = "debug",
             elements = listOf(
                 BuiltArtifactImpl.make(
-                    outputFile = File(outputFolder, "file1.apk").absolutePath,
+                    outputFile = createOutputFile(outputFolder, "file1.apk").absolutePath,
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -99,7 +144,7 @@ class BuiltArtifactsImplTest {
                         ))
                 ),
                 BuiltArtifactImpl.make(
-                    outputFile = File(outputFolder, "file2.apk").absolutePath,
+                    outputFile = createOutputFile(outputFolder, "file2.apk").absolutePath,
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -109,7 +154,7 @@ class BuiltArtifactsImplTest {
                         ))
                 ),
                 BuiltArtifactImpl.make(
-                    outputFile = File(outputFolder, "file3.apk").absolutePath,
+                    outputFile = createOutputFile(outputFolder, "file3.apk").absolutePath,
                     versionCode = 123,
                     versionName = "version_name",
                     variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -126,7 +171,7 @@ class BuiltArtifactsImplTest {
         val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
         Truth.assertThat(jsonContent).isEqualTo(
             """{
-  "version": 2,
+  "version": 3,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
@@ -170,7 +215,8 @@ class BuiltArtifactsImplTest {
       "versionName": "version_name",
       "outputFile": "file3.apk"
     }
-  ]
+  ],
+  "elementType": "File"
 }"""
         )
     }
@@ -189,7 +235,7 @@ class BuiltArtifactsImplTest {
         val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
         Truth.assertThat(jsonContent).isEqualTo(
             """{
-  "version": 2,
+  "version": 3,
   "artifactType": {
     "type": "APK",
     "kind": "Directory"
@@ -209,7 +255,8 @@ class BuiltArtifactsImplTest {
       "versionName": "123",
       "outputFile": "file1.apk"
     }
-  ]
+  ],
+  "elementType": "File"
 }"""
         )
     }
@@ -261,6 +308,69 @@ class BuiltArtifactsImplTest {
                 Truth.assertThat(filter.identifier).isAnyOf("xxhdpi", "xhdpi")
             }
         }
+    }
+
+    @Test
+    fun testVersion2Loading() {
+        val listingFile = tmpFolder.newFile()
+        listingFile.writeText(
+                """{
+  "version": 2,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "com.android.test",
+  "variantName": "debug",
+  "elements": [
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "DENSITY",
+          "value": "xhdpi"
+        }
+      ],
+      "versionCode": 123,
+      "versionName": "version_name",
+      "outputFile": "file1.apk"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "DENSITY",
+          "value": "xxhdpi"
+        }
+      ],
+      "versionCode": 123,
+      "versionName": "version_name",
+      "outputFile": "file2.apk"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "DENSITY",
+          "value": "xxxhdpi"
+        }
+      ],
+      "versionCode": 123,
+      "versionName": "version_name",
+      "outputFile": "file3.apk"
+    }
+  ]
+}"""
+        )
+
+        val builtArtifacts = GenericBuiltArtifactsLoader.loadFromFile(
+                listingFile,
+                NullLogger()
+        )
+        Truth.assertThat(builtArtifacts).isNotNull()
+        Truth.assertThat(builtArtifacts!!.version).isEqualTo(2)
+        Truth.assertThat(builtArtifacts.elements.size).isEqualTo(3)
+
     }
 
     @Test
@@ -347,7 +457,7 @@ class BuiltArtifactsImplTest {
         densityValue: String
     ) =
         BuiltArtifactImpl.make(
-            outputFile = File(outputFolder, "$fileName.apk").absolutePath,
+            outputFile = createOutputFile(outputFolder, "$fileName.apk").absolutePath,
             versionCode = versionCode,
             versionName = versionCode.toString(),
             variantOutputConfiguration = VariantOutputConfigurationImpl(
@@ -364,4 +474,9 @@ class BuiltArtifactsImplTest {
             variantName = "debug",
             elements = elements.toList()
         )
+
+    private fun createOutputFile(outputFolder: File, name: String): File =
+        File(outputFolder, name).also {
+            it.writeText("SomeFile")
+        }
 }

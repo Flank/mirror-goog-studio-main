@@ -72,6 +72,7 @@ object GenericBuiltArtifactsLoader {
                         filters = builtArtifact.filters
                     )
                 }
-                .toList())
+                .toList(),
+            elementType = buildOutputs.elementType)
     }
 }
