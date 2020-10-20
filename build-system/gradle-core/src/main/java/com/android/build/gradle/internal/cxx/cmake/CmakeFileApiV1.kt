@@ -157,36 +157,33 @@ fun readCmakeFileApiReply(
                         is SourceGroups -> sourceGroups = item.sourceGroups
                         is Link -> targetIdToLink[item.targetId] = item
                         is Source -> {
+                            // This relies on "compileGroups" arriving before "sources". Without this
+                            // assumption we'd need to scan source files twice, first to find compileGroups
+                            // then to scan sources and join with compileGroups.
                             val sourceGroup = sourceGroups!![item.sourceGroupIndex]
-                            if (sourceGroup == "Source Files" || sourceGroup == "Header Files") {
-                                // This relies on "compileGroups" arriving before "sources". Without this
-                                // assumption we'd need to scan source files twice, first to find compileGroups
-                                // then to scan sources and join with compileGroups.
-                                val compileGroup =
-                                        if (item.compileGroupIndex != null) {
-                                            compileGroups?.get(item.compileGroupIndex)
-                                        } else {
-                                            // No compile group probably means the sourceGroup is "Header Files"
-                                            null
-                                        }
+                            val compileGroup =
+                                    if (item.compileGroupIndex != null) {
+                                        compileGroups?.get(item.compileGroupIndex)
+                                    } else {
+                                        // No compile group probably means the sourceGroup is "Header Files"
+                                        null
+                                    }
+                            val sourceFile = rootSourceFolder.resolve(item.path)
 
-                                val sourceFile = rootSourceFolder.resolve(item.path)
-
-                                // Record the file extension for each language seen.
-                                if (compileGroup != null) {
-                                    languageToExtensionMap.computeIfAbsent(compileGroup.language) {
-                                        mutableSetOf()
-                                    }.add(sourceFile.extension)
-                                }
-
-                                sourceFlagAction(
-                                        CmakeFileApiSourceFile(
-                                                path = sourceFile,
-                                                sourceGroup = sourceGroups!![item.sourceGroupIndex],
-                                                compileGroup = compileGroup
-                                        )
-                                )
+                            // Record the file extension for each language seen.
+                            if (compileGroup != null) {
+                                languageToExtensionMap.computeIfAbsent(compileGroup.language) {
+                                    mutableSetOf()
+                                }.add(sourceFile.extension)
                             }
+
+                            sourceFlagAction(
+                                    CmakeFileApiSourceFile(
+                                            path = sourceFile,
+                                            sourceGroup = sourceGroup,
+                                            compileGroup = compileGroup
+                                    )
+                            )
                         }
                         else -> {
                         }
@@ -383,11 +380,12 @@ private class TargetDataStream(
 
     private fun readCompileGroup() : TargetCompileGroupData {
         reader.beginObject()
-        lateinit var compileCommandFragments: List<String>
+        // In the case of assembler code, there is no compileCommandFragments
+        var compileCommandFragments = listOf<String>()
         var defines = listOf<String>()
         var includes = listOf<String>()
-        lateinit var language: String
-        lateinit var sysroot: String
+        var language = "Unknown Language from CMake file API"
+        var sysroot = "Unknown Sysroot from CMake file API"
         while (reader.hasNext()) {
             when (reader.peek()) {
                 JsonToken.NAME -> {
