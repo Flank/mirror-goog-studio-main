@@ -144,3 +144,6 @@ build:dynamic --dynamic_local_strategy=formc=worker
 # Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
 # so there is no need to keep workers alive after the build.
 build:dynamic --worker_quit_after_build
+# Disables verbose failures to avoid triggering --materialize_param_files, see
+# b/160150358#comment30
+build:dynamic --noverbose_failures
