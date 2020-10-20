@@ -21,14 +21,12 @@ import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.ClientData;
-import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.HandleHello;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -337,10 +335,9 @@ class DeviceClientMonitorTask implements Runnable {
 
         SocketChannel clientSocket;
         try {
-          clientSocket =
-            AdbHelper.createPassThroughConnection(
-              new InetSocketAddress("localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT), device.getSerialNumber(), pid);
-
+            clientSocket =
+                    AdbHelper.createPassThroughConnection(
+                            AndroidDebugBridge.getSocketAddress(), device.getSerialNumber(), pid);
             // required for Selector
             clientSocket.configureBlocking(false);
         } catch (UnknownHostException uhe) {
