@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.cxx.cmake
 
 import com.android.testutils.TestUtils
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -37,6 +38,17 @@ class CmakeFileApiV1Test {
             error(result.absolutePath)
         }
         return result
+    }
+
+    @Test
+    fun assembler() {
+        val replyFolder = prepareReplyFolder("assembler")
+        val sources = mutableListOf<CmakeFileApiSourceFile>()
+        readCmakeFileApiReply(replyFolder) {
+            sources.add(it)
+        }
+        assertThat(sources.map { it.path.extension }.toSortedSet())
+                .containsExactly("asm", "cpp", "h")
     }
 
     @Test
@@ -167,7 +179,7 @@ class CmakeFileApiV1Test {
         Truth.assertThat(languageGroups).containsExactly("(none)", "C", "CXX")
 
         val sourceGroups = sources.map { it.sourceGroup }.distinct().sorted()
-        Truth.assertThat(sourceGroups).containsExactly("Header Files", "Source Files")
+        Truth.assertThat(sourceGroups).containsExactly("", "CMake Rules", "Header Files", "Object Libraries", "Source Files")
 
         val symbolFoldersIndexContent = config
                 .libraries!!
