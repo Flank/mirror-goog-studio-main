@@ -183,10 +183,17 @@ def _iml_module_jar_impl(
         allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
+    # Create an ijar to improve javac compilation avoidance.
+    ijar = java_common.run_ijar(
+        actions = ctx.actions,
+        jar = output_jar,
+        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain),
+    )
+
     providers = []
     providers = [JavaInfo(
         output_jar = output_jar,
-        compile_jar = output_jar,
+        compile_jar = ijar,
         deps = java_deps,
     )]
     providers += exports
