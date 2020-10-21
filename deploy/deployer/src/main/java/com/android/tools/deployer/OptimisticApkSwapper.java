@@ -24,6 +24,7 @@ import com.android.tools.deployer.model.DexClass;
 import com.android.tools.idea.protobuf.ByteString;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /** An object that can perform swaps via an installer or custom redefiners. */
@@ -115,7 +116,8 @@ public class OptimisticApkSwapper {
                     Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code)));
-            overlayIdBuilder.addSwappedDex(clazz.name, clazz.checksum);
+            String file = String.format(Locale.US, "%s.dex", clazz.name);
+            overlayIdBuilder.addOverlayFile(file, clazz.checksum);
         }
 
         for (DexClass clazz : dexOverlays.modifiedClasses) {
@@ -124,7 +126,8 @@ public class OptimisticApkSwapper {
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code))
                             .addAllFields(clazz.variableStates));
-            overlayIdBuilder.addSwappedDex(clazz.name, clazz.checksum);
+            String file = String.format(Locale.US, "%s.dex", clazz.name);
+            overlayIdBuilder.addOverlayFile(file, clazz.checksum);
         }
 
         for (Map.Entry<ApkEntry, ByteString> entry : fileOverlays.entrySet()) {
