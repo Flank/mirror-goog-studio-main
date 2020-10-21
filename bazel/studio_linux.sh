@@ -92,8 +92,9 @@ if [[ -d "${DIST_DIR}" ]]; then
   fi
 
   "${script_dir}/bazel" \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
     ${config_options} \
-    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector -- \
+    -- \
     -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
     -testlogs "${DIST_DIR}/logs/junit" \
     ${perfgate_arg}

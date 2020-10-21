@@ -52,8 +52,9 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
   "${script_dir}/bazel" \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
     ${config_options} \
-    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector -- \
+    -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
 fi
