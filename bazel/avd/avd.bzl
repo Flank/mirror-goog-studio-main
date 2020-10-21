@@ -5,7 +5,7 @@ def _avd_impl(ctx):
     # Look for the source.properties file in the system image to get information
     # about the image from.
     source_properties_path = None
-    system_image_files = ctx.attr._image[DefaultInfo].files.to_list()
+    system_image_files = ctx.attr.image[DefaultInfo].files.to_list()
     for system_image_file in system_image_files:
         if system_image_file.basename == "source.properties":
             source_properties_path = system_image_file.path
@@ -25,9 +25,9 @@ def _avd_impl(ctx):
 
     runfiles = ctx.runfiles(files = [executable] +
                                     ctx.files._emulator +
-                                    ctx.files._platform +
+                                    ctx.files.platform +
                                     ctx.files._platform_tools +
-                                    ctx.files._image)
+                                    ctx.files.image)
     return [DefaultInfo(runfiles = runfiles)]
 
 avd = rule(
@@ -40,14 +40,14 @@ avd = rule(
         "_emulator": attr.label(
             default = "//prebuilts/android-emulator:emulator",
         ),
-        "_platform": attr.label(
-            default = "//prebuilts/studio/sdk:platforms/latest",
-        ),
         "_platform_tools": attr.label(
             default = "//prebuilts/studio/sdk:platform-tools",
         ),
-        "_image": attr.label(
+        "image": attr.label(
             default = "@system_image_latest_default_x86_64//:images",
+        ),
+        "platform": attr.label(
+            default = "//prebuilts/studio/sdk:platforms/latest",
         ),
     },
     executable = True,

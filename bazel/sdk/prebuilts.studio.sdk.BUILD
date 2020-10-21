@@ -225,6 +225,7 @@ platform_filegroup(
     visibility = [
         "//tools/adt/idea/old-agp-tests:__pkg__",
         "//prebuilts/studio/buildbenchmarks:__pkg__",
+        "//tools/vendor/google/lldb-integration-tests:__pkg__",
     ],
 )
 

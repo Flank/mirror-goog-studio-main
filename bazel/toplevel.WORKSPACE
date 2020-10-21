@@ -79,3 +79,12 @@ http_archive(
     strip_prefix = "x86_64",
     build_file = "//tools/base/bazel/avd:system_images.BUILD",
 )
+
+http_archive(
+    name = "system_image_android-28_default_x86",
+    url = "https://dl.google.com/android/repository/sys-img/android/x86-28_r04.zip",
+    sha256 = "7c3615c55b64713fe56842a12fe6827d6792cb27a9f95f9fa3aee1ff1be47f16",
+    strip_prefix = "x86",
+    build_file = "//tools/base/bazel/avd:system_images.BUILD",
+)
+
