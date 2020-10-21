@@ -78,7 +78,6 @@ def _kotlin_jar_impl(ctx):
         transitive = [
             dep[JavaInfo].transitive_runtime_deps
             for dep in ctx.attr.deps
-            if JavaInfo in dep
         ],
     )
     kotlin_compile(
@@ -100,8 +99,7 @@ _kotlin_jar = rule(
             allow_files = True,
         ),
         "deps": attr.label_list(
-            mandatory = False,
-            allow_files = [".jar"],
+            providers = [JavaInfo],
         ),
         "module_name": attr.string(),
         # Java 8 runtime passed as -jdk-home to kotlinc. This is different than --javabase.
