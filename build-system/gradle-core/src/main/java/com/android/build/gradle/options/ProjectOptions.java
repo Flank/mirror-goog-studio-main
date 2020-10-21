@@ -19,6 +19,8 @@ package com.android.build.gradle.options;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.profile.GradleAnalyticsEnvironment;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.tools.analytics.AnalyticsSettings;
 import com.google.common.collect.ImmutableMap;
@@ -58,6 +60,12 @@ public final class ProjectOptions {
         integerOptionValues = createOptionValues(IntegerOption.values());
         replacedOptionValues = createOptionValues(ReplacedOption.values());
         stringOptionValues = createOptionValues(StringOption.values());
+        // Initialize AnalyticsSettings before we access its properties in isAnalyticsEnabled
+        // function
+        AnalyticsSettings.initialize(
+                LoggerWrapper.getLogger(ProjectOptions.class),
+                null,
+                new GradleAnalyticsEnvironment(providerFactory));
     }
 
     @NonNull

@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 abstract class NoOpAnalyticsService : AnalyticsService() {
 
-    override fun initializeAnalyticsSettings() {}
+    override fun initializeUsageTracker() {}
 
     override fun initializeResourceManager(): AnalyticsResourceManager {
         return AnalyticsResourceManager(
