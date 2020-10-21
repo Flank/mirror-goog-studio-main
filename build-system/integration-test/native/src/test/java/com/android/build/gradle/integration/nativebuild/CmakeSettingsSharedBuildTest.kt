@@ -156,7 +156,7 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
                 * sourceFlagsFile                 = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}
                 * symbolFolderIndexFile           = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
                 * buildFileIndexFile              = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
-                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/additional_project_files.txt{!}
+                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/additional_project_files.txt{F}
           < abis
        * NativeVariant:
           * name = "release"

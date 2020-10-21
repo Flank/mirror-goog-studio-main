@@ -32,7 +32,6 @@ import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.build.gradle.integration.common.fixture.model.dumpCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -137,15 +136,9 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
           .map { result.normalizer.normalize(File(it)) }
         ).containsExactly("{PROJECT}/build/intermediates/cmake/debug/obj/x86{D}")
 
-        if (cmakeVersion == BAKING_CMAKE_VERSION) {
-            // TODO(170910462): Support additional files in CMake server as well.
-            Truth.assertThat(syncedAbi.additionalProjectFilesIndexFile.readLines(StandardCharsets.UTF_8)
-              .map { result.normalizer.normalize(File(it)) }
-            ).containsExactly("{PROJECT}/blah.h{F}", "{PROJECT}/blah.txt{F}")
-        } else if (cmakeVersion == DEFAULT_CMAKE_VERSION) {
-            // Fail the test when the support is added so that we don't miss changing this file.
-            Truth.assertThat(syncedAbi.additionalProjectFilesIndexFile.exists()).isFalse()
-        }
+        Truth.assertThat(syncedAbi.additionalProjectFilesIndexFile.readLines(StandardCharsets.UTF_8)
+          .map { result.normalizer.normalize(File(it)) }
+        ).containsExactly("{PROJECT}/blah.h{F}", "{PROJECT}/blah.txt{F}")
 
         when (CURRENT_PLATFORM) {
             PLATFORM_LINUX -> Truth.assertThat(

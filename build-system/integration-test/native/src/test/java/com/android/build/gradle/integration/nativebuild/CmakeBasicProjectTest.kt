@@ -258,11 +258,11 @@ class CmakeBasicProjectTest(
         val fetchResult =
           project.modelV2().fetchNativeModules(listOf("debug"), listOf("x86_64"))
 
-        // TODO(tgeng): Update this when CMake server supports populating additional project files.
-        val additionalProjectFileStatus = if (cmakeVersionInDsl == BAKING_CMAKE_VERSION) {
-            "F"
-        } else {
+        val additionalProjectFileStatus = if (cmakeVersionInDsl == "3.6.0") {
+          // CMake 3.6 does not populate additional files known by it.
             "!"
+        } else {
+            "F"
         }
         // note that only build files for the requested variant and ABI exists.
         Truth.assertThat(fetchResult.dump()).isEqualTo(
@@ -370,10 +370,11 @@ class CmakeBasicProjectTest(
         val result = project.modelV2().fetchNativeModules(emptyList(), emptyList())
 
         // TODO(tgeng): Update this when CMake server supports populating additional project files.
-        val additionalProjectFileStatus = if (cmakeVersionInDsl == BAKING_CMAKE_VERSION) {
-            "F"
-        } else {
+        val additionalProjectFileStatus = if (cmakeVersionInDsl == "3.6.0") {
+            // CMake 3.6 does not populate additional files known by it.
             "!"
+        } else {
+            "F"
         }
         // The files still appear to exist because we have already built the project.
         Truth.assertThat(result.dump()).isEqualTo(
