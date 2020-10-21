@@ -92,14 +92,13 @@ import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeModuleImpl
 import com.android.ide.common.gradle.model.impl.ndk.v2.IdeNativeVariantImpl
 import com.android.ide.common.gradle.model.ndk.v2.NativeBuildSystem
 import com.android.ide.common.repository.GradleVersion
-import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ImmutableSortedSet
 import java.io.File
-import java.util.HashMap
+import java.util.concurrent.ConcurrentHashMap
 
 interface ModelCache {
   fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
@@ -174,9 +173,9 @@ interface ModelCacheTesting : ModelCache {
 private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTesting {
 
   val strings: MutableMap<String, String> = HashMap()
-  val androidLibraryCores = mutableMapOf<IdeAndroidLibraryCore, IdeAndroidLibraryCore>()
-  val javaLibraryCores = mutableMapOf<IdeJavaLibraryCore, IdeJavaLibraryCore>()
-  val moduleLibraryCores = mutableMapOf<IdeModuleLibraryCore, IdeModuleLibraryCore>()
+  val androidLibraryCores: MutableMap<IdeAndroidLibraryCore, IdeAndroidLibraryCore> = HashMap()
+  val javaLibraryCores: MutableMap<IdeJavaLibraryCore, IdeJavaLibraryCore> = HashMap()
+  val moduleLibraryCores: MutableMap<IdeModuleLibraryCore, IdeModuleLibraryCore> = HashMap()
 
   fun deduplicateString(s: String): String = strings.putIfAbsent(s, s) ?: s
   fun String.deduplicate() = deduplicateString(this)
@@ -1174,7 +1173,7 @@ private inline fun <T> copyNewPropertyWithDefault(propertyInvoker: () -> T, defa
   }
 }
 
-private fun <T> MutableMap<T, T>.internCore(core: T): T = getOrPut(core) { core }
+private fun <T> MutableMap<T, T>.internCore(core: T): T = putIfAbsent(core, core) ?: core
 
 private fun getSymbolFilePath(androidLibrary: AndroidLibrary): String {
   return try {
