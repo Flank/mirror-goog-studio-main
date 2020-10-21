@@ -15,7 +15,9 @@
   <object-detection versions="16.2.1"/>
   <object-detection-common versions="16.2.1"/>
   <object-detection-custom versions="16.2.1"/>
-  <pose-detection versions="16.0.0"/>
+  <pose-detection versions="16.0.0,17.0.0"/>
+  <pose-detection-accurate versions="17.0.0"/>
+  <pose-detection-common versions="17.0.0"/>
   <smart-reply versions="16.1.1"/>
   <translate versions="16.1.1"/>
   <vision-common versions="16.1.0"/>
