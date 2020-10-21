@@ -342,7 +342,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
             if (creationConfig.variantType.isAar) {
                 keep("class **.R")
-                keep("class **.R$*")
+                keep("class **.R$* {*;}")
             }
 
             if (variantDslInfo.isTestCoverageEnabled) {
