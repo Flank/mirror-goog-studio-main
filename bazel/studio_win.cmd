@@ -66,7 +66,6 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
  %DETECT_FLAKE_ARGS% ^
  -- ^
- //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  //tools/base/profiler/native/trace_processor_daemon ^
  %TARGETS%
 
@@ -86,15 +85,15 @@ copy %BASEDIR%\bazel-bin\tools\base\profiler\native\trace_processor_daemon\trace
 
 @echo studio_win.cmd time: %time%
 
-set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
-
 IF %IS_POST_SUBMIT% EQU 1 (
   SET PERFGATE_ARG=-perfzip %DISTDIR%\perfgate_data.zip
 ) ELSE (
   SET PERFGATE_ARG=
 )
 
-%JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
+CALL %SCRIPTDIR%bazel.cmd run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
+ --config=dynamic ^
+ -- ^
  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  -testlogs %DISTDIR%\logs\junit ^
  %PERFGATE_ARG%

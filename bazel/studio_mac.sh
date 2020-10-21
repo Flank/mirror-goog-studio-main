@@ -35,7 +35,6 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
         -- \
         //tools/... \
         //tools/base/profiler/native/trace_processor_daemon \
-        //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
         -//tools/base/build-system/integration-test/... \
         -//tools/adt/idea/android-lang:intellij.android.lang.tests_tests \
         -//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests \
@@ -52,8 +51,9 @@ if [[ -d "${dist_dir}" ]]; then
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${dist_dir}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
-  readonly java="prebuilts/studio/jdk/mac/Contents/Home/bin/java"
-  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
+  "${script_dir}/bazel" \
+    ${config_options} \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
 fi

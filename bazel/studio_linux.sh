@@ -67,7 +67,6 @@ readonly invocation_id="$(uuidgen)"
   //tools/adt/idea/studio:updater_deploy.jar \
   //tools/adt/idea/updater-ui:sdk-patcher.zip \
   //tools/adt/idea/native/installer:android-studio-bundle-data \
-  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
   //tools/adt/idea/studio:searchable_options_test \
@@ -83,7 +82,6 @@ if [[ -d "${DIST_DIR}" ]]; then
   # Generate a simple html page that redirects to the test results page.
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${DIST_DIR}"/upsalite_test_results.html
 
-  readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
 
@@ -93,7 +91,9 @@ if [[ -d "${DIST_DIR}" ]]; then
     readonly perfgate_arg=""
   fi
 
-  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
+  "${script_dir}/bazel" \
+    ${config_options} \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector -- \
     -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
     -testlogs "${DIST_DIR}/logs/junit" \
     ${perfgate_arg}
