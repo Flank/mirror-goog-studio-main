@@ -69,6 +69,12 @@ string ProcfsFiles::GetProcessStatusFilePath(int32_t pid) const {
   return os.str();
 }
 
+string ProcfsFiles::GetProcessCmdlineFilePath(int32_t pid) const {
+  std::ostringstream os;
+  os << "/proc/" << pid << "/cmdline";
+  return os.str();
+}
+
 string ProcfsFiles::GetProcessTaskDir(int32_t pid) const {
   std::ostringstream os;
   os << "/proc/" << pid << "/task/";
