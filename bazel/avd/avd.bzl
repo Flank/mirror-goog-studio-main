@@ -44,7 +44,7 @@ avd = rule(
             default = "//prebuilts/studio/sdk:platform-tools",
         ),
         "image": attr.label(
-            default = "@system_image_latest_default_x86_64//:images",
+            default = "@system_image_android-29_default_x86_64//:x86_64-android-29-images",
         ),
         "platform": attr.label(
             default = "//prebuilts/studio/sdk:platforms/latest",
