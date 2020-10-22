@@ -8,6 +8,29 @@ AS_BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
 AS_BUILD_NUMBER="${BUILD_NUMBER/P/0}"  # for AB presubmit: satisfy Integer.parseInt in BuildNumber.parseBuildNumber
 BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
 
+####################################
+# Copies bazel artifacts to an output directory named 'artifacts'.
+# Globals:
+#   DIST_DIR
+# Arguments:
+#   The bazel-bin directory.
+####################################
+function copy_bazel_artifacts() {
+  readonly artifacts_dir="${DIST_DIR}/artifacts"
+  mkdir -p ${artifacts_dir}
+
+  cp -a ${1}/tools/adt/idea/studio/android-studio.linux.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
+  cp -a ${1}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
+
+  cp -a ${1}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
+  cp -a ${1}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
+  cp -a ${1}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
+}
+
 if [[ $BUILD_NUMBER != SNAPSHOT ]];
 then
   WORKER_INSTANCES=auto
@@ -23,6 +46,9 @@ then
   IS_POST_SUBMIT=true
 fi
 
+build_tag_filters=-no_linux
+test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate,-very_flaky
+
 declare -a conditional_flags
 for arg in "$@"
 do
@@ -32,6 +58,16 @@ do
     conditional_flags+=(--runs_per_test_detects_flakes)
     conditional_flags+=(--nocache_test_results)
   fi
+  # Only run tests tagged with `very_flaky`, this is different than tests using
+  # the 'Flaky' attribute/tag. Tests that are excessively flaky use this tag to
+  # avoid running in presubmit.
+  if [[ "${arg}" == "--very_flaky" ]];
+  then
+    is_flaky_run=1
+    skip_bazel_artifacts=1
+    conditional_flags+=(--build_tests_only)
+    test_tag_filters=-no_linux,-no_test_linux,very_flaky
+  fi
 done
 
 if [[ $IS_POST_SUBMIT ]]; then
@@ -40,9 +76,6 @@ fi
 
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
-
-build_tag_filters=-no_linux
-test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
 
 config_options="--config=dynamic"
 
@@ -103,22 +136,18 @@ if [[ -d "${DIST_DIR}" ]]; then
     -testlogs "${DIST_DIR}/logs/junit" \
     ${perfgate_arg}
 
-  readonly artifacts_dir="${DIST_DIR}/artifacts"
-  mkdir -p ${artifacts_dir}
-
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.linux.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
-  cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
-
-  cp -a ${bin_dir}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
-  cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
+  if [[ ! $skip_bazel_artifacts ]]; then
+    copy_bazel_artifacts "${bin_dir}"
+  fi
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3
+BAZEL_EXITCODE_NO_TESTS_FOUND=4
+
+# It is OK if no tests are found when using --flaky.
+if [[ $is_flaky_run && $bazel_status == $BAZEL_EXITCODE_NO_TESTS_FOUND  ]]; then
+  exit 0
+fi
 
 # For post-submit builds, if the tests fail we still want to report success
 # otherwise ATP will think the build failed and there are no tests. b/152755167
