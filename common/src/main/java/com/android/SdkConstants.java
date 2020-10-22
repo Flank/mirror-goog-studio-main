@@ -930,9 +930,6 @@ public final class SdkConstants {
 
     /* Compose constants */
     public static final String CLASS_COMPOSE = "androidx.compose.Compose";
-    public static final String CLASS_COMPOSE_VIEW_ADAPTER =
-            "androidx.ui.tooling.preview.ComposeViewAdapter";
-    public static final String CLASS_COMPOSE_INSPECTABLE = "androidx.ui.tooling.InspectableKt";
 
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
