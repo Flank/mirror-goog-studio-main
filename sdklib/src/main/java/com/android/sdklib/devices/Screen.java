@@ -23,7 +23,6 @@ import com.android.resources.ScreenRound;
 import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 
-
 public class Screen {
     private ScreenSize mScreenSize;
     private double mDiagonalLength;
@@ -43,6 +42,14 @@ public class Screen {
     private int mFoldedYOffset;
     private int mFoldedWidth;
     private int mFoldedHeight;
+    private int mFoldedXOffset2;
+    private int mFoldedYOffset2;
+    private int mFoldedWidth2;
+    private int mFoldedHeight2;
+    private int mFoldedXOffset3;
+    private int mFoldedYOffset3;
+    private int mFoldedWidth3;
+    private int mFoldedHeight3;
 
     public ScreenSize getSize() {
         return mScreenSize;
@@ -147,9 +154,11 @@ public class Screen {
     public void setFoldedXOffset(int xOffset) {
         mFoldedXOffset = xOffset;
     }
+
     public int getFoldedXOffset() {
         return mFoldedXOffset;
     }
+
     public void setFoldedYOffset(int yOffset) {
         mFoldedYOffset = yOffset;
     }
@@ -167,6 +176,70 @@ public class Screen {
     }
     public int getFoldedHeight() {
         return mFoldedHeight;
+    }
+
+    public void setFoldedXOffset2(int xOffset) {
+        mFoldedXOffset2 = xOffset;
+    }
+
+    public int getFoldedXOffset2() {
+        return mFoldedXOffset2;
+    }
+
+    public void setFoldedYOffset2(int yOffset) {
+        mFoldedYOffset2 = yOffset;
+    }
+
+    public int getFoldedYOffset2() {
+        return mFoldedYOffset2;
+    }
+
+    public void setFoldedWidth2(int width) {
+        mFoldedWidth2 = width;
+    }
+
+    public int getFoldedWidth2() {
+        return mFoldedWidth2;
+    }
+
+    public void setFoldedHeight2(int height) {
+        mFoldedHeight2 = height;
+    }
+
+    public int getFoldedHeight2() {
+        return mFoldedHeight2;
+    }
+
+    public void setFoldedXOffset3(int xOffset) {
+        mFoldedXOffset3 = xOffset;
+    }
+
+    public int getFoldedXOffset3() {
+        return mFoldedXOffset3;
+    }
+
+    public void setFoldedYOffset3(int yOffset) {
+        mFoldedYOffset3 = yOffset;
+    }
+
+    public int getFoldedYOffset3() {
+        return mFoldedYOffset3;
+    }
+
+    public void setFoldedWidth3(int width) {
+        mFoldedWidth3 = width;
+    }
+
+    public int getFoldedWidth3() {
+        return mFoldedWidth3;
+    }
+
+    public void setFoldedHeight3(int height) {
+        mFoldedHeight3 = height;
+    }
+
+    public int getFoldedHeight3() {
+        return mFoldedHeight3;
     }
 
     /**
@@ -212,6 +285,14 @@ public class Screen {
         s.mFoldedYOffset = mFoldedYOffset;
         s.mFoldedWidth = mFoldedWidth;
         s.mFoldedHeight = mFoldedHeight;
+        s.mFoldedXOffset2 = mFoldedXOffset2;
+        s.mFoldedYOffset2 = mFoldedYOffset2;
+        s.mFoldedWidth2 = mFoldedWidth2;
+        s.mFoldedHeight2 = mFoldedHeight2;
+        s.mFoldedXOffset3 = mFoldedXOffset3;
+        s.mFoldedYOffset3 = mFoldedYOffset3;
+        s.mFoldedWidth3 = mFoldedWidth3;
+        s.mFoldedHeight3 = mFoldedHeight3;
         return s;
     }
 
@@ -240,7 +321,15 @@ public class Screen {
                 && s.mFoldedXOffset == mFoldedXOffset
                 && s.mFoldedYOffset == mFoldedYOffset
                 && s.mFoldedWidth == mFoldedWidth
-                && s.mFoldedHeight == mFoldedHeight;
+                && s.mFoldedHeight == mFoldedHeight
+                && s.mFoldedXOffset2 == mFoldedXOffset2
+                && s.mFoldedYOffset2 == mFoldedYOffset2
+                && s.mFoldedWidth2 == mFoldedWidth2
+                && s.mFoldedHeight2 == mFoldedHeight2
+                && s.mFoldedXOffset3 == mFoldedXOffset3
+                && s.mFoldedYOffset3 == mFoldedYOffset3
+                && s.mFoldedWidth3 == mFoldedWidth3
+                && s.mFoldedHeight3 == mFoldedHeight3;
     }
 
     @Override
@@ -268,6 +357,14 @@ public class Screen {
         hash = 31 * hash + mFoldedYOffset;
         hash = 31 * hash + mFoldedWidth;
         hash = 31 * hash + mFoldedHeight;
+        hash = 31 * hash + mFoldedXOffset2;
+        hash = 31 * hash + mFoldedYOffset2;
+        hash = 31 * hash + mFoldedWidth2;
+        hash = 31 * hash + mFoldedHeight2;
+        hash = 31 * hash + mFoldedXOffset3;
+        hash = 31 * hash + mFoldedYOffset3;
+        hash = 31 * hash + mFoldedWidth3;
+        hash = 31 * hash + mFoldedHeight3;
         return hash;
     }
 
@@ -308,6 +405,22 @@ public class Screen {
         sb.append(mFoldedWidth);
         sb.append(", mFoldableHeight=");
         sb.append(mFoldedHeight);
+        sb.append(", mFoldableXOffset2=");
+        sb.append(mFoldedXOffset2);
+        sb.append(", mFoldableYOffset2=");
+        sb.append(mFoldedYOffset2);
+        sb.append(", mFoldableWidth2=");
+        sb.append(mFoldedWidth2);
+        sb.append(", mFoldableHeight=2");
+        sb.append(mFoldedHeight2);
+        sb.append(", mFoldableXOffset3=");
+        sb.append(mFoldedXOffset3);
+        sb.append(", mFoldableYOffset3=");
+        sb.append(mFoldedYOffset3);
+        sb.append(", mFoldableWidth3=");
+        sb.append(mFoldedWidth3);
+        sb.append(", mFoldableHeight3=");
+        sb.append(mFoldedHeight3);
         sb.append("]");
         return sb.toString();
     }

@@ -316,6 +316,23 @@ public class AvdManager {
     public static final String AVD_INI_HINGE_ANGLES_POSTURE_DEFINITIONS =
             "hw.sensor.hinge_angles_posture_definitions";
 
+    /** AVD/config.ini key name representing the rollable settings */
+    public static final String AVD_INI_ROLL = "hw.sensor.roll";
+
+    public static final String AVD_INI_ROLL_COUNT = "hw.sensor.roll.count";
+    public static final String AVD_INI_ROLL_RANGES = "hw.sensor.roll.ranges";
+    public static final String AVD_INI_ROLL_DEFAULTS = "hw.sensor.roll.defaults";
+    public static final String AVD_INI_ROLL_RADIUS = "hw.sensor.roll.radius";
+    public static final String AVD_INI_ROLL_DIRECTION = "hw.sensor.roll.direction";
+    public static final String AVD_INI_ROLL_RESIZE_1_AT_POSTURE =
+            "hw.sensor.roll.resize_to_displayRegion.0.1_at_posture";
+    public static final String AVD_INI_ROLL_RESIZE_2_AT_POSTURE =
+            "hw.sensor.roll.resize_to_displayRegion.0.2_at_posture";
+    public static final String AVD_INI_ROLL_RESIZE_3_AT_POSTURE =
+            "hw.sensor.roll.resize_to_displayRegion.0.3_at_posture";
+    public static final String AVD_INI_ROLL_PERCENTAGES_POSTURE_DEFINITIONS =
+            "hw.sensor.roll_percentages_posture_definitions";
+
     /**
      * The API level of this AVD. Derived from the target hash.
      */

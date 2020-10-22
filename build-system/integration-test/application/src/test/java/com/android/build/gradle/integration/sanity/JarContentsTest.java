@@ -1273,6 +1273,7 @@ public class JarContentsTest {
                 "com/android/dvlib/devices-3.xsd",
                 "com/android/dvlib/devices-4.xsd",
                 "com/android/dvlib/devices-5.xsd",
+                "com/android/dvlib/devices-6.xsd",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
