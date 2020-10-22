@@ -182,12 +182,6 @@ public class ImlToIr {
                         List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
                         // Newer versions of jps sort the files correctly, for now using legacy
                         // sorting if not strict
-                        if (!config.strict) {
-                            // Library files are sometimes returned in file system order. Which
-                            // changes
-                            // across systems. Choose alphabetical always:
-                            Collections.sort(files);
-                        }
                         for (File file : files) {
                             if (file.getPath().contains("$SDK_PLATFORM$")) {
                                 // Libraries containing these files cannot be resolved and will

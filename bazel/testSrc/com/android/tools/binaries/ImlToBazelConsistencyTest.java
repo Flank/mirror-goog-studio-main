@@ -34,7 +34,6 @@ public class ImlToBazelConsistencyTest {
         try {
             Configuration config = new Configuration();
             config.dryRun = true;
-            config.strict = true;
             int updated =
                     ImlToBazel.run(
                             config,
