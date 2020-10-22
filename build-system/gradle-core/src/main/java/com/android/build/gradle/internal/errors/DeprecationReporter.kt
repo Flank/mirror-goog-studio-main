@@ -53,17 +53,17 @@ interface DeprecationReporter {
         private val additionalMessage: String? = null
     ) {
         VERSION_4_2(Version.VERSION_4_2),
-        VERSION_5_0(Version.VERSION_5_0),
+        VERSION_7_0(Version.VERSION_7_0),
 
         // deprecation of compile in favor of api/implementation
         CONFIG_NAME(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "For more information, see http://d.android.com/r/tools/update-dependency-configurations.html."
         ),
 
         // When legacy dexer will be removed and fully replaced by D8.
         LEGACY_DEXER(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
         ),
 
@@ -71,42 +71,42 @@ interface DeprecationReporter {
         DEX_OPTIONS(LEGACY_DEXER.removalTarget),
 
         // Deprecation of Task Access in the variant API
-        TASK_ACCESS_VIA_VARIANT(Version.VERSION_5_0),
+        TASK_ACCESS_VIA_VARIANT(Version.VERSION_7_0),
 
         DSL_USE_PROGUARD(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "Use 'android.enableR8' in gradle.properties to switch between R8 and Proguard."
         ),
 
-        ENABLE_R8(Version.VERSION_5_0, "You will no longer be able to disable R8"),
+        ENABLE_R8(Version.VERSION_7_0, "You will no longer be able to disable R8"),
 
         // Deprecation of disabling Desugar
         DESUGAR_TOOL(ENABLE_R8.removalTarget),
 
         USE_PROPERTIES(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "Gradle Properties must be used to change Variant information."
         ),
 
         INCLUDE_COMPILE_CLASSPATH(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "It does not do anything and AGP no longer includes annotation processors added on your project's compile classpath"
         ),
 
         AGP_BUILD_CACHE(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "It does not do anything and AGP is now using Gradle caching."
         ),
 
         LINT_CHECK_ONLY(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "`check` has been renamed to `checkOnly` to make it clear that it " +
                     "will turn off all other checks than those explicitly listed. If that is " +
                     "what you actually intended, use `checkOnly`; otherwise switch to `enable`."
         ),
 
         JETIFIER_IGNORE_LIST(
-            Version.VERSION_5_0,
+            Version.VERSION_7_0,
             "Use android.jetifier.ignorelist instead."
         ),
 

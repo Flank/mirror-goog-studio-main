@@ -79,7 +79,7 @@ class RClassPackageTest {
         // Add package overrides and make sure that:
         // a) app package for R remains unchanged
         // b) androidTest R package gets changed to applicationId + ".test"
-        // TODO(b/162244493): migrate everything to use the actual package name in AGP 5.0.
+        // TODO(170945282): migrate everything to use the actual package name in AGP 7.0.
         project.buildFile.appendText(
                 """
                 android.defaultConfig.applicationId "com.hello.world"

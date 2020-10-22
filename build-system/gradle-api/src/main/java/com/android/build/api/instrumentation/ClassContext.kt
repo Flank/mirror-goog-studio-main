@@ -14,16 +14,26 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant
+package com.android.build.api.instrumentation
 
 import org.gradle.api.Incubating
 
-/**
- * Read-only object to access dependencies information properties during [com.android.build.api.extension.AndroidComponentsExtension#onVariants]
- */
 @Incubating
-interface DependenciesInfo {
+interface ClassContext {
 
-    val includeInApk: Boolean
-    val includeInBundle: Boolean
+    /**
+     * Contains information about the class that will be instrumented.
+     */
+    val currentClassData: ClassData
+
+    /**
+     * Loads the class data for the class with given [className].
+     *
+     * Returns null if a class named [className] couldn't be found in the runtime classpath of the
+     * class defined by the [currentClassData].
+     *
+     * @param className the fully qualified name of the class,
+     *                  (e.g. "com.android.build.api.instrumentation.ClassContext")
+     */
+    fun loadClassData(className: String): ClassData?
 }

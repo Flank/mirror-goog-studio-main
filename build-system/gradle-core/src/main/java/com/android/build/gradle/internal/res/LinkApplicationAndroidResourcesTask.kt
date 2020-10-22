@@ -799,8 +799,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 packageForR = if (parameters.variantType.get().isForTesting) {
                     // Workaround for b/162244493: Use application ID in the test variant to match
                     // previous behaviour.
-                    // TODO(b/162244493): migrate everything to use the actual package name in
-                    //  AGP 5.0.
+                    // TODO(170945282): migrate everything to use the actual package name in AGP
+                    //  7.0.
                     parameters.applicationId.get()
                 } else {
                     parameters.packageName.get()

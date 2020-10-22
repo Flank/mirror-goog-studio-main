@@ -33,6 +33,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
                     """
                 import com.android.build.api.dsl.CommonExtension
                 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+                import com.android.build.api.instrumentation.ClassContext
                 import com.android.build.api.instrumentation.ClassData
                 import com.android.build.api.instrumentation.FramesComputationMode
                 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -70,7 +71,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
                         AsmClassVisitorFactory<ExampleParams> {
 
                         override fun createClassVisitor(
-                            classData: ClassData,
+                            classContext: ClassContext,
                             nextClassVisitor: ClassVisitor
                         ): ClassVisitor {
                             return if (parameters.get().writeToStdout.get()) {

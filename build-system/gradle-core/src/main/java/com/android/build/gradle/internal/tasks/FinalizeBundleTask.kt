@@ -72,12 +72,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val finalBundleFile: RegularFileProperty
 
-    @get:OutputFile
-    abstract val bundleIdeModel: RegularFileProperty
-
-    @get:Input
-    abstract val applicationId: Property<String>
-
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(BundleToolRunnable::class.java) {
             it.initializeFromAndroidVariantTask(this)
@@ -86,9 +80,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             signingConfigData?.convertToParams()?.let { signing ->
                 it.signingConfig.set(signing)
             }
-            it.bundleIdeModel.set(bundleIdeModel)
-            it.applicationId.set(applicationId)
-            it.variantName.set(variantName)
         }
     }
 
@@ -96,9 +87,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
         abstract val intermediaryBundleFile: RegularFileProperty
         abstract val finalBundleFile: RegularFileProperty
         abstract val signingConfig: Property<SigningConfigProviderParams>
-        abstract val bundleIdeModel: RegularFileProperty
-        abstract val applicationId: Property<String>
-        abstract val variantName: Property<String>
     }
 
     abstract class BundleToolRunnable : ProfileAwareWorkAction<Params>() {
@@ -155,14 +143,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
             } ?: run {
                 compressBundle(parameters.intermediaryBundleFile.asFile.get(), parameters.finalBundleFile.asFile.get())
             }
-
-            BuiltArtifactsImpl(
-                artifactType = ArtifactType.BUNDLE,
-                applicationId = parameters.applicationId.get(),
-                variantName = parameters.variantName.get(),
-                elements = listOf(
-                    BuiltArtifactImpl.make(outputFile = parameters.finalBundleFile.asFile.get().absolutePath))
-            ).saveToFile(parameters.bundleIdeModel.asFile.get())
         }
     }
 
@@ -201,12 +181,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                     .withName(bundleName)
                     .on(ArtifactType.BUNDLE)
             }
-
-            creationConfig.artifacts.setInitialProvider(
-                taskProvider,
-                FinalizeBundleTask::bundleIdeModel
-            ).withName(BuiltArtifactsImpl.METADATA_FILE_NAME)
-                .on(InternalArtifactType.BUNDLE_IDE_MODEL)
         }
 
         override fun configure(
@@ -223,10 +197,6 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                 task.signingConfigData =
                     SigningConfigDataProvider.create(creationConfig as ComponentImpl)
             }
-
-            task.applicationId.setDisallowChanges(creationConfig.applicationId)
         }
-
     }
-
 }

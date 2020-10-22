@@ -151,6 +151,7 @@ class AsmInstrumentationManager(
 
         return if (filteredVisitors.isNotEmpty()) {
             classInputStream.invoke().use {
+                val classContext = ClassContextImpl(classData, classesHierarchyResolver)
                 val bytes = ByteStreams.toByteArray(it)
                 val classReader = ClassReader(bytes)
                 val classWriter =
@@ -162,7 +163,7 @@ class AsmInstrumentationManager(
                 }
 
                 filteredVisitors.forEach { entry ->
-                    nextVisitor = entry.createClassVisitor(classData, nextVisitor)
+                    nextVisitor = entry.createClassVisitor(classContext, nextVisitor)
                 }
 
                 classReader.accept(nextVisitor, classReaderFlags)

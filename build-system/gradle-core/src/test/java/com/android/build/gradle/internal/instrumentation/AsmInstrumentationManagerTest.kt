@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.instrumentation
 
 import com.android.SdkConstants.DOT_CLASS
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.ClassContext
 import com.android.build.api.instrumentation.ClassData
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -508,7 +509,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
     abstract class FirstVisitorAnnotationAddingFactory : AsmClassVisitorFactory<Params> {
 
         override fun createClassVisitor(
-            classData: ClassData,
+            classContext: ClassContext,
             nextClassVisitor: ClassVisitor
         ): ClassVisitor {
             return AnnotationAddingVisitor(
@@ -528,7 +529,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
 
     abstract class SecondVisitorAnnotationAddingFactory : AsmClassVisitorFactory<Params> {
         override fun createClassVisitor(
-            classData: ClassData,
+            classContext: ClassContext,
             nextClassVisitor: ClassVisitor
         ): ClassVisitor {
             return AnnotationAddingVisitor(
@@ -608,7 +609,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
 
     abstract class MaxsInvalidatingVisitorFactory : AsmClassVisitorFactory<Params> {
         override fun createClassVisitor(
-            classData: ClassData,
+            classContext: ClassContext,
             nextClassVisitor: ClassVisitor
         ): ClassVisitor {
             return MaxsInvalidatingClassVisitor(
@@ -649,7 +650,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
 
     abstract class MethodInjectingVisitorFactory : AsmClassVisitorFactory<Params> {
         override fun createClassVisitor(
-            classData: ClassData,
+            classContext: ClassContext,
             nextClassVisitor: ClassVisitor
         ): ClassVisitor {
             return MethodInjectingClassVisitor(
@@ -668,10 +669,10 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
         val capturedClassData: MutableList<ClassData> = mutableListOf()
 
         override fun createClassVisitor(
-            classData: ClassData,
+            classContext: ClassContext,
             nextClassVisitor: ClassVisitor
         ): ClassVisitor {
-            capturedClassData.add(classData)
+            capturedClassData.add(classContext.currentClassData)
             return object :
                 ClassVisitor(instrumentationContext.apiVersion.get(), nextClassVisitor) {}
         }

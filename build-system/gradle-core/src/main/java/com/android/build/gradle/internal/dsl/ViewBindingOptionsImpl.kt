@@ -21,7 +21,6 @@ import com.android.build.gradle.api.ViewBindingOptions
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
 import javax.inject.Inject
 
 /** DSL object for configuring view binding options.  */
@@ -37,7 +36,7 @@ open class ViewBindingOptionsImpl @Inject constructor(
                 .reportDeprecatedUsage(
                     "android.buildFeatures.viewBinding",
                     "android.viewBinding.enabled",
-                    DeprecationReporter.DeprecationTarget.VERSION_5_0
+                    DeprecationReporter.DeprecationTarget.VERSION_7_0
                 )
             val bool = features.viewBinding
             if (bool != null) {
@@ -50,7 +49,7 @@ open class ViewBindingOptionsImpl @Inject constructor(
                 .reportDeprecatedUsage(
                     "android.buildFeatures.viewBinding",
                     "android.viewBinding.enabled",
-                    DeprecationReporter.DeprecationTarget.VERSION_5_0
+                    DeprecationReporter.DeprecationTarget.VERSION_7_0
                 )
             features.viewBinding = value
         }

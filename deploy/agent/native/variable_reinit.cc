@@ -82,6 +82,24 @@ bool isArray(const std::string& jvm_type) {
   return !jvm_type.empty() && jvm_type.at(0) == '[';
 }
 
+// Return a "best effort" guess error message should a
+// newly introduced variable appears to be a Kotlin compiler
+// generated lambda capture.
+std::string GuessKotlinCaptureEror(const std::string& name) {
+  // This is a valid JVM identifier and not a valid Java language
+  // identifier which makes it safe to assume a compiler generated
+  // this variable. Given the name, we can make an educated guess
+  // that it is the compiler trying to capture a variable in a
+  // lambda.
+  const std::string& this_capture_prefix = "this$";
+
+  if (name.find(this_capture_prefix) != std::string::npos) {
+    return "\nPossible new lambda capture of an outer \"this\" variable";
+  }
+
+  return "";
+}
+
 }  // namespace
 
 SwapResult::Status VariableReinitializer::GatherPreviousState(
@@ -155,7 +173,7 @@ SwapResult::Status VariableReinitializer::GatherPreviousState(
         } else if (isObject(state.type())) {
           std::ostringstream msg;
           msg << "Adding field object " << def.name() << "." << state.name()
-              << std::endl;
+              << GuessKotlinCaptureEror(state.name()) << std::endl;
           *error_msg = msg.str();
           return SwapResult::UNSUPPORTED_REINIT_NON_STATIC_OBJECT;
         } else {

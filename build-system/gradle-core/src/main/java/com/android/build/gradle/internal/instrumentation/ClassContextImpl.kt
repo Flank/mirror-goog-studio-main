@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.api.variant
+package com.android.build.gradle.internal.instrumentation
 
-import org.gradle.api.Incubating
+import com.android.build.api.instrumentation.ClassContext
+import com.android.build.api.instrumentation.ClassData
 
-/**
- * Read-only object to access dependencies information properties during [com.android.build.api.extension.AndroidComponentsExtension#onVariants]
- */
-@Incubating
-interface DependenciesInfo {
+class ClassContextImpl(
+        override val currentClassData: ClassData,
+        val classesHierarchyResolver: ClassesHierarchyResolver
+) : ClassContext {
 
-    val includeInApk: Boolean
-    val includeInBundle: Boolean
+    @Synchronized
+    override fun loadClassData(className: String) =
+            classesHierarchyResolver.maybeLoadClassDataForClass(className)
 }

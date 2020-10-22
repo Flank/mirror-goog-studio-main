@@ -17,6 +17,7 @@
 package com.example.buildsrc.instrumentation
 
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.ClassContext
 import com.android.build.api.instrumentation.ClassData
 import com.android.build.api.instrumentation.InstrumentationParameters
 import org.gradle.api.model.ObjectFactory
@@ -29,7 +30,7 @@ import javax.inject.Inject
 abstract class AnnotationAddingClassVisitorFactory :
     AsmClassVisitorFactory<AnnotationAddingClassVisitorFactory.InstrumentationParams> {
     override fun createClassVisitor(
-        classData: ClassData,
+        classContext: ClassContext,
         nextClassVisitor: ClassVisitor
     ): ClassVisitor {
         return AnnotationAddingClassVisitor(

@@ -272,7 +272,7 @@ android {
     }
 
     @Test
-    fun onVariantPropertiesActionAddedFromOldVariantApiBlock() {
+    fun onVariantsActionAddedFromOldVariantApiBlock() {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
