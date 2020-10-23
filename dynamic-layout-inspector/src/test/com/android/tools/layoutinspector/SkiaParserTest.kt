@@ -19,9 +19,9 @@ import com.android.testutils.ImageDiffUtil
 import com.android.testutils.TestUtils
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
 import org.junit.Test
-import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
@@ -37,24 +37,62 @@ class SkiaParserTest {
     private external fun generateBoxes(): ByteArray?
 
     @Test
-    @Throws(Exception::class)
     fun testBoxes() {
         val response = SkiaParser.InspectorView.parseFrom(generateBoxes())
-        val tree = LayoutInspectorUtils.buildTree(response, {false}, mapOf())!!
+        val tree = LayoutInspectorUtils.buildTree(response, { false }, mapOf())!!
         assertTreeIdsEqual(
-            Node(1, listOf(
-                Node(1),
-                Node(4, listOf(
-                    Node(4))))), tree)
-        assertImagesSimilar(tree, 1, "skiaTest_testBoxes_1.png")
-        assertImagesSimilar(tree, 4, "skiaTest_testBoxes_4.png")
+            Node(
+                1, listOf(
+                    Node(1),
+                    Node(
+                        4, listOf(
+                            Node(4)
+                        )
+                    )
+                )
+            ), tree
+        )
+        assertImagesSimilar(tree, 1, 0, "skiaTest_testBoxes_1.png")
+        assertImagesSimilar(tree, 4, 0, "skiaTest_testBoxes_4.png")
     }
 
-    private fun assertImagesSimilar(root: SkiaViewNode, id: Long, fileName: String) {
+    private external fun generateTransformedViews(): ByteArray?
+
+    @Test
+    fun testTransformation() {
+        val response = SkiaParser.InspectorView.parseFrom(generateTransformedViews())
+        val tree = LayoutInspectorUtils.buildTree(response, { false }, mapOf())!!
+        assertTreeIdsEqual(
+            Node(
+                1, listOf(
+                    Node(1),
+                    Node(
+                        2, listOf(
+                            Node(2),
+                            Node(
+                                3, listOf(
+                                    Node(3)
+                                )
+                            )
+                        )
+                    ),
+                    Node(1)
+                )
+            ), tree
+        )
+
+        assertImagesSimilar(tree, 1, 0, "skiaTest_testTransformation_1a.png")
+        assertImagesSimilar(tree, 2, 0, "skiaTest_testTransformation_2.png")
+        assertImagesSimilar(tree, 3, 0, "skiaTest_testTransformation_3.png")
+        assertImagesSimilar(tree, 1, 1, "skiaTest_testTransformation_1b.png")
+    }
+
+    private fun assertImagesSimilar(root: SkiaViewNode, id: Long, instance: Int, fileName: String) {
         ImageDiffUtil.assertImageSimilar(
             File(TestUtils.getWorkspaceRoot(), "$TEST_DATA_PATH/$fileName"),
-            findImage(id, root) as? BufferedImage ?: fail("No image for id $id"),
-            0.0)
+            findImage(id, AtomicInteger(instance), root) ?: fail("No image for id $id"),
+            0.0
+        )
     }
 
     private class Node(val id: Long, val children: List<Node> = listOf())
@@ -66,7 +104,13 @@ class SkiaParserTest {
         expected.children.zip(actual.children).forEach { (e, a) -> assertTreeIdsEqual(e, a) }
     }
 
-    private fun findImage(id: Long, node: SkiaViewNode): Image? =
-        if (id == node.id && node.image != null) node.image
-        else node.children.mapNotNull { findImage(id, it) }.firstOrNull()
+    private fun findImage(id: Long, instance: AtomicInteger, node: SkiaViewNode): BufferedImage? {
+        if (id == node.id && node.image != null) {
+            if (instance.get() == 0) {
+                return node.image as? BufferedImage
+            }
+            instance.decrementAndGet()
+        }
+        return node.children.mapNotNull { findImage(id, instance, it) }.firstOrNull()
+    }
 }

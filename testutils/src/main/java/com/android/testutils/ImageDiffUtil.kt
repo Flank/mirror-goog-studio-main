@@ -59,12 +59,13 @@ object ImageDiffUtil {
         maxPercentDifferent: Double
     ) {
         if (!goldenFile.exists()) {
+            val converted = convertToARGB(actual)
             Files.createParentDirs(goldenFile)
             val outFile = File(TestUtils.getTestOutputDir(), goldenFile.name)
             // This will show up in undeclared outputs when running on a test server
-            ImageIO.write(actual, "PNG", outFile)
+            ImageIO.write(converted, "PNG", outFile)
             // This will copy the file to its designated location. Useful when running locally.
-            ImageIO.write(actual, "PNG", goldenFile)
+            ImageIO.write(converted, "PNG", goldenFile)
             Assert.fail("File did not exist, created here: $goldenFile and in undeclared outputs")
         }
         val goldenImage = ImageIO.read(goldenFile)
@@ -76,7 +77,7 @@ object ImageDiffUtil {
     @JvmStatic
     fun assertImageSimilar(
         imageName: String,
-        goldenImage: Image,
+        goldenImage: BufferedImage,
         image: Image,
         maxPercentDifferent: Double
     ) {
@@ -84,10 +85,9 @@ object ImageDiffUtil {
         if (goldenImage === image) {
             return
         }
-        val bufferedGoldenImage = convertToARGB(goldenImage)
         val bufferedImage = convertToARGB(image)
-        val imageWidth = min(bufferedGoldenImage.width, bufferedImage.width)
-        val imageHeight = min(bufferedGoldenImage.height, bufferedImage.height)
+        val imageWidth = min(goldenImage.width, bufferedImage.width)
+        val imageHeight = min(goldenImage.height, bufferedImage.height)
 
         // Blur the images to account for the scenarios where there are pixel
         // differences
@@ -105,7 +105,7 @@ object ImageDiffUtil {
         var delta = 0.0
         for (y in 0 until imageHeight) {
             for (x in 0 until imageWidth) {
-                val goldenRgb = bufferedGoldenImage.getRGB(x, y)
+                val goldenRgb = goldenImage.getRGB(x, y)
                 val rgb = bufferedImage.getRGB(x, y)
                 if (goldenRgb == rgb) {
                     deltaImage.setRGB(imageWidth + x, y, 0x00808080)
@@ -143,23 +143,23 @@ object ImageDiffUtil {
             percentDifference > maxPercentDifferent -> {
                 error = String.format("Images differ (by %.2g%%)", percentDifference)
             }
-            abs(bufferedGoldenImage.width - bufferedImage.width) >= 2 -> {
+            abs(goldenImage.width - bufferedImage.width) >= 2 -> {
                 error =
                     "Widths differ too much for $imageName: " +
-                            "${bufferedGoldenImage.width}x${bufferedGoldenImage.height} vs " +
+                            "${goldenImage.width}x${goldenImage.height} vs " +
                             "${bufferedImage.width}x${bufferedImage.height}"
             }
-            abs(bufferedGoldenImage.height - bufferedImage.height) >= 2 -> {
+            abs(goldenImage.height - bufferedImage.height) >= 2 -> {
                 error =
                     "Heights differ too much for $imageName: " +
-                            "${bufferedGoldenImage.width}x${bufferedGoldenImage.height} vs " +
+                            "${goldenImage.width}x${goldenImage.height} vs " +
                             "${bufferedImage.width}x${bufferedImage.height}"
             }
         }
         if (error != null) {
             // Expected on the left
             // Golden on the right
-            g.drawImage(bufferedGoldenImage, 0, 0, null)
+            g.drawImage(goldenImage, 0, 0, null)
             g.drawImage(bufferedImage, 2 * imageWidth, 0, null)
 
             // Labels
