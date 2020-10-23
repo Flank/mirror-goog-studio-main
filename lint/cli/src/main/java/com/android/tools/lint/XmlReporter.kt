@@ -201,7 +201,12 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                     // Don't use absolute paths in baseline files
                     client.flags.isFullPath && !isIntendedForBaseline
                 )
-                writeAttribute(writer, 3, "file", path)
+                // intendedForBaseline: neutralize paths
+                val neutralPath = if (isIntendedForBaseline)
+                    path.replace('\\', '/')
+                else
+                    path
+                writeAttribute(writer, 3, "file", neutralPath)
                 val start = location.start
                 if (start != null) {
                     val line = start.line
@@ -273,7 +278,11 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                         // Don't use absolute paths in baseline files
                         client.flags.isFullPath && !isIntendedForBaseline
                     )
-                    writeAttribute(writer, 4, "file", path)
+                    val neutralPath = if (isIntendedForBaseline)
+                        path.replace('\\', '/')
+                    else
+                        path
+                    writeAttribute(writer, 4, "file", neutralPath)
 
                     with(edit) {
                         val after = source.substring(max(startOffset - 12, 0), startOffset)
