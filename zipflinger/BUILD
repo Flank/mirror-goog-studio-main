@@ -197,13 +197,12 @@ java_test(
     ],
 )
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.zipflinger",
     srcs = ["src"],
     iml_files = ["android.sdktools.zipflinger.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     tags = ["no_test_mac"],
     test_data = glob(["test/resource/**"]),
     test_srcs = ["test/src/java"],

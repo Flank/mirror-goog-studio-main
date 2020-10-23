@@ -44,8 +44,7 @@ class BaseSwapCommand : public Command {
   // Derived classes should override this to set up for the swap, including
   // copying the agent binary to the appropriate location and building the swap
   // request.
-  virtual proto::SwapRequest PrepareAndBuildRequest(
-      proto::SwapResponse* response) = 0;
+  virtual std::unique_ptr<proto::SwapRequest> PrepareAndBuildRequest() = 0;
 
   // Derived classes should override this to handle the SwapResponse returned
   // from the Swap() method, which aggregates all the AgentSwapResponses into a
@@ -78,7 +77,8 @@ class BaseSwapCommand : public Command {
  private:
   std::string agent_path_;
 
-  void Swap(const proto::SwapRequest& request, proto::SwapResponse* response);
+  bool Swap(const std::unique_ptr<proto::SwapRequest> request,
+            proto::SwapResponse* response);
 
   // Filter non-app process ids by removing all pids with uids outside of the
   // range [FIRST_APPLICATION_UID, LAST_APPLICATION_UID] in android.os.Process.

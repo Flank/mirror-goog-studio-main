@@ -89,8 +89,6 @@ class VariantTest: VariantApiBaseTest(
                     class CustomPlugin: Plugin<Project> {
                         override fun apply(project: Project) {
                             project.plugins.withType(AppPlugin::class.java) {
-                                // NOTE: BaseAppModuleExtension is internal. This will be replaced by a public
-                                // interface
                                 val extension = project.extensions.getByName("androidComponents") as ApplicationAndroidComponentsExtension
                                 extension.configure(project)
                             }

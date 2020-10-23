@@ -72,7 +72,7 @@ class DeprecationReporterImplTest {
         Truth.assertThat(issueReporter.warnings).containsExactly(
             "The option setting 'android.enableD8=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
-                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                    "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
                     "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
         )
     }
@@ -131,7 +131,7 @@ class DeprecationReporterImplTest {
                     "The current default is 'true'.",
             "The option setting 'android.enableD8=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
-                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                    "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
                     "For more details, see https://d.android.com/r/studio-ui/d8-overview.html",
             "The option 'android.enableAapt2jni' is deprecated.\n" +
                     "The current default is 'false'.\n" +
@@ -147,7 +147,7 @@ class DeprecationReporterImplTest {
         Truth.assertThat(issueReporter.errors).isEmpty()
         Truth.assertThat(issueReporter.warnings).containsExactly(
             "The option setting 'android.enableR8=true' is deprecated.\n" +
-                    "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                    "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
                     "You will no longer be able to disable R8")
     }
 }

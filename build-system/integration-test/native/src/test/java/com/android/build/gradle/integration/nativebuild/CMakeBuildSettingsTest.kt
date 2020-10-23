@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject
 import com.android.utils.FileUtils
 import org.junit.Before
@@ -38,7 +37,6 @@ import java.io.File
 @RunWith(Parameterized::class)
 class CMakeBuildSettingsTest(
     private val cmakeVersionInDsl: String,
-    private val useV2NativeModel: Boolean
 ) {
     @Rule
     @JvmField
@@ -46,18 +44,15 @@ class CMakeBuildSettingsTest(
         .fromTestApp(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
         )
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "version={0} useV2NativeModel={1}")
+        @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
         fun data() = arrayOf(
-            arrayOf("3.6.0", false),
-            arrayOf(DEFAULT_CMAKE_VERSION, false),
-            arrayOf("3.6.0", true),
-            arrayOf(DEFAULT_CMAKE_VERSION, true)
+            arrayOf("3.6.0"),
+            arrayOf(DEFAULT_CMAKE_VERSION)
         )
     }
 

@@ -27,6 +27,9 @@ class RunasExecutor : public RedirectExecutor {
  public:
   RunasExecutor(const std::string& package, Executor& executor)
       : RedirectExecutor(kRunAsExecutable, package, executor) {}
+
+  RunasExecutor(const std::string& package)
+      : RedirectExecutor(kRunAsExecutable, package, Executor::Get()) {}
 };
 
 }  // namespace deploy

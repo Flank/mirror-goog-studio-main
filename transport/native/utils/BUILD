@@ -129,6 +129,7 @@ cc_test(
         "current_process_test.cc",
         "file_cache_test.cc",
         "file_reader_test.cc",
+        "fs/file_system_test.cc",
         "memory_map_test.cc",
         "native_backtrace_test.cc",
         "producer_consumer_queue_test.cc",

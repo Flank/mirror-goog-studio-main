@@ -29,6 +29,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.ObjectOutputStream
+import kotlin.test.fail
 
 /**
  * Tests for [BuiltArtifactsImpl]
@@ -280,6 +281,63 @@ class BuiltArtifactsImplTest {
         )
 
         ObjectOutputStream(ByteArrayOutputStream()).writeObject(artifacts)
+    }
+
+    @Test
+    fun testMixedFileTypes() {
+        val folder = tmpFolder.newFolder()
+        val file = tmpFolder.newFile()
+        try {
+            createBuiltArtifacts(
+                    BuiltArtifactImpl.make(folder.absolutePath),
+                    BuiltArtifactImpl.make(file.absolutePath)
+            )
+        } catch(e: IllegalArgumentException) {
+            Truth.assertThat(e.message).contains("${file.name} is a file")
+            Truth.assertThat(e.message).contains("${folder.name} is a directory")
+            return
+        }
+        fail("exception not thrown")
+    }
+
+    @Test
+    fun testMixedFileTypesWithMultipleFiles() {
+        val folder = tmpFolder.newFolder()
+        val fileOne = tmpFolder.newFile()
+        val fileTwo = tmpFolder.newFile()
+        try {
+            createBuiltArtifacts(
+                    BuiltArtifactImpl.make(folder.absolutePath),
+                    BuiltArtifactImpl.make(fileOne.absolutePath),
+                    BuiltArtifactImpl.make(fileTwo.absolutePath)
+            )
+        } catch(e: IllegalArgumentException) {
+            Truth.assertThat(e.message).contains(
+                    "${fileOne.name},${fileTwo.name} are files")
+            Truth.assertThat(e.message).contains("${folder.name} is a directory")
+            return
+        }
+        fail("exception not thrown")
+    }
+
+    @Test
+    fun testMixedFileTypesWithMultipleDirectories() {
+        val folderOne = tmpFolder.newFolder()
+        val folderTwo = tmpFolder.newFolder()
+        val file = tmpFolder.newFile()
+        try {
+            createBuiltArtifacts(
+                    BuiltArtifactImpl.make(folderOne.absolutePath),
+                    BuiltArtifactImpl.make(folderTwo.absolutePath),
+                    BuiltArtifactImpl.make(file.absolutePath)
+            )
+        } catch(e: IllegalArgumentException) {
+            Truth.assertThat(e.message).contains(
+                    "${folderOne.name},${folderTwo.name} are directories")
+            Truth.assertThat(e.message).contains("${file.name} is a file")
+            return
+        }
+        fail("exception not thrown")
     }
 
     private fun createBuiltArtifact(

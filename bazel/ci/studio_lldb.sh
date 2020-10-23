@@ -20,6 +20,7 @@ readonly java="${script_dir}/../../../../prebuilts/studio/jdk/linux/jre/bin/java
   --invocation_id=${invocation_id} \
   --tool_tag=${script_name} \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
+  --flaky_test_attempts=3 \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   //tools/vendor/google/lldb-integration-tests:lldb-integration-tests_tests
 

@@ -1,12 +1,11 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.layoutinspector",
     srcs = ["src"],
     iml_files = ["android.sdktools.layoutinspector.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.android.sdktools.common"],
     # do not sort: must match IML order
@@ -15,6 +14,6 @@ iml_module(
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )

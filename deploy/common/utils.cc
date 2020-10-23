@@ -18,6 +18,14 @@
 
 namespace deploy {
 
+void ConvertProtoEventsToEvents(
+    const google::protobuf::RepeatedPtrField<proto::Event>& events) {
+  for (int i = 0; i < events.size(); i++) {
+    const proto::Event& event = events.Get(i);
+    AddRawEvent(ConvertProtoEventToEvent(event));
+  }
+}
+
 deploy::Event ConvertProtoEventToEvent(
     const proto::Event& proto_event) noexcept {
   Event event;

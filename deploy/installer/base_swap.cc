@@ -56,7 +56,7 @@ void BaseSwapCommand::Run(proto::InstallerResponse* response) {
   }
 
   client_ = StartInstallServer(
-      workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
       package_name_, kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_) {
@@ -70,16 +70,25 @@ void BaseSwapCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  proto::SwapRequest request = PrepareAndBuildRequest(swap_response);
-  Swap(request, swap_response);
+  std::unique_ptr<proto::SwapRequest> request = PrepareAndBuildRequest();
+  if (request == nullptr) {
+    swap_response->set_status(proto::SwapResponse::SETUP_FAILED);
+    ErrEvent("BaseSwapCommand: Unable to PrepareAndBuildRequest");
+    return;
+  }
+
+  Swap(std::move(request), swap_response);
   ProcessResponse(swap_response);
 }
 
-void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
-                           proto::SwapResponse* swap_response) {
+bool BaseSwapCommand::Swap(
+    const std::unique_ptr<proto::SwapRequest> swap_request,
+    proto::SwapResponse* swap_response) {
   Phase p("Swap");
   if (swap_response->status() != proto::SwapResponse::UNKNOWN) {
-    return;
+    ErrEvent(
+        "BaseSwapCommand: Unable to Swap (swapResponse status is populated)");
+    return false;
   }
 
   // Remove process ids that we do not need to swap.
@@ -89,7 +98,7 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
   if (process_ids_.empty() && extra_agents_count_ == 0) {
     LogEvent("No PIDs needs to be swapped");
     swap_response->set_status(proto::SwapResponse::OK);
-    return;
+    return true;
   }
 
   // Request for the install-server to open a socket and begin listening for
@@ -97,12 +106,12 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
   proto::SwapResponse::Status status = ListenForAgents();
   if (status != proto::SwapResponse::OK) {
     swap_response->set_status(status);
-    return;
+    return false;
   }
 
   if (!AttachAgents()) {
     swap_response->set_status(proto::SwapResponse::AGENT_ATTACH_FAILED);
-    return;
+    return false;
   }
 
   // Request for the install-server to accept a connection for each agent
@@ -113,11 +122,12 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
 
   auto send_request = server_request.mutable_send_request();
   send_request->set_agent_count(process_ids_.size() + extra_agents_count_);
-  *send_request->mutable_agent_request()->mutable_swap_request() = swap_request;
+  *send_request->mutable_agent_request()->mutable_swap_request() =
+      *swap_request.get();
 
   if (!client_->Write(server_request)) {
     swap_response->set_status(proto::SwapResponse::WRITE_TO_SERVER_FAILED);
-    return;
+    return false;
   }
 
   proto::InstallServerResponse server_response;
@@ -125,17 +135,12 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
       server_response.status() !=
           proto::InstallServerResponse::REQUEST_COMPLETED) {
     swap_response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);
-    return;
+    return false;
   }
 
   const auto& agent_server_response = server_response.send_response();
   for (const auto& agent_response : agent_server_response.agent_responses()) {
-    // Convert proto events to events.
-    for (int i = 0; i < agent_response.events_size(); i++) {
-      const proto::Event& event = agent_response.events(i);
-      AddRawEvent(ConvertProtoEventToEvent(event));
-    }
-
+    ConvertProtoEventsToEvents(agent_response.events());
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = swap_response->add_failed_agents();
       *failed_agent = agent_response;
@@ -145,10 +150,11 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
   if (agent_server_response.status() == proto::SendAgentMessageResponse::OK) {
     if (swap_response->failed_agents_size() == 0) {
       swap_response->set_status(proto::SwapResponse::OK);
+      return true;
     } else {
       swap_response->set_status(proto::SwapResponse::AGENT_ERROR);
+      return false;
     }
-    return;
   }
 
   CmdCommand cmd(workspace_);
@@ -158,27 +164,28 @@ void BaseSwapCommand::Swap(const proto::SwapRequest& swap_request,
       if (record.crashing) {
         swap_response->set_status(proto::SwapResponse::PROCESS_CRASHING);
         swap_response->set_extra(record.process_name);
-        return;
+        return false;
       }
 
       if (record.not_responding) {
         swap_response->set_status(proto::SwapResponse::PROCESS_NOT_RESPONDING);
         swap_response->set_extra(record.process_name);
-        return;
+        return false;
       }
     }
   }
 
-  for (int pid : swap_request.process_ids()) {
+  for (int pid : swap_request->process_ids()) {
     const std::string pid_string = to_string(pid);
     if (IO::access("/proc/" + pid_string, F_OK) != 0) {
       swap_response->set_status(proto::SwapResponse::PROCESS_TERMINATED);
       swap_response->set_extra(pid_string);
-      return;
+      return false;
     }
   }
 
   swap_response->set_status(proto::SwapResponse::MISSING_AGENT_RESPONSES);
+  return false;
 }
 
 void BaseSwapCommand::FilterProcessIds(std::vector<int>* process_ids) {

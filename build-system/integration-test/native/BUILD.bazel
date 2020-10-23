@@ -79,14 +79,6 @@ WINDOWS_DISABLED_TAG = [
 ]
 
 single_gradle_integration_test(
-    name = "CmakeExtensionsTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
     name = "CmakeBasicProjectTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
@@ -167,6 +159,15 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
+    name = "CmakeVariantApiTest",
+    timeout = "long",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
     name = "CombinedAbiDensitySplits",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK + ["//tools/base/build-system/integration-test:test-projects/combinedAbiDensitySplits"],
@@ -191,6 +192,16 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
+    name = "KeepDebugSymbolsTest",
+    timeout = "long",
+    srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
     name = "MergeNativeDebugMetadataTaskTest",
     srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
     data = DATA + CMAKE + NDK + ["//tools/base/build-system/integration-test:test-projects/dynamicApp"],
@@ -201,14 +212,6 @@ single_gradle_integration_test(
 
 single_gradle_integration_test(
     name = "NativeBuildOutputTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK,
-    maven_repos = MAVEN_REPOS,
-    deps = DEPS,
-)
-
-single_gradle_integration_test(
-    name = "V1NativeModelTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
@@ -258,6 +261,15 @@ single_gradle_integration_test(
 
 single_gradle_integration_test(
     name = "NdkBuildTargetsTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + NDK,
+    maven_repos = MAVEN_REPOS,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "NdkBuildVariantApiTest",
+    timeout = "long",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,
     maven_repos = MAVEN_REPOS,

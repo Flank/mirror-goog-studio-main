@@ -49,10 +49,10 @@ import java.nio.charset.StandardCharsets
 internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>,
-    variantBuilder: GradleBuildVariant.Builder
+    variantBuilder: GradleBuildVariant.Builder?
 ) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
     init {
-        variantBuilder.nativeBuildSystemType = CMAKE
+        variantBuilder?.nativeBuildSystemType = CMAKE
         cmakeMakefileChecks(variant)
     }
 

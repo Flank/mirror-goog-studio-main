@@ -70,12 +70,6 @@ def main():
         'Make sure to change the path to C:\\tools\\msys64\n' +
         '\n' +
         'See also: https://github.com/bazelbuild/bazel/issues/2447')
-    python_path = 'C:\\python27\\python.exe'
-    if not os.path.exists(python_path):
-        # Use path from Windows 2016 images.
-        # TODO(b/153749013) Remove after completing Windows 2019 migration.
-        python_path = 'C:\\python_27_amd64\\files\\python.exe'
-    define_env(env, 'BAZEL_PYTHON', python_path)
     # Bazel for windows requires a couple of extra env vars be set
     # SYSTEMROOT must be defined to run a win .exe; otherwise, subprocess.call
     # will hang.

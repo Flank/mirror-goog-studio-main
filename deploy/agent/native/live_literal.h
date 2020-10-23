@@ -33,6 +33,10 @@ class LiveLiteral {
       const proto::LiveLiteralUpdateRequest& request);
 
  private:
+  // Look up key name from the parse tree offset. The helper is a Compose
+  // generated class able to work with information about the initial parse tree.
+  jstring LookUpKeyByOffSet(const std::string& helper, int offset);
+
   ClassFinder class_finder_;
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;

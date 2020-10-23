@@ -134,9 +134,7 @@ class CMakeSettingsNameResolver(environments: List<CMakeSettingsEnvironment>) {
             environmentNames,
             mutableSetOf(),
             matches)
-        return matches
-            .sortedByDescending { it.groupPriority }
-            .firstOrNull()
-            ?.propertyValue
+        return matches.maxBy { it.groupPriority }
+                ?.propertyValue
     }
 }

@@ -26,6 +26,8 @@ namespace deploy {
 // possible to unit test complex installer commands.
 class Executor {
  public:
+  static Executor& Get();
+
   virtual bool Run(const std::string& executable_path,
                    const std::vector<std::string>& args, std::string* output,
                    std::string* error) const = 0;

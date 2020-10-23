@@ -1,4 +1,4 @@
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:maven.bzl", "maven_java_import", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 maven_pom(
@@ -13,10 +13,17 @@ maven_pom(
     visibility = ["//visibility:public"],
 )
 
-maven_java_library(
+maven_java_import(
     name = "aapt2-proto",
+    jars = [":libaapt2-proto-with-notice.jar"],
     pom = ":pom",
+    visibility = ["//visibility:public"],
+)
+
+# This is here just to merge the NOTICE file into the prebuilt proto jar.
+java_library(
+    name = "aapt2-proto-with-notice",
     resource_jars = ["//prebuilts/tools/common/aapt/protos"],
     resource_strip_prefix = "tools/base/build-system/aapt2-proto",
-    visibility = ["//visibility:public"],
+    resources = ["NOTICE"],
 )

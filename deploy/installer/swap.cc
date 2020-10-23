@@ -45,7 +45,7 @@ namespace deploy {
 namespace {
 const std::string kAgentFilename = "agent.so";
 const std::string kAgentAltFilename = "agent-alt.so";
-const std::string kServerFilename = "server.so";
+const std::string kServerFilename = "install_server";
 }  // namespace
 
 // Note: the use of shell commands for what would typically be regular stdlib
@@ -94,6 +94,10 @@ void SwapCommand::Run(proto::InstallerResponse* response) {
 
   proto::SwapResponse::Status swap_status = Swap();
 
+  proto::InstallServerResponse server_response;
+  client_->KillServerAndWait(&server_response);
+  ConvertProtoEventsToEvents(server_response.events());
+
   // If the swap fails, abort the installation.
   if (swap_status != proto::SwapResponse::OK) {
     cmd.AbortInstall(install_session, &output);
@@ -123,6 +127,10 @@ bool SwapCommand::Setup() noexcept {
     ErrEvent("Could not copy binaries");
     return false;
   }
+
+  client_ = StartInstallServer(
+      Executor::Get(), workspace_.GetTmpFolder() + kServerFilename,
+      request_.package_name(), kServerFilename + "-" + workspace_.GetVersion());
 
   return true;
 }
@@ -181,13 +189,13 @@ bool SwapCommand::CopyBinaries(const std::string& src_path,
   }
 
   if (need_server) {
-    matryoshka::Doll* agent_server =
-        matryoshka::FindByName(dolls, "agent_server");
-    if (!agent_server) {
-      ErrEvent("Installer binary does not contain agent_server");
+    matryoshka::Doll* install_server =
+        matryoshka::FindByName(dolls, kServerFilename);
+    if (!install_server) {
+      ErrEvent("Installer binary does not contain install server");
       return false;
     }
-    if (!WriteArrayToDisk(agent_server->content, agent_server->content_len,
+    if (!WriteArrayToDisk(install_server->content, install_server->content_len,
                           server_src_path)) {
       ErrEvent("Failed to write agent_server");
       return false;
@@ -221,60 +229,50 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
     return proto::SwapResponse::OK;
   }
   // Start the server and wait for it to begin listening for connections.
-  int read_fd, write_fd, agent_server_pid, status;
-  if (!WaitForServer(request_.process_ids().size() + request_.extra_agents(),
-                     &agent_server_pid, &read_fd, &write_fd)) {
+  if (!WaitForServer()) {
     ErrEvent("Unable to start server");
     return proto::SwapResponse::START_SERVER_FAILED;
   }
 
-  OwnedProtoPipe server_input(write_fd);
-  OwnedMessagePipeWrapper server_output(read_fd);
+  proto::InstallServerRequest server_request;
+  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+
+  proto::InstallServerResponse server_response;
 
   if (!AttachAgents()) {
     ErrEvent("Could not attach agents");
-    waitpid(agent_server_pid, &status, 0);
+    client_->KillServerAndWait(&server_response);
     return proto::SwapResponse::AGENT_ATTACH_FAILED;
-  }
-
-  if (!server_input.Write(request_)) {
-    ErrEvent("Could not write to agent proxy server");
-    waitpid(agent_server_pid, &status, 0);
-    return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
   }
 
   size_t total_agents = request_.process_ids().size() + request_.extra_agents();
 
-  std::string response_bytes;
-  std::unordered_map<int, proto::AgentResponse> agent_responses;
+  auto send_request = server_request.mutable_send_request();
+  send_request->set_agent_count(total_agents);
+  *send_request->mutable_agent_request()->mutable_swap_request() = request_;
+  if (!client_->Write(server_request)) {
+    ErrEvent("Could not write to install server");
+    client_->KillServerAndWait(&server_response);
+    return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
+  }
 
-  while (agent_responses.size() < total_agents &&
-         server_output.Read(&response_bytes)) {
-    proto::AgentResponse agent_response;
+  if (!client_->Read(&server_response)) {
+    ErrEvent("Could not read from install server");
+    client_->KillServerAndWait(&server_response);
+    return proto::SwapResponse::READ_FROM_SERVER_FAILED;
+  }
 
-    if (!agent_response.ParseFromString(response_bytes)) {
-      waitpid(agent_server_pid, &status, 0);
-      return proto::SwapResponse::UNPARSEABLE_AGENT_RESPONSE;
-    }
-
-    agent_responses.emplace(agent_response.pid(), agent_response);
-
-    // Convert proto events to events.
-    for (int i = 0; i < agent_response.events_size(); i++) {
-      const proto::Event& event = agent_response.events(i);
-      AddRawEvent(ConvertProtoEventToEvent(event));
-    }
-
+  for (const auto& agent_response :
+       server_response.send_response().agent_responses()) {
+    ConvertProtoEventsToEvents(agent_response.events());
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = response_->add_failed_agents();
       *failed_agent = agent_response;
     }
   }
-  // Cleanup zombie agent-server status from the kernel.
-  waitpid(agent_server_pid, &status, 0);
 
   // Ensure all of the agents have responded.
-  if (agent_responses.size() == total_agents) {
+  if (server_response.send_response().agent_responses_size() == total_agents) {
     return response_->failed_agents_size() == 0
                ? proto::SwapResponse::OK
                : proto::SwapResponse::AGENT_ERROR;
@@ -307,52 +305,35 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   return proto::SwapResponse::MISSING_AGENT_RESPONSES;
 }
 
-bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
-                                int* write_fd) const {
+bool SwapCommand::WaitForServer() const {
   Phase p("WaitForServer");
+  proto::InstallServerRequest server_request;
+  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
 
-  int sync_pipe[2];
-  if (pipe(sync_pipe) != 0) {
-    ErrEvent("Could not create sync pipe");
+  auto socket_request = server_request.mutable_socket_request();
+  socket_request->set_socket_name(Socket::kDefaultAddress);
+
+  proto::InstallServerResponse server_response;
+  if (!client_->Write(server_request)) {
+    ErrEvent("SwapCommand::WaitForServer: Error writing to install-server");
     return false;
   }
 
-  const int sync_read_fd = sync_pipe[0];
-  const int sync_write_fd = sync_pipe[1];
-
-  // The server doesn't know about the read end of the pipe, so set it to
-  // close-on-exec. Not a big deal if this fails, but we should still log.
-  if (fcntl(sync_read_fd, F_SETFD, FD_CLOEXEC) == -1) {
-    LogEvent("Could not set sync pipe read end to close-on-exec");
+  if (!client_->Read(&server_response)) {
+    ErrEvent("SwapCommand::WaitForServer: Error reading from install-server");
+    return false;
   }
 
-  std::vector<std::string> parameters;
-  parameters.push_back(to_string(agent_count));
-  parameters.push_back(Socket::kDefaultAddress);
-
-  // Pass the write end of the sync pipe to the server. The server will close
-  // the pipe to indicate that it is ready to receive connections.
-  parameters.push_back(to_string(sync_write_fd));
-  LogEvent(parameters.back());
-
-  int err_fd = -1;
-  RunasExecutor run_as(request_.package_name(), workspace_.GetExecutor());
-  bool success = run_as.ForkAndExec(target_dir_ + kServerFilename, parameters,
-                                    write_fd, read_fd, &err_fd, server_pid);
-  close(sync_write_fd);
-  close(err_fd);
-
-  if (success) {
-    // This branch is only possible in the parent process; we only reach this
-    // conditional in the child if success is false (the server failed to run).
-    char unused;
-    if (read(sync_read_fd, &unused, 1) != 0) {
-      ErrEvent("Unexpected response received on sync pipe");
-    }
+  if (server_response.status() !=
+          proto::InstallServerResponse::REQUEST_COMPLETED ||
+      server_response.socket_response().status() !=
+          proto::OpenAgentSocketResponse::OK) {
+    ErrEvent(
+        "SwapCommand::WaitForServer: Unexpected response from install-server");
+    return false;
   }
 
-  close(sync_read_fd);
-  return success;
+  return true;
 }
 
 bool SwapCommand::AttachAgents() const {
@@ -382,8 +363,8 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          const std::vector<std::string>& args,
                          std::string* output) const {
   std::string err;
-  Executor* executor = &workspace_.GetExecutor();
-  RunasExecutor alt(request_.package_name(), workspace_.GetExecutor());
+  Executor* executor = &Executor::Get();
+  RunasExecutor alt(request_.package_name(), *executor);
   if (run_as == User::APP_PACKAGE) {
     executor = &alt;
   }

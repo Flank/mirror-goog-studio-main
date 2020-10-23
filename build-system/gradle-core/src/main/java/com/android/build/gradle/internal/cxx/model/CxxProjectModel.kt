@@ -47,12 +47,6 @@ data class CxxProjectModel(
     val sdkFolder: File = File("."),
 
     /**
-     * Whether compiler settings cache is enabled
-     *   default -pandroid.enableNativeCompilerSettingsCache=false
-     */
-    val isNativeCompilerSettingsCacheEnabled: Boolean = false,
-
-    /**
      * Whether to build a single ABI for IDE
      *   default -pandroid.buildOnlyTargetAbi=true
      */
@@ -79,6 +73,4 @@ data class CxxProjectModel(
      * Feature flag enabling prefab for the project.
      */
     val isPrefabEnabled: Boolean = false,
-
-    val isV2NativeModelEnabled: Boolean = false
 )

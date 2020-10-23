@@ -188,5 +188,5 @@ abstract class VariantImpl(
     abstract override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
-            stats: GradleBuildVariant.Builder): T
+            stats: GradleBuildVariant.Builder?): T
 }

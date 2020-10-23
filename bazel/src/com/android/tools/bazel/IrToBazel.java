@@ -57,7 +57,7 @@ public class IrToBazel {
         File projectDir =
                 bazelProject.getBaseDir().toPath().resolve(bazelProject.getProjectPath()).toFile();
         Path workspace = bazelProject.getBaseDir().toPath();
-        Workspace bazel = new Workspace(workspace.toFile(), bazelProject.id());
+        Workspace bazel = new Workspace(workspace.toFile());
 
         // Map from file path to the bazel rule that provides it. Usually java_imports.
         Map<String, BazelRule> jarRules = Maps.newHashMap();
@@ -187,10 +187,6 @@ public class IrToBazel {
                             Package libPackage =
                                     library.owner == null ? librariesPkg : imlModule.getPackage();
                             String libName = library.getName().replaceAll(":", "_");
-                            libName =
-                                    bazelProject.id().isEmpty()
-                                            ? libName
-                                            : bazelProject.id() + "." + libName;
 
                             // Group library files by package
                             ArrayList<Package> pkgs = new ArrayList<>();
@@ -347,7 +343,6 @@ public class IrToBazel {
             //noinspection ConstantConditions - getLibraryName() is not null for module-level
             // libraries.
             String libName = library.name.replaceAll(":", "_");
-            libName = bazelProject.id().isEmpty() ? libName : bazelProject.id() + "." + libName;
             namedLib = libraries.get(libName.toLowerCase());
             if (namedLib == null) {
                 namedLib = new JavaLibrary(librariesPkg, libName);
@@ -391,9 +386,6 @@ public class IrToBazel {
                             target = pickTargetNameForMavenArtifact(file);
                         } else {
                             target = packageRelative.replaceAll("\\.jar$", "");
-                            if (!bazelProject.id().isEmpty()) {
-                                target = target.replaceFirst("([^/]*)$", bazelProject.id() + ".$1");
-                            }
                         }
                         try {
                             JavaImport javaImport = new JavaImport(jarPkg, target);

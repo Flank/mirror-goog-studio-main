@@ -3,13 +3,12 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "java_proto_library")
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.ddmlib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.ddmlib.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -17,21 +16,21 @@ iml_module(
     # do not sort: must match IML order
     exports = [
         "//tools/base/common:studio.android.sdktools.common",
-        "//tools/adt/idea/.idea/libraries:unb.kxml2",
+        "//tools/adt/idea/.idea/libraries:kxml2",
     ],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kxml2",
-        "//tools/adt/idea/.idea/libraries:unb.easymock[test]",
+        "//tools/adt/idea/.idea/libraries:kxml2",
+        "//tools/adt/idea/.idea/libraries:easymock[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
-        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
+        "//tools/adt/idea/.idea/libraries:mockito[test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:unb.protobuf",
-        "//tools/adt/idea/.idea/libraries:unb.libam-instrumentation-data-proto",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:protobuf",
+        "//tools/adt/idea/.idea/libraries:libam-instrumentation-data-proto",
     ],
 )
 

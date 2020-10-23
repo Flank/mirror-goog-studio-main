@@ -24,8 +24,8 @@ import java.io.File
 import java.io.Reader
 
 data class NdkMetaPlatforms(
-    val min : Int = potentialPlatforms.start,
-    val max : Int = potentialPlatforms.endInclusive,
+    val min : Int = potentialPlatforms.first,
+    val max : Int = potentialPlatforms.last,
     val aliases : Map<String, Int> = mapOf()) {
 
     init {
@@ -57,7 +57,7 @@ data class NdkMetaPlatforms(
          */
         fun fromReader(reader : Reader) : NdkMetaPlatforms {
             val mapTypeToken = object : TypeToken<NdkMetaPlatforms>() {}.type
-            return Gson().fromJson<NdkMetaPlatforms>(reader, mapTypeToken)
+            return Gson().fromJson(reader, mapTypeToken)
         }
     }
 }

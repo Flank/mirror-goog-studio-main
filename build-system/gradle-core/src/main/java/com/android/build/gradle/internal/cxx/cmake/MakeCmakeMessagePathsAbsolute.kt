@@ -41,25 +41,25 @@ private val pattern = "^(.*CMake (Error|Warning).* at\\s+)([^:]+)(:.*)$".toRegex
  * TODO(jomof) this string could be very large. This function should accept and return a sequence of lines
  */
 fun makeCmakeMessagePathsAbsolute(cmakeOutput: String, makeFileDirectory: File): String {
-    return StringReader(cmakeOutput).readLines().map { line ->
-            val match = pattern.matchEntire(line)
-            if (match == null) {
+    return StringReader(cmakeOutput).readLines().joinToString(System.lineSeparator()) { line ->
+        val match = pattern.matchEntire(line)
+        if (match == null) {
+            line
+        } else {
+            val type = match.groupValues[1]
+            val makeFileName = match.groupValues[3]
+            val message = match.groupValues[4]
+            if (File(makeFileName).isAbsolute) {
+                // No need to update absolute paths.
                 line
             } else {
-                val type = match.groupValues[1]
-                val makeFileName = match.groupValues[3]
-                val message = match.groupValues[4]
-                if (File(makeFileName).isAbsolute) {
-                    // No need to update absolute paths.
+                val resolved = join(makeFileDirectory, makeFileName)
+                if (!resolved.isFile) {
                     line
                 } else {
-                    val resolved = join(makeFileDirectory, makeFileName)
-                    if (!resolved.isFile) {
-                        line
-                    } else {
-                        "$type${resolved.absolutePath}$message"
-                    }
+                    "$type${resolved.absolutePath}$message"
                 }
             }
-        }.joinToString(System.lineSeparator())
+        }
+    }
 }

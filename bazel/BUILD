@@ -96,17 +96,6 @@ java_binary(
 )
 
 java_binary(
-    name = "fix_unbundled_rules",
-    srcs = ["src/com/android/tools/binaries/FixUnbundledRules.java"],
-    main_class = "com.android.tools.binaries.FixUnbundledRules",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":bazel_generator",
-        ":utils",
-    ],
-)
-
-java_binary(
     name = "zip_merger",
     srcs = ["src/com/android/tools/binaries/ZipMerger.java"],
     main_class = "com.android.tools.binaries.ZipMerger",

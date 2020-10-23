@@ -22,6 +22,7 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/server/install_server.h"
 
@@ -47,7 +48,6 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   Phase p("Overlay ID Push");
 
   if (!ExtractBinaries(workspace_.GetTmpFolder(), {kInstallServer})) {
-    // TODO Error Handling
     ErrEvent("Extracting binaries failed");
     return;
   }
@@ -63,16 +63,17 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   update_request->set_wipe_all_files(request_.wipe_overlays());
 
   std::unique_ptr<InstallClient> client_ = StartInstallServer(
-      workspace_.GetExecutor(), workspace_.GetTmpFolder() + kInstallServer,
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
       request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
 
   if (!client_) {
-    // TODO Error Handling
+    ErrEvent("OverlayIdPushCommand error: No client");
     return;
   }
 
   if (!client_->Write(install_request)) {
-    // TODO Error Handling.
+    ErrEvent(
+        "OverlayIdPushCommand error: Unable to write request to AppServer");
     return;
   }
 
@@ -82,13 +83,15 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  if (install_response.overlay_response().status() !=
-      proto::OverlayUpdateResponse::OK) {
-    // TODO Error Handling.
+  proto::OverlayUpdateResponse_Status status =
+      install_response.overlay_response().status();
+  if (status != proto::OverlayUpdateResponse::OK) {
+    ErrEvent("OverlayIdPushCommand error: Bad status (" + to_string(status) +
+             ")");
   }
 
   if (!client_->KillServerAndWait(&install_response)) {
-    // TODO Error Handling.
+    ErrEvent("OverlayIdPushCommand error: Unable to kill AppServer");
     return;
   }
 

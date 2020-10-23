@@ -8,13 +8,12 @@ load(
     "maven_repo",
 )
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
@@ -22,11 +21,11 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
-        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
+        "//tools/adt/idea/.idea/libraries:mockito[test]",
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )
 
@@ -108,11 +107,17 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "6.7-rc-4"
+GRADLE_VERSION = "6.7"
 
 filegroup(
     name = "gradle-distrib",
     srcs = ["//tools/external/gradle:gradle-distrib-" + GRADLE_VERSION],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gradle-distrib-6.5",
+    srcs = ["//tools/external/gradle:gradle-distrib-6.5"],
     visibility = ["//visibility:public"],
 )
 

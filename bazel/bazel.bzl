@@ -382,48 +382,6 @@ _iml_module_ = rule(
     implementation = _iml_module_impl,
 )
 
-def _iml_runtime_impl(ctx):
-    providers = [ctx.attr.iml_module.module.main_provider]
-    module_runtime = depset()
-    transitive_data = depset()
-    names = []
-    module_jars = None
-
-    for dep in ctx.attr.runtime_deps:
-        if JavaInfo in dep:
-            providers += [dep[JavaInfo]]
-        if hasattr(dep, "runtime_info"):
-            fail("runtime should not depend on runtime")
-        if hasattr(dep, "module"):
-            module_runtime = depset(transitive = [module_runtime, dep.module.module_runtime])
-            module_jars = dep.module.module_jars
-            transitive_data = depset(transitive = [transitive_data, dep.module.transitive_data])
-            names = dep.module.names
-
-    combined_provider = java_common.merge(providers)
-
-    # for name in ctx.attr.iml_module.module.names:
-    module_runtime = depset(transitive = [module_runtime, combined_provider.transitive_runtime_jars])
-
-    return struct(
-        providers = [combined_provider],
-        runtime_info = struct(
-            module_runtime = module_runtime,
-            module_jars = module_jars,
-            transitive_data = transitive_data,
-            names = names,
-        ),
-    )
-
-_iml_runtime = rule(
-    attrs = {
-        "iml_module": attr.label(),
-        "runtime_deps": attr.label_list(),
-    },
-    fragments = ["java"],
-    implementation = _iml_runtime_impl,
-)
-
 def _iml_test_module_impl(ctx):
     providers = [ctx.attr.iml_module.module.test_provider]
     for dep in ctx.attr.runtime_deps:
@@ -516,8 +474,6 @@ def iml_module(
         test_resources = [],
         deps = [],
         runtime_deps = [],
-        test_runtime_deps = [],
-        manual_test_runtime_deps = [],
         test_friends = [],
         visibility = [],
         exports = [],
@@ -581,14 +537,6 @@ def iml_module(
         bundled_deps = bundled_deps,
     )
 
-    _iml_runtime(
-        name = name + "_runtime",
-        tags = tags,
-        iml_module = ":" + name,
-        runtime_deps = runtime_deps + [":" + name],
-        visibility = visibility,
-    )
-
     if srcs.javas + srcs.kotlins:
         coverage_baseline(
             name = name,
@@ -598,15 +546,15 @@ def iml_module(
         )
 
     # Only add test utils to other than itself.
-    test_utils = [] if name == "studio.testutils" else ["//tools/base/testutils:studio.android.sdktools.testutils"]
+    test_utils = [] if name == "studio.android.sdktools.testutils" else ["//tools/base/testutils:studio.android.sdktools.testutils"]
     _iml_test_module_(
         name = name + "_testlib",
         tags = tags,
         iml_module = ":" + name,
         testonly = True,
         visibility = visibility,
-        runtime_deps = runtime_deps + test_runtime_deps + [
-            ":" + name + "_runtime",
+        runtime_deps = runtime_deps + [
+            ":" + name,
             "//tools/base/bazel:langtools",
         ] + test_utils,
     )
@@ -650,7 +598,7 @@ def iml_module(
             split_test_targets = split_test_targets,
             test_tags = test_tags,
             test_data = test_data,
-            runtime_deps = manual_test_runtime_deps + [":" + name + "_testlib"],
+            runtime_deps = [":" + name + "_testlib"],
             timeout = test_timeout,
             jvm_flags = ["-Dtest.suite.jar=" + name + "_test.jar"],
             test_class = test_class,
@@ -662,7 +610,7 @@ def iml_module(
         coverage_java_test(
             name = name + "_tests",
             tags = test_tags,
-            runtime_deps = manual_test_runtime_deps + [":" + name + "_testlib"],
+            runtime_deps = [":" + name + "_testlib"],
             flaky = test_flaky,
             timeout = test_timeout,
             shard_count = test_shard_count,

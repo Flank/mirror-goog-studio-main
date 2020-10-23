@@ -35,7 +35,7 @@ namespace deploy {
 
 class Workspace {
  public:
-  Workspace(const std::string& version, Executor* executor);
+  Workspace(const std::string& version);
 
   const std::string GetVersion() const noexcept { return version_; }
 
@@ -55,10 +55,6 @@ class Workspace {
 
   const MessagePipeWrapper& GetOutput() const noexcept { return output_pipe_; }
 
-  Executor& GetExecutor() const noexcept { return *executor_; }
-
-  void SetExecutor(Executor* executor) { executor_ = executor; }
-
   void Init() noexcept;
 
  private:
@@ -69,8 +65,6 @@ class Workspace {
 
   std::string tmp_;
   std::string pids_folder_;
-
-  Executor* executor_;
 
   deploy::MessagePipeWrapper output_pipe_;
 };

@@ -34,7 +34,7 @@
     <orderEntry type="module" module-name="transport-test-framework" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module-library" scope="PROVIDED">
-      <library>
+      <library name="native artifacts">
         <CLASSES />
         <JAVADOC />
         <NATIVE>
@@ -44,5 +44,9 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" scope="TEST" name="layoutinspector-skia-proto" level="project" />
+    <orderEntry type="library" name="protobuf" level="project" />
+    <orderEntry type="module" module-name="layout-inspector-common" scope="TEST" />
+    <orderEntry type="library" name="kotlin-test" level="project" />
   </component>
 </module>

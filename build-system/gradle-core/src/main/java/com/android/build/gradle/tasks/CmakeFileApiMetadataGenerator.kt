@@ -40,10 +40,10 @@ import org.gradle.process.ExecOperations
 internal class CmakeQueryMetadataGenerator(
         variant: CxxVariantModel,
         abis: List<CxxAbiModel>,
-        @get:Internal override val variantBuilder: GradleBuildVariant.Builder
+        @get:Internal override val variantBuilder: GradleBuildVariant.Builder?
 ) : ExternalNativeJsonGenerator(variant, abis, variantBuilder) {
     init {
-        variantBuilder.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
+        variantBuilder?.nativeBuildSystemType = GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
         cmakeMakefileChecks(variant)
     }
     override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {

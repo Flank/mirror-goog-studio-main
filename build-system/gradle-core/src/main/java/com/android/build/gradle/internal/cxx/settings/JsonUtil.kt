@@ -37,7 +37,7 @@ fun createCmakeSettingsJsonFromString(
     reader.isLenient = lenient
     val settings =  try {
         Gson()
-            .getAdapter<CMakeSettings>(object : TypeToken<CMakeSettings>() {})
+            .getAdapter(object : TypeToken<CMakeSettings>() {})
             .read(reader)
     } catch (e: Throwable) {
         // Parse errors are "recoverable" by issuing an error and returning an empty result

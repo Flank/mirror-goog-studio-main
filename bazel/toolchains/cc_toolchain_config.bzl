@@ -476,12 +476,6 @@ def _impl(ctx):
                         iterate_over = "libopts",
                         expand_if_available = "libopts",
                     ),
-                ],
-            ),
-            flag_set(
-                actions = all_link_actions +
-                          [ACTION_NAMES.cpp_link_static_library],
-                flag_groups = [
                     flag_group(
                         iterate_over = "libraries_to_link",
                         flag_groups = [

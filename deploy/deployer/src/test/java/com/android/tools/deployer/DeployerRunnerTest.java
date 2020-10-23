@@ -1468,8 +1468,12 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // swap
                     "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
-                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
-                    "/data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
@@ -1726,8 +1730,12 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // swap
                     "/system/bin/run-as com.example.simpleapp cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
                     "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ /data/data/com.example.simpleapp/code_cache/.studio/",
-                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
-                    "/data/data/com.example.simpleapp/code_cache/.studio/server.so 1 irsocket 5",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
                     "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(

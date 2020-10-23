@@ -408,12 +408,16 @@ public class AnalyticsUtil {
         if (version == null) {
             return;
         }
-        AnalyticsConfiguratorService configuratorService =
+        GradleBuildProject.Builder projectBuilder =
                 BuildServicesKt.getBuildService(
-                        project.getGradle().getSharedServices(), AnalyticsConfiguratorService.class)
-                        .get();
-        configuratorService.getProjectBuilder(project.getPath())
-                .setFirebasePerformancePluginVersion(version);
+                        project.getGradle().getSharedServices(),
+                        AnalyticsConfiguratorService.class)
+                        .get()
+                        .getProjectBuilder(project.getPath());
+
+        if (projectBuilder != null) {
+            projectBuilder.setFirebasePerformancePluginVersion(version);
+        }
     }
 
     /**

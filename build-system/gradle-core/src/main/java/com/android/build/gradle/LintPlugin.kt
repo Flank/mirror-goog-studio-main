@@ -220,10 +220,13 @@ abstract class LintPlugin : Plugin<Project> {
         val configuratorService =
             AnalyticsConfiguratorService.RegistrationAction(project).execute().get()
         configuratorService.createAnalyticsService(project, listenerRegistry)
-        configuratorService.getProjectBuilder(project.path)
-            .setAndroidPluginVersion(ANDROID_GRADLE_PLUGIN_VERSION)
-            .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
-            .setOptions(AnalyticsUtil.toProto(projectServices.projectOptions))
+        configuratorService.getProjectBuilder(project.path)?.let {
+            it
+                .setAndroidPluginVersion(ANDROID_GRADLE_PLUGIN_VERSION)
+                .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
+                .setOptions(AnalyticsUtil.toProto(projectServices.projectOptions))
+        }
+
 
         val stringCachingService = StringCachingBuildService.RegistrationAction(project).execute()
         val mavenCoordinatesCacheBuildService =

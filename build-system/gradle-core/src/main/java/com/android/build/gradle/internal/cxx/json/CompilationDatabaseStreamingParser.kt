@@ -48,8 +48,7 @@ open class CompilationDatabaseStreamingParser(
         reader.beginObject()
         visitor.beginCommand()
         while (reader.hasNext()) {
-            val name = reader.nextName()
-            when (name) {
+            when (val name = reader.nextName()) {
                 "directory" -> visitor.visitDirectory(reader.nextString())
                 "command" -> visitor.visitCommand(reader.nextString())
                 "file" -> visitor.visitFile(reader.nextString())

@@ -157,6 +157,26 @@ class FileSystem {
   virtual bool CopyFile(const std::string &fpath_from,
                         const std::string &fpath_to) = 0;
 
+  // Given a path to a directory, walk over its contents, triggering the
+  // callback for each file. The callback will be triggered in an order where
+  // the paths can be safely deleted (i.e. children first).
+  //
+  // This method also takes a depth parameter, where a |max_depth| of 1 walks
+  // contents of this directory, |max_depth| of 2 also includes contents of its
+  // subdirectories, |max_depth| of 3 also includes the contents of those
+  // subdirectories' subdirectories, etc. A |max_depth| of 0 does nothing. Pass
+  // in |INT32_MAX| to walk all children.
+  virtual void WalkDir(const std::string &dpath,
+                       std::function<void(const PathStat &)> callback,
+                       int32_t max_depth) const = 0;
+
+  // Read a file's contents all in one pass. This will return the empty string
+  // if the file at the target path is in write mode.
+  virtual std::string GetFileContents(const std::string &fpath) const = 0;
+
+  // Remove a directory and all of its contents recursively.
+  virtual bool DeleteDir(const std::string &dpath) = 0;
+
  protected:
   virtual bool HasDir(const std::string &dpath) const = 0;
 
@@ -183,25 +203,8 @@ class FileSystem {
   // exists. This method does NOT create a file if it doesn't already exist.
   virtual void Touch(const std::string &fpath) = 0;
 
-  // Given a path to a directory, walk over its contents, triggering the
-  // callback for each file. The callback will be triggered in an order where
-  // the paths can be safely deleted (i.e. children first).
-  //
-  // This method also takes a depth parameter, where a |max_depth| of 1 walks
-  // contents of this directory, |max_depth| of 2 also includes contents of its
-  // subdirectories, |max_depth| of 3 also includes the contents of those
-  // subdirectories' subdirectories, etc. A |max_depth| of 0 does nothing. Pass
-  // in |INT32_MAX| to walk all children.
-  virtual void WalkDir(const std::string &dpath,
-                       std::function<void(const PathStat &)> callback,
-                       int32_t max_depth) const = 0;
-
   // Return a file's size, in bytes.
   virtual int32_t GetFileSize(const std::string &fpath) const = 0;
-
-  // Read a file's contents all in one pass. This will return the empty string
-  // if the file at the target path is in write mode.
-  virtual std::string GetFileContents(const std::string &fpath) const = 0;
 
   // Returns true if the file is in write mode. See also |OpenWriteMode| and
   // |Close|
@@ -223,9 +226,6 @@ class FileSystem {
   // Indication that user is done writing to a file after calling
   // |OpenWriteMode|.
   virtual void Close(const std::string &fpath) = 0;
-
-  // Remove a directory and all of its contents recursively.
-  virtual bool DeleteDir(const std::string &dpath) = 0;
 
   // Return the free space available on the disk which contains the target path.
   // The path must exist, or this will return 0.

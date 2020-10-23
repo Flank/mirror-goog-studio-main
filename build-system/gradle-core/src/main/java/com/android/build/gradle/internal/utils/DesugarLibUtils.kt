@@ -251,25 +251,28 @@ abstract class DesugarLibLintExtractor : TransformAction<DesugarLibLintExtractor
 
     override fun transform(outputs: TransformOutputs) {
         val inputFile = inputArtifact.get().asFile
+        val minSdkVersion = parameters.minSdkVersion.get()
 
-        ZipInputStream(inputFile.inputStream().buffered()).use { zipInputStream ->
-            while(true) {
-                val entry = zipInputStream.nextEntry ?: break
+        // Search for the lint file based on compileSdkVersion specified by the user. If we are not able to find it,
+        // fallback to the lint file with a lower compileSdkVersion. Currently, the lowest compileSdkVersion for
+        // lint files is 26.
+        for (compileSdkVersion in parameters.compileSdkVersion.get() downTo 26) {
+            val pattern = if (minSdkVersion >= 21) {
+                "${compileSdkVersion}_21.txt"
+            } else {
+                "${compileSdkVersion}_1.txt"
+            }
 
-                val compileSdkVersion = parameters.compileSdkVersion.get()
-                val minSdkVersion = parameters.minSdkVersion.get()
-                val pattern = if (minSdkVersion >= 21) {
-                    "${compileSdkVersion}_21.txt"
-                } else {
-                    "${compileSdkVersion}_1.txt"
-                }
-
-                if (entry.name.endsWith(pattern)) {
-                    val outputFile = outputs.file(inputFile.nameWithoutExtension + "-desugar-lint.txt")
-                    Files.newOutputStream(outputFile.toPath()).buffered().use { output ->
-                        ByteStreams.copy(zipInputStream, output)
+            ZipInputStream(inputFile.inputStream().buffered()).use { zipInputStream ->
+                while(true) {
+                    val entry = zipInputStream.nextEntry ?: break
+                    if (entry.name.endsWith(pattern)) {
+                        val outputFile = outputs.file(inputFile.nameWithoutExtension + "-desugar-lint.txt")
+                        Files.newOutputStream(outputFile.toPath()).buffered().use { output ->
+                            ByteStreams.copy(zipInputStream, output)
+                        }
+                        return
                     }
-                    break
                 }
             }
         }

@@ -153,10 +153,6 @@ void Init(int argc, char** argv, Workspace* workspace) {
   if (parameters.pm_path != kNoValue) {
     workspace->SetPmPath(parameters.pm_path);
   }
-  static RedirectExecutor redirect(Env::shell(), workspace->GetExecutor());
-  if (Env::IsValid()) {
-    workspace->SetExecutor(&redirect);
-  }
 
   workspace->Init();
 
@@ -205,8 +201,7 @@ void ProcessRequest(std::unique_ptr<proto::InstallerRequest> request,
 int main(int argc, char** argv) {
   InitEventSystem();
 
-  ExecutorImpl executor;
-  Workspace workspace(GetVersion(), &executor);
+  Workspace workspace(GetVersion());
 
   Init(argc, argv, &workspace);
 

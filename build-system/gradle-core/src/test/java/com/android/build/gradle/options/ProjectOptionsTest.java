@@ -22,6 +22,8 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
+import com.android.tools.analytics.AnalyticsSettings;
+import com.android.tools.analytics.AnalyticsSettingsData;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
 import java.util.Arrays;
@@ -293,6 +295,41 @@ public class ProjectOptionsTest {
                         .collect(Collectors.toList());
 
         assertThat(optionsNames).containsNoDuplicates();
+    }
+
+    @Test
+    public void checkAnalyticsEnabledCondition() {
+        AnalyticsSettingsData settingsData = new AnalyticsSettingsData();
+        settingsData.setOptedIn(false);
+        AnalyticsSettings.setInstanceForTest(settingsData);
+
+        ProjectOptions projectOptions = new ProjectOptions(
+                ImmutableMap.of(),
+                new FakeProviderFactory(
+                        FakeProviderFactory.getFactory(), ImmutableMap.of()));
+        assertThat(projectOptions.isAnalyticsEnabled()).isFalse();
+
+        projectOptions =
+                new ProjectOptions(
+                        ImmutableMap.of(),
+                        new FakeProviderFactory(
+                                FakeProviderFactory.getFactory(),
+                                ImmutableMap.of("android.enableProfileJson", "true")));
+        assertThat(projectOptions.isAnalyticsEnabled()).isTrue();
+
+        projectOptions = new ProjectOptions(
+                ImmutableMap.of(),
+                new FakeProviderFactory(
+                        FakeProviderFactory.getFactory(),
+                        ImmutableMap.of("android.advanced.profileOutputDir", "path")));
+        assertThat(projectOptions.isAnalyticsEnabled()).isTrue();
+
+        settingsData.setOptedIn(true);
+        projectOptions = new ProjectOptions(
+                ImmutableMap.of(),
+                new FakeProviderFactory(
+                        FakeProviderFactory.getFactory(), ImmutableMap.of()));
+        assertThat(projectOptions.isAnalyticsEnabled()).isTrue();
     }
 
     @NonNull

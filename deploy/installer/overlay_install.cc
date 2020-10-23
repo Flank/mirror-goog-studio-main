@@ -22,6 +22,7 @@
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
+#include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/server/install_server.h"
@@ -64,7 +65,7 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
 
   const std::string server_name =
       kInstallServer + "-" + workspace_.GetVersion();
-  client_ = StartInstallServer(workspace_.GetExecutor(),
+  client_ = StartInstallServer(Executor::Get(),
                                workspace_.GetTmpFolder() + kInstallServer,
                                request_.package_name(), server_name);
 
@@ -85,10 +86,7 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  for (int i = 0; i < install_response.events_size(); i++) {
-    const proto::Event& event = install_response.events(i);
-    AddRawEvent(ConvertProtoEventToEvent(event));
-  }
+  ConvertProtoEventsToEvents(install_response.events());
 }
 
 void OverlayInstallCommand::SetUpAgent(
@@ -106,7 +104,7 @@ void OverlayInstallCommand::SetUpAgent(
   std::unordered_set<std::string> missing_files;
   CheckFilesExist({startup_path, studio_path, agent_path}, &missing_files);
 
-  RunasExecutor run_as(request_.package_name(), workspace_.GetExecutor());
+  RunasExecutor run_as(request_.package_name());
   std::string error;
 
   bool missing_startup =

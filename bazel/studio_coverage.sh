@@ -85,8 +85,9 @@ if [[ -d "${dist_dir}" ]]; then
 
   # Upload the LCOV data to GCS if running on BYOB but only for postsubmit builds
   if [[ "$build_number" && "$postsubmit" ]]; then
-    gsutil cp ${lcov_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
-    gsutil cp ${comp_list_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
+    # TODO(b/171261837) remove hardcoded gsutil path
+    /snap/bin/gsutil cp ${lcov_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
+    /snap/bin/gsutil cp ${comp_list_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
   fi
 fi
 

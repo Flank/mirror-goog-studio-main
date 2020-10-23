@@ -3,13 +3,12 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:utils.bzl", "fileset")
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.sdk-common",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdk-common.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     resources = ["src/main/resources"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -20,7 +19,7 @@ iml_module(
         "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model",
         "//tools/base/common:studio.android.sdktools.common",
         "//tools/base/sdklib:studio.android.sdktools.sdklib",
-        "//tools/adt/idea/.idea/libraries:unb.kxml2",
+        "//tools/adt/idea/.idea/libraries:kxml2",
     ],
     # do not sort: must match IML order
     deps = [
@@ -29,24 +28,24 @@ iml_module(
         "//tools/base/build-system/builder-model:studio.android.sdktools.builder-model[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/base/sdklib:studio.android.sdktools.sdklib[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kxml2",
+        "//tools/adt/idea/.idea/libraries:kxml2",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
+        "//tools/adt/idea/.idea/libraries:mockito[test]",
         "//tools/base/build-system/builder-test-api:studio.android.sdktools.builder-test-api[module]",
-        "//tools/adt/idea/.idea/libraries:unb.easymock[test]",
-        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
+        "//tools/adt/idea/.idea/libraries:easymock[test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:jimfs[test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/adt/idea/.idea/libraries:unb.equalsverifier[test]",
-        "//tools/adt/idea/.idea/libraries:unb.javax-inject",
-        "//tools/adt/idea/.idea/libraries:unb.aapt-proto",
-        "//tools/adt/idea/.idea/libraries:unb.protobuf",
-        "//tools/adt/idea/.idea/libraries:unb.studio-analytics-proto",
-        "//tools/adt/idea/.idea/libraries:unb.aia-proto",
-        "//tools/adt/idea/.idea/libraries:unb.studio-proto",
+        "//tools/adt/idea/.idea/libraries:Guava",
+        "//tools/adt/idea/.idea/libraries:equalsverifier[test]",
+        "//tools/adt/idea/.idea/libraries:javax-inject",
+        "//tools/adt/idea/.idea/libraries:aapt-proto",
+        "//tools/adt/idea/.idea/libraries:protobuf",
+        "//tools/adt/idea/.idea/libraries:studio-analytics-proto",
+        "//tools/adt/idea/.idea/libraries:aia-proto",
+        "//tools/adt/idea/.idea/libraries:studio-proto",
     ],
 )
 

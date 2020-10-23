@@ -83,10 +83,11 @@ void MemoryFileSystem::WalkDir(const string &dpath,
   }
 
   for (const auto &full_path : paths) {
-    int32_t size_b = GetFileSize(full_path);
     int32_t modification_age_s = GetModificationAge(full_path);
     PathStat::Type type =
         HasDir(full_path) ? PathStat::Type::DIR : PathStat::Type::FILE;
+    int32_t size_b =
+        (type == PathStat::Type::FILE ? GetFileSize(full_path) : 0);
 
     PathStat pstat(type, dpath, full_path, size_b, modification_age_s);
     int32_t depth =

@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PARAMETER
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -31,7 +32,6 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
-import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
@@ -72,6 +72,16 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
         type == METHOD_CALL || type == METHOD_CALL_CLASS || type == METHOD_CALL_PARAMETER
 
     /**
+     * Keeps track of which UAST nodes have already been visited by [visitAnnotationUsage].
+     * See [visitAnnotationUsage] for why this is needed.
+     */
+    private val visitedAnnotationUsages = mutableSetOf<PsiElement>()
+
+    override fun afterCheckFile(context: Context) {
+        visitedAnnotationUsages.clear()
+    }
+
+    /**
      * Handles a given UAST node relevant to our annotations.
      *
      * [com.android.tools.lint.client.api.AnnotationHandler] will call us repeatedly (once for every
@@ -102,8 +112,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
     ) {
         if (method == null) return
         val usagePsi = usage.sourcePsi ?: return
-        if (usagePsi.getUserData(CHECKED) == true) return
-        usagePsi.putUserData(CHECKED, true)
+        if (!visitedAnnotationUsages.add(usagePsi)) return
 
         // Meaning of the arguments we are given depends on `type`, get what we need accordingly:
         when (type) {
@@ -361,9 +370,6 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
             IntellijThreadDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
-
-        private val CHECKED: Key<Boolean> =
-            Key.create("${::CHECKED.javaClass.name}.${::CHECKED.name}")
 
         /** Calling methods on the wrong thread  */
         @JvmField

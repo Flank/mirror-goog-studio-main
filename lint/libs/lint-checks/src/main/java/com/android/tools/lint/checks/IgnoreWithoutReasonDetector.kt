@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -69,6 +70,10 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
         override fun visitClass(node: UClass) = processAnnotations(node, node)
 
         private fun processAnnotations(element: UElement, annotated: UAnnotated) {
+            val source = element.sourcePsi
+            if (source is KtObjectDeclaration && source.isCompanion()) {
+                return
+            }
             val annotations = context.evaluator.getAllAnnotations(annotated, false)
             val ignoreAnnotation =
                 annotations.firstOrNull { it.qualifiedName == "org.junit.Ignore" }

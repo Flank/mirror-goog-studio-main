@@ -16,7 +16,6 @@
 
 package com.android.tools.bazel;
 
-import com.google.common.collect.ImmutableSet;
 import com.intellij.util.graph.DFSTBuilder;
 import com.intellij.util.graph.Graph;
 import com.intellij.util.graph.GraphGenerator;
@@ -24,38 +23,23 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
-import org.jetbrains.jps.model.JpsElement;
 import org.jetbrains.jps.model.JpsProject;
-import org.jetbrains.jps.model.java.JpsJavaDependencyExtension;
-import org.jetbrains.jps.model.java.JpsJavaDependencyScope;
-import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.module.JpsDependencyElement;
-import org.jetbrains.jps.model.module.JpsLibraryDependency;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.module.JpsModuleDependency;
 
-/**
- * A graph of jps modules that can return transitive closures and strongly connected components.
- */
+/** A graph of jps modules that checks for cycles and sorts them in topological order */
 class JpsGraph {
 
-    private final LinkedHashMap<JpsModule, Set<JpsElement>> closures;
-    private final List<List<JpsModule>> components;
+    private final List<JpsModule> modules; // Modules in topological order
     private final BazelToolsLogger logger;
 
-    public JpsGraph(
-            JpsProject project,
-            ImmutableSet<JpsJavaDependencyScope> scope,
-            BazelToolsLogger logger) {
+    public JpsGraph(JpsProject project, BazelToolsLogger logger) {
         this.logger = logger;
-        closures = new LinkedHashMap<>();
-        components = new ArrayList<>();
+        modules = new ArrayList<>();
 
-        Graph<JpsModule> graph = createGraph(project, scope);
+        Graph<JpsModule> graph = createGraph(project);
         DFSTBuilder<JpsModule> builder = new DFSTBuilder<>(graph);
         // Loops through the module in reverse topological order and build the transitive closure
         IntList scCs = builder.getSCCs();
@@ -66,40 +50,29 @@ class JpsGraph {
             for (int j = 0; j < s; j++) {
                 component.add(builder.getNodeByTNumber(k + j));
             }
-            components.add(component);
-            LinkedHashSet<JpsElement> closure = new LinkedHashSet<>(component);
+            checkNoCycles(component);
             for (JpsModule module : component) {
-                Iterator<JpsModule> it = graph.getIn(module);
-                while (it.hasNext()) {
-                    JpsModule dependency = it.next();
-                    if (!closure.contains(dependency)) {
-                        closure.add(dependency);
-                        closure.addAll(closures.get(dependency));
-                    }
-                }
-            }
-
-            // Add libraries to the closure
-            for (JpsModule module : component) {
-                for (JpsDependencyElement dep : module.getDependenciesList().getDependencies()) {
-                    JpsJavaDependencyExtension extension =
-                            JpsJavaExtensionService.getInstance().getDependencyExtension(dep);
-                    if (dep instanceof JpsLibraryDependency
-                            && extension != null
-                            && scope.contains(extension.getScope())) {
-                        closure.add(((JpsLibraryDependency) dep).getLibrary());
-                    }
-                }
-            }
-
-            for (JpsModule module : component) {
-                closures.put(module, closure);
+                modules.add(module);
             }
             k += s;
         }
     }
 
-    private Graph<JpsModule> createGraph(JpsProject project, Set<JpsJavaDependencyScope> scopes) {
+    private void checkNoCycles(List<JpsModule> component) {
+        // If the component has more than one element, there is a cycle:
+        if (component.size() > 1) {
+            StringBuilder message = new StringBuilder();
+            message.append("Found circular module dependency: ")
+                    .append(component.size())
+                    .append(" modules");
+            for (JpsModule module : component) {
+                message.append("        ").append(module.getName());
+            }
+            logger.error(message.toString());
+        }
+    }
+
+    private Graph<JpsModule> createGraph(JpsProject project) {
         return GraphGenerator.create(
                 new GraphGenerator.SemiGraph<JpsModule>() {
                     @Override
@@ -113,12 +86,7 @@ class JpsGraph {
                                 jpsModule.getDependenciesList().getDependencies();
                         List<JpsModule> ins = new ArrayList<>();
                         for (JpsDependencyElement dep : deps) {
-                            JpsJavaDependencyExtension extension =
-                                    JpsJavaExtensionService.getInstance()
-                                            .getDependencyExtension(dep);
-                            if (dep instanceof JpsModuleDependency
-                                    && extension != null
-                                    && scopes.contains(extension.getScope())) {
+                            if (dep instanceof JpsModuleDependency) {
                                 JpsModuleDependency moduleDep = (JpsModuleDependency) dep;
                                 if (moduleDep.getModule() == null) {
                                     if (!ImlToIr.ignoreWarnings(jpsModule.getName())) {
@@ -137,15 +105,7 @@ class JpsGraph {
                 });
     }
 
-    public Set<JpsModule> getModules() {
-        return closures.keySet();
-    }
-
-    public Set<JpsElement> getClosure(JpsModule module) {
-        return closures.get(module);
-    }
-
-    public List<List<JpsModule>> getConnectedComponents() {
-        return components;
+    public List<JpsModule> getModulesInTopologicalOrder() {
+        return modules;
     }
 }

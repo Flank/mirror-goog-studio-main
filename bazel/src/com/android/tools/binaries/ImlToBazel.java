@@ -47,8 +47,6 @@ public class ImlToBazel {
                 config.imlGraph = args.next();
             } else if (arg.equals("--dry_run")){
                 config.dryRun = true;
-            } else if (arg.equals("--warnings_as_errors")) {
-                config.warningsAsErrors = true;
             } else if (arg.equals("--strict")) {
                 config.strict = true;
             } else {
@@ -90,23 +88,19 @@ public class ImlToBazel {
         ImlToIr imlToIr = new ImlToIr();
         IrProject irProject = imlToIr.convert(config, workspace, project, logger);
 
-        check(logger, config.warningsAsErrors);
+        check(logger);
 
         IrToBazel irToBazel = new IrToBazel(logger, config);
         int packagesUpdated = irToBazel.convert(irProject);
 
-        check(logger, config.warningsAsErrors);
+        check(logger);
 
         return packagesUpdated;
     }
 
-    private static void check(BazelToolsLogger logger, boolean warningsAsErrors) {
-        if (warningsAsErrors && logger.getTotalIssuesCount() > 0) {
+    private static void check(BazelToolsLogger logger) {
+        if (logger.getTotalIssuesCount() > 0) {
             throw new ProjectLoadingException(logger.getTotalIssuesCount());
-        }
-
-        if (logger.getErrorCount() > 0) {
-            throw new ProjectLoadingException(logger.getErrorCount());
         }
     }
 

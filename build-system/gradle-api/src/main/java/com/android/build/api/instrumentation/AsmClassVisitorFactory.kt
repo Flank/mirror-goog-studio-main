@@ -53,29 +53,26 @@ interface AsmClassVisitorFactory<ParametersT : InstrumentationParameters> : Seri
     val instrumentationContext: InstrumentationContext
 
     /**
-     * Creates a class visitor object that will visit a class with the given [classData]. The
+     * Creates a class visitor object that will visit a class with the given [classContext]. The
      * returned class visitor must delegate its calls to [nextClassVisitor].
      *
-     * The given [classData] contains static information about the class before starting the
+     * The given [classContext] contains static information about the classes before starting the
      * instrumentation process. Any changes in interfaces or superclasses for the class with the
-     * given [classData] or for any other class in its hierarchy chain by a previous visitor will
-     * not be reflected in the [classData] object.
+     * given [classContext] or for any other class in its classpath by a previous visitor will
+     * not be reflected in the [classContext] object.
      *
-     * [classDataLoader] can be used to get the data for classes that are in the runtime classpath
+     * [classContext] can also be used to get the data for classes that are in the runtime classpath
      * of the class being visited.
      *
      * This method must handle asynchronous calls.
      *
-     * @param classData contains information about the class that will be instrumented by the
-     *                  returned class visitor.
-     * @param classDataLoader helps in loading the class data for classes that are in the runtime
-     *                        classpath of the class being visited.
+     * @param classContext contains information about the class that will be instrumented by the
+     *                     returned class visitor.
      * @param nextClassVisitor the [ClassVisitor] to which the created [ClassVisitor] must delegate
      *                         method calls.
      */
     fun createClassVisitor(
-        classData: ClassData,
-        classDataLoader: ClassDataLoader,
+        classContext: ClassContext,
         nextClassVisitor: ClassVisitor
     ): ClassVisitor
 

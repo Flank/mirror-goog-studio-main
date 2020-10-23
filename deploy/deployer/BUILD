@@ -1,7 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.deployer",
     srcs = ["src/main/java"],
@@ -9,13 +9,12 @@ iml_module(
         "//tools/base/deploy/installer:android-installer",
     ],
     bundled_deps = [
-        "//tools/base/deploy/deployer:unb.deploy_java_proto",
-        "//prebuilts/r8:unb.r8",
-        "//tools/base/deploy/deployer:unb.libjava_version",
+        "//tools/base/deploy/deployer:deploy_java_proto",
+        "//prebuilts/r8",
+        "//tools/base/deploy/deployer:libjava_version",
     ],
     iml_files = ["android.sdktools.deployer.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     tags = [
         "no_mac",
     ],
@@ -31,8 +30,8 @@ iml_module(
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
-        "//tools/base/deploy/deployer:unb.deploy_java_proto",
-        "//tools/adt/idea/.idea/libraries:unb.protobuf",
+        "//tools/base/deploy/deployer:deploy_java_proto",
+        "//tools/adt/idea/.idea/libraries:protobuf",
     ],
     # do not sort: must match IML order
     deps = [
@@ -41,19 +40,19 @@ iml_module(
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//tools/base/deploy/deployer:unb.deploy_java_proto",
-        "//tools/adt/idea/.idea/libraries:unb.protobuf",
-        "//prebuilts/r8:unb.r8",
-        "//tools/base/deploy/deployer:unb.libjava_version",
-        "//tools/adt/idea/.idea/libraries:unb.sqlite",
-        "//tools/adt/idea/.idea/libraries:unb.mockito[test]",
+        "//tools/adt/idea/.idea/libraries:Guava",
+        "//tools/base/deploy/deployer:deploy_java_proto",
+        "//tools/adt/idea/.idea/libraries:protobuf",
+        "//prebuilts/r8",
+        "//tools/base/deploy/deployer:libjava_version",
+        "//tools/adt/idea/.idea/libraries:sqlite",
+        "//tools/adt/idea/.idea/libraries:mockito[test]",
         "//tools/base/tracer:studio.android.sdktools.tracer[module]",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.studio-proto",
+        "//tools/adt/idea/.idea/libraries:studio-proto",
         "//tools/base/perf-logger:studio.perf-logger[module, test]",
-        "//tools/base/deploy/deployer:unb.fake_device_proto[test]",
-        "//tools/adt/idea/.idea/libraries:unb.studio-grpc[test]",
+        "//tools/base/deploy/deployer:fake_device_proto[test]",
+        "//tools/adt/idea/.idea/libraries:studio-grpc[test]",
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
     ],
 )
@@ -153,35 +152,23 @@ coverage_java_test(
     ],
 )
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 java_import(
-    name = "unb.deploy_java_proto",
+    name = "deploy_java_proto",
     jars = ["//tools/base/deploy/proto:deploy_java_proto.jar"],
-    tags = [
-        "manual",
-        "unb",
-    ],
     visibility = ["//visibility:public"],
 )
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 java_import(
-    name = "unb.libjava_version",
+    name = "libjava_version",
     jars = ["//tools/base/deploy/deployer:libjava_version.jar"],
-    tags = [
-        "manual",
-        "unb",
-    ],
     visibility = ["//visibility:public"],
 )
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 java_import(
-    name = "unb.fake_device_proto",
+    name = "fake_device_proto",
     jars = ["//tools/base/deploy/installer/tests:fake_device_proto.jar"],
-    tags = [
-        "manual",
-        "unb",
-    ],
     visibility = ["//visibility:public"],
 )

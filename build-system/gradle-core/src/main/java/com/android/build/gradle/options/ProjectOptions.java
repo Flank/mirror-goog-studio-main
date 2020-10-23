@@ -19,7 +19,10 @@ package com.android.build.gradle.options;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.profile.GradleAnalyticsEnvironment;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.tools.analytics.AnalyticsSettings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
@@ -57,6 +60,12 @@ public final class ProjectOptions {
         integerOptionValues = createOptionValues(IntegerOption.values());
         replacedOptionValues = createOptionValues(ReplacedOption.values());
         stringOptionValues = createOptionValues(StringOption.values());
+        // Initialize AnalyticsSettings before we access its properties in isAnalyticsEnabled
+        // function
+        AnalyticsSettings.initialize(
+                LoggerWrapper.getLogger(ProjectOptions.class),
+                null,
+                new GradleAnalyticsEnvironment(providerFactory));
     }
 
     @NonNull
@@ -193,6 +202,12 @@ public final class ProjectOptions {
             return EnumSet.copyOf(optionalCompilationSteps);
         }
         return EnumSet.noneOf(OptionalCompilationStep.class);
+    }
+
+    public boolean isAnalyticsEnabled() {
+        return AnalyticsSettings.getOptedIn()
+                || get(BooleanOption.ENABLE_PROFILE_JSON)
+                || get(StringOption.PROFILE_OUTPUT_DIR) != null;
     }
 
     public <OptionT extends Option<ValueT>, ValueT>

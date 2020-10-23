@@ -87,10 +87,10 @@ class GetProcessInfoExecutor : public Executor {
 class InstallerTest : public ::testing::Test {};
 
 TEST_F(InstallerTest, TestGetProcessInfo) {
-  Executor* exec = new GetProcessInfoExecutor(
+  GetProcessInfoExecutor exec(
       "tools/base/deploy/installer/tests/data/dumpOutput.txt");
-  Workspace workspace("fakeversion", exec);
-  CmdCommand cmd(workspace);
+  Workspace workspace("fakeversion");
+  CmdCommand cmd(workspace, exec);
 
   std::vector<ProcessRecord> records;
   ASSERT_TRUE(cmd.GetProcessInfo("com.noah.clr", &records));
@@ -232,7 +232,7 @@ TEST_F(InstallerTest, TestHighlander) {
   setenv("FAKE_DEVICE_ROOT", ".", 1);
   Env::Reset();
 
-  Workspace workspace("", nullptr);
+  Workspace workspace("");
   workspace.Init();
 
   int pid = fork();

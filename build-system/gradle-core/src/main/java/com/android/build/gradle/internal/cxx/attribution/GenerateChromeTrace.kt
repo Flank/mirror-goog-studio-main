@@ -112,9 +112,9 @@ private fun readZipContent(file: File): Map<AttributionKey, List<AttributionTask
             val (module, variant, abi) = entry.name.split('/', limit = 3)
             allAttributions[AttributionKey(module, variant, abi)] =
                 mutableListOf<AttributionTask>().apply {
-                    InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8).use {
+                    InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8).use { inputStreamReader ->
                         var startingTimestamp = 0L
-                        for (line in it.readLines()) {
+                        for (line in inputStreamReader.readLines()) {
                             if (line.startsWith('#')) {
                                 startingTimestamp = line
                                     .dropWhile { c -> !Character.isDigit(c) }

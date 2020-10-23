@@ -29,40 +29,26 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Check cmake build with split and injected ABI. */
-@RunWith(Parameterized.class)
 public class CmakeInjectedAbiSplitTest {
     @Rule
     public GradleTestProject sProject;
 
-    @Parameterized.Parameters(name = "useV2NativeModel={0}")
-    public static Collection<Object[]> data() {
-        return ImmutableList.of(new Object[]{false}, new Object[]{true});
-    }
-
-    public CmakeInjectedAbiSplitTest(boolean useV2NativeModel) {
+    public CmakeInjectedAbiSplitTest() {
         sProject =
                 GradleTestProject.builder()
                         .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
                         .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
                         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                         .setWithCmakeDirInLocalProp(true)
-                        .addGradleProperties(
-                                BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
-                                        + "="
-                                        + useV2NativeModel)
                         .create();
     }
 

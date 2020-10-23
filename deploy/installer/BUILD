@@ -9,7 +9,6 @@ load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 genrule(
     name = "version",
     srcs = [
-        "//tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server",
         "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
         "//tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw",
         "//tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server",
@@ -20,7 +19,6 @@ genrule(
     ],
     cmd = "DEP=\"" +
           # This should be a list of all binaries that determine our current version.
-          "$(location //tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server) " +
           "$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) " +
           "$(location //tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw) " +
           "$(location //tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server) " +
@@ -51,10 +49,6 @@ genrule(
         "//tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so",
         "//tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so",
         "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
-        "//tools/base/deploy/agent/native:android-agent_server/x86/android-agent_server",
-        "//tools/base/deploy/agent/native:android-agent_server/x86_64/android-agent_server",
-        "//tools/base/deploy/agent/native:android-agent_server/armeabi-v7a/android-agent_server",
-        "//tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server",
         ":version.raw",
     ],
     outs = [
@@ -68,7 +62,6 @@ genrule(
            -i $(location :android-installer_raw/x86/android-installer_raw) \
            -o $(location android-installer/x86/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/x86/android-agent_server) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/x86/android-install-server) \
            -p version=$(location :version.raw);
 
@@ -77,7 +70,6 @@ genrule(
            -o $(location android-installer/x86_64/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/x86_64/android-agent_server) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/x86_64/android-install-server) \
            -p version=$(location :version.raw);
 
@@ -85,7 +77,6 @@ genrule(
            -i $(location :android-installer_raw/armeabi-v7a/android-installer_raw) \
            -o $(location android-installer/armeabi-v7a/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/armeabi-v7a/android-agent_server) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/armeabi-v7a/android-install-server) \
            -p version=$(location :version.raw);
 
@@ -94,7 +85,6 @@ genrule(
            -o $(location android-installer/arm64-v8a/installer) \
            -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server) \
            -p install_server=$(location //tools/base/deploy/installer:android-install-server/arm64-v8a/android-install-server) \
            -p version=$(location :version.raw);
     """,
@@ -111,7 +101,6 @@ genrule(
         ":installer",
         ":install-server",
         "//tools/base/deploy/agent/native:libswap.so",
-        "//tools/base/deploy/agent/native:agent_server",
         ":version.raw",
     ],
     outs = [
@@ -123,7 +112,6 @@ genrule(
            -o $(location android-installer/test-installer) \
            -p agent-alt.so=$(location //tools/base/deploy/agent/native:libswap.so) \
            -p agent.so=$(location //tools/base/deploy/agent/native:libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:agent_server) \
            -p install_server=$(location :install-server) \
            -p version=$(location :version.raw);
     """,
@@ -148,6 +136,7 @@ cc_library(
         "delta_preinstall.cc",
         "dump.cc",
         "dump.h",
+        "executor/executor.cc",
         "executor/executor_impl.cc",
         "executor/redirect_executor.cc",
         "highlander.cc",

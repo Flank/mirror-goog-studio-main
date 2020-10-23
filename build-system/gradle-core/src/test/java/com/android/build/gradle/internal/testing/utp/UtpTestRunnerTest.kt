@@ -101,7 +101,6 @@ class UtpTestRunnerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),
-                any(File::class.java),
                 any(RetentionConfig::class.java))).then {
             utpOutputDir = it.getArgument<File>(5)
             RunnerConfigProto.RunnerConfig.getDefaultInstance()

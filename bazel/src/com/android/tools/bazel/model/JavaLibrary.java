@@ -32,8 +32,7 @@ public class JavaLibrary extends BazelRule {
 
     @Override
     public void update() throws IOException {
-        String id = getPackage().getWorkspace().id();
-        CallStatement statement = getCallStatement("java_library", name, id);
+        CallStatement statement = getCallStatement("java_library", name);
         CallExpression call = statement.getCall();
 
         call.setArgument("runtime_deps", dependencies);
@@ -46,7 +45,7 @@ public class JavaLibrary extends BazelRule {
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
-        statement.setIsManaged(id);
+        statement.setIsManaged();
     }
 }
 

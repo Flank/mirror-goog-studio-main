@@ -17,6 +17,7 @@
 #ifndef INSTALLER_SWAP_COMMAND_H_
 #define INSTALLER_SWAP_COMMAND_H_
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -24,6 +25,7 @@
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/installer/command.h"
 #include "tools/base/deploy/installer/executor/executor.h"
+#include "tools/base/deploy/installer/server/install_server.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -41,11 +43,14 @@ class SwapCommand : public Command {
   std::string target_dir_;
   proto::SwapResponse* response_;
 
+  std::unique_ptr<InstallClient> client_;
+
   enum class User { SHELL_USER, APP_PACKAGE };
 
   // Makes sure everything is ready for ART to attach the JVMI agent to the app.
   // - Make sure the agent shared lib is in the app data folder.
   // - Make sure the  configuration file to app data folder.
+  // - Start the install-server.
   bool Setup() noexcept;
 
   // Performs a swap by starting the server and attaching agents. Returns
@@ -53,12 +58,9 @@ class SwapCommand : public Command {
   // code otherwise.
   proto::SwapResponse::Status Swap() const;
 
-  // Starts the server and waits for it to start listening. The sync is
-  // performed by opening a pipe and passing the write end to the server
-  // process, then blocking on the read end. The server indicates it is ready to
-  // receive connections by closing the write end, which unblocks this method.
-  bool WaitForServer(int agent_count, int* server_pid, int* read_fd,
-                     int* write_fd) const;
+  // Request for the install-server to open a socket and begin listening for
+  // agents to connect. Agents connect shortly after they are attached.
+  bool WaitForServer() const;
 
   // Tries to attach an agent to each process in the request; if any agent fails
   // to attach, returns false.

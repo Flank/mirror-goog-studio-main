@@ -48,7 +48,7 @@ class VariantFilterTest:  VariantApiBaseTest(
                                     }
                                 }
                                 project.plugins.withType(LibraryPlugin::class.java) {
-                                    val extension = project.extensions.getByName("androidComponents") as LibraryndroidComponentsExtension
+                                    val extension = project.extensions.getByName("androidComponents") as LibraryAndroidComponentsExtension
                                     extension.beforeAndroidTest(extension.selector().withBuildType("debug")) {
                                         // Disable instrumentation for debug
                                         it.enabled = false
@@ -56,8 +56,8 @@ class VariantFilterTest:  VariantApiBaseTest(
                                     extension.beforeUnitTest(extension.selector().withBuildType("release")) {
                                         // disable all unit tests for apps (only using instrumentation tests)
                                         it.enabled = false
-                                    }                                }
-
+                                    }
+                                }
                             }
                         }
                     """.trimIndent())

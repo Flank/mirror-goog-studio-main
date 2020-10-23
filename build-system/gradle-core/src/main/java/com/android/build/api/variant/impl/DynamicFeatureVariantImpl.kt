@@ -251,13 +251,17 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
-            stats: GradleBuildVariant.Builder
+            stats: GradleBuildVariant.Builder?
     ): T =
+        if (stats == null) {
+            this as T
+        } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledDynamicFeatureVariant::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledDynamicFeatureVariant::class.java,
+                this,
+                stats
             ) as T
+        }
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi

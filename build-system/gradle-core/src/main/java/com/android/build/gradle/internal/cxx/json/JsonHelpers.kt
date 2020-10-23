@@ -34,7 +34,7 @@ fun <T> jsonStringOf(value : T) = GsonBuilder()
  */
 fun <T> writeJsonFile(file : File, value : T)
 {
-    val parent = file.parentFile;
+    val parent = file.parentFile
     if (!parent.exists()) parent.mkdirs()
     file.writeText(
         jsonStringOf(value),

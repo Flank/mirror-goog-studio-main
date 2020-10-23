@@ -111,7 +111,7 @@ class AbiConfigurator(
 
                 // Lastly, if there is an injected ABI set and none of the ABIs is actually buildable by
                 // this project then issue an error.
-                if (ideBuildOnlyTargetAbi && ideBuildTargetAbi != null && !ideBuildTargetAbi.isEmpty()) {
+                if (ideBuildOnlyTargetAbi && ideBuildTargetAbi != null && ideBuildTargetAbi.isNotEmpty()) {
                     val injectedAbis = ideBuildTargetAbi.split(",").map { it.trim() }
                     val injectedLegalAbis = injectedAbis.mapNotNull(Abi::getByName)
                     validAbis = if (injectedLegalAbis.isEmpty()) {

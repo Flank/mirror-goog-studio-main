@@ -144,6 +144,30 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
                         RETURN_VALUE_TIMEOUT));
     }
 
+    @Test
+    public void testUpdateByOffSet() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        Deploy.LiveLiteralUpdateRequest request =
+                Deploy.LiveLiteralUpdateRequest.newBuilder()
+                        .addUpdates(
+                                Deploy.LiveLiteral.newBuilder()
+                                        .setHelperClass("app/LiveLiteralOffsetLookupKt")
+                                        .setOffset(159)
+                                        .setType("I")
+                                        .setValue("100"))
+                        .build();
+        installer.update(request);
+        Deploy.AgentLiveLiteralUpdateResponse response = installer.getLiveLiteralAgentResponse();
+        Assert.assertEquals(Deploy.AgentLiveLiteralUpdateResponse.Status.OK, response.getStatus());
+
+        Assert.assertTrue(
+                android.waitForInput(
+                        "updateLiveLiteralValue(Int_func_foo_bar_LiveLiteral_variable, class java.lang.Integer, 100)",
+                        RETURN_VALUE_TIMEOUT));
+    }
+
     /** A helper to communicate SwapRequest to the agent with the on-host installer. */
     protected static class LocalLiveLiteralUpdateClient extends InstallServerTestClient {
         protected LocalLiveLiteralUpdateClient(

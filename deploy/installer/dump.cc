@@ -120,7 +120,7 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
 
   std::string output;
   std::string error;
-  RunasExecutor run_as(package_name, workspace_.GetExecutor());
+  RunasExecutor run_as(package_name);
   if (!run_as.Run("id", {"-u"}, &output, &error)) {
     ErrEvent("Could not get package user id: " + error);
     return false;

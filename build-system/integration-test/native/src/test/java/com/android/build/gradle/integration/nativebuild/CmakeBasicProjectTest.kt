@@ -32,23 +32,15 @@ import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.builder.model.NativeAndroidProject
-import com.android.builder.model.NativeArtifact
-import com.android.builder.model.NativeVariantAbi
 import com.android.builder.model.v2.models.ndk.NativeModule
-import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils.join
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Lists
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.util.zip.GZIPInputStream
@@ -57,7 +49,6 @@ import java.util.zip.GZIPInputStream
 @RunWith(Parameterized::class)
 class CmakeBasicProjectTest(
     private val cmakeVersionInDsl: String,
-    private val useV2NativeModel: Boolean
 ) {
     @Rule
     @JvmField
@@ -66,19 +57,15 @@ class CmakeBasicProjectTest(
         // TODO(b/159233213) Turn to ON when release configuration is cacheable
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .addGradleProperties("${BooleanOption.ENABLE_V2_NATIVE_MODEL.propertyName}=$useV2NativeModel")
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "version={0} useV2NativeModel={1}")
+        @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
         fun data() = arrayOf(
-            arrayOf("3.6.0", false),
-            arrayOf(BAKING_CMAKE_VERSION, false),
-            arrayOf(DEFAULT_CMAKE_VERSION, false),
-            arrayOf("3.6.0", true),
-            arrayOf(BAKING_CMAKE_VERSION, true),
-            arrayOf(DEFAULT_CMAKE_VERSION, true)
+          arrayOf("3.6.0"),
+          arrayOf(BAKING_CMAKE_VERSION),
+          arrayOf(DEFAULT_CMAKE_VERSION)
         )
     }
 
@@ -267,232 +254,178 @@ class CmakeBasicProjectTest(
 
     @Test
     fun checkModelSingleVariant() {
-        if (useV2NativeModel) {
-            // Request build details for debug-x86_64
-            val fetchResult =
-                project.modelV2().fetchNativeModules(listOf("debug"), listOf("x86_64"))
-            // note that only build files for the requested variant and ABI exists.
-            Truth.assertThat(fetchResult.dump()).isEqualTo(
-                """
-                [:]
-                > NativeModule:
-                    - name                    = "project"
-                    > variants:
-                       * NativeVariant:
-                          * name = "debug"
-                          > abis:
-                             * NativeAbi:
-                                * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
-                             * NativeAbi:
-                                * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
-                          < abis
-                       * NativeVariant:
-                          * name = "release"
-                          > abis:
-                             * NativeAbi:
-                                * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
-                             * NativeAbi:
-                                * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
-                          < abis
-                    < variants
-                    - nativeBuildSystem       = CMAKE
-                    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
-                    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
-                    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
-                < NativeModule
-                """.trimIndent()
-            )
-        } else {
-            project.model()
-                    .fetchAndroidProjectsAllowSyncIssues() // Allow warning about V2 model flag being removed later
-            val model = project.model().fetch(NativeVariantAbi::class.java)
-            assertThat(model.buildFiles.map { it.name }).containsExactly("CMakeLists.txt")
-        }
+        // Request build details for debug-x86_64
+        val fetchResult =
+          project.modelV2().fetchNativeModules(listOf("debug"), listOf("x86_64"))
+        // note that only build files for the requested variant and ABI exists.
+        Truth.assertThat(fetchResult.dump()).isEqualTo(
+          """
+            [:]
+            > NativeModule:
+                - name                    = "project"
+                > variants:
+                   * NativeVariant:
+                      * name = "debug"
+                      > abis:
+                         * NativeAbi:
+                            * name                  = "armeabi-v7a"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
+                         * NativeAbi:
+                            * name                  = "x86_64"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
+                      < abis
+                   * NativeVariant:
+                      * name = "release"
+                      > abis:
+                         * NativeAbi:
+                            * name                  = "armeabi-v7a"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
+                         * NativeAbi:
+                            * name                  = "x86_64"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
+                      < abis
+                < variants
+                - nativeBuildSystem       = CMAKE
+                - ndkVersion              = "{DEFAULT_NDK_VERSION}"
+                - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
+                - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
+            < NativeModule
+            """.trimIndent()
+        )
     }
 
     @Test
     fun checkModel() {
-        if (useV2NativeModel) {
-            val fetchResult = project.modelV2().fetchNativeModules(emptyList(), emptyList())
-            Truth.assertThat(fetchResult.dump()).isEqualTo(
-                """
-                [:]
-                > NativeModule:
-                    - name                    = "project"
-                    > variants:
-                       * NativeVariant:
-                          * name = "debug"
-                          > abis:
-                             * NativeAbi:
-                                * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
-                             * NativeAbi:
-                                * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}
-                          < abis
-                       * NativeVariant:
-                          * name = "release"
-                          > abis:
-                             * NativeAbi:
-                                * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
-                             * NativeAbi:
-                                * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
-                          < abis
-                    < variants
-                    - nativeBuildSystem       = CMAKE
-                    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
-                    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
-                    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
-                < NativeModule
-                """.trimIndent()
-            )
-        } else {
-            project.model()
-                .fetchAndroidProjectsAllowSyncIssues() // Allow warning about V2 model flag being removed later
-            val model = project.model().fetch(NativeAndroidProject::class.java)
-            assertThat(model.buildSystems).containsExactly(NativeBuildSystem.CMAKE.tag)
-            assertThat(model).hasAtLeastBuildFilesShortNames("CMakeLists.txt")
-            assertThat(model.name).isEqualTo("project")
-            val abiCount = 2
-            assertThat(model.artifacts).hasSize(abiCount * 2)
-            assertThat(model.fileExtensions).hasSize(1)
-
-            for (file in model.buildFiles) {
-                assertThat(file).isFile()
-            }
-
-            val groupToArtifacts = ArrayListMultimap.create<String, NativeArtifact>()
-
-            for (artifact in model.artifacts) {
-                val pathElements = TestFileUtils.splitPath(artifact.outputFile!!)
-                assertThat(pathElements).contains("obj")
-                assertThat(pathElements).doesNotContain("lib")
-                groupToArtifacts.put(artifact.groupName, artifact)
-            }
-
-            assertThat(model).hasArtifactGroupsNamed("debug", "release")
-            assertThat(model).hasArtifactGroupsOfSize(abiCount.toLong())
-
-            assertThat(model).hasVariantInfoBuildFolderForEachAbi()
-        }
+        val fetchResult = project.modelV2().fetchNativeModules(emptyList(), emptyList())
+        Truth.assertThat(fetchResult.dump()).isEqualTo(
+          """
+            [:]
+            > NativeModule:
+                - name                    = "project"
+                > variants:
+                   * NativeVariant:
+                      * name = "debug"
+                      > abis:
+                         * NativeAbi:
+                            * name                  = "armeabi-v7a"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{!}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{!}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{!}
+                         * NativeAbi:
+                            * name                  = "x86_64"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{!}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{!}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{!}
+                      < abis
+                   * NativeVariant:
+                      * name = "release"
+                      > abis:
+                         * NativeAbi:
+                            * name                  = "armeabi-v7a"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{!}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{!}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{!}
+                         * NativeAbi:
+                            * name                  = "x86_64"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{!}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{!}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{!}
+                      < abis
+                < variants
+                - nativeBuildSystem       = CMAKE
+                - ndkVersion              = "{DEFAULT_NDK_VERSION}"
+                - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
+                - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
+            < NativeModule
+            """.trimIndent()
+        )
     }
 
     @Test
     fun checkClean() {
-        lateinit var model: NativeAndroidProject
         lateinit var modelV2: NativeModule
         // Build the project.
         project.execute("clean", "assembleDebug", "assembleRelease")
 
-        if (useV2NativeModel) {
-            // We specify to not generate the build information for any variants or ABIs here.
-            val result = project.modelV2().fetchNativeModules(emptyList(), emptyList())
-            // The files still appear to exist because we have already built the project.
-            Truth.assertThat(result.dump()).isEqualTo(
-                """
-                [:]
-                > NativeModule:
-                    - name                    = "project"
-                    > variants:
-                       * NativeVariant:
-                          * name = "debug"
-                          > abis:
-                             * NativeAbi:
-                                * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{F}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{F}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{F}
-                             * NativeAbi:
-                                * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
-                          < abis
-                       * NativeVariant:
-                          * name = "release"
-                          > abis:
-                             * NativeAbi:
-                                * name                  = "armeabi-v7a"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{F}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{F}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{F}
-                             * NativeAbi:
-                                * name                  = "x86_64"
-                                * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{F}
-                                * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{F}
-                                * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{F}
-                          < abis
-                    < variants
-                    - nativeBuildSystem       = CMAKE
-                    - ndkVersion              = "{DEFAULT_NDK_VERSION}"
-                    - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
-                    - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
-                < NativeModule
-                """.trimIndent()
-            )
-            modelV2 = result.container.singleModel
-            val outputFiles = modelV2.variants.flatMap { variant ->
-                variant.abis.flatMap { abi ->
-                    abi.symbolFolderIndexFile.readAsFileIndex().flatMap {
-                        it.list().toList()
-                    }
+        // We specify to not generate the build information for any variants or ABIs here.
+        val result = project.modelV2().fetchNativeModules(emptyList(), emptyList())
+        // The files still appear to exist because we have already built the project.
+        Truth.assertThat(result.dump()).isEqualTo(
+          """
+            [:]
+            > NativeModule:
+                - name                    = "project"
+                > variants:
+                   * NativeVariant:
+                      * name = "debug"
+                      > abis:
+                         * NativeAbi:
+                            * name                  = "armeabi-v7a"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/compile_commands.json.bin{F}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/symbol_folder_index.txt{F}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/armeabi-v7a/build_file_index.txt{F}
+                         * NativeAbi:
+                            * name                  = "x86_64"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/debug/x86_64/compile_commands.json.bin{F}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/debug/x86_64/symbol_folder_index.txt{F}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/debug/x86_64/build_file_index.txt{F}
+                      < abis
+                   * NativeVariant:
+                      * name = "release"
+                      > abis:
+                         * NativeAbi:
+                            * name                  = "armeabi-v7a"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/armeabi-v7a/compile_commands.json.bin{F}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/armeabi-v7a/symbol_folder_index.txt{F}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/armeabi-v7a/build_file_index.txt{F}
+                         * NativeAbi:
+                            * name                  = "x86_64"
+                            * sourceFlagsFile       = {PROJECT}/.cxx/cmake/release/x86_64/compile_commands.json.bin{F}
+                            * symbolFolderIndexFile = {PROJECT}/.cxx/cmake/release/x86_64/symbol_folder_index.txt{F}
+                            * buildFileIndexFile    = {PROJECT}/.cxx/cmake/release/x86_64/build_file_index.txt{F}
+                      < abis
+                < variants
+                - nativeBuildSystem       = CMAKE
+                - ndkVersion              = "{DEFAULT_NDK_VERSION}"
+                - defaultNdkVersion       = "{DEFAULT_NDK_VERSION}"
+                - externalNativeBuildFile = {PROJECT}/CMakeLists.txt{F}
+            < NativeModule
+            """.trimIndent()
+        )
+        modelV2 = result.container.singleModel
+        val outputFiles = modelV2.variants.flatMap { variant ->
+            variant.abis.flatMap { abi ->
+                abi.symbolFolderIndexFile.readAsFileIndex().flatMap {
+                    it.list().toList()
                 }
             }
-            Truth.assertThat(outputFiles).hasSize(4)
-            Truth.assertThat(outputFiles.toSet()).containsExactly("libhello-jni.so")
-        } else {
-            model = project.model().fetch(NativeAndroidProject::class.java)
-            assertThat(model).hasBuildOutputCountEqualTo(4)
-            assertThat(model).allBuildOutputsExist()
-            // CMake .o files are kept in -B folder which is under .externalNativeBuild/
-            assertThat(model).hasExactObjectFilesInCxxFolder("hello-jni.c.o")
-            // CMake .so files are kept in -DCMAKE_LIBRARY_OUTPUT_DIRECTORY folder which is under build/
-            assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so")
         }
+        Truth.assertThat(outputFiles).hasSize(4)
+        Truth.assertThat(outputFiles.toSet()).containsExactly("libhello-jni.so")
 
         project.execute("clean")
 
-        if (useV2NativeModel) {
-            modelV2.variants.forEach { variant ->
-                variant.abis.forEach { abi ->
-                    abi.symbolFolderIndexFile.readAsFileIndex().forEach {
-                        assertThat(it).doesNotExist()
-                    }
+        modelV2.variants.forEach { variant ->
+            variant.abis.forEach { abi ->
+                abi.symbolFolderIndexFile.readAsFileIndex().forEach {
+                    assertThat(it).doesNotExist()
                 }
             }
-        } else {
-            assertThat(model).noBuildOutputsExist()
-            assertThat(model).hasExactObjectFilesInBuildFolder()
-            assertThat(model).hasExactSharedObjectFilesInBuildFolder()
         }
     }
 
     @Test
     fun checkCleanAfterAbiSubset() {
         project.execute("clean", "assembleDebug", "assembleRelease")
-        val buildOutputs = if (useV2NativeModel) {
+        val buildOutputs = run {
             val result = project.modelV2().fetchNativeModules(emptyList(), emptyList())
             val nativeModule = result.container.singleModel
             val buildOutputFolders = nativeModule.variants.flatMap { variant ->
@@ -504,16 +437,6 @@ class CmakeBasicProjectTest(
                 Truth.assertThat(folder.list().toList()).containsExactly("libhello-jni.so")
             }
             buildOutputFolders
-        } else {
-            val model = project.model().fetch(NativeAndroidProject::class.java)
-            assertThat(model).hasBuildOutputCountEqualTo(4)
-
-            val allBuildOutputs = Lists.newArrayList<File>()
-            for (artifact in model.artifacts) {
-                assertThat(artifact.outputFile).isFile()
-                allBuildOutputs.add(artifact.outputFile)
-            }
-            allBuildOutputs
         }
 
         // Change the build file to only have "x86_64"
@@ -558,7 +481,7 @@ class CmakeBasicProjectTest(
         val generationRecord = project.file(".cxx/cmake/debug/armeabi-v7a/json_generation_record.json")
         project.executor().run("assembleDebug")
         assertThat(generationRecord).exists()
-        var stateModificationTime = generationRecord.lastModified()
+        val stateModificationTime = generationRecord.lastModified()
         project.executor().run("assembleDebug")
         assertThat(stateModificationTime).isNotEqualTo(0)
         assertThat(generationRecord).exists()

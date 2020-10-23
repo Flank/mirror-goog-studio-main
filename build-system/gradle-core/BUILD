@@ -174,6 +174,7 @@ kotlin_test(
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.4.10:jar",
         "//tools/analytics-library/protos/src/main/proto",
+        "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system/builder",

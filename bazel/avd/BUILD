@@ -17,12 +17,11 @@ java_library(
     ],
 )
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.base.bazel.avd",
     srcs = ["src"],
     iml_files = ["android.sdktools.base.bazel.avd.iml"],
-    project = "unb",
     visibility = ["//visibility:public"],
     deps = ["//prebuilts/studio/intellij-sdk:studio-sdk"],
 )

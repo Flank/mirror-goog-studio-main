@@ -40,17 +40,6 @@ class CreateCxxAbiModelTest {
             assertThat(abi.cxxBuildFolder.path
                     .replace("\\", "/"))
                 .endsWith(".cxx/cmake/debug/x86")
-            assertThat(abi.cmake!!.cmakeWrappingBaseFolder.path
-                    .replace("\\", "/"))
-                .doesNotContain("cmake/debug/cxx/debug")
-            assertThat(
-                abi.cmake!!.buildGenerationStateFile.path
-                    .replace("\\", "/"))
-                .doesNotContain("cmake/cxx/x86")
-            assertThat(
-                abi.cmake!!.cmakeListsWrapperFile.path
-                    .replace("\\", "/"))
-                .endsWith(".cxx/cxx/debug/x86/CMakeLists.txt")
         }
     }
 

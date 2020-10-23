@@ -10,7 +10,7 @@ fileset(
     mappings = {"//tools/buildSrc/base:": "com/android/builder/model/"},
 )
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.builder-model",
     srcs = ["src/main/java"],
@@ -20,7 +20,6 @@ iml_module(
         "-target 6",
     ],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -28,8 +27,8 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/adt/idea/.idea/libraries:unb.kotlin-stdlib-jdk8",
-        "//tools/adt/idea/.idea/libraries:unb.Guava[test]",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/adt/idea/.idea/libraries:Guava[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )

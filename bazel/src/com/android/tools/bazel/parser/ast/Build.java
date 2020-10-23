@@ -67,15 +67,13 @@ public class Build extends Node {
         nodes.add(this);
     }
 
-    public CallStatement getCall(String name, String id) {
+    public CallStatement getCall(String name) {
         for (Statement statement : statements) {
             if (statement instanceof CallStatement) {
                 CallExpression call = ((CallStatement)statement).getCall();
                 String literal = call.getLiteralArgument("name");
                 if (literal != null && literal.equals("\"" + name + "\"")) {
-                    if (id == null || ((CallStatement) statement).isManaged(id)) {
-                        return (CallStatement) statement;
-                    }
+                    return (CallStatement) statement;
                 }
             }
         }
@@ -118,11 +116,11 @@ public class Build extends Node {
      * Hides all the statements that are managed by this plugin. This plugin identifies managed
      * rules by the tag "managed" present in the rule.
      */
-    public void hideNotUpdatedManagedStatements(String owner) {
+    public void hideNotUpdatedManagedStatements() {
         for (Statement statement : statements) {
             if (statement instanceof CallStatement) {
                 CallStatement call = ((CallStatement)statement);
-                if (call.isManaged(owner) && !call.isUpdated()) {
+                if (call.isManaged() && !call.isUpdated()) {
                     statement.setHidden(true);
                 }
             }

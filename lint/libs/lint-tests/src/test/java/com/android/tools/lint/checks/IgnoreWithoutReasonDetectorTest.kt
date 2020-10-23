@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import org.junit.Test
 
@@ -58,7 +59,7 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 class MyTest {
-                  @Test fun something() {
+                  @Test void something() {
                   }
                 }"""
                 ).indented()
@@ -82,7 +83,7 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 class MyTest {
-                  @Test @Ignore("reason") fun something() {
+                  @Test @Ignore("reason") void something() {
                   }
                 }"""
                 ).indented()
@@ -106,7 +107,7 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 @Ignore("reason") class MyTest {
-                  @Test fun something() {
+                  @Test void something() {
                   }
                 }"""
                 ).indented()
@@ -130,7 +131,7 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 @Ignore class MyTest {
-                  @Test fun something() {
+                  @Test void something() {
                   }
                 }"""
                 ).indented()
@@ -140,6 +141,39 @@ class IgnoreWithoutReasonDetectorTest {
             .expect(
                 """
                 src/foo/MyTest.java:7: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
+                @Ignore class MyTest {
+                ~~~~~~~
+                0 errors, 1 warnings
+                """
+            )
+    }
+
+    @Test
+    fun testAnnotationWithoutReasonOnClassKotlin() {
+        lint()
+            .files(
+                stubJUnitTest, stubJUnitIgnore,
+                kotlin(
+                    """
+                    package foo
+
+                    import org.junit.Ignore
+                    import org.junit.Test
+
+                    @Ignore class MyTest {
+                      @Test fun something() {
+                      }
+                      @Ignore companion object { // b/170228047
+                      }
+                    }
+                    """
+                ).indented()
+            )
+            .issues(IgnoreWithoutReasonDetector.ISSUE)
+            .run()
+            .expect(
+                """
+                src/foo/MyTest.kt:6: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
                 @Ignore class MyTest {
                 ~~~~~~~
                 0 errors, 1 warnings
@@ -161,13 +195,13 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "DefaultAnnotationParam"})
                 class MyTest {
-                  @Test @Ignore fun something() {
+                  @Test @Ignore void something() {
                   }
 
-                  @Test @Ignore("") fun something() {
+                  @Test @Ignore("") void something() {
                   }
 
-                  @Test @Ignore("TODO") fun something() {
+                  @Test @Ignore("TODO") void something() {
                   }
                 }
                 """
@@ -178,13 +212,13 @@ class IgnoreWithoutReasonDetectorTest {
             .expect(
                 """
                 src/foo/MyTest.java:8: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
-                  @Test @Ignore fun something() {
+                  @Test @Ignore void something() {
                         ~~~~~~~
                 src/foo/MyTest.java:11: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
-                  @Test @Ignore("") fun something() {
+                  @Test @Ignore("") void something() {
                         ~~~~~~~~~~~
                 src/foo/MyTest.java:14: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
-                  @Test @Ignore("TODO") fun something() {
+                  @Test @Ignore("TODO") void something() {
                         ~~~~~~~~~~~~~~~
                 0 errors, 3 warnings
                 """
@@ -193,8 +227,8 @@ class IgnoreWithoutReasonDetectorTest {
                 """
                 Fix for src/foo/MyTest.java line 8: Give reason:
                 @@ -8 +8
-                -   @Test @Ignore fun something() {
-                +   @Test @Ignore("[TODO]") fun something() {
+                -   @Test @Ignore void something() {
+                +   @Test @Ignore("[TODO]") void something() {
                 """
             )
     }

@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.fixture.model.NativeUt
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dumpCompileCommandsJsonBin;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -29,35 +28,22 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2;
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.tasks.NativeBuildSystem;
-import com.android.builder.model.NativeAndroidProject;
-import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.v2.models.ndk.NativeAbi;
 import com.android.builder.model.v2.models.ndk.NativeModule;
 import com.android.builder.model.v2.models.ndk.NativeVariant;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
-import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for ndk-build with targets clause. */
-@RunWith(Parameterized.class)
 public class NdkBuildTargetsTest {
 
-    private final boolean useV2NativeModel;
     @Rule public final GradleTestProject project;
 
-    public NdkBuildTargetsTest(boolean useV2NativeModel) {
+    public NdkBuildTargetsTest() {
         project =
                 GradleTestProject.builder()
                         .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cpp").build())
@@ -69,17 +55,7 @@ public class NdkBuildTargetsTest {
                                 HelloWorldJniApp.libraryCpp(
                                         "src/main/cpp/library2", "library2.cpp"))
                         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-                        .addGradleProperties(
-                                BooleanOption.ENABLE_V2_NATIVE_MODEL.getPropertyName()
-                                        + "="
-                                        + useV2NativeModel)
                         .create();
-        this.useV2NativeModel = useV2NativeModel;
-    }
-
-    @Parameterized.Parameters(name = "useV2NativeModel={0}")
-    public static Collection<Object[]> data() {
-        return ImmutableList.of(new Object[] {false}, new Object[] {true});
     }
 
     @Before
@@ -141,12 +117,7 @@ public class NdkBuildTargetsTest {
         assertThatApk(apk).contains("lib/x86/libmylibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/libmylibrary2.so");
 
-        if (useV2NativeModel) {
-            assertV2Model();
-        } else {
-            project.model().fetchAndroidProjectsAllowSyncIssues();
-            assertModel(project.model().fetch(NativeAndroidProject.class));
-        }
+        assertV2Model();
     }
 
     @Test
@@ -164,11 +135,7 @@ public class NdkBuildTargetsTest {
 
         project.model().fetchAndroidProjectsAllowSyncIssues();
 
-        if (useV2NativeModel) {
-            assertV2Model();
-        } else {
-            assertModel(project.model().fetch(NativeAndroidProject.class));
-        }
+        assertV2Model();
     }
 
     private void assertV2Model() {
@@ -263,30 +230,5 @@ public class NdkBuildTargetsTest {
                                     + "workingDir: {PROJECT}/{D}\n"
                                     + "flags:      [-target, i686-none-linux-android16, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {ANDROID_NDK}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fno-exceptions, -fno-rtti, -fPIC, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/cpp/library2, -I{PROJECT}/src/main/cpp/library2, -DTEST_C_FLAG, -DTEST_C_FLAG_2, -DTEST_CPP_FLAG, -DANDROID, -Wformat, -Werror=format-security, -mstackrealign]");
         }
-    }
-
-    private static void assertModel(NativeAndroidProject model) {
-        assertThat(model).isNotNull();
-        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getTag());
-        assertThat(model.getBuildFiles()).hasSize(1);
-        assertThat(model.getName()).isEqualTo("project");
-        assertThat(model.getArtifacts()).hasSize(12);
-        assertThat(model.getFileExtensions()).hasSize(1);
-
-        for (File file : model.getBuildFiles()) {
-            assertThat(file).isFile();
-        }
-
-        Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
-
-        for (NativeArtifact artifact : model.getArtifacts()) {
-            List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
-            assertThat(pathElements).contains("obj");
-            assertThat(pathElements).doesNotContain("lib");
-            groupToArtifacts.put(artifact.getGroupName(), artifact);
-        }
-
-        assertThat(model).hasArtifactGroupsNamed("debug", "release");
-        assertThat(model).hasArtifactGroupsOfSize(6);
     }
 }

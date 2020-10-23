@@ -945,17 +945,22 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
         }
     }
 
+    private Path createRandomFile(String filename, byte[] bytes) throws IOException {
+        Random random = new Random(0);
+        random.nextBytes(bytes);
+
+        Path path = getTestPath("testLargeSource.txt");
+        try (OutputStream out =
+                Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+            out.write(bytes);
+        }
+        return path;
+    }
+
     @Test
     public void testLargeSource() throws IOException {
         byte[] bytes = new byte[4096];
-        Random random = new Random(0);
-        Path srcPath = getTestPath("testLargeSource.txt");
-        try (OutputStream out =
-                Files.newOutputStream(
-                        srcPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
-            random.nextBytes(bytes);
-            out.write(bytes);
-        }
+        Path srcPath = createRandomFile("testLargeSource.txt", bytes);
 
         Path tmpPath = getTestPath("testLargeSourceTmpPath.tmp");
 
@@ -986,6 +991,30 @@ public class ZipFlingerTest extends AbstractZipflingerTest {
             Assert.assertEquals("FileBacked entry differ", ByteBuffer.wrap(bytes), buffer);
         }
         Assert.assertFalse("LargeSource tmp file was not deleted", Files.exists(tmpPath));
+    }
+
+    @Test
+    public void testLargeCompressedSourceNoTmp() throws IOException {
+        byte[] bytes = new byte[4096];
+        Path srcPath = createRandomFile("testLargeCompressedSourceNoTmp.txt", bytes);
+
+        File archiveFile = getTestFile("testLargeCompressedSourceNoTmp.zip");
+        try (ZipArchive zipArchive = new ZipArchive(archiveFile)) {
+            LargeFileSource s = new LargeFileSource(srcPath, "x", 1);
+            zipArchive.add(s);
+
+            s = new LargeFileSource(srcPath, "y", 1);
+            zipArchive.add(s);
+        }
+
+        verifyArchive(archiveFile);
+        try (ZipRepo zipRepo = new ZipRepo(archiveFile)) {
+            ByteBuffer buffer = zipRepo.getContent("x");
+            Assert.assertEquals("FileBacked entry differ", ByteBuffer.wrap(bytes), buffer);
+
+            buffer = zipRepo.getContent("y");
+            Assert.assertEquals("FileBacked entry differ", ByteBuffer.wrap(bytes), buffer);
+        }
     }
 
     @Test

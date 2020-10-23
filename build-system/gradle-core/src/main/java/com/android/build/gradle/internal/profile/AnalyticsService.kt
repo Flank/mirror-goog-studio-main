@@ -16,13 +16,10 @@
 
 package com.android.build.gradle.internal.profile
 
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.AnalyticsService.Params
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.builder.profile.AnalyticsProfileWriter
 import com.android.builder.profile.Recorder
-import com.android.tools.analytics.AnalyticsSettings
-import com.android.tools.analytics.Environment
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
@@ -71,7 +68,14 @@ abstract class AnalyticsService :
     @get:Inject
     abstract val provider: ProviderFactory
 
-    private val resourceManager = AnalyticsResourceManager(
+    private val resourceManager: AnalyticsResourceManager = initializeResourceManager()
+
+    init {
+        initializeUsageTracker()
+    }
+
+    protected open fun initializeResourceManager(): AnalyticsResourceManager {
+        return AnalyticsResourceManager(
             reconstructProfileBuilder(),
             ConcurrentHashMap(parameters.projects.get()),
             parameters.enableProfileJson.get(),
@@ -79,12 +83,9 @@ abstract class AnalyticsService :
             ConcurrentHashMap(parameters.taskMetadata.get()),
             parameters.rootProjectPath.get()
         )
+    }
 
-    private val gradleEnvironment: Environment = GradleAnalyticsEnvironment(provider)
-
-    init {
-        AnalyticsSettings.initialize(
-            LoggerWrapper.getLogger(AnalyticsService::class.java), null, gradleEnvironment)
+    protected open fun initializeUsageTracker() {
         // Initialize UsageTracker because some tasks(e.g. lint) need to record analytics with
         // UsageTracker.
         AnalyticsProfileWriter().initializeUsageTracker()
@@ -121,7 +122,7 @@ abstract class AnalyticsService :
     }
 
     @Synchronized
-    override fun getProjectBuillder(projectPath: String): GradleBuildProject.Builder {
+    override fun getProjectBuillder(projectPath: String): GradleBuildProject.Builder? {
         return resourceManager.getProjectBuilder(projectPath)
     }
 
@@ -129,7 +130,7 @@ abstract class AnalyticsService :
     override fun getVariantBuilder(
         projectPath: String,
         variantName: String
-    ) : GradleBuildVariant.Builder {
+    ) : GradleBuildVariant.Builder? {
         return resourceManager.getVariantBuilder(projectPath, variantName)
     }
 
@@ -166,7 +167,7 @@ abstract class AnalyticsService :
         resourceManager.recordEvent(event)
     }
 
-    fun recordApplicationId(metadataFile: File) {
+    override fun recordApplicationId(metadataFile: File) {
         resourceManager.recordApplicationId(metadataFile)
     }
 

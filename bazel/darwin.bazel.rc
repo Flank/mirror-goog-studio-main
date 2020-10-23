@@ -8,3 +8,6 @@ build:release --copt=-fno-exceptions
 build:release --cxxopt=-fno-exceptions
 build:release --copt=-ffunction-sections
 build:release --cxxopt=-ffunction-sections
+# Disable Clang diagnostics for release builds, to reduce the amount of noise
+# in the output in continuous builds and --config=remote runs.
+build:release --copt=-w

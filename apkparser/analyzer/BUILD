@@ -1,18 +1,17 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
 
-# managed by go/iml_to_build [unb]
+# managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.analyzer",
     srcs = ["src/main/java"],
     bundled_deps = [
-        "//prebuilts/tools/common/archive-patcher:unb.explainer",
-        "//prebuilts/tools/common/archive-patcher:unb.generator",
-        "//prebuilts/tools/common/archive-patcher:unb.shared",
+        "//prebuilts/tools/common/archive-patcher:explainer",
+        "//prebuilts/tools/common/archive-patcher:generator",
+        "//prebuilts/tools/common/archive-patcher:shared",
     ],
     iml_files = ["android.sdktools.analyzer.iml"],
     lint_baseline = "lint_baseline.xml",
-    project = "unb",
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -26,15 +25,15 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/adt/idea/.idea/libraries:unb.Guava",
-        "//prebuilts/tools/common/archive-patcher:unb.explainer",
-        "//prebuilts/tools/common/archive-patcher:unb.generator",
-        "//prebuilts/tools/common/archive-patcher:unb.shared",
-        "//tools/adt/idea/.idea/libraries:unb.dexlib2",
-        "//tools/adt/idea/.idea/libraries:unb.baksmali",
+        "//tools/adt/idea/.idea/libraries:Guava",
+        "//prebuilts/tools/common/archive-patcher:explainer",
+        "//prebuilts/tools/common/archive-patcher:generator",
+        "//prebuilts/tools/common/archive-patcher:shared",
+        "//tools/adt/idea/.idea/libraries:dexlib2",
+        "//tools/adt/idea/.idea/libraries:baksmali",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/adt/idea/.idea/libraries:unb.truth[test]",
-        "//tools/adt/idea/.idea/libraries:unb.jimfs[test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//tools/adt/idea/.idea/libraries:jimfs[test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
         "//tools/base/lint:studio.android.sdktools.lint-api[module]",
         "//tools/base/lint:studio.android.sdktools.lint-checks[module]",

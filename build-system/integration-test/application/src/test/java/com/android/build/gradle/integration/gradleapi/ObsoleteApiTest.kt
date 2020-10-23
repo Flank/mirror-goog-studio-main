@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
@@ -82,7 +83,7 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
                 val warningMsg = syncIssues.first().message
                 Truth.assertThat(warningMsg).isEqualTo(
                     "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
-                            "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                            "${DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT.getDeprecationTargetMessage()}\n" +
                             "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
                             "REASON: Called from: ${project.projectDir}${File.separatorChar}build.gradle:26\n" +
                             "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")
@@ -109,7 +110,7 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
                 "Java" -> {
                     ScannerSubject.assertThat(it).contains(
                         "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
-                                "It will be removed in version 5.0 of the Android Gradle plugin.\n" +
+                                "${DeprecationReporter.DeprecationTarget.TASK_ACCESS_VIA_VARIANT.getDeprecationTargetMessage()}\n" +
                                 "For more information, see https://d.android.com/r/tools/task-configuration-avoidance.\n" +
                                 "REASON: Called from: ${project.projectDir}${File.separatorChar}build.gradle:26\n" +
                                 "WARNING: Debugging obsolete API calls can take time during configuration. It's recommended to not keep it on at all times.")

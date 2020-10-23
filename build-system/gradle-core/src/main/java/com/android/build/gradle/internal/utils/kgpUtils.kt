@@ -79,7 +79,7 @@ private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, projec
                     .get()
 
     buildService.getVariantBuilder(project.path, creationConfig.name)
-            .setKotlinOptions(GradleBuildVariant.KotlinOptions.newBuilder().setUseIr(true))
+            ?.setKotlinOptions(GradleBuildVariant.KotlinOptions.newBuilder().setUseIr(true))
 }
 
 /** Add compose compiler extension args to Kotlin compile task. */

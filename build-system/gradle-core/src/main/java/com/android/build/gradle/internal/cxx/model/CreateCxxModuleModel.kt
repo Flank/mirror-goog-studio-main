@@ -72,8 +72,8 @@ fun createCxxModuleModel(
                         cmakeLocator.findCmakePath(
                                 configurationParameters.cmakeVersion,
                                 localPropertyFile(CMAKE_DIR_PROPERTY),
-                                sdkComponents.sdkDirectoryProvider.get().asFile,
-                                Consumer { sdkComponents.installCmake(it) })
+                                sdkComponents.sdkDirectoryProvider.get().asFile
+                        ) { sdkComponents.installCmake(it) }
                     val cmakeExe =
                             if (cmakeFolder == null) null
                             else join(cmakeFolder, "bin", "cmake$exe")

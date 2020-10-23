@@ -11,7 +11,6 @@ def swap_test(name, srcs):
         data = [
             ":original_dex",
             ":swapped_dex",
-            "//tools/base/deploy/agent/native:agent_server",
             "//tools/base/deploy/agent/native:libswap.so",
             "//tools/base/deploy/installer:install-server",
             "//tools/base/deploy/test/data/apk1:apk",

@@ -22,7 +22,9 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Locale;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.Deflater;
@@ -32,6 +34,8 @@ public class LargeFileSource extends Source {
 
     private final Path transferSrc;
     private final int compressionLevel;
+
+    private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 
     // Does not load the whole file in memory. If the entry is not compressed, only read it to
     // compute the CRC32 and zero-copy src when needed. If compression is requested, uses a tmp
@@ -62,6 +66,29 @@ public class LargeFileSource extends Source {
             // At this point the input file has been completely read. We can request the crc32.
             crc = Ints.longToUint(in.getChecksum().getValue());
         }
+    }
+
+    public LargeFileSource(@NonNull Path src, @NonNull String name, int compressionLevel)
+            throws IOException {
+        this(src, getTmpStoragePath(src.getFileName().toString()), name, compressionLevel);
+    }
+
+    @NonNull
+    public static Path getTmpStoragePath(@NonNull String entryName) {
+        StringBuilder filename = new StringBuilder();
+        filename.append(Integer.toHexString(entryName.hashCode()));
+        filename.append("-");
+        filename.append(Thread.currentThread().getId());
+        filename.append("-");
+        filename.append(System.nanoTime());
+        filename.append(".tmp");
+
+        Path tmp = Paths.get(TMP_DIR, filename.toString());
+        if (Files.exists(tmp)) {
+            String msg = String.format(Locale.US, "Cannot use path '%s' (exists)", tmp);
+            throw new IllegalStateException(msg);
+        }
+        return tmp;
     }
 
     private void buildStored(@NonNull InputStream in) throws IOException {

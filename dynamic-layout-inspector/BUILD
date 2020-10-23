@@ -9,8 +9,8 @@ kotlin_test(
     name = "agent_tests",
     testonly = 1,
     srcs = glob([
-        "src/test/**/*.kt",
-        "src/test/**/*.java",
+        "src/test/com/android/tools/agent/**/*.kt",
+        "src/test/com/android/tools/agent/**/*.java",
     ]),
     data = select({
         "windows": [],
@@ -39,6 +39,33 @@ kotlin_test(
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/transport/proto:transport_java_proto",
         "//tools/base/transport/test-framework",
+    ],
+)
+
+kotlin_test(
+    name = "skiaparser_tests",
+    testonly = 1,
+    srcs = glob([
+        "src/test/com/android/tools/layoutinspector/**/*.kt",
+        "src/test/com/android/tools/layoutinspector/**/*.java",
+    ]),
+    data = select({
+        "windows": [":skiaparser-test.dll"],
+        "mac": [":libskiaparser-test.dylib"],
+        "//conditions:default": [":libskiaparser-test.so"],
+    }) + glob(["testData/**/*"]),
+    jvm_flags = [
+        "-Dtest.suite.jar=skiaparser_tests.jar",
+        "-Djava.library.path=tools/base/dynamic-layout-inspector",
+    ],
+    resource_strip_prefix = "tools/base/dynamic-layout-inspector/src/testResources",
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        "//tools/base/dynamic-layout-inspector/common:studio.layout-inspector-common",
+        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_java_proto",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
     ],
 )
 
@@ -78,8 +105,35 @@ config_setting(
 
 cc_binary(
     name = "skia-grpc-server",
+    srcs = ["src/main/native/skia/server.cc"],
+    copts = [
+        "-DSK_USER_CONFIG_HEADER=\\\"StudioConfig.h\\\"",
+        "-UFORTIFY_SOURCE",
+        "-DATRACE_TAG=ATRACE_TAG_VIEW",
+        "-DSKIA_IMPLEMENTATION=1",
+        "-DSK_PRINT_CODEC_MESSAGES",
+        "-D_FORTIFY_SOURCE=1",
+    ] + select({
+        "windows": [],
+        "//conditions:default": [
+            "-std=c++14",
+            "-Wno-implicit-fallthrough",
+            "-Wno-missing-field-initializers",
+            "-Wno-thread-safety-analysis",
+            "-Wno-unused-parameter",
+            "-Wno-unused-variable",
+            "-fvisibility=hidden",
+            "-fexceptions",
+            "-mssse3",
+        ],
+    }),
+    deps = [":skia-lib"],
+)
+
+cc_library(
+    name = "skia-lib",
     srcs = glob([
-        "src/main/native/skia/*.cc",
+        "src/main/native/skia/tree_building_canvas*.cc",
         "src/main/native/skia/*.h",
     ]),
     copts = [
@@ -111,9 +165,10 @@ cc_binary(
     linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_cc_proto",
+        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_cc_proto",
         "@skia_repo//:libskia",
     ],
+    alwayslink = 1,
 )
 
 flat_archive(
@@ -135,7 +190,6 @@ cc_library(
         "src/main/native/agent/commands/layoutinspector_agent_command.h",
     ],
     copts = ANDROID_COPTS + [
-        "-Itools/base/dynamic-layout-inspector/src/main/native/agent",
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
@@ -180,18 +234,31 @@ cc_library(
 )
 
 cc_library(
-    name = "native_test_support",
+    name = "agent_test_support",
     srcs = ["src/test/native/testing/component_tree_test_java_jni.cc"],
-    copts = ANDROID_COPTS + [
-        "-Itools/base/profiler/native/agent",
-    ],
     linkstatic = 1,
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_cc_proto",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/test-framework:native_test_support",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "skiaparser_test_support",
+    srcs = ["src/test/native/testing/skia_parser_test_java_jni.cc"],
+    copts = [
+        "-DSK_USER_CONFIG_HEADER=\\\"StudioConfig.h\\\"",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":skia-lib",
+        "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_cc_proto",
     ],
     alwayslink = 1,
 )
@@ -205,8 +272,8 @@ cc_binary(
         "no_windows",
     ],
     deps = [
+        ":agent_test_support",
         ":jni",
-        ":native_test_support",
     ],
 )
 
@@ -218,7 +285,43 @@ cc_binary(
         "no_windows",
     ],
     deps = [
+        ":agent_test_support",
         ":jni",
-        ":native_test_support",
+    ],
+)
+
+cc_binary(
+    name = "libskiaparser-test.dylib",
+    linkshared = 1,
+    tags = [
+        "no_linux",
+        "no_windows",
+    ],
+    deps = [
+        ":skiaparser_test_support",
+    ],
+)
+
+cc_binary(
+    name = "libskiaparser-test.so",
+    linkshared = 1,
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    deps = [
+        ":skiaparser_test_support",
+    ],
+)
+
+cc_binary(
+    name = "skiaparser-test.dll",
+    linkshared = 1,
+    tags = [
+        "no_linux",
+        "no_mac",
+    ],
+    deps = [
+        ":skiaparser_test_support",
     ],
 )

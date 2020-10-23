@@ -60,8 +60,6 @@ class UtpConfigFactoryTest {
     @Mock
     lateinit var mockTestLogDir: File
     @Mock
-    lateinit var mockRunLogDir: File
-    @Mock
     lateinit var mockSdkDir: File
     @Mock
     lateinit var mockAdb: RegularFile
@@ -110,7 +108,6 @@ class UtpConfigFactoryTest {
         `when`(mockOutputDir.absolutePath).thenReturn("mockOutputDirPath")
         `when`(mockTmpDir.absolutePath).thenReturn("mockTmpDirPath")
         `when`(mockTestLogDir.absolutePath).thenReturn("mockTestLogDirPath")
-        `when`(mockRunLogDir.absolutePath).thenReturn("mockRunLogDirPath")
         `when`(mockAppApk.absolutePath).thenReturn("mockAppApkPath")
         `when`(mockTestApk.absolutePath).thenReturn("mockTestApkPath")
         `when`(mockHelperApk.absolutePath).thenReturn("mockHelperApkPath")
@@ -147,7 +144,6 @@ class UtpConfigFactoryTest {
             mockOutputDir,
             mockTmpDir,
             mockTestLogDir,
-            mockRunLogDir,
             mockRetentionConfig)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
@@ -237,7 +233,7 @@ class UtpConfigFactoryTest {
                     path: "mockTestLogDirPath"
                   }
                   test_run_log {
-                    path: "mockRunLogDirPath"
+                    path: "test-results.log"
                   }
                 }
               }
@@ -284,7 +280,6 @@ class UtpConfigFactoryTest {
             mockOutputDir,
             mockTmpDir,
             mockTestLogDir,
-            mockRunLogDir,
             mockRetentionConfig)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
@@ -387,7 +382,7 @@ class UtpConfigFactoryTest {
                     path: "mockTestLogDirPath"
                   }
                   test_run_log {
-                    path: "mockRunLogDirPath"
+                    path: "test-results.log"
                   }
                 }
               }
@@ -438,7 +433,6 @@ class UtpConfigFactoryTest {
             mockOutputDir,
             mockTmpDir,
             mockTestLogDir,
-            mockRunLogDir,
             mockRetentionConfig
         )
         assertThat(runnerConfigProto.toString()).isEqualTo("""
@@ -528,7 +522,7 @@ class UtpConfigFactoryTest {
                     path: "mockTestLogDirPath"
                   }
                   test_run_log {
-                    path: "mockRunLogDirPath"
+                    path: "test-results.log"
                   }
                 }
               }
