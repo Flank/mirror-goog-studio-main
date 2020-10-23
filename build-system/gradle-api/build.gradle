@@ -81,6 +81,16 @@ dokka {
 task dokkaZip(type: Zip) {
     dependsOn dokka
     from dokka.outputDirectory
+    def versionFile = new File(dokka.outputDirectory, "version.txt")
+    doFirst {
+        versionFile.createNewFile()
+        def stream = new FileOutputStream(versionFile)
+        stream.write(rootProject.ext.buildVersion.getBytes())
+        stream.close()
+    }
     destinationDirectory = layout.projectDirectory.dir("$rootDir/../out/dist")
     archiveFileName = "documentation.zip"
+    doLast {
+        versionFile.delete()
+    }
 }
