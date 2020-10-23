@@ -29,28 +29,37 @@ using profiler::Log;
 
 namespace app_inspection {
 
+void EnqueueTransportEvent(
+    JNIEnv *env,
+    std::function<void(profiler::proto::Event *)> initialize_event) {
+  profiler::Agent::Instance().SubmitAgentTasks(
+      {[initialize_event](profiler::proto::AgentService::Stub &stub,
+                          grpc::ClientContext &ctx) {
+        profiler::proto::SendEventRequest request;
+        auto *event = request.mutable_event();
+        event->set_is_ended(true);
+        event->set_pid(getpid());
+        initialize_event(event);
+        profiler::proto::EmptyResponse response;
+        return stub.SendEvent(&ctx, request, &response);
+      }});
+}
+
 void EnqueueAppInspectionResponse(
     JNIEnv *env, int32_t command_id, AppInspectionResponse::Status status,
     jstring error_message,
     std::function<void(AppInspectionResponse *)> initialize_response) {
   profiler::JStringWrapper message(env, error_message);
-  profiler::Agent::Instance().SubmitAgentTasks(
-      {[command_id, status, message, initialize_response](
-           profiler::proto::AgentService::Stub &stub,
-           grpc::ClientContext &ctx) {
-        profiler::proto::SendEventRequest request;
-        auto *event = request.mutable_event();
-        event->set_kind(profiler::proto::Event::APP_INSPECTION_RESPONSE);
-        event->set_is_ended(true);
-        event->set_pid(getpid());
-        auto *inspection_response = event->mutable_app_inspection_response();
-        inspection_response->set_command_id(command_id);
-        inspection_response->set_status(status);
-        inspection_response->set_error_message(message.get().c_str());
-        initialize_response(inspection_response);
-        profiler::proto::EmptyResponse response;
-        return stub.SendEvent(&ctx, request, &response);
-      }});
+  EnqueueTransportEvent(env, [command_id, status, message, initialize_response](
+                                 profiler::proto::Event *event) {
+    event->set_kind(profiler::proto::Event::APP_INSPECTION_RESPONSE);
+
+    auto *inspection_response = event->mutable_app_inspection_response();
+    inspection_response->set_command_id(command_id);
+    inspection_response->set_status(status);
+    inspection_response->set_error_message(message.get().c_str());
+    initialize_response(inspection_response);
+  });
 }
 
 void EnqueueAppInspectionDisposeInspectorResponse(
@@ -88,8 +97,7 @@ void EnqueueAppInspectionRawResponse(JNIEnv *env, int32_t command_id,
                                  });
   } else {
     EnqueueAppInspectionResponse(env, command_id, status, error_message,
-                                 [](AppInspectionResponse *response) {
-                                 });
+                                 [](AppInspectionResponse *response) {});
   }
 }
 
@@ -163,20 +171,14 @@ void EnqueueAppInspectionEvent(
     JNIEnv *env, jstring inspector_id,
     std::function<void(AppInspectionEvent *)> initialize_event) {
   profiler::JStringWrapper id(env, inspector_id);
-  profiler::Agent::Instance().SubmitAgentTasks(
-      {[id, initialize_event](profiler::proto::AgentService::Stub &stub,
-                              grpc::ClientContext &ctx) {
-        profiler::proto::SendEventRequest request;
-        auto *event = request.mutable_event();
+  EnqueueTransportEvent(
+      env, [id, initialize_event](profiler::proto::Event *event) {
         event->set_kind(profiler::proto::Event::APP_INSPECTION_EVENT);
-        event->set_is_ended(true);
-        event->set_pid(getpid());
+
         auto *inspection_event = event->mutable_app_inspection_event();
         inspection_event->set_inspector_id(id.get().c_str());
         initialize_event(inspection_event);
-        profiler::proto::EmptyResponse response;
-        return stub.SendEvent(&ctx, request, &response);
-      }});
+      });
 }
 
 void EnqueueAppInspectionRawEvent(JNIEnv *env, jstring inspector_id,
