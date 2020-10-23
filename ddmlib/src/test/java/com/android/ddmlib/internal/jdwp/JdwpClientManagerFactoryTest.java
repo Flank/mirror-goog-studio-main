@@ -24,13 +24,15 @@ import com.android.fakeadbserver.DeviceState;
 import java.io.IOException;
 import java.nio.channels.Selector;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class JdwpClientManagerFactoryTest {
 
   private JdwpClientManagerFactory myFactory;
-  @Rule
+  //b/166750879 - Disabled JDWP Proxy in 4.1
+  //@Rule
   public FakeAdbTestRule myAdb = new FakeAdbTestRule();
 
   @Before
@@ -41,6 +43,7 @@ public class JdwpClientManagerFactoryTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void duplicateKeyReturnsSameInstance() throws Exception {
     DeviceState state = myAdb.connectAndWaitForDevice();
     ClientImpl client = FakeAdbTestRule.launchAndWaitForProcess(state, true);
@@ -58,6 +61,7 @@ public class JdwpClientManagerFactoryTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void terminatingConnectionRemovesItFromFactory() throws Exception {
     DeviceState state = myAdb.connectAndWaitForDevice();
     ClientImpl client = FakeAdbTestRule.launchAndWaitForProcess(state, true);

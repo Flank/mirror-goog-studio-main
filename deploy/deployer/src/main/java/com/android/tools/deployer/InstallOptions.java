@@ -67,6 +67,12 @@ public final class InstallOptions {
             return this;
         }
 
+        // Instruct PM to not kill the process on install.
+        public Builder setDontKill() {
+            flags.add("--dont-kill");
+            return this;
+        }
+
         // Skips package verification if possible.
         public Builder setSkipVerification(IDevice device, String packageName) {
             String skipVerificationString =

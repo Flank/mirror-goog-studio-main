@@ -39,6 +39,7 @@ import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -48,6 +49,7 @@ public class JdwpClientManagerTest {
   // a customized initialization order for FakeAdb
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void connectionThrowsErrorOnFiledToFindDevice() throws Throwable {
     Selector selector = Selector.open();
     FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
@@ -65,6 +67,7 @@ public class JdwpClientManagerTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void connectionThrowsErrorOnFiledToFindProcess() throws Throwable {
     FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
     fakeAdb.before();
@@ -84,6 +87,7 @@ public class JdwpClientManagerTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void connectionRegistorsSelector() throws Throwable {
     FakeAdbTestRule fakeAdb = new FakeAdbTestRule();
     fakeAdb.before();
@@ -104,6 +108,7 @@ public class JdwpClientManagerTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void proxyClientIsCalledWhenDataIsReceived() throws Throwable {
     // Need to start a server before FakeAdb so we have the actual server instead of the fallback.
     JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {
@@ -126,6 +131,7 @@ public class JdwpClientManagerTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void inspectorIsRunOnWriteAndRead() throws Throwable {
     // Need to start a server before FakeAdb so we have the actual server instead of the fallback.
     JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {
@@ -181,6 +187,7 @@ public class JdwpClientManagerTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void dontWriteWhenFiltered() throws Throwable {
     // Need to start a server before FakeAdb so we have the actual server instead of the fallback.
     JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {

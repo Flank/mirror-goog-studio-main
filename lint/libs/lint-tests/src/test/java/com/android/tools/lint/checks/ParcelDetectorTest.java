@@ -402,9 +402,29 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n"
                                         + "\n"),
+                        //  168794947: Lint's Parcelize check has false positives when using the new
+                        //     @Parcelize annotation
+                        kotlin(
+                                ""
+                                        + "@file:JvmName(\"Test2Kt\")\n"
+                                        + "package test2\n"
+                                        + "\n"
+                                        + "import kotlinx.parcelize.Parcelize\n"
+                                        + "import android.os.Parcel\n"
+                                        + "import android.os.Parcelable\n"
+                                        + "\n"
+                                        + "@Parcelize\n"
+                                        + "data class Test(val a: List<String>) : Parcelable // OK: Has parcelable\n"
+                                        + "\n"),
                         kotlin(
                                 ""
                                         + "package kotlinx.android.parcel\n"
+                                        + "@Target(AnnotationTarget.CLASS)\n"
+                                        + "@Retention(AnnotationRetention.BINARY)\n"
+                                        + "annotation class Parcelize"),
+                        kotlin(
+                                ""
+                                        + "package kotlinx.parcelize\n"
                                         + "@Target(AnnotationTarget.CLASS)\n"
                                         + "@Retention(AnnotationRetention.BINARY)\n"
                                         + "annotation class Parcelize"))

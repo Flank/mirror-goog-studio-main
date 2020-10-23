@@ -24,15 +24,18 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class JdwpProxyServerTest {
 
   // Creates and starts a default server
-  public @Rule FakeAdbTestRule myFakeAdb = new FakeAdbTestRule();
+  //b/166750879 - Disabled JDWP Proxy in 4.1
+  //public @Rule FakeAdbTestRule myFakeAdb = new FakeAdbTestRule();
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void serverStartsOnPortDefaultPort() throws Exception {
     SocketChannel channel = SocketChannel.open(new InetSocketAddress("localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT));
     assertThat(channel.isConnected()).isTrue();
@@ -40,6 +43,7 @@ public class JdwpProxyServerTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void secondaryServerStartsInFallbackMode() throws Exception {
     JdwpProxyServer proxy = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {
     });
@@ -49,6 +53,7 @@ public class JdwpProxyServerTest {
   }
 
   @Test
+  @Ignore("b/166750879 - Disabled JDWP Proxy in 4.1")
   public void stateChangeCallbackWhenServerStops() throws Exception {
     CountDownLatch stateChangedLatch = new CountDownLatch(1);
     JdwpProxyServer server = new JdwpProxyServer(0, () -> {
