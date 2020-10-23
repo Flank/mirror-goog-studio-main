@@ -12,6 +12,7 @@
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/test-inspector/api/app-inspection.test-inspector.api.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/test-inspector/api/app-inspection.test-inspector.api.iml" />
       <module fileurl="file://$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" filepath="$PROJECT_DIR$/../app-inspection/tests/app-inspection-test/app-inspection.tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/../fakeandroid/fakeandroid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/proto/proto.iml" filepath="$PROJECT_DIR$/proto/proto.iml" />
       <module fileurl="file://$PROJECT_DIR$/test-framework/test-app/transport-test-app.iml" filepath="$PROJECT_DIR$/test-framework/test-app/transport-test-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/test-framework/transport-test-framework.iml" filepath="$PROJECT_DIR$/test-framework/transport-test-framework.iml" />
     </modules>
