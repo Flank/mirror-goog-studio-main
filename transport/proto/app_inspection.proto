@@ -76,6 +76,19 @@ message LaunchMetadata {
 // itself.
 message DisposeInspectorCommand {}
 
+// A payload is a large binary blob, which we break up into chunks to improve streaming behavior.
+// Chunks must be associated with a payload ID and sent serially, and they will be reconstructed on
+// the client side.
+// Note: This payload ID will be unique across all inspectors attached to a process, so there's
+// no need to additionally filter by inspector ID.
+// Note: This chunk will be wrapped by a parent |Event| (see common.proto) and will use its
+// |group_id| field to store the payload ID and the |is_ended| field to indicate it is the final
+// message in the series.
+message AppInspectionPayload {
+  // The subset of bytes in this chunk
+  bytes chunk = 1;
+}
+
 // Opaque command to an inspector.
 message RawCommand {
   bytes content = 1;
@@ -163,13 +176,22 @@ message GetLibraryCompatibilityInfoResponse {
 
 // Opaque response from an inspector.
 message RawResponse {
-  bytes content = 1;
+  oneof data {
+    // An opaque serialized response, inspectors themselves define serialization format
+    bytes content = 1;
+    // If specified, bytes will be fetched from a payload cache by ID
+    int64 payload_id = 2;
+  }
 }
 
 // Opaque event from an inspector.
 message RawEvent {
-  // An opaque serialized event, inspectors themselves define serialization format
-  bytes content = 1;
+  oneof data {
+    // An opaque serialized event, inspectors themselves define serialization format
+    bytes content = 1;
+    // If specified, bytes will be fetched from a payload cache by ID
+    int64 payload_id = 2;
+  }
 }
 
 // Sent when inspector encounters an unrecoverable error.

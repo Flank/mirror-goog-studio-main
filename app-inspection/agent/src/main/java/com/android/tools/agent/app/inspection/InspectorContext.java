@@ -33,6 +33,11 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 final class InspectorContext {
+    /**
+     * A reasonable size for a chunk (in bytes), to be used by {@link NativeTransport#sendPayload}.
+     */
+    private static final int CHUNK_SIZE = 50 * 1024;
+
     private final String mInspectorId;
     private Inspector mInspector;
     /**
@@ -83,7 +88,7 @@ final class InspectorContext {
             while (iterator.hasNext()) {
                 InspectorFactory inspectorFactory = iterator.next();
                 if (mInspectorId.equals(inspectorFactory.getInspectorId())) {
-                    ConnectionImpl connection = new ConnectionImpl(mInspectorId);
+                    ConnectionImpl connection = new ConnectionImpl(mInspectorId, CHUNK_SIZE);
                     InspectorEnvironment environment =
                             new InspectorEnvironmentImpl(nativePtr, mInspectorId, mExecutors);
                     inspector = inspectorFactory.createInspector(connection, environment);
@@ -153,7 +158,13 @@ final class InspectorContext {
                 if (mStatus == Status.PENDING) {
                     mStatus = Status.REPLIED;
                     mIdToCommandCallback.remove(mCommandId);
-                    NativeTransport.sendRawResponseSuccess(mCommandId, bytes, bytes.length);
+                    if (bytes.length <= CHUNK_SIZE) {
+                        NativeTransport.sendRawResponseData(mCommandId, bytes, bytes.length);
+                    } else {
+                        long payloadId =
+                                NativeTransport.sendPayload(bytes, bytes.length, CHUNK_SIZE);
+                        NativeTransport.sendRawResponsePayload(mCommandId, payloadId);
+                    }
                 }
             }
         }

@@ -14,28 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.tools.agent.app.inspection;
+package test.inspector;
 
+import androidx.annotation.NonNull;
 import androidx.inspection.Connection;
+import androidx.inspection.InspectorEnvironment;
+import androidx.inspection.InspectorFactory;
 
-class ConnectionImpl extends Connection {
-
-    private String mInspectorId;
-
-    private final int mChunkSize;
-
-    public ConnectionImpl(String inspectorId, int chunkSize) {
-        mInspectorId = inspectorId;
-        this.mChunkSize = chunkSize;
+public final class PayloadInspectorFactory extends InspectorFactory<TestInspector> {
+    public PayloadInspectorFactory() {
+        super("payload.inspector");
     }
 
+    @NonNull
     @Override
-    public void sendEvent(byte[] data) {
-        if (data.length <= mChunkSize) {
-            NativeTransport.sendRawEventData(mInspectorId, data, data.length);
-        } else {
-            long payloadId = NativeTransport.sendPayload(data, data.length, mChunkSize);
-            NativeTransport.sendRawEventPayload(mInspectorId, payloadId);
-        }
+    public TestInspector createInspector(
+            @NonNull Connection connection, @NonNull InspectorEnvironment environment) {
+        return new PayloadInspector(connection);
     }
 }

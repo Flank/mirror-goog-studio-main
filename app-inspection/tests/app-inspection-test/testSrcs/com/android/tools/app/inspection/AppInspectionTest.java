@@ -22,8 +22,13 @@ import static com.android.tools.app.inspection.AppInspection.CreateInspectorResp
 import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.SUCCESS;
 import static com.android.tools.app.inspection.AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE;
 import static com.android.tools.app.inspection.AppInspectionRule.injectInspectorDex;
-import static com.android.tools.app.inspection.Asserts.*;
-import static com.android.tools.app.inspection.Commands.*;
+import static com.android.tools.app.inspection.Asserts.assertCreateInspectorResponseStatus;
+import static com.android.tools.app.inspection.Asserts.assertDisposeInspectorResponseStatus;
+import static com.android.tools.app.inspection.Asserts.assertRawResponse;
+import static com.android.tools.app.inspection.Commands.createInspector;
+import static com.android.tools.app.inspection.Commands.createLibraryInspector;
+import static com.android.tools.app.inspection.Commands.disposeInspector;
+import static com.android.tools.app.inspection.Commands.rawCommandInspector;
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.annotation.NonNull;
@@ -39,6 +44,7 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import test.inspector.api.NoReplyInspectorApi;
+import test.inspector.api.PayloadInspectorApi;
 import test.inspector.api.TestExecutorsApi;
 import test.inspector.api.TestInspectorApi;
 
@@ -462,6 +468,49 @@ public final class AppInspectionTest {
                 .startsWith("Failed to parse provided min version");
         assertThat(response.getGetLibraryCompatibilityResponse().getResponses(4).getVersion())
                 .isEqualTo("1.0.0");
+    }
+
+    @Test
+    public void receiveLargePayloadsInChunks() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        String inspectorId = "payload.inspector";
+        assertCreateInspectorResponseStatus(
+                appInspectionRule.sendCommandAndGetResponse(
+                        createInspector(inspectorId, onDevicePath)),
+                SUCCESS);
+        appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
+
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                PayloadInspectorApi.Command.SEND_LARGE_RESPONSE.toByteArray()));
+        {
+            List<Byte> payload =
+                    appInspectionRule.removePayload(response.getRawResponse().getPayloadId());
+
+            assertThat(payload).hasSize(1024 * 1024);
+            for (int i = 0; i < payload.size(); i++) {
+                assertThat(payload.get(i)).isEqualTo((byte) i);
+            }
+        }
+
+        assertRawResponse(
+                appInspectionRule.sendCommandAndGetResponse(
+                        rawCommandInspector(
+                                inspectorId,
+                                PayloadInspectorApi.Command.SEND_LARGE_EVENT.toByteArray())),
+                TestInspectorApi.Reply.SUCCESS.toByteArray());
+        AppInspectionEvent event = appInspectionRule.consumeCollectedEvent();
+        {
+            List<Byte> payload =
+                    appInspectionRule.removePayload(event.getRawEvent().getPayloadId());
+
+            assertThat(payload).hasSize(1024 * 1024);
+            for (int i = 0; i < payload.size(); i++) {
+                assertThat(payload.get(i)).isEqualTo((byte) i);
+            }
+        }
     }
 
     @NonNull

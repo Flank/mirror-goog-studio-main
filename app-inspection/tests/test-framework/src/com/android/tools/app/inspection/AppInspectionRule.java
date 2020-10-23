@@ -19,6 +19,7 @@ package com.android.tools.app.inspection;
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.android.tools.app.inspection.AppInspection.AppInspectionCommand;
 import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.fakeandroid.ProcessRunner;
@@ -34,7 +35,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.RuleChain;
@@ -70,6 +77,7 @@ public final class AppInspectionRule extends ExternalResource implements Runnabl
     private ConcurrentHashMap<Integer, CompletableFuture<Common.Event>> commandIdToFuture =
             new ConcurrentHashMap<>();
     private LinkedBlockingQueue<Common.Event> events = new LinkedBlockingQueue<>();
+    private Map<Long, List<Byte>> payloads = new ConcurrentHashMap<>();
 
     public AppInspectionRule(@NonNull String activityClass, @NonNull SdkLevel sdkLevel) {
         this.transportRule =
@@ -181,8 +189,20 @@ public final class AppInspectionRule extends ExternalResource implements Runnabl
                 int commandId = inspectionResponse.getCommandId();
                 assertThat(commandId).isNotEqualTo(0);
                 handleCommandResponse(commandId, event);
+            } else if (event.hasAppInspectionPayload()) {
+                long payloadId = event.getGroupId();
+                AppInspection.AppInspectionPayload payload = event.getAppInspectionPayload();
+                List<Byte> bytes = payloads.computeIfAbsent(payloadId, id -> new ArrayList<>());
+                for (byte b : payload.getChunk().toByteArray()) {
+                    bytes.add(b);
+                }
             }
         }
+    }
+
+    @Nullable
+    public List<Byte> removePayload(long payloadId) {
+        return payloads.remove(payloadId);
     }
 
     private void handleCommandResponse(int commandId, @NonNull Common.Event response) {
