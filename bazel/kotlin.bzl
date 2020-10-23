@@ -1,5 +1,5 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
-load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target")
+load(":functions.bzl", "explicit_target")
 load(":maven.bzl", "maven_pom")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
@@ -40,11 +40,7 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
 
     deps = depset(direct = jre, transitive = [deps])
     transitive_deps += [deps]
-    src_paths = [src.path for src in srcs]
-    option_flags, option_files = \
-        create_java_compiler_args_srcs(ctx, src_paths, out, deps.to_list())
 
-    args.add_all(option_flags)
     args.add("--module_name", name)
     for friend in friends:
         args.add("--friend_dir", friend.path)
@@ -52,12 +48,16 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     # b/166582569
     args.add("-api-version", "1.3")
 
+    args.add_joined("-cp", deps, join_with = ":")
+    args.add("-o", out)
+    args.add_all(srcs)
+
     # To enable persistent Bazel workers, all arguments must come in an argfile.
     args.use_param_file("@%s", use_always = True)
     args.set_param_file_format("multiline")
 
     ctx.actions.run(
-        inputs = depset(direct = srcs + option_files, transitive = transitive_deps),
+        inputs = depset(direct = srcs, transitive = transitive_deps),
         outputs = [out],
         mnemonic = "kotlinc",
         arguments = [args],

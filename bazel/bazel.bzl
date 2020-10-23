@@ -1,5 +1,5 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
-load(":functions.bzl", "create_java_compiler_args_srcs", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
+load(":functions.bzl", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
 load(":kotlin.bzl", "kotlin_compile")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
@@ -141,23 +141,24 @@ def _iml_module_jar_impl(
             # Note: we explicitly include the bootclasspath from the current Java toolchain with
             # the classpath, because extracting it at runtime, when we are running in the
             # FormCompiler JVM, is not portable across JDKs (and made much harder on JDK9+).
+            form_classpath = depset(transitive = [transitive_runtime_jars, java_toolchain.bootclasspath])
 
-            option_flags, option_files = create_java_compiler_args_srcs(
-                ctx,
-                [form.path for form in form_srcs] + [k + "=" + v.path for k, v in form_deps] + [f.path for f in formc_input_jars],
-                java_jar,
-                transitive_runtime_jars.to_list() + java_toolchain.bootclasspath.to_list(),
-            )
             args = ctx.actions.args()
-            args.add_all(option_flags)
+            args.add_joined("-cp", form_classpath, join_with = ":")
+            args.add("-o", java_jar)
+            args.add_all(form_srcs)
+            args.add_all([k + "=" + v.path for k, v in form_deps])
+            args.add_all(formc_input_jars)
 
             # To support persistent workers, arguments must come from a param file..
             args.use_param_file("@%s", use_always = True)
             args.set_param_file_format("multiline")
 
             ctx.actions.run(
-                inputs = [v for _, v in form_deps] + form_srcs + formc_input_jars + option_files +
-                         transitive_runtime_jars.to_list() + java_toolchain.bootclasspath.to_list(),
+                inputs = depset(
+                    direct = [v for _, v in form_deps] + form_srcs + formc_input_jars,
+                    transitive = [form_classpath],
+                ),
                 outputs = [java_jar],
                 mnemonic = "formc",
                 arguments = [args],
