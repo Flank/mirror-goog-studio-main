@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,20 +27,20 @@ import com.google.gson.JsonSerializer
 import java.lang.reflect.Type
 
 /**
- * Serializes from json to [CMakeSettingsEnvironment].
+ * Serializes from json to [SettingsEnvironment].
  * A custom serializer is required because there are predefined properties like "namespace"
  * mixed with custom defined properties Map<String, String>.
  */
-class CMakeSettingsEnvironmentSerializer :
-    JsonDeserializer<CMakeSettingsEnvironment>,
-    JsonSerializer<CMakeSettingsEnvironment> {
+class SettingsEnvironmentSerializer :
+    JsonDeserializer<SettingsEnvironment>,
+    JsonSerializer<SettingsEnvironment> {
     override fun deserialize(
         element: JsonElement,
         type: Type,
         context: JsonDeserializationContext?
-    ): CMakeSettingsEnvironment {
+    ): SettingsEnvironment {
         val obj = element as JsonObject
-        val result = CMakeSettingsEnvironment()
+        val result = SettingsEnvironment()
         val properties: MutableMap<String, PropertyValue> = mutableMapOf()
         var namespace = ""
         var environment = ""
@@ -63,7 +63,7 @@ class CMakeSettingsEnvironmentSerializer :
                 }
             }
         }
-        return CMakeSettingsEnvironment(
+        return SettingsEnvironment(
             namespace = namespace,
             environment = environment,
             groupPriority = groupPriority,
@@ -73,9 +73,9 @@ class CMakeSettingsEnvironmentSerializer :
     }
 
     override fun serialize(
-        environment: CMakeSettingsEnvironment,
-        type: Type,
-        context: JsonSerializationContext
+            environment: SettingsEnvironment,
+            type: Type,
+            context: JsonSerializationContext
     ): JsonElement {
         val list = mutableMapOf<String, Any?>()
         list["namespace"] = environment.namespace

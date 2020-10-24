@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,28 +24,28 @@ import com.android.build.gradle.internal.cxx.settings.PropertyValue.*
 /**
  * Expand ${ndk.abi} and ${abi.systemVersion} in environment names.
  */
-fun CMakeSettings.expandInheritEnvironmentMacros(abi: CxxAbiModel) : CMakeSettings {
+fun Settings.expandInheritEnvironmentMacros(abi: CxxAbiModel) : Settings {
     val environments = environments.map { configuration ->
         configuration.copy(
-            inheritEnvironments = configuration.inheritEnvironments.map { environment ->
-                val result = environment
-                    .replace(NDK_ABI.ref, abi.abi.tag)
-                    .replace(NDK_SYSTEM_VERSION.ref, abi.abiPlatformVersion.toString()
-                    )
-                result
-            }
+                inheritEnvironments = configuration.inheritEnvironments.map { environment ->
+                    val result = environment
+                            .replace(NDK_ABI.ref, abi.abi.tag)
+                            .replace(NDK_SYSTEM_VERSION.ref, abi.abiPlatformVersion.toString()
+                            )
+                    result
+                }
         )
     }
     return copy(environments = environments)
 }
 
 /**
- * Reify [CMakeSettingsConfiguration] by replacing macro values using [CMakeSettingsNameResolver].
+ * Reify [SettingsConfiguration] by replacing macro values using [SettingsEnvironmentNameResolver].
  */
 fun reifyRequestedConfiguration(
-    resolver: CMakeSettingsNameResolver,
-    configuration: CMakeSettingsConfiguration)
-        : CMakeSettingsConfiguration? {
+        resolver: SettingsEnvironmentNameResolver,
+        configuration: SettingsConfiguration)
+        : SettingsConfiguration? {
 
     fun String?.reify() = reifyString(this) { tokenMacro ->
         when(tokenMacro) {
@@ -58,17 +58,17 @@ fun reifyRequestedConfiguration(
     }
 
     return configuration.copy(
-        buildRoot = configuration.buildRoot.reify(),
-        configurationType = configuration.configurationType.reify(),
-        installRoot = configuration.installRoot.reify(),
-        cmakeCommandArgs = configuration.cmakeCommandArgs.reify(),
-        buildCommandArgs = configuration.buildCommandArgs.reify(),
-        ctestCommandArgs = configuration.ctestCommandArgs.reify(),
-        cmakeExecutable = configuration.cmakeExecutable.reify(),
-        cmakeToolchain = configuration.cmakeToolchain.reify(),
-        variables = configuration.variables.map { (name, value) ->
-            CMakeSettingsVariable(name, value.reify()!!)
-        }
+            buildRoot = configuration.buildRoot.reify(),
+            configurationType = configuration.configurationType.reify(),
+            installRoot = configuration.installRoot.reify(),
+            cmakeCommandArgs = configuration.cmakeCommandArgs.reify(),
+            buildCommandArgs = configuration.buildCommandArgs.reify(),
+            ctestCommandArgs = configuration.ctestCommandArgs.reify(),
+            cmakeExecutable = configuration.cmakeExecutable.reify(),
+            cmakeToolchain = configuration.cmakeToolchain.reify(),
+            variables = configuration.variables.map { (name, value) ->
+                SettingsConfigurationVariable(name, value.reify()!!)
+            }
     )
 }
 
@@ -91,7 +91,7 @@ fun reifyString(value : String?, reifier : (String) -> PropertyValue?) : String?
                 is Token.MacroToken -> {
                     val tokenMacro = token.macro
                     if (seen.contains(tokenMacro)) {
-                        errorln("CMakeSettings.json value '$value' has recursive macro expansion \${$tokenMacro}")
+                        errorln("Settings.json value '$value' has recursive macro expansion \${$tokenMacro}")
                         recursionError = true
                     } else {
                         val resolved = reifier(tokenMacro)

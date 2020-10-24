@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.cxx.settings
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 
 /**
- * Builder class for [CMakeSettingsConfiguration].
+ * Builder class for [SettingsConfiguration].
  */
-class CMakeSettingsConfigurationBuilder {
+class SettingsConfigurationBuilder {
     var name : String? = null
     var description : String? = null
     var buildRoot : String? = null
@@ -34,12 +34,12 @@ class CMakeSettingsConfigurationBuilder {
     var buildCommandArgs : String? = null
     var ctestCommandArgs : String? = null
     var inheritedEnvironments = listOf<String>()
-    val variables = mutableListOf<CMakeSettingsVariable>()
+    val variables = mutableListOf<SettingsConfigurationVariable>()
 
     /**
-     * Initialize this builder with the values from another [CMakeSettingsConfiguration]
+     * Initialize this builder with the values from another [SettingsConfiguration]
      */
-    fun initialize(settings : CMakeSettingsConfiguration) : CMakeSettingsConfigurationBuilder {
+    fun initialize(settings : SettingsConfiguration) : SettingsConfigurationBuilder {
         name = settings.name
         description = settings.description
         buildRoot = settings.buildRoot
@@ -59,16 +59,16 @@ class CMakeSettingsConfigurationBuilder {
     /**
      * Add a variable to the map of variables for this builder.
      */
-    fun putVariable(property : CmakeProperty, arg : Any) : CMakeSettingsConfigurationBuilder {
-        variables += CMakeSettingsVariable(property.name, arg.toString())
+    fun putVariable(property : CmakeProperty, arg : Any) : SettingsConfigurationBuilder {
+        variables += SettingsConfigurationVariable(property.name, arg.toString())
         return this
     }
 
     /**
-     * Build an immutable [CMakeSettingsConfiguration] from the contents of this builder.
+     * Build an immutable [SettingsConfiguration] from the contents of this builder.
      */
-    fun build() : CMakeSettingsConfiguration {
-        return CMakeSettingsConfiguration(
+    fun build() : SettingsConfiguration {
+        return SettingsConfiguration(
             name = name,
             description = description,
             generator = generator,

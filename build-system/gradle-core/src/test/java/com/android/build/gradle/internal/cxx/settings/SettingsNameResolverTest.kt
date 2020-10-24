@@ -19,11 +19,11 @@ package com.android.build.gradle.internal.cxx.settings
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class CMakeSettingsNameResolverTest {
+class SettingsNameResolverTest {
 
     @Test
     fun `simple`() {
-        val resolver = CMakeSettingsNameResolver(createCmakeSettingsJsonFromString("""
+        val resolver = SettingsEnvironmentNameResolver(createSettingsFromJsonString("""
              {
               "environments": [ {
                 "namespace": "ndk",
@@ -47,7 +47,7 @@ class CMakeSettingsNameResolverTest {
 
     @Test
     fun `default namespace name is env`() {
-        val resolver = CMakeSettingsNameResolver(createCmakeSettingsJsonFromString("""
+        val resolver = SettingsEnvironmentNameResolver(createSettingsFromJsonString("""
              {
               "environments": [ {
                 "namespace": "env",
@@ -63,7 +63,7 @@ class CMakeSettingsNameResolverTest {
 
     @Test
     fun `inherit order respected`() {
-        val resolver = CMakeSettingsNameResolver(createCmakeSettingsJsonFromString("""
+        val resolver = SettingsEnvironmentNameResolver(createSettingsFromJsonString("""
              {
               "environments": [ {
                 "namespace": "ndk",
@@ -89,7 +89,7 @@ class CMakeSettingsNameResolverTest {
 
     @Test
     fun `environment-to-environment inherit order`() {
-        val resolver = CMakeSettingsNameResolver(createCmakeSettingsJsonFromString("""
+        val resolver = SettingsEnvironmentNameResolver(createSettingsFromJsonString("""
              {
               "environments": [ {
                 "namespace": "ndk",
@@ -121,7 +121,7 @@ class CMakeSettingsNameResolverTest {
 
     @Test
     fun `environment-to-environment inherit order overridden by group priority`() {
-        val resolver = CMakeSettingsNameResolver(createCmakeSettingsJsonFromString("""
+        val resolver = SettingsEnvironmentNameResolver(createSettingsFromJsonString("""
              {
               "environments": [ {
                 "namespace": "ndk",
@@ -146,7 +146,7 @@ class CMakeSettingsNameResolverTest {
 
     @Test
     fun `mutually recursive environment names`() {
-        val resolver = CMakeSettingsNameResolver(createCmakeSettingsJsonFromString("""
+        val resolver = SettingsEnvironmentNameResolver(createSettingsFromJsonString("""
              {
               "environments": [ {
                 "namespace": "ndk",

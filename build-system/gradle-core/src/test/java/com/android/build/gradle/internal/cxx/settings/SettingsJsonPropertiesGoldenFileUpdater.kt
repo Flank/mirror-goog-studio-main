@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-/** See [CMakeSettingsDefaultConfigurationGoldenFileTest] */
-class CMakeSettingsDefaultConfigurationGoldenFileUpdater {
+/** See [SettingsJsonPropertiesGoldenFileTest] */
+class SettingsJsonPropertiesGoldenFileUpdater {
     companion object {
         /** Run this to update the expected file.*/
         @JvmStatic
         fun main(args: Array<String>) {
-            CMakeSettingsDefaultConfigurationGoldenFileTest.goldenFile.update()
+            SettingsJsonPropertiesGoldenFileTest.goldenFile.update()
         }
     }
 }

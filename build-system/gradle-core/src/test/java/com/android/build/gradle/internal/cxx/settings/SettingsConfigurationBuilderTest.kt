@@ -22,14 +22,14 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class CMakeSettingsConfigurationBuilderTest {
+class SettingsConfigurationBuilderTest {
 
     @Test
     fun `round trip through builder`() {
-        RandomInstanceGenerator().synthetics(CMakeSettingsConfiguration::class.java)
+        RandomInstanceGenerator().synthetics(SettingsConfiguration::class.java)
             .forEach { initial ->
                 val builder =
-                    CMakeSettingsConfigurationBuilder().initialize(initial)
+                    SettingsConfigurationBuilder().initialize(initial)
                 val recovered = builder.build()
                 assertThat(initial.toJsonString()).isEqualTo(recovered.toJsonString())
             }
@@ -38,15 +38,15 @@ class CMakeSettingsConfigurationBuilderTest {
     @Test
     fun `add property works`() {
         RandomInstanceGenerator()
-            .synthetics(CMakeSettingsConfiguration::class.java)
+            .synthetics(SettingsConfiguration::class.java)
             .forEach { initial ->
                 val builder =
-                    CMakeSettingsConfigurationBuilder()
+                    SettingsConfigurationBuilder()
                         .initialize(initial)
                         .putVariable(CmakeProperty.ANDROID_ABI, "x86")
                 val recovered = builder.build()
                 assertThat(recovered.variables).contains(
-                    CMakeSettingsVariable(
+                    SettingsConfigurationVariable(
                         CmakeProperty.ANDROID_ABI.name,
                         "x86"
                     )
@@ -57,10 +57,10 @@ class CMakeSettingsConfigurationBuilderTest {
     @Test
     fun `exercise other properties`() {
         RandomInstanceGenerator()
-            .synthetics(CMakeSettingsConfiguration::class.java)
+            .synthetics(SettingsConfiguration::class.java)
             .forEach { initial ->
                 val builder =
-                    CMakeSettingsConfigurationBuilder()
+                    SettingsConfigurationBuilder()
                         .initialize(initial)
                 builder.configurationType = "ddd"
                 builder.installRoot = "xxx"

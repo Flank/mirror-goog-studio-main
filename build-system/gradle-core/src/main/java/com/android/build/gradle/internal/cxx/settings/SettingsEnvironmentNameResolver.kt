@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 
 /**
  * A name resolver that looks up user-defined values of name in a group of
- * [CMakeSettingsEnvironment]s. For example,
+ * [SettingsEnvironment]s. For example,
  *
  *   "environments": [ {
  *     "namespace": "ndk",
@@ -49,7 +49,7 @@ import com.android.build.gradle.internal.cxx.logging.errorln
  * (5) While two environments with the same name is considered invalid, this function
  *     resolves the ambiguity by ignoring the second environment that has the same name.
  *
- * Rule (1) and (2) are defined by Microsoft. See comments in [CMakeSettingsEnvironment].
+ * Rule (1) and (2) are defined by Microsoft. See comments in [SettingsEnvironment].
  *
  * Rule (3) isn't stated anywhere but it's the only rule that can work because user-written
  * CMakeSettings.json (the includer) would be expected to override built-in values that the
@@ -60,13 +60,14 @@ import com.android.build.gradle.internal.cxx.logging.errorln
  * Rule (5) is chosen and it is left the responsibility of higher level code to alert the
  * user. For example, a lint rule or quickfix in the IDE.
  */
-class CMakeSettingsNameResolver(environments: List<CMakeSettingsEnvironment>) {
+class SettingsEnvironmentNameResolver(environments: List<SettingsEnvironment>) {
 
     /**
-     * Group the list of environments in [CMakeSettings] by the name of the environment.
+     * Group the list of environments in [Settings] by the name of the environment.
      * Note that multiple environments can have the same name.
      */
-    private val environmentMap = environments.groupBy { env -> env.environment }
+    private val environmentMap = environments
+            .groupBy { env -> env.environment }
 
     /**
      * Stores a resolution match along with the groupPriority of the environment that it came

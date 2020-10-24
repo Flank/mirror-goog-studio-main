@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
+import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.google.common.truth.Truth.*
 import com.android.build.gradle.internal.cxx.settings.Token.*
 import org.junit.Test

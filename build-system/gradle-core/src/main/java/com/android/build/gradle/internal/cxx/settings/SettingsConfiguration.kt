@@ -19,9 +19,9 @@ package com.android.build.gradle.internal.cxx.settings
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 
 /**
- * A 'configurations' element from CMakeSettings.json.
+ * Schema of 'configurations' element from CMakeSettings.json.
  */
-data class CMakeSettingsConfiguration(
+data class SettingsConfiguration(
     /**
      * The configuration name.
      */
@@ -84,10 +84,10 @@ data class CMakeSettingsConfiguration(
      * A list of CMake variables. The name value pairs are passed to CMake
      * as -Dname1=value1 -Dname2=value2, etc.
      */
-    val variables: List<CMakeSettingsVariable> = listOf()
+    val variables: List<SettingsConfigurationVariable> = listOf()
 )
 
-fun CMakeSettingsConfiguration.getVariableValue(property: CmakeProperty) : String? {
+fun SettingsConfiguration.getVariableValue(property: CmakeProperty) : String? {
     var value : String? = null
     variables.forEach { variable ->
         if (variable.name == property.name) {

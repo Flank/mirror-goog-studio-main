@@ -17,14 +17,11 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.*
 
 import org.junit.Test
 
-class BuiltInCmakeSettingsJsonKtTest {
+class BuiltInSettingsJsonKtTest {
 
 
     @Test

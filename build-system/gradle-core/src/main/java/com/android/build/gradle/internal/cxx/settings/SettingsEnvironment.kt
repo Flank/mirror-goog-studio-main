@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.cxx.settings
 import com.google.gson.annotations.JsonAdapter
 
 /**
- * A 'environments' element from CMakeSettings.json.
+ * Schema of 'environments' element from CMakeSettings.json.
  */
-@JsonAdapter(CMakeSettingsEnvironmentSerializer::class)
-data class CMakeSettingsEnvironment(
+@JsonAdapter(SettingsEnvironmentSerializer::class)
+data class SettingsEnvironment(
     /**
      * A way to categorize a list of “environment” groups. Allows it to be
      * referenced later.

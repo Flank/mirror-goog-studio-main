@@ -27,24 +27,24 @@ import java.io.StringReader
 import java.io.StringWriter
 
 /**
- * Given a json string construct a [CMakeSettings].
+ * Given a json string construct a [Settings].
  */
-fun createCmakeSettingsJsonFromString(
+fun createSettingsFromJsonString(
     json: String,
     lenient: Boolean = true // Should be true for production to allow //-style comments
-) : CMakeSettings {
+) : Settings {
     val reader = JsonReader(StringReader(json))
     reader.isLenient = lenient
     val settings =  try {
         Gson()
-            .getAdapter(object : TypeToken<CMakeSettings>() {})
+            .getAdapter(object : TypeToken<Settings>() {})
             .read(reader)
     } catch (e: Throwable) {
         // Parse errors are "recoverable" by issuing an error and returning an empty result
         errorln(e.message ?: e.cause?.message ?: e.javaClass.name)
-        CMakeSettings()
+        Settings()
     }
-    return CMakeSettings(
+    return Settings(
         // [filterNotNull] needed to remove nulls introduced by Gson when there is a trailing comma
         environments = settings.environments.filterNotNull(),
         configurations = settings.configurations.filterNotNull().map { configuration ->
@@ -56,21 +56,21 @@ fun createCmakeSettingsJsonFromString(
 }
 
 /**
- * Given a file with json construct [CMakeSettings].
+ * Given a file with json construct [Settings].
  */
-fun createCmakeSettingsJsonFromFile(
+fun createSettingsFromJsonFile(
     json: File
-) : CMakeSettings {
+) : Settings {
     PassThroughPrefixingLoggingEnvironment(file = json).use {
-        return createCmakeSettingsJsonFromString(json.readText())
+        return createSettingsFromJsonString(json.readText())
     }
 }
 
 
 /**
- * Write the [CMakeSettings] to Json string.
+ * Write the [Settings] to Json string.
  */
-fun CMakeSettings.toJsonString(): String {
+fun Settings.toJsonString(): String {
     return StringWriter()
         .also { writer -> GsonBuilder()
             .setPrettyPrinting()
@@ -79,9 +79,9 @@ fun CMakeSettings.toJsonString(): String {
 }
 
 /**
- * Write the [CMakeSettingsConfiguration] to Json string.
+ * Write the [SettingsConfiguration] to Json string.
  */
-fun CMakeSettingsConfiguration.toJsonString(): String {
+fun SettingsConfiguration.toJsonString(): String {
     return StringWriter()
         .also { writer -> GsonBuilder()
             .setPrettyPrinting()

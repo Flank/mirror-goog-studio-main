@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,18 +56,18 @@ fun CxxAbiModel.rewriteCxxAbiModelWithCMakeSettings() : CxxAbiModel {
         }
 
         val cmakeModule = original.variant.module.cmake!!.copy(
-            cmakeExe = configuration.cmakeExecutable.toFile()
+                cmakeExe = configuration.cmakeExecutable.toFile()
         )
         val module = original.variant.module.copy(
-            cmake = cmakeModule,
-            cmakeToolchainFile = configuration.cmakeToolchain.toFile()!!
+                cmake = cmakeModule,
+                cmakeToolchainFile = configuration.cmakeToolchain.toFile()!!
         )
         val variant = original.variant.copy(
-            module = module
+                module = module
         )
         val cmakeAbi = original.cmake?.copy(
-            cmakeArtifactsBaseFolder = configuration.buildRoot.toFile()!!,
-            effectiveConfiguration = configuration
+                cmakeArtifactsBaseFolder = configuration.buildRoot.toFile()!!,
+                effectiveConfiguration = configuration
         )
         return original.copy(
                 variant = ({ variant })(),
@@ -99,74 +99,74 @@ private fun String?.toFile() = if (this != null) File(this) else null
  */
 private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
     val allSettings = gatherCMakeSettingsFromAllLocations()
-        .expandInheritEnvironmentMacros(this)
-    val resolver = CMakeSettingsNameResolver(allSettings.environments)
+            .expandInheritEnvironmentMacros(this)
+    val resolver = SettingsEnvironmentNameResolver(allSettings.environments)
 
     // Accumulate configuration values with later values replacing earlier values
     // when not null.
-    fun CMakeSettingsConfiguration.accumulate(configuration : CMakeSettingsConfiguration?) : CMakeSettingsConfiguration {
+    fun SettingsConfiguration.accumulate(configuration : SettingsConfiguration?) : SettingsConfiguration {
         if (configuration == null) return this
-        return CMakeSettingsConfiguration(
-            name = configuration.name ?: name,
-            description = configuration.description ?: description,
-            generator = configuration.generator ?: generator,
-            configurationType = configurationType,
-            inheritEnvironments = configuration.inheritEnvironments,
-            buildRoot = configuration.buildRoot ?: buildRoot,
-            installRoot = configuration.installRoot ?: installRoot,
-            cmakeCommandArgs = configuration.cmakeCommandArgs ?: cmakeCommandArgs,
-            cmakeToolchain = configuration.cmakeToolchain ?: cmakeToolchain,
-            cmakeExecutable = configuration.cmakeExecutable ?: cmakeExecutable,
-            buildCommandArgs = configuration.buildCommandArgs ?: buildCommandArgs,
-            ctestCommandArgs = configuration.ctestCommandArgs ?: ctestCommandArgs,
-            variables = variables + configuration.variables
+        return SettingsConfiguration(
+                name = configuration.name ?: name,
+                description = configuration.description ?: description,
+                generator = configuration.generator ?: generator,
+                configurationType = configurationType,
+                inheritEnvironments = configuration.inheritEnvironments,
+                buildRoot = configuration.buildRoot ?: buildRoot,
+                installRoot = configuration.installRoot ?: installRoot,
+                cmakeCommandArgs = configuration.cmakeCommandArgs ?: cmakeCommandArgs,
+                cmakeToolchain = configuration.cmakeToolchain ?: cmakeToolchain,
+                cmakeExecutable = configuration.cmakeExecutable ?: cmakeExecutable,
+                buildCommandArgs = configuration.buildCommandArgs ?: buildCommandArgs,
+                ctestCommandArgs = configuration.ctestCommandArgs ?: ctestCommandArgs,
+                variables = variables + configuration.variables
         )
     }
 
-    fun CMakeSettingsConfiguration.accumulate(arguments : List<CommandLineArgument>) : CMakeSettingsConfiguration {
+    fun SettingsConfiguration.accumulate(arguments : List<CommandLineArgument>) : SettingsConfiguration {
         return copy(
-            configurationType =
+                configurationType =
                 when (arguments.getCmakeProperty(CMAKE_BUILD_TYPE)) {
                     null -> configurationType
                     else -> null
                 },
-            cmakeToolchain =
+                cmakeToolchain =
                 when (arguments.getCmakeProperty(CMAKE_TOOLCHAIN_FILE)) {
                     null -> cmakeToolchain
                     else -> null
                 },
-            generator = arguments.getGenerator() ?: generator,
-            variables = variables +
-                    arguments.onlyKeepProperties().map {
-                        CMakeSettingsVariable(it.propertyName, it.propertyValue)
-                    },
-            cmakeCommandArgs = arguments.onlyKeepUnknownArguments().let { unknowns ->
-                if (unknowns.isEmpty()) cmakeCommandArgs
-                else (cmakeCommandArgs ?: "") + unknowns.joinToString(" ") { it.sourceArgument }
-            }
+                generator = arguments.getGenerator() ?: generator,
+                variables = variables +
+                        arguments.onlyKeepProperties().map {
+                            SettingsConfigurationVariable(it.propertyName, it.propertyValue)
+                        },
+                cmakeCommandArgs = arguments.onlyKeepUnknownArguments().let { unknowns ->
+                    if (unknowns.isEmpty()) cmakeCommandArgs
+                    else (cmakeCommandArgs ?: "") + unknowns.joinToString(" ") { it.sourceArgument }
+                }
         )
     }
 
-    fun getCMakeSettingsConfiguration(configurationName : String) : CMakeSettingsConfiguration? {
+    fun getSettingsConfiguration(configurationName : String) : SettingsConfiguration? {
         val configuration = allSettings.configurations
-            .firstOrNull { it.name == configurationName } ?: return null
+                .firstOrNull { it.name == configurationName } ?: return null
         return reifyRequestedConfiguration(resolver, configuration)
     }
 
     // First, set up the traditional environment. If the user has also requested a specific
     // CMakeSettings.json environment then values from that will overwrite these.
-    val combinedConfiguration = getCMakeSettingsConfiguration(TRADITIONAL_CONFIGURATION_NAME)!!
-        .accumulate(getCMakeSettingsConfiguration(variant.cmakeSettingsConfiguration))
+    val combinedConfiguration = getSettingsConfiguration(TRADITIONAL_CONFIGURATION_NAME)!!
+            .accumulate(getSettingsConfiguration(variant.cmakeSettingsConfiguration))
     val configuration = combinedConfiguration
-        .accumulate(combinedConfiguration.getCmakeCommandLineArguments())
-        .accumulate(parseCmakeArguments(variant.buildSystemArgumentList))
+            .accumulate(combinedConfiguration.getCmakeCommandLineArguments())
+            .accumulate(parseCmakeArguments(variant.buildSystemArgumentList))
 
     // Translate to [CommandLineArgument]. Be sure that user variables from build.gradle get
     // passed after settings variables
     val configurationArguments = configuration.getCmakeCommandLineArguments()
 
     val hashInvariantCommandLineArguments =
-        configurationArguments.removeSubsumedArguments().removeBlankProperties()
+            configurationArguments.removeSubsumedArguments().removeBlankProperties()
 
     // Compute a hash of the command-line arguments
     val digest = MessageDigest.getInstance("SHA-256")
@@ -196,43 +196,43 @@ private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
     }.removeSubsumedArguments().removeBlankProperties()
 
     val expandedBuildSettings = BuildSettingsConfiguration(
-        environmentVariables = buildSettings.environmentVariables.map {
-            EnvironmentVariable(
-                name = it.name.reify(),
-                value = it.value?.reify()
-            )
-        }
+            environmentVariables = buildSettings.environmentVariables.map {
+                EnvironmentVariable(
+                        name = it.name.reify(),
+                        value = it.value?.reify()
+                )
+            }
     )
 
     return RewriteConfiguration(
-        buildSettings = expandedBuildSettings,
-        configuration = CMakeSettingsConfiguration(
-            name = configuration.name,
-            description = "Composite reified CMakeSettings configuration",
-            generator = arguments.getGenerator(),
-            configurationType = configuration.configurationType,
-            inheritEnvironments = configuration.inheritEnvironments,
-            buildRoot = configuration.buildRoot?.reify(),
-            installRoot = configuration.installRoot?.reify(),
-            cmakeToolchain = arguments.getCmakeProperty(CMAKE_TOOLCHAIN_FILE),
-            cmakeCommandArgs = configuration.cmakeCommandArgs?.reify(),
-            cmakeExecutable = configuration.cmakeExecutable?.reify(),
-            buildCommandArgs = configuration.buildCommandArgs?.reify(),
-            ctestCommandArgs = configuration.ctestCommandArgs?.reify(),
-            variables = arguments.mapNotNull {
-                when (it) {
-                    is CommandLineArgument.DefineProperty -> CMakeSettingsVariable(
-                        it.propertyName,
-                        it.propertyValue
-                    )
-                    else -> null
-                }
-            }
-        )
+            buildSettings = expandedBuildSettings,
+            configuration = SettingsConfiguration(
+                    name = configuration.name,
+                    description = "Composite reified CMakeSettings configuration",
+                    generator = arguments.getGenerator(),
+                    configurationType = configuration.configurationType,
+                    inheritEnvironments = configuration.inheritEnvironments,
+                    buildRoot = configuration.buildRoot?.reify(),
+                    installRoot = configuration.installRoot?.reify(),
+                    cmakeToolchain = arguments.getCmakeProperty(CMAKE_TOOLCHAIN_FILE),
+                    cmakeCommandArgs = configuration.cmakeCommandArgs?.reify(),
+                    cmakeExecutable = configuration.cmakeExecutable?.reify(),
+                    buildCommandArgs = configuration.buildCommandArgs?.reify(),
+                    ctestCommandArgs = configuration.ctestCommandArgs?.reify(),
+                    variables = arguments.mapNotNull {
+                        when (it) {
+                            is CommandLineArgument.DefineProperty -> SettingsConfigurationVariable(
+                                    it.propertyName,
+                                    it.propertyValue
+                            )
+                            else -> null
+                        }
+                    }
+            )
     )
 }
 
-fun CMakeSettingsConfiguration.getCmakeCommandLineArguments() : List<CommandLineArgument> {
+fun SettingsConfiguration.getCmakeCommandLineArguments() : List<CommandLineArgument> {
     val result = mutableListOf<CommandLineArgument>()
     if (configurationType != null) {
         result += "-D$CMAKE_BUILD_TYPE=$configurationType".toCmakeArgument()
@@ -292,7 +292,7 @@ fun CxxAbiModel.getFinalCmakeCommandLineArguments() : List<CommandLineArgument> 
 */
 fun CxxAbiModel.getBuildCommandArguments(): List<String> {
     return cmake?.effectiveConfiguration?.buildCommandArgs?.tokenizeCommandLineToEscaped()
-        ?: emptyList()
+            ?: emptyList()
 }
 
 /**
@@ -300,6 +300,6 @@ fun CxxAbiModel.getBuildCommandArguments(): List<String> {
  * clean/build for CMake builds.
  */
 private class RewriteConfiguration(
-    val buildSettings: BuildSettingsConfiguration,
-    val configuration: CMakeSettingsConfiguration
+        val buildSettings: BuildSettingsConfiguration,
+        val configuration: SettingsConfiguration
 )

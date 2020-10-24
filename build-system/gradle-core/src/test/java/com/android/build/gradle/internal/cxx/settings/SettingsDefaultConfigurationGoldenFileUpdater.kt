@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-/**
- * Content of a CMakeSettings.json file.
- */
-data class CMakeSettings(
-    val environments: List<CMakeSettingsEnvironment> = listOf(),
-    val configurations: List<CMakeSettingsConfiguration> = listOf()
-)
-
+/** See [SettingsDefaultConfigurationGoldenFileTest] */
+class SettingsDefaultConfigurationGoldenFileUpdater {
+    companion object {
+        /** Run this to update the expected file.*/
+        @JvmStatic
+        fun main(args: Array<String>) {
+            SettingsDefaultConfigurationGoldenFileTest.goldenFile.update()
+        }
+    }
+}
