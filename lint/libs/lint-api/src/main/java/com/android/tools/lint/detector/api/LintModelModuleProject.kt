@@ -358,7 +358,7 @@ open class LintModelModuleProject(
             val xml: String = Files.asCharSource(manifest, Charsets.UTF_8).read()
             val document = XmlUtils.parseDocumentSilently(xml, true)
             if (document == null) {
-                client.log(null,"Could not read %1\$s", manifest)
+                client.log(null, "Could not read %1\$s", manifest)
                 return null
             }
             // Note for later that we'll need to resolve locations from
