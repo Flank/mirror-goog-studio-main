@@ -260,4 +260,91 @@ class DeprecationDetectorTest : AbstractCheckTest() {
                 0 errors, 1 warnings"""
         )
     }
+
+    fun testGcmFjdDeprecation() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.content.Context;
+                import com.firebase.jobdispatcher.FirebaseJobDispatcher;
+                import com.google.android.gms.gcm.GcmNetworkManager;
+
+                @SuppressWarnings("unused")
+                public class DeprecationTestJava {
+                    public void test(Object driver) {
+                        FirebaseJobDispatcher firebaseJobDispatcher =
+                                new FirebaseJobDispatcher(driver);
+                    }
+                    public void testGcm(Context context, Object task) {
+                        GcmNetworkManager.getInstance(context).schedule(task);
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import android.content.Context
+                import com.firebase.jobdispatcher.FirebaseJobDispatcher
+                import com.google.android.gms.gcm.GcmNetworkManager
+
+                @Suppress("unused", "UNUSED_VARIABLE")
+                class DeprecationTestKotlin {
+                    fun test(driver: Any) {
+                        val firebaseJobDispatcher = FirebaseJobDispatcher(driver)
+                    }
+                    fun testGcm(context: Context?, task: Any) {
+                        GcmNetworkManager.getInstance(context).schedule(task)
+                    }
+                }
+                """
+            ).indented(),
+
+            // Stubs
+            java(
+                """
+                package com.firebase.jobdispatcher;
+                public class FirebaseJobDispatcher {
+                    public FirebaseJobDispatcher(Object driver) { }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.google.android.gms.gcm;
+                import android.content.Context;
+                public class GcmNetworkManager {
+                    public static GcmNetworkManager getInstance(Context context) {
+                        return new GcmNetworkManager();
+                    }
+                    public void schedule(Object task) { }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/DeprecationTestJava.java:10: Warning: Job scheduling with FirebaseJobDispatcher is deprecated: Use AndroidX WorkManager instead [Deprecated]
+                            new FirebaseJobDispatcher(driver);
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/DeprecationTestJava.java:13: Warning: Job scheduling with GcmNetworkManager is deprecated: Use AndroidX WorkManager instead [Deprecated]
+                    GcmNetworkManager.getInstance(context).schedule(task);
+                                      ~~~~~~~~~~~
+            src/test/pkg/DeprecationTestKotlin.kt:9: Warning: Job scheduling with FirebaseJobDispatcher is deprecated: Use AndroidX WorkManager instead [Deprecated]
+                    val firebaseJobDispatcher = FirebaseJobDispatcher(driver)
+                                                ~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/DeprecationTestKotlin.kt:12: Warning: Job scheduling with GcmNetworkManager is deprecated: Use AndroidX WorkManager instead [Deprecated]
+                    GcmNetworkManager.getInstance(context).schedule(task)
+                                      ~~~~~~~~~~~
+            0 errors, 4 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Show URL for src/test/pkg/DeprecationTestJava.java line 10: https://developer.android.com/topic/libraries/architecture/workmanager/migrating-fb
+            Show URL for src/test/pkg/DeprecationTestJava.java line 13: https://developer.android.com/topic/libraries/architecture/workmanager/migrating-gcm
+            Show URL for src/test/pkg/DeprecationTestKotlin.kt line 9: https://developer.android.com/topic/libraries/architecture/workmanager/migrating-fb
+            Show URL for src/test/pkg/DeprecationTestKotlin.kt line 12: https://developer.android.com/topic/libraries/architecture/workmanager/migrating-gcm
+            """
+        )
+    }
 }

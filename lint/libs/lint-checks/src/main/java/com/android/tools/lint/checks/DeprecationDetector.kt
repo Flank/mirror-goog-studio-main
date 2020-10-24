@@ -37,18 +37,26 @@ import com.android.resources.ResourceFolderType.XML
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue.Companion.create
+import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.ResourceXmlDetector
-import com.android.tools.lint.detector.api.Scope.Companion.MANIFEST_AND_RESOURCE_SCOPE
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Scope.Companion.JAVA_FILE_SCOPE
 import com.android.tools.lint.detector.api.Scope.Companion.MANIFEST_SCOPE
 import com.android.tools.lint.detector.api.Scope.Companion.RESOURCE_FILE_SCOPE
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
+import com.intellij.psi.PsiMethod
+import org.jetbrains.uast.UCallExpression
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
+import java.util.EnumSet
 
 /** Check which looks for usage of deprecated tags, attributes, etc. */
-class DeprecationDetector : ResourceXmlDetector() {
+class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
+
+    // XML (resource and manifest) checks:
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean {
         return folderType == LAYOUT || folderType == XML
@@ -176,8 +184,55 @@ class DeprecationDetector : ResourceXmlDetector() {
         )
     }
 
+    // Kotlin and Java deprecation checks:
+
+    override fun getApplicableConstructorTypes(): List<String>? {
+        return listOf(FIREBASE_JOB_DISPATCHER_CLASS)
+    }
+
+    override fun visitConstructor(
+        context: JavaContext,
+        node: UCallExpression,
+        constructor: PsiMethod
+    ) {
+        val url = "https://developer.android.com/topic/libraries/architecture/workmanager/migrating-fb"
+        context.report(
+            ISSUE,
+            node,
+            context.getCallLocation(node, includeReceiver = false, includeArguments = false),
+            "Job scheduling with `FirebaseJobDispatcher` is deprecated: Use AndroidX `WorkManager` instead",
+            fix().url(url).build()
+        )
+    }
+
+    override fun getApplicableMethodNames(): List<String>? {
+        return listOf("getInstance")
+    }
+
+    override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+        if (!context.evaluator.isMemberInClass(method, GCM_NETWORK_MANAGER_CLASS)) {
+            return
+        }
+        val url = "https://developer.android.com/topic/libraries/architecture/workmanager/migrating-gcm"
+        context.report(
+            ISSUE,
+            node,
+            context.getCallLocation(node, includeReceiver = false, includeArguments = false),
+            "Job scheduling with `GcmNetworkManager` is deprecated: Use AndroidX `WorkManager` instead",
+            fix().url(url).build()
+        )
+    }
+
     companion object {
+        @Suppress("SpellCheckingInspection")
+        private const val FIREBASE_JOB_DISPATCHER_CLASS =
+            "com.firebase.jobdispatcher.FirebaseJobDispatcher"
+
+        private const val GCM_NETWORK_MANAGER_CLASS =
+            "com.google.android.gms.gcm.GcmNetworkManager"
+
         /** Usage of deprecated views or attributes */
+        @JvmField
         val ISSUE = create(
             id = "Deprecated",
             briefDescription = "Using deprecated resources",
@@ -191,9 +246,10 @@ class DeprecationDetector : ResourceXmlDetector() {
             severity = Severity.WARNING,
             implementation = Implementation(
                 DeprecationDetector::class.java,
-                MANIFEST_AND_RESOURCE_SCOPE,
+                EnumSet.of(Scope.MANIFEST, Scope.RESOURCE_FILE, Scope.JAVA_FILE),
                 MANIFEST_SCOPE,
-                RESOURCE_FILE_SCOPE
+                RESOURCE_FILE_SCOPE,
+                JAVA_FILE_SCOPE
             )
         )
     }

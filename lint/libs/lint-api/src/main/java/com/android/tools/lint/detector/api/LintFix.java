@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 import org.intellij.lang.annotations.Language;
 import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.Nls;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.uast.UElement;
 
 /**
@@ -398,6 +399,26 @@ public class LintFix {
         public LintFix data(@NonNull Object... args) {
             return map(args).build();
         }
+
+        /**
+         * Creates a "fix" which can display a URL
+         *
+         * @return a fix builder
+         */
+        @NonNull
+        public UrlBuilder url() {
+            return new UrlBuilder(displayName, familyName, null);
+        }
+
+        /**
+         * Creates a "fix" which displays a URL
+         *
+         * @return a fix builder
+         */
+        @NonNull
+        public UrlBuilder url(@NonNull String url) {
+            return new UrlBuilder(displayName, familyName, url);
+        }
     }
 
     /** Builder for constructing a group of fixes */
@@ -714,6 +735,28 @@ public class LintFix {
                     range,
                     robot,
                     !independent);
+        }
+    }
+
+    public static class UrlBuilder {
+        @Nls protected String displayName;
+        @Nls @Nullable protected String familyName;
+        @NonNls private String url;
+
+        private UrlBuilder(String displayName, @Nullable String familyName, @Nullable String url) {
+            this.displayName = displayName;
+            this.familyName = familyName;
+            this.url = url;
+        }
+
+        public UrlBuilder url(@NonNls @NonNull String url) {
+            this.url = url;
+            return this;
+        }
+
+        public LintFix build() {
+            assert url != null;
+            return new ShowUrl(displayName, familyName, url);
         }
     }
 
@@ -1156,6 +1199,17 @@ public class LintFix {
 
         /** This group represents separate fix alternatives the user can choose between */
         ALTERNATIVES
+    }
+
+    /** A URL to be offered to be shown as a "fix". */
+    public static class ShowUrl extends LintFix {
+        @NonNull public final String url;
+
+        protected ShowUrl(
+                @Nullable String displayName, @Nullable String familyName, @NonNull String url) {
+            super(displayName, familyName);
+            this.url = url;
+        }
     }
 
     /**
