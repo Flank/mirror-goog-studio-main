@@ -32,6 +32,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject.GradlePlugin.COM
 import java.util.HashSet
 import org.junit.Rule
 import org.junit.Test
+import java.util.regex.Pattern
 
 /**
  * This test exists to make sure that the profiles we get back from the Android Gradle Plugin meet
@@ -62,6 +63,12 @@ class ProfileContentTest {
             assertThat(profile.spanCount).isGreaterThan(0)
 
             assertThat(profile.projectCount).isGreaterThan(0)
+            assertThat(profile.osName).containsMatch(Pattern.compile("Linux|Mac|Windows"))
+            assertThat(profile.osVersion).isNotEmpty()
+            assertThat(profile.javaVersion).isNotEmpty()
+            assertThat(profile.javaVmVersion).isNotEmpty()
+            assertThat(profile.maxMemory).isGreaterThan(0)
+            assertThat(profile.gradleVersion).isNotEmpty()
             val gbp = profile.getProject(0)
             assertThat(gbp.compileSdk).isEqualTo(GradleTestProject.compileSdkHash)
             assertThat(gbp.kotlinPluginVersion).isEqualTo(project.kotlinVersion)
