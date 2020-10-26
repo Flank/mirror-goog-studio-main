@@ -818,7 +818,7 @@ public class AndroidDebugBridge {
         ListenableFuture<AdbVersion> future = getAdbVersion(adb);
         AdbVersion version;
         try {
-            version = future.get(DdmPreferences.getTimeOut(), TimeUnit.MILLISECONDS);
+            version = future.get(DEFAULT_START_ADB_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             return;
         } catch (java.util.concurrent.TimeoutException e) {
