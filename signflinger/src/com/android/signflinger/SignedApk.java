@@ -77,10 +77,9 @@ public class SignedApk implements Archive {
             throws InvalidKeyException, IOException {
         this.options = options;
         this.archive = new ZipArchive(file, zip64Policy);
-
         DefaultApkSignerEngine.SignerConfig signerConfig =
                 new DefaultApkSignerEngine.SignerConfig.Builder(
-                                "CERT", options.privateKey, options.certificates)
+                                options.name, options.privateKey, options.certificates)
                         .build();
         List<DefaultApkSignerEngine.SignerConfig> signerConfigs = new ArrayList<>();
         signerConfigs.add(signerConfig);

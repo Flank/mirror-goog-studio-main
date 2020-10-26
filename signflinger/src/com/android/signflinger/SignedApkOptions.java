@@ -48,6 +48,8 @@ import java.util.Locale;
  */
 public class SignedApkOptions {
 
+    @NonNull final String name;
+
     @NonNull final PrivateKey privateKey;
 
     @NonNull final List<X509Certificate> certificates;
@@ -71,6 +73,7 @@ public class SignedApkOptions {
     final byte[] sdkDependencies;
 
     private SignedApkOptions(
+            String name,
             PrivateKey privateKey,
             List<X509Certificate> certificates,
             RunnablesExecutor executor,
@@ -85,6 +88,7 @@ public class SignedApkOptions {
             String v1BuiltBy,
             boolean v1TrustManifest,
             int minSdkVersion) {
+        this.name = name;
         this.privateKey = privateKey;
         this.certificates = certificates;
         this.executor = executor;
@@ -137,6 +141,7 @@ public class SignedApkOptions {
     }
 
     public static class Builder {
+        String name = "CERT";
         PrivateKey privateKey;
         List<X509Certificate> certificates;
         RunnablesExecutor executor;
@@ -151,6 +156,11 @@ public class SignedApkOptions {
         String v1BuiltBy = "Signflinger";
         boolean v1TrustManifest;
         int minSdkVersion;
+
+        public Builder setName(@NonNull String name) {
+            this.name = name;
+            return this;
+        }
 
         public Builder setPrivateKey(@NonNull PrivateKey privateKey) {
             this.privateKey = privateKey;
@@ -226,6 +236,7 @@ public class SignedApkOptions {
         @NonNull
         public SignedApkOptions build() {
             return new SignedApkOptions(
+                    name,
                     privateKey,
                     certificates,
                     executor,
