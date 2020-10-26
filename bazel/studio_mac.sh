@@ -53,7 +53,6 @@ if [[ -d "${dist_dir}" ]]; then
 
   "${script_dir}/bazel" \
     run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
-    ${config_options} \
     -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
