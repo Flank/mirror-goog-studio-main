@@ -20,13 +20,15 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.getSoFolderFor
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 
 class NdkBuildVariantApiTest {
     @Rule
@@ -75,18 +77,20 @@ class NdkBuildVariantApiTest {
         project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.ARM64_V8A)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.X86)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.ARMEABI_V7A)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.X86_64)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
-        val buildCommandFile = project.file(".cxx/ndkBuild/debug/x86_64/build_command.txt")
-        PathSubject.assertThat(buildCommandFile).exists()
-        val buildCommand = buildCommandFile.readText()
+        project.recoverExistingCxxAbiModels().forEach { abi ->
+            val buildCommandFile = abi.buildCommandFile
+            PathSubject.assertThat(buildCommandFile).exists()
+            val buildCommand = buildCommandFile.readText()
 
-        Truth.assertThat(buildCommand).contains("APP_CPPFLAGS+=-DTEST_CPP_FLAG")
-        Truth.assertThat(buildCommand).contains("APP_CFLAGS+=-DTEST_C_FLAG")
-        Truth.assertThat(buildCommand).contains("NDK_ALL_ABIS=x86_64")
+            Truth.assertThat(buildCommand).contains("APP_CPPFLAGS+=-DTEST_CPP_FLAG")
+            Truth.assertThat(buildCommand).contains("APP_CFLAGS+=-DTEST_C_FLAG")
+            Truth.assertThat(buildCommand).contains("NDK_ALL_ABIS=x86_64")
+        }
     }
 
     @Test
@@ -126,19 +130,21 @@ class NdkBuildVariantApiTest {
         project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.ARM64_V8A)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.X86)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.ARMEABI_V7A)).exists()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.X86_64)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
-        val buildCommandFile = project.file(".cxx/ndkBuild/debug/x86_64/build_command.txt")
-        PathSubject.assertThat(buildCommandFile).exists()
-        val buildCommand = buildCommandFile.readText()
+        project.recoverExistingCxxAbiModels().forEach { abi ->
+            val buildCommandFile = abi.buildCommandFile
+            PathSubject.assertThat(buildCommandFile).exists()
+            val buildCommand = buildCommandFile.readText()
 
-        Truth.assertThat(buildCommand).contains("APP_CPPFLAGS+=-DTEST_CPP_FLAG")
-        Truth.assertThat(buildCommand).contains("APP_CPPFLAGS+=-DTEST_CPP_FLAG2")
-        Truth.assertThat(buildCommand).contains("APP_CFLAGS+=-DTEST_C_FLAG")
-        Truth.assertThat(buildCommand).contains("APP_CFLAGS+=-DTEST_C_FLAG2")
+            Truth.assertThat(buildCommand).contains("APP_CPPFLAGS+=-DTEST_CPP_FLAG")
+            Truth.assertThat(buildCommand).contains("APP_CPPFLAGS+=-DTEST_CPP_FLAG2")
+            Truth.assertThat(buildCommand).contains("APP_CFLAGS+=-DTEST_C_FLAG")
+            Truth.assertThat(buildCommand).contains("APP_CFLAGS+=-DTEST_C_FLAG2")
+        }
     }
 
     @Test
@@ -179,19 +185,16 @@ class NdkBuildVariantApiTest {
         project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.ARM64_V8A)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.X86)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.ARMEABI_V7A)).doesNotExist()
-        PathSubject.assertThat(getNdkBuildOutputLib(Abi.X86_64)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
-        val buildCommandFile = project.file(".cxx/ndkBuild/debug/x86_64/build_command.txt")
-        PathSubject.assertThat(buildCommandFile).exists()
-        val buildCommand = buildCommandFile.readText()
-        Truth.assertThat(buildCommand).contains("NDK_MODULE_PATH+=./third_party/modules")
-    }
-
-    private fun getNdkBuildOutputLib(abi: Abi): File? {
-        return project.file(
-                "build/intermediates/ndkBuild/debug/obj/local/" + abi.tag + "/libhello-jni.so")
+        project.recoverExistingCxxAbiModels().forEach { abi ->
+            val buildCommandFile = abi.buildCommandFile
+            PathSubject.assertThat(buildCommandFile).exists()
+            val buildCommand = buildCommandFile.readText()
+            Truth.assertThat(buildCommand).contains("NDK_MODULE_PATH+=./third_party/modules")
+        }
     }
 }

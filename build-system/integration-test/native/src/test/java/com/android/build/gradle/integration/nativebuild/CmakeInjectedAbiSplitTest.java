@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.*;
 import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
@@ -29,7 +30,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -92,10 +92,10 @@ public class CmakeInjectedAbiSplitTest {
         assertThat(sProject.getApk("universal", GradleTestProject.ApkType.DEBUG)).doesNotExist();
         assertThat(sProject.getApk("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist();
 
-        assertThat(getCmakeOutputLib(Abi.ARM64_V8A)).exists();
-        assertThat(getCmakeOutputLib(Abi.X86)).doesNotExist();
-        assertThat(getCmakeOutputLib(Abi.ARMEABI_V7A)).doesNotExist();
-        assertThat(getCmakeOutputLib(Abi.X86_64)).doesNotExist();
+        assertThat(getSoFolderFor(sProject, Abi.ARM64_V8A)).exists();
+        assertThat(getSoFolderFor(sProject, Abi.X86)).isNull();
+        assertThat(getSoFolderFor(sProject, Abi.ARMEABI_V7A)).isNull();
+        assertThat(getSoFolderFor(sProject, Abi.X86_64)).isNull();
     }
 
     @Test
@@ -110,10 +110,10 @@ public class CmakeInjectedAbiSplitTest {
         Apk x86Apk = sProject.getApk("x86", GradleTestProject.ApkType.DEBUG);
         checkApkContent(x86Apk, Abi.X86);
 
-        assertThat(getCmakeOutputLib(Abi.ARM64_V8A)).exists();
-        assertThat(getCmakeOutputLib(Abi.X86)).exists();
-        assertThat(getCmakeOutputLib(Abi.ARMEABI_V7A)).doesNotExist();
-        assertThat(getCmakeOutputLib(Abi.X86_64)).doesNotExist();
+        assertThat(getSoFolderFor(sProject, Abi.ARM64_V8A)).exists();
+        assertThat(getSoFolderFor(sProject, Abi.X86)).exists();
+        assertThat(getSoFolderFor(sProject, Abi.ARMEABI_V7A)).isNull();
+        assertThat(getSoFolderFor(sProject, Abi.X86_64)).isNull();
     }
 
     @Test
@@ -133,11 +133,6 @@ public class CmakeInjectedAbiSplitTest {
                 .run("clean", "assembleDebug");
         Apk universalApk = sProject.getApk("universal", GradleTestProject.ApkType.DEBUG);
         checkApkContent(universalApk, Abi.ARM64_V8A, Abi.X86);
-    }
-
-    private File getCmakeOutputLib(Abi abi) {
-        return sProject.file(
-                "build/intermediates/cmake/debug/obj/" + abi.getTag() + "/libhello-jni.so");
     }
 
     private void checkApkContent(Apk apk, Abi... abis) throws IOException {

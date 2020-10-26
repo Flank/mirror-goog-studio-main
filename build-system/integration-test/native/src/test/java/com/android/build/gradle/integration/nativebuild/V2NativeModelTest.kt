@@ -16,10 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.SdkConstants.CURRENT_PLATFORM
-import com.android.SdkConstants.PLATFORM_DARWIN
-import com.android.SdkConstants.PLATFORM_LINUX
-import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.SdkConstants.*
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
@@ -27,11 +24,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.fixture.model.FileNormalizer
-import com.android.build.gradle.integration.common.fixture.model.ModelComparator
-import com.android.build.gradle.integration.common.fixture.model.dumpCompileCommandsJsonBin
+import com.android.build.gradle.integration.common.fixture.model.*
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -132,56 +128,57 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
           .map { result.normalizer.normalize(File(it)) }
         ).containsExactly("{PROJECT}/CMakeLists.txt{F}")
 
+        val abi = project.recoverExistingCxxAbiModels().single()
         Truth.assertThat(syncedAbi.symbolFolderIndexFile.readLines(StandardCharsets.UTF_8)
-          .map { result.normalizer.normalize(File(it)) }
-        ).containsExactly("{PROJECT}/build/intermediates/cmake/debug/obj/x86{D}")
+        ).containsExactly(abi.soFolder.toString())
 
         Truth.assertThat(syncedAbi.additionalProjectFilesIndexFile.readLines(StandardCharsets.UTF_8)
           .map { result.normalizer.normalize(File(it)) }
         ).containsExactly("{PROJECT}/blah.h{F}", "{PROJECT}/blah.txt{F}")
 
+        val translate = result.hashToKeyTranslator()
         when (CURRENT_PLATFORM) {
             PLATFORM_LINUX -> Truth.assertThat(
-              syncedAbi.sourceFlagsFile.dumpCompileCommandsJsonBin(
-                result.normalizer
-              )
+                translate(syncedAbi.sourceFlagsFile.dumpCompileCommandsJsonBin(
+                    result.normalizer
+                  ))
             ).isEqualTo(
               """
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}
-                workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
+                workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
                 flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
 
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}
-                workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
+                workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
                 flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIE]
 
                 sourceFile: {PROJECT}/src/main/cxx/hello-jni.c{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang{F}
-                workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
+                workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
                 flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC]
                 """.trimIndent()
             )
             PLATFORM_WINDOWS -> Truth.assertThat(
-              syncedAbi.sourceFlagsFile.dumpCompileCommandsJsonBin(
-                result.normalizer
-              )
+                    translate(syncedAbi.sourceFlagsFile.dumpCompileCommandsJsonBin(
+                        result.normalizer
+                      ))
             ).isEqualTo(
               """
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}
-                workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
+                workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
                 flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC, {PROJECT}/src/main/cxx/executable/main.cpp]
 
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}
-                workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
+                workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
                 flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIE, {PROJECT}/src/main/cxx/executable/main.cpp]
 
                 sourceFile: {PROJECT}/src/main/cxx/hello-jni.c{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe{F}
-                workingDir: {PROJECT}/.cxx/cmake/debug/x86{D}
+                workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
                 flags:      [--target=i686-none-linux-android16, --gcc-toolchain={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64, --sysroot={ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/sysroot, -Dhello_jni_EXPORTS, -g, -DANDROID, -fdata-sections, -ffunction-sections, -funwind-tables, -fstack-protector-strong, -no-canonical-prefixes, -mstackrealign, -D_FORTIFY_SOURCE=2, -Wformat, -Werror=format-security, -O0, -fno-limit-debug-info, -fPIC, {PROJECT}/src/main/cxx/hello-jni.c]
                 """.trimIndent()
 

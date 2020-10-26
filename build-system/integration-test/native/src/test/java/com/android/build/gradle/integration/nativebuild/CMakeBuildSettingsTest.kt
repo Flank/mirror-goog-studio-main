@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.testutils.truth.PathSubject
@@ -145,10 +145,9 @@ class CMakeBuildSettingsTest(
         project.execute("clean", "assembleDebug")
 
         // No BuildSettings.json, should have empty BuildSettingsConfiguration
-        debugBuildModelFiles()
-            .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
+        project.recoverExistingCxxAbiModels()
             .forEach {
-                assertThat(it).isEqualTo(BuildSettingsConfiguration())
+                assertThat(it.buildSettings).isEqualTo(BuildSettingsConfiguration())
             }
     }
 
@@ -175,8 +174,7 @@ class CMakeBuildSettingsTest(
 
 
         // Verify that environment variables is set in BuildSettings
-        debugBuildModelFiles()
-            .map { createCxxAbiModelFromJson(it.readText()) }
+        project.recoverExistingCxxAbiModels()
             .forEach {
                 assertThat(it.buildSettings).isEqualTo(
                     BuildSettingsConfiguration(
@@ -191,16 +189,5 @@ class CMakeBuildSettingsTest(
         // Verify the environment variable was used by the launcher
         val launcherOutput = FileUtils.join(project.buildFile.parentFile, "launcher_output.txt")
         assertThat(launcherOutput.readText().trim()).isEqualTo("value for TEST_ENV")
-    }
-
-    private fun debugBuildModelFiles(): List<File> {
-        val x86ModelDebug = FileUtils.join(
-            project.projectDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json"
-        )
-        val armModelDebug = FileUtils.join(
-            project.projectDir, ".cxx", "cmake", "debug", "armeabi-v7a", "build_model.json"
-        )
-
-        return listOf(x86ModelDebug, armModelDebug)
     }
 }
