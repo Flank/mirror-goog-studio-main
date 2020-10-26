@@ -57,12 +57,13 @@ public class LintLibraryModelTest {
         project.execute("clean", ":app:lintDebug");
         project.execute("clean", ":app:lintDebug");
         String expected =
-                FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "lintmodel", "mylibrary", "MyLibrary.java") + ":5: Warning: Assertions are never enabled in Android. Use BuildConfig.DEBUG conditional checks instead [Assert]\n"
-                        + "       assert arg > 5;\n"
-                        + "       ~~~~~~\n"
+                ""
                         + FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "javalib", "JavaLib.java") + ":4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                         + "    public static final String SD_CARD = \"/sdcard/something\";\n"
                         + "                                         ~~~~~~~~~~~~~~~~~~~\n"
+                        + FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "lintmodel", "mylibrary", "MyLibrary.java") + ":9: Warning: DateFormat character 'Y' in YYYY is the week-era-year; did you mean 'y' ? [WeekBasedYear]\n"
+                        + "         DateTimeFormatter.ofPattern(\"'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'\", Locale.US); // ERROR\n"
+                        + "                                               ~~~~\n"
                         + "0 errors, 2 warnings";
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");
         assertThat(file).exists();

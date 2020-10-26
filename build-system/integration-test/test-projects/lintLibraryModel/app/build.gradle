@@ -12,11 +12,12 @@ android {
     lintOptions {
         textReport true
         textOutput file("lint-results.txt")
+        warning 'WeekBasedYear'
         // Only look for these two issues (which have been
         // planted in the project); otherwise newly added
         // lint issues may suddenly cause this test to fail
         // when it finds more than expected.
-        check 'Assert', 'SdCardPath'
+        checkOnly 'WeekBasedYear', 'SdCardPath'
         absolutePaths false
         explainIssues false
         checkDependencies true

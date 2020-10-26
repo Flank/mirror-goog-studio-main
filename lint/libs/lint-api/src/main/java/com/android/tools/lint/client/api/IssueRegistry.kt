@@ -380,6 +380,18 @@ protected constructor() {
         )
 
         /**
+         * Returns true if the given [id] used to be a valid id in lint but has since been
+         * deleted or renamed
+         */
+        fun isDeletedIssueId(id: String): Boolean {
+            return when (id) {
+                "MissingRegistered", // Renamed to MissingClass
+                "Assert" -> true // Deleted; no longer needed thanks to d8
+                else -> false
+            }
+        }
+
+        /**
          * Issue reported by lint (not a specific detector) when it cannot even
          * parse an XML file prior to analysis
          */

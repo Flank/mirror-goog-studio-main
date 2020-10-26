@@ -342,7 +342,7 @@ open class LintCliClient : LintClient {
                 val count = describeCounts(
                     stats.baselineErrorCount,
                     stats.baselineWarningCount,
-                    comma = true,
+                    comma = false,
                     capitalize = true
                 )
                 print(" ($count filtered by baseline ${baselineFile.name})")
@@ -667,9 +667,8 @@ open class LintCliClient : LintClient {
     }
 
     private fun reportNonExistingIssueId(project: Project?, registry: IssueRegistry, id: String) {
-        if (id == "MissingRegistered") {
-            // Recently renamed to MissingClass, but avoid complaining about leftover
-            // configuration
+        if (IssueRegistry.isDeletedIssueId(id)) {
+            // Recently deleted, but avoid complaining about leftover configuration
             return
         }
         val message = LintXmlConfiguration.getUnknownIssueIdErrorMessage(id, registry)

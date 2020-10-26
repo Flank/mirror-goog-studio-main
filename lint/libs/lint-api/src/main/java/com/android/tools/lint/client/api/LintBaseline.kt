@@ -154,13 +154,20 @@ class LintBaseline(
             val baselineFile = file
             val ids = Maps.newHashMap<String, Int>()
             for (entry in messageToEntry.values()) {
-                var count: Int? = ids[entry.issueId]
+                val id = entry.issueId
+                if (IssueRegistry.isDeletedIssueId(id)) {
+                    continue
+                }
+                var count: Int? = ids[id]
                 if (count == null) {
                     count = 1
                 } else {
                     count += 1
                 }
-                ids[entry.issueId] = count
+                ids[id] = count
+            }
+            if (ids.isEmpty()) {
+                return
             }
             val sorted = Lists.newArrayList(ids.keys)
             sorted.sort()
@@ -228,7 +235,6 @@ class LintBaseline(
     ): Boolean {
         val found = findAndMark(issue, location, message, severity, 0)
         if (writeOnClose && (!removeFixed || found)) {
-
             if (entriesToWrite != null && issue.id != IssueRegistry.BASELINE.id) {
                 entriesToWrite!!.add(ReportedEntry(issue, project, location, message))
             }
@@ -372,7 +378,9 @@ class LintBaseline(
                                 idToMessages.put(issue, message)
                             }
                         } else if (tag == TAG_ISSUE) {
-                            totalCount++
+                            if (issue != null && !IssueRegistry.isDeletedIssueId(issue)) {
+                                totalCount++
+                            }
                             issue = null
                             message = null
                             path = null
@@ -579,7 +587,7 @@ class LintBaseline(
         /**
          * Given the report of an issue, add it to the baseline being built in the XML writer
          */
-        internal fun write(
+        fun write(
             writer: Writer,
             client: LintClient
         ) {
