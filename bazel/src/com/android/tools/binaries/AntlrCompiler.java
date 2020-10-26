@@ -40,10 +40,10 @@ public class AntlrCompiler extends JarOutputCompiler {
     }
 
     @Override
-    protected boolean compile(List<String> files, String classPath, File outDir)
+    protected boolean compile(List<String> forwardedArgs, String classPath, File outDir)
             throws IOException {
         List<String> antlrArgs = Lists.newArrayList("-o", outDir.getAbsolutePath());
-        antlrArgs.addAll(files);
+        antlrArgs.addAll(forwardedArgs);
 
         Tool antlr = new Tool(Iterables.toArray(antlrArgs, String.class));
         antlr.process();

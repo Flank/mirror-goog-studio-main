@@ -30,7 +30,7 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     # This is because we want to ship code that runs on JDK 8 and right now we run kotlinc on
     # newer versions of java installation. See b/166472930 for more details.
     if jre:
-        args.add("--no-jdk")
+        args.add("-no-jdk")
     else:
         # We also need to specify "jre" as tools.jar is missing if only -jdk-home is there.
         jre = find_java_toolchain(ctx, ctx.attr._kotlin_jdk_toolchain).bootclasspath.to_list()
@@ -41,13 +41,13 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     deps = depset(direct = jre, transitive = [deps])
     transitive_deps += [deps]
 
-    args.add("--module_name", name)
-    for friend in friends:
-        args.add("--friend_dir", friend.path)
+    args.add("-module-name", name)
+    args.add("-nowarn")  # Mirrors the default javac opts.
+    args.add("-jvm-target", "1.8")
+    args.add("-api-version", "1.3")  # b/166582569
+    args.add("-Xjvm-default=enable")
 
-    # b/166582569
-    args.add("-api-version", "1.3")
-
+    args.add_joined(friends, join_with = ",", format_joined = "-Xfriend-paths=%s")
     args.add_joined("-cp", deps, join_with = ":")
     args.add("-o", out)
     args.add_all(srcs)
@@ -110,7 +110,9 @@ _kotlin_jar = rule(
         "deps": attr.label_list(
             providers = [JavaInfo],
         ),
-        "module_name": attr.string(),
+        "module_name": attr.string(
+            default = "unnamed",
+        ),
         # Java 8 runtime passed as -jdk-home to kotlinc. This is different than --javabase.
         "_kotlin_jdk_home": attr.label(
             default = Label("//prebuilts/studio/jdk:jdk_runtime"),
