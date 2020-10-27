@@ -70,11 +70,6 @@ public class SdkHelper {
     }
 
     @NonNull
-    public static File getDxJar() {
-        return getBuildTool(BuildToolInfo.PathId.DX_JAR);
-    }
-
-    @NonNull
     public static File getBuildTool(@NonNull BuildToolInfo.PathId pathId) {
         Revision revision = Revision.parseRevision(
                 GradleTestProject.DEFAULT_BUILD_TOOL_VERSION, Revision.Precision.MICRO);

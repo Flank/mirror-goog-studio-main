@@ -29,7 +29,6 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
-import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.r8.ClassFileProviderFactory
@@ -338,7 +337,6 @@ class DexMergingTaskTest {
                             project.objects.property(DexMergingTask.SharedParams::class.java).also {
                                 it.set(object : DexMergingTask.SharedParams() {
                                     override val dexingType = FakeGradleProperty(dexingType)
-                                    override val dexMerger = FakeGradleProperty(DexMergerTool.D8)
                                     override val minSdkVersion = FakeGradleProperty(minSdkVersion)
                                     override val debuggable = FakeGradleProperty(true)
                                     override val errorFormatMode =

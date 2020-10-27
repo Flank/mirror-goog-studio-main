@@ -1087,7 +1087,7 @@ com.android.build.gradle.internal.dsl.DeviceGroupFactory.<init>: com.android.bui
 com.android.build.gradle.internal.dsl.DeviceGroupFactory.create: com.android.build.gradle.internal.dsl.DeviceGroup (java.lang.String)
 com.android.build.gradle.internal.dsl.DeviceGroupFactory.create: java.lang.Object (java.lang.String)
 com.android.build.gradle.internal.dsl.DexOptions extends com.android.builder.core.DefaultDexOptions
-com.android.build.gradle.internal.dsl.DexOptions.<init>: com.android.build.gradle.internal.dsl.DexOptions (com.android.build.gradle.internal.errors.DeprecationReporter)
+com.android.build.gradle.internal.dsl.DexOptions.<init>: com.android.build.gradle.internal.dsl.DexOptions ()
 com.android.build.gradle.internal.dsl.DexOptions.additionalParameters: void (java.lang.String[])
 com.android.build.gradle.internal.dsl.DexOptions.getIncremental: boolean ()
 com.android.build.gradle.internal.dsl.DexOptions.setIncremental: void (boolean)

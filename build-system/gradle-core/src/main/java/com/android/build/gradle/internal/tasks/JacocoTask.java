@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.IncrementalChangesUtils;
-import com.android.builder.dexing.DexerTool;
 import com.android.builder.files.SerializableChange;
 import com.android.builder.files.SerializableFileChanges;
 import com.android.utils.FileUtils;
@@ -98,11 +97,7 @@ public abstract class JacocoTask extends NewIncrementalTask {
     /** Returns which Jacoco version to use. */
     @NonNull
     public static String getJacocoVersion(@NonNull ComponentCreationConfig creationConfig) {
-        if (creationConfig.getVariantScope().getDexer() == DexerTool.DX) {
-            return JacocoConfigurations.VERSION_FOR_DX;
-        } else {
-            return creationConfig.getGlobalScope().getExtension().getJacoco().getVersion();
-        }
+        return creationConfig.getGlobalScope().getExtension().getJacoco().getVersion();
     }
 
     @Override

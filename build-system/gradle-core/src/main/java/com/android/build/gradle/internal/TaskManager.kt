@@ -105,10 +105,8 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeMlModelsSourceF
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.DefaultDexOptions
 import com.android.builder.core.DesugarProcessArgs
 import com.android.builder.core.VariantType
-import com.android.builder.dexing.DexerTool
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
 import com.android.builder.errors.IssueReporter
@@ -1681,16 +1679,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             creationConfig: ApkCreationConfig,
             dexingType: DexingType,
             registeredLegacyTransforms: Boolean) {
-        val dexOptions: DefaultDexOptions
-        val variantType = creationConfig.variantType
-        if (variantType.isTestComponent) {
-            // Don't use custom dx flags when compiling the test FULL_APK. They can break the test FULL_APK,
-            // like --minimal-main-dex.
-            dexOptions = DefaultDexOptions.copyOf(extension.dexOptions)
-            dexOptions.additionalParameters = listOf()
-        } else {
-            dexOptions = extension.dexOptions
-        }
         val java8SLangSupport = creationConfig.getJava8LangSupportType()
         val minified = creationConfig.codeShrinker != null
         val supportsDesugaring = (java8SLangSupport == VariantScope.Java8LangSupport.UNUSED
@@ -1705,8 +1693,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 && !minified
                 && supportsDesugaring)
         taskFactory.register(
-                DexArchiveBuilderTask.CreationAction(
-                        dexOptions, enableDexingArtifactTransform, creationConfig))
+                DexArchiveBuilderTask.CreationAction(enableDexingArtifactTransform, creationConfig))
         maybeCreateDexDesugarLibTask(creationConfig, enableDexingArtifactTransform)
         createDexMergingTasks(creationConfig, dexingType, enableDexingArtifactTransform)
     }
@@ -1813,19 +1800,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .variantType
                 .isAar)))
         if (isTestCoverageEnabled) {
-            if (creationConfig.variantScope.dexer == DexerTool.DX) {
-                creationConfig
-                        .services
-                        .issueReporter
-                        .reportWarning(
-                                IssueReporter.Type.GENERIC, String.format(
-                                "Jacoco version is downgraded to %s because dx is used. "
-                                        + "This is due to -P%s=false flag. See "
-                                        + "https://issuetracker.google.com/37116789 for "
-                                        + "more details.",
-                                JacocoConfigurations.VERSION_FOR_DX,
-                                BooleanOption.ENABLE_D8.propertyName))
-            }
             val jacocoAgentRuntimeDependency = JacocoConfigurations.getAgentRuntimeDependency(
                     JacocoTask.getJacocoVersion(creationConfig))
             project.dependencies

@@ -22,17 +22,13 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
@@ -215,9 +211,8 @@ public class D8DesugaringTest {
     }
 
     @Test
-    public void checkDesugaring() throws IOException, InterruptedException, ProcessException {
+    public void checkDesugaring() throws IOException, InterruptedException {
         GradleTaskExecutor executor = project.executor()
-                .with(BooleanOption.ENABLE_D8, true)
                 .with(BooleanOption.ENABLE_D8_DESUGARING, true);
         if (!withDexingArtifactTransform) {
             // https://github.com/gradle/gradle/issues/13200
@@ -247,7 +242,6 @@ public class D8DesugaringTest {
                         "com/example/helloworld/HelloWorld.java"),
                 "Runnable r = () -> {};");
         project.executor()
-                .with(BooleanOption.ENABLE_D8, true)
                 .with(BooleanOption.ENABLE_D8_DESUGARING, true)
                 .run("assembleBaseDebug");
         Apk androidApk =
@@ -257,9 +251,8 @@ public class D8DesugaringTest {
 
     @Test
     public void checkMultidex() throws IOException, InterruptedException, ProcessException {
-        GradleTaskExecutor executor = project.executor()
-                .with(BooleanOption.ENABLE_D8, true)
-                .with(BooleanOption.ENABLE_D8_DESUGARING, true);
+        GradleTaskExecutor executor =
+                project.executor().with(BooleanOption.ENABLE_D8_DESUGARING, true);
         if (!withDexingArtifactTransform) {
             // https://github.com/gradle/gradle/issues/13200
             executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
@@ -277,19 +270,5 @@ public class D8DesugaringTest {
             }
         }
         assertThat(foundTheSynthetic).isTrue();
-    }
-
-    @Test
-    public void checkD8DesugaringWithoutD8Enable() throws IOException {
-        ModelContainer<AndroidProject> container =
-                project.model()
-                        .ignoreSyncIssues()
-                        .with(BooleanOption.ENABLE_D8, false)
-                        .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                        .fetchAndroidProjects();
-        ModelContainerSubject.assertThat(container)
-                .rootBuild()
-                .project(":app")
-                .hasIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
     }
 }

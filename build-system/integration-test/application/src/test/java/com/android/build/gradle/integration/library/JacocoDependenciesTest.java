@@ -117,18 +117,6 @@ public class JacocoDependenciesTest {
         assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.4.201502262128:runtime@jar");
     }
 
-    @Test
-    public void checkVersionWithDx() throws IOException {
-        assertAgentMavenCoordinates(
-                project.model()
-                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .with(BooleanOption.ENABLE_D8, false)
-                        .with(BooleanOption.ENABLE_D8_DESUGARING, false),
-                "org.jacoco:org.jacoco.agent:"
-                        + JacocoConfigurations.VERSION_FOR_DX
-                        + ":runtime@jar");
-    }
-
     private void assertAgentMavenCoordinates(@NonNull String expected) throws IOException {
         assertAgentMavenCoordinates(project.model(), expected);
     }

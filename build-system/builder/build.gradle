@@ -101,15 +101,7 @@ dependencies {
         transitive = false
     }
 
-    provided(project(':dx')) {
-        transitive = false
-    }
-
     provided(files('../../../../prebuilts/r8/r8.jar'))
-
-    sourcesProvided(project(path:':dx')) {
-        transitive = false
-    }
 
     resourcesRuntime(project(path: ':external:desugar', configuration: 'fatJar')) {
         transitive = false

@@ -21,14 +21,10 @@ import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import java.util.List;
 
-/**
- * Concrete implementation of DexOptions.
- */
+/** Concrete implementation of DexOptions. */
 @SuppressWarnings("WeakerAccess") // Exposed in the DSL.
+@Deprecated
 public class DefaultDexOptions implements DexOptions {
-
-    public static final String OPTIMIZE_WARNING =
-            "Disabling dex optimization produces wrong local debug info, b.android.com/82031.";
 
     private boolean preDexLibraries = true;
 

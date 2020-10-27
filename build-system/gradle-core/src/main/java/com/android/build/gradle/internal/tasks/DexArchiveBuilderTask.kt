@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dependency.BaseDexingTransform
 import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
 import com.android.build.gradle.internal.dexing.DexParameters
-import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -41,8 +40,6 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.core.DexOptions
-import com.android.builder.dexing.DexerTool
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.transform.CacheableTransform
@@ -143,9 +140,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     @get:Nested
     abstract val dexParams: DexParameterInputs
 
-    @get:Nested
-    abstract val dxDexParams: DxDexParameterInputs
-
     @get:Input
     abstract val incrementalDexingTaskV2: Property<Boolean>
 
@@ -158,9 +152,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
     @get:LocalState
     abstract val inputJarHashesFile: RegularFileProperty
-
-    @get:Input
-    abstract val dexer: Property<DexerTool>
 
     /**
      * This property is annotated with [Internal] in order to allow cache hits across build that use
@@ -177,9 +168,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     @get:InputFiles
     abstract val externalLibDexFiles: ConfigurableFileCollection
-
-    @get:Internal
-    abstract val dxStateBuildService: Property<DxStateBuildService>
 
     /**
      * Task runs incrementally if input changes allow that and if the number of buckets is the same
@@ -253,7 +241,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             mixedScopeOutputKeepRules = mixedScopeOutputKeepRules.asFile.orNull,
 
             dexParams = dexParams.toDexParameters(),
-            dxDexParams = dxDexParams.toDxDexParameters(),
 
             desugarClasspathChangedClasses = getChanged(
                 isIncremental,
@@ -266,17 +253,12 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
             projectVariant = projectVariant.get(),
             inputJarHashesFile = inputJarHashesFile.get().asFile,
-            dexer = dexer.get(),
             numberOfBuckets = numberOfBuckets.get(),
             workerExecutor = workerExecutor,
             projectName = projectName,
             taskPath = path,
             analyticsService = analyticsService
         ).doProcess()
-
-        if (dexer.get() == DexerTool.DX) {
-            dxStateBuildService.get().clearStateAfterBuild()
-        }
     }
 
     /**
@@ -306,7 +288,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        private val dexOptions: DexOptions,
         enableDexingArtifactTransform: Boolean,
         creationConfig: ApkCreationConfig
     ) : VariantTaskCreationAction<DexArchiveBuilderTask, ApkCreationConfig>(
@@ -384,7 +365,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 )
                 dexExternalLibsInArtifactTransform =
                     creationConfig.services.projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
-                            && creationConfig.variantScope.dexer == DexerTool.D8
             }
 
             desugaringClasspathForArtifactTransforms = if (dexExternalLibsInArtifactTransform) {
@@ -540,17 +520,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             }
 
             task.dexParams.errorFormatMode.set(SyncOptions.getErrorFormatMode(projectOptions))
-            task.dexer.set(creationConfig.variantScope.dexer)
-            task.dxDexParams.inBufferSize.set(
-                task.project.providers.provider {
-                    (projectOptions.getProvider(IntegerOption.DEXING_READ_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
-                }
-            )
-            task.dxDexParams.outBufferSize.set(
-                task.project.providers.provider {
-                    (projectOptions.getProvider(IntegerOption.DEXING_WRITE_BUFFER_SIZE).getOrElse(DEFAULT_BUFFER_SIZE_IN_KB)) * 1024
-                }
-            )
             task.dexParams.debuggable.setDisallowChanges(
                 creationConfig.debuggable
             )
@@ -563,9 +532,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                         ?: DEFAULT_NUM_BUCKETS
                 }
             )
-            task.dxDexParams.dxNoOptimizeFlagPresent.set(
-                dexOptions.additionalParameters.contains("--no-optimize")
-            )
             if (libraryDesugaring) {
                 task.dexParams.coreLibDesugarConfig.set(getDesugarLibConfig(task.project))
             }
@@ -576,7 +542,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             } else {
                 task.externalLibClasses.from(externalLibraryClasses)
             }
-            task.dxStateBuildService.set(DxStateBuildService.RegistrationAction(task.project).execute())
         }
 
         /** Creates a detached configuration and sets up artifact transform for dexing. */
@@ -658,29 +623,6 @@ abstract class DexParameterInputs {
             desugarClasspath = desugarClasspath.files.toList(),
             coreLibDesugarConfig = coreLibDesugarConfig.orNull,
             errorFormatMode = errorFormatMode.get()
-        )
-    }
-}
-
-/** Parameters required for dexing with DX. */
-abstract class DxDexParameterInputs {
-
-    @get:Input
-    abstract val inBufferSize: Property<Int>
-
-    @get:Input
-    abstract val outBufferSize: Property<Int>
-
-    @get:Input
-    abstract val dxNoOptimizeFlagPresent: Property<Boolean>
-
-    fun toDxDexParameters(): DxDexParameters {
-        return DxDexParameters(
-            inBufferSize = inBufferSize.get(),
-            outBufferSize = outBufferSize.get(),
-            dxNoOptimizeFlagPresent = dxNoOptimizeFlagPresent.get(),
-            // Jumbo mode is always enabled for dex archives - see http://b/37151347
-            jumboMode = true
         )
     }
 }

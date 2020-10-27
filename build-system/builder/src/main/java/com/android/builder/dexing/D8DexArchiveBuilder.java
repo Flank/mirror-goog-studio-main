@@ -19,7 +19,6 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
-import com.android.ide.common.blame.parser.DexParser;
 import com.android.tools.r8.AssertionsConfiguration;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
@@ -141,6 +140,21 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
         return new DexArchiveBuilderException(msg.toString(), t);
     }
 
+    private static String getEnableDesugaringHint(int minSdkVersion) {
+        return "The dependency contains Java 8 bytecode. Please enable desugaring by "
+                + "adding the following to build.gradle\n"
+                + "android {\n"
+                + "    compileOptions {\n"
+                + "        sourceCompatibility 1.8\n"
+                + "        targetCompatibility 1.8\n"
+                + "    }\n"
+                + "}\n"
+                + "See https://developer.android.com/studio/write/java8-support.html for "
+                + "details. Alternatively, increase the minSdkVersion to "
+                + minSdkVersion
+                + " or above.\n";
+    }
+
     private class InterceptingDiagnosticsHandler extends D8DiagnosticsHandler {
         public InterceptingDiagnosticsHandler() {
             super(D8DexArchiveBuilder.this.dexParams.getMessageReceiver());
@@ -150,15 +164,15 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
         protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
 
             if (diagnostic.getDiagnosticMessage().startsWith(INVOKE_CUSTOM)) {
-                addHint(DexParser.getEnableDesugaringHint(26));
+                addHint(getEnableDesugaringHint(26));
             }
 
             if (diagnostic.getDiagnosticMessage().startsWith(DEFAULT_INTERFACE_METHOD)) {
-                addHint(DexParser.getEnableDesugaringHint(24));
+                addHint(getEnableDesugaringHint(24));
             }
 
             if (diagnostic.getDiagnosticMessage().startsWith(STATIC_INTERFACE_METHOD)) {
-                addHint(DexParser.getEnableDesugaringHint(24));
+                addHint(getEnableDesugaringHint(24));
             }
 
             return super.convertToMessage(kind, diagnostic);

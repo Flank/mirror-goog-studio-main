@@ -36,6 +36,18 @@ class OptionVersionTest {
          */
         private val ANDROID_GRADLE_PLUGIN_VERSION =
             GradleVersion.parseAndroidGradlePluginVersion("7.0.0-alpha01")
+
+        /**
+         * Until a more comprehensive solution is found (b/162495697), we maintain a list of
+         * options that are removed in the current version, before the final version. E.g option
+         * "android.enableD8" is removed before 7.0.0-alpha01, but the removed version for that
+         * option is set to 7.0. This fails the test, so we'll just explicitly list all options
+         * that are removed. Once [ANDROID_GRADLE_PLUGIN_VERSION] is greater than 7.0, we can clear
+         * this list.
+         */
+        private val REMOVED_IN_THIS_VERSION = listOf(
+            BooleanOption.ENABLE_D8
+        )
     }
 
     @Test
@@ -53,7 +65,9 @@ class OptionVersionTest {
 
     @Test
     fun `check removed options do not have removed versions in the future`() {
-        val removedOptions = getAllOptions().filter { it.status is Option.Status.Removed }
+        val removedOptions = getAllOptions().filter {
+            it.status is Option.Status.Removed && it !in REMOVED_IN_THIS_VERSION
+        }
         for (option in removedOptions) {
             val status = option.status as Option.Status.Removed
             status.removedVersion.getVersion()?.let { removedVersion ->

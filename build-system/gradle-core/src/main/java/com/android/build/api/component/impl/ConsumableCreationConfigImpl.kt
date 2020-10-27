@@ -27,7 +27,6 @@ import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.CodeShrinker
-import com.google.common.collect.Lists
 
 /**
  * This class and subclasses are implementing methods defined in the CreationConfig
@@ -103,8 +102,7 @@ open class ConsumableCreationConfigImpl(
             }
         } else {
             // D8 cannot be used if R8 is used
-            if (globalScope.projectOptions[BooleanOption.ENABLE_D8_DESUGARING]
-                    && isValidJava8Flag(BooleanOption.ENABLE_D8_DESUGARING, BooleanOption.ENABLE_D8)) {
+            if (globalScope.projectOptions[BooleanOption.ENABLE_D8_DESUGARING]) {
                 return VariantScope.Java8LangSupport.D8
             }
         }
@@ -123,31 +121,6 @@ open class ConsumableCreationConfigImpl(
                     missingFlag.name),
                     variantDslInfo.componentIdentity.name)
         return VariantScope.Java8LangSupport.INVALID
-    }
-
-    private fun isValidJava8Flag(flag: BooleanOption, vararg dependsOn: BooleanOption): Boolean {
-
-        var invalid: MutableList<String?>? = null
-        for (requiredFlag in dependsOn) {
-            if (!globalScope.projectOptions[requiredFlag]) {
-                if (invalid == null) {
-                    invalid = Lists.newArrayList()
-                }
-                invalid!!.add("'" + requiredFlag.propertyName + "= false'")
-            }
-        }
-        return if (invalid == null) {
-            true
-        } else {
-            val template = ("Java 8 language support, as requested by '%s= true' in your "
-                    + "gradle.properties file, is not supported when %s.")
-            val msg = String.format(template, flag.propertyName, java.lang.String.join(",", invalid))
-            globalScope
-                .dslServices
-                .issueReporter
-                .reportError(IssueReporter.Type.GENERIC, msg, variantDslInfo.componentIdentity.name)
-            false
-        }
     }
 
     val isCoreLibraryDesugaringEnabled: Boolean

@@ -25,7 +25,6 @@ kotlin_library(
     ]),
     bundled_deps = [
         "//tools/base/build-system/profile",
-        "//tools/dx/dalvik/dx",
         "//prebuilts/r8",
     ],
     lint_baseline = "lint_baseline.xml",

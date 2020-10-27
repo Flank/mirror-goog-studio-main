@@ -48,12 +48,6 @@ abstract class DexArchiveBuilder {
 
     companion object {
 
-        /** Creates an instance that is using dx to convert class files to dex files.  */
-        @JvmStatic
-        fun createDxDexBuilder(config: DexArchiveBuilderConfig): DexArchiveBuilder {
-            return DxDexArchiveBuilder(config)
-        }
-
         /** Creates an instance that is using d8 to convert class files to dex files.  */
         @JvmStatic
         fun createD8DexBuilder(dexParams: DexParameters): DexArchiveBuilder {

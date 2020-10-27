@@ -71,20 +71,3 @@ class DexParametersForWorkers(
         private const val serialVersionUID: Long = 1L
     }
 }
-
-/**
- * Parameters required for dexing with DX.
- *
- * This class is serializable as it is passed to Gradle workers.
- */
-class DxDexParameters(
-    val inBufferSize: Int,
-    val outBufferSize: Int,
-    val dxNoOptimizeFlagPresent: Boolean,
-    val jumboMode: Boolean
-) : Serializable {
-
-    companion object {
-        private const val serialVersionUID: Long = 1L
-    }
-}
