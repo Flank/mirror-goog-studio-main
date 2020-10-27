@@ -136,13 +136,17 @@ build:dynamic --config=remote
 # # as well as remotely, choosing whichever finishes first.
 build:dynamic --internal_spawn_scheduler
 build:dynamic --strategy=Javac=dynamic
-build:dynamic --dynamic_local_strategy=Javac=worker
 build:dynamic --strategy=kotlinc=dynamic
-build:dynamic --dynamic_local_strategy=kotlinc=worker
 build:dynamic --strategy=formc=dynamic
-build:dynamic --dynamic_local_strategy=formc=worker
 build:dynamic --strategy=singlejar=dynamic
-build:dynamic --dynamic_local_strategy=singlejar=local
+# Configure auxiliary java mnemonics to run dynamically
+build:dynamic --strategy=JavaIjar=dynamic
+build:dynamic --strategy=JavaDeployJar=dynamic
+build:dynamic --strategy=JavaSourceJar=dynamic
+build:dynamic --strategy=Turbine=dynamic
+# We want to use persistent workers, if supported (Javac, kotlinc, formc)
+build:dynamic --dynamic_local_strategy=worker,local
+
 # Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
 # so there is no need to keep workers alive after the build.
 build:dynamic --worker_quit_after_build
