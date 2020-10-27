@@ -93,18 +93,14 @@ def _iml_module_jar_impl(
     # Kotlin
     kotlin_providers = []
     if kotlin_srcs:
-        kotlin_compile(
+        kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = module_name,
             srcs = java_srcs + kotlin_srcs,
-            deps = transitive_compile_time_jars,
+            deps = java_deps,
             friends = friends,
             out = kotlin_jar,
             jre = ctx.files._bootclasspath,
-        )
-        kotlin_providers += [JavaInfo(
-            output_jar = kotlin_jar,
-            compile_jar = kotlin_jar,
         )]
         jars += [kotlin_jar]
 
