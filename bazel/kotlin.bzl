@@ -3,20 +3,18 @@ load(":functions.bzl", "explicit_target")
 load(":maven.bzl", "maven_pom")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
-load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
-def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
+def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
     """Runs kotlinc on the given source files.
 
     Args:
-        ctx:      the analysis context
-        name:     the name of the module being compiled
-        srcs:     a list of Java and Kotlin source files
-        deps:     a depset of compile-time jar dependencies
-        friends:  a list of friend jars (allowing access to 'internal' members)
-        jre:      a list of jars to put on the bootclasspath, *instead* of the
-                    default JRE determined by kotlinc
-        out:      the output jar file
+        ctx: the analysis context
+        name: the name of the module being compiled
+        srcs: a list of Java and Kotlin source files
+        deps: a depset of compile-time jar dependencies
+        friends: a list of friend jars (allowing access to 'internal' members)
+        out: the output jar file
+        jre: list of jars from the JRE bootclasspath
 
     Expects that ctx.files._kotlinc is defined.
 
@@ -24,22 +22,6 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     sources, then you will also need to run javac after this action.
     """
     args = ctx.actions.args()
-    transitive_deps = []
-
-    # Never use currently running JDK (java installation used to run kotlinc) to resolve JDK APIs.
-    # This is because we want to ship code that runs on JDK 8 and right now we run kotlinc on
-    # newer versions of java installation. See b/166472930 for more details.
-    if jre:
-        args.add("-no-jdk")
-    else:
-        # We also need to specify "jre" as tools.jar is missing if only -jdk-home is there.
-        jre = find_java_toolchain(ctx, ctx.attr._kotlin_jdk_toolchain).bootclasspath.to_list()
-        kotlin_jdk_home = find_java_runtime_toolchain(ctx, ctx.attr._kotlin_jdk_home)
-        transitive_deps += [kotlin_jdk_home.files]
-        args.add("-jdk-home", kotlin_jdk_home.java_home)
-
-    deps = depset(direct = jre, transitive = [deps])
-    transitive_deps += [deps]
 
     args.add("-module-name", name)
     args.add("-nowarn")  # Mirrors the default javac opts.
@@ -47,8 +29,12 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     args.add("-api-version", "1.3")  # b/166582569
     args.add("-Xjvm-default=enable")
 
+    # Use custom JRE instead of the default one picked by kotlinc.
+    args.add("-no-jdk")
+    classpath = depset(direct = jre, transitive = [deps])
+
     args.add_joined(friends, join_with = ",", format_joined = "-Xfriend-paths=%s")
-    args.add_joined("-cp", deps, join_with = ":")
+    args.add_joined("-cp", classpath, join_with = ":")
     args.add("-o", out)
     args.add_all(srcs)
 
@@ -57,7 +43,7 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre = []):
     args.set_param_file_format("multiline")
 
     ctx.actions.run(
-        inputs = depset(direct = srcs, transitive = transitive_deps),
+        inputs = depset(direct = srcs, transitive = [classpath]),
         outputs = [out],
         mnemonic = "kotlinc",
         arguments = [args],
@@ -96,6 +82,7 @@ def _kotlin_jar_impl(ctx):
         deps = compile_deps,
         friends = ctx.files.friends,
         out = ctx.outputs.output_jar,
+        jre = ctx.files._bootclasspath,
     )
 
 _kotlin_jar = rule(
@@ -113,13 +100,10 @@ _kotlin_jar = rule(
         "module_name": attr.string(
             default = "unnamed",
         ),
-        # Java 8 runtime passed as -jdk-home to kotlinc. This is different than --javabase.
-        "_kotlin_jdk_home": attr.label(
-            default = Label("//prebuilts/studio/jdk:jdk_runtime"),
-        ),
-        # JDK used to extract bootclasspath which as appended to the compile classpath.
-        "_kotlin_jdk_toolchain": attr.label(
-            default = Label("@bazel_tools//tools/jdk:current_java_toolchain"),
+        "_bootclasspath": attr.label(
+            # Use JDK 8 because AGP still needs to support it (b/166472930).
+            default = Label("//prebuilts/studio/jdk:bootclasspath"),
+            allow_files = [".jar"],
         ),
         "_kotlinc": attr.label(
             executable = True,
