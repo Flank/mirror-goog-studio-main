@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
@@ -28,23 +28,23 @@ import com.android.tools.idea.wizard.template.impl.activities.common.generateNoA
 import com.android.tools.idea.wizard.template.impl.activities.common.generateThemeStyles
 import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentJava
 import com.android.tools.idea.wizard.template.impl.activities.common.src.app_package.placeholder.placeholderContentKt
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.fragmentItemDetailXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.fragmentItemDetailTwoPaneXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.fragmentItemListTwoPaneXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.fragmentItemListXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.itemListContentXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.values.dimensXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.values.stringsXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentDetailFragmentJava
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentDetailFragmentKt
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentListFragmentJava
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentListFragmentKt
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.layout.activityMainXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.navigation.mobileNavigationXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.navigation.tabletDetailsNavigationXml
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentListDetailHostActivityKt
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.fragmentItemDetailXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.fragmentItemDetailTwoPaneXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.fragmentItemListTwoPaneXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.fragmentItemListXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.itemListContentXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values.dimensXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values.stringsXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentDetailFragmentJava
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentDetailFragmentKt
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentListFragmentJava
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentListFragmentKt
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.layout.activityMainXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.navigation.mobileNavigationXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.navigation.tabletDetailsNavigationXml
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentListDetailHostActivityKt
 import com.android.tools.idea.wizard.template.impl.activities.common.navigation.navigationDependencies
-import com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package.contentListDetailHostActivityJava
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package.contentListDetailHostActivityJava
 
 fun RecipeExecutor.primaryDetailFlowRecipe(
   moduleData: ModuleTemplateData,

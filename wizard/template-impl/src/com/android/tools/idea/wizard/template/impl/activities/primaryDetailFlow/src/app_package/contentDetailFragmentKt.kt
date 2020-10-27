@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.src.app_package
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.src.app_package
 
 import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.getMaterialComponentName

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.values
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.values
 
 
 fun dimensXml() = """

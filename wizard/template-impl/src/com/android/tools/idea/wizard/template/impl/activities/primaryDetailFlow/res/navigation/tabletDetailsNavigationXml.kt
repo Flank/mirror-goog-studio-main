@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template.impl.activities.masterDetailFlow.res.navigation
+package com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.res.navigation
 
 
-fun mobileNavigationXml(
+fun tabletDetailsNavigationXml(
   packageName: String,
-  itemListLayout: String,
-  collectionName: String,
   detailName: String,
   detailNameLayout: String
 ) = """
@@ -27,26 +25,18 @@ fun mobileNavigationXml(
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_graph"
-    app:startDestination="@id/${itemListLayout}_fragment">
-
+    android:id="@+id/nav_graph_details"
+    app:startDestination="@id/fragment_${detailNameLayout}">
     <fragment
-        android:id="@+id/${itemListLayout}_fragment"
-        android:name="${packageName}.${collectionName}Fragment"
-        android:label="${collectionName}Fragment" >
-        <action
-            android:id="@+id/show_${detailNameLayout}"
-            app:destination="@id/${detailNameLayout}_fragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/${detailNameLayout}_fragment"
+        android:id="@+id/fragment_${detailNameLayout}"
         android:name="${packageName}.${detailName}Fragment"
-        android:label="${detailNameLayout}"
+        android:label="@string/title_${detailNameLayout}"
         tools:layout="@layout/fragment_${detailNameLayout}">
         <argument
             android:name="item_id"
             app:argType="string"
             android:defaultValue="" />
     </fragment>
+
 </navigation>
 """
