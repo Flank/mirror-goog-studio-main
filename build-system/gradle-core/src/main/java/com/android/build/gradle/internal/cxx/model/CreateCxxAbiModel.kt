@@ -62,6 +62,7 @@ fun createCxxAbiModel(
                 null
             },
         buildSettings = createBuildSettingsFromFile(variant.module.buildSettingsFile),
+        isActiveAbi = variant.validAbiList.contains(abi),
         prefabFolder = variant.prefabDirectory.resolve(abi.tag)
     )
 }

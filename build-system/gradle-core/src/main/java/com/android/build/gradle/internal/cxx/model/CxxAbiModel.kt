@@ -75,7 +75,12 @@ data class CxxAbiModel(
     /**
      * The directory containing generated Prefab imports, if any.
      */
-    val prefabFolder: File
+    val prefabFolder: File,
+
+    /**
+     * Whether or not this abi is active in the build or not.
+     */
+    val isActiveAbi: Boolean,
 )
 
 /**

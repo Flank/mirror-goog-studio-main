@@ -19,11 +19,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact.SingleArtifact
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.TestComponentBuilderImpl
-import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.component.impl.*
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
@@ -33,16 +29,10 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.component.ApkCreationConfig
-import com.android.build.gradle.internal.component.ApplicationCreationConfig
-import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.TestCreationConfig
-import com.android.build.gradle.internal.component.UnitTestCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.*
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.coverage.JacocoReportTask
-import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
+import com.android.build.gradle.internal.cxx.configure.createCxxTasks
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.androidXMappings
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -58,91 +48,24 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.*
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask.TestRuntimeStubRClassCreationAction
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager
-import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DEX
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
-import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
-import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_JARS
-import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
-import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
-import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
-import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
+import com.android.build.gradle.internal.scope.*
+import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.tasks.AndroidReportTask
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
-import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
-import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
-import com.android.build.gradle.internal.tasks.CheckProguardFiles
-import com.android.build.gradle.internal.tasks.CompressAssetsTask
-import com.android.build.gradle.internal.tasks.D8MainDexListTask
-import com.android.build.gradle.internal.tasks.DependencyReportTask
-import com.android.build.gradle.internal.tasks.DesugarTask
-import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
-import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
-import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
-import com.android.build.gradle.internal.tasks.DexMergingAction
-import com.android.build.gradle.internal.tasks.DexMergingTask
-import com.android.build.gradle.internal.tasks.DexSplitterTask
-import com.android.build.gradle.internal.tasks.ExtractProguardFiles
-import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar
-import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
-import com.android.build.gradle.internal.tasks.InstallVariantTask
-import com.android.build.gradle.internal.tasks.JacocoTask
-import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
-import com.android.build.gradle.internal.tasks.LintCompile
-import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
-import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
-import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
-import com.android.build.gradle.internal.tasks.MergeClassesTask
-import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
-import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
-import com.android.build.gradle.internal.tasks.MergeNativeLibsTask
-import com.android.build.gradle.internal.tasks.OptimizeResourcesTask
-import com.android.build.gradle.internal.tasks.PackageForUnitTest
-import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish
-import com.android.build.gradle.internal.tasks.ProcessJavaResTask
-import com.android.build.gradle.internal.tasks.ProguardTask
-import com.android.build.gradle.internal.tasks.R8Task
-import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask
-import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
-import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask
-import com.android.build.gradle.internal.tasks.SigningConfigWriterTask
-import com.android.build.gradle.internal.tasks.SigningReportTask
-import com.android.build.gradle.internal.tasks.SourceSetsTask
+import com.android.build.gradle.internal.tasks.*
 import com.android.build.gradle.internal.tasks.TestServerTask.TestServerTaskCreationAction
-import com.android.build.gradle.internal.tasks.UninstallTask
-import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments.Companion.createArguments
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
-import com.android.build.gradle.internal.tasks.factory.TaskFactory
-import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
-import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.factory.dependsOn
+import com.android.build.gradle.internal.tasks.factory.*
 import com.android.build.gradle.internal.tasks.featuresplit.getFeatureName
 import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass
 import com.android.build.gradle.internal.test.AbstractTestDataImpl
@@ -157,46 +80,14 @@ import com.android.build.gradle.internal.utils.getKotlinCompile
 import com.android.build.gradle.internal.utils.recordIrBackendForAnalytics
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
-import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.tasks.AidlCompile
-import com.android.build.gradle.tasks.AnalyzeDependenciesTask
-import com.android.build.gradle.tasks.CleanBuildCache
-import com.android.build.gradle.tasks.CompatibleScreensManifest
-import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
-import com.android.build.gradle.tasks.ExternalNativeBuildTask
-import com.android.build.gradle.tasks.ExternalNativeCleanTask
-import com.android.build.gradle.tasks.GenerateBuildConfig
-import com.android.build.gradle.tasks.GenerateManifestJarTask
-import com.android.build.gradle.tasks.GenerateResValues
-import com.android.build.gradle.tasks.GenerateTestConfig
+import com.android.build.gradle.tasks.*
 import com.android.build.gradle.tasks.GenerateTestConfig.TestConfigInputs
-import com.android.build.gradle.tasks.JavaCompileCreationAction
-import com.android.build.gradle.tasks.JavaPreCompileTask
-import com.android.build.gradle.tasks.KOTLIN_KAPT_PLUGIN_ID
-import com.android.build.gradle.tasks.LintFixTask
-import com.android.build.gradle.tasks.LintGlobalTask
-import com.android.build.gradle.tasks.LintPerVariantTask
 import com.android.build.gradle.tasks.LintPerVariantTask.VitalCreationAction
-import com.android.build.gradle.tasks.ManifestProcessorTask
-import com.android.build.gradle.tasks.MergeResources
-import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction
-import com.android.build.gradle.tasks.PackageApplication
-import com.android.build.gradle.tasks.ProcessApplicationManifest
-import com.android.build.gradle.tasks.ProcessManifestForBundleTask
-import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask
-import com.android.build.gradle.tasks.ProcessManifestForMetadataFeatureTask
-import com.android.build.gradle.tasks.ProcessMultiApkApplicationManifest
-import com.android.build.gradle.tasks.ProcessPackagedManifestTask
-import com.android.build.gradle.tasks.ProcessTestManifest
-import com.android.build.gradle.tasks.RenderscriptCompile
-import com.android.build.gradle.tasks.ShaderCompile
-import com.android.build.gradle.tasks.TransformClassesWithAsmTask
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
-import com.android.build.gradle.tasks.registerDataBindingOutputs
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DefaultDexOptions
 import com.android.builder.core.DesugarProcessArgs
@@ -213,11 +104,7 @@ import com.google.common.base.Strings
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ListMultimap
-import org.gradle.api.Action
-import org.gradle.api.DefaultTask
-import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.UnknownTaskException
+import org.gradle.api.*
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
@@ -235,7 +122,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
-import java.util.Locale
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.function.Consumer
 import java.util.stream.Collectors
@@ -311,6 +198,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             testComponentPropertiesList
         )
         createReportTasks()
+
+
+        // Create C/C++ configuration, build, and clean tasks
+        createCxxTasks(
+                globalScope.sdkComponents.get(),
+                globalScope.dslServices.issueReporter,
+                taskFactory,
+                variants);
     }
 
     fun createPostApiTasks() {
@@ -1169,36 +1064,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .addScope(QualifiedContent.Scope.PROJECT)
                         .setFileCollection(variantData.allPostJavacGeneratedBytecode)
                         .build())
-    }
-
-    fun createExternalNativeBuildTasks(variant: VariantImpl) {
-        val configurationModel = tryCreateCxxConfigurationModel(variant) ?: return
-
-        // External native build
-        variant.taskContainer.cxxConfigurationModel = configurationModel
-        val taskContainer = variant.taskContainer
-
-        // Set up JSON generation tasks
-        val generateTask: TaskProvider<out Task> = taskFactory.register(
-            ExternalNativeBuildJsonTask.CreationAction(
-                configurationModel, variant
-            )
-        )
-
-        // Set up build tasks
-        val buildTask = taskFactory.register(
-            ExternalNativeBuildTask.CreationAction(
-                configurationModel, variant, generateTask
-            )
-        )
-        taskContainer.compileTask.dependsOn(buildTask)
-
-        // Set up clean tasks
-        val cleanTask = taskFactory.named("clean")
-        val externalNativeCleanTask = taskFactory.register(
-            ExternalNativeCleanTask.CreationAction(configurationModel, variant)
-        )
-        cleanTask.dependsOn(externalNativeCleanTask)
     }
 
     /** Creates the tasks to build unit tests.  */

@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationMo
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.services.getBuildService
@@ -34,7 +35,6 @@ import com.google.common.base.Joiner
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
-import java.io.File
 import javax.inject.Inject
 
 /**
@@ -46,27 +46,30 @@ import javax.inject.Inject
 abstract class ExternalNativeCleanTask @Inject constructor(private val ops: ExecOperations) : NonIncrementalTask() {
     @get:Internal
     abstract val sdkComponents: Property<SdkComponentsBuildService>
-    private lateinit var configurationModel: CxxConfigurationModel
+    @get:Internal
+    internal lateinit var configurationModel: CxxConfigurationModel
 
     override fun doTaskAction() {
         IssueReporterLoggingEnvironment(
-            DefaultIssueReporter(LoggerWrapper(logger))
+                DefaultIssueReporter(LoggerWrapper(logger))
         ).use {
             infoln("starting clean")
             infoln("finding existing JSONs")
-            val existingJsons = mutableListOf<File>()
+            val existingJsonAbis = mutableListOf<CxxAbiModel>()
             // Include unused ABIs since changes to build.gradle may have changed the set of
             // ABIs that are built. We want to clean the old ones too.
             for (abi in (configurationModel.activeAbis + configurationModel.unusedAbis)) {
                 if (abi.jsonFile.isFile) {
-                    existingJsons.add(abi.jsonFile)
+                    existingJsonAbis.add(abi)
                 } else {
                     // This is infoln instead of warnln because clean considers all possible
                     // ABIs while cleaning
                     infoln("Json file not found so contents couldn't be cleaned ${abi.jsonFile}")
                 }
             }
-            val configValueList = getNativeBuildMiniConfigs(existingJsons, null)
+            val configValueList = getNativeBuildMiniConfigs(
+                    existingJsonAbis.map { it.jsonFile },
+                    null)
             val cleanCommands = mutableListOf<List<String>>()
             val targetNames = mutableListOf<String>()
 
@@ -89,8 +92,8 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
      * that point.
      */
     private fun executeProcessBatch(
-        commands: List<List<String>>,
-        targetNames: List<String>
+            commands: List<List<String>>,
+            targetNames: List<String>
     ) {
         for (commandIndex in commands.indices) {
             val tokens = commands[commandIndex]
@@ -103,37 +106,34 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
             }
             infoln("$processBuilder")
             createProcessOutputJunction(
-                configurationModel.variant.objFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
-                configurationModel.variant.objFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
-                configurationModel.variant.objFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
+                    configurationModel.variant.objFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
+                    configurationModel.variant.objFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
+                    configurationModel.variant.objFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
                     processBuilder,
-                ""
+                    ""
             )
-                .logStderrToLifecycle()
-                .logStdoutToInfo()
-                .execute(ops::exec)
+                    .logStderrToLifecycle()
+                    .logStdoutToInfo()
+                    .execute(ops::exec)
         }
     }
+}
 
-    class CreationAction(
-        private val configurationModel : CxxConfigurationModel,
+/**
+ * Create a C/C++ clean task.
+ */
+fun createVariantCxxCleanTask(
+        configurationModel : CxxConfigurationModel,
         creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<ExternalNativeCleanTask, VariantCreationConfig>(
-        creationConfig, false
-    ) {
+) = object : VariantTaskCreationAction<ExternalNativeCleanTask, VariantCreationConfig>(creationConfig) {
+    override val name = computeTaskName("externalNativeBuildClean")
+    override val type = ExternalNativeCleanTask::class.java
 
-        override val name
-            get() = computeTaskName("externalNativeBuildClean")
-
-        override val type
-            get() = ExternalNativeCleanTask::class.java
-
-        override fun configure(task: ExternalNativeCleanTask) {
-            super.configure(task)
-            task.configurationModel = configurationModel
-            task.sdkComponents.setDisallowChanges(
+    override fun configure(task: ExternalNativeCleanTask) {
+        super.configure(task)
+        task.configurationModel = configurationModel
+        task.sdkComponents.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
-            )
-        }
+        )
     }
 }
