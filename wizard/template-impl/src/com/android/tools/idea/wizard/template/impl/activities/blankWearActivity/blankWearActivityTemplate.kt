@@ -48,7 +48,7 @@ val blankWearActivityTemplate
     description = "Creates a blank activity for Wear OS"
 
     constraints = listOf(TemplateConstraint.AndroidX)
-    category = Category.Activity
+    category = Category.Wear
     formFactor = FormFactor.Wear
     screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)
 
