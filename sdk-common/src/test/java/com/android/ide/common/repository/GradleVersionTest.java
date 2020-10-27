@@ -325,6 +325,18 @@ public class GradleVersionTest {
     }
 
     @Test
+    public void testParseWithThreeSegments3WithNumberedDev() {
+        GradleVersion version = GradleVersion.parse("7.0.0-dev03");
+        assertEquals(7, version.getMajor());
+        assertEquals(0, version.getMinor());
+        assertEquals(0, version.getMicro());
+        assertEquals(3, version.getPreview());
+        assertEquals("dev", version.getPreviewType());
+        assertFalse(version.isSnapshot());
+        assertEquals("7.0.0-dev03", version.toString());
+    }
+
+    @Test
     public void testCompare() {
         assertEquals(0, GradleVersion.parse("1.0.0").compareTo("1.0.0"));
         assertEquals(0, GradleVersion.parse("1.0.0-alpha1").compareTo("1.0.0-alpha1"));
@@ -358,6 +370,11 @@ public class GradleVersionTest {
         // A dev version is larger than a "numbered" preview. So if a piece of DSL was added in
         // alpha3, projects for 3.0.0-dev will use it.
         assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0-alpha3") > 0);
+
+        // Ensure numbered dev versions compare correctly.
+        assertTrue(GradleVersion.parse("3.0.0-dev01").compareTo("3.0.0-alpha01") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0-alpha04") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev02").compareTo("3.0.0-dev01") > 0);
     }
 
     @Test
@@ -513,6 +530,13 @@ public class GradleVersionTest {
         assertFalse(version.isAtLeast(2, 3, 0));
         assertFalse(version.isAtLeast(2, 4, 0));
 
+        version = GradleVersion.parse("7.0.0-dev02");
+        assertTrue(version.isAtLeast(6, 9, 3));
+        assertTrue(version.isAtLeast(7, 0, 0, "dev", 1, false));
+        assertFalse(version.isAtLeast(7, 0, 0, null, 0, false));
+        assertFalse(version.isAtLeast(7, 0, 0));
+        assertFalse(version.isAtLeast(7, 1, 0));
+
         version = GradleVersion.parse("2.3.0-beta1");
         assertTrue(version.isAtLeast(2, 3, 0, "beta", 1, false));
         assertTrue(version.isAtLeast(2, 3, 0, "alpha", 8, false));
@@ -552,6 +576,8 @@ public class GradleVersionTest {
 
         assertThat(convertAGPVersionToString(tryParseAndroidGradlePluginVersion("3.0.0-dev")))
                 .isEqualTo("3.0.0-dev");
+        assertThat(convertAGPVersionToString(tryParseAndroidGradlePluginVersion("3.0.0-dev01")))
+                .isEqualTo("3.0.0-dev1");
         assertThat(convertAGPVersionToString(tryParseAndroidGradlePluginVersion("3.1.0-dev")))
                 .isEqualTo("3.1.0-dev");
 
@@ -579,7 +605,6 @@ public class GradleVersionTest {
 
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0dev")).isNull();
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0.dev")).isNull();
-        assertThat(tryParseAndroidGradlePluginVersion("3.1.0-dev01")).isNull();
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0-dev-01")).isNull();
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0-dev.0")).isNull();
         assertThat(tryParseAndroidGradlePluginVersion("3.1.0-dev-0")).isNull();
