@@ -35,7 +35,7 @@ class OptionVersionTest {
          * [com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION] (tracked by bug 162495697).
          */
         private val ANDROID_GRADLE_PLUGIN_VERSION =
-            GradleVersion.parseAndroidGradlePluginVersion("4.2.0")
+            GradleVersion.parseAndroidGradlePluginVersion("7.0.0-alpha01")
     }
 
     @Test
