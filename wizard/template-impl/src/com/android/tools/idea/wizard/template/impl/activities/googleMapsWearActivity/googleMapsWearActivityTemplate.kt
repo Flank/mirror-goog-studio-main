@@ -47,7 +47,7 @@ val googleMapsWearActivityTemplate
     constraints = listOf(TemplateConstraint.AndroidX)
     description = "Creates an new activity with a Google Map for Wear OS"
 
-    category = Category.Google
+    category = Category.Wear
     formFactor = FormFactor.Wear
     screens = listOf(WizardUiContext.MenuEntry, WizardUiContext.NewProject, WizardUiContext.NewModule)
 
