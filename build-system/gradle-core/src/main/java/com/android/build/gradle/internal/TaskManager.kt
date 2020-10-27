@@ -55,8 +55,25 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager
-import com.android.build.gradle.internal.scope.*
-import com.android.build.gradle.internal.scope.InternalArtifactType.*
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DEX
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
+import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_JARS
+import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
+import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.*
 import com.android.build.gradle.internal.tasks.TestServerTask.TestServerTaskCreationAction
@@ -71,7 +88,6 @@ import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass
 import com.android.build.gradle.internal.test.AbstractTestDataImpl
 import com.android.build.gradle.internal.test.BundleTestDataImpl
 import com.android.build.gradle.internal.test.TestDataImpl
-import com.android.build.gradle.internal.transforms.CustomClassTransform
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
@@ -1584,19 +1600,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.register(MergeClassesTask.CreationAction(creationConfig))
         }
 
-        // ----- Android studio profiling transforms
-        val profilingTransforms = creationConfig.advancedProfilingTransforms
-        if (!profilingTransforms.isEmpty()) {
-            registeredLegacyTransform = true
-            for (jar in profilingTransforms) {
-                transformManager.addTransform(
-                        taskFactory,
-                        creationConfig,
-                        CustomClassTransform(
-                                jar, creationConfig.shouldPackageProfilerDependencies))
-            }
-        }
-
         // ----- Minify next -----
         maybeCreateCheckDuplicateClassesTask(creationConfig)
         maybeCreateJavaCodeShrinkerTask(creationConfig)
@@ -2647,7 +2650,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
     protected fun maybeCreateTransformClassesWithAsmTask(
             creationConfig: ComponentCreationConfig, isTestCoverageEnabled: Boolean) {
-        if (!creationConfig.registeredProjectClassesVisitors.isEmpty()) {
+        if (creationConfig.projectClassesAreInstrumented) {
             creationConfig
                     .transformManager
                     .consumeStreams(
@@ -2655,7 +2658,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             ImmutableSet.of<QualifiedContent.ContentType>(DefaultContentType.CLASSES))
             taskFactory.register(
                     TransformClassesWithAsmTask.CreationAction(
-                            creationConfig, isTestCoverageEnabled))
+                            creationConfig,
+                            isTestCoverageEnabled
+                    )
+            )
             if (creationConfig.asmFramesComputationMode
                     == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                 taskFactory.register(RecalculateStackFramesTask.CreationAction(creationConfig))

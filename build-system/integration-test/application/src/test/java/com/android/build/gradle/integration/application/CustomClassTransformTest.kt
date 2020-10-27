@@ -36,6 +36,9 @@ import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
+/**
+ * Tests for transforms that are passed through [StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS].
+ */
 class CustomClassTransformTest {
 
     @Rule

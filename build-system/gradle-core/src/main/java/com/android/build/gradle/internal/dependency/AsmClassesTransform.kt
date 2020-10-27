@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -61,7 +62,7 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
             dependencyHandler: DependencyHandler,
             creationConfig: ComponentCreationConfig
         ) {
-            if (creationConfig.registeredDependenciesClassesVisitors.isNotEmpty()) {
+            if (creationConfig.dependenciesClassesAreInstrumented) {
                 dependencyHandler.registerTransform(AsmClassesTransform::class.java) { spec ->
                     spec.parameters { parameters ->
                         parameters.projectName.set(projectName)
@@ -75,6 +76,11 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
                         parameters.bootClasspath.set(creationConfig.globalScope.fullBootClasspathProvider)
                         parameters.classesHierarchyBuildService.set(
                             getBuildService(creationConfig.services.buildServiceRegistry)
+                        )
+                        parameters.profilingTransforms.set(
+                                if (creationConfig is ApkCreationConfig) {
+                                    creationConfig.advancedProfilingTransforms
+                                } else emptyList()
                         )
                     }
 
@@ -121,11 +127,14 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
             parameters.visitorsList.get(),
             parameters.asmApiVersion.get(),
             classesHierarchyResolver,
-            parameters.framesComputationMode.get()
-        ).instrumentClassesFromJarToJar(
-            inputFile,
-            outputs.file(inputFile.name)
-        )
+            parameters.framesComputationMode.get(),
+            parameters.profilingTransforms.get()
+        ).use {
+            it.instrumentClassesFromJarToJar(
+                    inputFile,
+                    outputs.file(inputFile.name)
+            )
+        }
     }
 
     interface Parameters : GenericTransformParameters {
@@ -143,5 +152,8 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
         @get:Internal
         val classesHierarchyBuildService: Property<ClassesHierarchyBuildService>
+
+        @get:Input
+        val profilingTransforms: ListProperty<String>
     }
 }

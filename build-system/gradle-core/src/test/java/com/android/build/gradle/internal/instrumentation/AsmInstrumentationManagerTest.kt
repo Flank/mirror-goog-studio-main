@@ -120,6 +120,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             val inputJar = inputDir.listFiles()!![0]
             instrumentClassesFromJarToJar(inputJar, File(outputDir, inputJar.name))
         }
+        close()
     }
 
     @Test
