@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -76,17 +77,34 @@ class PrefabPublishingTest(
         }
     }
 
-    private fun verifyModule(packageDir: File, moduleName: String) {
+    private fun verifyModule(
+        packageDir: File,
+        moduleName: String,
+        static: Boolean,
+        libraryName: String? = null
+    ) {
         val moduleDir = packageDir.resolve("modules/$moduleName")
         val moduleMetadata = moduleDir.resolve("module.json").readText()
-        Truth.assertThat(moduleMetadata).isEqualTo(
-            """
-            {
-              "export_libraries": [],
-              "android": {}
-            }
-            """.trimIndent()
-        )
+        if (libraryName != null) {
+            Truth.assertThat(moduleMetadata).isEqualTo(
+                """
+                {
+                  "export_libraries": [],
+                  "library_name": "$libraryName",
+                  "android": {}
+                }
+                """.trimIndent()
+            )
+        } else {
+            Truth.assertThat(moduleMetadata).isEqualTo(
+                """
+                {
+                  "export_libraries": [],
+                  "android": {}
+                }
+                """.trimIndent()
+            )
+        }
 
         val header = moduleDir.resolve("include/$gradleModuleName/$gradleModuleName.h").readText()
         Truth.assertThat(header).isEqualTo(
@@ -118,12 +136,13 @@ class PrefabPublishingTest(
                 """.trimIndent()
             )
 
-            val suffix = if (moduleName.endsWith("_static")) {
+            val prefix = libraryName ?: "lib$moduleName"
+            val suffix = if (static) {
                 ".a"
             } else {
                 ".so"
             }
-            val library = abiDir.resolve("lib$moduleName$suffix")
+            val library = abiDir.resolve("$prefix$suffix")
             assertThat(library).exists()
         }
     }
@@ -151,9 +170,8 @@ class PrefabPublishingTest(
             """.trimIndent()
         )
 
-        for (suffix in listOf("", "_static")) {
-            verifyModule(packageDir, "$gradleModuleName$suffix")
-        }
+        verifyModule(packageDir, gradleModuleName, static = false)
+        verifyModule(packageDir, "${gradleModuleName}_static", static = true)
     }
 
     @Test
@@ -240,5 +258,96 @@ class PrefabPublishingTest(
         headerSrc.writeText(newHeaderContents)
         project.execute("assemble$variant")
         Truth.assertThat(header.readText()).isEqualTo(newHeaderContents)
+    }
+
+    @Test
+    fun `modules with libraryName are constructed correctly`() {
+        // The ndk-build importer isn't able to determine the name of a module if its
+        // LOCAL_MODULE_FILENAME is altered.
+        Assume.assumeTrue(buildSystem != NativeBuildSystem.NDK_BUILD)
+        val subproject = project.getSubproject(gradleModuleName)
+
+        subproject.buildFile.writeText(
+            """
+            plugins {
+                id 'com.android.library'
+            }
+
+            android {
+                compileSdkVersion rootProject.latestCompileSdk
+                buildToolsVersion = rootProject.buildToolsVersion
+
+                defaultConfig {
+                    minSdkVersion 16
+                    targetSdkVersion rootProject.latestCompileSdk
+
+                    externalNativeBuild {
+                        if (!project.hasProperty("ndkBuild")) {
+                            cmake {
+                                arguments "-DANDROID_STL=c++_shared"
+                            }
+                        }
+                    }
+                }
+
+                externalNativeBuild {
+                    if (project.hasProperty("ndkBuild")) {
+                        ndkBuild {
+                            path "src/main/cpp/Android.mk"
+                        }
+                    } else {
+                        cmake {
+                            path "src/main/cpp/CMakeLists.txt"
+                        }
+                    }
+                }
+
+                buildFeatures {
+                    prefabPublishing true
+                }
+
+                prefab {
+                    foo {
+                        headers "src/main/cpp/include"
+                        libraryName "libfoo_static"
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+        subproject.getMainSrcDir("cpp").resolve("CMakeLists.txt").writeText(
+            """
+            cmake_minimum_required(VERSION 3.6)
+            project(foo VERSION 1.0.0 LANGUAGES CXX)
+
+            add_library(foo STATIC foo.cpp)
+            target_include_directories(foo PUBLIC include)
+            set_target_properties(foo PROPERTIES OUTPUT_NAME "foo_static")
+            """.trimIndent()
+        )
+        subproject.getMainSrcDir("cpp").resolve("Android.mk").writeText(
+            """
+            LOCAL_PATH := $(call my-dir)
+
+            include $(CLEAR_VARS)
+            LOCAL_MODULE := foo
+            LOCAL_MODULE_FILENAME := libfoo_static
+            LOCAL_SRC_FILES := foo.cpp
+            LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
+            LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+            include $(BUILD_STATIC_LIBRARY)
+            """.trimIndent()
+        )
+
+        project.execute("assemble$variant")
+
+        project.getSubproject(gradleModuleName).assertThatAar(variant) {
+            containsFile("prefab/prefab.json")
+            containsFile("prefab/modules/$gradleModuleName/module.json")
+        }
+
+        val packageDir = project.getSubproject(gradleModuleName)
+            .getIntermediateFile("prefab_package", variant, "prefab")
+        verifyModule(packageDir, gradleModuleName, true, "libfoo_static")
     }
 }
