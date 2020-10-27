@@ -90,9 +90,6 @@ import org.gradle.api.provider.Provider;
 /** A scope containing data for a specific variant. */
 public class VariantScopeImpl implements VariantScope {
 
-    private static final String PUBLISH_ERROR_MSG =
-            "Publishing to %1$s with no %1$s configuration object. VariantType: %2$s";
-
     // Variant specific Data
     @NonNull private final ComponentIdentity componentIdentity;
     @NonNull private final VariantDslInfo variantDslInfo;
@@ -188,10 +185,15 @@ public class VariantScopeImpl implements VariantScope {
         for (PublishedConfigType configType : PublishedConfigType.values()) {
             if (configTypes.contains(configType)) {
                 Configuration config = variantDependencies.getElements(configType);
-                Preconditions.checkNotNull(
-                        config,
-                        String.format(
-                                PUBLISH_ERROR_MSG, configType, variantDslInfo.getVariantType()));
+                if (config == null) {
+                    throw new NullPointerException(
+                            "Publishing to "
+                                    + configType
+                                    + " with no "
+                                    + configType
+                                    + " configuration object. VariantType: "
+                                    + variantDslInfo.getVariantType());
+                }
                 if (configType.isPublicationConfig()) {
                     String classifier = null;
                     if (configType.isClassifierRequired()) {
