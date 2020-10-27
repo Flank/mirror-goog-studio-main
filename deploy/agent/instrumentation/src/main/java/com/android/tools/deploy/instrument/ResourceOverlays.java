@@ -42,6 +42,7 @@ public final class ResourceOverlays {
 
         // Enumerate every Resources object that currently exists in the application. Add our
         // resources loader to each one.
+        @SuppressWarnings("unchecked")
         ArrayList<WeakReference<Resources>> refs =
                 (ArrayList<WeakReference<Resources>>)
                         getDeclaredField(resourcesManager, "mResourceReferences");
@@ -64,7 +65,14 @@ public final class ResourceOverlays {
 
         List<ResourcesProvider> providers = new ArrayList<>();
         for (File apkDir : overlay.getApkDirs()) {
-            providers.add(ResourcesProvider.loadFromDirectory(apkDir.getAbsolutePath(), null));
+            File resDir = new File(apkDir, "res");
+            File arscFile = new File(apkDir, "resources.arsc");
+            // Ensure there's actually resource content in the directory before creating a loader.
+            // This is mostly important for when IWI run does not support resources but IWI swap
+            // does.
+            if (resDir.exists() || arscFile.exists()) {
+                providers.add(ResourcesProvider.loadFromDirectory(apkDir.getAbsolutePath(), null));
+            }
         }
 
         // This will update every AssetManager that currently references our loader.

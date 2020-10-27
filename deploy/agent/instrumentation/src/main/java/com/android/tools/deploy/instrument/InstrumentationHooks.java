@@ -99,10 +99,7 @@ public final class InstrumentationHooks {
     }
 
     public static Resources addResourceOverlays(Resources resources) throws Exception {
-        // TODO: This is commented out to prevent crashes, until IWI-run supports resources.
-        // Lack of resource support means no resources.arsc, which apparently causes issues down
-        // the line when we try to load an arsc file during swap.
-        // ResourceOverlays.addResourceOverlays(resources);
+        ResourceOverlays.addResourceOverlays(resources);
         return resources;
     }
 
