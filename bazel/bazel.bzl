@@ -59,12 +59,6 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
     )
     return plugin
 
-def accumulate_provider(provider, deps, runtime, compile_time):
-    deps += [provider]
-    runtime = depset(transitive = [runtime, provider.transitive_runtime_jars])
-    compile_time = depset(transitive = [compile_time, provider.full_compile_jars])
-    return deps, runtime, compile_time
-
 def _iml_module_jar_impl(
         ctx,
         name,
@@ -80,9 +74,7 @@ def _iml_module_jar_impl(
         form_deps,
         exports,
         friends,
-        module_name,
-        transitive_compile_time_jars,
-        transitive_runtime_jars):
+        module_name):
     jars = []
     sourcepath = []
     forms = []
@@ -134,10 +126,16 @@ def _iml_module_jar_impl(
         if form_srcs:
             forms += relative_paths(ctx, form_srcs, roots)
 
+            # formc requires full compile jars (no ijars/hjars).
+            form_dep_jars = depset(transitive = [
+                java_common.make_non_strict(dep).full_compile_jars
+                for dep in java_deps
+            ])
+
             # Note: we explicitly include the bootclasspath from the current Java toolchain with
             # the classpath, because extracting it at runtime, when we are running in the
             # FormCompiler JVM, is not portable across JDKs (and made much harder on JDK9+).
-            form_classpath = depset(transitive = [transitive_runtime_jars, java_toolchain.bootclasspath])
+            form_classpath = depset(transitive = [form_dep_jars, java_toolchain.bootclasspath])
 
             args = ctx.actions.args()
             args.add_joined("-cp", form_classpath, join_with = ":")
@@ -204,9 +202,6 @@ def _iml_module_impl(ctx):
     java_deps = []
     form_deps = []
 
-    transitive_runtime_jars = depset(order = "preorder")
-    transitive_compile_time_jars = depset(order = "preorder")
-
     for this_dep in ctx.attr.deps:
         if hasattr(this_dep, "module"):
             transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
@@ -214,36 +209,19 @@ def _iml_module_impl(ctx):
         elif DefaultInfo in this_dep:
             transitive_data = depset(transitive = [transitive_data, this_dep[DefaultInfo].default_runfiles.files])
 
-        if java_common.provider in this_dep:
-            java_deps, transitive_runtime_jars, transitive_compile_time_jars = accumulate_provider(
-                this_dep[java_common.provider],
-                java_deps,
-                transitive_runtime_jars,
-                transitive_compile_time_jars,
-            )
+        if JavaInfo in this_dep:
+            java_deps += [this_dep[JavaInfo]]
 
     test_java_deps = []
     test_form_deps = []
-    transitive_test_runtime_jars = depset([ctx.outputs.production_jar], order = "preorder")
-    transitive_test_compile_time_jars = depset([ctx.outputs.production_jar], order = "preorder")
 
     for this_dep in ctx.attr.test_deps:
         if JavaInfo in this_dep:
-            test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars = accumulate_provider(
-                this_dep[JavaInfo],
-                test_java_deps,
-                transitive_test_runtime_jars,
-                transitive_test_compile_time_jars,
-            )
+            test_java_deps += [this_dep[JavaInfo]]
         if hasattr(this_dep, "module"):
             transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             test_form_deps += this_dep.module.test_forms
-            test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars = accumulate_provider(
-                this_dep.module.test_provider,
-                test_java_deps,
-                transitive_test_runtime_jars,
-                transitive_test_compile_time_jars,
-            )
+            test_java_deps += [this_dep.module.test_provider]
 
     exports = []
     test_exports = []
@@ -254,7 +232,6 @@ def _iml_module_impl(ctx):
             test_exports += [export.module.test_provider]
 
     module_jars = ctx.outputs.production_jar
-    module_runtime = transitive_runtime_jars
 
     transitive_data = depset(ctx.files.iml_files + ctx.files.data, transitive = [transitive_data])
 
@@ -276,8 +253,6 @@ def _iml_module_impl(ctx):
         exports,
         [],
         module_name,
-        transitive_compile_time_jars,
-        transitive_runtime_jars,
     )
 
     test_provider, test_forms, _ = _iml_module_jar_impl(
@@ -296,15 +271,12 @@ def _iml_module_impl(ctx):
         exports + test_exports,
         [ctx.outputs.production_jar] + ctx.files.test_friends,
         module_name,
-        transitive_test_compile_time_jars,
-        transitive_test_runtime_jars,
     )
 
     return struct(
         module = struct(
             bundled_deps = ctx.files.bundled_deps,
             module_jars = module_jars,
-            module_runtime = module_runtime,
             transitive_data = transitive_data,
             forms = main_forms,
             test_forms = test_forms,
