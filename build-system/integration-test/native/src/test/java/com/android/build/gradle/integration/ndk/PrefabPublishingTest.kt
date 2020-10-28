@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.integration.ndk
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +31,8 @@ import java.io.File
 @RunWith(Parameterized::class)
 class PrefabPublishingTest(
     private val variant: String,
-    private val buildSystem: NativeBuildSystem
+    private val buildSystem: NativeBuildSystem,
+    private val cmakeVersion: String,
 ) {
     private val projectName = "prefabPublishing"
     private val gradleModuleName = "foo"
@@ -47,20 +48,31 @@ class PrefabPublishingTest(
     private val expectedAbis = listOf(Abi.ARMEABI_V7A, Abi.ARM64_V8A, Abi.X86, Abi.X86_64)
 
     companion object {
-        @Parameterized.Parameters(name = "variant = {0}, build system = {1}")
+        @Parameterized.Parameters(name = "variant = {0}, build system = {1}, cmake = {2}")
         @JvmStatic
         fun data() = listOf(
-            arrayOf("debug", NativeBuildSystem.CMAKE),
-            arrayOf("debug", NativeBuildSystem.NDK_BUILD),
-            arrayOf("release", NativeBuildSystem.CMAKE),
-            arrayOf("release", NativeBuildSystem.NDK_BUILD)
+            arrayOf("debug", NativeBuildSystem.CMAKE, "3.10.2"),
+            arrayOf("debug", NativeBuildSystem.CMAKE, "3.18.1"),
+            arrayOf("debug", NativeBuildSystem.NDK_BUILD, "N/A"),
+            arrayOf("release", NativeBuildSystem.CMAKE, "3.10.2"),
+            arrayOf("release", NativeBuildSystem.CMAKE, "3.18.1"),
+            arrayOf("release", NativeBuildSystem.NDK_BUILD, "N/A")
         )
     }
 
-    private fun execute(vararg tasks: String) {
-        when (buildSystem) {
-            NativeBuildSystem.NDK_BUILD -> project.execute(mutableListOf("-PndkBuild"), *tasks)
-            else -> project.execute(*tasks)
+    @Before
+    fun setUp() {
+        val appBuild = project.buildFile.parentFile.resolve("foo/build.gradle")
+        if (buildSystem == NativeBuildSystem.NDK_BUILD) {
+            appBuild.appendText("""
+                android.externalNativeBuild.ndkBuild.path="src/main/cpp/Android.mk"
+                """.trimIndent())
+        } else {
+            appBuild.appendText("""
+                android.externalNativeBuild.cmake.path="src/main/cpp/CMakeLists.txt"
+                android.externalNativeBuild.cmake.version="$cmakeVersion"
+                android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=c++_shared")
+                """.trimIndent())
         }
     }
 
@@ -118,12 +130,12 @@ class PrefabPublishingTest(
 
     @Test
     fun `project builds`() {
-        execute("clean", "assemble$variant")
+        project.execute("clean", "assemble$variant")
     }
 
     @Test
     fun `prefab package was constructed correctly`() {
-        execute("assemble$variant")
+        project.execute("assemble$variant")
 
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
@@ -146,7 +158,7 @@ class PrefabPublishingTest(
 
     @Test
     fun `AAR contains the prefab packages`() {
-        execute("clean", "assemble$variant")
+        project.execute("clean", "assemble$variant")
         project.getSubproject(gradleModuleName).assertThatAar(variant) {
             containsFile("prefab/prefab.json")
             containsFile("prefab/modules/$gradleModuleName/module.json")
@@ -156,7 +168,7 @@ class PrefabPublishingTest(
 
     @Test
     fun `adding a new header causes a rebuild`() {
-        execute("assemble${variant.toLowerCase()}")
+        project.execute("assemble${variant.toLowerCase()}")
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
         val moduleDir = packageDir.resolve("modules/$gradleModuleName")
@@ -173,7 +185,7 @@ class PrefabPublishingTest(
                 """.trimIndent()
         )
 
-        execute("assemble$variant")
+        project.execute("assemble$variant")
         assertThat(header).exists()
     }
 
@@ -193,11 +205,11 @@ class PrefabPublishingTest(
             """.trimIndent()
         )
 
-        execute("assemble$variant")
+        project.execute("assemble$variant")
         assertThat(header).exists()
 
         headerSrc.delete()
-        execute("assemble$variant")
+        project.execute("assemble$variant")
         assertThat(header).doesNotExist()
     }
 
@@ -217,7 +229,7 @@ class PrefabPublishingTest(
                 """.trimIndent()
         )
 
-        execute("assemble$variant")
+        project.execute("assemble$variant")
         assertThat(header).exists()
 
         val newHeaderContents = """
@@ -226,7 +238,7 @@ class PrefabPublishingTest(
                 """.trimIndent()
 
         headerSrc.writeText(newHeaderContents)
-        execute("assemble$variant")
+        project.execute("assemble$variant")
         Truth.assertThat(header.readText()).isEqualTo(newHeaderContents)
     }
 }

@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +32,7 @@ import org.junit.runners.Parameterized
 import java.io.File
 
 @RunWith(Parameterized::class)
-class PrefabTest(private val buildSystem: NativeBuildSystem) {
+class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: String) {
     private val expectedAbis = listOf(Abi.ARMEABI_V7A, Abi.ARM64_V8A, Abi.X86, Abi.X86_64)
 
     @Rule
@@ -41,15 +42,31 @@ class PrefabTest(private val buildSystem: NativeBuildSystem) {
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).create()
 
     companion object {
-        @Parameterized.Parameters(name = "build system = {0}")
+        @Parameterized.Parameters(name = "build system = {0}, cmake = {1}")
         @JvmStatic
-        fun data() = arrayOf(NativeBuildSystem.CMAKE, NativeBuildSystem.NDK_BUILD)
+        fun data() = listOf(
+                arrayOf(NativeBuildSystem.CMAKE, "3.10.2"),
+                arrayOf(NativeBuildSystem.CMAKE, "3.18.1"),
+                arrayOf(NativeBuildSystem.NDK_BUILD, "N/A"),
+                arrayOf(NativeBuildSystem.CMAKE, "3.10.2"),
+                arrayOf(NativeBuildSystem.CMAKE, "3.18.1"),
+                arrayOf(NativeBuildSystem.NDK_BUILD, "N/A")
+        )
     }
 
-    private fun execute(vararg tasks: String) {
-        when (buildSystem) {
-            NativeBuildSystem.NDK_BUILD -> project.execute(mutableListOf("-PndkBuild"), *tasks)
-            else -> project.execute(*tasks)
+    @Before
+    fun setUp() {
+        val appBuild = project.buildFile.parentFile.resolve("app/build.gradle")
+        if (buildSystem == NativeBuildSystem.NDK_BUILD) {
+            appBuild.appendText("""
+                android.externalNativeBuild.ndkBuild.path="src/main/cpp/Android.mk"
+                """.trimIndent())
+        } else {
+            appBuild.appendText("""
+                android.externalNativeBuild.cmake.path="src/main/cpp/CMakeLists.txt"
+                android.externalNativeBuild.cmake.version="$cmakeVersion"
+                android.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_STL=c++_shared")
+                """.trimIndent())
         }
     }
 
@@ -78,7 +95,7 @@ class PrefabTest(private val buildSystem: NativeBuildSystem) {
 
     @Test
     fun `build integrations are passed to build system`() {
-        execute("assembleDebug")
+        project.execute("assembleDebug")
         val prefabDir = project.file("app/.cxx/${buildSystem.tag}/debug/prefab")
         assertThat(prefabDir).exists()
         for (abi in expectedAbis) {
@@ -104,26 +121,26 @@ class PrefabTest(private val buildSystem: NativeBuildSystem) {
 
     @Test
     fun `build integrations are not cleaned up`() {
-        execute("assembleDebug")
-        execute("clean")
+        project.execute("assembleDebug")
+        project.execute("clean")
         val prefabDir = project.file("app/.cxx/${buildSystem.tag}/debug/prefab")
         assertThat(prefabDir).exists()
     }
 
     @Test
     fun `cleaning a cleaned project works`() {
-        execute("clean")
-        execute("clean")
+        project.execute("clean")
+        project.execute("clean")
     }
 
     @Test
     fun `project builds`() {
-        execute("clean", "assembleDebug")
+        project.execute("clean", "assembleDebug")
     }
 
     @Test
     fun `dependencies are copied to the APK`() {
-        execute("clean", "assembleDebug")
+        project.execute("clean", "assembleDebug")
         val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk.file.toFile()).exists()
         for (abi in expectedAbis) {
