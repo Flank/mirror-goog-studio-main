@@ -197,34 +197,36 @@ def _iml_module_jar_impl(
 
     return java_common.merge(providers), forms, plugin
 
+def merge_runfiles(deps):
+    return depset(transitive = [
+        dep[DefaultInfo].default_runfiles.files
+        for dep in deps
+        if dep[DefaultInfo].default_runfiles
+    ])
+
 def _iml_module_impl(ctx):
     names = [iml.basename[:-4] for iml in ctx.files.iml_files if iml.basename.endswith(".iml")]
 
-    transitive_data = depset()
+    # Prod dependencies.
     java_deps = []
     form_deps = []
-
     for this_dep in ctx.attr.deps:
         if hasattr(this_dep, "module"):
-            transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             form_deps += this_dep.module.forms
-        elif DefaultInfo in this_dep:
-            transitive_data = depset(transitive = [transitive_data, this_dep[DefaultInfo].default_runfiles.files])
-
         if JavaInfo in this_dep:
             java_deps += [this_dep[JavaInfo]]
 
+    # Test dependencies (superset of prod).
     test_java_deps = []
     test_form_deps = []
-
     for this_dep in ctx.attr.test_deps:
         if JavaInfo in this_dep:
             test_java_deps += [this_dep[JavaInfo]]
         if hasattr(this_dep, "module"):
-            transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             test_form_deps += this_dep.module.test_forms
             test_java_deps += [this_dep.module.test_provider]
 
+    # Exports.
     exports = []
     test_exports = []
     for export in ctx.attr.exports:
@@ -233,9 +235,18 @@ def _iml_module_impl(ctx):
         if hasattr(export, "module"):
             test_exports += [export.module.test_provider]
 
-    module_jars = ctx.outputs.production_jar
-
-    transitive_data = depset(ctx.files.iml_files + ctx.files.data, transitive = [transitive_data])
+    # Runfiles.
+    # Note: the runfiles for test-only deps should technically not be in
+    # the prod module, but it is simpler this way (and not very harmful).
+    transitive_data = depset(
+        direct = ctx.files.iml_files + ctx.files.data,
+        transitive = [
+            merge_runfiles(ctx.attr.deps),
+            merge_runfiles(ctx.attr.test_deps),
+            merge_runfiles(ctx.attr.runtime_deps),
+        ],
+    )
+    runfiles = ctx.runfiles(transitive_files = transitive_data)
 
     # If multiple modules we use the label, otherwise use the exact module name
     module_name = names[0] if len(names) == 1 else ctx.label.name
@@ -280,8 +291,7 @@ def _iml_module_impl(ctx):
     return struct(
         module = struct(
             bundled_deps = ctx.files.bundled_deps,
-            module_jars = module_jars,
-            transitive_data = transitive_data,
+            module_jars = ctx.outputs.production_jar,
             forms = main_forms,
             test_forms = test_forms,
             java_deps = java_deps,
@@ -290,7 +300,10 @@ def _iml_module_impl(ctx):
             names = names,
             plugin = plugin_xml,
         ),
-        providers = [main_provider],
+        providers = [
+            main_provider,
+            DefaultInfo(runfiles = runfiles),
+        ],
     )
 
 _iml_module_ = rule(
@@ -364,7 +377,7 @@ _iml_module_ = rule(
 )
 
 def _iml_test_module_impl(ctx):
-    runfiles = ctx.runfiles(transitive_files = ctx.attr.iml_module.module.transitive_data)
+    runfiles = ctx.attr.iml_module[DefaultInfo].default_runfiles
     return [
         ctx.attr.iml_module.module.test_provider,  # JavaInfo.
         DefaultInfo(runfiles = runfiles),
