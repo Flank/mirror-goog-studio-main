@@ -11,6 +11,11 @@ then
   IS_POST_SUBMIT=true
 fi
 
+declare -a conditional_flags
+if [[ $IS_POST_SUBMIT ]]; then
+  conditional_flags+=(--nocache_test_results)
+fi
+
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
@@ -32,6 +37,7 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
         --worker_quit_after_build \
         --define=meta_android_build_number=${build_number} \
         --profile=${dist_dir}/profile-${build_number}.json.gz \
+        "${conditional_flags[@]}" \
         -- \
         //tools/... \
         //tools/base/profiler/native/trace_processor_daemon \

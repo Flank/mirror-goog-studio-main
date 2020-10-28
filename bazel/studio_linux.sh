@@ -23,16 +23,20 @@ then
   IS_POST_SUBMIT=true
 fi
 
-declare -a detect_flake_args
+declare -a conditional_flags
 for arg in "$@"
 do
   if [[ "${arg}" == "--detect_flakes" ]];
   then
-    detect_flake_args+=(--runs_per_test=20)
-    detect_flake_args+=(--runs_per_test_detects_flakes)
-    detect_flake_args+=(--nocache_test_results)
+    conditional_flags+=(--runs_per_test=20)
+    conditional_flags+=(--runs_per_test_detects_flakes)
+    conditional_flags+=(--nocache_test_results)
   fi
 done
+
+if [[ $IS_POST_SUBMIT ]]; then
+  conditional_flags+=(--nocache_test_results)
+fi
 
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
@@ -61,7 +65,7 @@ readonly invocation_id="$(uuidgen)"
   --embed_label="${AS_BUILD_NUMBER}" \
   --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
   --runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2 \
-  "${detect_flake_args[@]}" \
+  "${conditional_flags[@]}" \
   -- \
   //tools/adt/idea/studio:android-studio \
   //tools/adt/idea/studio:updater_deploy.jar \
