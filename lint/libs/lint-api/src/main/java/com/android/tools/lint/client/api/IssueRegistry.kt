@@ -42,10 +42,20 @@ import java.util.HashSet
  */
 @Beta
 abstract class IssueRegistry
-/**
- * Creates a new [IssueRegistry]
- */
 protected constructor() {
+    /**
+     * The vendor providing this lint check. For all the built in checks, this
+     * will report the Android Open Source Project, but for checks provided
+     * from libraries, this should point to the library author/vendor. Lint will
+     * include this in lint reports such that bug reports (and compliments!) can
+     * be directed to the right place.
+     *
+     * (This is a val with a default null implementation instead of an abstract
+     * method for backwards compatibility; we don't want to cause class load
+     * errors when loading older registries in newer lint.)
+     */
+    open val vendor: Vendor? = null
+
     init {
         LintClient.ensureClientNameInitialized()
     }
@@ -534,6 +544,13 @@ protected constructor() {
             priority = 10,
             severity = Severity.WARNING,
             implementation = EMPTY_IMPLEMENTATION
+        )
+
+        /** Vendor used for the built-in lint checks */
+        val AOSP_VENDOR = Vendor(
+            vendorName = "Android Open Source Project",
+            feedbackUrl = "https://issuetracker.google.com/issues/new?component=192708",
+            contact = "https://groups.google.com/g/lint-dev"
         )
 
         /**

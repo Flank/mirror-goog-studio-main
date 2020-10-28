@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.lint;
 
-
 import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -55,12 +54,19 @@ public class LintCustomRuleTest {
         project.executor().expectFailure().run("clean", ":app:lintDebug");
         project.executor().expectFailure().run("clean", ":app:lintDebug");
         String expected =
-                "src" + File.separator + "main" + File.separator + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck]\n"
+                "src"
+                        + File.separator
+                        + "main"
+                        + File.separator
+                        + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck from LintCustomRuleTest]\n"
                         + "        <activity android:name=\".MainActivity\">\n"
                         + "        ^\n"
                         + "\n"
                         + "   Explanation for issues of type \"UnitTestLintCheck\":\n"
                         + "   This app should not have any activities.\n"
+                        + "\n"
+                        + "   Vendor: Google\n"
+                        + "   Identifier: LintCustomRuleTest\n"
                         + "\n"
                         + "1 errors, 0 warnings";
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.txt");

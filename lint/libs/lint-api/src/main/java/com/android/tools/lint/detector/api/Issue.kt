@@ -17,8 +17,11 @@
 package com.android.tools.lint.detector.api
 
 import com.android.tools.lint.client.api.Configuration
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.TextFormat.RAW
 import com.google.common.annotations.Beta
+import com.android.tools.lint.client.api.CompositeIssueRegistry
+import com.android.tools.lint.client.api.Vendor
 import java.util.ArrayList
 import java.util.EnumSet
 
@@ -297,6 +300,25 @@ class Issue private constructor(
     override fun hashCode(): Int {
         return id.hashCode()
     }
+
+    /**
+     * The registry providing this issue, if known. Note that this is typically the
+     * original registry providing the issue; there may be other issue registries
+     * providing this issue as well (for example, [CompositeIssueRegistry]), so it
+     * is not the case that each issue returned by registry.getIssues() will point
+     * back to the same registry. (Note that lint will set this on its own
+     * after loading an issue registry.)
+     *
+     * All the built-in issues typically point to [IssueRegistry.AOSP_VENDOR].
+     */
+    var registry: IssueRegistry? = null
+
+    /**
+     * The vendor providing this fix. You do not need to set this for every issue;
+     * as long as the [IssueRegistry] associated with this issue provides a vendor,
+     * lint will find and use it.
+     */
+    var vendor: Vendor? = null
 
     companion object {
         /**

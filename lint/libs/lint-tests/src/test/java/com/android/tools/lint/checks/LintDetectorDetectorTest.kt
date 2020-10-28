@@ -21,6 +21,7 @@ import com.android.tools.lint.checks.LintDetectorDetector.Companion.CHECK_URL
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.DOLLAR_STRINGS
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.EXISTING_LINT_CONSTANTS
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.ID
+import com.android.tools.lint.checks.LintDetectorDetector.Companion.MISSING_VENDOR
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.PSI_COMPARE
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.TEXT_FORMAT
 import com.android.tools.lint.checks.LintDetectorDetector.Companion.TRIM_INDENT
@@ -49,7 +50,8 @@ class LintDetectorDetectorTest {
         TEXT_FORMAT,
         EXISTING_LINT_CONSTANTS,
         UNEXPECTED_DOMAIN,
-        DOLLAR_STRINGS
+        DOLLAR_STRINGS,
+        MISSING_VENDOR
     )
 
     @Test
@@ -233,6 +235,35 @@ class LintDetectorDetectorTest {
                 ).indented(),
                 kotlin(
                     """
+                    package test.pkg
+                    import com.android.tools.lint.client.api.IssueRegistry
+                    import com.android.tools.lint.client.api.Vendor
+                    class MyVendorIssueRegistry : IssueRegistry() {
+                        // Supplies a vendor: no warning
+                        override var vendor: Vendor? = Vendor("Unit test")
+                        override val issues = listOf(
+                            MyJavaLintDetector.ISSUE,
+                            MyKotlinLintDetector.Companion.ISSUE
+                        )
+                    }
+                    """
+                ).indented(),
+                kotlin(
+                    """
+                    package test.pkg
+                    import com.android.tools.lint.client.api.IssueRegistry
+                    import com.android.tools.lint.client.api.Vendor
+                    class InheritingRegistry : MyVendorIssueRegistry() { // NO WARNING
+                        // This registry doesn't supply a vendor but inherits one; no warning
+                        override val issues = listOf(
+                            MyJavaLintDetector.ISSUE,
+                            MyKotlinLintDetector.Companion.ISSUE
+                        )
+                    }
+                    """
+                ).indented(),
+                kotlin(
+                    """
                         package test.pkg
                         import com.android.tools.lint.checks.infrastructure.LintDetectorTest
                         import com.android.tools.lint.detector.api.Detector
@@ -399,7 +430,10 @@ class LintDetectorDetectorTest {
                 src/test/pkg/MyKotlinLintDetector.kt:37: Error: Don't call PsiField#getInitializer(); you must use UAST instead. If you don't have a UField call UastFacade.getInitializerBody(field) [LintImplUseUast]
                         field.initializer // ERROR - must use UAST
                         ~~~~~~~~~~~~~~~~~
-                26 errors, 9 warnings
+                src/test/pkg/MyIssueRegistry.kt:3: Warning: An IssueRegistry should override the vendor property [MissingVendor]
+                class MyIssueRegistry : IssueRegistry() {
+                      ~~~~~~~~~~~~~~~
+                26 errors, 10 warnings
                 """
             )
             .expectFixDiffs(

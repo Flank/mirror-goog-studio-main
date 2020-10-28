@@ -40,8 +40,7 @@ public class LintCustomLocalAndPublishTest {
         return LintInvocationType.values();
     }
 
-    @Rule
-    public final GradleTestProject project;
+    @Rule public final GradleTestProject project;
 
     public LintCustomLocalAndPublishTest(LintInvocationType lintInvocationType) {
         this.project =
@@ -80,12 +79,14 @@ public class LintCustomLocalAndPublishTest {
                         + File.separator
                         + "app"
                         + File.separator
-                        + "MyClass.java:19: Error: Do not implement java.util.List directly [UnitTestLintCheck2]\n"
+                        + "MyClass.java:19: Error: Do not implement java.util.List directly [UnitTestLintCheck2 from com.example.google.lint]\n"
                         + "public abstract class MyClass implements java.util.List {}\n"
                         + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "\n"
                         + "   Explanation for issues of type \"UnitTestLintCheck2\":\n"
                         + "   This app should not have implement java.util.List.\n"
+                        + "\n"
+                        + "   Identifier: com.example.google.lint\n"
                         + "\n"
                         + "1 errors, 1 warnings";
 
@@ -114,20 +115,24 @@ public class LintCustomLocalAndPublishTest {
                         + File.separator
                         + "main"
                         + File.separator
-                        + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck]\n"
+                        + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck from com.example.google.lintpublish]\n"
                         + "        <activity android:name=\".MainActivity\">\n"
                         + "        ^\n"
                         + "\n"
                         + "   Explanation for issues of type \"UnitTestLintCheck\":\n"
                         + "   This app should not have any activities.\n"
                         + "\n"
+                        + "   Identifier: com.example.google.lintpublish\n"
+                        + "\n"
                         + FileUtils.toSystemDependentPath("src/main/java/com/example/app/Util.java")
-                        + ":5: Error: Do not implement java.util.Set directly [UnitTestLintCheck3]\n"
+                        + ":5: Error: Do not implement java.util.Set directly [UnitTestLintCheck3 from com.example.remote.lint]\n"
                         + "public abstract class Util implements Set {}\n"
                         + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "\n"
                         + "   Explanation for issues of type \"UnitTestLintCheck3\":\n"
                         + "   This app should not implement java.util.Set.\n"
+                        + "\n"
+                        + "   Identifier: com.example.remote.lint\n"
                         + "\n"
                         + "2 errors, 1 warnings";
         File appLintFile =

@@ -99,14 +99,14 @@ import java.util.Locale
  * Look for TODO in issue registration strings, or empty registration strings
  */
 class LintDetectorDetector : Detector(), UastScanner {
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return listOf(
             CLASS_DETECTOR,
             CLASS_ISSUE_REGISTRY
         )
     }
 
-    override fun getApplicableMethodNames(): List<String>? = listOf("lint")
+    override fun getApplicableMethodNames(): List<String> = listOf("lint")
 
     override fun visitMethodCall(
         context: JavaContext,
@@ -138,6 +138,26 @@ class LintDetectorDetector : Detector(), UastScanner {
     override fun visitClass(context: JavaContext, declaration: UClass) {
         checkKotlin(context, declaration)
         declaration.accept(LintDetectorVisitor(context))
+
+        if (context.evaluator.inheritsFrom(declaration, CLASS_ISSUE_REGISTRY)) {
+            checkIssueRegistry(context, declaration)
+        }
+    }
+
+    private fun checkIssueRegistry(context: JavaContext, declaration: UClass) {
+        val methods = declaration.javaPsi.allMethods
+        val count = methods.count() { it.name == "getVendor" && it.parameters.isEmpty() }
+        if (count <= 1) { // one occurrence is on IssueRegistry itself; don't count that one
+            val name = declaration.qualifiedName
+            if (name != null && name.startsWith("com.android.tools.lint.client.api.")) {
+                // Skip lint infrastructure classes
+                return
+            }
+            context.report(
+                MISSING_VENDOR, declaration, context.getNameLocation(declaration),
+                "An `IssueRegistry` should override the `vendor` property"
+            )
+        }
     }
 
     private fun checkKotlin(context: JavaContext, declaration: UClass) {
@@ -1224,6 +1244,37 @@ class LintDetectorDetector : Detector(), UastScanner {
                     functions (as well as in UAST), default and named parameters (for the \
                     Issue registration methods for example where there are methods with 12+ \
                     parameters with only a couple of required ones), and so on.
+                    """,
+                category = CUSTOM_LINT_CHECKS,
+                priority = 4,
+                severity = WARNING,
+                implementation = IMPLEMENTATION,
+                platforms = JDK_SET
+            )
+
+        /** IssueRegistry not providing a vendor */
+        @JvmField
+        val MISSING_VENDOR =
+            Issue.create(
+                id = "MissingVendor",
+                briefDescription = "IssueRegistry not providing a vendor",
+                explanation =
+                    """
+                    Recent versions of lint includes a `vendor` property (or from Java, \
+                    `getVendor` and `setVendor` methods) on `IssueRegistry`.
+
+                    You should override this property and point to a suitable vendor \
+                    instance where you list the author (or organization or vendor) \
+                    providing the lint check, a feedback URL, etc. (See the Vendor \
+                    documentation.)
+
+                    The vendor info is included in a few places (such as HTML reports) \
+                    and partially in a few other places (such as the identifier showing \
+                    up at the end of each error line in the text output). This makes it \
+                    easier for users to figure out where checks are coming from, since \
+                    lint will pull in lint checks from a number of sources, and makes \
+                    it clear where to go to provide feedback or file bug reports or \
+                    requests.
                     """,
                 category = CUSTOM_LINT_CHECKS,
                 priority = 4,

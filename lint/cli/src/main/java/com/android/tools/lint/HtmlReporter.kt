@@ -361,6 +361,16 @@ class HtmlReporter(
             append("</div>\n") // class=warningslist
             writeIssueMetadata(issue, null, true)
             append("</div>\n") // class=issue
+
+            val issueVendor = issue.vendor ?: issue.registry?.vendor
+            issueVendor?.let { vendor ->
+                if (vendor != IssueRegistry.AOSP_VENDOR) {
+                    append("<div class=\"vendor\">\n")
+                    vendor.describeInto(sb!!, TextFormat.HTML)
+                    append("</div>\n") // class=vendor
+                }
+            }
+
             append("<div class=\"chips\">\n")
             writeChip(issue.id)
             var category: Category? = issue.category

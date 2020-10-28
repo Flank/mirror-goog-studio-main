@@ -30,8 +30,10 @@ import java.io.InputStreamReader
 import java.lang.ref.SoftReference
 import java.net.URLClassLoader
 import java.util.HashMap
+import java.util.Locale
 import java.util.jar.Attributes
 import java.util.jar.JarFile
+import java.util.regex.Pattern
 
 /**
  *  An [IssueRegistry] for a custom lint rule jar file. The rule jar should provide a
@@ -47,7 +49,9 @@ private constructor(
     /** The jar file the rules were loaded from */
     val jarFile: File,
     /** The custom lint check's issue registry that this [JarFileIssueRegistry] wraps */
-    registry: IssueRegistry
+    registry: IssueRegistry,
+    /** Vendor for this lint registry */
+    override val vendor: Vendor
 ) : IssueRegistry() {
 
     override fun cacheable(): Boolean = LintClient.isStudio
@@ -64,9 +68,18 @@ private constructor(
         }
     }
 
-    override val api: Int = com.android.tools.lint.detector.api.CURRENT_API
+    override val api: Int = CURRENT_API
 
     companion object Factory {
+        /**
+         * Pattern for matching lint jar paths in Gradle's cache, like
+         * ../../../../../.gradle/caches/transforms-2/files-2.1/7ea1fb10a49aec17439ff96dc10e54cb/annotation-experimental-1.0.0/jars/lint.jar
+         * and on Windows,
+         * C:\users\example\.gradle\caches\transforms-2\files-2.1\7ea1fb10a49aec17439ff96dc10e54cb\annotation-experimental-1.0.0\jars\lint.jar
+         *
+         */
+        private val ARTIFACT_PATTERN = Pattern.compile(".*[/\\\\].gradle[/\\\\]caches[/\\\\]transforms-[0-9]+[/\\\\]files-[0-9.]+[/\\\\][0-9a-f]+[/\\\\](.+)[/\\\\]jars[/\\\\]lint\\.jar$")
+
         /** Service key for automatic discovery of lint rules */
         private const val SERVICE_KEY =
             "META-INF/services/com.android.tools.lint.client.api.IssueRegistry"
@@ -147,14 +160,18 @@ private constructor(
                 }
 
                 // Ensure that the scope-to-detector map doesn't return stale results
-                IssueRegistry.reset()
+                reset()
 
                 val userRegistry = loadIssueRegistry(
                     client, jarFile, registryClassName,
                     currentProject
                 )
                 return if (userRegistry != null) {
-                    val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry)
+                    val vendor = getVendor(client, userRegistry, jarFile)
+                    val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry, vendor)
+                    for (issue in userRegistry.issues) {
+                        issue.registry = jarIssueRegistry
+                    }
                     cache!![jarFile] = SoftReference(jarIssueRegistry)
                     jarIssueRegistry
                 } else {
@@ -300,6 +317,52 @@ private constructor(
             }
         }
 
+        private fun getVendor(
+            client: LintClient,
+            registry: IssueRegistry,
+            jarFile: File
+        ): Vendor {
+            return registry.vendor
+                ?: run {
+
+                    val registryClass = registry.javaClass.name
+
+                    client.log(
+                        Severity.WARNING, null,
+                        "$registryClass in $jarFile does not specify a vendor; see IssueRegistry#vendor"
+                    )
+
+                    // Try to guess a vendor from the path and catch some common cases
+                    // until the various libraries are updated
+                    val matcher = ARTIFACT_PATTERN.matcher(jarFile.path)
+                    val identifier =
+                        if (matcher.matches()) {
+                            matcher.group(1)
+                        } else {
+                            registryClass.removeSuffix("IssueRegistry").removeSuffix("Registry")
+                                .removeSuffix(".My") // MyIssueRegistry common from sample
+                                .removeSuffix(".").toLowerCase(Locale.US)
+                        }
+
+                    if (registryClass.startsWith("androidx.") ||
+                        registryClass.startsWith("android.")
+                    ) {
+                        Vendor(
+                            vendorName = "Android Open Source Project ($identifier)",
+                            feedbackUrl = "https://developer.android.com/jetpack/androidx/releases/appcompat#feedback",
+                            identifier = identifier
+                        )
+                    } else if (registryClass.startsWith("com.google.")) {
+                        Vendor(
+                            vendorName = "Google ($identifier)",
+                            identifier = identifier
+                        )
+                    } else {
+                        Vendor(identifier = identifier)
+                    }
+                }
+        }
+
         /**
          * Returns a map from issue registry qualified name to the corresponding jar file
          * that contains it
@@ -349,7 +412,7 @@ private constructor(
                                         } else {
                                             line.trim()
                                         }
-                                        if (!className.isEmpty() &&
+                                        if (className.isNotEmpty() &&
                                             registryClassToJarFile[className] == null
                                         ) {
                                             registryClassToJarFile[className] = jarFile

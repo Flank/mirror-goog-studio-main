@@ -68,7 +68,6 @@ enum class TextFormat {
      * HTML formatted output (note: does not include surrounding `<html></html>` tags).
      * This is like [.HTML], but it does not escape unicode characters with entities.
      *
-     *
      * (This is used for example in the IDE, where some partial HTML support in some
      * label widgets support some HTML markup, but not numeric code character entities.)
      */

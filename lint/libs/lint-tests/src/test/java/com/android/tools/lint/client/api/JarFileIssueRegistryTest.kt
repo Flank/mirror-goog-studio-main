@@ -61,10 +61,13 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         assertTrue(applicableCallNames!!.contains("getActionBar"))
 
         assertEquals(
-            "Custom lint rule jar " + file2.path + " does not contain a valid " +
+            "android.support.v7.lint.AppCompatIssueRegistry in " +
+                file1.path +
+                " does not specify a vendor; see IssueRegistry#vendor\n" +
+                "Custom lint rule jar " + file2.path + " does not contain a valid " +
                 "registry manifest key (Lint-Registry-v2).\n" +
                 "Either the custom jar is invalid, or it uses an outdated API not " +
-                "supported this lint client",
+                "supported this lint client\n",
             loggedWarnings.toString()
         )
 
@@ -102,6 +105,31 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         assertThat(registries.size).isEqualTo(1)
     }
 
+    fun testGetDefaultIdentifier() {
+        val targetDir = TestUtils.createTempDirDeletedOnExit()
+        val file1 = base64gzip(
+            "lint1.jar",
+            CustomRuleTest.LINT_JAR_BASE64_GZIP
+        ).createFile(targetDir)
+        assertTrue(file1.path, file1.exists())
+
+        val loggedWarnings = StringWriter()
+        val client = createClient(loggedWarnings)
+
+        val registry = JarFileIssueRegistry.get(client, listOf(file1), null).first()
+        val vendor = registry.vendor
+        assertNotNull(vendor)
+        assertEquals("android.support.v7.lint.appcompat", vendor.identifier)
+        assertEquals(
+            "Android Open Source Project (android.support.v7.lint.appcompat)",
+            vendor.vendorName
+        )
+        assertEquals(
+            "https://developer.android.com/jetpack/androidx/releases/appcompat#feedback",
+            vendor.feedbackUrl
+        )
+    }
+
     override fun getDetector(): Detector? {
         fail("Not used in this test")
         return null
@@ -117,7 +145,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         return object : TestLintClient() {
             override fun log(exception: Throwable?, format: String?, vararg args: Any) {
                 if (format != null) {
-                    loggedWarnings.append(String.format(format, *args))
+                    loggedWarnings.append(String.format(format, *args) + '\n')
                 }
             }
 
@@ -128,7 +156,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
                 vararg args: Any
             ) {
                 if (format != null) {
-                    loggedWarnings.append(String.format(format, *args))
+                    loggedWarnings.append(String.format(format, *args) + '\n')
                 }
             }
         }

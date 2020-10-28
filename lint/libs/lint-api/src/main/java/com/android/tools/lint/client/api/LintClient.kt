@@ -2051,6 +2051,7 @@ abstract class LintClient {
                         LintDriver(
                             object : IssueRegistry() {
                                 override val issues: List<Issue> = emptyList()
+                                override val vendor: Vendor = AOSP_VENDOR
                             },
                             client, request
                         )

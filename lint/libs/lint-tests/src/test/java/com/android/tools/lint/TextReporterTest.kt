@@ -17,8 +17,10 @@ package com.android.tools.lint
 
 import com.android.tools.lint.LintStats.Companion.create
 import com.android.tools.lint.checks.AbstractCheckTest
+import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
+import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Location
@@ -129,6 +131,11 @@ class TextReporterTest : AbstractCheckTest() {
     }
 
     fun testWithExplanations() {
+        // Temporarily switch HardcodedValuesDetector.ISSUE to a custom
+        // registry with an example vendor to test output of vendor info
+        // (which we normally omit for built-in checks)
+        HardcodedValuesDetector.ISSUE.vendor = createTestVendor()
+
         val file = File(targetDir, "report")
         try {
             val client: LintCliClient = createClient()
@@ -250,7 +257,7 @@ class TextReporterTest : AbstractCheckTest() {
 
                    https://developer.android.com/guide/topics/manifest/uses-sdk-element.html
 
-                res/layout/main.xml:12: Warning: Hardcoded string "Fooo", should use @string resource [HardcodedText]
+                res/layout/main.xml:12: Warning: Hardcoded string "Fooo", should use @string resource [HardcodedText from mylibrary-1.0]
                         android:text="Fooo" />
                         ~~~~~~~~~~~~~~~~~~~
                     AndroidManifest.xml:8: Secondary location
@@ -270,6 +277,11 @@ class TextReporterTest : AbstractCheckTest() {
                    There are quickfixes to automatically extract this hardcoded string into a
                    resource lookup.
 
+                   Vendor: AOSP Unit Tests
+                   Identifier: mylibrary-1.0
+                   Contact: lint@example.com
+                   Feedback: https://example.com/lint/file-new-bug.html
+
                 0 errors, 3 warnings
 
                 """.trimIndent(),
@@ -277,6 +289,7 @@ class TextReporterTest : AbstractCheckTest() {
             )
         } finally {
             file.delete()
+            HardcodedValuesDetector.ISSUE.vendor = BuiltinIssueRegistry().vendor
         }
     }
 
@@ -301,4 +314,13 @@ class TextReporterTest : AbstractCheckTest() {
         sb.append(errorLines)
         client.setSourceText(location.file, sb)
     }
+}
+
+fun createTestVendor(): Vendor {
+    return Vendor(
+        vendorName = "AOSP Unit Tests",
+        contact = "lint@example.com",
+        feedbackUrl = "https://example.com/lint/file-new-bug.html",
+        identifier = "mylibrary-1.0"
+    )
 }

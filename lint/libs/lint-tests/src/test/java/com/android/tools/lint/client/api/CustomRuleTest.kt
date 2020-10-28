@@ -398,28 +398,28 @@ class CustomRuleTest {
             .run()
             .check(
                 TestResultChecker {
-                    assertThat(it).contains("res/values/strings.xml:2: Warning: All tags are now flagged: string [ShortUniqueId]")
+                    assertThat(it).contains("res/values/strings.xml:2: Warning: All tags are now flagged: string [ShortUniqueId from com.example.lint.checks.sample]")
                 }
             )
     }
 
     private val expectedOutputGradle = "" +
-        "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod from android.support.v7.lint.appcompat]\n" +
         "        getActionBar();                    // ERROR\n" +
         "        ~~~~~~~~~~~~\n" +
-        "src/main/java/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod]\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [UnitTestAppCompatMethod from android.support.v7.lint.appcompat]\n" +
         "        startActionMode(null);             // ERROR\n" +
         "        ~~~~~~~~~~~~~~~\n" +
-        "src/main/java/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod]\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [UnitTestAppCompatMethod from android.support.v7.lint.appcompat]\n" +
         "        requestWindowFeature(0);           // ERROR\n" +
         "        ~~~~~~~~~~~~~~~~~~~~\n" +
-        "src/main/java/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod]\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [UnitTestAppCompatMethod from android.support.v7.lint.appcompat]\n" +
         "        setProgressBarVisibility(true);    // ERROR\n" +
         "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-        "src/main/java/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod]\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [UnitTestAppCompatMethod from android.support.v7.lint.appcompat]\n" +
         "        setProgressBarIndeterminate(true);\n" +
         "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-        "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
+        "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod from android.support.v7.lint.appcompat]\n" +
         "        setProgressBarIndeterminateVisibility(true);\n" +
         "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
         "0 errors, 6 warnings\n"
