@@ -132,6 +132,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 DuplicateResourceDetector.TYPE_MISMATCH,
                 EllipsizeMaxLinesDetector.ISSUE,
                 ExifInterfaceDetector.ISSUE,
+                ExportedReceiverDetector.ISSUE,
                 ExtraTextDetector.ISSUE,
                 FieldGetterDetector.ISSUE,
                 FirebaseAnalyticsDetector.INVALID_NAME,
