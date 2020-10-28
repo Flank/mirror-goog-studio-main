@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.profile;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -50,7 +52,9 @@ import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import com.google.wireless.android.sdk.stats.ProductDetails;
 import com.google.wireless.android.sdk.stats.TestRun;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logging;
@@ -360,9 +364,9 @@ public class AnalyticsUtil {
     static GradleBuildProject.GradlePlugin otherPluginToProto(@NonNull String pluginClassName) {
         String enumName = getOtherPluginEnumName(pluginClassName);
 
-        try {
-            return GradleBuildProject.GradlePlugin.valueOf(enumName);
-        } catch (IllegalArgumentException e) {
+        if (PLUGIN_MAP.containsKey(enumName)) {
+            return PLUGIN_MAP.get(enumName);
+        } else {
             Logging.getLogger(AnalyticsUtil.class)
                     .info(
                             "Analytics other plugin to proto: Unknown plugin type {} expected enum {}",
@@ -371,6 +375,10 @@ public class AnalyticsUtil {
             return GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN;
         }
     }
+
+    private static final Map<String, GradleBuildProject.GradlePlugin> PLUGIN_MAP =
+            Arrays.stream(GradleBuildProject.GradlePlugin.values())
+                    .collect(toImmutableMap(Enum::toString, plugin -> plugin));
 
     @VisibleForTesting
     @NonNull
