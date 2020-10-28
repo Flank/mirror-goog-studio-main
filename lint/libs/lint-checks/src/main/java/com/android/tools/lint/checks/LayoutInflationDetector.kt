@@ -300,8 +300,8 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
                             val prefix = parser.getAttributePrefix(i)
                             if (prefix != null && !prefix.isEmpty() &&
                                 SdkConstants.ANDROID_URI == parser.getNamespace(
-                                    prefix
-                                )
+                                        prefix
+                                    )
                             ) {
                                 return true
                             }

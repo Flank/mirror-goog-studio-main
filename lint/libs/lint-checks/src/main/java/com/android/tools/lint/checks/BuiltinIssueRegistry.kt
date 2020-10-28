@@ -295,6 +295,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 PackageVisibilityDetector.QUERY_ALL_PACKAGES_PERMISSION,
                 PackageVisibilityDetector.QUERY_PERMISSIONS_NEEDED,
                 ParcelDetector.ISSUE,
+                PendingIntentMutableFlagDetector.ISSUE,
                 PermissionDetector.MISSING_PERMISSION,
                 PluralsDetector.EXTRA,
                 PluralsDetector.IMPLIED_QUANTITY,
