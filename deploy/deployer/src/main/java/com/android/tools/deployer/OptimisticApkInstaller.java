@@ -18,12 +18,10 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
-import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +62,26 @@ class OptimisticApkInstaller {
         this.logger = logger;
     }
 
+    /**
+     * Updates the overlay for package {@code packageName} by performing an overlay diff and
+     * applying the resulting overlay update to the device. The inputs to the diff are the set of
+     * currently installed APKs, the set of newly built APKs, and the current overlay contents.
+     *
+     * <p>The diff has three steps:
+     *
+     * <ul>
+     *   <li>Diff installed APKs from {@link OverlayId#getInstalledApks()} with {@code apks} to
+     *       produce a baseline diff
+     *   <li>Compare the baseline diff to the set of current overlay files from {@link
+     *       OverlayId#getOverlayContents()} to obtain the "files to add" set (files in diff but NOT
+     *       in overlay)
+     *   <li>Compare the current overlay files with the new APKs to obtain the * "files to delete"
+     *       set (files in overlay but NOT in APKs)
+     * </ul>
+     *
+     * The set of "files to add" are extracted from the APK and pushed to the device. The set of
+     * "files to delete" are removed from the overlay.
+     */
     public OverlayId install(String packageName, List<Apk> apks) throws DeployerException {
         try {
             return tracedInstall(packageName, apks);
@@ -99,36 +117,17 @@ class OptimisticApkInstaller {
         metrics.finish();
 
         metrics.start(DIFF_METRIC);
-
-        // Quick and dirty fallback on to normal install if we see a swap has happened.
-        // TODO: Remove this when we properly diff w/ overlays.
-        if (!entry.getOverlayId().getSwappedDexFiles().isEmpty()) {
-            throw DeployerException.runAfterSwapNotSupported();
-        }
-        List<FileDiff> diffs = new ApkDiffer().specDiff(entry, apks);
-
-        // Ensure that we currently have IWI support enabled for every change; otherwise, throw an
-        // exception to cause a fallback to delta install. This has one exception - if a diff is
-        // present only because a resource is absent from the overlay, and resource support is
-        // disabled, we can simply throw away the diff.
-        List<FileDiff> filteredDiffs = new ArrayList<>();
-        for (FileDiff diff : diffs) {
-            ChangeType type = ChangeType.getType(diff);
-            if (options.optimisticInstallSupport.contains(type)) {
-                filteredDiffs.add(diff);
-            } else if (diff.status != FileDiff.Status.RESOURCE_NOT_IN_OVERLAY) {
-                logger.warning("File '%s' [%s] is not supported by IWI", diff.getName(), type);
-                throw DeployerException.changeNotSupportedByIWI(type);
-            }
-        }
+        final OverlayId overlayId = entry.getOverlayId();
+        OverlayDiffer.Result diff =
+                new OverlayDiffer(options.optimisticInstallSupport).diff(apks, overlayId);
         metrics.finish();
 
         metrics.start(EXTRACT_METRIC);
-        Map<ApkEntry, ByteString> overlayFiles = new ApkEntryExtractor().extract(filteredDiffs);
+        Map<ApkEntry, ByteString> overlayFiles =
+                new ApkEntryExtractor().extractFromEntries(diff.filesToAdd);
         metrics.finish();
 
         metrics.start(UPDATE_METRIC);
-        final OverlayId overlayId = entry.getOverlayId();
         final OverlayId.Builder nextIdBuilder = OverlayId.builder(overlayId);
 
         Deploy.OverlayInstallRequest.Builder request =
@@ -146,17 +145,9 @@ class OptimisticApkInstaller {
                     file.getKey().getQualifiedPath(), file.getKey().getChecksum());
         }
 
-        for (FileDiff diff : diffs) {
-            if (diff.status == FileDiff.Status.DELETED) {
-                request.addDeletedFiles(diff.oldFile.getQualifiedPath());
-                nextIdBuilder.removeOverlayFile(diff.oldFile.getQualifiedPath());
-            }
-        }
-
-        // Clear out any swapped dex from the overlay directory, since they will override the dex
-        // inside the exploded APKs.
-        for (String dexFile : overlayId.getSwappedDexFiles()) {
-            request.addDeletedFiles(dexFile);
+        for (String file : diff.filesToRemove) {
+            request.addDeletedFiles(file);
+            nextIdBuilder.removeOverlayFile(file);
         }
 
         OverlayId nextOverlayId = nextIdBuilder.build();

@@ -16,12 +16,9 @@
 
 package com.android.build.gradle.integration.dexing;
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,11 +43,6 @@ public class D8DexingTest {
                         + "    multiDexEnabled true\n"
                         + "  }\n"
                         + "}\n");
-        executor().run("assembleDebug");
-    }
-
-    @NonNull
-    private GradleTaskExecutor executor() {
-        return project.executor().with(BooleanOption.ENABLE_D8, true);
+        project.executor().run("assembleDebug");
     }
 }

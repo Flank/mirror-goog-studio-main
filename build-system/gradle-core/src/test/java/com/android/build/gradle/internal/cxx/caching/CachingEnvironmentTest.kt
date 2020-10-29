@@ -23,6 +23,7 @@ import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 object EmptyResult
 
@@ -30,9 +31,6 @@ class CachingEnvironmentTest {
     @Rule
     @JvmField
     val temporaryFolder = TemporaryFolder()
-
-    // This depends on the AGP version, changing it requires changing the value.
-    private val expectedKeyHash = "2z293741"
 
     @Test
     fun `exception is logged`() {
@@ -47,6 +45,8 @@ class CachingEnvironmentTest {
             }
         } catch (e: Exception) {
             assertThat(e.message).isEqualTo("Exception thrown by cached function")
+
+            val expectedKeyHash = getExpectedKeyHash(folder)
             val exceptionFile = join(folder, "empty_result_${expectedKeyHash}_exception.txt")
             assertThat(exceptionFile.exists())
                 .named("Didn't find $exceptionFile among ${folder.listFiles().map { it.name }}")
@@ -80,9 +80,15 @@ class CachingEnvironmentTest {
                 EmptyResult
             }
         }
+        val expectedKeyHash = getExpectedKeyHash(folder)
         val exceptionFile = join(folder, "empty_result_${expectedKeyHash}_exception.txt")
         assertThat(!exceptionFile.exists())
             .named("Unexpectedly found $exceptionFile among ${folder.listFiles().map { it.name }}")
             .isTrue()
     }
+
+    private fun getExpectedKeyHash(folder: File) = folder.list()!!
+        .first { it.startsWith("empty_result_") && it.endsWith(".log") }
+        .removeSurrounding("empty_result_", ".log")
+
 }

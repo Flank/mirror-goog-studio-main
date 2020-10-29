@@ -59,6 +59,7 @@ import com.android.builder.dexing.isLegacyMultiDexMode
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.ApiVersion
+import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import java.io.File
@@ -651,8 +652,8 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         .setUseMultidex(variant.isMultiDexEnabled)
                         .setUseLegacyMultidex(variant.dexingType.isLegacyMultiDexMode())
                         .setVariantType(variant.variantType.analyticsVariantType)
-                        .setDexBuilder(AnalyticsUtil.toProto(variantScope.dexer))
-                        .setDexMerger(AnalyticsUtil.toProto(variantScope.dexMerger))
+                        .setDexBuilder(GradleBuildVariant.DexBuilderTool.D8_DEXER)
+                        .setDexMerger(GradleBuildVariant.DexMergerTool.D8_MERGER)
                         .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled)
                         .testExecution = AnalyticsUtil.toProto(globalScope.extension.testOptions.getExecutionEnum())
 

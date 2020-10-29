@@ -66,11 +66,12 @@ class GenericBuiltArtifactsSplitOutputMatcherTest {
 
     private fun wrap(builtArtifacts: Collection<GenericBuiltArtifact>): GenericBuiltArtifacts =
         GenericBuiltArtifacts(
-            version = 2,
+            version = 3,
             artifactType = GenericArtifactType("APK", "Directory"),
             applicationId = "com.android.test",
             variantName = "debug",
-            elements = builtArtifacts
+            elements = builtArtifacts,
+            elementType = "File"
         )
 
 

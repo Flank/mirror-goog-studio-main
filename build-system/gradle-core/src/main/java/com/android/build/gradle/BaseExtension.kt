@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.dsl.TestOptions
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.LibraryRequest
@@ -107,8 +108,17 @@ abstract class BaseExtension protected constructor(
     /** Secondary dependencies for the custom transform. */
     private val _transformDependencies: MutableList<List<Any>> = mutableListOf()
 
-    override val dexOptions: DexOptions =
-        dslServices.newInstance(DexOptions::class.java, dslServices.deprecationReporter)
+    private val _dexOptions = dslServices.newInstance(DexOptions::class.java)
+
+    @Deprecated("Using dexOptions is obsolete.")
+    override val dexOptions: DexOptions
+        get() {
+            dslServices.deprecationReporter.reportObsoleteUsage(
+                "dexOptions",
+                DeprecationReporter.DeprecationTarget.DEX_OPTIONS
+            )
+            return _dexOptions
+        }
 
     private val deviceProviderList: MutableList<DeviceProvider> = Lists.newArrayList()
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
@@ -177,6 +187,7 @@ abstract class BaseExtension protected constructor(
      *
      * For more information about the properties you can configure in this block, see [DexOptions].
      */
+    @Deprecated("Setting dexOptions is obsolete.")
     fun dexOptions(action: Action<DexOptions>) {
         checkWritability()
         action.execute(dexOptions)

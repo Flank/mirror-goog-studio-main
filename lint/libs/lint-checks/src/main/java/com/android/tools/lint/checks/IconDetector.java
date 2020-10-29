@@ -419,7 +419,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                     + "it supports transparency and lossless conversion as well. Note that there is a "
                                     + "quickfix in the IDE which lets you perform conversion.\n"
                                     + "\n"
-                                    + "Launcher icons must be in the PNG format.",
+                                    + "Previously, launcher icons were required to be in the PNG format but that "
+                                    + "restriction is no longer there, so lint now flags these.",
                             Category.ICONS,
                             6,
                             Severity.WARNING,
@@ -563,11 +564,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         if (endsWithIgnoreCase(name, DOT_PNG) && !endsWithIgnoreCase(name, DOT_9PNG)
                                 || endsWithIgnoreCase(name, DOT_JPG)
                                 || endsWithIgnoreCase(name, DOT_JPEG)) {
-                            // Launcher icons are not eligible for WEBP conversion
-                            String folderName = f.getParentFile().getName();
                             String baseName = getBaseName(name);
-                            if (isLauncherIcon(folderName, baseName)
-                                    || isAdaptiveIconLayer(baseName)) {
+                            if (isAdaptiveIconLayer(baseName)) {
                                 continue;
                             }
 
@@ -584,7 +582,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         String message =
                                 "One or more images in this project can be converted to "
                                         + "the WebP format which typically results in smaller file sizes, "
-                                        + "even for lossless conversion (but launcher icons should use PNG)";
+                                        + "even for lossless conversion";
                         context.report(WEBP_ELIGIBLE, location, message);
                     }
                 }
@@ -1614,10 +1612,9 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             }
             String name = file.getName();
             String baseName = getBaseName(name);
-            if (isLauncherIcon(file.getParentFile().getName(), baseName)
-                    || isAdaptiveIconLayer(baseName)) {
+            if (isAdaptiveIconLayer(baseName)) {
                 Location location = Location.create(file);
-                String message = "Launcher icons must be in PNG format";
+                String message = "Adaptive icon bitmaps must be in PNG format";
                 context.report(WEBP_UNSUPPORTED, location, message);
                 continue;
             }

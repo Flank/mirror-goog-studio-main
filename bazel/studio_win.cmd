@@ -21,7 +21,12 @@ IF "%DETECT_FLAKES%"=="--detect_flakes" (
   set RUNS=--runs_per_test=5
   set DETECT_FLAKES=--runs_per_test_detects_flakes
   set NOCACHE=--nocache_test_results
-  set DETECT_FLAKE_ARGS=!RUNS! !DETECT_FLAKES! !NOCACHE!
+  set CONDITIONAL_FLAGS=!RUNS! !DETECT_FLAKES! !NOCACHE!
+)
+
+IF %IS_POST_SUBMIT% EQU 1 (
+  SET NOCACHE=--nocache_test_results
+  SET CONDITIONAL_FLAGS=!NOCACHE!
 )
 
 set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate
@@ -64,9 +69,8 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  --test_tag_filters=%TESTTAGFILTERS% ^
  --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^
- %DETECT_FLAKE_ARGS% ^
+ %CONDITIONAL_FLAGS% ^
  -- ^
- //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
  //tools/base/profiler/native/trace_processor_daemon ^
  %TARGETS%
 
@@ -86,15 +90,15 @@ copy %BASEDIR%\bazel-bin\tools\base\profiler\native\trace_processor_daemon\trace
 
 @echo studio_win.cmd time: %time%
 
-set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
-
 IF %IS_POST_SUBMIT% EQU 1 (
   SET PERFGATE_ARG=-perfzip %DISTDIR%\perfgate_data.zip
 ) ELSE (
   SET PERFGATE_ARG=
 )
 
-%JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
+CALL %SCRIPTDIR%bazel.cmd run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
+ --config=dynamic ^
+ -- ^
  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  -testlogs %DISTDIR%\logs\junit ^
  %PERFGATE_ARG%

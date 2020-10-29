@@ -17,32 +17,30 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.*
 import org.gradle.process.ExecOperations
 import javax.inject.Inject
 
-/** Task wrapper around ExternalNativeJsonGenerator.  */
-abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: ExecOperations) :
-    UnsafeOutputsTask("Generate json model is always run.") {
+/** Task wrapper around [CxxMetadataGenerator].  */
+abstract class ExternalNativeBuildJsonTask @Inject constructor(
+        @get:Internal val ops: ExecOperations) :
+        UnsafeOutputsTask("C/C++ Configuration is always run.") {
+
     @get:Internal
     abstract val sdkComponents: Property<SdkComponentsBuildService>
-    private lateinit var configurationModel: CxxConfigurationModel
+
+    @get:Internal
+    internal lateinit var configurationModel: CxxConfigurationModel
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
@@ -51,42 +49,31 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(private val ops: 
 
     override fun doTaskAction() {
         IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use {
-            val generator =
-                createCxxMetadataGenerator(
-                    configurationModel,
-                    analyticsService = analyticsService.get()
-                )
+            val generator : CxxMetadataGenerator =
+                    createCxxMetadataGenerator(
+                            configurationModel,
+                            analyticsService = analyticsService.get()
+                    )
             for (future in generator.getMetadataGenerators(ops, false, null)) {
                 future.call()
             }
         }
     }
+}
 
-    class CreationAction(
-        private val configurationModel : CxxConfigurationModel,
-        creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<ExternalNativeBuildJsonTask, VariantCreationConfig>(creationConfig) {
-        override val name
-            get() = computeTaskName("generateJsonModel")
-
-        override val type
-            get() = ExternalNativeBuildJsonTask::class.java
-
-        override fun configure(task: ExternalNativeBuildJsonTask) {
-            super.configure(task)
-            task.configurationModel = configurationModel
-            task.sdkComponents.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
-            val variantDslInfo = creationConfig.variantDslInfo
-            if (variantDslInfo.renderscriptNdkModeEnabled) {
-                creationConfig
-                    .artifacts
-                    .setTaskInputToFinalProduct(
-                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR,
-                        task.renderscriptSources
-                    )
-            }
-        }
+/**
+ * Create a C/C++ configure task.
+ */
+fun createCxxConfigureTask(
+        globalScope: GlobalScope,
+        configurationModel : CxxConfigurationModel,
+        name : String
+) = object : GlobalTaskCreationAction<ExternalNativeBuildJsonTask>(globalScope) {
+    override val name = name
+    override val type = ExternalNativeBuildJsonTask::class.java
+    override fun configure(task: ExternalNativeBuildJsonTask) {
+        super.configure(task)
+        task.configurationModel = configurationModel
+        task.variantName = configurationModel.variant.variantName
     }
 }

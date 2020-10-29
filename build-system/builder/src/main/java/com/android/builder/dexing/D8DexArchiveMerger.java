@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageReceiver;
-import com.android.ide.common.blame.parser.DexParser;
 import com.android.tools.r8.CompilationFailedException;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
@@ -32,7 +31,6 @@ import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.errors.DuplicateTypesDiagnostic;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -69,23 +67,25 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
     @Override
     public void mergeDexArchives(
             @NonNull List<DexArchiveEntry> dexArchiveEntries,
-            @NonNull List<Path> dexRootsForDx,
             @NonNull Path outputDir,
-            @Nullable Path mainDexClasses,
-            @NonNull DexingType dexingType)
+            @Nullable Path mainDexClasses)
             throws DexArchiveMergerException {
-        List<Path> inputsList = new ArrayList(dexRootsForDx);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.log(
                     Level.INFO,
                     "Merging to '"
                             + outputDir.toAbsolutePath().toString()
                             + "' with D8 from all or a subset of dex files in "
-                            + inputsList.stream()
-                                    .map(path -> path.toAbsolutePath().toString())
+                            + dexArchiveEntries.stream()
+                                    .map(
+                                            path ->
+                                                    path.getDexArchive()
+                                                            .getRootPath()
+                                                            .toAbsolutePath()
+                                                            .toString())
                                     .collect(Collectors.joining(", ")));
         }
-        if (inputsList.isEmpty()) {
+        if (dexArchiveEntries.isEmpty()) {
             return;
         }
 
@@ -128,6 +128,10 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
         return new DexArchiveMergerException(msg.toString(), t);
     }
 
+    private static final String DEX_LIMIT_EXCEEDED_ERROR =
+            "The number of method references in a .dex file cannot exceed 64K.\n"
+                    + "Learn how to resolve this issue at "
+                    + "https://developer.android.com/tools/building/multidex.html";
 
     private class InterceptingDiagnosticsHandler extends D8DiagnosticsHandler {
         public InterceptingDiagnosticsHandler() {
@@ -138,7 +142,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
         protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
 
             if (diagnostic.getDiagnosticMessage().startsWith(ERROR_MULTIDEX)) {
-                addHint(DexParser.DEX_LIMIT_EXCEEDED_ERROR);
+                addHint(DEX_LIMIT_EXCEEDED_ERROR);
             }
 
             if (diagnostic instanceof DuplicateTypesDiagnostic) {

@@ -41,6 +41,7 @@ import com.android.tools.lint.detector.api.LintFix.GroupType;
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup;
 import com.android.tools.lint.detector.api.LintFix.ReplaceString;
 import com.android.tools.lint.detector.api.LintFix.SetAttribute;
+import com.android.tools.lint.detector.api.LintFix.ShowUrl;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
@@ -225,6 +226,8 @@ public class LintFixVerifier {
                     // Doesn't edit file, but include in diffs so fixes can verify the
                     // correct data is passed
                     appendDataMap(incident, (DataMap) lintFix, diffs);
+                } else if (lintFix instanceof ShowUrl && diffs != null) {
+                    appendShowUrl(incident, (ShowUrl) lintFix, diffs);
                 }
 
                 String after;
@@ -628,6 +631,22 @@ public class LintFixVerifier {
             }
             diffs.append(diff);
         }
+    }
+
+    private static void appendShowUrl(
+            @NonNull Incident incident, @NonNull ShowUrl fix, @NonNull StringBuilder diffs) {
+        String targetPath = incident.getDisplayPath();
+        diffs.append("Show URL for ")
+                .append(targetPath.replace(File.separatorChar, '/'))
+                .append(" line ")
+                .append(incident.getLine() + 1)
+                .append(": ");
+        String fixDescription = fix.getDisplayName();
+        if (fixDescription != null) {
+            diffs.append(fixDescription).append(":\n");
+        }
+        diffs.append(fix.url);
+        diffs.append("\n");
     }
 
     private static void appendDataMap(

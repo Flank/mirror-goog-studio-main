@@ -540,7 +540,7 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
      */
     @Nullable
     public static GradleVersion tryParseAndroidGradlePluginVersion(@NonNull String value) {
-        if (value.matches("\\d+\\.\\d+\\.\\d+(-(((alpha|beta|rc)\\d+)|dev))?")) {
+        if (value.matches("\\d+\\.\\d+\\.\\d+(-(((alpha|beta|rc)\\d+)|(dev\\d*)))?")) {
             // Any string that matches the above pattern is a valid Android Gradle plugin version
             // and should be parsable by tryParse()
             return Verify.verifyNotNull(tryParse(value));

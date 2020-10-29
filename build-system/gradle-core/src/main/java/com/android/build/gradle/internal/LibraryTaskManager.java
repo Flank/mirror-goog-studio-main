@@ -201,9 +201,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
         taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libraryVariant));
 
-        // External native build
-        createExternalNativeBuildTasks(libraryVariant);
-
         createMergeJniLibFoldersTasks(libraryVariant);
 
         taskFactory.register(new StripDebugSymbolsTask.CreationAction(libraryVariant));
@@ -214,8 +211,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(libraryVariant));
 
         taskFactory.register(new ExportConsumerProguardFilesTask.CreationAction(libraryVariant));
-
-        createPrefabTasks(libraryVariant);
 
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this
@@ -500,46 +495,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     public void createLibraryAssetsTask(@NonNull VariantImpl variant) {
         taskFactory.register(new MergeSourceSetFolders.LibraryAssetCreationAction(variant));
-    }
-
-    public void createPrefabTasks(@NonNull LibraryVariantImpl libraryVariant) {
-        if (!libraryVariant.getBuildFeatures().getPrefabPublishing()) {
-            return;
-        }
-
-        CxxConfigurationModel configurationModel =
-                libraryVariant.getTaskContainer().getCxxConfigurationModel();
-        if (configurationModel == null) {
-            // No external native build, so definitely no prefab tasks.
-            return;
-        }
-
-        LibraryExtension extension = (LibraryExtension) globalScope.getExtension();
-        List<PrefabModuleTaskData> modules = Lists.newArrayList();
-        for (PrefabPackagingOptions options : extension.getPrefab()) {
-            File headers = null;
-            if (options.getHeaders() != null) {
-                headers =
-                        project.getLayout()
-                                .getProjectDirectory()
-                                .dir(options.getHeaders())
-                                .getAsFile();
-            }
-            modules.add(new PrefabModuleTaskData(options.getName(), headers, options.getLibraryName()));
-        }
-
-        if (!modules.isEmpty()) {
-            TaskProvider<PrefabPackageTask> packageTask =
-                    taskFactory.register(
-                            new PrefabPackageTask.CreationAction(
-                                    modules,
-                                    libraryVariant.getGlobalScope().getSdkComponents().get(),
-                                    libraryVariant.getTaskContainer().getCxxConfigurationModel(),
-                                    libraryVariant));
-            packageTask
-                    .get()
-                    .dependsOn(libraryVariant.getTaskContainer().getExternalNativeBuildTask());
-        }
     }
 
     @NonNull

@@ -475,7 +475,7 @@ rootProject.name = "${testName?.methodName ?: javaClass.simpleName}"
         this.parameters.putAll(parameters)
     }
 
-    private fun withGradleWrapper(gradleVersion: String = "6.6.1") {
+    private fun withGradleWrapper(gradleVersion: String = SdkConstants.GRADLE_LATEST_VERSION) {
         val projectPath = "${testProjectDir.root}/${testName.methodName}"
         TestResources.getFile("/gradlew")
             .copyTo(File("${projectPath}/gradlew")).setExecutable(true)
@@ -483,7 +483,6 @@ rootProject.name = "${testName?.methodName ?: javaClass.simpleName}"
             .copyTo(File("${projectPath}/gradlew.bat"))
         TestResources.getFile("/gradle-wrapper.jar")
             .copyTo(File("${projectPath}/gradle/wrapper/gradle-wrapper.jar"))
-        // TODO: Fetch the gradle version from $SRC/tools/gradle/wrapper/gradle-wrapper.properties
         File("${projectPath}/gradle/wrapper/gradle-wrapper.properties").writeText(
 """distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists

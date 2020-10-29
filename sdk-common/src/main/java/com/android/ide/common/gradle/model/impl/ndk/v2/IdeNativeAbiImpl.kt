@@ -23,5 +23,6 @@ data class IdeNativeAbiImpl(
   override val name: String,
   override val sourceFlagsFile: File,
   override val symbolFolderIndexFile: File,
-  override val buildFileIndexFile: File
+  override val buildFileIndexFile: File,
+  override val additionalProjectFilesIndexFile: File?
 ) : IdeNativeAbi, Serializable

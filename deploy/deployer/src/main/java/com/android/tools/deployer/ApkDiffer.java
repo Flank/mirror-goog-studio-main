@@ -48,7 +48,9 @@ public class ApkDiffer {
                     // If newFile == null, standardDiff would have returned a diff. We can assume
                     // newFile is not null from this point forward.
                     boolean inOverlay =
-                            cacheEntry.getOverlayFiles().contains(newFile.getQualifiedPath());
+                            cacheEntry
+                                    .getOverlayContents()
+                                    .containsFile(newFile.getQualifiedPath());
                     boolean isResource = newFile.getName().startsWith("res");
                     if (!inOverlay && isResource) {
                         return Optional.of(

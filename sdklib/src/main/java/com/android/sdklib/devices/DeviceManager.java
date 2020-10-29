@@ -550,6 +550,34 @@ public class DeviceManager {
                       Integer.toString(hw.getScreen().getFoldedHeight()));
             props.put(HardwareProperties.HW_LCD_FOLDED_WIDTH,
                       Integer.toString(hw.getScreen().getFoldedWidth()));
+            if (hw.getScreen().getFoldedWidth2() != 0 && hw.getScreen().getFoldedHeight2() != 0) {
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_X_OFFSET_2,
+                        Integer.toString(hw.getScreen().getFoldedXOffset2()));
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_Y_OFFSET_2,
+                        Integer.toString(hw.getScreen().getFoldedYOffset2()));
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_WIDTH_2,
+                        Integer.toString(hw.getScreen().getFoldedWidth2()));
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_HEIGHT_2,
+                        Integer.toString(hw.getScreen().getFoldedHeight2()));
+            }
+            if (hw.getScreen().getFoldedWidth3() != 0 && hw.getScreen().getFoldedHeight3() != 0) {
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_X_OFFSET_3,
+                        Integer.toString(hw.getScreen().getFoldedXOffset3()));
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_Y_OFFSET_3,
+                        Integer.toString(hw.getScreen().getFoldedYOffset3()));
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_WIDTH_3,
+                        Integer.toString(hw.getScreen().getFoldedWidth3()));
+                props.put(
+                        HardwareProperties.HW_LCD_FOLDED_HEIGHT_3,
+                        Integer.toString(hw.getScreen().getFoldedHeight3()));
+            }
         }
         return props;
     }

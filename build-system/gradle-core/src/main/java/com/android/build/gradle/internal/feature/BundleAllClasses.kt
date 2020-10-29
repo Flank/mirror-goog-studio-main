@@ -137,7 +137,7 @@ abstract class BundleAllClasses : NonIncrementalTask() {
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            if (creationConfig.registeredProjectClassesVisitors.isNotEmpty()) {
+            if (creationConfig.projectClassesAreInstrumented) {
                 if (creationConfig.asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                     task.inputDirs.from(
                         creationConfig.artifacts.get(

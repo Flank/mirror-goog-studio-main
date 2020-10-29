@@ -70,7 +70,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Callable
 
-const val ANDROID_GRADLE_BUILD_VERSION = "1"
+const val ANDROID_GRADLE_BUILD_VERSION = "2"
 
 /**
  * Base class for generation of native JSON.

@@ -34,7 +34,6 @@ public class ImlToBazel {
         Configuration config = new Configuration();
         Path workspace = null;
         String project = "tools/adt/idea";
-        config.strict = true;
 
         Iterator<String> args = Arrays.asList(strings).iterator();
         while (args.hasNext()) {
@@ -47,8 +46,6 @@ public class ImlToBazel {
                 config.imlGraph = args.next();
             } else if (arg.equals("--dry_run")){
                 config.dryRun = true;
-            } else if (arg.equals("--strict")) {
-                config.strict = true;
             } else {
                 System.err.println("Unknown argument: " + arg);
                 System.exit(1);

@@ -24,6 +24,7 @@ import com.google.common.collect.ArrayListMultimap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -43,13 +44,26 @@ public class ApkEntryExtractor {
         this.filter = filter;
     }
 
-    public SortedMap<ApkEntry, ByteString> extract(List<FileDiff> diffs) throws DeployerException {
+    public SortedMap<ApkEntry, ByteString> extractFromDiffs(List<FileDiff> diffs)
+            throws DeployerException {
         ArrayListMultimap<Apk, ApkEntry> entriesToExtract = ArrayListMultimap.create();
-
         diffs.stream()
                 .filter(this::shouldExtract)
                 .forEach(diff -> entriesToExtract.put(diff.newFile.getApk(), diff.newFile));
+        return extractFromApks(entriesToExtract);
+    }
 
+    public SortedMap<ApkEntry, ByteString> extractFromEntries(Collection<ApkEntry> entries)
+            throws DeployerException {
+        ArrayListMultimap<Apk, ApkEntry> entriesToExtract = ArrayListMultimap.create();
+        entries.stream()
+                .filter(entry -> filter.test(entry.getName()))
+                .forEach(entry -> entriesToExtract.put(entry.getApk(), entry));
+        return extractFromApks(entriesToExtract);
+    }
+
+    private SortedMap<ApkEntry, ByteString> extractFromApks(
+            ArrayListMultimap<Apk, ApkEntry> entriesToExtract) throws DeployerException {
         SortedMap<ApkEntry, ByteString> extracted =
                 new TreeMap<>(ApkEntryExtractor::compareApkEntries);
         for (Apk apk : entriesToExtract.keySet()) {

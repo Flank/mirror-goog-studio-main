@@ -19,13 +19,15 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.getSoFolderFor
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 
 class CmakeVariantApiTest {
     @Rule
@@ -84,18 +86,20 @@ class CmakeVariantApiTest {
 
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(getCmakeOutputLib(Abi.ARM64_V8A)).doesNotExist()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.X86)).doesNotExist()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.ARMEABI_V7A)).doesNotExist()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.X86_64)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
-        val buildCommandFile = project.file(".cxx/cmake/debug/x86_64/build_command.txt")
-        PathSubject.assertThat(buildCommandFile).exists()
-        val buildCommand = buildCommandFile.readText()
+        project.recoverExistingCxxAbiModels().forEach { abi ->
+            val buildCommandFile = abi.buildCommandFile
+            PathSubject.assertThat(buildCommandFile).exists()
+            val buildCommand = buildCommandFile.readText()
 
-        Truth.assertThat(buildCommand).contains("-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG")
-        Truth.assertThat(buildCommand).contains("-DCMAKE_C_FLAGS=-DTEST_C_FLAG")
-        Truth.assertThat(buildCommand).contains("-DANDROID_ABI=x86_64")
+            Truth.assertThat(buildCommand).contains("-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG")
+            Truth.assertThat(buildCommand).contains("-DCMAKE_C_FLAGS=-DTEST_C_FLAG")
+            Truth.assertThat(buildCommand).contains("-DANDROID_ABI=x86_64")
+        }
     }
 
     @Test
@@ -145,17 +149,20 @@ class CmakeVariantApiTest {
 
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(getCmakeOutputLib(Abi.ARM64_V8A)).doesNotExist()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.X86)).doesNotExist()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.ARMEABI_V7A)).exists()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.X86_64)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
-        val buildCommandFile = project.file(".cxx/cmake/debug/x86_64/build_command.txt")
-        PathSubject.assertThat(buildCommandFile).exists()
-        val buildCommand = buildCommandFile.readText()
+        project.recoverExistingCxxAbiModels().forEach { abi ->
+            val buildCommandFile = abi.buildCommandFile
+            PathSubject.assertThat(buildCommandFile).exists()
+            val buildCommand = buildCommandFile.readText()
 
-        Truth.assertThat(buildCommand).contains("-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG -DTEST_CPP_FLAG2")
-        Truth.assertThat(buildCommand).contains("-DCMAKE_C_FLAGS=-DTEST_C_FLAG -DTEST_C_FLAG2")
+            Truth.assertThat(buildCommand)
+                    .contains("-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG -DTEST_CPP_FLAG2")
+            Truth.assertThat(buildCommand).contains("-DCMAKE_C_FLAGS=-DTEST_C_FLAG -DTEST_C_FLAG2")
+        }
     }
 
     @Test
@@ -204,21 +211,18 @@ class CmakeVariantApiTest {
 
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(getCmakeOutputLib(Abi.ARM64_V8A)).doesNotExist()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.X86)).doesNotExist()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.ARMEABI_V7A)).exists()
-        PathSubject.assertThat(getCmakeOutputLib(Abi.X86_64)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).exists()
+        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
-        val buildCommandFile = project.file(".cxx/cmake/debug/x86_64/build_command.txt")
-        PathSubject.assertThat(buildCommandFile).exists()
-        val buildCommand = buildCommandFile.readText()
+        project.recoverExistingCxxAbiModels().forEach { abi ->
+            val buildCommandFile = abi.buildCommandFile
+            PathSubject.assertThat(buildCommandFile).exists()
+            val buildCommand = buildCommandFile.readText()
 
-        Truth.assertThat(buildCommand).contains("-DANDROID_ARM_NEON=TRUE")
-    }
-
-    private fun getCmakeOutputLib(abi: Abi): File? {
-        return project.file(
-                "build/intermediates/cmake/debug/obj/" + abi.tag + "/libfoo.so")
+            Truth.assertThat(buildCommand).contains("-DANDROID_ARM_NEON=TRUE")
+        }
     }
 }
 

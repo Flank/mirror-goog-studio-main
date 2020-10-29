@@ -187,6 +187,22 @@ public class DeviceParser {
                 mHardware.getScreen().setFoldedWidth(getInteger(mStringAccumulator));
             } else if (DeviceSchema.NODE_Y_FOLDED_DIMENSION.equals(localName)) {
                 mHardware.getScreen().setFoldedHeight(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_X_FOLDED_OFFSET_2.equals(localName)) {
+                mHardware.getScreen().setFoldedXOffset2(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_Y_FOLDED_OFFSET_2.equals(localName)) {
+                mHardware.getScreen().setFoldedYOffset2(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_X_FOLDED_DIMENSION_2.equals(localName)) {
+                mHardware.getScreen().setFoldedWidth2(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_Y_FOLDED_DIMENSION_2.equals(localName)) {
+                mHardware.getScreen().setFoldedHeight2(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_X_FOLDED_OFFSET_3.equals(localName)) {
+                mHardware.getScreen().setFoldedXOffset3(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_Y_FOLDED_OFFSET_3.equals(localName)) {
+                mHardware.getScreen().setFoldedYOffset3(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_X_FOLDED_DIMENSION_3.equals(localName)) {
+                mHardware.getScreen().setFoldedWidth3(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_Y_FOLDED_DIMENSION_3.equals(localName)) {
+                mHardware.getScreen().setFoldedHeight3(getInteger(mStringAccumulator));
             } else if (DeviceSchema.NODE_XDPI.equals(localName)) {
                 mHardware.getScreen().setXdpi(getDouble(mStringAccumulator));
             } else if (DeviceSchema.NODE_YDPI.equals(localName)) {

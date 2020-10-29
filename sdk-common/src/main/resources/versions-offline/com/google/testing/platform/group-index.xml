@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.google.testing.platform>
-  <android-device-controller-adb versions="0.0.5-dev"/>
+  <android-device-controller-adb versions="0.0.4-dev"/>
   <android-device-provider-local versions="0.0.5-dev"/>
+  <android-device-provider-virtual versions="0.0.5-dev"/>
   <android-driver-instrumentation versions="0.0.5-dev"/>
   <android-test-plugin versions="0.0.5-dev"/>
   <android-test-plugin-host-device-info versions="0.0.5-dev"/>

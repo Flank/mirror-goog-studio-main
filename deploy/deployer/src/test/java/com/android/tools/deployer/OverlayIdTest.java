@@ -57,7 +57,7 @@ public class OverlayIdTest {
         // First IWI Swap
         // Doing first IWI swap on a real APK, adding a class.
         // *****************************************************
-        OverlayId firstSwap = OverlayId.builder(realInstall).addSwappedDex("dex1", 1L).build();
+        OverlayId firstSwap = OverlayId.builder(realInstall).addOverlayFile("dex1.dex", 1L).build();
         stringRep = firstSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -74,7 +74,7 @@ public class OverlayIdTest {
         // Second IWI Swap
         // Doing a IWI swap on the previous IWI install, modifying an existing class.
         // *****************************************************
-        OverlayId secondSwap = OverlayId.builder(firstSwap).addSwappedDex("dex2", 2L).build();
+        OverlayId secondSwap = OverlayId.builder(firstSwap).addOverlayFile("dex2.dex", 2L).build();
         stringRep = secondSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -92,7 +92,8 @@ public class OverlayIdTest {
         // Third IWI Swap
         // Doing a IWI swap on the previous IWI install, modifying dex2 again.
         // *****************************************************
-        OverlayId thirdSwap = OverlayId.builder(secondSwap).addSwappedDex("dex2", 200L).build();
+        OverlayId thirdSwap =
+                OverlayId.builder(secondSwap).addOverlayFile("dex2.dex", 200L).build();
         stringRep = thirdSwap.getRepresentation();
         Assert.assertEquals(
                 getFileHeader()
@@ -183,22 +184,19 @@ public class OverlayIdTest {
     @Test
     public void testRemoveFile() throws DeployerException {
         OverlayId realInstall = new OverlayId(makeApks(2));
-        Assert.assertEquals(0, realInstall.getOverlayFiles().size());
+        Assert.assertEquals(0, realInstall.getOverlayContents().size());
 
         OverlayId nextOverlayId =
                 OverlayId.builder(realInstall)
                         .addOverlayFile("apk/res/1", 1L)
                         .addOverlayFile("apk/res/2", 11L)
-                        .addSwappedDex("Class1", 2L)
-                        .addSwappedDex("Class2", 22L)
+                        .addOverlayFile("Class1.dex", 2L)
+                        .addOverlayFile("Class2.dex", 22L)
                         .build();
 
         Assert.assertThat(
-                nextOverlayId.getOverlayFiles(),
+                nextOverlayId.getOverlayContents().allFiles(),
                 Matchers.containsInAnyOrder("apk/res/1", "apk/res/2", "Class1.dex", "Class2.dex"));
-        Assert.assertThat(
-                nextOverlayId.getSwappedDexFiles(),
-                Matchers.containsInAnyOrder("Class1.dex", "Class2.dex"));
 
         nextOverlayId =
                 OverlayId.builder(nextOverlayId)
@@ -207,10 +205,8 @@ public class OverlayIdTest {
                         .build();
 
         Assert.assertThat(
-                nextOverlayId.getOverlayFiles(),
+                nextOverlayId.getOverlayContents().allFiles(),
                 Matchers.containsInAnyOrder("apk/res/1", "Class2.dex"));
-        Assert.assertThat(
-                nextOverlayId.getSwappedDexFiles(), Matchers.containsInAnyOrder("Class2.dex"));
     }
 
     private List<Apk> makeApks(int size) {

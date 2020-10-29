@@ -30,8 +30,6 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.dexing.DexMergerTool;
-import com.android.builder.dexing.DexerTool;
 import com.android.builder.model.CodeShrinker;
 import com.android.builder.model.TestOptions;
 import com.android.resources.Density;
@@ -191,28 +189,6 @@ public class AnalyticsUtil {
                 throw new IllegalArgumentException("Unexpected type " + type);
         }
         throw new AssertionError("Unrecognized type " + type);
-    }
-
-    @NonNull
-    public static GradleBuildVariant.DexBuilderTool toProto(@NonNull DexerTool dexerTool) {
-        switch (dexerTool) {
-            case DX:
-                return GradleBuildVariant.DexBuilderTool.DX_DEXER;
-            case D8:
-                return GradleBuildVariant.DexBuilderTool.D8_DEXER;
-        }
-        throw new AssertionError("Unrecognized type " + dexerTool);
-    }
-
-    @NonNull
-    public static GradleBuildVariant.DexMergerTool toProto(@NonNull DexMergerTool dexMerger) {
-        switch (dexMerger) {
-            case DX:
-                return GradleBuildVariant.DexMergerTool.DX_MERGER;
-            case D8:
-                return GradleBuildVariant.DexMergerTool.D8_MERGER;
-        }
-        throw new AssertionError("Unrecognized type " + dexMerger);
     }
 
     @NonNull

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dexing.DexParameters
-import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
@@ -29,7 +28,6 @@ import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Tiger
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.dexing.DexerTool
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject.assertThatDex
@@ -511,18 +509,11 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
                 coreLibDesugarConfig = libConfiguration,
                 errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
             ),
-            dxDexParams = DxDexParameters(
-                inBufferSize = 10,
-                outBufferSize = 10,
-                dxNoOptimizeFlagPresent = false,
-                jumboMode = true
-            ),
             desugarClasspathChangedClasses = emptySet(),
             incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
             desugarGraphDir =  desugarGraphDir?.toFile(),
             projectVariant = "myVariant",
             inputJarHashesFile = inputJarHashes,
-            dexer = DexerTool.D8,
             numberOfBuckets = 2,
             workerExecutor = workerExecutor,
             projectName = "",

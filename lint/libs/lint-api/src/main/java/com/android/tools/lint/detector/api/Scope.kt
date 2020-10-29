@@ -202,7 +202,7 @@ enum class Scope {
         @JvmStatic
         fun infer(projects: Collection<Project>?): EnumSet<Scope> {
             if (projects == null || projects.isEmpty()) {
-                return Scope.ALL
+                return ALL
             }
 
             // Infer the scope
@@ -237,7 +237,7 @@ enum class Scope {
                     }
                 } else {
                     // Specified a full project: just use the full project scope
-                    scope = Scope.ALL
+                    scope = ALL
                     break
                 }
             }
@@ -291,8 +291,7 @@ enum class Scope {
 
         /** Resource XML files and manifest files */
         @JvmField
-        val MANIFEST_AND_RESOURCE_SCOPE: EnumSet<Scope> =
-            EnumSet.of(Scope.MANIFEST, Scope.RESOURCE_FILE)
+        val MANIFEST_AND_RESOURCE_SCOPE: EnumSet<Scope> = EnumSet.of(MANIFEST, RESOURCE_FILE)
 
         /** Scope-set used for detectors which are affected by single XML and Java source files */
         @JvmField
@@ -305,8 +304,7 @@ enum class Scope {
 
         /** Scope-set used for analyzing all class files, including those in libraries */
         @JvmField
-        val ALL_CLASSES_AND_LIBRARIES: EnumSet<Scope> =
-            EnumSet.of(Scope.ALL_CLASS_FILES, Scope.JAVA_LIBRARIES)
+        val ALL_CLASSES_AND_LIBRARIES: EnumSet<Scope> = EnumSet.of(ALL_CLASS_FILES, JAVA_LIBRARIES)
 
         /** Scope-set used for detectors which are affected by Java libraries */
         @JvmField

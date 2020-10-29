@@ -26,8 +26,6 @@ import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.builder.dexing.DexMergerTool;
-import com.android.builder.dexing.DexerTool;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import java.io.File;
 import java.util.Collection;
@@ -114,12 +112,6 @@ public interface VariantScope {
         RETROLAMBDA,
         R8,
     }
-
-    @NonNull
-    DexerTool getDexer();
-
-    @NonNull
-    DexMergerTool getDexMerger();
 
     @NonNull
     ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();

@@ -5,9 +5,6 @@ load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_lib
 iml_module(
     name = "studio.android.sdktools.deployer",
     srcs = ["src/main/java"],
-    bundle_data = [
-        "//tools/base/deploy/installer:android-installer",
-    ],
     bundled_deps = [
         "//tools/base/deploy/deployer:deploy_java_proto",
         "//prebuilts/r8",

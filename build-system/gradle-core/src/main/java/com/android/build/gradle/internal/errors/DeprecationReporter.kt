@@ -61,14 +61,8 @@ interface DeprecationReporter {
             "For more information, see http://d.android.com/r/tools/update-dependency-configurations.html."
         ),
 
-        // When legacy dexer will be removed and fully replaced by D8.
-        LEGACY_DEXER(
-            Version.VERSION_7_0,
-            "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
-        ),
-
-        // Obsolete Dex Options
-        DEX_OPTIONS(LEGACY_DEXER.removalTarget),
+        // Obsolete dx Dex Options
+        DEX_OPTIONS(Version.VERSION_8_0),
 
         // Deprecation of Task Access in the variant API
         TASK_ACCESS_VIA_VARIANT(Version.VERSION_7_0),

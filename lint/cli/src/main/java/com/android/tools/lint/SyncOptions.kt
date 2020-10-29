@@ -21,7 +21,6 @@ import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.detector.api.Category.Companion.getCategory
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.model.LintModelLintOptions
 import com.android.tools.lint.model.LintModelModule
 import java.io.BufferedWriter
 import java.io.File
@@ -259,8 +258,8 @@ private fun isStdErr(output: File): Boolean = Reporter.STDERR == output.path
 fun validateOutputFile(outputFile: File): File {
     var output = outputFile
     if (isStdOut(output) || isStdErr(
-            output
-        )
+        output
+    )
     ) {
         return output
     }

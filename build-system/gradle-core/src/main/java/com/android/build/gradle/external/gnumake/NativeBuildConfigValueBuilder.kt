@@ -15,11 +15,11 @@
  */
 package com.android.build.gradle.external.gnumake
 
+import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue
-import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import com.android.utils.NativeSourceFileExtensions
 import com.android.utils.NdkUtils
 import com.android.utils.cxx.CompileCommandsEncoder
@@ -28,9 +28,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.google.common.io.Files
 import java.io.File
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.HashSet
+import java.util.*
 
 /**
  * The purpose of this class is to take the raw output of an ndk-build -n call and to produce a
@@ -115,7 +113,7 @@ class NativeBuildConfigValueBuilder internal constructor(
             this.outputs.add(Output(key, value, buildCommand, cleanCommand, variantName))
         }
         buildTargetsCommand =
-            buildCommand + listOf(ExternalNativeBuildTask.BUILD_TARGETS_PLACEHOLDER)
+            buildCommand + listOf(CxxRegularBuilder.BUILD_TARGETS_PLACEHOLDER)
         return this
     }
 

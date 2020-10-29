@@ -33,7 +33,6 @@ public class ImlToBazelTest {
         try {
             Configuration config = new Configuration();
             config.dryRun = true;
-            config.strict = true;
             ImlToBazel.run(
                     config,
                     Paths.get("tools/base/bazel/test/iml_to_bazel").toAbsolutePath(),

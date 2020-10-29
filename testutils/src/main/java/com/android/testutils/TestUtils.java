@@ -80,16 +80,8 @@ public class TestUtils {
 
     @NonNull
     private static File getKotlinVersionFile() {
-        if (System.getProperty("idea.gui.test.running.on.release") != null) {
-            File homePath =
-                    new File(System.getProperty("idea.gui.test.remote.ide.path"))
-                            .getParentFile()
-                            .getParentFile();
-            return new File(homePath, "plugins/Kotlin/kotlinc/build.txt");
-        } else {
-            return getWorkspaceFile(
-                    "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt");
-        }
+        return getWorkspaceFile(
+                "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt");
     }
 
     /**

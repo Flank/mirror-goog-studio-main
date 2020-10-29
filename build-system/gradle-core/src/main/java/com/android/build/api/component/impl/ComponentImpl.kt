@@ -35,6 +35,7 @@ import com.android.build.api.variant.impl.fullName
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -65,7 +66,6 @@ import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.IssueReporter
-import com.android.builder.model.ApiVersion
 import com.android.builder.model.CodeShrinker
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
@@ -175,7 +175,7 @@ abstract class ComponentImpl(
 
     override val allProjectClassesPostAsmInstrumentation: FileCollection
         get() =
-            if (registeredProjectClassesVisitors.isNotEmpty()) {
+            if (projectClassesAreInstrumented) {
                 if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                     services.fileCollection(
                             artifacts.get(
@@ -198,6 +198,14 @@ abstract class ComponentImpl(
             } else {
                 artifacts.getAllClasses()
             }
+
+    override val projectClassesAreInstrumented: Boolean
+        get() = registeredProjectClassesVisitors.isNotEmpty() ||
+                (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
+
+    override val dependenciesClassesAreInstrumented: Boolean
+        get() = registeredDependenciesClassesVisitors.isNotEmpty() ||
+                (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
 
     /**
      * Returns the tested variant. This is null for [VariantImpl] instances
@@ -696,7 +704,7 @@ abstract class ComponentImpl(
     ): T
 
     override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
-        return if (registeredDependenciesClassesVisitors.isNotEmpty()) {
+        return if (dependenciesClassesAreInstrumented) {
             if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                 variantDependencies.getArtifactFileCollection(
                         ConsumedConfigType.RUNTIME_CLASSPATH,

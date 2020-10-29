@@ -29,25 +29,25 @@ public class VersionChecker {
      *
      * <p>The version of the library is found inside a version file in the APK's META-INF directory.
      *
-     * @param targetInfo which contains the minVersion and the versionFile being targeted.
+     * @param artifactCoordinate represents the minimum supported library artifact.
      * @return a VersionChecker.Result object containing the result of the check and any errors.
      */
-    public VersionCheckerResult checkVersion(VersionTargetInfo targetInfo) {
-        String versionFile = targetInfo.versionFileName;
-        String minVersionString = targetInfo.minVersion;
+    public VersionCheckerResult checkVersion(ArtifactCoordinate artifactCoordinate) {
+        String versionFile = artifactCoordinate.toVersionFileName();
+        String minVersionString = artifactCoordinate.version;
         VersionFileReader.Result readResult = reader.readVersionFile(versionFile);
         switch (readResult.status) {
             case NOT_FOUND:
                 return new VersionCheckerResult(
                         VersionCheckerResult.Status.NOT_FOUND,
                         "Failed to find version file " + versionFile,
-                        versionFile,
+                        artifactCoordinate,
                         null);
             case READ_ERROR:
                 return new VersionCheckerResult(
                         VersionCheckerResult.Status.INCOMPATIBLE,
                         "Failed to read version file " + versionFile,
-                        versionFile,
+                        artifactCoordinate,
                         null);
         }
         Version version = Version.parseOrNull(readResult.versionString);
@@ -58,7 +58,7 @@ public class VersionChecker {
                             + readResult.versionString
                             + " which is in "
                             + versionFile,
-                    versionFile,
+                    artifactCoordinate,
                     readResult.versionString);
         }
         Version minVersion = Version.parseOrNull(minVersionString);
@@ -66,14 +66,14 @@ public class VersionChecker {
             return new VersionCheckerResult(
                     VersionCheckerResult.Status.ERROR,
                     "Failed to parse provided min version " + minVersionString,
-                    versionFile,
+                    artifactCoordinate,
                     readResult.versionString);
         }
         if (version.compareTo(minVersion) >= 0) {
             return new VersionCheckerResult(
                     VersionCheckerResult.Status.COMPATIBLE,
                     null,
-                    versionFile,
+                    artifactCoordinate,
                     readResult.versionString);
         } else {
             return new VersionCheckerResult(
@@ -82,7 +82,7 @@ public class VersionChecker {
                             + readResult.versionString
                             + " does not satisfy the inspector's min version requirement "
                             + minVersionString,
-                    versionFile,
+                    artifactCoordinate,
                     readResult.versionString);
         }
     }

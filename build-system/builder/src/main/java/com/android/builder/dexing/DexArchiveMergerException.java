@@ -22,14 +22,6 @@ package com.android.builder.dexing;
  * message that can be retrieved using {@link Throwable#getMessage()}.
  */
 public class DexArchiveMergerException extends Exception {
-    public DexArchiveMergerException(Throwable cause) {
-        super(cause);
-    }
-
-    public DexArchiveMergerException(String message) {
-        super(message);
-    }
-
     public DexArchiveMergerException(String message, Throwable cause) {
         super(message, cause);
     }

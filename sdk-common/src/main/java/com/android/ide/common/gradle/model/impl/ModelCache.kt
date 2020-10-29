@@ -99,6 +99,7 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ImmutableSortedSet
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import java.util.HashMap
 
 interface ModelCache {
   fun variantFrom(variant: Variant, modelVersion: GradleVersion?): IdeVariantImpl
@@ -781,7 +782,8 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       name = nativeAbi.name,
       sourceFlagsFile = nativeAbi.sourceFlagsFile,
       symbolFolderIndexFile = nativeAbi.symbolFolderIndexFile,
-      buildFileIndexFile = nativeAbi.buildFileIndexFile
+      buildFileIndexFile = nativeAbi.buildFileIndexFile,
+      additionalProjectFilesIndexFile = copyNewPropertyWithDefault(nativeAbi::additionalProjectFilesIndexFile) { null }
     )
   }
 

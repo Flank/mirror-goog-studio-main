@@ -10,6 +10,7 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/app-inspection/native/include/commands",
+        "-Itools/base/app-inspection/native/include/common",
         "-Itools/base/app-inspection/native",
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
@@ -19,6 +20,7 @@ cc_library(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
+        ":common",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/native/agent",
         "//tools/base/transport/native/agent:jvmti_helper",
@@ -39,6 +41,7 @@ cc_library(
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/app-inspection/native/include",
+        "-Itools/base/app-inspection/native/include/common",
         # TODO: Remove dependency when agent.h no longer includes
         # memory_component.h.
         "-Itools/base/profiler/native/agent",
@@ -47,6 +50,7 @@ cc_library(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
+        ":common",
         "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/native/agent",
@@ -54,6 +58,24 @@ cc_library(
         "//tools/base/transport/native/agent:jvmti_helper",
         "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "common",
+    srcs = glob(["native/src/common/**/*.cc"]),
+    hdrs = glob([
+        "native/include/common/**/*.h",
+    ]),
+    copts = ANDROID_COPTS + [
+        "-Itools/base/app-inspection/native/include/common",
+    ],
+    linkstatic = 1,
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//prebuilts/studio/jdk:jni_headers",
     ],
     alwayslink = 1,
 )

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.dexing.DexParameters
-import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
@@ -25,7 +24,6 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.dexing.DexerTool
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
@@ -43,7 +41,6 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
 import org.gradle.workers.WorkerExecutor
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -63,7 +60,6 @@ import kotlin.test.fail
 /** Testing the [DexArchiveBuilderTaskDelegate].  */
 @RunWith(Parameterized::class)
 class DexArchiveBuilderDelegateTest(
-    private var dexerTool: DexerTool,
     private val withIncrementalDexingTaskV2: Boolean
 ) {
 
@@ -317,8 +313,6 @@ class DexArchiveBuilderDelegateTest(
      */
     @Test
     fun testBucketingStrategy() {
-        Assume.assumeTrue(dexerTool == DexerTool.D8)
-
         val outputKeepRule = tmpDir.root.toPath().resolve("outputKeepRule")
         Files.createDirectories(outputKeepRule)
         val numberOfBuckets = 3
@@ -414,7 +408,6 @@ class DexArchiveBuilderDelegateTest(
         isIncremental: Boolean = false,
         isDebuggable: Boolean = true,
         minSdkVersion: Int = 1,
-        dexerTool: DexerTool = this.dexerTool,
         projectClasses: Set<File> = emptySet(),
         projectChanges: Set<FileChange> = emptySet(),
         externalLibClasses: Set<File> = emptySet(),
@@ -451,7 +444,6 @@ class DexArchiveBuilderDelegateTest(
             desugarClasspathChangedClasses = emptySet(),
             incrementalDexingTaskV2 = withIncrementalDexingTaskV2,
             desugarGraphDir =  tmpDir.newFolder().takeIf{ withIncrementalDexingTaskV2 },
-            dexer = dexerTool,
             projectVariant = "myVariant",
             numberOfBuckets = numberOfBuckets,
             workerExecutor = workerExecutor,
@@ -464,12 +456,6 @@ class DexArchiveBuilderDelegateTest(
                 coreLibDesugarConfig = libConfiguration,
                 errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
             ),
-            dxDexParams = DxDexParameters(
-                inBufferSize = 10,
-                outBufferSize = 10,
-                dxNoOptimizeFlagPresent = false,
-                jumboMode = true
-            ),
             projectName = "",
             taskPath = "",
             analyticsService = FakeObjectFactory.factory.property(AnalyticsService::class.java)
@@ -479,12 +465,10 @@ class DexArchiveBuilderDelegateTest(
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "dexerTool_{0}_incrementalDexingTaskV2_{1}")
+        @Parameterized.Parameters(name = "incrementalDexingTaskV2_{0}")
         fun parameters() = listOf(
-            arrayOf(DexerTool.DX, false),
-            // No need to test arrayOf(DexerTool.DX, true) as incrementalDexingTaskV2 is only for D8
-            arrayOf(DexerTool.D8, false),
-            arrayOf(DexerTool.D8, true)
+            arrayOf(false),
+            arrayOf(true)
         )
     }
 }

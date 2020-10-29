@@ -26,9 +26,9 @@ import com.android.build.gradle.external.cmake.server.Configuration;
 import com.android.build.gradle.external.cmake.server.FileGroup;
 import com.android.build.gradle.external.cmake.server.Project;
 import com.android.build.gradle.external.cmake.server.Target;
+import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
-import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.repository.Revision;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -119,7 +119,7 @@ public class CmakeUtils {
                 .addAll(buildCommandArgs)
                 .add("-C")
                 .add(outputFolder.getAbsolutePath())
-                .add(ExternalNativeBuildTask.BUILD_TARGETS_PLACEHOLDER)
+                .add(CxxRegularBuilder.BUILD_TARGETS_PLACEHOLDER)
                 .build();
     }
 

@@ -21,16 +21,13 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dexing.DexParameters
 import com.android.build.gradle.internal.dexing.DexWorkAction
-import com.android.build.gradle.internal.dexing.DxDexParameters
 import com.android.build.gradle.internal.dexing.IncrementalDexSpec
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
-import com.android.builder.core.DefaultDexOptions
 import com.android.builder.dexing.ClassBucket
 import com.android.builder.dexing.ClassBucketGroup
 import com.android.builder.dexing.ClassFileEntry
 import com.android.builder.dexing.ClassFileInput
-import com.android.builder.dexing.DexerTool
 import com.android.builder.dexing.DirectoryBucketGroup
 import com.android.builder.dexing.JarBucketGroup
 import com.android.builder.dexing.r8.ClassFileProviderFactory
@@ -90,7 +87,6 @@ class DexArchiveBuilderTaskDelegate(
 
     // Dex parameters
     private val dexParams: DexParameters,
-    private val dxDexParams: DxDexParameters,
 
     // Incremental info
     private val desugarClasspathChangedClasses: Set<FileChange> = emptySet(),
@@ -107,7 +103,6 @@ class DexArchiveBuilderTaskDelegate(
     // Other info
     projectVariant: String,
     private val inputJarHashesFile: File,
-    private val dexer: DexerTool,
     private val numberOfBuckets: Int,
     private val workerExecutor: WorkerExecutor,
     private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool(),
@@ -145,7 +140,7 @@ class DexArchiveBuilderTaskDelegate(
     // Whether impacted files are computed lazily in the workers instead of being computed up front
     // before the workers are launched.
     private val isImpactedFilesComputedLazily: Boolean =
-        dexParams.withDesugaring && dexer == DexerTool.D8 && incrementalDexingTaskV2
+        dexParams.withDesugaring && incrementalDexingTaskV2
 
     // desugarIncrementalHelper is not null iff
     // !isImpactedFilesComputedLazily && dexParams.withDesugaring
@@ -184,10 +179,6 @@ class DexArchiveBuilderTaskDelegate(
     }
 
     fun doProcess() {
-        if (dxDexParams.dxNoOptimizeFlagPresent) {
-            loggerWrapper.warning(DefaultDexOptions.OPTIMIZE_WARNING)
-        }
-
         loggerWrapper.verbose("Dex builder is incremental : %b ", isIncremental)
 
         // impactedFiles is not null iff !isImpactedFilesComputedLazily
@@ -459,7 +450,6 @@ class DexArchiveBuilderTaskDelegate(
             val classBucket = ClassBucket(inputs, bucketId)
             workerExecutor.noIsolation().submit(DexWorkAction::class.java) { params ->
                 params.initializeWith(projectName, taskPath, analyticsService)
-                params.dexer.set(dexer)
                 params.dexSpec.set(
                         IncrementalDexSpec(
                         inputClassFiles = classBucket,
@@ -479,7 +469,6 @@ class DexArchiveBuilderTaskDelegate(
                             null
                         }
                 ))
-                params.dxDexParams.set(dxDexParams)
             }
         }
     }

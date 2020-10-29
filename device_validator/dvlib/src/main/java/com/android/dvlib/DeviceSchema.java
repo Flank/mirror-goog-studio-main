@@ -53,7 +53,7 @@ public class DeviceSchema {
      * The latest version of the device XML Schema. Valid version numbers are between 1 and this
      * number, included.
      */
-    public static final int NS_LATEST_VERSION = 5;
+    public static final int NS_LATEST_VERSION = 6;
 
     /** The XML namespace of the latest device XML. */
     public static final String NS_DEVICES_URI = getSchemaUri(NS_LATEST_VERSION);
@@ -182,6 +182,14 @@ public class DeviceSchema {
     public static final String NODE_Y_FOLDED_OFFSET = "y-folded-offset";
     public static final String NODE_X_FOLDED_DIMENSION = "x-folded-dimension";
     public static final String NODE_Y_FOLDED_DIMENSION = "y-folded-dimension";
+    public static final String NODE_X_FOLDED_OFFSET_2 = "x-folded-offset-2";
+    public static final String NODE_Y_FOLDED_OFFSET_2 = "y-folded-offset-2";
+    public static final String NODE_X_FOLDED_DIMENSION_2 = "x-folded-dimension-2";
+    public static final String NODE_Y_FOLDED_DIMENSION_2 = "y-folded-dimension-2";
+    public static final String NODE_X_FOLDED_OFFSET_3 = "x-folded-offset-3";
+    public static final String NODE_Y_FOLDED_OFFSET_3 = "y-folded-offset-3";
+    public static final String NODE_X_FOLDED_DIMENSION_3 = "x-folded-dimension-3";
+    public static final String NODE_Y_FOLDED_DIMENSION_3 = "y-folded-dimension-3";
 
     public static final String NODE_CPU = "cpu";
 

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
+import com.android.build.gradle.internal.cxx.settings.SettingsConfiguration
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -33,7 +33,7 @@ data class CxxCmakeAbiModel(
     /**
      * The effective CMakeSettings
      */
-    val effectiveConfiguration : CMakeSettingsConfiguration,
+    val effectiveConfiguration : SettingsConfiguration,
 
     /**
      * Log of the conversation with CMake server.

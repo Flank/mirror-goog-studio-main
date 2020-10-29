@@ -106,6 +106,7 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
+                        "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform");
@@ -167,6 +168,7 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
+                        "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
@@ -264,6 +266,7 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
+                        "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform");
@@ -321,6 +324,7 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
+                        "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",
@@ -408,6 +412,7 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
+                        "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform");
@@ -465,6 +470,7 @@ public class DeviceManagerTest {
                         "5.4\" FWVGA",
                         "6.7\" Horizontal Fold-in",
                         "7\" WSVGA (Tablet)",
+                        "7.4\" Rollable",
                         "7.6\" Fold-in with outer display",
                         "8\" Fold-out",
                         "13.5\" Freeform",

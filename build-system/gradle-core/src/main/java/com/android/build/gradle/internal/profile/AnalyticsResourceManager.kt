@@ -286,12 +286,12 @@ class AnalyticsResourceManager(
         recordPlugins(project)
 
         profileBuilder
-            .setOsName(getSystemProperty(providers,"os.version"))
+            .setOsName(getSystemProperty(providers,"os.name"))
             .setOsVersion(getSystemProperty(providers,"os.version"))
             .setJavaVersion(getSystemProperty(providers,"java.version"))
             .setJavaVmVersion(getSystemProperty(providers,"java.vm.version"))
             .setMaxMemory(Runtime.getRuntime().maxMemory())
-            .setGradleVersion(Strings.nullToEmpty(project.gradle.gradleVersion))
+            .setGradleVersion(project.gradle.gradleVersion)
 
         val configCachingEnabled = project.gradle.startParameter.isConfigurationCache
         if (configCachingEnabled != null) {

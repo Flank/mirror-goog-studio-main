@@ -17,9 +17,7 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
-import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
-import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dumpCompileCommandsJsonBin;
-import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.readAsFileIndex;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.*;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
@@ -33,6 +31,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.v2.models.ndk.NativeAbi;
 import com.android.builder.model.v2.models.ndk.NativeModule;
@@ -160,29 +159,33 @@ public class NdkBuildTest {
                                 + "          * name = \"debug\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt{!}\n"
+                                + "                * name                            = \"armeabi-v7a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/compile_commands.json.bin{!}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/symbol_folder_index.txt{!}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/build_file_index.txt{!}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"arm64-v8a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"arm64-v8a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "       * NativeVariant:\n"
                                 + "          * name = \"release\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/build_file_index.txt{!}\n"
+                                + "                * name                            = \"armeabi-v7a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/compile_commands.json.bin{!}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/symbol_folder_index.txt{!}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/build_file_index.txt{!}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"arm64-v8a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/compile_commands.json.bin{!}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/symbol_folder_index.txt{!}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/build_file_index.txt{!}\n"
+                                + "                * name                            = \"arm64-v8a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/compile_commands.json.bin{!}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/symbol_folder_index.txt{!}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/build_file_index.txt{!}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "    < variants\n"
                                 + "    - nativeBuildSystem       = NDK_BUILD\n"
@@ -219,12 +222,9 @@ public class NdkBuildTest {
                                     + "workingDir: {PROJECT}/{D}\n"
                                     + "flags:      [-target, aarch64-none-linux-android21, -fdata-sections, -ffunction-sections, -fstack-protector-strong, -funwind-tables, -no-canonical-prefixes, --sysroot, {ANDROID_NDK}/build//../toolchains/llvm/prebuilt/windows-x86_64/sysroot, -g, -Wno-invalid-command-line-argument, -Wno-unused-command-line-argument, -D_FORTIFY_SOURCE=2, -fpic, -O0, -UNDEBUG, -fno-limit-debug-info, -I{PROJECT}/src/main/jni, -DANDROID, -Wformat, -Werror=format-security]");
         }
-        assertThat(
-                        readAsFileIndex(
-                                debugX86Abi.getSymbolFolderIndexFile(),
-                                fetchResult.getNormalizer()))
-                .containsExactly(
-                        "{PROJECT}/build/intermediates/ndkBuild/debug/obj/local/arm64-v8a{!}");
+        File soFolder = getSoFolderFor(project, Abi.ARM64_V8A);
+        assertThat(readAsFileIndex(debugX86Abi.getSymbolFolderIndexFile()))
+                .containsExactly(soFolder);
         assertThat(
                         readAsFileIndex(
                                 debugX86Abi.getBuildFileIndexFile(), fetchResult.getNormalizer()))
@@ -232,7 +232,7 @@ public class NdkBuildTest {
     }
 
     @Test
-    public void clean() throws IOException {
+    public void clean() {
         project.execute("clean", "assembleDebug", "assembleRelease");
         ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> fetchResult =
                 project.modelV2().fetchNativeModules(ImmutableList.of(), ImmutableList.of());
@@ -246,29 +246,33 @@ public class NdkBuildTest {
                                 + "          * name = \"debug\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"armeabi-v7a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"arm64-v8a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"arm64-v8a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "       * NativeVariant:\n"
                                 + "          * name = \"release\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"armeabi-v7a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"arm64-v8a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"arm64-v8a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "    < variants\n"
                                 + "    - nativeBuildSystem       = NDK_BUILD\n"
@@ -308,29 +312,33 @@ public class NdkBuildTest {
                                 + "          * name = \"debug\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"armeabi-v7a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"arm64-v8a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/debug/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"arm64-v8a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/arm64-v8a/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "       * NativeVariant:\n"
                                 + "          * name = \"release\"\n"
                                 + "          > abis:\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"armeabi-v7a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"armeabi-v7a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/armeabi-v7a/additional_project_files.txt{!}\n"
                                 + "             * NativeAbi:\n"
-                                + "                * name                  = \"arm64-v8a\"\n"
-                                + "                * sourceFlagsFile       = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/compile_commands.json.bin{F}\n"
-                                + "                * symbolFolderIndexFile = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/symbol_folder_index.txt{F}\n"
-                                + "                * buildFileIndexFile    = {PROJECT}/.cxx/ndkBuild/release/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * name                            = \"arm64-v8a\"\n"
+                                + "                * sourceFlagsFile                 = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/compile_commands.json.bin{F}\n"
+                                + "                * symbolFolderIndexFile           = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/symbol_folder_index.txt{F}\n"
+                                + "                * buildFileIndexFile              = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/build_file_index.txt{F}\n"
+                                + "                * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{RELEASE}/arm64-v8a/additional_project_files.txt{!}\n"
                                 + "          < abis\n"
                                 + "    < variants\n"
                                 + "    - nativeBuildSystem       = NDK_BUILD\n"

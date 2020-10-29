@@ -27,21 +27,16 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
-import com.android.builder.dexing.DexMergerTool;
-import com.android.builder.dexing.DexerTool;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.PathSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -53,28 +48,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Tests for incremental dexing using dex archives. */
-@RunWith(FilterableParameterized.class)
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class DexArchivesTest {
-
-    @Parameterized.Parameter() public DexerTool dexerTool;
-
-    @Parameterized.Parameter(1)
-    public DexMergerTool mergerTool;
-
-    @Parameterized.Parameters(name = "{0}_{1}")
-    public static Iterable<Object[]> getSetups() {
-        return ImmutableList.of(
-                new Object[] {DexerTool.DX, DexMergerTool.DX},
-                new Object[] {DexerTool.D8, DexMergerTool.D8});
-    }
 
     @Rule
     public GradleTestProject project =
@@ -83,21 +62,9 @@ public class DexArchivesTest {
                     .withGradleBuildCacheDirectory(new File("local-build-cache"))
                     .create();
 
-    @Before
-    public void setUp() throws IOException {
-        if (dexerTool == DexerTool.DX) {
-            // set Java lang level to 1.6 explicitly for DX
-            TestFileUtils.appendToFile(
-                    project.getBuildFile(),
-                    "\n"
-                            + "android.compileOptions.sourceCompatibility 1.7\n"
-                            + "android.compileOptions.targetCompatibility 1.7\n");
-        }
-    }
-
     @Test
     public void testInitialBuild() throws Exception {
-        executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
         checkIntermediaryDexArchives(getInitialFolderDexEntries(), getInitialJarDexClasses());
 
@@ -111,7 +78,7 @@ public class DexArchivesTest {
 
     @Test
     public void testChangingExistingFile() throws Exception {
-        executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
         TestFileUtils.addMethod(
                 FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/HelloWorld.java"),
                 "\npublic void addedMethod() {}");
@@ -122,14 +89,14 @@ public class DexArchivesTest {
             long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
 
             TestUtils.waitForFileSystemTick();
-            executor().run("assembleDebug");
+            project.executor().run("assembleDebug");
 
             assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get())
                     .wasModifiedAt(created);
             assertThat(FileUtils.find(builderDir(), "HelloWorld.dex").get().lastModified())
                     .isGreaterThan(created);
         } else {
-            executor().run("assembleDebug");
+            project.executor().run("assembleDebug");
         }
 
         Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
@@ -142,7 +109,7 @@ public class DexArchivesTest {
 
     @Test
     public void testAddingFile() throws Exception {
-        executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
         if (!project.getIntermediateFile(
                         InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
                 .exists()) {
@@ -150,13 +117,13 @@ public class DexArchivesTest {
 
             addNewClass();
             TestUtils.waitForFileSystemTick();
-            executor().run("assembleDebug");
+            project.executor().run("assembleDebug");
             assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get())
                     .wasModifiedAt(created);
         } else {
             addNewClass();
             TestUtils.waitForFileSystemTick();
-            executor().run("assembleDebug");
+            project.executor().run("assembleDebug");
         }
         List<String> dexEntries = Lists.newArrayList("NewClass.dex");
         dexEntries.addAll(getInitialFolderDexEntries());
@@ -174,12 +141,12 @@ public class DexArchivesTest {
         File srcToRemove =
                 FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/ToRemove.java");
         Files.write(srcToRemove.toPath(), newClass.getBytes(Charsets.UTF_8));
-        executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
         assertThat(FileUtils.find(builderDir(), "ToRemove.dex").get()).exists();
 
         srcToRemove.delete();
-        executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
         checkIntermediaryDexArchives(getInitialFolderDexEntries(), getInitialJarDexClasses());
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
@@ -189,7 +156,7 @@ public class DexArchivesTest {
     @Test
     public void testForReleaseVariants() throws IOException, InterruptedException {
         GradleBuildResult result =
-                executor()
+                project.executor()
                         // http://b/149978740
                         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .run("assembleRelease");
@@ -209,18 +176,18 @@ public class DexArchivesTest {
                         + "android.defaultConfig.minSdkVersion=10\n"
                         + "dependencies { implementation ('org.jdeferred:jdeferred-android-aar:1.2.2') {   transitive = false } }");
 
-        executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
         // Minor version update
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\ndependencies { implementation ('org.jdeferred:jdeferred-android-aar:1.2.3') {   transitive = false } }");
-        executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
     }
 
     @Test
     public void testWithCacheDoesNotLoadLocalState() throws IOException, InterruptedException {
-        GradleTaskExecutor executor = executor().withArgument("--build-cache");
+        GradleTaskExecutor executor = project.executor().withArgument("--build-cache");
 
         executor.run("assembleDebug");
         File inputJarHashes =
@@ -240,7 +207,7 @@ public class DexArchivesTest {
     @Test
     public void testDexingBucketsImpactOnCaching() throws IOException, InterruptedException {
         // 1st build to cache
-        GradleTaskExecutor executor = executor().withArgument("--build-cache");
+        GradleTaskExecutor executor = project.executor().withArgument("--build-cache");
 
         executor.with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 1).run("assembleDebug");
         File previousRunDexBuckets =
@@ -275,7 +242,7 @@ public class DexArchivesTest {
 
     @Test
     public void testIncrementalRunWithChangedBuckets() throws IOException, InterruptedException {
-        executor().with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 1).run("assembleDebug");
+        project.executor().with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 1).run("assembleDebug");
 
         if (!project.getIntermediateFile(
                         InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
@@ -284,7 +251,7 @@ public class DexArchivesTest {
             long initialBuildTimestamp =
                     FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
 
-            executor().with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
+            project.executor().with(IntegerOption.DEXING_NUMBER_OF_BUCKETS, 2).run("assembleDebug");
             assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified())
                     .isGreaterThan(initialBuildTimestamp);
             assertThat(FileUtils.find(builderDir(), "NewClass.dex").get().lastModified())
@@ -378,12 +345,6 @@ public class DexArchivesTest {
                     "Lcom/example/helloworld/R$layout;",
                     "Lcom/example/helloworld/R$string;");
         }
-    }
-
-    private GradleTaskExecutor executor() {
-        return project.executor()
-                .with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8)
-                .with(BooleanOption.ENABLE_D8_DESUGARING, dexerTool == DexerTool.D8);
     }
 
     @NonNull

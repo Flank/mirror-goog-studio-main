@@ -314,8 +314,8 @@ public class DeployerException extends Exception {
                 "",
                 ResolutionAction.NONE),
 
-        IWI_RUN_AFTER_SWAP_NOT_SUPPORTED(
-                "Run after swap is not supported by the IWI pipeline. Deployment should fall back to regular installation",
+        UNSUPPORTED_IWI_FILE_DELETE(
+                "Deleting installed files is not supported by the IWI pipeline. Deployment should fall back to regular installation",
                 "",
                 "",
                 ResolutionAction.NONE),
@@ -609,8 +609,8 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.UNSUPPORTED_IWI_CHANGE, type, NO_ARGS, NO_ARGS);
     }
 
-    public static DeployerException runAfterSwapNotSupported() {
-        return new DeployerException(Error.IWI_RUN_AFTER_SWAP_NOT_SUPPORTED, NO_ARGS, NO_ARGS);
+    public static DeployerException deleteInstalledFileNotSupported() {
+        return new DeployerException(Error.UNSUPPORTED_IWI_FILE_DELETE, NO_ARGS, NO_ARGS);
     }
 
     public static DeployerException runTestsNotSupported() {
@@ -622,7 +622,10 @@ public class DeployerException extends Exception {
     }
 
     public static DeployerException runtimeException(Exception e) {
-        return new DeployerException(Error.RUN_TIME_EXCEPTION, NO_ARGS, e.toString());
+        DeployerException dx =
+                new DeployerException(Error.RUN_TIME_EXCEPTION, NO_ARGS, e.toString());
+        dx.initCause(e);
+        return dx;
     }
 
     public static DeployerException apiNotSupported() {

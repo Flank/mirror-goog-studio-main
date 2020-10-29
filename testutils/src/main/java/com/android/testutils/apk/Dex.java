@@ -100,6 +100,14 @@ public final class Dex {
         return HeaderItem.getVersion(fileBytesSupplier.get(), 0);
     }
 
+    public int getFieldCount() {
+        return DexUtils.loadDex(fileBytesSupplier.get()).getFieldCount();
+    }
+
+    public int getMethodCount() {
+        return DexUtils.loadDex(fileBytesSupplier.get()).getMethodCount();
+    }
+
     @Override
     public String toString() {
         return "Dex<" + name + ">";

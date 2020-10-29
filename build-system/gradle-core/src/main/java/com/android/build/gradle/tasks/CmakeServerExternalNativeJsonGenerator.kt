@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.external.cmake.server.ComputeResult
 import com.android.build.gradle.external.cmake.server.ConfigureCommandResult
-import com.android.build.gradle.external.cmake.server.FileGroup
 import com.android.build.gradle.external.cmake.server.HandshakeRequest
 import com.android.build.gradle.external.cmake.server.ProtocolVersion
 import com.android.build.gradle.external.cmake.server.Server
@@ -37,15 +36,13 @@ import com.android.build.gradle.internal.cxx.configure.onlyKeepServerArguments
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue
-import com.android.build.gradle.internal.cxx.json.NativeToolchainValue
-import com.android.build.gradle.internal.cxx.json.StringTable
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrintWriterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
+import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
@@ -56,11 +53,11 @@ import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
 import org.gradle.process.ExecOperations
+import java.io.BufferedWriter
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.PrintWriter
-import java.io.Reader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
@@ -291,9 +288,6 @@ internal class CmakeServerExternalNativeJsonGenerator(
     ): NativeBuildConfigValue {
         val nativeBuildConfigValue =
             createDefaultNativeBuildConfigValue()
-        assert(nativeBuildConfigValue.stringTable != null)
-        val strings =
-            StringTable(nativeBuildConfigValue.stringTable!!)
         assert(nativeBuildConfigValue.buildFiles != null)
         nativeBuildConfigValue.buildFiles!!.addAll(getBuildFiles(cmakeServer))
         assert(nativeBuildConfigValue.cleanCommandsComponents != null)
@@ -321,30 +315,26 @@ internal class CmakeServerExternalNativeJsonGenerator(
         assert(nativeBuildConfigValue.cppFileExtensions != null)
         nativeBuildConfigValue.cppFileExtensions!!.addAll(CmakeUtils.getCppExtensionSet(codeModel))
 
-        // toolchains is always null for V2 model
-        val toolchainHashString = null
-
-        // Fill in the required fields in NativeBuildConfigValue from the code model obtained from
-        // Cmake server.
-        for (config in codeModel.configurations) {
-            for (project in config.projects) {
-                for (target in project.targets) {
-                    // Ignore targets that aren't valid.
-                    if (!canAddTargetToNativeLibrary(
-                        target
-                      )
-                    ) {
-                        continue
-                    }
-                    val nativeLibraryValue =
-                        getNativeLibraryValue(abi, abi.cxxBuildFolder, target, strings)
-                    nativeLibraryValue.toolchain = toolchainHashString
-                    val libraryName =
-                        target.name + "-" + config.name + "-" + abi.abi.tag
-                    assert(nativeBuildConfigValue.libraries != null)
-                    nativeBuildConfigValue.libraries!![libraryName] = nativeLibraryValue
-                } // target
-            } // project
+        abi.additionalProjectFilesIndexFile.bufferedWriter(StandardCharsets.UTF_8).use { additionalProjectFilesIndexWriter ->
+            // Fill in the required fields in NativeBuildConfigValue from the code model obtained from
+            // Cmake server.
+            for (config in codeModel.configurations) {
+                for (project in config.projects) {
+                    for (target in project.targets) {
+                        // Ignore targets that aren't valid.
+                        if (!canAddTargetToNativeLibrary(
+                            target
+                          )
+                        ) {
+                            continue
+                        }
+                        val nativeLibraryValue = getNativeLibraryValue(abi, target, additionalProjectFilesIndexWriter)
+                        val libraryName = target.name + "-" + config.name + "-" + abi.abi.tag
+                        assert(nativeBuildConfigValue.libraries != null)
+                        nativeBuildConfigValue.libraries!![libraryName] = nativeLibraryValue
+                    } // target
+                } // project
+            }
         }
         return nativeBuildConfigValue
     }
@@ -352,20 +342,17 @@ internal class CmakeServerExternalNativeJsonGenerator(
     @VisibleForTesting
     @Throws(FileNotFoundException::class)
     private fun getNativeLibraryValue(
-        abi: CxxAbiModel,
-        workingDirectory: File,
-        target: Target,
-        strings: StringTable
+      abi: CxxAbiModel,
+      target: Target,
+      additionalProjectFilesIndexWriter: BufferedWriter,
     ): NativeLibraryValue {
         return getNativeLibraryValue(
           cmake.cmakeExe!!,
           abi.cxxBuildFolder,
           variant.isDebuggableEnabled,
-          { abi.cmake!!.compileCommandsJsonFile.reader(StandardCharsets.UTF_8) },
           abi.abi.tag,
-          workingDirectory,
           target,
-          strings
+          additionalProjectFilesIndexWriter
         )
     }
 
@@ -406,25 +393,6 @@ internal class CmakeServerExternalNativeJsonGenerator(
 
     companion object {
         private const val CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: "
-
-        /**
-         * @param toolchains - toolchains map
-         * @return the hash of the only entry in the map, ideally the toolchains map should have only
-         * one entry.
-         */
-        private fun getOnlyToolchainName(
-            toolchains: Map<String, NativeToolchainValue>
-        ): String? {
-            if (toolchains.size != 1) {
-                throw RuntimeException(
-                    String.format(
-                        "Invalid number %d of toolchains. Only one toolchain should be present.",
-                        toolchains.size
-                    )
-                )
-            }
-            return toolchains.keys.iterator().next()
-        }
 
         @Throws(IOException::class)
         private fun getCmakeInfoString(cmakeServer: Server): String {
@@ -555,11 +523,9 @@ internal class CmakeServerExternalNativeJsonGenerator(
           cmakeExecutable: File,
           outputFolder: File,
           isDebuggable: Boolean,
-          compileCommandsJsonReader: () -> Reader,
           abi: String,
-          workingDirectory: File,
           target: Target,
-          strings: StringTable
+          additionalProjectFilesIndexWriter: BufferedWriter,
         ): NativeLibraryValue {
             val nativeLibraryValue = NativeLibraryValue()
             nativeLibraryValue.abi = abi
@@ -569,39 +535,24 @@ internal class CmakeServerExternalNativeJsonGenerator(
             nativeLibraryValue.buildType = if (isDebuggable) "debug" else "release"
             // If the target type is an OBJECT_LIBRARY, it does not build any output that we care.
             if ("OBJECT_LIBRARY" != target.type // artifacts of an object library could be null. See example in b/144938511
-                && target.artifacts != null && target.artifacts.isNotEmpty()
+              && target.artifacts != null && target.artifacts.isNotEmpty()
             ) {
                 // We'll have only one output, so get the first one.
                 nativeLibraryValue.output = File(target.artifacts[0])
             }
             nativeLibraryValue.runtimeFiles = findRuntimeFiles(target)
 
+            val sourceDirectory = File(target.sourceDirectory)
+            for (fileGroup in target.fileGroups) {
+                if (fileGroup.language == "C" || fileGroup.language == "CXX") {
+                    // Skip C and CXX since these are contained in compile_commands.json already.
+                    continue
+                }
+                for (source in fileGroup.sources) {
+                    additionalProjectFilesIndexWriter.appendln(sourceDirectory.resolve(source).absolutePath)
+                }
+            }
             return nativeLibraryValue
-
-        }
-
-        private fun compileFlagsFromFileGroup(fileGroup: FileGroup): String {
-            val flags = StringBuilder()
-            flags.append(fileGroup.compileFlags)
-            if (fileGroup.defines != null) {
-                for (define in fileGroup.defines) {
-                    flags.append(" -D").append(define)
-                }
-            }
-            if (fileGroup.includePath != null) {
-                for (includePath in fileGroup.includePath) {
-                    if (includePath?.path == null) {
-                        continue
-                    }
-                    if (includePath.isSystem != null && includePath.isSystem) {
-                        flags.append(" -system ")
-                    } else {
-                        flags.append(" -I ")
-                    }
-                    flags.append(includePath.path)
-                }
-            }
-            return flags.toString()
         }
 
         /**

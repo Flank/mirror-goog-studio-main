@@ -50,14 +50,11 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.variant.VariantPathHelper;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.VariantType;
-import com.android.builder.dexing.DexMergerTool;
-import com.android.builder.dexing.DexerTool;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.OptionalCompilationStep;
@@ -482,26 +479,6 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).addValue(componentIdentity.getName()).toString();
-    }
-
-    @NonNull
-    @Override
-    public DexerTool getDexer() {
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
-            return DexerTool.D8;
-        } else {
-            return DexerTool.DX;
-        }
-    }
-
-    @NonNull
-    @Override
-    public DexMergerTool getDexMerger() {
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
-            return DexMergerTool.D8;
-        } else {
-            return DexMergerTool.DX;
-        }
     }
 
     @NonNull

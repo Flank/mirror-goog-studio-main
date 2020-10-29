@@ -26,9 +26,13 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.MethodVisitor
 import java.io.BufferedOutputStream
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.net.URLClassLoader
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -49,13 +53,25 @@ import java.util.zip.ZipOutputStream
  *                                 to load the actual classes.
  * @param framesComputationMode the frame computation mode that will be applied to the bytecode of
  *                              the instrumented classes.
+ * @param profilingTransforms list of paths to the profiler jars injected by the IDE to transform
+ *                            classes.
  */
 class AsmInstrumentationManager(
-    private val visitors: List<AsmClassVisitorFactory<*>>,
-    private val apiVersion: Int,
-    private val classesHierarchyResolver: ClassesHierarchyResolver,
-    private val framesComputationMode: FramesComputationMode
-) {
+        private val visitors: List<AsmClassVisitorFactory<*>>,
+        private val apiVersion: Int,
+        private val classesHierarchyResolver: ClassesHierarchyResolver,
+        private val framesComputationMode: FramesComputationMode,
+        profilingTransforms: List<String> = emptyList()
+): Closeable {
+    private val profilingTransformsClassLoaders = mutableListOf<URLClassLoader>()
+
+    private val profilingTransforms = profilingTransforms.map {
+        val jarFile = File(it)
+        val classLoader = URLClassLoader(arrayOf(jarFile.toURI().toURL()))
+        profilingTransformsClassLoaders.add(classLoader)
+        loadTransformFunction(jarFile, classLoader)
+    }
+
     private val classWriterFlags: Int =
         when (framesComputationMode) {
             FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS,
@@ -71,6 +87,10 @@ class AsmInstrumentationManager(
                 ClassReader.SKIP_FRAMES
             else -> ClassReader.EXPAND_FRAMES
         }
+
+    override fun close() {
+        profilingTransformsClassLoaders.forEach(URLClassLoader::close)
+    }
 
     fun instrumentClassesFromDirectoryToDirectory(inputDir: File, outputDir: File) {
         val inputPath = inputDir.toPath()
@@ -128,6 +148,20 @@ class AsmInstrumentationManager(
         }
     }
 
+    private fun performProfilingTransformations(inputStream: InputStream): ByteArray {
+        var bytes = ByteStreams.toByteArray(inputStream)
+        ByteArrayOutputStream().use { outputStream ->
+            profilingTransforms.forEach { transform ->
+                ByteArrayInputStream(bytes).use { inputStream ->
+                    transform.accept(inputStream, outputStream)
+                }
+                bytes = outputStream.toByteArray()
+                outputStream.reset()
+            }
+        }
+        return bytes
+    }
+
     private fun doInstrumentClass(
         packageName: String,
         className: String,
@@ -152,8 +186,7 @@ class AsmInstrumentationManager(
         return if (filteredVisitors.isNotEmpty()) {
             classInputStream.invoke().use {
                 val classContext = ClassContextImpl(classData, classesHierarchyResolver)
-                val bytes = ByteStreams.toByteArray(it)
-                val classReader = ClassReader(bytes)
+                val classReader = ClassReader(performProfilingTransformations(it))
                 val classWriter =
                     FixFramesClassWriter(classReader, classWriterFlags, classesHierarchyResolver)
                 var nextVisitor: ClassVisitor = classWriter

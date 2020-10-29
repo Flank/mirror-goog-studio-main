@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
-import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
+import com.android.build.gradle.internal.cxx.settings.SettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
@@ -55,13 +55,14 @@ fun createCxxAbiModel(
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
                 CxxCmakeAbiModel(
                     cmakeServerLogFile = join(cxxBuildFolder, "cmake_server_log.txt"),
-                    effectiveConfiguration = CMakeSettingsConfiguration(),
+                    effectiveConfiguration = SettingsConfiguration(),
                     cmakeArtifactsBaseFolder = cxxBuildFolder
                 )
             } else {
                 null
             },
         buildSettings = createBuildSettingsFromFile(variant.module.buildSettingsFile),
+        isActiveAbi = variant.validAbiList.contains(abi),
         prefabFolder = variant.prefabDirectory.resolve(abi.tag)
     )
 }

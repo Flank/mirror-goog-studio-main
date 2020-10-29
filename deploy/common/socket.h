@@ -17,6 +17,7 @@
 #ifndef DEPLOY_SOCKET_H
 #define DEPLOY_SOCKET_H
 
+#include <memory>
 #include <string>
 
 #include <sys/socket.h>
@@ -42,7 +43,7 @@ class Socket : public MessagePipeWrapper {
 
   // Accepts an incoming connection on this and assigns that connection to
   // the passed-in socket.
-  bool Accept(Socket* socket, int timeout_ms);
+  std::unique_ptr<Socket> Accept(int timeout_ms);
 
   // Connects this socket to the socket at the specified address.
   bool Connect(const std::string& socket_name);

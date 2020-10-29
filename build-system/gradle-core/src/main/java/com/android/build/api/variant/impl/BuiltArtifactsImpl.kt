@@ -17,46 +17,53 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.ide.common.build.CommonBuiltArtifacts
 import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.function.Supplier
 
-class BuiltArtifactsImpl(
+class BuiltArtifactsImpl @JvmOverloads constructor(
     override val version: Int = BuiltArtifacts.METADATA_FILE_VERSION,
     override val artifactType: Artifact<*>,
     override val applicationId: String,
     override val variantName: String,
-    override val elements: Collection<BuiltArtifactImpl>)
+    override val elements: Collection<BuiltArtifactImpl>,
+    val elementType: String? = initFileType(elements))
     : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
 
-    init {
-        val (files, directories)  = elements
-                .asSequence()
-                .map { File(it.outputFile) }
-                .filter { it.exists() }
-                .partition { it.isFile }
-        if (files.isNotEmpty() && directories.isNotEmpty()) {
-                        throw IllegalArgumentException("""
+    companion object {
+        const val METADATA_FILE_NAME = "output-metadata.json"
+
+        private fun initFileType(elements: Collection<BuiltArtifactImpl>): String? {
+            val (files, directories)  = elements
+                    .asSequence()
+                    .map { File(it.outputFile) }
+                    .filter { it.exists() }
+                    .partition { it.isFile }
+            if (files.isNotEmpty() && directories.isNotEmpty()) {
+                throw IllegalArgumentException("""
                 You cannot store both files and directories as a single artifact.
                 ${display(files, "file", "files")}
                 ${display(directories, "directory", "directories")}
             """.trimIndent())
+            }
+            return when {
+                files.isNotEmpty() -> "File"
+                directories.isNotEmpty() -> "Directory"
+                else -> null
+            }
         }
 
-    }
-
-    companion object {
-        const val METADATA_FILE_NAME = "output-metadata.json"
+        private fun display(files: Collection<File>, singular: String, plural: String): String {
+            return if (files.size > 1)
+                "${files.joinToString(",") { it.name }} are $plural"
+            else "${files.first().name} is a $singular"
+        }
     }
 
     override fun save(out: Directory) {
@@ -104,13 +111,8 @@ class BuiltArtifactsImpl(
                         versionName = builtArtifact.versionName,
                         variantOutputConfiguration = builtArtifact.variantOutputConfiguration
                     )
-                }
-            .toList()))
-    }
-
-    private fun display(files: Collection<File>, singular: String, plural: String): String {
-        return if (files.size > 1)
-            "${files.joinToString(",") { it.name }} are $plural"
-        else "${files.first().name} is a $singular"
+                }.toList(),
+                elementType)
+        )
     }
 }

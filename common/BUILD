@@ -7,9 +7,6 @@ load("//tools/base/bazel:utils.bzl", "dir_archive", "fileset")
 iml_module(
     name = "studio.android.sdktools.common",
     srcs = ["src/main/java"],
-    bundle_data = [
-        "src/main/java/com/android/SdkConstants.java",
-    ],
     iml_files = ["android.sdktools.common.iml"],
     lint_baseline = "lint_baseline.xml",
     # do not sort: must match IML order

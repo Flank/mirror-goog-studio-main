@@ -75,7 +75,12 @@ data class CxxAbiModel(
     /**
      * The directory containing generated Prefab imports, if any.
      */
-    val prefabFolder: File
+    val prefabFolder: File,
+
+    /**
+     * Whether or not this abi is active in the build or not.
+     */
+    val isActiveAbi: Boolean,
 )
 
 /**
@@ -160,6 +165,13 @@ val CxxAbiModel.compileCommandsJsonFile: File
  */
 val CxxAbiModel.compileCommandsJsonBinFile: File
     get() = FileUtils.join(originalCxxBuildFolder, "compile_commands.json.bin")
+
+/**
+ * additional_project_files.txt file for this ABI. This file contains a newline separated list of
+ * filenames that are known by the build system and considered to be part of the project.
+ */
+val CxxAbiModel.additionalProjectFilesIndexFile: File
+    get() = FileUtils.join(originalCxxBuildFolder, "additional_project_files.txt")
 
 /**
  * Text file containing absolute paths to folders containing the generated symbols, one per line.

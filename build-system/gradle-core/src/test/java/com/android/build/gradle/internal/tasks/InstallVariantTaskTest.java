@@ -75,7 +75,7 @@ public class InstallVariantTaskTest {
 
     private void checkSingleApk(DeviceConnector deviceConnector) throws Exception {
         File mainOutputFileApk = temporaryFolder.newFile("main.apk");
-        BuiltArtifacts builtArtifacts =
+        BuiltArtifactsImpl builtArtifacts =
                 new BuiltArtifactsImpl(
                         BuiltArtifacts.METADATA_FILE_VERSION,
                         ArtifactType.APK.INSTANCE,

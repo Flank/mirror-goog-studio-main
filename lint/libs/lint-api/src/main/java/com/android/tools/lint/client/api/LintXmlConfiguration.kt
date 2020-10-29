@@ -1380,6 +1380,10 @@ open class LintXmlConfiguration protected constructor(
         project: Project,
         id: String
     ) {
+        if (IssueRegistry.isDeletedIssueId(id)) {
+            // Recently deleted, but avoid complaining about leftover configuration
+            return
+        }
         val message = getUnknownIssueIdErrorMessage(id, issueRegistry)
         if (driver != null) {
             val location = Location.create(configFile)

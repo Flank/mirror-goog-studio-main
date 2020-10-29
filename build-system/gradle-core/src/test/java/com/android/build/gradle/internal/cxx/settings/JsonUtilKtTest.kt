@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -68,14 +67,14 @@ class JsonUtilKtTest {
           ]
         }""".trimIndent()
 
-    fun CMakeSettings.nullCheck() {
+    fun Settings.nullCheck() {
         check(environments != null)
         check(configurations != null)
         environments.forEach { it.nullCheck() }
         configurations.forEach { it.nullCheck() }
     }
 
-    fun CMakeSettingsEnvironment.nullCheck() {
+    fun SettingsEnvironment.nullCheck() {
         check(namespace != null)
         check(environment != null)
         check(inheritEnvironments != null)
@@ -87,7 +86,7 @@ class JsonUtilKtTest {
         }
     }
 
-    fun CMakeSettingsConfiguration.nullCheck() {
+    fun SettingsConfiguration.nullCheck() {
         check(inheritEnvironments != null)
         inheritEnvironments.forEach { check(it!=null) }
         check(variables != null)
@@ -95,57 +94,28 @@ class JsonUtilKtTest {
         variables.forEach { it.nullCheck() }
     }
 
-    fun CMakeSettingsVariable.nullCheck() {
+    fun SettingsConfigurationVariable.nullCheck() {
         check(name != null)
         check(value != null)
     }
 
     @Test
     fun `real world test`() {
-        val settings = createCmakeSettingsJsonFromString(realWorldTestExample)
+        val settings = createSettingsFromJsonString(realWorldTestExample)
         val returnToString = settings.toJsonString()
-        val roundTrip = createCmakeSettingsJsonFromString(returnToString)
+        val roundTrip = createSettingsFromJsonString(returnToString)
         assertThat(settings).isEqualTo(roundTrip)
         assertThat(realWorldTestExample).isEqualTo(returnToString)
     }
 
     @Test
     fun `comments allowed`() {
-        val settings = createCmakeSettingsJsonFromString("""{
+        val settings = createSettingsFromJsonString("""{
             // A comment
         }""".trimIndent())
         val returnToString = settings.toJsonString()
-        val roundTrip = createCmakeSettingsJsonFromString(returnToString)
+        val roundTrip = createSettingsFromJsonString(returnToString)
         assertThat(settings).isEqualTo(roundTrip)
-    }
-    
-    @Test
-    fun `round trip synthesize random with string property`() {
-        RandomInstanceGenerator()
-            .provide(PropertyValue::class.java) { sb ->
-                PropertyValue.StringPropertyValue(sb.synthetic(String::class.java))
-            }
-            .synthetics(CMakeSettings::class.java, 5)
-            .forEach { settings ->
-                val returnToString = settings.toJsonString()
-                val roundTrip = createCmakeSettingsJsonFromString(returnToString)
-                assertThat(settings).isEqualTo(roundTrip)
-            }
-    }
-
-    @Test
-    fun `round trip synthesize random with lookup property`() {
-        RandomInstanceGenerator()
-            .provide(PropertyValue::class.java) { sb ->
-                val result = sb.synthetic(String::class.java)
-                PropertyValue.LookupPropertyValue { result }
-            }
-            .synthetics(CMakeSettings::class.java)
-            .forEach { settings ->
-                val returnToString = settings.toJsonString()
-                val roundTrip = createCmakeSettingsJsonFromString(returnToString)
-                assertThat(settings.toJsonString()).isEqualTo(roundTrip.toJsonString())
-            }
     }
 
     @Test
@@ -163,14 +133,14 @@ class JsonUtilKtTest {
             }
           ]
         }""".trimIndent()
-        val value = createCmakeSettingsJsonFromString(json)
+        val value = createSettingsFromJsonString(json)
         value.nullCheck()
     }
 
     @Test
     fun `check parse error becomes errorln`() {
         PassThroughDeduplicatingLoggingEnvironment().apply {
-            createCmakeSettingsJsonFromString("{")
+            createSettingsFromJsonString("{")
             assertThat(errors.single()).isEqualTo("End of input at line 1 column 2 path \$.")
         }
     }

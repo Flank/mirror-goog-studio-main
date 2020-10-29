@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.utils.ILogger;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -78,6 +77,14 @@ public class HardwareProperties {
     public static final String HW_LCD_FOLDED_Y_OFFSET = "hw.displayRegion.0.1.yOffset";
     public static final String HW_LCD_FOLDED_WIDTH = "hw.displayRegion.0.1.width";
     public static final String HW_LCD_FOLDED_HEIGHT = "hw.displayRegion.0.1.height";
+    public static final String HW_LCD_FOLDED_X_OFFSET_2 = "hw.displayRegion.0.2.xOffset";
+    public static final String HW_LCD_FOLDED_Y_OFFSET_2 = "hw.displayRegion.0.2.yOffset";
+    public static final String HW_LCD_FOLDED_WIDTH_2 = "hw.displayRegion.0.2.width";
+    public static final String HW_LCD_FOLDED_HEIGHT_2 = "hw.displayRegion.0.2.height";
+    public static final String HW_LCD_FOLDED_X_OFFSET_3 = "hw.displayRegion.0.3.xOffset";
+    public static final String HW_LCD_FOLDED_Y_OFFSET_3 = "hw.displayRegion.0.3.yOffset";
+    public static final String HW_LCD_FOLDED_WIDTH_3 = "hw.displayRegion.0.3.width";
+    public static final String HW_LCD_FOLDED_HEIGHT_3 = "hw.displayRegion.0.3.height";
 
     /** AVD/config.ini key indicating whether proximity sensor present. */
     public static final String HW_PROXIMITY_SENSOR = "hw.sensors.proximity";

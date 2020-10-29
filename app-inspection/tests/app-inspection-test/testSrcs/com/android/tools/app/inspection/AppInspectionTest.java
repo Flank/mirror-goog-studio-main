@@ -32,7 +32,6 @@ import com.android.tools.app.inspection.AppInspection.AppInspectionEvent;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse;
 import com.android.tools.app.inspection.AppInspection.AppInspectionResponse.Status;
 import com.android.tools.app.inspection.AppInspection.LaunchMetadata;
-import com.android.tools.app.inspection.AppInspection.VersionParams;
 import com.android.tools.transport.device.SdkLevel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -330,7 +329,7 @@ public final class AppInspectionTest {
                         createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                versionParams("test.library_test.version", "0.0.1"))),
+                                artifactCoordinate("test.library", "test", "0.0.1"))),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
     }
@@ -343,16 +342,18 @@ public final class AppInspectionTest {
                         createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                versionParams("test.library_test.version", "3.0.0")));
+                                artifactCoordinate("test.library", "test", "3.0.0")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getCreateInspectorResponse().getStatus())
                 .isEqualTo(AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE);
     }
 
-    private static VersionParams versionParams(String versionFileName, String minVersion) {
-        return VersionParams.newBuilder()
-                .setMinVersion(minVersion)
-                .setVersionFileName(versionFileName)
+    private static AppInspection.ArtifactCoordinate artifactCoordinate(
+            String groupId, String artifactId, String version) {
+        return AppInspection.ArtifactCoordinate.newBuilder()
+                .setGroupId(groupId)
+                .setArtifactId(artifactId)
+                .setVersion(version)
                 .build();
     }
 
@@ -364,7 +365,7 @@ public final class AppInspectionTest {
                         createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                versionParams("test.library_test.version", "3.a")));
+                                artifactCoordinate("test.library", "test", "3.a")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage())
                 .isEqualTo("Failed to parse provided min version 3.a");
@@ -380,7 +381,7 @@ public final class AppInspectionTest {
                         createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                versionParams("non-existent.version", "1.0.0")));
+                                artifactCoordinate("non", "existent", "1.0.0")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage()).startsWith("Failed to find version file");
         assertThat(response.getCreateInspectorResponse().getStatus()).isEqualTo(LIBRARY_MISSING);
@@ -394,7 +395,7 @@ public final class AppInspectionTest {
                         createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                versionParams("test.invalid_test.version", "1.0.0")));
+                                artifactCoordinate("test.invalid", "test", "1.0.0")));
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getErrorMessage()).startsWith("Failed to parse version string");
         assertThat(response.getCreateInspectorResponse().getStatus())
@@ -402,81 +403,64 @@ public final class AppInspectionTest {
     }
 
     @Test
-    public void getLibraryVersions() throws Exception {
-        List<VersionParams> targetVersions = new ArrayList<>();
+    public void getLibraryCompatibilityInfoCommand() throws Exception {
+        List<AppInspection.ArtifactCoordinate> artifacts = new ArrayList<>();
         // SUCCESS
-        targetVersions.add(
-                VersionParams.newBuilder()
-                        .setMinVersion("1.0.0")
-                        .setVersionFileName("test.library_test.version")
-                        .build());
+        artifacts.add(artifactCoordinate("test.library", "test", "1.0.0"));
         // NOT FOUND
-        targetVersions.add(
-                VersionParams.newBuilder()
-                        .setMinVersion("1.0.0")
-                        .setVersionFileName("does_not_exist.version")
-                        .build());
+        artifacts.add(artifactCoordinate("non", "existent", "1.0.0"));
         // SERVICE ERROR
-        targetVersions.add(
-                VersionParams.newBuilder()
-                        .setMinVersion("1.0.0")
-                        .setVersionFileName("test.invalid_test.version")
-                        .build());
+        artifacts.add(artifactCoordinate("test.invalid", "test", "1.0.0"));
         // INCOMPATIBLE
-        targetVersions.add(
-                VersionParams.newBuilder()
-                        .setMinVersion("2.0.0")
-                        .setVersionFileName("test.library_test.version")
-                        .build());
+        artifacts.add(artifactCoordinate("test.library", "test", "2.0.0"));
         // INVALID MIN VERSION
-        targetVersions.add(
-                VersionParams.newBuilder()
-                        .setMinVersion("12das")
-                        .setVersionFileName("test.library_test.version")
-                        .build());
-        AppInspectionResponse response =
-                appInspectionRule.sendCommandAndGetResponse(getLibraryVersions(targetVersions));
-        assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
-        assertThat(response.getLibraryVersionsResponse().getResponsesCount()).isEqualTo(5);
+        artifacts.add(artifactCoordinate("test.library", "test", "1232ad"));
 
-        assertThat(response.getLibraryVersionsResponse().getResponses(0).getStatus())
-                .isEqualTo(AppInspection.LibraryVersionResponse.Status.COMPATIBLE);
-        assertThat(response.getLibraryVersionsResponse().getResponses(0).getVersionFileName())
-                .isEqualTo("test.library_test.version");
-        assertThat(response.getLibraryVersionsResponse().getResponses(0).getVersion())
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        getLibraryCompatibilityInfoCommand(artifacts));
+        assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponsesCount()).isEqualTo(5);
+
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(0).getStatus())
+                .isEqualTo(AppInspection.LibraryCompatibilityInfo.Status.COMPATIBLE);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(0).getTargetLibrary())
+                .isEqualTo(artifacts.get(0));
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(0).getVersion())
                 .isEqualTo("1.0.0");
 
-        assertThat(response.getLibraryVersionsResponse().getResponses(1).getStatus())
-                .isEqualTo(AppInspection.LibraryVersionResponse.Status.LIBRARY_MISSING);
-        assertThat(response.getLibraryVersionsResponse().getResponses(1).getVersionFileName())
-                .isEqualTo("does_not_exist.version");
-        assertThat(response.getLibraryVersionsResponse().getResponses(1).getErrorMessage())
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(1).getStatus())
+                .isEqualTo(AppInspection.LibraryCompatibilityInfo.Status.LIBRARY_MISSING);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(1).getTargetLibrary())
+                .isEqualTo(artifacts.get(1));
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(1).getErrorMessage())
                 .startsWith("Failed to find version file");
-        assertThat(response.getLibraryVersionsResponse().getResponses(1).getVersion()).isEmpty();
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(1).getVersion())
+                .isEmpty();
 
-        assertThat(response.getLibraryVersionsResponse().getResponses(2).getStatus())
-                .isEqualTo(AppInspection.LibraryVersionResponse.Status.INCOMPATIBLE);
-        assertThat(response.getLibraryVersionsResponse().getResponses(2).getVersionFileName())
-                .isEqualTo("test.invalid_test.version");
-        assertThat(response.getLibraryVersionsResponse().getResponses(2).getErrorMessage())
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(2).getStatus())
+                .isEqualTo(AppInspection.LibraryCompatibilityInfo.Status.INCOMPATIBLE);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(2).getTargetLibrary())
+                .isEqualTo(artifacts.get(2));
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(2).getErrorMessage())
                 .startsWith("Failed to parse version string");
-        assertThat(response.getLibraryVersionsResponse().getResponses(2).getVersion())
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(2).getVersion())
                 .isEqualTo("abc");
 
-        assertThat(response.getLibraryVersionsResponse().getResponses(3).getStatus())
-                .isEqualTo(AppInspection.LibraryVersionResponse.Status.INCOMPATIBLE);
-        assertThat(response.getLibraryVersionsResponse().getResponses(3).getVersionFileName())
-                .isEqualTo("test.library_test.version");
-        assertThat(response.getLibraryVersionsResponse().getResponses(3).getVersion())
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(3).getStatus())
+                .isEqualTo(AppInspection.LibraryCompatibilityInfo.Status.INCOMPATIBLE);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(3).getTargetLibrary())
+                .isEqualTo(artifacts.get(3));
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(3).getVersion())
                 .isEqualTo("1.0.0");
 
-        assertThat(response.getLibraryVersionsResponse().getResponses(4).getStatus())
-                .isEqualTo(AppInspection.LibraryVersionResponse.Status.SERVICE_ERROR);
-        assertThat(response.getLibraryVersionsResponse().getResponses(4).getVersionFileName())
-                .isEqualTo("test.library_test.version");
-        assertThat(response.getLibraryVersionsResponse().getResponses(4).getErrorMessage())
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(4).getStatus())
+                .isEqualTo(AppInspection.LibraryCompatibilityInfo.Status.SERVICE_ERROR);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(4).getTargetLibrary())
+                .isEqualTo(artifacts.get(4));
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(4).getErrorMessage())
                 .startsWith("Failed to parse provided min version");
-        assertThat(response.getLibraryVersionsResponse().getResponses(4).getVersion())
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(4).getVersion())
                 .isEqualTo("1.0.0");
     }
 
@@ -491,11 +475,12 @@ public final class AppInspectionTest {
     }
 
     @NonNull
-    private static AppInspectionCommand getLibraryVersions(List<VersionParams> targetVersions) {
+    private static AppInspectionCommand getLibraryCompatibilityInfoCommand(
+            List<AppInspection.ArtifactCoordinate> targetVersions) {
         return AppInspectionCommand.newBuilder()
-                .setGetLibraryVersionsCommand(
-                        AppInspection.GetLibraryVersionsCommand.newBuilder()
-                                .addAllTargetVersions(targetVersions))
+                .setGetLibraryCompatibilityInfoCommand(
+                        AppInspection.GetLibraryCompatibilityInfoCommand.newBuilder()
+                                .addAllTargetLibraries(targetVersions))
                 .build();
     }
 

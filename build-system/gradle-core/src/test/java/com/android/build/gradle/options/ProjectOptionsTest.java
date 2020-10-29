@@ -233,7 +233,7 @@ public class ProjectOptionsTest {
         ImmutableMap<String, Object> gradleProperties =
                 ImmutableMap.of(
                         "android.enableDesugar", "false",
-                        "android.enableD8", "false");
+                        "android.enableIncrementalDexingTransform", "false");
         ProjectOptions projectOptions =
                 new ProjectOptions(
                         ImmutableMap.of(),
@@ -245,7 +245,7 @@ public class ProjectOptionsTest {
         gradleProperties =
                 ImmutableMap.of(
                         "android.enableDesugar", "true",
-                        "android.enableD8", "false");
+                        "android.enableIncrementalDexingTransform", "false");
         projectOptions =
                 new ProjectOptions(
                         ImmutableMap.of(),
@@ -257,7 +257,7 @@ public class ProjectOptionsTest {
         gradleProperties =
                 ImmutableMap.of(
                         "android.enableDesugar", "true",
-                        "android.enableD8", "true");
+                        "android.enableIncrementalDexingTransform", "true");
         projectOptions =
                 new ProjectOptions(
                         ImmutableMap.of(),

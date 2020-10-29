@@ -29,7 +29,6 @@ import com.android.testutils.apk.Dex;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -89,30 +88,22 @@ public class DexArchiveBuilderTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Parameterized.Parameters(name = "{0}_{1}_{2}")
+    @Parameterized.Parameters(name = "{0}_{1}")
     public static Collection<Object[]> setups() {
         return ImmutableList.of(
-                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.DIR, DexerTool.D8},
-                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.JAR, DexerTool.D8},
-                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.DIR, DexerTool.D8},
-                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.JAR, DexerTool.D8},
-                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.DIR, DexerTool.DX},
-                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.JAR, DexerTool.DX},
-                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.DIR, DexerTool.DX},
-                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.JAR, DexerTool.DX});
+                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.DIR},
+                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.JAR},
+                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.DIR},
+                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.JAR});
     }
 
     @NonNull private final ClassesInputFormat inputFormat;
     @NonNull private final DexArchiveFormat outputFormat;
-    @NonNull private final DexerTool dexerTool;
 
     public DexArchiveBuilderTest(
-            @NonNull ClassesInputFormat inputFormat,
-            @NonNull DexArchiveFormat outputFormat,
-            @NonNull DexerTool dexerTool) {
+            @NonNull ClassesInputFormat inputFormat, @NonNull DexArchiveFormat outputFormat) {
         this.inputFormat = inputFormat;
         this.outputFormat = outputFormat;
-        this.dexerTool = dexerTool;
     }
 
     @Test
@@ -120,7 +111,7 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, classesInInput);
@@ -131,7 +122,7 @@ public class DexArchiveBuilderTest {
     public void checkEmptyInput() throws Exception {
         Path emptyInput = writeToInput(ImmutableList.of());
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(emptyInput, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(emptyInput, output);
 
         if (outputFormat == DexArchiveFormat.JAR) {
             assertThat(output).doesNotExist();
@@ -146,13 +137,13 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
 
         // add new file
         writeToInput(ImmutableList.of("D"));
 
         // trigger conversion again
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, ImmutableList.of("A", "B", "C", "D"));
         }
@@ -161,7 +152,7 @@ public class DexArchiveBuilderTest {
         writeToInput(ImmutableList.of("F"));
 
         // trigger conversion again
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, ImmutableList.of("A", "B", "C", "D", "F"));
         }
@@ -175,7 +166,7 @@ public class DexArchiveBuilderTest {
         }
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, classesInInput);
@@ -212,14 +203,11 @@ public class DexArchiveBuilderTest {
 
         Path output = fs.getPath("tmp\\output");
         Files.createDirectories(output);
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
     }
 
     @Test
     public void checkChecksumInfoExists() throws Exception {
-        // Checksum is a feature only available in D8.
-        Assume.assumeTrue(dexerTool == DexerTool.D8);
-
         // We are going to build a dex with debug output mode.
         Path input = writeToInput(ImmutableList.of("A"));
         ClassFileInput cfInput = ClassFileInputs.fromPath(input);
@@ -229,7 +217,7 @@ public class DexArchiveBuilderTest {
         Path output = createOutput();
 
         // DexArchiveTestUtil always do debug build which should contains the checksums.
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
         Dex dex = null;
 
         // Look into the string contend of the dex file. It should have at least one string
@@ -277,7 +265,7 @@ public class DexArchiveBuilderTest {
         }
 
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, dexerTool);
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output);
 
         Path dexFile =
                 Iterators.getOnlyElement(
@@ -298,46 +286,9 @@ public class DexArchiveBuilderTest {
     }
 
     @Test
-    public void checkStaticAndDefaultInterfaceMethods() throws Exception {
-        Assume.assumeTrue(inputFormat == ClassesInputFormat.DIR);
-        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
-        Assume.assumeFalse(dexerTool == DexerTool.D8);
-
-        Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
-        String path =
-                TestStaticAndDefault.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
-        Path outClassFile = classesDir.resolve(path);
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
-            Files.createDirectories(outClassFile.getParent());
-            Files.write(outClassFile, ByteStreams.toByteArray(in));
-        }
-
-        Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, dexerTool);
-
-        Path dexFile =
-                Iterators.getOnlyElement(
-                        Files.walk(output).filter(Files::isRegularFile).iterator());
-        String dexClassName = "L" + path.replaceAll("\\.class$", ";");
-        Dex dex = new Dex(dexFile);
-        assertThat(dex).containsClass(dexClassName);
-
-        // D8 has desugaring enabled by default, so we check this behavior only for DX
-        Assume.assumeTrue(dexerTool == DexerTool.DX);
-        try {
-            DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, dexerTool);
-            fail("Default and static interface method should require min sdk 24.");
-        } catch (DexArchiveBuilderException ignored) {
-            assertThat(Throwables.getStackTraceAsString(ignored))
-                    .contains("strictly requires --min-sdk-version >= 24");
-        }
-    }
-
-    @Test
     public void testAssertionsForDebugBuilds() throws Exception {
         Assume.assumeTrue(inputFormat == ClassesInputFormat.DIR);
         Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
-        Assume.assumeTrue(dexerTool == DexerTool.D8);
 
         Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
         String path =
@@ -349,7 +300,7 @@ public class DexArchiveBuilderTest {
         }
 
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, dexerTool, true);
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, true);
 
         Path dexFile =
                 Iterators.getOnlyElement(
@@ -362,7 +313,7 @@ public class DexArchiveBuilderTest {
 
         // now build for release
         FileUtils.cleanOutputDir(output.toFile());
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, dexerTool, false);
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, false);
         assertThat(new Dex(dexFile))
                 .containsClass(dexClassName)
                 .that()

@@ -139,9 +139,6 @@ public abstract class AbstractAppTaskManager<
 
         createAidlTask(appVariantProperties);
 
-        // Add external native build tasks
-        createExternalNativeBuildTasks(appVariantProperties);
-
         maybeExtractProfilerDependencies(apkCreationConfig);
 
         // Add a task to merge the jni libs folders

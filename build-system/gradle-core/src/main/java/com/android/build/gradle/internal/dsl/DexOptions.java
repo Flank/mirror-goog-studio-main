@@ -16,36 +16,25 @@
 
 package com.android.build.gradle.internal.dsl;
 
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.core.DefaultDexOptions;
 import java.util.Arrays;
-import javax.inject.Inject;
 
 /**
  * DSL object for configuring dx options.
+ *
+ * @deprecated AGP does not use these options for dexing any more.
  */
+@Deprecated
 @SuppressWarnings("unused") // Exposed in the DSL.
 public class DexOptions extends DefaultDexOptions {
-
-    private final DeprecationReporter deprecationReporter;
-
-    @Inject
-    public DexOptions(DeprecationReporter deprecationReporter) {
-        this.deprecationReporter = deprecationReporter;
-    }
 
     /** @deprecated ignored */
     @Deprecated
     public boolean getIncremental() {
-        deprecationReporter.reportObsoleteUsage(
-                "DexOptions.incremental", DeprecationTarget.DEX_OPTIONS);
         return false;
     }
 
     public void setIncremental(boolean ignored) {
-        deprecationReporter.reportObsoleteUsage(
-                "DexOptions.incremental", DeprecationTarget.DEX_OPTIONS);
     }
 
     public void additionalParameters(String... parameters) {
@@ -57,7 +46,5 @@ public class DexOptions extends DefaultDexOptions {
      */
     @Deprecated
     public void setOptimize(@SuppressWarnings("UnusedParameters") Boolean optimize) {
-        deprecationReporter.reportObsoleteUsage(
-                "DexOptions.optimize", DeprecationTarget.DEX_OPTIONS);
     }
 }

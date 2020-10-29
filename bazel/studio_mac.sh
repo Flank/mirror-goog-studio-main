@@ -11,6 +11,11 @@ then
   IS_POST_SUBMIT=true
 fi
 
+declare -a conditional_flags
+if [[ $IS_POST_SUBMIT ]]; then
+  conditional_flags+=(--nocache_test_results)
+fi
+
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
@@ -32,10 +37,10 @@ readonly config_options="--config=local --config=release --config=cloud_resultst
         --worker_quit_after_build \
         --define=meta_android_build_number=${build_number} \
         --profile=${dist_dir}/profile-${build_number}.json.gz \
+        "${conditional_flags[@]}" \
         -- \
         //tools/... \
         //tools/base/profiler/native/trace_processor_daemon \
-        //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
         -//tools/base/build-system/integration-test/... \
         -//tools/adt/idea/android-lang:intellij.android.lang.tests_tests \
         -//tools/adt/idea/profilers-ui:intellij.android.profilers.ui_tests \
@@ -52,8 +57,9 @@ if [[ -d "${dist_dir}" ]]; then
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${dist_dir}
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
-  readonly java="prebuilts/studio/jdk/mac/Contents/Home/bin/java"
-  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
+  "${script_dir}/bazel" \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
+    -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
 fi

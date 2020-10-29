@@ -58,7 +58,7 @@ class DeprecationReporterImplTest {
 
     @Test
     fun `test deprecated options, actual value == default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, true)
 
         Truth.assertThat(issueReporter.errors).isEmpty()
         Truth.assertThat(issueReporter.warnings).isEmpty()
@@ -66,14 +66,14 @@ class DeprecationReporterImplTest {
 
     @Test
     fun `test deprecated options, actual value != default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, false)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, false)
 
         Truth.assertThat(issueReporter.errors).isEmpty()
         Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option setting 'android.enableD8=false' is deprecated.\n" +
+            "The option setting 'android.enableBuildCache=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
                     "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
-                    "For more details, see https://d.android.com/r/studio-ui/d8-overview.html"
+                    "It does not do anything and AGP is now using Gradle caching."
         )
     }
 
@@ -111,9 +111,9 @@ class DeprecationReporterImplTest {
         reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
 
         // Deprecated options
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_D8, false)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, true)
+        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, false)
 
         // Removed options
         reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
@@ -129,10 +129,10 @@ class DeprecationReporterImplTest {
         Truth.assertThat(issueReporter.warnings).containsExactly(
             "The option setting 'android.buildOnlyTargetAbi=false' is experimental.\n" +
                     "The current default is 'true'.",
-            "The option setting 'android.enableD8=false' is deprecated.\n" +
+            "The option setting 'android.enableBuildCache=false' is deprecated.\n" +
                     "The current default is 'true'.\n" +
                     "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
-                    "For more details, see https://d.android.com/r/studio-ui/d8-overview.html",
+                    "It does not do anything and AGP is now using Gradle caching.",
             "The option 'android.enableAapt2jni' is deprecated.\n" +
                     "The current default is 'false'.\n" +
                     "It has been removed from the current version of the Android Gradle plugin.\n" +

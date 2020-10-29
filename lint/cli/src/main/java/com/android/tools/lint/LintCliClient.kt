@@ -49,7 +49,6 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintModelModuleProject
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
@@ -343,7 +342,7 @@ open class LintCliClient : LintClient {
                 val count = describeCounts(
                     stats.baselineErrorCount,
                     stats.baselineWarningCount,
-                    comma = true,
+                    comma = false,
                     capitalize = true
                 )
                 print(" ($count filtered by baseline ${baselineFile.name})")
@@ -668,9 +667,8 @@ open class LintCliClient : LintClient {
     }
 
     private fun reportNonExistingIssueId(project: Project?, registry: IssueRegistry, id: String) {
-        if (id == "MissingRegistered") {
-            // Recently renamed to MissingClass, but avoid complaining about leftover
-            // configuration
+        if (IssueRegistry.isDeletedIssueId(id)) {
+            // Recently deleted, but avoid complaining about leftover configuration
             return
         }
         val message = LintXmlConfiguration.getUnknownIssueIdErrorMessage(id, registry)

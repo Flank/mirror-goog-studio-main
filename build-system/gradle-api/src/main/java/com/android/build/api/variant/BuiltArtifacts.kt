@@ -22,7 +22,6 @@ import org.gradle.api.file.Directory
 import org.gradle.workers.WorkParameters
 import java.io.File
 import java.io.Serializable
-import java.util.ServiceLoader
 
 /**
  * Represents a [Collection] of [BuiltArtifact] produced by a [org.gradle.api.Task].
@@ -72,7 +71,7 @@ interface BuiltArtifacts {
         /**
          * Current version of the metadata file.
          */
-        const val METADATA_FILE_VERSION = 2
+        const val METADATA_FILE_VERSION = 3
     }
 
     /**

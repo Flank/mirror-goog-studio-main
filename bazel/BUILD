@@ -12,17 +12,6 @@ java_library(
     deps = ["@io_bazel_rules_kotlin//src/main/protobuf:worker_protocol_java_proto"],
 )
 
-java_binary(
-    name = "jasmin-compiler",
-    srcs = ["src/com/android/tools/jasmin/JasminCompiler.java"],
-    main_class = "com.android.tools.jasmin.JasminCompiler",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":utils",
-        "//prebuilts/tools/common/jasmin",
-    ],
-)
-
 config_setting(
     name = "agent_coverage",
     values = {

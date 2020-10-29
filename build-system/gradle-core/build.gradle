@@ -144,7 +144,6 @@ dependencies {
     compileOnly libs.jacoco_report
     // already packaged in (':base:builder')
     compileOnly project(':base:profile')
-    compileOnly project(':dx')
 
     // Add gradleApi to classpath for compilation, but use provided configuration so that groovy is
     // not exposed as a runtime dependency.
@@ -168,7 +167,6 @@ dependencies {
     apiTestCompile project(":base:apkparser:apkanalyzer")
     apiTestCompile project(":base:apkparser:apkanalyzer-cli")
     testCompileOnly project(':base:profile')
-    testCompileOnly project(':dx')
 
     // mlkit-common
     includeInJar(project(':base:mlkit-common')) {

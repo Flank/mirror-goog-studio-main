@@ -16,6 +16,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "tools/base/deploy/common/socket.h"
 
 namespace deploy {
@@ -31,7 +33,7 @@ TEST_F(SocketTest, TestBindAndConnect) {
 
   Socket server;
   Socket write;
-  Socket read;
+  std::unique_ptr<Socket> read;
 
   EXPECT_TRUE(server.Open());
   EXPECT_TRUE(server.BindAndListen(socket_name));
@@ -39,11 +41,11 @@ TEST_F(SocketTest, TestBindAndConnect) {
   EXPECT_TRUE(write.Open());
   EXPECT_TRUE(write.Connect(socket_name));
 
-  EXPECT_TRUE(server.Accept(&read, 1000));
+  EXPECT_TRUE((read = server.Accept(1000)) != nullptr);
   EXPECT_TRUE(write.Write("\xFF"));
 
   std::string received;
-  EXPECT_TRUE(read.Read(&received));
+  EXPECT_TRUE(read->Read(&received));
   EXPECT_EQ(received, "\xFF");
 }
 

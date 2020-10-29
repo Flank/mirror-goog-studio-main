@@ -4,7 +4,7 @@
     name=":app"
     type="APP"
     maven="lintKotlin:app:"
-    gradle="4.2.0-dev"
+    gradle="$androidGradlePluginVersion"
     buildFolder="build"
     bootClassPath="${androidSdkDir}/platforms/android-30/android.jar:${androidSdkDir}/build-tools/30.0.2/core-lambda-stubs.jar"
     javaSourceLevel="1.8"

@@ -336,7 +336,7 @@ fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArt
         enableCoreLibraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled,
         needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
         incrementalDexingTransform = creationConfig.globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM),
-        asmTransformedVariant = if (creationConfig.registeredDependenciesClassesVisitors.isNotEmpty()) creationConfig.name else null
+        asmTransformedVariant = if (creationConfig.dependenciesClassesAreInstrumented) creationConfig.name else null
     )
 }
 

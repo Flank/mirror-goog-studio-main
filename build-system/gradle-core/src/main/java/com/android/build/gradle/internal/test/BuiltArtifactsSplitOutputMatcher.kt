@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.test
 
 import com.android.build.api.variant.BuiltArtifacts
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.ide.common.build.GenericArtifactType
 import com.android.ide.common.build.GenericBuiltArtifact
@@ -38,7 +39,7 @@ object BuiltArtifactsSplitOutputMatcher {
      */
     fun computeBestOutput(
         deviceConfigProvider: DeviceConfigProvider,
-        builtArtifacts: BuiltArtifacts,
+        builtArtifacts: BuiltArtifactsImpl,
         variantAbiFilters: Collection<String>
     ): List<File> {
         val adaptedBuiltArtifactType = GenericBuiltArtifacts(
@@ -62,8 +63,8 @@ object BuiltArtifactsSplitOutputMatcher {
                     versionName = sourceBuiltArtifact.versionName,
                     outputFile = sourceBuiltArtifact.outputFile
                 )
-            }
-
+            },
+            elementType = builtArtifacts.elementType
         )
         // now look for a matching output file
         return GenericBuiltArtifactsSplitOutputMatcher.computeBestOutput(
