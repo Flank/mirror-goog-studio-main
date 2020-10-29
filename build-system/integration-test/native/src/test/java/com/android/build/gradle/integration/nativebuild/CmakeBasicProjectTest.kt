@@ -259,6 +259,32 @@ class CmakeBasicProjectTest(
     }
 
     @Test
+    fun `configuration build command golden flags`() {
+        val golden = project.goldenConfigurationFlags(Abi.X86_64)
+        println(golden)
+        Truth.assertThat(golden).isEqualTo("""
+            -B{PROJECT}/.cxx/{DEBUG}/x86_64
+            -DANDROID_ABI=x86_64
+            -DANDROID_NDK={NDK}
+            -DANDROID_PLATFORM=android-16
+            -DCMAKE_ANDROID_ARCH_ABI=x86_64
+            -DCMAKE_ANDROID_NDK={NDK}
+            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG
+            -DCMAKE_C_FLAGS=-DTEST_C_FLAG -DTEST_C_FLAG_2
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY={PROJECT}/build/intermediates/{DEBUG}/obj/x86_64
+            -DCMAKE_MAKE_PROGRAM={NINJA}
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY={PROJECT}/build/intermediates/{DEBUG}/obj/x86_64
+            -DCMAKE_SYSTEM_NAME=Android
+            -DCMAKE_SYSTEM_VERSION=16
+            -DCMAKE_TOOLCHAIN_FILE={NDK}/build/cmake/android.toolchain.cmake
+            -G{Generator}
+            -H{PROJECT}
+        """.trimIndent())
+    }
+
+    @Test
     fun checkModelSingleVariant() {
         // Request build details for debug-x86_64
         val fetchResult =

@@ -21,8 +21,10 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.model.soFolder
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.utils.cxx.streamCompileCommands
 import com.google.gson.JsonArray
@@ -71,6 +73,45 @@ fun File.dumpCompileCommandsJsonBin(normalizer: FileNormalizer): String =
             flags:      $flags
         """.trimIndent()
                 }
+
+/**
+ * Output configuration flags for the given ABI.
+ */
+fun GradleTestProject.goldenConfigurationFlags(abi: Abi) : String {
+    val fetchResult =
+            modelV2().fetchNativeModules(listOf("debug"), listOf(abi.tag))
+    val abi = recoverExistingCxxAbiModels().single { it.abi == abi }
+    val hashToKey = fetchResult.hashToKeyTranslator()
+    return hashToKey(abi.goldenConfigurationFlags())
+}
+
+private fun CxxAbiModel.goldenConfigurationFlags() : String {
+    fun String.slash() : String = replace("\\", "/") ?: ""
+    fun File.slash() : String = toString().slash()
+    return buildCommandFile.readText()
+            .slash()
+            .replace(variant.module.project.rootBuildGradleFolder.slash(), "{PROJECT}")
+            .replace(variant.module.ndkFolder.slash(), "{NDK}")
+            .trim()
+            .lines()
+            .map { line ->
+                if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
+                    val cmake = variant.module.cmake!!
+                    line
+                        .replace(cmake.cmakeExe!!.slash(), "{CMAKE}")
+                        .replace(cmake.ninjaExe!!.slash(), "{NINJA}")
+                        .replace("-GNinja", "-G{Generator}")
+                        .replace("-GAndroid Gradle - Ninja", "-G{Generator}")
+                } else line
+            }
+            .filter { !it.startsWith(" ") }
+            .filter { !it.isBlank() }
+            .filter { !it.startsWith("jvmArgs") }
+            .filter { !it.startsWith("arguments") }
+            .filter { !it.startsWith("Executable :") }
+            .sorted()
+            .joinToString("\n")
+}
 
 private val abiTags = Abi.values().map { abi -> abi.tag }.toSet()
 

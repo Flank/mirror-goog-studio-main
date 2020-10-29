@@ -20,8 +20,10 @@ import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.goldenConfigurationFlags
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
@@ -136,6 +138,25 @@ class NdkBuildBuildSettingsTest {
         assertThat(launcherOutput.readText().trim()).isEqualTo("output to launcher_output.txt")
     }
 
+    @Test
+    fun `configuration build command golden flags`() {
+        val golden = project.goldenConfigurationFlags(Abi.ARMEABI_V7A)
+        println(golden)
+        assertThat(golden).isEqualTo("""
+            -B
+            -n
+            APP_ABI=armeabi-v7a
+            APP_BUILD_SCRIPT={PROJECT}/src/main/jni/Android.mk
+            APP_PLATFORM=android-16
+            APP_SHORT_COMMANDS=false
+            LOCAL_SHORT_COMMANDS=false
+            NDK_ALL_ABIS=armeabi-v7a
+            NDK_DEBUG=1
+            NDK_LIBS_OUT={PROJECT}/build/intermediates/{DEBUG}/lib
+            NDK_OUT={PROJECT}/build/intermediates/{DEBUG}/obj
+            NDK_PROJECT_PATH=null
+        """.trimIndent())
+    }
 
     private fun debugBuildModelFiles(): List<File> {
         val arm64DebugModel = join(
