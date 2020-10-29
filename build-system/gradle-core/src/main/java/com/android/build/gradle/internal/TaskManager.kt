@@ -134,6 +134,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
+import org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper
 import java.io.File
 import java.util.*
 import java.util.concurrent.Callable
@@ -351,6 +352,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     private fun configureKotlinPluginTasksIfNecessary() {
+        try {
+            if (project.plugins.none { it is KotlinBasePluginWrapper }) {
+                return
+            }
+        } catch (ignored: Throwable) {
+            // This may fail if Kotlin plugin is not applied, as KotlinBasePluginWrapper
+            // will not be present at runtime. This means that the Kotlin plugin is not applied.
+            return
+        }
         val composeIsEnabled = allPropertiesList
                 .any { componentProperties: ComponentCreationConfig ->
                     componentProperties.buildFeatures.compose }
