@@ -30,7 +30,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * In memory cache of APK info of a given device.
@@ -65,8 +64,8 @@ public class DeploymentCacheDatabase {
             return oid;
         }
 
-        public Set<String> getOverlayFiles() {
-            return oid.getOverlayFiles();
+        public OverlayId.Contents getOverlayContents() {
+            return oid.getOverlayContents();
         }
 
         private Entry(List<Apk> apks, OverlayId overlayId) {

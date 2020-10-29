@@ -357,7 +357,9 @@ public class Deployer {
         Predicate<String> filter = file -> file.startsWith("res") || file.startsWith("assets");
         Task<Map<ApkEntry, ByteString>> extractedFiles =
                 runner.create(
-                        Tasks.EXTRACT_APK_ENTRIES, new ApkEntryExtractor(filter)::extract, diffs);
+                        Tasks.EXTRACT_APK_ENTRIES,
+                        new ApkEntryExtractor(filter)::extractFromDiffs,
+                        diffs);
 
         // Verify the changes are swappable and get only the dexes that we can change
         Task<List<FileDiff>> dexDiffs =

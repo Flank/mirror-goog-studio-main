@@ -137,9 +137,15 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                     if (count > 1) {
                         var i = 0
                         while (i < count) {
+                            val sanitizedDimensionName = sanitizeFlavorDimension(flavors[i + 1])
                             addStringField(
-                                    "FLAVOR_${flavors[i + 1]}",
-                                    "${flavors[i]}"
+                                    "FLAVOR_$sanitizedDimensionName",
+                                    "${flavors[i]}",
+                                    if (sanitizedDimensionName == flavors[i + 1]) {
+                                        null
+                                    } else {
+                                        "From flavor dimension ${flavors[i + 1]}"
+                                    }
                             )
                             i += 2
                         }
@@ -180,6 +186,12 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 }
 
         generator.generate()
+    }
+
+    private fun sanitizeFlavorDimension(name: String): String {
+        assert(name.isNotEmpty())
+        // Replace invalid characters
+        return name.replace("[^a-zA-Z0-9_\$]".toRegex(), "_")
     }
 
     // ----- Config Action -----

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.tasks.featuresplit.toIdString
-import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
@@ -27,7 +26,6 @@ import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
-import java.util.stream.Collectors
 
 /**
  * Implementation of [Spec] to filter out directories from a [FileCollection]
@@ -43,51 +41,36 @@ class FilteringSpec(
 ) : Spec<File>, Serializable {
 
     @Transient
-    private var excluded: Lazy<Set<String>> = lazy { computeFilteredArtifacts() }
+    private var excluded: Lazy<Set<String>> = lazy { initExcluded() }
 
     @Transient
     private var filteredFileCollection: Lazy<FileCollection> = lazy { initFilteredFileCollection() }
 
     /** Keep lazy, as invoking getArtifacts() is quite costly with configuration caching. */
     @Transient
-    private var originalArtifacts = lazy { artifacts.artifacts }
+    private var filteredArtifacts = lazy { initFilteredArtifacts() }
 
     override fun isSatisfiedBy(file: File): Boolean {
         if (excluded.value.isEmpty()) return true
-        val keptFiles = originalArtifacts.value.asSequence()
-            .filter { !excluded.value.contains(it.toIdString()) }
-            .map { it.file }.toSet()
-        return keptFiles.contains(file)
+        return filteredArtifacts.value.any { it.file.path == file.path }
     }
 
-    private fun computeFilteredArtifacts(): Set<String> = excludedDirectoryFiles
-        .files
-        .stream()
-        .map { file: File ->
-            if (file.isFile) Files.readLines(
-                file,
-                Charsets.UTF_8
-            ) else listOf()
-        }
-        .flatMap { list: List<String> -> list.stream() }
-        .collect(Collectors.toSet<String>())
+    private fun initExcluded(): Set<String> = excludedDirectoryFiles.files.asSequence()
+        .filter { it.isFile }
+        .flatMapTo(HashSet()) { it.readLines(Charsets.UTF_8).asSequence() }
 
     private fun initFilteredFileCollection() =
         objectFactory.fileCollection().from(artifacts.artifactFiles.filter(this))
             .builtBy(artifacts.artifactFiles.buildDependencies)
             .builtBy(excludedDirectoryFiles.buildDependencies)
 
+    private fun initFilteredArtifacts() = artifacts.artifacts.asSequence()
+        .filter { !excluded.value.contains(it.toIdString()) }
+        .toMutableSet()
+
     // Returns a MutableSet as FilteredArtifactCollection#getIterator expects this to be mutable to
     // returns a mutable iterator.
-    fun getArtifactFiles(): MutableSet<ResolvedArtifactResult> {
-
-        if (excluded.value.isEmpty()) {
-            return originalArtifacts.value
-        }
-
-        return originalArtifacts.value.asSequence()
-            .filter { !excluded.value.contains(it.toIdString()) }.toMutableSet()
-    }
+    fun getArtifactFiles(): MutableSet<ResolvedArtifactResult> = filteredArtifacts.value
 
     fun getFilteredFileCollection(): FileCollection = filteredFileCollection.value
 
@@ -97,8 +80,8 @@ class FilteringSpec(
 
     private fun readObject(objectInputStream: ObjectInputStream) {
         objectInputStream.defaultReadObject()
-        excluded = lazy { computeFilteredArtifacts() }
+        excluded = lazy { initExcluded() }
         filteredFileCollection = lazy { initFilteredFileCollection() }
-        originalArtifacts = lazy { artifacts.artifacts }
+        filteredArtifacts = lazy { initFilteredArtifacts() }
     }
 }

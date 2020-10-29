@@ -16,13 +16,13 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.Apk;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,49 +42,40 @@ public class OverlayId implements Serializable {
     // this differently. This is also strict string comparison with no backward capability.
     public static final String SCHEMA_VERSION = "1.0";
 
-    // A mapping from each fully installed APK to its computed digest.
-    private final SortedMap<String, String> apks;
+    // The installed APKs backing this overlay.
+    private final ImmutableList<Apk> installedApks;
 
     // A mapping from each file in the overlay to its computed checksum. Each key value is the
     // file's full path within the overlay.
-    private final SortedMap<String, String> overlayFiles;
-
-    // The set of overlay files that are swapped dex classes from Apply Changes or Apply Code
-    // Changes deployments. All files in this set are also keys in the overlayFiles map.
-    private final Set<String> swappedDex;
+    private final Contents overlayContents;
 
     private final String sha;
 
     // Distinguish between a "true" base install and an install that has OID but zero overlay file.
     private final boolean baseInstall;
 
-    public OverlayId(List<Apk> installedApk) throws DeployerException {
-        apks = new TreeMap<>();
-        overlayFiles = ImmutableSortedMap.of();
-        swappedDex = ImmutableSet.of();
-        installedApk.forEach(apk -> apks.put(apk.name, apk.checksum));
+    public OverlayId(List<Apk> apks) throws DeployerException {
+        installedApks = ImmutableList.sortedCopyOf(Comparator.comparing(apk -> apk.name), apks);
+        overlayContents = new Contents(ImmutableSortedMap.of());
         sha = computeShaHex(getRepresentation());
         baseInstall = true;
     }
 
     private OverlayId(
-            SortedMap<String, String> apks,
-            SortedMap<String, String> overlayFiles,
-            Set<String> swappedDex)
+            ImmutableList<Apk> installedApks, ImmutableSortedMap<String, Long> overlayFiles)
             throws DeployerException {
-        this.apks = apks;
-        this.overlayFiles = overlayFiles;
-        this.swappedDex = swappedDex;
+        this.installedApks = installedApks;
+        this.overlayContents = new Contents(overlayFiles);
         sha = computeShaHex(getRepresentation());
         baseInstall = false;
     }
 
-    public Set<String> getOverlayFiles() {
-        return overlayFiles.keySet();
+    public List<Apk> getInstalledApks() {
+        return installedApks;
     }
 
-    public Set<String> getSwappedDexFiles() {
-        return swappedDex;
+    public Contents getOverlayContents() {
+        return overlayContents;
     }
 
     public String getRepresentation() {
@@ -94,17 +85,17 @@ public class OverlayId implements Serializable {
         rep.append(SCHEMA_VERSION);
         rep.append("\n");
 
-        for (Map.Entry<String, String> apk : apks.entrySet()) {
-            rep.append(
-                    String.format(
-                            "Real APK %s has checksum of %s\n", apk.getKey(), apk.getValue()));
+        for (Apk apk : installedApks) {
+            rep.append(String.format("Real APK %s has checksum of %s\n", apk.name, apk.checksum));
         }
 
-        for (Map.Entry<String, String> delta : overlayFiles.entrySet()) {
+        for (Map.Entry<String, Long> delta : overlayContents.contents.entrySet()) {
             rep.append(
                     String.format(
-                            " Has overlayfile %s with checksum %s\n",
-                            delta.getKey(), delta.getValue()));
+                            Locale.US,
+                            " Has overlayfile %s with checksum %d\n",
+                            delta.getKey(),
+                            delta.getValue()));
         }
         return rep.toString();
     }
@@ -137,36 +128,50 @@ public class OverlayId implements Serializable {
     }
 
     public static class Builder {
-        private final SortedMap<String, String> apks;
-        private final SortedMap<String, String> overlayFiles;
-        private final Set<String> swappedDex;
+        private final ImmutableList<Apk> installedApks;
+        private final SortedMap<String, Long> overlayFiles;
 
         private Builder(OverlayId prevOverlayId) {
-            apks = prevOverlayId.apks;
-            overlayFiles = new TreeMap<>(prevOverlayId.overlayFiles);
-            swappedDex = new HashSet<>(prevOverlayId.swappedDex);
+            installedApks = prevOverlayId.installedApks;
+            overlayFiles = new TreeMap<>(prevOverlayId.overlayContents.contents);
         }
 
         public Builder addOverlayFile(String file, long checksum) {
-            overlayFiles.put(file, String.format(Locale.US, "%d", checksum));
-            return this;
-        }
-
-        public Builder addSwappedDex(String name, long checksum) {
-            final String file = String.format(Locale.US, "%s.dex", name);
-            overlayFiles.put(file, String.format(Locale.US, "%d", checksum));
-            swappedDex.add(file);
+            overlayFiles.put(file, checksum);
             return this;
         }
 
         public Builder removeOverlayFile(String file) {
             overlayFiles.remove(file);
-            swappedDex.remove(file);
             return this;
         }
 
         public OverlayId build() throws DeployerException {
-            return new OverlayId(apks, overlayFiles, swappedDex);
+            return new OverlayId(installedApks, ImmutableSortedMap.copyOfSorted(overlayFiles));
+        }
+    }
+
+    public static class Contents implements Serializable {
+        private final Map<String, Long> contents;
+
+        private Contents(Map<String, Long> contents) {
+            this.contents = contents;
+        }
+
+        public int size() {
+            return contents.size();
+        }
+
+        public Long getFileChecksum(String path) {
+            return contents.getOrDefault(path, -1L);
+        }
+
+        public boolean containsFile(String path) {
+            return contents.containsKey(path);
+        }
+
+        public Set<String> allFiles() {
+            return contents.keySet();
         }
     }
 }

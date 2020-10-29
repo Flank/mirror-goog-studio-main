@@ -43,8 +43,7 @@ public class LintBaselineTest {
         return LintInvocationType.values();
     }
 
-    @Rule
-    public final GradleTestProject project;
+    @Rule public final GradleTestProject project;
 
     public LintBaselineTest(LintInvocationType lintInvocationType) {
         this.project = lintInvocationType.testProjectBuilder()
@@ -60,10 +59,7 @@ public class LintBaselineTest {
         File baselineFile =
                 new File(project.getSubproject("app").getProjectDir(), "lint-baseline.xml");
         assertThat(baselineFile).exists();
-        String baseline =
-                FilesKt.readText(baselineFile, Charsets.UTF_8)
-                        .replace('\\', '/')
-                        .replace("\r\n", "\n");
+        String baseline = FilesKt.readText(baselineFile, Charsets.UTF_8);
         assertThat(baseline)
                 .contains(
                         ""
