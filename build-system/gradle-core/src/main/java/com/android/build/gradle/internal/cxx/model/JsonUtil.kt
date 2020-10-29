@@ -108,16 +108,18 @@ class PlainFileGsonTypeAdaptor : TypeAdapter<File?>() {
 
 class FileCollectionTypeAdaptor : TypeAdapter<FileCollection?>() {
     override fun write(jsonWriter: JsonWriter, fileCollection: FileCollection?) {
-        if (fileCollection == null) {
-            jsonWriter.nullValue()
-            return
-        }
         jsonWriter.beginArray()
-        fileCollection.toList().onEach { jsonWriter.value(it.path) }
+        fileCollection?.onEach { jsonWriter.value(it.path) }
         jsonWriter.endArray()
     }
 
-    override fun read(jsonReader: JsonReader): FileCollection? = null
+    override fun read(jsonReader: JsonReader): FileCollection? {
+        // FileCollection is read but ignored
+        jsonReader.beginArray()
+        while(jsonReader.hasNext()) jsonReader.nextString()
+        jsonReader.endArray()
+        return null
+    }
 }
 
 private val GSON = GsonBuilder()
