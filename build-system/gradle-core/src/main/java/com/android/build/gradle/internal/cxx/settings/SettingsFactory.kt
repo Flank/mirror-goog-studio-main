@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.cxx.settings
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.settings.Macro.*
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.*
 
 /**
  * Expand ${ndk.abi} and ${abi.systemVersion} in environment names.
@@ -50,9 +49,9 @@ fun reifyRequestedConfiguration(
     fun String?.reify() = reifyString(this) { tokenMacro ->
         when(tokenMacro) {
             // Exclude properties that shouldn't be evaluated before the configuration hash.
-            NDK_ABI.qualifiedName -> StringPropertyValue(NDK_ABI.ref)
-            NDK_CONFIGURATION_HASH.qualifiedName -> StringPropertyValue(NDK_CONFIGURATION_HASH.ref)
-            NDK_FULL_CONFIGURATION_HASH.qualifiedName -> StringPropertyValue(NDK_FULL_CONFIGURATION_HASH.ref)
+            NDK_ABI.qualifiedName -> NDK_ABI.ref
+            NDK_CONFIGURATION_HASH.qualifiedName -> NDK_CONFIGURATION_HASH.ref
+            NDK_FULL_CONFIGURATION_HASH.qualifiedName -> NDK_FULL_CONFIGURATION_HASH.ref
             else -> resolver.resolve(tokenMacro, configuration.inheritEnvironments)
         }
     }
@@ -77,7 +76,7 @@ fun reifyRequestedConfiguration(
  * A macro, when expanded, may include other macros so this function loops until there are no
  * macros to expand.
  */
-fun reifyString(value : String?, reifier : (String) -> PropertyValue?) : String? {
+fun reifyString(value : String?, reifier : (String) -> String?) : String? {
     var prior = value ?: return null
     var replaced: Boolean
     val seen = mutableSetOf<String>()
@@ -95,7 +94,7 @@ fun reifyString(value : String?, reifier : (String) -> PropertyValue?) : String?
                         recursionError = true
                     } else {
                         val resolved = reifier(tokenMacro)
-                        val value = resolved?.get() ?: ""
+                        val value = resolved ?: ""
                         if (value != "\${$tokenMacro}") {
                             seen += tokenMacro
                             replaced = true
