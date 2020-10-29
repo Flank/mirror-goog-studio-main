@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.options
 
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.ide.common.repository.GradleVersion
 import org.junit.Test
 
@@ -25,75 +26,96 @@ class OptionVersionTest {
     companion object {
 
         /**
-         * This constant should be the same as [com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION].
-         *
-         * The reason we don't use [com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION] directly is
-         * to make upgrading [com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION] easier without
-         * having to fix any AGP issues detected by this test during an upgrade.
-         *
-         * Instead, we will upgrade this constant separately, ideally shortly after upgrading
-         * [com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION] (tracked by bug 162495697).
+         * The AGP stable version that is going to be published (ignoring dot releases for the
+         * purpose of this test).
          */
-        private val ANDROID_GRADLE_PLUGIN_VERSION =
-            GradleVersion.parseAndroidGradlePluginVersion("7.0.0-alpha01")
+        private val AGP_STABLE_VERSION: GradleVersion = getStableVersionIgnoringDotReleases(ANDROID_GRADLE_PLUGIN_VERSION)
 
-        /**
-         * Until a more comprehensive solution is found (b/162495697), we maintain a list of
-         * options that are removed in the current version, before the final version. E.g option
-         * "android.enableD8" is removed before 7.0.0-alpha01, but the removed version for that
-         * option is set to 7.0. This fails the test, so we'll just explicitly list all options
-         * that are removed. Once [ANDROID_GRADLE_PLUGIN_VERSION] is greater than 7.0, we can clear
-         * this list.
-         */
-        private val REMOVED_IN_THIS_VERSION = listOf(
-            BooleanOption.ENABLE_D8
+        /** Deprecated [Option]s that have invalid deprecation versions and need to be fixed. */
+        @Suppress("DEPRECATION")
+        private val KNOWN_VIOLATING_DEPRECATION_OPTIONS: Set<Option<*>> = setOf(
+                BooleanOption.ENABLE_DESUGAR,
+                BooleanOption.JETIFIER_SKIP_IF_POSSIBLE,
+                BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2,
+                BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM,
+                BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
+                BooleanOption.ENABLE_SYMBOL_TABLE_CACHING,
+                BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS,
+                BooleanOption.PREFER_CMAKE_FILE_API,
+                BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING,
+                BooleanOption.ENABLE_BUILD_CACHE,
+                BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE,
+                OptionalBooleanOption.ENABLE_R8,
+                StringOption.JETIFIER_BLACKLIST,
+                StringOption.BUILD_CACHE_DIR
         )
+
+        private fun getStableVersionIgnoringDotReleases(versionString: String): GradleVersion {
+            // Normalize the version string first (e.g., "7.0" => "7.0.0")
+            val normalizedVersionString = if (versionString.count { it=='.' }==1) {
+                "$versionString.0"
+            } else {
+                versionString
+            }
+            val gradleVersion = GradleVersion.parseAndroidGradlePluginVersion(normalizedVersionString)
+            return GradleVersion(gradleVersion.major, gradleVersion.minor, 0)
+        }
     }
 
     @Test
-    fun `check deprecated options have deprecation targets in the future`() {
-        val deprecatedOptions = getAllOptions().filter { it.status is Option.Status.Deprecated }
-        for (option in deprecatedOptions) {
-            val status = option.status as Option.Status.Deprecated
-            status.deprecationTarget.removalTarget.getVersion()?.let { removalTargetVersion ->
-                assert(removalTargetVersion > ANDROID_GRADLE_PLUGIN_VERSION) {
-                    "Deprecated option ${option.propertyName} does not have deprecation target in the future: $removalTargetVersion"
+    fun `check deprecated options have deprecation versions in the future`() {
+        val violatingDeprecatedOptions = getAllOptions()
+                .filter { it.status is Option.Status.Deprecated }
+                .filter {
+                    val deprecationVersion = getStableVersionIgnoringDotReleases(
+                            (it.status as Option.Status.Deprecated).deprecationTarget.removalTarget.versionString!!)
+                    deprecationVersion <= AGP_STABLE_VERSION
                 }
-            }
+
+        val notYetKnownViolations = violatingDeprecatedOptions - KNOWN_VIOLATING_DEPRECATION_OPTIONS
+        assert(notYetKnownViolations.isEmpty()) {
+            "Deprecated options must have deprecation versions in the future." +
+                    " The following options do not meet that requirement:\n" +
+                    "```\n" +
+                    violatingDeprecatedOptions.joinToString("") { "${it.javaClass.simpleName}.${it},\n" } +
+                    "```\n" +
+                    "Please either fix them now or copy the above code snippet to" +
+                    " `OptionVersionTest.KNOWN_VIOLATING_DEPRECATION_OPTIONS` to fix them later."
+        }
+
+        val fixedViolations = KNOWN_VIOLATING_DEPRECATION_OPTIONS - violatingDeprecatedOptions
+        assert(fixedViolations.isEmpty()) {
+            "The following options no longer violate the requirement checked by this test:\n" +
+                    "```\n" +
+                    fixedViolations.joinToString("") { "${it.javaClass.simpleName}.${it},\n" } +
+                    "```\n" +
+                    "Please remove them from `OptionVersionTest.KNOWN_VIOLATING_DEPRECATION_OPTIONS`."
         }
     }
 
     @Test
     fun `check removed options do not have removed versions in the future`() {
-        val removedOptions = getAllOptions().filter {
-            it.status is Option.Status.Removed && it !in REMOVED_IN_THIS_VERSION
-        }
-        for (option in removedOptions) {
-            val status = option.status as Option.Status.Removed
-            status.removedVersion.getVersion()?.let { removedVersion ->
-                assert(removedVersion <= ANDROID_GRADLE_PLUGIN_VERSION) {
-                    "Removed option ${option.propertyName} has removed version in the future: $removedVersion"
+        val violatingRemovedOptions = getAllOptions()
+                .filter { it.status is Option.Status.Removed }
+                .filter { option ->
+                    val removedVersion = (option.status as Option.Status.Removed).removedVersion.versionString?.let {
+                        getStableVersionIgnoringDotReleases(it)
+                    }
+                    removedVersion?.let { removedVersion > AGP_STABLE_VERSION } ?: false
                 }
-            }
+
+        assert(violatingRemovedOptions.isEmpty()) {
+            "Removed options must not have removed versions in the future:\n" +
+                    "```\n" +
+                    violatingRemovedOptions.joinToString("") { "${it.javaClass.simpleName}.${it},\n" } +
+                    "```\n"
         }
     }
 
     private fun getAllOptions(): List<Option<Any>> =
-        (BooleanOption.values().toList() as List<Option<Boolean>>) +
-                OptionalBooleanOption.values() +
-                StringOption.values() +
-                IntegerOption.values()
-
-    private fun Version.getVersion(): GradleVersion? {
-        return versionString?.let { versionString ->
-            // Normalize the version string (e.g., "7.0" => "7.0.0")
-            val normalizedVersionString = if (versionString.count { it == '.' } == 1) {
-                "$versionString.0"
-            } else {
-                versionString
-            }
-            GradleVersion.parseAndroidGradlePluginVersion(normalizedVersionString)
-        }
-    }
+            (BooleanOption.values().toList() as List<Option<Boolean>>) +
+                    OptionalBooleanOption.values() +
+                    StringOption.values() +
+                    IntegerOption.values()
 }
 
