@@ -21,7 +21,7 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.FD_JARS
 import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.SdkConstants.FN_LINT_JAR
-import com.android.builder.utils.isValidZipEntryPath
+import com.android.builder.utils.isValidZipEntryName
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import java.io.File
@@ -68,14 +68,11 @@ class AarExtractor {
         ZipInputStream(aar.inputStream().buffered()).use { zipInputStream ->
             while (true) {
                 val entry = zipInputStream.nextEntry ?: break
-                if (entry.isDirectory) {
+                if (entry.isDirectory || !isValidZipEntryName(entry) || entry.name.isEmpty()) {
                     continue
                 }
                 val path = FileUtils.toSystemDependentPath(choosePathInOutput(entry.name))
                 val outputFile = File(outputDir, path)
-                if (!isValidZipEntryPath(outputFile, outputDir)) {
-                    continue
-                }
                 Files.createParentDirs(outputFile)
                 Files.asByteSink(outputFile).writeFrom(zipInputStream)
             }
