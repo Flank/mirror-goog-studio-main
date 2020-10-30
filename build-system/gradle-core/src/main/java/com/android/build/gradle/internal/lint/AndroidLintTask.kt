@@ -17,12 +17,16 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.Version
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
+import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStderr
+import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStdout
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -36,6 +40,8 @@ import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
@@ -45,7 +51,9 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -62,14 +70,44 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val lintModelDirectory: DirectoryProperty
 
+    @get:Input
+    abstract val textReportEnabled: Property<Boolean>
+
+    @get:OutputFile
+    @get:Optional
+    abstract val textReportOutputFile: RegularFileProperty
+
+    @get:Input
+    abstract val htmlReportEnabled: Property<Boolean>
+
+    @get:OutputFile
+    @get:Optional
+    abstract val htmlReportOutputFile: RegularFileProperty
+
+    @get:Input
+    abstract val xmlReportEnabled: Property<Boolean>
+
+    @get:OutputFile
+    @get:Optional
+    abstract val xmlReportOutputFile: RegularFileProperty
+
+    @get:Input
+    abstract val sarifReportEnabled: Property<Boolean>
+
+    @get:OutputFile
+    @get:Optional
+    abstract val sarifReportOutputFile: RegularFileProperty
+
+    @get:Input
+    abstract val textReportToStdOut: Property<Boolean>
+    @get:Input
+    abstract val textReportToStderr: Property<Boolean>
+
     @get:Internal
     abstract val javaHome: Property<String>
 
     @get:Internal
     abstract val androidSdkHome: Property<String>
-
-    @get:Internal // TODO(160392650): Model lint outputs correctly
-    abstract val reportsDir: DirectoryProperty
 
     @get:Input
     abstract val androidGradlePluginVersion: Property<String>
@@ -159,6 +197,25 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         arguments += listOf("--jdk-home", javaHome.get())
         arguments += listOf("--sdk-home", androidSdkHome.get())
 
+        if (textReportEnabled.get()) {
+            arguments.add("--text", textReportOutputFile.get())
+        }
+        if (htmlReportEnabled.get()) {
+            arguments.add("--html", htmlReportOutputFile.get())
+        }
+        if (xmlReportEnabled.get()) {
+            arguments.add("--xml", xmlReportOutputFile.get())
+        }
+        if (sarifReportEnabled.get()) {
+            arguments.add("--sarif", sarifReportOutputFile.get())
+        }
+        if (textReportToStdOut.get()) {
+            arguments.add("--text", "stdout")
+        }
+        if (textReportToStderr.get()) {
+            arguments.add("--text", "stderr")
+        }
+
         val models = LinkedHashSet<String>(1)
         models += lintModelDirectory.get().asFile.absolutePath
 
@@ -198,6 +255,16 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     // even if there is only one path.
     private fun Collection<String>.asLintPaths() = joinToString(separator = ";", postfix = ";")
 
+    private fun MutableList<String>.add(arg: String, path: RegularFile) {
+        add(arg)
+        add(path.asFile.absolutePath)
+    }
+
+    private fun MutableList<String>.add(arg: String, value: String) {
+        add(arg)
+        add(value)
+    }
+
     /** Creates the lintVariant Task. Linting a variant also includes looking at the tests for that variant. */
     class SingleVariantCreationAction(variant: VariantWithTests) : VariantCreationAction(variant) {
         override val name: String = creationConfig.computeTaskName("lint")
@@ -206,6 +273,45 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val description: String get() = "Run lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+
+        override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
+            registerLintReportArtifacts(taskProvider, creationConfig.artifacts, creationConfig.name, creationConfig.globalScope.reportsDir)
+        }
+
+        override fun configureOutputSettings(task: AndroidLintTask) {
+            task.configureOutputSettings(creationConfig.globalScope.extension.lintOptions)
+        }
+
+        companion object {
+            fun registerLintReportArtifacts(
+                taskProvider: TaskProvider<AndroidLintTask>,
+                artifacts: ArtifactsImpl,
+                variantName: String?,
+                reportsDirectory: File,
+            ) {
+                val name = "lint-results" + if (variantName != null) "-$variantName" else ""
+                artifacts
+                    .setInitialProvider(taskProvider, AndroidLintTask::textReportOutputFile)
+                    .atLocation(reportsDirectory.absolutePath)
+                    .withName("$name.txt")
+                    .on(InternalArtifactType.LINT_TEXT_REPORT)
+                artifacts
+                    .setInitialProvider(taskProvider, AndroidLintTask::htmlReportOutputFile)
+                    .atLocation(reportsDirectory.absolutePath)
+                    .withName("$name.html")
+                    .on(InternalArtifactType.LINT_HTML_REPORT)
+                artifacts
+                    .setInitialProvider(taskProvider, AndroidLintTask::xmlReportOutputFile)
+                    .atLocation(reportsDirectory.absolutePath)
+                    .withName("$name.xml")
+                    .on(InternalArtifactType.LINT_XML_REPORT)
+                artifacts
+                    .setInitialProvider(taskProvider, AndroidLintTask::sarifReportOutputFile)
+                    .atLocation(reportsDirectory.absolutePath)
+                    .withName("$name.sarif")
+                    .on(InternalArtifactType.LINT_SARIF_REPORT)
+            }
+        }
     }
 
     /** Creates the lintFix task. . */
@@ -216,6 +322,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         override val description: String get() = "Fix lint on the ${creationConfig.name} variant"
         override val checkDependencies: Boolean
             get() = creationConfig.globalScope.extension.lintOptions.isCheckDependencies
+
+        override fun configureOutputSettings(task: AndroidLintTask) {
+            task.textReportToStdOut.setDisallowChanges(true)
+        }
     }
 
 
@@ -231,6 +341,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<AndroidLintTask>) {
             variant.main.taskContainer.assembleTask.dependsOn(taskProvider)
+        }
+
+        override fun configureOutputSettings(task: AndroidLintTask) {
+            task.textReportToStderr.setDisallowChanges(true)
         }
     }
 
@@ -310,29 +424,56 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                     "lintClassPath"
                 )
             )
-            task.outputs.upToDateWhen { task ->
-                task.logger.debug("Lint does not model all of its inputs yet.")
-                return@upToDateWhen false
+            if (checkDependencies) {
+                task.outputs.upToDateWhen {
+                    it.logger.debug("Lint with checkDependencies does not model all of its inputs yet.")
+                    false
+                }
             }
+            if (autoFix) {
+                task.outputs.upToDateWhen {
+                    it.logger.debug("Lint fix task potentially modifies sources so cannot be up-to-date")
+                    false
+                }
+            }
+            task.initializeOutputTypesConvention()
+            configureOutputSettings(task)
+            task.finalizeOutputTypes()
         }
+
+        abstract fun configureOutputSettings(task: AndroidLintTask)
+    }
+
+    private fun initializeOutputTypesConvention() {
+        textReportEnabled.convention(false)
+        htmlReportEnabled.convention(false)
+        xmlReportEnabled.convention(false)
+        sarifReportEnabled.convention(false)
+        textReportToStdOut.convention(false)
+        textReportToStderr.convention(false)
+    }
+
+    private fun finalizeOutputTypes() {
+        textReportEnabled.disallowChanges()
+        htmlReportEnabled.disallowChanges()
+        xmlReportEnabled.disallowChanges()
+        sarifReportEnabled.disallowChanges()
+        textReportToStdOut.disallowChanges()
+        textReportToStderr.disallowChanges()
     }
 
     private fun initializeGlobalInputs(globalScope: GlobalScope) {
         initializeGlobalInputs(
             project = globalScope.project,
-            reportsDir = globalScope.reportsDir,
             isAndroid = true
         )
     }
 
     private fun initializeGlobalInputs(
         project: Project,
-        reportsDir: File,
         isAndroid: Boolean
     ) {
         val buildServiceRegistry = project.gradle.sharedServices
-        this.reportsDir.set(reportsDir)
-        this.reportsDir.disallowChanges()
         this.androidGradlePluginVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         val sdkComponentsBuildService =
             getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
@@ -358,9 +499,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     ) {
         initializeGlobalInputs(
             project = project,
-            reportsDir = javaPluginConvention.testResultsDir,
-            isAndroid = false
-        )
+            isAndroid = false)
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
         this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -371,16 +510,44 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         }
         this.lintFixBuildService.disallowChanges()
         this.checkDependencies.setDisallowChanges(false)
-        this.checkOnly.setDisallowChanges(project.provider { lintOptions.checkOnly })
+        this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintClasspath.fromDisallowChanges(project.configurations.getByName("lintClassPath"))
         this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
         // Do not support check dependencies in the standalone lint plugin
-        this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, customLintChecksConfig, lintOptions, checkDependencies=false)
+        this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, checkDependencies=false)
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(project.layout.buildDirectory.dir("intermediates/android-lint-model"))
-        this.outputs.upToDateWhen { task ->
-            task.logger.debug("Lint does not model all of its inputs yet.")
-            return@upToDateWhen false
+        this.initializeOutputTypesConvention()
+        when {
+            fatalOnly -> {
+                this.textReportToStderr.setDisallowChanges(true)
+            }
+            autoFix -> {
+                this.textReportToStdOut.setDisallowChanges(true)
+                this.outputs.upToDateWhen {
+                    it.logger.debug("Lint fix task potentially modifies sources so cannot be up-to-date")
+                    false
+                }
+            }
+            else -> {
+                configureOutputSettings(lintOptions)
+            }
         }
+        this.finalizeOutputTypes()
+
+    }
+
+    private fun configureOutputSettings(lintOptions: LintOptions) {
+        this.textReportEnabled.setDisallowChanges(lintOptions.textReport)
+        // If text report is requested, but no path specified, output to stdout, hence the ?: true
+        this.textReportToStdOut.setDisallowChanges(
+            lintOptions.textReport && lintOptions.textOutput?.isLintStdout() ?: true
+        )
+        this.textReportToStderr.setDisallowChanges(
+            lintOptions.textReport && lintOptions.textOutput?.isLintStderr() ?: false
+        )
+        this.htmlReportEnabled.setDisallowChanges(lintOptions.htmlReport)
+        this.xmlReportEnabled.setDisallowChanges(lintOptions.xmlReport)
+        this.sarifReportEnabled.setDisallowChanges(lintOptions.sarifReport)
     }
 }

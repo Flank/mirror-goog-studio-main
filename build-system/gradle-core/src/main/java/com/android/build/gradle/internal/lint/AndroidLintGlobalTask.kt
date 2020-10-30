@@ -17,16 +17,22 @@
 package com.android.build.gradle.internal.lint
 
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
+import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.tasks.Internal
 
 /**
  * Anchor task for the new lint integration.
  *
  * Eventually will do report aggregation, but for now, just depends on the variant-specific task.
  */
-abstract class AndroidLintGlobalTask: NonIncrementalGlobalTask() {
+abstract class AndroidLintGlobalTask: BaseTask(), VariantAwareTask {
+
+    @Internal("No influence on output, this is for our build stats reporting mechanism")
+    override lateinit var variantName: String
 
     class GlobalCreationAction(globalScope: GlobalScope) : BaseGlobalCreationAction(globalScope) {
         override val name: String get() = Companion.name
@@ -54,8 +60,5 @@ abstract class AndroidLintGlobalTask: NonIncrementalGlobalTask() {
             task.group = JavaBasePlugin.VERIFICATION_GROUP
             task.description = description
         }
-    }
-
-    override fun doTaskAction() {
     }
 }

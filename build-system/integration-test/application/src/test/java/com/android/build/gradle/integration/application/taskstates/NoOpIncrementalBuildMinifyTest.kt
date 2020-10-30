@@ -37,14 +37,6 @@ class NoOpIncrementalBuildMinifyTest {
     companion object {
 
         private val EXPECTED_TASK_STATES = mapOf(
-            // Sort alphabetically for readability
-            DID_WORK to setOf(
-                // Lint declares no outputs, so it's never up-to-date. It's probably for the
-                // better, because it's hard to declare all inputs (they include the SDK
-                // and contents of the Google maven repo).
-                ":lintDebug",
-                ":lint"
-            ),
             UP_TO_DATE to setOf(
                 ":assembleDebugAndroidTest",
                 ":assembleRelease",
@@ -86,6 +78,8 @@ class NoOpIncrementalBuildMinifyTest {
                 ":javaPreCompileDebugUnitTest",
                 ":javaPreCompileRelease",
                 ":javaPreCompileReleaseUnitTest",
+                ":lint",
+                ":lintDebug",
                 ":mergeDebugAndroidTestAssets",
                 ":mergeDebugAndroidTestJavaResource",
                 ":mergeDebugAndroidTestJniLibFolders",

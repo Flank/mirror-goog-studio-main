@@ -91,7 +91,10 @@ abstract class Artifact<T: FileSystemLocation>(
         /* Intermediates files produced by tasks. */
         INTERMEDIATES,
         /* output files going into the outputs folder. This is the result of the build. */
-        OUTPUTS;
+        OUTPUTS,
+        /* Report files for tests and lint. */
+        REPORTS,
+        ;
     }
 
     /**

@@ -24,6 +24,7 @@ jar {
 }
 
 dependencies {
+    compileOnly "com.android.tools:annotations:$baseVersion"
     compileOnly "com.android.tools.lint:lint-api:$baseVersion"
     compileOnly "com.android.tools.lint:lint-checks:$baseVersion"
 }

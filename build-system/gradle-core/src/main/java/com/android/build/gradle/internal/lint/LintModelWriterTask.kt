@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.lint
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -31,6 +32,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
@@ -66,11 +68,10 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         )
     }
 
-    fun configureForStandalone(
+    internal fun configureForStandalone(
         project: Project,
         projectOptions: ProjectOptions,
         javaConvention: JavaPluginConvention,
-        customLintChecks: FileCollection,
         lintOptions: LintOptions
     ) {
         this.group = JavaBasePlugin.VERIFICATION_GROUP
@@ -78,7 +79,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         this.projectInputs.initializeForStandalone(project, javaConvention, lintOptions)
         // The artifact produced is only used by lint tasks with checkDependencies=true
-        this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, customLintChecks, lintOptions, checkDependencies=true)
+        this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, checkDependencies=true)
     }
 
     class CreationAction(
@@ -94,9 +95,7 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<LintModelWriterTask>) {
             super.handleProvider(taskProvider)
-            creationConfig.artifacts
-                .setInitialProvider(taskProvider, LintModelWriterTask::outputDirectory)
-                .on(InternalArtifactType.LINT_MODEL)
+            registerOutputArtifacts(taskProvider, creationConfig.artifacts)
         }
 
         override fun configure(task: LintModelWriterTask) {
@@ -109,6 +108,17 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
                 // The artifact produced is only used by lint tasks with checkDependencies=true
                 checkDependencies = true
             )
+        }
+
+        companion object {
+            fun registerOutputArtifacts(
+                taskProvider: TaskProvider<LintModelWriterTask>,
+                artifacts: ArtifactsImpl
+            ) {
+                artifacts
+                    .setInitialProvider(taskProvider, LintModelWriterTask::outputDirectory)
+                    .on(InternalArtifactType.LINT_MODEL)
+            }
         }
     }
 }

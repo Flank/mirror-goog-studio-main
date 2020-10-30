@@ -62,9 +62,11 @@ import com.android.tools.lint.model.LintModelDependencies
 import com.android.tools.lint.model.LintModelFactory
 import com.android.tools.lint.model.LintModelJavaArtifact
 import com.android.tools.lint.model.LintModelLibrary
+import com.android.tools.lint.model.LintModelLintOptions
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.LintModelNamespacingMode
+import com.android.tools.lint.model.LintModelSeverity
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
 import org.gradle.api.JavaVersion
@@ -80,6 +82,8 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -112,8 +116,8 @@ abstract class ProjectInputs {
     @get:Input
     abstract val buildDirectoryPath: Property<String>
 
-    @get:Input
-    abstract val lintOptions: Property<DefaultLintModelLintOptions>
+    @get:Nested
+    abstract val lintOptions: LintOptionsInput
 
     @get:Input
     @get:Optional
@@ -145,8 +149,7 @@ abstract class ProjectInputs {
         initializeFromProject(project)
         projectType.setDisallowChanges(creationConfig.variantType.toLintModelModuleType())
 
-        lintOptions.setDisallowChanges(
-            LintModelFactory.getLintOptions(extension.lintOptions))
+        lintOptions.initialize(extension.lintOptions)
         resourcePrefix.setDisallowChanges(extension.resourcePrefix)
 
         if (extension is BaseAppModuleExtension) {
@@ -164,8 +167,7 @@ abstract class ProjectInputs {
     internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, dslLintOptions: LintOptions) {
         initializeFromProject(project)
         projectType.setDisallowChanges(LintModelModuleType.JAVA_LIBRARY)
-        val lintModelLintOptions = project.provider { LintModelFactory.getLintOptions(dslLintOptions) }
-        lintOptions.setDisallowChanges(lintModelLintOptions)
+        lintOptions.initialize(dslLintOptions)
         resourcePrefix.setDisallowChanges("")
         dynamicFeatures.setDisallowChanges(setOf())
         val mainSourceSet = javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
@@ -200,7 +202,7 @@ abstract class ProjectInputs {
             ),
             gradleVersion = GradleVersion.tryParse(Version.ANDROID_GRADLE_PLUGIN_VERSION),
             buildFolder = File(buildDirectoryPath.get()),
-            lintOptions = lintOptions.get(),
+            lintOptions = lintOptions.toLintModel(),
             lintRuleJars = listOf(),
             resourcePrefix = resourcePrefix.orNull,
             dynamicFeatures = dynamicFeatures.get(),
@@ -222,6 +224,118 @@ internal fun VariantType.toLintModelModuleType(): LintModelModuleType {
         VariantTypeImpl.OPTIONAL_APK -> LintModelModuleType.DYNAMIC_FEATURE
         VariantTypeImpl.TEST_APK -> LintModelModuleType.TEST
         else -> throw RuntimeException("Unsupported VariantTypeImpl value")
+    }
+}
+
+abstract class LintOptionsInput {
+    @get:Input
+    abstract val disable: SetProperty<String>
+    @get:Input
+    abstract val enable: SetProperty<String>
+    @get:Input
+    abstract val checkOnly: SetProperty<String>
+    @get:Input
+    abstract val abortOnError: Property<Boolean>
+    @get:Input
+    abstract val absolutePaths: Property<Boolean>
+    @get:Input
+    abstract val noLines: Property<Boolean>
+    @get:Input
+    abstract val quiet: Property<Boolean>
+    @get:Input
+    abstract val checkAllWarnings: Property<Boolean>
+    @get:Input
+    abstract val ignoreWarnings: Property<Boolean>
+    @get:Input
+    abstract val warningsAsErrors: Property<Boolean>
+    @get:Input
+    abstract val checkTestSources: Property<Boolean>
+    @get:Input
+    abstract val checkGeneratedSources: Property<Boolean>
+    @get:Input
+    abstract val explainIssues: Property<Boolean>
+    @get:Input
+    abstract val showAll: Property<Boolean>
+    @get:Input
+    abstract val checkDependencies: Property<Boolean>
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val lintConfig: RegularFileProperty
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val baselineFile: RegularFileProperty
+    @get:Input
+    abstract val severityOverrides: MapProperty<String, LintModelSeverity>
+
+    fun initialize(lintOptions: LintOptions) {
+        disable.setDisallowChanges(lintOptions.disable)
+        enable.setDisallowChanges(lintOptions.enable)
+        checkOnly.setDisallowChanges(lintOptions.checkOnly)
+        abortOnError.setDisallowChanges(lintOptions.isAbortOnError)
+        absolutePaths.setDisallowChanges(lintOptions.isAbsolutePaths)
+        noLines.setDisallowChanges(lintOptions.isNoLines)
+        quiet.setDisallowChanges(lintOptions.isQuiet)
+        checkAllWarnings.setDisallowChanges(lintOptions.isCheckAllWarnings)
+        ignoreWarnings.setDisallowChanges(lintOptions.isIgnoreWarnings)
+        warningsAsErrors.setDisallowChanges(lintOptions.isWarningsAsErrors)
+        checkTestSources.setDisallowChanges(lintOptions.isCheckTestSources)
+        checkGeneratedSources.setDisallowChanges(lintOptions.isCheckGeneratedSources)
+        explainIssues.setDisallowChanges(lintOptions.isExplainIssues)
+        showAll.setDisallowChanges(lintOptions.isShowAll)
+        checkDependencies.setDisallowChanges(lintOptions.isCheckDependencies)
+        lintOptions.lintConfig?.let { lintConfig.set(it) }
+        lintConfig.disallowChanges()
+        lintOptions.baselineFile?.let { baselineFile.set(it) }
+        baselineFile.disallowChanges()
+        severityOverrides.setDisallowChanges(
+            lintOptions.severityOverrides?.mapValues { getSeverity(it.value) } ?: mapOf())
+    }
+
+    private fun getSeverity(severity: Int): LintModelSeverity =
+        when (severity) {
+            com.android.builder.model.LintOptions.SEVERITY_FATAL -> LintModelSeverity.FATAL
+            com.android.builder.model.LintOptions.SEVERITY_ERROR -> LintModelSeverity.ERROR
+            com.android.builder.model.LintOptions.SEVERITY_WARNING -> LintModelSeverity.WARNING
+            com.android.builder.model.LintOptions.SEVERITY_INFORMATIONAL -> LintModelSeverity.INFORMATIONAL
+            com.android.builder.model.LintOptions.SEVERITY_IGNORE -> LintModelSeverity.IGNORE
+            com.android.builder.model.LintOptions.SEVERITY_DEFAULT_ENABLED -> LintModelSeverity.WARNING
+            else -> LintModelSeverity.IGNORE
+        }
+
+    fun toLintModel(): LintModelLintOptions {
+        return DefaultLintModelLintOptions(
+            disable=disable.get(),
+            enable=enable.get(),
+            check=checkOnly.get(),
+            abortOnError=abortOnError.get(),
+            absolutePaths=absolutePaths.get(),
+            noLines=noLines.get(),
+            quiet=quiet.get(),
+            checkAllWarnings=checkAllWarnings.get(),
+            ignoreWarnings=ignoreWarnings.get(),
+            warningsAsErrors=warningsAsErrors.get(),
+            checkTestSources=checkTestSources.get(),
+            ignoreTestSources=false, // Handled in LintTaskManager
+            checkGeneratedSources=checkGeneratedSources.get(),
+            explainIssues=explainIssues.get(),
+            showAll=showAll.get(),
+            lintConfig=lintConfig.orNull?.asFile,
+            // Report setup is handled in the invocation
+            textReport=false,
+            textOutput=null,
+            htmlReport=false,
+            htmlOutput=null,
+            xmlReport=false,
+            xmlOutput=null,
+            sarifReport=false,
+            sarifOutput=null,
+            checkReleaseBuilds=true, // Handled in LintTaskManager & LintPlugin
+            checkDependencies=checkDependencies.get(),
+            baselineFile=baselineFile.orNull?.asFile,
+            severityOverrides=severityOverrides.get(),
+        )
     }
 }
 
@@ -365,7 +479,7 @@ abstract class VariantInputs {
         mavenCoordinatesCache.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
     }
 
-    internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, projectOptions: ProjectOptions, customLintChecks: FileCollection, dslLintOptions: LintOptions,  checkDependencies: Boolean) {
+    internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, projectOptions: ProjectOptions, checkDependencies: Boolean) {
         val mainSourceSet = javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
         val testSourceSet = javaConvention.sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
 
