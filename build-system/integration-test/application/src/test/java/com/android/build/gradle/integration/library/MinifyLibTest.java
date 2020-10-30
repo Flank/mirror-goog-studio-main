@@ -121,6 +121,21 @@ public class MinifyLibTest {
         assertThat(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;");
     }
 
+    /** Regression test for b/171364505. */
+    @Test
+    public void shrinkingLibWithMultidex() throws Exception {
+        enableLibShrinking();
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").getBuildFile(),
+                ""
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        multiDexEnabled true\n"
+                        + "    }\n"
+                        + "}");
+        getExecutor().run(":lib:assembleDebug");
+    }
+
     /**
      * Ensure androidTest compile uses consumer proguard files from library.
      *

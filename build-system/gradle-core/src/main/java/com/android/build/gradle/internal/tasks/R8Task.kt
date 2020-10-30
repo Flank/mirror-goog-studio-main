@@ -264,45 +264,47 @@ abstract class R8Task: ProguardConfigurableTask() {
 
             task.proguardConfigurations = proguardConfigurations
 
-            if (!variantType.isAar) {
+            if (variantType.isApk) {
+                // options applicable only when building APKs, do not apply with AARs
                 task.duplicateClassesCheck.from(artifacts.get(DUPLICATE_CLASSES_CHECK))
-            }
 
-            creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
-                task.mainDexRulesFiles.from(multiDexKeepProguard)
-            }
+                creationConfig.variantDslInfo.multiDexKeepProguard?.let { multiDexKeepProguard ->
+                    task.mainDexRulesFiles.from(multiDexKeepProguard)
+                }
 
-            if (creationConfig.dexingType.needsMainDexList
-                && !creationConfig.globalScope.extension.aaptOptions.namespaced) {
-                task.mainDexRulesFiles.from(
-                    artifacts.get(
-                        InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
+                if (creationConfig.dexingType.needsMainDexList
+                    && !creationConfig.globalScope.extension.aaptOptions.namespaced
+                ) {
+                    task.mainDexRulesFiles.from(
+                        artifacts.get(
+                            InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
+                        )
                     )
-                )
-            }
+                }
 
-            creationConfig.variantDslInfo.multiDexKeepFile?.let { multiDexKeepFile ->
-                task.mainDexListFiles.from(multiDexKeepFile)
-            }
+                creationConfig.variantDslInfo.multiDexKeepFile?.let { multiDexKeepFile ->
+                    task.mainDexListFiles.from(multiDexKeepFile)
+                }
 
-            if (creationConfig.variantScope.consumesFeatureJars()) {
-                creationConfig.artifacts.setTaskInputToFinalProduct(
-                    InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
-                    task.baseJar
-                )
-                task.featureJars.from(
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                        AndroidArtifacts.ArtifactScope.PROJECT,
-                        AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES
+                if (creationConfig.variantScope.consumesFeatureJars()) {
+                    creationConfig.artifacts.setTaskInputToFinalProduct(
+                        InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
+                        task.baseJar
                     )
-                )
+                    task.featureJars.from(
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES
+                        )
+                    )
+                }
+                if (creationConfig.isCoreLibraryDesugaringEnabled) {
+                    task.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.globalScope.project))
+                }
             }
             task.baseJar.disallowChanges()
             task.featureJars.disallowChanges()
-            if (creationConfig.isCoreLibraryDesugaringEnabled) {
-                task.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.globalScope.project))
-            }
         }
 
         override fun keep(keep: String) {
