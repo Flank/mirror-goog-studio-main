@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.profile;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.android.Version;
 import com.android.annotations.NonNull;
@@ -42,6 +41,7 @@ import com.android.tools.build.gradle.internal.profile.VariantApiArtifactType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.protobuf.Descriptors;
 import com.google.wireless.android.sdk.stats.ApiVersion;
 import com.google.wireless.android.sdk.stats.DeviceInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
@@ -52,9 +52,7 @@ import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import com.google.wireless.android.sdk.stats.ProductDetails;
 import com.google.wireless.android.sdk.stats.TestRun;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Locale;
-import java.util.Map;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logging;
@@ -74,11 +72,13 @@ public class AnalyticsUtil {
 
     public static GradleTransformExecutionType getTransformType(
             @NonNull Class<? extends Transform> taskClass) {
-        try {
-            return GradleTransformExecutionType.valueOf(getPotentialTransformTypeName(taskClass));
-        } catch (IllegalArgumentException ignored) {
+        Descriptors.EnumValueDescriptor value =
+                GradleTransformExecutionType.getDescriptor()
+                        .findValueByName(getPotentialTransformTypeName(taskClass));
+        if (value == null) {
             return GradleTransformExecutionType.UNKNOWN_TRANSFORM_TYPE;
         }
+        return GradleTransformExecutionType.valueOf(value);
     }
 
     @VisibleForTesting
@@ -91,20 +91,24 @@ public class AnalyticsUtil {
 
     @NonNull
     public static GradleTaskExecutionType getTaskExecutionType(@NonNull Class<?> taskClass) {
-        try {
-            return GradleTaskExecutionType.valueOf(getPotentialTaskExecutionTypeName(taskClass));
-        } catch (IllegalArgumentException ignored) {
+        Descriptors.EnumValueDescriptor value =
+                GradleTaskExecutionType.getDescriptor()
+                        .findValueByName(getPotentialTaskExecutionTypeName(taskClass));
+        if (value == null) {
             return GradleTaskExecutionType.UNKNOWN_TASK_TYPE;
         }
+        return GradleTaskExecutionType.valueOf(value);
     }
 
     @NonNull
     public static VariantApiArtifactType getVariantApiArtifactType(@NonNull Class<?> artifactType) {
-        try {
-            return VariantApiArtifactType.valueOf(artifactType.getSimpleName());
-        } catch (IllegalArgumentException ignored) {
+        Descriptors.EnumValueDescriptor value =
+                VariantApiArtifactType.getDescriptor()
+                        .findValueByName(artifactType.getSimpleName());
+        if (value == null) {
             return VariantApiArtifactType.CUSTOM_ARTIFACT_TYPE;
         }
+        return VariantApiArtifactType.valueOf(value);
     }
 
     @NonNull
@@ -265,52 +269,57 @@ public class AnalyticsUtil {
     @NonNull
     static com.android.tools.build.gradle.internal.profile.BooleanOption toProto(
             @NonNull BooleanOption option) {
-        try {
-            return com.android.tools.build.gradle.internal.profile.BooleanOption.valueOf(
-                    option.name());
-        } catch (IllegalArgumentException e) {
+        Descriptors.EnumValueDescriptor value =
+                com.android.tools.build.gradle.internal.profile.BooleanOption.getDescriptor()
+                        .findValueByName(option.name());
+        if (value == null) {
             return com.android.tools.build.gradle.internal.profile.BooleanOption
                     .UNKNOWN_BOOLEAN_OPTION;
         }
+        return com.android.tools.build.gradle.internal.profile.BooleanOption.valueOf(value);
     }
 
     @VisibleForTesting
     @NonNull
     static com.android.tools.build.gradle.internal.profile.OptionalBooleanOption toProto(
             @NonNull OptionalBooleanOption option) {
-        try {
-            return com.android.tools.build.gradle.internal.profile.OptionalBooleanOption.valueOf(
-                    option.name());
-        } catch (IllegalArgumentException e) {
+        Descriptors.EnumValueDescriptor value =
+                com.android.tools.build.gradle.internal.profile.OptionalBooleanOption
+                        .getDescriptor()
+                        .findValueByName(option.name());
+        if (value == null) {
             return com.android.tools.build.gradle.internal.profile.OptionalBooleanOption
                     .UNKNOWN_OPTIONAL_BOOLEAN_OPTION;
         }
+        return com.android.tools.build.gradle.internal.profile.OptionalBooleanOption.valueOf(value);
     }
 
     @VisibleForTesting
     @NonNull
     static com.android.tools.build.gradle.internal.profile.IntegerOption toProto(
             @NonNull IntegerOption option) {
-        try {
-            return com.android.tools.build.gradle.internal.profile.IntegerOption.valueOf(
-                    option.name());
-        } catch (IllegalArgumentException e) {
+        Descriptors.EnumValueDescriptor value =
+                com.android.tools.build.gradle.internal.profile.IntegerOption.getDescriptor()
+                        .findValueByName(option.name());
+        if (value == null) {
             return com.android.tools.build.gradle.internal.profile.IntegerOption
                     .UNKNOWN_INTEGER_OPTION;
         }
+        return com.android.tools.build.gradle.internal.profile.IntegerOption.valueOf(value);
     }
 
     @VisibleForTesting
     @NonNull
     static com.android.tools.build.gradle.internal.profile.StringOption toProto(
             @NonNull StringOption option) {
-        try {
-            return com.android.tools.build.gradle.internal.profile.StringOption.valueOf(
-                    option.name());
-        } catch (IllegalArgumentException e) {
+        Descriptors.EnumValueDescriptor value =
+                com.android.tools.build.gradle.internal.profile.StringOption.getDescriptor()
+                        .findValueByName(option.name());
+        if (value == null) {
             return com.android.tools.build.gradle.internal.profile.StringOption
                     .UNKNOWN_STRING_OPTION;
         }
+        return com.android.tools.build.gradle.internal.profile.StringOption.valueOf(value);
     }
 
     @NonNull
@@ -363,10 +372,9 @@ public class AnalyticsUtil {
     @VisibleForTesting
     static GradleBuildProject.GradlePlugin otherPluginToProto(@NonNull String pluginClassName) {
         String enumName = getOtherPluginEnumName(pluginClassName);
-
-        if (PLUGIN_MAP.containsKey(enumName)) {
-            return PLUGIN_MAP.get(enumName);
-        } else {
+        Descriptors.EnumValueDescriptor value =
+                GradleBuildProject.GradlePlugin.getDescriptor().findValueByName(enumName);
+        if (value == null) {
             Logging.getLogger(AnalyticsUtil.class)
                     .info(
                             "Analytics other plugin to proto: Unknown plugin type {} expected enum {}",
@@ -374,11 +382,8 @@ public class AnalyticsUtil {
                             enumName);
             return GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN;
         }
+        return GradleBuildProject.GradlePlugin.valueOf(value);
     }
-
-    private static final Map<String, GradleBuildProject.GradlePlugin> PLUGIN_MAP =
-            Arrays.stream(GradleBuildProject.GradlePlugin.values())
-                    .collect(toImmutableMap(Enum::toString, plugin -> plugin));
 
     @VisibleForTesting
     @NonNull
