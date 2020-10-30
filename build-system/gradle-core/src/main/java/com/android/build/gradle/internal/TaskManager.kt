@@ -1167,7 +1167,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         testConfigInputs.packageNameOfFinalRClass)
             }
         } else {
-            if (testedVariant.variantType.isAar) {
+            if (testedVariant.variantType.isAar && testedVariant.buildFeatures.androidResources) {
                 // With compile classpath R classes, we need to generate a dummy R class for unit
                 // tests
                 // See https://issuetracker.google.com/143762955 for more context.
