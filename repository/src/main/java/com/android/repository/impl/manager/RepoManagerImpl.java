@@ -18,6 +18,7 @@ package com.android.repository.impl.manager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.FallbackLocalRepoLoader;
@@ -198,9 +199,9 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     /**
-     * {@inheritDoc} This calls {@link  #markInvalid()}, so a complete load will occur the next time
-     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController,
-     * boolean)} is called.
+     * {@inheritDoc} This calls {@link #markInvalid()}, so a complete load will occur the next time
+     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController)} is
+     * called.
      */
     @Override
     public void setFallbackLocalRepoLoader(@Nullable FallbackLocalRepoLoader fallback) {
@@ -209,9 +210,9 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     /**
-     * {@inheritDoc} This calls {@link  #markInvalid()}, so a complete load will occur the next time
-     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController,
-     * boolean)} is called.
+     * {@inheritDoc} This calls {@link #markInvalid()}, so a complete load will occur the next time
+     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController)} is
+     * called.
      */
     @Override
     public void setFallbackRemoteRepoLoader(@Nullable FallbackRemoteRepoLoader remote) {
@@ -220,9 +221,9 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     /**
-     * {@inheritDoc} This calls {@link  #markInvalid()}, so a complete load will occur the next time
-     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController,
-     * boolean)} is called.
+     * {@inheritDoc} This calls {@link #markInvalid()}, so a complete load will occur the next time
+     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController)} is
+     * called.
      */
     @Override
     public void setLocalPath(@Nullable File path) {
@@ -231,9 +232,9 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     /**
-     * {@inheritDoc} This calls {@link  #markInvalid()}, so a complete load will occur the next time
-     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController,
-     * boolean)} is called.
+     * {@inheritDoc} This calls {@link #markInvalid()}, so a complete load will occur the next time
+     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController)} is
+     * called.
      */
     @Override
     public void registerSourceProvider(@NonNull RepositorySourceProvider provider) {
@@ -266,12 +267,12 @@ public class RepoManagerImpl extends RepoManager {
     }
 
     /**
-     * {@inheritDoc} This calls {@link  #markInvalid()}, so a complete load will occur the next time
-     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController,
-     * boolean)} is called.
+     * {@inheritDoc} This calls {@link #markInvalid()}, so a complete load will occur the next time
+     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController)} is
+     * called.
      */
     @Override
-    public void registerSchemaModule(@NonNull SchemaModule module) {
+    public void registerSchemaModule(@NonNull SchemaModule<?> module) {
         mModules.add(module);
         markInvalid();
     }
@@ -303,12 +304,75 @@ public class RepoManagerImpl extends RepoManager {
         return mPackages;
     }
 
+    @Override
+    public void loadSynchronously(
+            long cacheExpirationMs,
+            @Nullable List<RepoLoadedListener> onLocalComplete,
+            @Nullable List<RepoLoadedListener> onSuccess,
+            @Nullable List<Runnable> onError,
+            @NonNull ProgressRunner runner,
+            @Nullable Downloader downloader,
+            @Nullable SettingsController settings) {
+        load(
+                cacheExpirationMs,
+                onLocalComplete,
+                onSuccess,
+                onError,
+                runner,
+                downloader,
+                settings,
+                true);
+    }
+
+    @Override
+    public void load(
+            long cacheExpirationMs,
+            @Nullable List<RepoLoadedListener> onLocalComplete,
+            @Nullable List<RepoLoadedListener> onSuccess,
+            @Nullable List<Runnable> onError,
+            @NonNull ProgressRunner runner,
+            @Nullable Downloader downloader,
+            @Nullable SettingsController settings) {
+        load(
+                cacheExpirationMs,
+                onLocalComplete,
+                onSuccess,
+                onError,
+                runner,
+                downloader,
+                settings,
+                false);
+    }
+
+    /**
+     * Loads the local and remote repositories.
+     *
+     * @param cacheExpirationMs How long must have passed since the last load for us to reload.
+     *     Specify {@code 0} to reload immediately.
+     * @param onLocalComplete When loading, the local repo load happens first, and should be
+     *     relatively fast. When complete, the {@code onLocalComplete} {@link RepoLoadedListener }s
+     *     are run. Will be called with a {@link RepositoryPackages} that contains only the local
+     *     packages.
+     * @param onSuccess Callbacks that are run when the entire load (local and remote) has completed
+     *     successfully. Called with an {@link RepositoryPackages} containing both the local and
+     *     remote packages.
+     * @param onError Callbacks that are run when there's an error at some point during the load.
+     * @param runner The {@link ProgressRunner} to use for any tasks started during the load,
+     *     including running the callbacks.
+     * @param downloader The {@link Downloader} to use for downloading remote files, including any
+     *     remote list of repo sources and the remote repositories themselves.
+     * @param settings The settings to use during the load, including for example proxy settings
+     *     used when fetching remote files.
+     * @param sync If true, load synchronously. If false, load asynchronously (this method should
+     *     return quickly, and the {@code onSuccess} callbacks can be used to process the completed
+     *     results).
+     */
     // TODO: fix up invalidation. It's annoying that you have to manually reload.
     // TODO: Maybe: when you load, instead of load as now, you get back a loader, which knows how
-    // TODO: to reload with same settings,
-    // TODO: and contains current valid or invalid packages as they are cached here.
-    @Override
-    public void load(long cacheExpirationMs,
+    //       to reload with same settings, and contains current valid or invalid packages as they
+    //       are cached here.
+    private void load(
+            long cacheExpirationMs,
             @Nullable List<RepoLoadedListener> onLocalComplete,
             @Nullable List<RepoLoadedListener> onSuccess,
             @Nullable List<Runnable> onError,
@@ -382,6 +446,7 @@ public class RepoManagerImpl extends RepoManager {
 
     }
 
+    @Slow
     @Override
     public boolean reloadLocalIfNeeded(@NonNull ProgressIndicator progress) {
         // TODO: there should be a nice interface whereby we can do this check without creating a
@@ -492,10 +557,10 @@ public class RepoManagerImpl extends RepoManager {
 
         /**
          * Add callbacks to this task (if e.g. {@link #load(long, List, List, List, ProgressRunner,
-         * Downloader, SettingsController, boolean)} is called again while a task is already
-         * running.
+         * Downloader, SettingsController)} is called again while a task is already running.
          */
-        public void addCallbacks(@NonNull List<RepoLoadedListener> onLocalComplete,
+        public void addCallbacks(
+                @NonNull List<RepoLoadedListener> onLocalComplete,
                 @NonNull List<RepoLoadedListener> onSuccess,
                 @NonNull List<Runnable> onError,
                 @Nullable ProgressRunner runner) {

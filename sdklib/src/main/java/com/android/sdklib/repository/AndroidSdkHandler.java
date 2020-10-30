@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.prefs.AndroidLocation;
 import com.android.repository.Revision;
 import com.android.repository.api.ConstantSourceProvider;
@@ -692,10 +693,13 @@ public final class AndroidSdkHandler {
             mCustomSourceProviders.add(provider);
         }
 
+        @Slow
         @NonNull
-        public RepoManager createRepoManager(@NonNull ProgressIndicator progress,
+        public RepoManager createRepoManager(
+                @NonNull ProgressIndicator progress,
                 @Nullable File localLocation,
-                @Nullable LocalSourceProvider userProvider, @NonNull FileOp fop) {
+                @Nullable LocalSourceProvider userProvider,
+                @NonNull FileOp fop) {
             RepoManager result = RepoManager.create(fop);
 
             // Create the schema modules etc. if they haven't been already.

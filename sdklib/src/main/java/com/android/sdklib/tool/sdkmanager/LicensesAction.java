@@ -16,6 +16,7 @@
 package com.android.sdklib.tool.sdkmanager;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
@@ -39,6 +40,7 @@ class LicensesAction extends SdkAction {
         argToFactory.put(LICENSES_ARG, LicensesAction::new);
     }
 
+    @Slow
     @Override
     public void execute(@NonNull ProgressIndicator progress)
             throws SdkManagerCli.CommandFailedException {

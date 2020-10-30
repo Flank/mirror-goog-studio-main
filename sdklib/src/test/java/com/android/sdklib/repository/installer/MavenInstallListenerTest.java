@@ -19,8 +19,13 @@ package com.android.sdklib.repository.installer;
 import static org.junit.Assert.assertArrayEquals;
 
 import com.android.repository.Revision;
-import com.android.repository.api.*;
-import com.android.repository.api.RepoManager.RepoLoadedListener;
+import com.android.repository.api.ConstantSourceProvider;
+import com.android.repository.api.Installer;
+import com.android.repository.api.InstallerFactory;
+import com.android.repository.api.LocalPackage;
+import com.android.repository.api.RemotePackage;
+import com.android.repository.api.RepoManager;
+import com.android.repository.api.Uninstaller;
 import com.android.repository.impl.installer.BasicInstallerFactory;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.RepositoryPackages;
@@ -101,9 +106,14 @@ public class MavenInstallListenerTest extends TestCase {
         FakeProgressRunner runner = new FakeProgressRunner();
 
         // Load
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, ImmutableList.<RepoLoadedListener>of(),
-                 ImmutableList.<RepoLoadedListener>of(), ImmutableList.<Runnable>of(), runner,
-                 downloader, new FakeSettingsController(false), true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                new FakeSettingsController(false));
 
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
@@ -145,9 +155,14 @@ public class MavenInstallListenerTest extends TestCase {
                 contents);
 
         // Reload
-        mgr.load(0, ImmutableList.<RepoLoadedListener>of(), ImmutableList.<RepoLoadedListener>of(),
-                 ImmutableList.<Runnable>of(), runner, downloader, new FakeSettingsController(false),
-                 true);
+        mgr.loadSynchronously(
+                0,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                new FakeSettingsController(false));
 
         // Ensure it was recognized as a package.
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
@@ -208,10 +223,14 @@ public class MavenInstallListenerTest extends TestCase {
         FakeProgressRunner runner = new FakeProgressRunner();
 
         // Load
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
-                 ImmutableList.<RepoLoadedListener>of(), ImmutableList.<RepoLoadedListener>of(),
-                 ImmutableList.<Runnable>of(), runner,
-                 downloader, new FakeSettingsController(false), true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                new FakeSettingsController(false));
 
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
@@ -253,9 +272,14 @@ public class MavenInstallListenerTest extends TestCase {
                         new File(ROOT, "m2repository/com/android/group1/artifact1/1.2.3/package.xml")},
                 contents);
         // Reload
-        mgr.load(0, ImmutableList.<RepoLoadedListener>of(), ImmutableList.<RepoLoadedListener>of(),
-                 ImmutableList.<Runnable>of(), runner, downloader, new FakeSettingsController(false),
-                 true);
+        mgr.loadSynchronously(
+                0,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                new FakeSettingsController(false));
 
         // Ensure it was recognized as a package.
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
@@ -341,9 +365,14 @@ public class MavenInstallListenerTest extends TestCase {
         FakeProgressRunner runner = new FakeProgressRunner();
         FakeDownloader downloader = new FakeDownloader(fop);
         // Reload
-        mgr.load(0, ImmutableList.<RepoLoadedListener>of(), ImmutableList.<RepoLoadedListener>of(),
-                 ImmutableList.<Runnable>of(), runner, downloader, new FakeSettingsController(false),
-                 true);
+        mgr.loadSynchronously(
+                0,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
@@ -420,9 +449,14 @@ public class MavenInstallListenerTest extends TestCase {
         FakeProgressRunner runner = new FakeProgressRunner();
         FakeDownloader downloader = new FakeDownloader(fop);
         // Reload
-        mgr.load(0, ImmutableList.<RepoLoadedListener>of(), ImmutableList.<RepoLoadedListener>of(),
-                 ImmutableList.<Runnable>of(), runner, downloader, new FakeSettingsController(false),
-                 true);
+        mgr.loadSynchronously(
+                0,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();

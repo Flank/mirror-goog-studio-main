@@ -16,6 +16,7 @@
 package com.android.sdklib.tool.sdkmanager;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.Installer;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
@@ -46,6 +47,7 @@ class InstallAction extends SdkPackagesAction {
         argToFactory.put(ACTION_ARG, InstallAction::new);
     }
 
+    @Slow
     @Override
     public void execute(@NonNull ProgressIndicator progress)
             throws SdkManagerCli.CommandFailedException {

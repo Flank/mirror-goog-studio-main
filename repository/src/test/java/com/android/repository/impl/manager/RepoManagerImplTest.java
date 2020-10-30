@@ -70,8 +70,14 @@ public class RepoManagerImplTest extends TestCase {
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
-        mgr.load(0, ImmutableList.of(localCallback), ImmutableList.of(remoteCallback),
-                ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, true);
+        mgr.loadSynchronously(
+                0,
+                ImmutableList.of(localCallback),
+                ImmutableList.of(remoteCallback),
+                ImmutableList.of(errorCallback),
+                runner,
+                new FakeDownloader(fop),
+                null);
 
         assertEquals(4, counter.get());
     }
@@ -95,13 +101,18 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         try {
-            mgr.load(0, ImmutableList.of(localCallback), ImmutableList.of(remoteCallback),
-                    ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, true);
+            mgr.loadSynchronously(
+                    0,
+                    ImmutableList.of(localCallback),
+                    ImmutableList.of(remoteCallback),
+                    ImmutableList.of(errorCallback),
+                    runner,
+                    new FakeDownloader(fop),
+                    null);
         } catch (Exception e) {
             // expected
         }
         assertEquals(4, counter.get());
-
     }
 
     // test error causes error callbacks to be called
@@ -122,8 +133,14 @@ public class RepoManagerImplTest extends TestCase {
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
         try {
-            mgr.load(0, ImmutableList.of(localCallback), ImmutableList.of(remoteCallback),
-                    ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, true);
+            mgr.loadSynchronously(
+                    0,
+                    ImmutableList.of(localCallback),
+                    ImmutableList.of(remoteCallback),
+                    ImmutableList.of(errorCallback),
+                    runner,
+                    new FakeDownloader(fop),
+                    null);
         } catch (Exception e) {
             // expected
         }
@@ -180,10 +197,22 @@ public class RepoManagerImplTest extends TestCase {
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
-        mgr.load(0, ImmutableList.of(localCallback1), ImmutableList.of(remoteCallback1),
-                ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, false);
-        mgr.load(0, ImmutableList.of(localCallback2), ImmutableList.of(remoteCallback2),
-                ImmutableList.of(errorCallback), runner, new FakeDownloader(fop), null, false);
+        mgr.load(
+                0,
+                ImmutableList.of(localCallback1),
+                ImmutableList.of(remoteCallback1),
+                ImmutableList.of(errorCallback),
+                runner,
+                new FakeDownloader(fop),
+                null);
+        mgr.load(
+                0,
+                ImmutableList.of(localCallback2),
+                ImmutableList.of(remoteCallback2),
+                ImmutableList.of(errorCallback),
+                runner,
+                new FakeDownloader(fop),
+                null);
         runLocal.release();
 
         if (!completeDone.tryAcquire(2, 10, TimeUnit.SECONDS)) {
@@ -216,31 +245,43 @@ public class RepoManagerImplTest extends TestCase {
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
-        mgr.load(0, null, null, null, runner, null, null, true);
+        mgr.loadSynchronously(0, null, null, null, runner, null, null);
         assertTrue(localDidRun.compareAndSet(true, false));
         assertFalse(remoteDidRun.get());
 
         // we shouldn't run because of timeout
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null);
 
         assertFalse(localDidRun.get());
         assertFalse(remoteDidRun.get());
 
         // remote should run since we've specified a downloader
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner,
-                new FakeDownloader(fop), null, true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
+                null,
+                null,
+                null,
+                runner,
+                new FakeDownloader(fop),
+                null);
         assertFalse(localDidRun.compareAndSet(true, false));
         assertTrue(remoteDidRun.compareAndSet(true, false));
 
         // now neither should run because of caching
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner,
-                new FakeDownloader(fop), null, true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
+                null,
+                null,
+                null,
+                runner,
+                new FakeDownloader(fop),
+                null);
         assertFalse(localDidRun.get());
         assertFalse(remoteDidRun.get());
 
         // now we will timeout, so they should run again
-        mgr.load(-1, null, null, null, runner, new FakeDownloader(fop), null, true);
+        mgr.loadSynchronously(-1, null, null, null, runner, new FakeDownloader(fop), null);
         assertTrue(localDidRun.compareAndSet(true, false));
         assertTrue(remoteDidRun.compareAndSet(true, false));
     }
@@ -263,26 +304,26 @@ public class RepoManagerImplTest extends TestCase {
         FakeProgressRunner runner = new FakeProgressRunner();
 
         // First time we should load, despite not being out of date
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null);
         assertTrue(didRun.compareAndSet(true, false));
 
         // With default timeout, we shouldn't run again
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null);
         assertFalse(didRun.get());
 
         // Now with shallow check, we should run
         shallowResult.set(true);
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null);
         assertTrue(didRun.compareAndSet(true, false));
 
         // With deep check only we shouldn't run
         shallowResult.set(false);
         deepResult.set(true);
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null,
-                true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null);
         assertFalse(didRun.get());
 
         // now we do the deep check and should run.
@@ -292,8 +333,8 @@ public class RepoManagerImplTest extends TestCase {
         // check again that we won't reload because of caching
         shallowResult.set(false);
         deepResult.set(false);
-        mgr.load(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null,
-                null, true);
+        mgr.loadSynchronously(
+                RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, null, null, null, runner, null, null);
         assertFalse(didRun.get());
     }
 
@@ -325,26 +366,26 @@ public class RepoManagerImplTest extends TestCase {
                                 ImmutableList.of(), null)));
         mgr.registerSourceProvider(provider);
         // Initial load to set current state
-        mgr.load(-1, null, null, null, runner, downloader, null, true);
+        mgr.loadSynchronously(-1, null, null, null, runner, downloader, null);
         AtomicBoolean localRan = new AtomicBoolean(false);
         AtomicBoolean remoteRan = new AtomicBoolean(false);
         mgr.addLocalChangeListener(new RunningCallback(localRan));
         mgr.addRemoteChangeListener(new RunningCallback(remoteRan));
 
         // load again with no changes
-        mgr.load(-1, null, null, null, runner, downloader, null, true);
+        mgr.loadSynchronously(-1, null, null, null, runner, downloader, null);
         assertFalse(localRan.get());
         assertFalse(remoteRan.get());
 
         // update local and ensure the local listener fired
         localPackages.put("bar", new FakeLocalPackage("bar"));
-        mgr.load(-1, null, null, null, runner, downloader, null, true);
+        mgr.loadSynchronously(-1, null, null, null, runner, downloader, null);
         assertTrue(localRan.compareAndSet(true, false));
         assertFalse(remoteRan.get());
 
         // update remote and ensure the remote listener fired
         remotePackages.put("baz", new FakeRemotePackage("baz"));
-        mgr.load(-1, null, null, null, runner, downloader, null, true);
+        mgr.loadSynchronously(-1, null, null, null, runner, downloader, null);
         assertFalse(localRan.get());
         assertTrue(remoteRan.compareAndSet(true, false));
     }

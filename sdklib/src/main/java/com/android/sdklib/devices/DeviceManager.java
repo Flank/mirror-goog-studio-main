@@ -21,6 +21,7 @@ import static com.android.sdklib.internal.avd.AvdManager.AVD_INI_RAM_SIZE;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.RepoManager;
 import com.android.repository.io.FileOp;
 import com.android.resources.KeyboardState;
@@ -46,7 +47,15 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
@@ -349,8 +358,10 @@ public class DeviceManager {
 
     /**
      * Initializes all system-image provided {@link Device}s.
-     * @return True if the list has changed.
+     *
+     * @return true if the list has changed.
      */
+    @Slow
     private boolean initSysImgDevices() {
         synchronized (mLock) {
             if (mSysImgDevices != null) {
