@@ -194,18 +194,6 @@ enum class BooleanOption(
      * DEPRECATED FEATURES
      */
 
-    @Suppress("unused")
-    ENABLE_BUILD_CACHE(
-        "android.enableBuildCache",
-        true,
-        FeatureStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
-    ),
-    @Suppress("unused")
-    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE(
-        "android.enableIntermediateArtifactsCache",
-        true,
-        FeatureStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
-    ),
 
     /* -----------------
      * ENFORCED FEATURES
@@ -433,6 +421,20 @@ enum class BooleanOption(
         "android.generateRJava",
         false,
         FeatureStage.Removed(VERSION_4_1, "This feature was removed in AGP 4.1")),
+
+    @Suppress("unused")
+    ENABLE_BUILD_CACHE(
+        "android.enableBuildCache",
+        false,
+        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches are superseded by the Gradle build cache https://docs.gradle.org/current/userguide/build_cache.html")
+    ),
+
+    @Suppress("unused")
+    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE(
+        "android.enableIntermediateArtifactsCache",
+        false,
+        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches are superseded by the Gradle build cache https://docs.gradle.org/current/userguide/build_cache.html")
+    ),
 
     ; // end of enums
 

@@ -18,15 +18,41 @@ package com.android.build.gradle.internal.errors
 
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.Version
+import com.android.build.gradle.options.parseBoolean
 import com.google.common.collect.ImmutableMap
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Test
 
 class DeprecationReporterImplTest {
+
+    enum class FakeOption(
+        override val propertyName: String,
+        override val defaultValue: Boolean?,
+        override val status: Option.Status
+    ) : Option<Boolean?> {
+        EXPERIMENTAL("android.experimental.option", false, Option.Status.EXPERIMENTAL),
+        DEPRECATED(
+            "android.deprecated.option",
+            false,
+            Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_7_0)
+        ),
+        DEPRECATED_OPTIONAL(
+            "android.deprecated.optional.option",
+            null,
+            Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.VERSION_7_0)
+        ),
+        REMOVED(
+            "android.removed.option",
+            false,
+            Option.Status.Removed(Version.VERSION_7_0, "Extra message.")
+        ),
+        ;
+        override fun parse(value: Any): Boolean = parseBoolean(propertyName, value)
+    }
 
     private val issueReporter = FakeSyncIssueReporter()
     private val reporter =
@@ -39,115 +65,126 @@ class DeprecationReporterImplTest {
 
     @Test
     fun `test experimental options, actual value == default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.EXPERIMENTAL, false)
 
-        Truth.assertThat(issueReporter.errors).isEmpty()
-        Truth.assertThat(issueReporter.warnings).isEmpty()
+        assertThat(issueReporter.errors).isEmpty()
+        assertThat(issueReporter.warnings).isEmpty()
     }
 
     @Test
     fun `test experimental options, actual value != default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.EXPERIMENTAL, true)
 
-        Truth.assertThat(issueReporter.errors).isEmpty()
-        Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option setting 'android.buildOnlyTargetAbi=false' is experimental.\n" +
-                    "The current default is 'true'."
+        assertThat(issueReporter.errors).isEmpty()
+        assertThat(issueReporter.warnings).containsExactly(
+            "The option setting 'android.experimental.option=true' is experimental.\n" +
+                    "The current default is 'false'."
         )
     }
 
     @Test
     fun `test deprecated options, actual value == default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.DEPRECATED, false)
 
-        Truth.assertThat(issueReporter.errors).isEmpty()
-        Truth.assertThat(issueReporter.warnings).isEmpty()
+        assertThat(issueReporter.errors).isEmpty()
+        assertThat(issueReporter.warnings).isEmpty()
     }
 
     @Test
     fun `test deprecated options, actual value != default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.DEPRECATED, true)
 
-        Truth.assertThat(issueReporter.errors).isEmpty()
-        Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option setting 'android.enableBuildCache=false' is deprecated.\n" +
-                    "The current default is 'true'.\n" +
-                    "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
-                    "It does not do anything and AGP is now using Gradle caching."
+        assertThat(issueReporter.errors).isEmpty()
+        assertThat(issueReporter.warnings).containsExactly(
+            "The option setting 'android.deprecated.option=true' is deprecated.\n" +
+                    "The current default is 'false'.\n" +
+                    "It will be removed in version 7.0 of the Android Gradle plugin."
         )
     }
 
     @Test
     fun `test removed options, actual value == default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.REMOVED, false)
 
-        Truth.assertThat(issueReporter.errors).isEmpty()
-        Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option 'android.enableAapt2jni' is deprecated.\n" +
+        assertThat(issueReporter.errors).isEmpty()
+        assertThat(issueReporter.warnings).containsExactly(
+            "The option 'android.removed.option' is deprecated.\n" +
                     "The current default is 'false'.\n" +
-                    "It has been removed from the current version of the Android Gradle plugin.\n" +
-                    "AAPT2 JNI has been removed."
+                    "It was removed in version 7.0 of the Android Gradle plugin.\n" +
+                    "Extra message."
         )
     }
 
     @Test
     fun `test removed options, actual value != default value`() {
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.REMOVED, true)
 
-        Truth.assertThat(issueReporter.errors).containsExactly(
-            "The option 'android.enableAapt2jni' is deprecated.\n" +
+        assertThat(issueReporter.errors).containsExactly(
+            "The option 'android.removed.option' is deprecated.\n" +
                     "The current default is 'false'.\n" +
-                    "It has been removed from the current version of the Android Gradle plugin.\n" +
-                    "AAPT2 JNI has been removed."
+                    "It was removed in version 7.0 of the Android Gradle plugin.\n" +
+                    "Extra message."
         )
-        Truth.assertThat(issueReporter.warnings).isEmpty()
+        assertThat(issueReporter.warnings).isEmpty()
     }
 
     @Test
     fun `test errors and warnings are reported only once`() {
         // Experimental options
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.EXPERIMENTAL, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.EXPERIMENTAL, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.EXPERIMENTAL, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.EXPERIMENTAL, false)
 
         // Deprecated options
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_BUILD_CACHE, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.DEPRECATED, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.DEPRECATED, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.DEPRECATED, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.DEPRECATED, false)
 
         // Removed options
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
-        reporter.reportOptionIssuesIfAny(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.REMOVED, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.REMOVED, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.REMOVED, false)
+        reporter.reportOptionIssuesIfAny(FakeOption.REMOVED, false)
 
-        Truth.assertThat(issueReporter.errors).containsExactly(
-            "The option 'android.enableAapt2jni' is deprecated.\n" +
-                    "The current default is 'false'.\n" +
-                    "It has been removed from the current version of the Android Gradle plugin.\n" +
-                    "AAPT2 JNI has been removed."
+        assertThat(issueReporter.errors).containsExactly(
+            """
+            The option 'android.removed.option' is deprecated.
+            The current default is 'false'.
+            It was removed in version 7.0 of the Android Gradle plugin.
+            Extra message.
+            """.trimIndent()
         )
-        Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option setting 'android.buildOnlyTargetAbi=false' is experimental.\n" +
-                    "The current default is 'true'.",
-            "The option setting 'android.enableBuildCache=false' is deprecated.\n" +
-                    "The current default is 'true'.\n" +
-                    "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
-                    "It does not do anything and AGP is now using Gradle caching.",
-            "The option 'android.enableAapt2jni' is deprecated.\n" +
-                    "The current default is 'false'.\n" +
-                    "It has been removed from the current version of the Android Gradle plugin.\n" +
-                    "AAPT2 JNI has been removed."
+        assertThat(issueReporter.warnings).containsExactly(
+            """
+                The option setting 'android.experimental.option=true' is experimental.
+                The current default is 'false'.
+            """.trimIndent(),
+            """
+                The option setting 'android.deprecated.option=true' is deprecated.
+                The current default is 'false'.
+                It will be removed in version 7.0 of the Android Gradle plugin.
+            """.trimIndent(),
+            """
+                The option 'android.removed.option' is deprecated.
+                The current default is 'false'.
+                It was removed in version 7.0 of the Android Gradle plugin.
+                Extra message.
+            """.trimIndent()
         )
     }
 
     @Test
     fun `test deprecated optional option`() {
-        reporter.reportOptionIssuesIfAny(OptionalBooleanOption.ENABLE_R8, true)
+        reporter.reportOptionIssuesIfAny(FakeOption.DEPRECATED_OPTIONAL, true)
 
-        Truth.assertThat(issueReporter.errors).isEmpty()
-        Truth.assertThat(issueReporter.warnings).containsExactly(
-            "The option setting 'android.enableR8=true' is deprecated.\n" +
-                    "It will be removed in version 7.0 of the Android Gradle plugin.\n" +
-                    "You will no longer be able to disable R8")
+        assertThat(issueReporter.errors).isEmpty()
+        assertThat(issueReporter.warnings).containsExactly(
+            """
+                The option setting 'android.deprecated.optional.option=true' is deprecated.
+                It will be removed in version 7.0 of the Android Gradle plugin.
+            """.trimIndent()
+        )
     }
 }
