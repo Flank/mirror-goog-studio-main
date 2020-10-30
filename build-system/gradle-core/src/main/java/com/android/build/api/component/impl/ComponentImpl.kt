@@ -608,7 +608,11 @@ abstract class ComponentImpl(
                         artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                     )
                 } else {
-                    internalServices.fileCollection(variantScope.rJarForUnitTests)
+                    if (buildFeatures.androidResources) {
+                        internalServices.fileCollection(variantScope.rJarForUnitTests)
+                    } else {
+                        internalServices.fileCollection()
+                    }
                 }
             }
         }
