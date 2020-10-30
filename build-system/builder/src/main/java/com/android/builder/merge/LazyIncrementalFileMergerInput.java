@@ -128,8 +128,14 @@ public class LazyIncrementalFileMergerInput implements IncrementalFileMergerInpu
                 new CachedSupplier<>(
                         () -> {
                             Set<File> zips = new HashSet<>();
+                            // keep track of visitedZips to avoid calls to isFile()
+                            Set<File> visitedZips = new HashSet<>();
                             for (RelativeFile rf : files.get()) {
                                 if (rf.getType() == RelativeFile.Type.JAR) {
+                                    if (visitedZips.contains(rf.getBase())) {
+                                        continue;
+                                    }
+                                    visitedZips.add(rf.getBase());
                                     if (rf.getBase().isFile()) {
                                         zips.add(rf.getBase());
                                     }
