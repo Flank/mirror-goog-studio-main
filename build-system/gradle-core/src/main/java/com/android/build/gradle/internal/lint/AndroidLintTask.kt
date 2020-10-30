@@ -438,7 +438,11 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
             })
             task.projectInputs.initialize(variant)
-            task.variantInputs.initialize(variant, checkDependencies)
+            task.variantInputs.initialize(
+                variant,
+                checkDependencies,
+                warnIfProjectTreatedAsExternalDependency = true
+            )
             if (checkDependencies) {
                 task.mainDependencyLintModels.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(

@@ -75,3 +75,5 @@ fun Gradle.computeBuildMapping(): BuildMapping {
 
     return builder.build()
 }
+
+val BuildMapping.currentBuild: String get() = this[CURRENT_BUILD_NAME]!!

@@ -20,8 +20,6 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
-import com.android.build.gradle.internal.ide.dependencies.getBuildId
-import com.android.build.gradle.internal.ide.dependencies.getVariantName
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
 import com.android.tools.lint.model.DefaultLintModelAndroidLibrary
@@ -31,7 +29,6 @@ import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelMavenName
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import java.io.File
 import java.util.Collections
 
@@ -48,8 +45,6 @@ class ExternalLintModelArtifactHandler private constructor(
     private val projectExplodedAarsMap: Map<ProjectKey, File>,
     private val projectJarsMap: Map<ProjectKey, File>
 ) : ArtifactHandler<LintModelLibrary>(localJarCache, mavenCoordinatesCache) {
-
-    private data class ProjectKey(val buildId: String, val projectPath: String, val variantName: String?)
 
     override fun handleAndroidLibrary(
         aarFile: File,
@@ -183,13 +178,6 @@ class ExternalLintModelArtifactHandler private constructor(
                 Collections.unmodifiableMap(projectJarsMap)
             )
 
-        }
-
-        private fun ArtifactCollection.asProjectKeyedMap(buildMapping: BuildMapping): Map<ProjectKey, File> {
-            return artifacts.asSequence().map { artifact ->
-                val id = artifact.id.componentIdentifier as ProjectComponentIdentifier
-                ProjectKey(id.getBuildId(buildMapping)!!, id.projectPath, artifact.getVariantName()) to artifact.file
-            }.toMap()
         }
     }
 }

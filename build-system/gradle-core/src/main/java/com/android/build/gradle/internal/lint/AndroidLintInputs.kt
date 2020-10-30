@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
+import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -59,7 +60,6 @@ import com.android.tools.lint.model.DefaultLintModelVariant
 import com.android.tools.lint.model.LintModelAndroidArtifact
 import com.android.tools.lint.model.LintModelBuildFeatures
 import com.android.tools.lint.model.LintModelDependencies
-import com.android.tools.lint.model.LintModelFactory
 import com.android.tools.lint.model.LintModelJavaArtifact
 import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.LintModelLintOptions
@@ -422,24 +422,28 @@ abstract class VariantInputs {
     abstract val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
 
 
-    fun initialize(variantWithTests: VariantWithTests, checkDependencies: Boolean) {
+    fun initialize(
+        variantWithTests: VariantWithTests,
+        checkDependencies: Boolean,
+        warnIfProjectTreatedAsExternalDependency: Boolean
+    ) {
         val creationConfig = variantWithTests.main
         name.setDisallowChanges(creationConfig.name)
         this.checkDependencies.setDisallowChanges(checkDependencies)
         minifiedEnabled.setDisallowChanges(creationConfig.codeShrinker != null)
-        mainArtifact.initialize(creationConfig as ComponentImpl, checkDependencies)
+        mainArtifact.initialize(creationConfig as ComponentImpl, checkDependencies, warnIfProjectTreatedAsExternalDependency)
 
         testArtifact.setDisallowChanges(
             variantWithTests.unitTest?.let { unitTest ->
                 creationConfig.services.newInstance(JavaArtifactInput::class.java)
-                    .initialize(unitTest as UnitTestImpl, checkDependencies)
+                    .initialize(unitTest as UnitTestImpl, checkDependencies, warnIfProjectTreatedAsExternalDependency)
             }
         )
 
         androidTestArtifact.setDisallowChanges(
             variantWithTests.androidTest?.let { androidTest ->
                 creationConfig.services.newInstance(AndroidArtifactInput::class.java)
-                    .initialize(androidTest as ComponentImpl, checkDependencies)
+                    .initialize(androidTest as ComponentImpl, checkDependencies, warnIfProjectTreatedAsExternalDependency)
         })
         mergedManifest.setDisallowChanges(
             creationConfig.artifacts.get(ArtifactType.MERGED_MANIFEST)
@@ -485,8 +489,13 @@ abstract class VariantInputs {
 
         name.setDisallowChanges(mainSourceSet.name)
         this.checkDependencies.setDisallowChanges(checkDependencies)
-        mainArtifact.initializeForStandalone(project, projectOptions, mainSourceSet)
-        testArtifact.setDisallowChanges(project.objects.newInstance(JavaArtifactInput::class.java).initializeForStandalone(project, projectOptions, mainSourceSet))
+        mainArtifact.initializeForStandalone(project, projectOptions, mainSourceSet, checkDependencies)
+        testArtifact.setDisallowChanges(project.objects.newInstance(JavaArtifactInput::class.java).initializeForStandalone(
+            project,
+            projectOptions,
+            mainSourceSet,
+            checkDependencies
+        ))
         androidTestArtifact.disallowChanges()
         namespace.setDisallowChanges("")
         minSdkVersion.initializeEmpty()
@@ -702,7 +711,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
     @get:Internal
     abstract val generatedResourceFolders: ListProperty<File>
 
-    fun initialize(componentImpl: ComponentImpl, checkDependencies: Boolean): AndroidArtifactInput {
+    fun initialize(componentImpl: ComponentImpl, checkDependencies: Boolean, warnIfProjectTreatedAsExternalDependency: Boolean): AndroidArtifactInput {
         applicationId.setDisallowChanges(componentImpl.applicationId)
         generatedSourceFolders.setDisallowChanges(ModelBuilder.getGeneratedSourceFolders(componentImpl))
         generatedResourceFolders.setDisallowChanges(ModelBuilder.getGeneratedResourceFolders(componentImpl))
@@ -716,7 +725,10 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             .getCompiledRClasses(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH))
         classesOutputDirectories.disallowChanges()
-        if (!checkDependencies) {
+        this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
+        if (checkDependencies) {
+            initializeProjectDependenciesLintModels(componentImpl.variantDependencies)
+        } else {
             projectDependencyExplodedAars =
                 componentImpl.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -736,12 +748,12 @@ abstract class AndroidArtifactInput : ArtifactInput() {
         return this
     }
 
-    fun initializeForStandalone(project: Project, projectOptions: ProjectOptions, sourceSet: SourceSet) {
+    fun initializeForStandalone(project: Project, projectOptions: ProjectOptions, sourceSet: SourceSet, checkDependencies: Boolean) {
         applicationId.setDisallowChanges("")
         generatedSourceFolders.setDisallowChanges(listOf())
         generatedResourceFolders.setDisallowChanges(listOf())
         classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
-
+        warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(
             variantName = sourceSet.name,
             variantType = VariantTypeImpl.JAVA_LIBRARY,
@@ -766,6 +778,9 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             buildMapping = project.gradle.computeBuildMapping(),
             mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
         ))
+        if (checkDependencies) {
+            initializeProjectDependenciesLintModels(variantDependencies)
+        }
     }
 
     internal fun toLintModel(dependencyCaches: DependencyCaches, checkDependencies: Boolean): LintModelAndroidArtifact {
@@ -784,7 +799,11 @@ abstract class AndroidArtifactInput : ArtifactInput() {
  */
 abstract class JavaArtifactInput : ArtifactInput() {
 
-    fun initialize(unitTestImpl: UnitTestImpl, checkDependencies: Boolean): JavaArtifactInput {
+    fun initialize(
+        unitTestImpl: UnitTestImpl,
+        checkDependencies: Boolean,
+        warnIfProjectTreatedAsExternalDependency: Boolean,
+    ): JavaArtifactInput {
         classesOutputDirectories.from(
             unitTestImpl.artifacts.get(InternalArtifactType.JAVAC)
         )
@@ -796,7 +815,10 @@ abstract class JavaArtifactInput : ArtifactInput() {
             .getCompiledRClasses(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH))
         classesOutputDirectories.disallowChanges()
-        if (!checkDependencies) {
+        this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
+        if (checkDependencies) {
+            initializeProjectDependenciesLintModels(unitTestImpl.variantDependencies)
+        } else {
             projectDependencyExplodedAars =
                 unitTestImpl.variantDependencies.getArtifactCollectionForToolingModel(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -815,8 +837,10 @@ abstract class JavaArtifactInput : ArtifactInput() {
         return this
     }
 
-    fun initializeForStandalone(project: Project, projectOptions: ProjectOptions, sourceSet: SourceSet): JavaArtifactInput {
+    fun initializeForStandalone(project: Project, projectOptions: ProjectOptions, sourceSet: SourceSet, checkDependencies: Boolean): JavaArtifactInput {
         classesOutputDirectories.fromDisallowChanges(sourceSet.output.classesDirs)
+        // Only ever used within the model builder in the standalone plugin
+        warnIfProjectTreatedAsExternalDependency.setDisallowChanges(false)
         val variantDependencies = VariantDependencies(
             variantName = sourceSet.name,
             variantType = VariantTypeImpl.JAVA_LIBRARY,
@@ -843,6 +867,9 @@ abstract class JavaArtifactInput : ArtifactInput() {
                 mavenCoordinatesCache = getBuildService(project.gradle.sharedServices)
             )
         )
+        if (checkDependencies) {
+            initializeProjectDependenciesLintModels(variantDependencies)
+        }
         return this
     }
 
@@ -875,17 +902,47 @@ abstract class ArtifactInput {
     @get:Internal
     var projectDependencyExplodedAars: ArtifactCollection? = null
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:Optional
+    abstract val projectDependencyLintModelsFileCollection: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val projectDependencyLintModels: Property<ArtifactCollection>
+
+    @get:Internal
+    abstract val warnIfProjectTreatedAsExternalDependency: Property<Boolean>
+
+    protected fun initializeProjectDependenciesLintModels(variantDependencies: VariantDependencies) {
+        val artifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
+            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+            AndroidArtifacts.ArtifactScope.PROJECT,
+            AndroidArtifacts.ArtifactType.LINT_MODEL
+        )
+        projectDependencyLintModels.setDisallowChanges(artifactCollection)
+        projectDependencyLintModelsFileCollection.fromDisallowChanges(artifactCollection.artifactFiles)
+    }
+
     internal fun computeDependencies(dependencyCaches: DependencyCaches, checkDependencies: Boolean): LintModelDependencies {
 
         val artifactCollectionsInputs = artifactCollectionsInputs.get()
 
         val artifactHandler: ArtifactHandler<LintModelLibrary> =
             if (checkDependencies) {
-                // TODO(b/160392650): Maybe add the java library project dependency models as an
-                //   input here, and then treat the library as external if there is no corresponding
-                //   lint model (as the build author now needs to apply the standalone lint plugin)
-                //   This could help to ease the transition to this new approach.
-                LintModelArtifactHandler(dependencyCaches)
+                val thisProject =
+                    ProjectKey(
+                        artifactCollectionsInputs.buildMapping.currentBuild,
+                        artifactCollectionsInputs.projectPath,
+                        artifactCollectionsInputs.variantName
+                    )
+                CheckDependenciesLintModelArtifactHandler(
+                    dependencyCaches,
+                    thisProject,
+                    projectDependencyLintModels.get(),
+                    artifactCollectionsInputs.compileClasspath.projectJars,
+                    artifactCollectionsInputs.runtimeClasspath!!.projectJars,
+                    artifactCollectionsInputs.buildMapping,
+                    warnIfProjectTreatedAsExternalDependency.get())
             } else {
                 // When not checking dependencies, treat all dependencies as external.
                 ExternalLintModelArtifactHandler.create(
