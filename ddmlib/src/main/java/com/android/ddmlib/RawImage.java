@@ -16,6 +16,16 @@
 
 package com.android.ddmlib;
 
+import com.android.annotations.Nullable;
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DirectColorModel;
+import java.awt.image.WritableRaster;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -207,6 +217,62 @@ public final class RawImage {
         }
 
         return a << 24 | r << 16 | g << 8 | b;
+    }
+
+    public BufferedImage asBufferedImage() {
+        String profileName = getProfileName();
+        BufferedImage image;
+        if (profileName == null) {
+            //noinspection UndesirableClassUsage
+            image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        } else {
+            ICC_Profile profile = ICC_Profile.getInstance(ColorSpace.CS_sRGB);
+            try {
+                profile =
+                        ICC_Profile.getInstance(
+                                getClass()
+                                        .getClassLoader()
+                                        .getResourceAsStream("colorProfiles/" + profileName));
+            } catch (IOException e) {
+                // Ignore
+            }
+            ICC_ColorSpace colorSpace = new ICC_ColorSpace(profile);
+
+            ColorModel colorModel =
+                    new DirectColorModel(
+                            colorSpace,
+                            32,
+                            0x00ff0000,
+                            0x0000ff00,
+                            0x000000ff,
+                            0xff000000,
+                            false,
+                            DataBuffer.TYPE_INT);
+            WritableRaster raster = colorModel.createCompatibleWritableRaster(width, height);
+
+            //noinspection UndesirableClassUsage
+            image = new BufferedImage(colorModel, raster, colorModel.isAlphaPremultiplied(), null);
+        }
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int argb = getARGB((x + y * width) * (bpp / 8));
+                image.setRGB(x, y, argb);
+            }
+        }
+        return image;
+    }
+
+    @Nullable
+    public String getProfileName() {
+        switch (colorSpace) {
+            case RawImage.COLOR_SPACE_UNKNOWN:
+                return null;
+            case RawImage.COLOR_SPACE_SRGB:
+                return "sRGB.icc";
+            case RawImage.COLOR_SPACE_DISPLAY_P3:
+                return "DisplayP3.icc";
+        }
+        return null;
     }
 
     /**
