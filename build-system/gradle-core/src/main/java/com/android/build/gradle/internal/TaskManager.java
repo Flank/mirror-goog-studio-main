@@ -1733,7 +1733,8 @@ public abstract class TaskManager<
                                 testConfigInputs.getPackageNameOfFinalRClass());
                     });
         } else {
-            if (testedVariant.getVariantType().isAar()) {
+            if (testedVariant.getVariantType().isAar()
+                    && testedVariant.getBuildFeatures().getAndroidResources()) {
                 // With compile classpath R classes, we need to generate a dummy R class for unit tests
                 // See https://issuetracker.google.com/143762955 for more context.
                 taskFactory.register(
