@@ -16,23 +16,27 @@
 
 package com.android.tools.lint
 
-import com.android.tools.lint.checks.infrastructure.TestFiles.image
-import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
-import com.android.tools.lint.checks.infrastructure.TestFiles.xml
-import org.junit.Assert.assertTrue
-
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.LogDetector
 import com.android.tools.lint.checks.ManifestDetector
+import com.android.tools.lint.checks.infrastructure.TestFiles.image
+import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestResultTransformer
-import java.io.File
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestName
+import java.io.File
 
 class HtmlReporterTest {
+    @get:Rule
+    val testName = TestName()
+
     @Test
     fun testBasic() {
         val client = TestLintClient()
@@ -57,7 +61,8 @@ class HtmlReporterTest {
             report
         }
 
-        TestLintTask.lint().sdkHome(TestUtils.getSdk()).files(
+        val testName = javaClass.simpleName + "_" + testName.methodName
+        TestLintTask.lint().testName(testName).sdkHome(TestUtils.getSdk()).files(
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"

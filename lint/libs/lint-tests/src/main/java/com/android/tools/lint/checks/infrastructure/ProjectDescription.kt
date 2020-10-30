@@ -28,6 +28,7 @@ class ProjectDescription {
     var name: String = ""
     var type = Type.APP
     var report = true
+    var under: ProjectDescription? = null
 
     /**
      * Creates a new project description
@@ -110,6 +111,15 @@ class ProjectDescription {
     }
 
     /**
+     * Places this project in a subdirectory (determined by
+     * the project name) of the given [parent] project
+     */
+    fun under(parent: ProjectDescription): ProjectDescription {
+        this.under = parent
+        return this
+    }
+
+    /**
      * Marks this project as reportable (the default) or non-reportable.
      * Lint projects are usually reportable, but if they depend on libraries
      * (such as appcompat) those dependencies are marked as non-reportable.
@@ -141,6 +151,9 @@ class ProjectDescription {
             }
         }
     }
+
+    override fun toString(): String =
+        "$type:${if (name.isNotBlank()) name else ProjectDescription::class.java.simpleName}"
 
     /** Describes different types of lint test projects  */
     enum class Type {

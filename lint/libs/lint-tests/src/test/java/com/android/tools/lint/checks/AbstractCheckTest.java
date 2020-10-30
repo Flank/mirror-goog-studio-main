@@ -90,6 +90,8 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         // detector results below
         TestLintTask task = TestLintTask.lint();
 
+        task.testName(this.getClass().getSimpleName() + "_" + getName());
+
         task.checkMessage(
                 (context, issue, severity, location, message, fix) ->
                         AbstractCheckTest.super.checkReportedError(

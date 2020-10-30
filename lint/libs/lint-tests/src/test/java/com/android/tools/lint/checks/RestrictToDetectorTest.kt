@@ -18,6 +18,8 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.RestrictToDetector.Companion.sameLibraryGroupPrefix
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Project
+import java.io.File
 
 class RestrictToDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = RestrictToDetector()
@@ -1791,7 +1793,25 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             ).indented()
         ).name("lib2").dependsOn(library)
 
-        lint().projects(library, library2).run().expect(
+        // Make sure projects are placed correctly on disk: to do this, record
+        // project locations with a special client, then after the lint run make
+        // sure the locations are correct.
+        library2.under(library)
+        var libDir1: File? = null
+        var libDir2: File? = null
+        val client = object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+            override fun registerProject(dir: File, project: Project) {
+                if (project.name == "lib1") {
+                    libDir1 = dir
+                } else if (project.name == "lib2") {
+                    libDir2 = dir
+                }
+                super.registerProject(dir, project)
+            }
+        }
+        assertEquals("APP:lib1", library.toString())
+
+        lint().projects(library, library2).client(client).run().expect(
             """
             lib2/src/main/kotlin/com/example/myapplication/test.kt:8: Error: LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library) [RestrictedApi]
                 LibraryCode.method3()
@@ -1808,6 +1828,9 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             4 errors, 0 warnings
             """
         )
+
+        // Make sure project directories are laid out correctly
+        assertTrue(libDir2!!.parentFile.path == libDir1!!.path)
     }
 
     val restrictToAnnotation = java(
