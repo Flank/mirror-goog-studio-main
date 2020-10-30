@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
 
-import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
@@ -45,11 +44,8 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Desugar tool specific tests. */
 public class DesugarAppWithDesugarToolTest {
@@ -221,7 +217,7 @@ public class DesugarAppWithDesugarToolTest {
                         + "}\n");
 
         getProjectExecutor()
-                .with(OptionalBooleanOption.ENABLE_R8, false)
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
                 .run("assembleDebugAndroidTest");
 
         assertThatApk(project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG))

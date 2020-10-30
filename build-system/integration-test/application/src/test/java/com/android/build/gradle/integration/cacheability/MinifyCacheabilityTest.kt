@@ -149,7 +149,7 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
 
         CacheabilityTestHelper(projectCopy1, projectCopy2, buildCacheDir)
             .useCustomExecutor {
-                it.with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                it.with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8)
             }
             .runTasks(
                 "clean",

@@ -287,7 +287,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.ENABLE_R8, false)
+                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
                         .build();
         initFieldsFromProject();
         android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
@@ -303,7 +303,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.ENABLE_R8, true)
+                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
                         .build();
         initFieldsFromProject();
 
@@ -321,7 +321,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.ENABLE_R8, true)
+                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
                         .build();
         initFieldsFromProject();
 
@@ -348,7 +348,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_proguard").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.ENABLE_R8, false)
+                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
                         .build();
         initFieldsFromProject();
         android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
@@ -435,7 +435,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("useProguardFalse").toPath())
                         .withPlugin(pluginType)
-                        .withProperty(OptionalBooleanOption.ENABLE_R8, false)
+                        .withProperty(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
                         .build();
         initFieldsFromProject();
         BuildType buildType = android.getBuildTypes().getByName("debug");

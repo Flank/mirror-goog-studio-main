@@ -62,7 +62,7 @@ open class ConsumableCreationConfigImpl(
 
     open fun getCodeShrinker(): CodeShrinker? {
         val codeShrinker: CodeShrinker = variantDslInfo.getPostProcessingOptions().getCodeShrinker() ?: return null
-        var enableR8 = globalScope.projectOptions[OptionalBooleanOption.ENABLE_R8]
+        var enableR8 = globalScope.projectOptions[OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8]
         if (variantDslInfo.variantType.isAar && !globalScope.projectOptions[BooleanOption.ENABLE_R8_LIBRARIES]) {
                 // R8 is disabled for libraries
                 enableR8 = false

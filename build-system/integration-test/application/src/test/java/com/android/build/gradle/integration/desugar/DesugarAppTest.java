@@ -342,7 +342,7 @@ public class DesugarAppTest {
                 project.executor()
                         .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
                         .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
-                        .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
+                        .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, java8LangSupport == R8)
                         .with(
                                 BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
                                 artifactTransforms == ArtifactTransform.WITH_DESUGARING);

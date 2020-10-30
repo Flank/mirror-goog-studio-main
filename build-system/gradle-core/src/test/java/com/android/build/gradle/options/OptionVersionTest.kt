@@ -43,7 +43,7 @@ class OptionVersionTest {
                 BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS,
                 BooleanOption.PREFER_CMAKE_FILE_API,
                 BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING,
-                OptionalBooleanOption.ENABLE_R8,
+                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
                 StringOption.JETIFIER_BLACKLIST,
                 StringOption.BUILD_CACHE_DIR
         )

@@ -225,7 +225,7 @@ public class ShrinkResourcesOldShrinkerTest {
         GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8)
                 .with(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING, useRTxt)
                 .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, false)
                 .run(

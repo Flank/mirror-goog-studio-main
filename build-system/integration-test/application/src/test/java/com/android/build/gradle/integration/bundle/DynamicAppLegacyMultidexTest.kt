@@ -147,7 +147,7 @@ class DynamicAppLegacyMultidexTest {
     /** Regression test for b/131204372 */
     @Test
     fun testPrimaryDexContainsAllNecessaryClassesWithProguard() {
-        project.executor().with(OptionalBooleanOption.ENABLE_R8, false).run("bundleIcsR8")
+        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("bundleIcsR8")
 
         // also check the main dex list contains computed entries, not only manually specified ones
         val mainDexListClasses =

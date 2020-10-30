@@ -91,7 +91,9 @@ public class MinifyLibTest {
 
         ModelContainer<AndroidProject> container =
                 project.model()
-                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(
+                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                                codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects();
         ModelContainerSubject.assertThat(container)
@@ -207,6 +209,8 @@ public class MinifyLibTest {
     @NonNull
     private GradleTaskExecutor getExecutor() {
         return project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8);
     }
 }

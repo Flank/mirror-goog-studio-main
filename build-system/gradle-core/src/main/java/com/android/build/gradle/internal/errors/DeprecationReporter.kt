@@ -67,10 +67,7 @@ interface DeprecationReporter {
         // Deprecation of Task Access in the variant API
         TASK_ACCESS_VIA_VARIANT(Version.VERSION_7_0),
 
-        DSL_USE_PROGUARD(
-            Version.VERSION_7_0,
-            "Use 'android.enableR8' in gradle.properties to switch between R8 and Proguard."
-        ),
+        DSL_USE_PROGUARD(Version.VERSION_7_0),
 
         ENABLE_R8(Version.VERSION_7_0, "You will no longer be able to disable R8"),
 

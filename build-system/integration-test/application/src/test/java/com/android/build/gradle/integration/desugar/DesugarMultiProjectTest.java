@@ -267,7 +267,7 @@ public class DesugarMultiProjectTest {
         GradleTaskExecutor executor =
                 project.executor()
                         .with(BooleanOption.ENABLE_D8_DESUGARING, enableD8Desugaring)
-                        .with(OptionalBooleanOption.ENABLE_R8, tool == Tool.R8)
+                        .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, tool == Tool.R8)
                         .with(BooleanOption.ENABLE_R8_DESUGARING, tool == Tool.R8)
                         .with(
                                 BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,

@@ -66,7 +66,7 @@ class ShrinkResourcesNewShrinkerTest {
 
     private fun `shrink resources for APKs`(useR8: Boolean) {
         project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, useR8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, useR8)
             .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
             .with(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS, false)
             .run("clean", "assembleDebug", "assembleRelease")
@@ -232,7 +232,7 @@ class ShrinkResourcesNewShrinkerTest {
     @Test
     fun `optimize shrinked resources`() {
         project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, true)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
             .with(BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS, true)
             .run(":webview:assembleRelease")
@@ -285,7 +285,7 @@ class ShrinkResourcesNewShrinkerTest {
     @Test
     fun `shrink resources in single module bundles`() {
         project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, true)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
             .run(
                 "clean",
@@ -405,7 +405,7 @@ class ShrinkResourcesNewShrinkerTest {
     @Test
     fun `shrink resources in bundles with dynamic feature module`() {
         projectWithDynamicFeatureModules.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, true)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
             .run("signReleaseBundle")
 

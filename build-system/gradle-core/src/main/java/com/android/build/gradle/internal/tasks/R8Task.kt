@@ -421,8 +421,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 .info(
                     """
                 |R8 is a new Android code shrinker. If you experience any issues, please file a bug at
-                |https://issuetracker.google.com, using 'Shrinker (R8)' as component name. You can
-                |disable R8 by updating gradle.properties with 'android.enableR8=false'.
+                |https://issuetracker.google.com, using 'Shrinker (R8)' as component name.
                 |Current version is: ${getR8Version()}.
                 |""".trimMargin()
                 )

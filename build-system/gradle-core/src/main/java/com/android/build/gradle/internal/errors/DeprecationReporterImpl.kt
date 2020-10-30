@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.errors
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Option
+import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.IssueReporter
@@ -194,7 +195,10 @@ class DeprecationReporterImpl(
                 // has been removed, so we always produce a warning for that option to avoid
                 // breaking tests. TODO: Remove those tests and remove the special treatment for
                 // ENABLE_DEPRECATED_NDK.
-                if (option.defaultValue == value || option == BooleanOption.ENABLE_DEPRECATED_NDK) {
+                // Also, report "android.enableR8=true" as warning, otherwise as error.
+                if (option.defaultValue == value
+                    || option == BooleanOption.ENABLE_DEPRECATED_NDK
+                    || (value == true && option == OptionalBooleanOption.ENABLE_R8)) {
                     issueReporter.reportWarning(
                         Type.UNSUPPORTED_PROJECT_OPTION_USE,
                         "The option '${option.propertyName}' is deprecated."

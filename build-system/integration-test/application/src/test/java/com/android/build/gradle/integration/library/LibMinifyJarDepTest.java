@@ -45,7 +45,9 @@ public class LibMinifyJarDepTest {
     @Before
     public void setUp() throws IOException, InterruptedException {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("clean", "assembleDebug", "assembleAndroidTest");
     }
 

@@ -316,7 +316,7 @@ class DynamicAppTest {
     @Test
     fun `test unsigned bundleRelease task with proguard`() {
         val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.ENABLE_R8, false).run("app:$bundleTaskName")
+        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         FileSubject.assertThat(bundleFile).exists()
@@ -331,7 +331,7 @@ class DynamicAppTest {
     @Test
     fun `test unsigned bundleRelease task with r8`() {
         val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.ENABLE_R8, true).run("app:$bundleTaskName")
+        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         FileSubject.assertThat(bundleFile).exists()
@@ -348,7 +348,7 @@ class DynamicAppTest {
         project.getSubproject("app").projectDir.resolve("proguard-rules.pro")
             .writeText("-dontobfuscate")
         val bundleTaskName = getBundleTaskName("release")
-        project.executor().with(OptionalBooleanOption.ENABLE_R8, true).run("app:$bundleTaskName")
+        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
         FileSubject.assertThat(bundleFile).exists()
