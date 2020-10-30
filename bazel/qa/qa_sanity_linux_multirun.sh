@@ -35,7 +35,6 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \
   -- \
-  //tools/adt/idea/android-uitests:AbiSplitApksTest \
   //tools/adt/idea/android-uitests:AddKotlinTest \
   //tools/adt/idea/android-uitests:AddNewBuildTypeTest \
   //tools/adt/idea/android-uitests:AddRemoveCppDependencyTest \
@@ -53,14 +52,12 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   //tools/adt/idea/android-uitests:CreateNewProjectWithCpp2Test \
   //tools/adt/idea/android-uitests:CreateNewProjectWithCpp3Test \
   //tools/adt/idea/android-uitests:GenerateApkWithReleaseVariantTest \
-  //tools/adt/idea/android-uitests:LaunchApkViewerTest \
   //tools/adt/idea/android-uitests:ModifyMinSdkAndSyncTest \
   //tools/adt/idea/android-uitests:NewComposeProjectTest \
   //tools/adt/idea/android-uitests:OpenCloseVisualizationToolTest \
   //tools/adt/idea/android-uitests:OpenExistingProjectTest \
   //tools/adt/idea/android-uitests:QuickFixForJniTest \
-  //tools/adt/idea/android-uitests:RunOnEmulatorTest \
-  //tools/adt/idea/android-uitests:X86AbiSplitApksTest
+  //tools/adt/idea/android-uitests:RunOnEmulatorTest
 
 readonly bazel_status_sanity_longrunning=$?
 
