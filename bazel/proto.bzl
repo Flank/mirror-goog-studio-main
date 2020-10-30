@@ -200,7 +200,6 @@ def java_proto_library(
             name = name,
             srcs = outs,
             deps = java_deps,
-            javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
             visibility = visibility,
             **kwargs
         )

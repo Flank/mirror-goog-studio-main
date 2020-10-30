@@ -223,7 +223,6 @@ def maven_java_library(
         deps = deps,
         runtime_deps = runtime_deps,
         srcs = srcs,
-        javacopts = kwargs.pop("javacopts", []) + ["--release", "8"],
         resources = native.glob(["NOTICE", "LICENSE"]) + resources,
         exports = java_exports,
         visibility = visibility,
