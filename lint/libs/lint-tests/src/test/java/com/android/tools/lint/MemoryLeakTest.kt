@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import sun.tools.attach.HotSpotVirtualMachine
+import java.io.IOException
 import java.lang.management.ManagementFactory
 import java.util.Scanner
 
@@ -39,7 +40,11 @@ class MemoryLeakTest {
 
     private fun countLiveInstancesOf(clz: String): Int {
         val pid = ManagementFactory.getRuntimeMXBean().name.substringBefore('@')
-        val vm = VirtualMachine.attach(pid) as HotSpotVirtualMachine
+        val vm = try {
+            VirtualMachine.attach(pid) as HotSpotVirtualMachine
+        } catch (e: IOException) {
+            error("$e: Make sure you've added -Djdk.attach.allowAttachSelf=true to your runconfig")
+        }
         val heap = vm.heapHisto("-live")
 
         var res = 0
