@@ -26,6 +26,7 @@ import com.android.SdkConstants.XMLNS_ANDROID
 import com.android.SdkConstants.XMLNS_PREFIX
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceFolderType
+import com.android.resources.ResourceUrl
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -235,6 +236,14 @@ class NamespaceDetector : ResourceXmlDetector() {
             val prefix = attribute.prefix
             if (prefix != null) {
                 unusedNamespaces?.remove(prefix)
+            }
+            // Check if there is a namespace prefix in XML attribute value resource reference
+            val attributeValue = attribute.nodeValue
+            if (attributeValue != null) {
+                val urlNamespace = ResourceUrl.parse(attributeValue)?.namespace
+                if (urlNamespace != null) {
+                    unusedNamespaces?.remove(urlNamespace)
+                }
             }
         }
 
