@@ -322,10 +322,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 for (project in config.projects) {
                     for (target in project.targets) {
                         // Ignore targets that aren't valid.
-                        if (!canAddTargetToNativeLibrary(
-                            target
-                          )
-                        ) {
+                        if (!canAddTargetToNativeLibrary(target)) {
                             continue
                         }
                         val nativeLibraryValue = getNativeLibraryValue(abi, target, additionalProjectFilesIndexWriter)
@@ -543,7 +540,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             nativeLibraryValue.runtimeFiles = findRuntimeFiles(target)
 
             val sourceDirectory = File(target.sourceDirectory)
-            for (fileGroup in target.fileGroups) {
+            for (fileGroup in target.fileGroups.orEmpty()) {
                 if (fileGroup.language == "C" || fileGroup.language == "CXX") {
                     // Skip C and CXX since these are contained in compile_commands.json already.
                     continue
