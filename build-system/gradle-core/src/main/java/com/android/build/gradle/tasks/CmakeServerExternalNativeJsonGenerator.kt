@@ -636,7 +636,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             )
             val files = mutableListOf<NativeSourceFileValue>()
             val headers = mutableListOf<NativeHeaderFileValue>()
-            for (fileGroup in target.fileGroups) {
+            for (fileGroup in target.fileGroups.orEmpty()) {
                 for (source in fileGroup.sources) {
                     // Skip object files in sources
                     if (source.endsWith(".o")) continue
