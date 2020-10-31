@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.tasks.createCxxConfigureTask
-import com.android.build.gradle.tasks.createReferringCxxBuildTask
 import com.android.build.gradle.tasks.createVariantCxxCleanTask
 import com.android.build.gradle.tasks.createWorkingCxxBuildTask
 import com.android.builder.errors.IssueReporter
@@ -90,9 +89,9 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                     is VariantBuild -> {
                         val variant = variantMap.getValue(task.variantName)
                         val configuration = task.representatives.toConfigurationModel()
-                        val buildTask = taskFactory.register(createReferringCxxBuildTask(
+                        val buildTask = taskFactory.register(createWorkingCxxBuildTask(
+                                global,
                                 task.representatives.toConfigurationModel(),
-                                variant,
                                 name))
                         variant.taskContainer.cxxConfigurationModel = configuration
                         variant.taskContainer.externalNativeBuildTask = buildTask
@@ -164,10 +163,6 @@ fun createCxxTaskDependencyModel(abis: List<CxxAbiModel>) : CxxTaskDependencyMod
                 val configureTask = Configure(abi)
                 tasks[configureTaskName] = configureTask
 
-                val buildTaskName = "build$taskSuffix"
-                val buildTask = Build(abi)
-                tasks[buildTaskName] = buildTask
-
                 val generateJsonTaskName = "generateJsonModel$variantName"
                 tasks.computeIfAbsent(generateJsonTaskName) { Anchor(abi.variant.variantName) }
 
@@ -175,9 +170,8 @@ fun createCxxTaskDependencyModel(abis: List<CxxAbiModel>) : CxxTaskDependencyMod
                 val buildAbis = builds.computeIfAbsent(externalNativeBuildTaskName) { mutableListOf() }
                 buildAbis += abi
 
-                edges += buildTaskName to configureTaskName
+                edges += externalNativeBuildTaskName to configureTaskName
                 edges += generateJsonTaskName to configureTaskName
-                edges += externalNativeBuildTaskName to buildTaskName
                 edges += externalNativeBuildTaskName to generateJsonTaskName
             }
 
