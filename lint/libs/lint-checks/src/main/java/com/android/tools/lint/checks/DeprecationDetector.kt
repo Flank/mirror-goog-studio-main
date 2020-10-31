@@ -23,10 +23,12 @@ import com.android.SdkConstants.ATTR_EDITABLE
 import com.android.SdkConstants.ATTR_INPUT_METHOD
 import com.android.SdkConstants.ATTR_NUMERIC
 import com.android.SdkConstants.ATTR_PASSWORD
+import com.android.SdkConstants.ATTR_PERMISSION
 import com.android.SdkConstants.ATTR_PHONE_NUMBER
 import com.android.SdkConstants.ATTR_SINGLE_LINE
 import com.android.SdkConstants.CLASS_PREFERENCE
 import com.android.SdkConstants.EDIT_TEXT
+import com.android.SdkConstants.TAG_SERVICE
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
 import com.android.SdkConstants.VALUE_FALSE
@@ -48,6 +50,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UClass
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -113,7 +116,8 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
             ATTR_CAPITALIZE,
             ATTR_NUMERIC,
             ATTR_PHONE_NUMBER,
-            ATTR_PASSWORD
+            ATTR_PASSWORD,
+            ATTR_PERMISSION
             // ATTR_SINGLE_LINE is marked deprecated, but (a) it's used a lot everywhere,
             // including in our own apps, and (b) replacing it with the suggested replacement
             // can lead to crashes; see issue 37137344
@@ -148,6 +152,20 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         val fix: String
         var minSdk = 1
         when (name) {
+            ATTR_PERMISSION -> {
+                if (TAG_SERVICE == attribute.ownerElement.tagName &&
+                    CHOOSER_TARGET_SERVICE_PERM == attribute.value
+                ) {
+                    context.report(
+                        ISSUE,
+                        attribute,
+                        context.getLocation(attribute),
+                        "ChooserTargetService` is deprecated: Please see $SHARE_API_URL",
+                        fix().url(SHARE_API_URL).build()
+                    )
+                }
+                return
+            }
             ATTR_EDITABLE -> {
                 fix = if (EDIT_TEXT != attribute.ownerElement.tagName) {
                     "Use an `<EditText>` to make it editable"
@@ -223,6 +241,21 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         )
     }
 
+    override fun applicableSuperClasses(): List<String>? {
+        return listOf(CHOOSER_TARGET_SERVICE_CLASS)
+    }
+
+    override fun visitClass(context: JavaContext, declaration: UClass) {
+        val location = context.getNameLocation(declaration)
+        context.report(
+            ISSUE,
+            declaration,
+            location,
+            "`${declaration.name}` extends the deprecated `ChooserTargetService`: Use the Share API instead",
+            fix().url(SHARE_API_URL).build()
+        )
+    }
+
     companion object {
         @Suppress("SpellCheckingInspection")
         private const val FIREBASE_JOB_DISPATCHER_CLASS =
@@ -230,6 +263,15 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
 
         private const val GCM_NETWORK_MANAGER_CLASS =
             "com.google.android.gms.gcm.GcmNetworkManager"
+
+        private const val CHOOSER_TARGET_SERVICE_CLASS =
+            "android.service.chooser.ChooserTargetService"
+
+        private const val CHOOSER_TARGET_SERVICE_PERM =
+            "android.permission.BIND_CHOOSER_TARGET_SERVICE"
+
+        private const val SHARE_API_URL =
+            "https://developer.android.com/training/sharing/receive.html?source=studio#providing-direct-share-targets"
 
         /** Usage of deprecated views or attributes */
         @JvmField
