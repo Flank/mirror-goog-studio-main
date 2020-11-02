@@ -160,11 +160,11 @@ enum class BooleanOption(
 
     USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
 
-    USE_NEW_LINT_MODEL("android.experimental.useNewLintModel", false, FeatureStage.Experimental),
-
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
+
+    USE_NEW_LINT_MODEL("android.experimental.useNewLintModel", true,  FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
     /** Whether Jetifier will skip libraries that already support AndroidX. */
     JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
