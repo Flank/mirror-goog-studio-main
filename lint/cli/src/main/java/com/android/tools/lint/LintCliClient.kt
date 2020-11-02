@@ -1007,7 +1007,18 @@ open class LintCliClient : LintClient {
     }
 
     override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader {
-        return UrlClassLoader.build().parent(parent).urls(*urls).get()
+        return if (isGradle) {
+            // When lint is invoked from Gradle, it's normally running in the Gradle
+            // daemon which sticks around for a while, And URLClassLoader will on
+            // Windows lock the jar files which is problematic if the jar files are
+            // in build/ -- that will prevent a subsequent ./gradlew clean from
+            // succeeding. So here we'll use the IntelliJ platform's UrlClassLoader
+            // instead which does not lock files. See
+            // JarFileIssueRegistry#loadAndCloseURLClassLoader for more details.
+            UrlClassLoader.build().parent(parent).urls(*urls).get()
+        } else {
+            super.createUrlClassLoader(urls, parent)
+        }
     }
 
     override fun getMergedManifest(project: Project): Document? {
