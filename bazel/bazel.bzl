@@ -215,6 +215,8 @@ def _iml_module_impl(ctx):
             form_deps += this_dep.module.forms
         if JavaInfo in this_dep:
             java_deps += [this_dep[JavaInfo]]
+    module_deps = depset(direct = [dep for dep in ctx.attr.deps if hasattr(dep, "module")])
+    plugin_deps = depset(direct = [dep for dep in ctx.attr.deps if hasattr(dep, "plugin_info")])
 
     # Test dependencies (superset of prod).
     test_java_deps = []
@@ -297,6 +299,8 @@ def _iml_module_impl(ctx):
             java_deps = java_deps,
             test_provider = test_provider,
             main_provider = main_provider,
+            module_deps = module_deps,
+            plugin_deps = plugin_deps,
             names = names,
             plugin = plugin_xml,
         ),
