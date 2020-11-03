@@ -21,7 +21,9 @@ import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.FN_BUILD_GRADLE_KTS
+import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.SdkConstants.VALUE_TRUE
+import com.android.SdkConstants.currentPlatform
 import com.android.Version
 import com.android.ide.common.repository.GradleVersion
 import com.android.manifmerger.ManifestMerger2
@@ -1007,7 +1009,7 @@ open class LintCliClient : LintClient {
     }
 
     override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader {
-        return if (isGradle) {
+        return if (isGradle || currentPlatform() == PLATFORM_WINDOWS) {
             // When lint is invoked from Gradle, it's normally running in the Gradle
             // daemon which sticks around for a while, And URLClassLoader will on
             // Windows lock the jar files which is problematic if the jar files are
