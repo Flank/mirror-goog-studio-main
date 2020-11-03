@@ -367,14 +367,30 @@ public class GradleVersionTest {
         assertTrue(GradleVersion.parse("1.0.0-rc1").compareTo("1.0.0-alpha2") > 0);
         assertTrue(GradleVersion.parse("2.0.0-alpha1").compareTo("1.0.0-alpha1") > 0);
 
-        // A dev version is larger than a "numbered" preview. So if a piece of DSL was added in
-        // alpha3, projects for 3.0.0-dev will use it.
-        assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0-alpha3") > 0);
-
-        // Ensure numbered dev versions compare correctly.
-        assertTrue(GradleVersion.parse("3.0.0-dev01").compareTo("3.0.0-alpha01") > 0);
+        // A pure -dev version is larger than a "numbered" preview. So if a piece of DSL was added
+        // in alpha3, projects for 3.0.0-dev will use it.
         assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0-alpha04") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-alpha04").compareTo("3.0.0-dev") < 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0-beta04") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-beta04").compareTo("3.0.0-dev") < 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0-rc04") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-rc04").compareTo("3.0.0-dev") < 0);
+
+        // A pure -dev version is smaller than the corresponding non-dev release.
+        assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0") < 0);
+        assertTrue(GradleVersion.parse("3.0.0").compareTo("3.0.0-dev") > 0);
+
+        // Numbered -dev versions are smaller than any other kind of preview release.
+        assertTrue(GradleVersion.parse("3.0.0-dev01").compareTo("3.0.0-alpha01") < 0);
+        assertTrue(GradleVersion.parse("3.0.0-alpha01").compareTo("3.0.0-dev01") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev01").compareTo("3.0.0-beta01") < 0);
+        assertTrue(GradleVersion.parse("3.0.0-beta01").compareTo("3.0.0-dev01") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev01").compareTo("3.0.0-rc01") < 0);
+        assertTrue(GradleVersion.parse("3.0.0-rc01").compareTo("3.0.0-dev01") > 0);
         assertTrue(GradleVersion.parse("3.0.0-dev02").compareTo("3.0.0-dev01") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev01").compareTo("3.0.0-dev02") < 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev").compareTo("3.0.0-dev01") > 0);
+        assertTrue(GradleVersion.parse("3.0.0-dev01").compareTo("3.0.0-dev") < 0);
     }
 
     @Test
