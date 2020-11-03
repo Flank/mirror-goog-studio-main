@@ -30,7 +30,32 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
+const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
+
+/**
+ * Returns `true` if any of the Kotlin plugins is applied (there are many Kotlin plugins). If we
+ * want to check a specific Kotlin plugin, use another method (e.g.,
+ * [isKotlinAndroidPluginApplied]).
+ */
+fun isKotlinPluginApplied(project: Project): Boolean {
+    return try {
+        project.plugins.any { it is KotlinBasePluginWrapper }
+    } catch (ignored: Throwable) {
+        // This may fail if Kotlin plugin is not applied, as KotlinBasePluginWrapper
+        // will not be present at runtime. This means that the Kotlin plugin is not applied.
+        false
+    }
+}
+
+fun isKotlinAndroidPluginApplied(project: Project) =
+        project.pluginManager.hasPlugin(KOTLIN_ANDROID_PLUGIN_ID)
+
+fun isKotlinKaptPluginApplied(project: Project) =
+        project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
 
 fun getKotlinCompile(project: Project, creationConfig: ComponentCreationConfig): TaskProvider<Task> =
         project.tasks.named(creationConfig.computeTaskName("compile", "Kotlin"))

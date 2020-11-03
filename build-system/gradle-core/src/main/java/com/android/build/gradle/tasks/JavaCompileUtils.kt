@@ -41,8 +41,6 @@ import java.io.Serializable
 import java.io.UncheckedIOException
 import java.util.jar.JarFile
 
-const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
-
 const val ANNOTATION_PROCESSORS_INDICATOR_FILE =
     "META-INF/services/javax.annotation.processing.Processor"
 const val INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE =

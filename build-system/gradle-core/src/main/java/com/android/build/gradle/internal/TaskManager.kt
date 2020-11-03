@@ -19,7 +19,11 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact.SingleArtifact
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.component.impl.*
+import com.android.build.api.component.impl.AndroidTestImpl
+import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.TestComponentBuilderImpl
+import com.android.build.api.component.impl.TestComponentImpl
+import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
@@ -29,7 +33,13 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.component.*
+import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.TestCreationConfig
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.coverage.JacocoReportTask
 import com.android.build.gradle.internal.cxx.configure.createCxxTasks
@@ -47,7 +57,9 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.*
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask.TestRuntimeStubRClassCreationAction
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask
@@ -90,8 +102,11 @@ import com.android.build.gradle.internal.test.TestDataImpl
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
+import com.android.build.gradle.internal.utils.KOTLIN_KAPT_PLUGIN_ID
 import com.android.build.gradle.internal.utils.addComposeArgsToKotlinCompile
 import com.android.build.gradle.internal.utils.getKotlinCompile
+import com.android.build.gradle.internal.utils.isKotlinKaptPluginApplied
+import com.android.build.gradle.internal.utils.isKotlinPluginApplied
 import com.android.build.gradle.internal.utils.recordIrBackendForAnalytics
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
@@ -106,7 +121,19 @@ import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.MergeSourceSetFolders
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeMlModelsSourceFoldersCreationAction
 import com.android.build.gradle.tasks.MergeSourceSetFolders.MergeShaderSourceFoldersCreationAction
+import com.android.build.gradle.tasks.PackageApplication
+import com.android.build.gradle.tasks.ProcessApplicationManifest
+import com.android.build.gradle.tasks.ProcessManifestForBundleTask
+import com.android.build.gradle.tasks.ProcessManifestForInstantAppTask
+import com.android.build.gradle.tasks.ProcessManifestForMetadataFeatureTask
+import com.android.build.gradle.tasks.ProcessMultiApkApplicationManifest
+import com.android.build.gradle.tasks.ProcessPackagedManifestTask
+import com.android.build.gradle.tasks.ProcessTestManifest
+import com.android.build.gradle.tasks.RenderscriptCompile
+import com.android.build.gradle.tasks.ShaderCompile
+import com.android.build.gradle.tasks.TransformClassesWithAsmTask
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
+import com.android.build.gradle.tasks.registerDataBindingOutputs
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.DesugarProcessArgs
 import com.android.builder.core.VariantType
@@ -121,7 +148,11 @@ import com.google.common.base.Strings
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ListMultimap
-import org.gradle.api.*
+import org.gradle.api.Action
+import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
@@ -138,7 +169,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
-import org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper
 import java.io.File
 import java.util.*
 import java.util.concurrent.Callable
@@ -356,13 +386,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     private fun configureKotlinPluginTasksIfNecessary() {
-        try {
-            if (project.plugins.none { it is KotlinBasePluginWrapper }) {
-                return
-            }
-        } catch (ignored: Throwable) {
-            // This may fail if Kotlin plugin is not applied, as KotlinBasePluginWrapper
-            // will not be present at runtime. This means that the Kotlin plugin is not applied.
+        if (!isKotlinPluginApplied(project)) {
             return
         }
         val composeIsEnabled = allPropertiesList
@@ -1051,7 +1075,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val javacTask: TaskProvider<out JavaCompile> = taskFactory.register(
                 JavaCompileCreationAction(
                         creationConfig,
-                        project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)))
+                        isKotlinKaptPluginApplied(project)))
         postJavacCreation(creationConfig)
         return javacTask
     }
@@ -2505,9 +2529,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                         + dataBindingBuilder.getBaseAdaptersVersion(version))
             }
             project.pluginManager
-                    .withPlugin(
-                            KOTLIN_KAPT_PLUGIN_ID
-                    ) {
+                    .withPlugin(KOTLIN_KAPT_PLUGIN_ID) {
                         configureKotlinKaptTasksForDataBinding(project, version)
                     }
         }
