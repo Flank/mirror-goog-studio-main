@@ -35,10 +35,10 @@ readonly invocation_id="$(uuidgen)"
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
-  --host_javabase=//prebuilts/studio/jdk:jdk_runtime \
+  --host_javabase=//prebuilts/studio/jdk:jdk11_runtime \
   --javabase=//prebuilts/studio/jdk:jdk_runtime \
-  --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8 \
-  --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8 \
+  --host_java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain \
+  --java_toolchain=@bazel_tools//tools/jdk:legacy_toolchain \
   --keep_going \
   ${config_options} \
   --worker_max_instances=${WORKER_INSTANCES} \
