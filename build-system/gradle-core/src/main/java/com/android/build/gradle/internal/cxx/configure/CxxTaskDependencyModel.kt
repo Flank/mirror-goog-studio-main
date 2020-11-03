@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
  * Anchor: A placeholder task that exists to depend on working tasks.
  */
 sealed class CxxGradleTaskModel {
-    data class Configure(val representative: CxxAbiModel) : CxxGradleTaskModel()
+    data class Configure(val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
     data class Build(val representative: CxxAbiModel) : CxxGradleTaskModel()
     data class VariantBuild(val variantName: String, val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
     data class Anchor(val variantName: String) : CxxGradleTaskModel()

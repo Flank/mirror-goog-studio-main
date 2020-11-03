@@ -77,7 +77,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                     is Configure -> {
                         taskFactory.register(createCxxConfigureTask(
                                 global,
-                                task.representative.toConfigurationModel(),
+                                task.representatives.toConfigurationModel(),
                                 name))
                     }
                     is Build -> {
@@ -153,31 +153,17 @@ fun createPrefabTasks(taskFactory: TaskFactory, libraryVariant: LibraryVariantIm
 fun createCxxTaskDependencyModel(abis: List<CxxAbiModel>) : CxxTaskDependencyModel {
     val tasks = mutableMapOf<String, CxxGradleTaskModel>()
     val edges = mutableListOf<Pair<String, String>>()
-    val builds = mutableMapOf<String, MutableList<CxxAbiModel>>()
     abis
-            .filter { abi -> abi.isActiveAbi }
-            .forEach { abi ->
-                val variantName = "".appendCapitalized(abi.variant.variantName)
-                val taskSuffix = "Cxx$variantName[${abi.abi.tag}]"
-                val configureTaskName = "configure$taskSuffix"
-                val configureTask = Configure(abi)
-                tasks[configureTaskName] = configureTask
-
-                val generateJsonTaskName = "generateJsonModel$variantName"
-                tasks.computeIfAbsent(generateJsonTaskName) { Anchor(abi.variant.variantName) }
-
-                val externalNativeBuildTaskName = "externalNativeBuild$variantName"
-                val buildAbis = builds.computeIfAbsent(externalNativeBuildTaskName) { mutableListOf() }
-                buildAbis += abi
-
-                edges += externalNativeBuildTaskName to configureTaskName
-                edges += generateJsonTaskName to configureTaskName
-                edges += externalNativeBuildTaskName to generateJsonTaskName
+        .groupBy { it.variant.variantName }
+            .forEach { (variantName, abis) ->
+                if (abis.any { abi -> abi.isActiveAbi }) {
+                    val configureName = "generateJsonModel".appendCapitalized(variantName)
+                    val buildName = "externalNativeBuild".appendCapitalized(variantName)
+                    tasks[configureName] = Configure(abis)
+                    tasks[buildName] = VariantBuild(variantName, abis)
+                    edges += buildName to configureName
+                }
             }
-
-    builds.forEach { (taskName, abis) ->
-        tasks[taskName] = VariantBuild(abis.first().variant.variantName, abis.distinct())
-    }
 
     return CxxTaskDependencyModel(
             tasks = tasks,
