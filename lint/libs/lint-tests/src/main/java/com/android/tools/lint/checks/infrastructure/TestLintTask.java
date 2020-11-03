@@ -763,7 +763,7 @@ public class TestLintTask {
                     int index = 1;
                     for (ProjectDescription dependency : project.getDependsOn()) {
                         File dependencyDir = getProjectDirectory(dependency, rootDir);
-                        TestLintClient client = new TestLintClient();
+                        TestLintClient client = new TestLintClient(LintClient.clientName);
                         String relative = client.getRelativePath(projectDir, dependencyDir);
                         String referenceKey = "android.library.reference." + (index++);
                         propertyFile.property(referenceKey, relative);
