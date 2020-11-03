@@ -109,17 +109,18 @@ fun CxxAbiModel.getNdkMetaCmakeSettingsJson() : Settings {
 
     // Per-platform environments. In order to be lazy, promise future platform versions and return
     // blank for PLATFORM_CODE when they are evaluated and don't exist.
-    for(potentialPlatform in NdkMetaPlatforms.potentialPlatforms) {
+    val metaPlatformAliases = variant.module.ndkMetaPlatforms?.aliases?.toList()
+    for (potentialPlatform in NdkMetaPlatforms.potentialPlatforms) {
         val platformNameTable = mutableMapOf<Macro, String>()
         val environmentName =
-                Environment.NDK_PLATFORM.environment.replace(NDK_SYSTEM_VERSION.ref, potentialPlatform.toString())
+                Environment.NDK_PLATFORM.environment.replace(NDK_SYSTEM_VERSION.ref,
+                        potentialPlatform.toString())
         environments[environmentName] = platformNameTable
         platformNameTable[NDK_SYSTEM_VERSION] = "$potentialPlatform"
         platformNameTable[NDK_PLATFORM] = "android-$potentialPlatform"
-        platformNameTable[NDK_PLATFORM_CODE] =
-            variant.module.ndkMetaPlatforms!!.aliases.toList().lastOrNull {
-                (_, platform) -> platform == potentialPlatform
-            } ?.first ?: ""
+        platformNameTable[NDK_PLATFORM_CODE] = metaPlatformAliases?.lastOrNull { (_, platform) ->
+            platform == potentialPlatform
+        }?.first ?: ""
     }
 
     val settingsEnvironments =
