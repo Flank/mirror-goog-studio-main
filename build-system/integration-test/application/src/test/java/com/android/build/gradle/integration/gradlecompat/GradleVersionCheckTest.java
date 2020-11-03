@@ -59,7 +59,7 @@ public class GradleVersionCheckTest {
                             String.format(
                                     "Minimum supported Gradle version is %s."
                                             + " Current version is %s.",
-                                    SdkConstants.GRADLE_MINIMUM_VERSION, OLD_GRADLE_VERSION));
+                                    SdkConstants.GRADLE_LATEST_VERSION, OLD_GRADLE_VERSION));
         }
     }
 }
