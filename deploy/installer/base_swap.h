@@ -34,7 +34,7 @@ class BaseSwapCommand : public AgentInteractionCommand {
   virtual void Run(proto::InstallerResponse* response) final;
 
  protected:
-  std::unique_ptr<InstallClient> client_;
+  InstallClient* client_ = nullptr;
 
   // Swap parameters
   std::string package_name_;
@@ -84,7 +84,7 @@ class BaseSwapCommand : public AgentInteractionCommand {
   // connections. This method does NOT inform the install-server of how many
   // agents will be connecting, or tell the install-server what SwapRequest to
   // forward the agents.
-  proto::SwapResponse::Status ListenForAgents() const;
+  proto::SwapResponse::Status ListenForAgents();
 };
 
 }  // namespace deploy

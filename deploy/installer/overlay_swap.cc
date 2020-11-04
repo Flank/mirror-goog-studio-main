@@ -160,14 +160,6 @@ void OverlaySwapCommand::ProcessResponse(proto::SwapResponse* response) {
   // Do this even if the deployment failed; it's retrieving data unrelated to
   // the current deployment. We might want to find a better time to do this.
   GetAgentLogs(response);
-
-  proto::InstallServerResponse install_response;
-  if (!client_->KillServerAndWait(&install_response)) {
-    response->set_status(proto::SwapResponse::INSTALL_SERVER_COM_ERR);
-    return;
-  }
-
-  ConvertProtoEventsToEvents(install_response.events());
 }
 
 void OverlaySwapCommand::UpdateOverlay(proto::SwapResponse* response) {

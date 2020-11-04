@@ -9,7 +9,7 @@ Requests are always sent over ADB Server to the device on which runs the "Instal
 the request may be fullfitted entirely (Dump request) or it may need additional messages to be exchanged
 between InstallerD and the target app being swapped.
 
-## AppServer
+## AppServer Deamon (a.k.a InstallServer)
 
 Since the Installerd and the app process run on different uids, they cannot communicate directly. The AppServer
 is started via run-as and act as a bridge between the app processes and Installerd.
@@ -17,8 +17,13 @@ is started via run-as and act as a bridge between the app processes and Installe
 Full-duplex comm between the two process is maintained thanks to pipes opened when installerd fork(3).
 The pipes are connected to the AppServer stdout and stdin to receive requets and send responses.
 
-To detect when the AppServer is ready to fullfit requets, a spontaneous response (without a request) is
-emitted. 
+We call this a deamon because the appServer remains alive between installerd request. This is done to save spawning a
+new process on each request. The "natural state" of the AppServer is to be blocked on a read(), awaiting for a request
+from the installerd. At any time, there is a maximum of one alive appServerd per applicationID.
+
+Each appserverd monitors its parent process (installerd) and terminates when its parent terminates.
+Additionally, appserverd monitors framework re-install via a canary file. If the canary stops tweeting, appserverd also
+terminates.
 
 ## Agent(JVMTI)
 
