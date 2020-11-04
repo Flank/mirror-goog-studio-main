@@ -50,27 +50,23 @@ build_tag_filters=-no_linux
 test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate,-very_flaky
 
 declare -a conditional_flags
-for arg in "$@"
-do
-  if [[ "${arg}" == "--detect_flakes" ]];
-  then
-    conditional_flags+=(--runs_per_test=20)
-    conditional_flags+=(--runs_per_test_detects_flakes)
-    conditional_flags+=(--nocache_test_results)
-  fi
-  # Only run tests tagged with `very_flaky`, this is different than tests using
-  # the 'Flaky' attribute/tag. Tests that are excessively flaky use this tag to
-  # avoid running in presubmit.
-  if [[ "${arg}" == "--very_flaky" ]];
-  then
-    is_flaky_run=1
-    skip_bazel_artifacts=1
-    conditional_flags+=(--build_tests_only)
-    test_tag_filters=-no_linux,-no_test_linux,very_flaky
-  fi
-done
+if [[ " $@ " =~ " --detect_flakes " ]];
+then
+  conditional_flags+=(--runs_per_test=20)
+  conditional_flags+=(--runs_per_test_detects_flakes)
+  conditional_flags+=(--nocache_test_results)
 
-if [[ $IS_POST_SUBMIT ]]; then
+# Only run tests tagged with `very_flaky`, this is different than tests using
+# the 'Flaky' attribute/tag. Tests that are excessively flaky use this tag to
+# avoid running in presubmit.
+elif [[ " $@ " =~ " --very_flaky " ]];
+then
+  is_flaky_run=1
+  skip_bazel_artifacts=1
+  conditional_flags+=(--build_tests_only)
+  test_tag_filters=-no_linux,-no_test_linux,very_flaky
+
+elif [[ $IS_POST_SUBMIT ]]; then
   conditional_flags+=(--nocache_test_results)
 fi
 
