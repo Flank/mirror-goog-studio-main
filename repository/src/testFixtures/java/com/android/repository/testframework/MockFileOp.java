@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.repository.testframework;
 
 import com.android.annotations.NonNull;
@@ -39,7 +38,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * Mock version of {@link FileOpImpl} that wraps some common {@link File}
  * operations on files and folders.
@@ -50,7 +48,11 @@ import java.util.List;
  * To avoid cross-platform path issues (e.g. Windows path), the methods here should
  * always use rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3".
  * When processing {@link File}, you can convert them using {@link #getAgnosticAbsPath(File)}.
+ *
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs} and
+ *     {@link com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
+@Deprecated
 public class MockFileOp extends FileSystemFileOp {
     private FileSystem mFileSystem = createFileSystem();
 
