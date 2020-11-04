@@ -26,6 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 
 private const val TEST_DATA_PATH = "tools/base/dynamic-layout-inspector/testData"
+private const val DIFF_THRESHOLD = 0.01
 
 class SkiaParserTest {
     companion object {
@@ -91,7 +92,7 @@ class SkiaParserTest {
         ImageDiffUtil.assertImageSimilar(
             File(TestUtils.getWorkspaceRoot(), "$TEST_DATA_PATH/$fileName"),
             findImage(id, AtomicInteger(instance), root) ?: fail("No image for id $id"),
-            0.0
+            DIFF_THRESHOLD
         )
     }
 
