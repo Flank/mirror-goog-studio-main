@@ -99,25 +99,23 @@ open class ConsumableCreationConfigImpl(
         if (shrinker == CodeShrinker.R8) {
             if (globalScope.projectOptions[BooleanOption.ENABLE_R8_DESUGARING]) {
                 return VariantScope.Java8LangSupport.R8
+            } else {
+                globalScope
+                        .dslServices
+                        .issueReporter
+                        .reportError(
+                                IssueReporter.Type.GENERIC, String.format(
+                                "Please add '%s=true' to your "
+                                        + "gradle.properties file to enable Java 8 "
+                                        + "language support.",
+                                BooleanOption.ENABLE_R8_DESUGARING.name),
+                                variantDslInfo.componentIdentity.name)
+                return VariantScope.Java8LangSupport.INVALID
             }
         } else {
             // D8 cannot be used if R8 is used
-            if (globalScope.projectOptions[BooleanOption.ENABLE_D8_DESUGARING]) {
-                return VariantScope.Java8LangSupport.D8
-            }
+            return VariantScope.Java8LangSupport.D8
         }
-        val missingFlag = if (shrinker == CodeShrinker.R8) BooleanOption.ENABLE_R8_DESUGARING else BooleanOption.ENABLE_D8_DESUGARING
-        globalScope
-            .dslServices
-            .issueReporter
-            .reportError(
-                    IssueReporter.Type.GENERIC, String.format(
-                    "Please add '%s=true' to your "
-                            + "gradle.properties file to enable Java 8 "
-                            + "language support.",
-                    missingFlag.name),
-                    variantDslInfo.componentIdentity.name)
-        return VariantScope.Java8LangSupport.INVALID
     }
 
     val isCoreLibraryDesugaringEnabled: Boolean

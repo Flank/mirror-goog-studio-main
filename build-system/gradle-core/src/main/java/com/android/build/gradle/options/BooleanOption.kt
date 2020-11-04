@@ -132,7 +132,6 @@ enum class BooleanOption(
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.Experimental),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true, FeatureStage.Experimental),
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true, FeatureStage.Experimental),
-    ENABLE_D8_DESUGARING("android.enableD8.desugaring", true, FeatureStage.Experimental),
 
     /** Set to true by default, but has effect only if R8 is enabled. */
     ENABLE_R8_DESUGARING("android.enableR8.desugaring", true, FeatureStage.Experimental),
@@ -340,6 +339,16 @@ enum class BooleanOption(
         FeatureStage.Enforced(
             VERSION_7_0,
             "For more details, see https://d.android.com/r/studio-ui/d8-overview.html."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_D8_DESUGARING(
+        "android.enableD8.desugaring",
+        true,
+        FeatureStage.Enforced(
+            VERSION_7_0,
+            "D8 desugaring is used by default, when applicable."
         )
     ),
 

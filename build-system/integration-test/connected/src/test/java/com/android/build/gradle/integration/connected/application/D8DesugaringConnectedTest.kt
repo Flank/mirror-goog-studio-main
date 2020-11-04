@@ -187,9 +187,7 @@ class D8DesugaringConnectedTest {
 
     @Test
     fun runAndroidTest() {
-        val result = project.executor()
-            .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-            .run("app:connectedBaseDebugAndroidTest")
+        val result = project.executor().run("app:connectedBaseDebugAndroidTest")
         result.stdout.use { stdout -> assertThat(stdout).contains("Starting 2 tests on") }
     }
 }

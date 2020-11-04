@@ -212,8 +212,7 @@ public class D8DesugaringTest {
 
     @Test
     public void checkDesugaring() throws IOException, InterruptedException {
-        GradleTaskExecutor executor = project.executor()
-                .with(BooleanOption.ENABLE_D8_DESUGARING, true);
+        GradleTaskExecutor executor = project.executor();
         if (!withDexingArtifactTransform) {
             // https://github.com/gradle/gradle/issues/13200
             executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
@@ -241,9 +240,7 @@ public class D8DesugaringTest {
                         project.getSubproject(":app").getMainSrcDir(),
                         "com/example/helloworld/HelloWorld.java"),
                 "Runnable r = () -> {};");
-        project.executor()
-                .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                .run("assembleBaseDebug");
+        project.executor().run("assembleBaseDebug");
         Apk androidApk =
                 project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "base");
         assertThat(androidApk).hasDexVersion(35);
@@ -251,8 +248,7 @@ public class D8DesugaringTest {
 
     @Test
     public void checkMultidex() throws IOException, InterruptedException, ProcessException {
-        GradleTaskExecutor executor =
-                project.executor().with(BooleanOption.ENABLE_D8_DESUGARING, true);
+        GradleTaskExecutor executor = project.executor();
         if (!withDexingArtifactTransform) {
             // https://github.com/gradle/gradle/issues/13200
             executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);

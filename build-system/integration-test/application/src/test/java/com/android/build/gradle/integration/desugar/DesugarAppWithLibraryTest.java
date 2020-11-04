@@ -101,7 +101,6 @@ public class DesugarAppWithLibraryTest {
         }
         GradleTaskExecutor executor =
                 project.executor()
-                        .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
                         .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, java8LangSupport == R8)
                         .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8);
 

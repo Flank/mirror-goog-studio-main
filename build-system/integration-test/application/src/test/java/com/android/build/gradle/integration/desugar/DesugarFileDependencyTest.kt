@@ -128,10 +128,7 @@ class DesugarFileDependencyTest(var tool: Tool) {
     }
 
     private fun executor(): GradleTaskExecutor {
-        val enableD8Desugaring =
-            tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS || tool == Tool.D8_WITHOUT_ARTIFACT_TRANSFORMS
         return project.executor()
-            .with(BooleanOption.ENABLE_D8_DESUGARING, enableD8Desugaring)
             .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, tool == Tool.R8)
             .with(BooleanOption.ENABLE_R8_DESUGARING, tool == Tool.R8)
             .with(

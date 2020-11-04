@@ -61,7 +61,6 @@ class BooleanOptionTest {
             BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES,
             BooleanOption.ENABLE_EXTRACT_ANNOTATIONS,
             BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS,
-            BooleanOption.ENABLE_D8_DESUGARING,
             BooleanOption.ENABLE_R8_DESUGARING,
             BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES,
             BooleanOption.BUILD_ONLY_TARGET_ABI,
