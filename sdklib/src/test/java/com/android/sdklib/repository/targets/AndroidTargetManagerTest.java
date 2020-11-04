@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -46,7 +47,7 @@ import junit.framework.TestCase;
  */
 public class AndroidTargetManagerTest extends TestCase {
 
-    public void testNew() throws Exception {
+    public void testNewTarget() {
         MockFileOp fop = new MockFileOp();
         recordPlatform13(fop);
         recordPlatform23(fop);
@@ -76,7 +77,7 @@ public class AndroidTargetManagerTest extends TestCase {
         verifyAddon23(addon23, platform23, fop);
     }
 
-    public void testLegacyAddon() throws Exception {
+    public void testLegacyAddon() {
         MockFileOp fop = new MockFileOp();
         recordPlatform23(fop);
         recordLegacyGoogleApis23(fop);
@@ -98,7 +99,7 @@ public class AndroidTargetManagerTest extends TestCase {
         verifyAddon23(addon23, platform23, fop);
     }
 
-    public void testInstalledLegacyAddon() throws Exception {
+    public void testInstalledLegacyAddon() {
         MockFileOp fop = new MockFileOp();
         recordPlatform23(fop);
         recordInstalledLegacyGoogleApis23(fop);
@@ -120,7 +121,7 @@ public class AndroidTargetManagerTest extends TestCase {
         verifyPlatform23(platform23, fop);
     }
 
-    public void testSources() throws Exception {
+    public void testSources() {
         MockFileOp fop = new MockFileOp();
         recordPlatform23(fop);
 
@@ -721,7 +722,7 @@ public class AndroidTargetManagerTest extends TestCase {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public void testBuildTools() throws Exception {
+    public void testBuildTools() {
         MockFileOp fop = new MockFileOp();
         recordPlatform13(fop);
         recordPlatform23(fop);
@@ -737,7 +738,7 @@ public class AndroidTargetManagerTest extends TestCase {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public void testBuildToolsWithPreviewOlderThanStable() throws Exception {
+    public void testBuildToolsWithPreviewOlderThanStable() {
         MockFileOp fop = new MockFileOp();
         recordPlatform13(fop);
         recordPlatform23(fop);
@@ -754,16 +755,17 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals("24.0.0", handler.getLatestBuildTool(progress, true).getRevision().toString());
     }
 
-    public void testDuplicatePlatform() throws Exception {
+    public void testDuplicatePlatform() {
         MockFileOp fop = new MockFileOp();
-        File bogus1Location = new File("/sdk", "foo");
-        File bogus2Location = new File("/sdk", "bar");
-        File real1Location = new File("/sdk", "platforms/android-20");
-        File real2Location = new File("/sdk", "platforms/android-19");
-        fop.recordExistingFile(new File(bogus1Location, SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(new File(bogus2Location, SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(new File(real1Location, SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(new File(real2Location, SdkConstants.FN_BUILD_PROP));
+        Path sdkPath = fop.toPath("/sdk");
+        Path bogus1Location = sdkPath.resolve("foo");
+        Path bogus2Location = sdkPath.resolve("bar");
+        Path real1Location = sdkPath.resolve("platforms/android-20");
+        Path real2Location = sdkPath.resolve("platforms/android-19");
+        fop.recordExistingFile(bogus1Location.resolve(SdkConstants.FN_BUILD_PROP));
+        fop.recordExistingFile(bogus2Location.resolve(SdkConstants.FN_BUILD_PROP));
+        fop.recordExistingFile(real1Location.resolve(SdkConstants.FN_BUILD_PROP));
+        fop.recordExistingFile(real2Location.resolve(SdkConstants.FN_BUILD_PROP));
         LocalPackage bogus1 = new FakePlatformPackage("foo", bogus1Location, 20);
         LocalPackage bogus2 = new FakePlatformPackage("bar", bogus2Location, 20);
         LocalPackage real1 = new FakePlatformPackage(
@@ -793,26 +795,18 @@ public class AndroidTargetManagerTest extends TestCase {
 
     private static class FakePlatformPackage extends FakePackage.FakeLocalPackage {
         private final DetailsTypes.PlatformDetailsType mDetails;
-        private final File mLocation;
 
-        public FakePlatformPackage(@NonNull String path, @NonNull File location, int apiLevel) {
-            super(path);
+        public FakePlatformPackage(@NonNull String path, @NonNull Path location, int apiLevel) {
+            super(path, location);
             mDetails = AndroidSdkHandler.getRepositoryModule().createLatestFactory()
                     .createPlatformDetailsType();
             mDetails.setApiLevel(apiLevel);
-            mLocation = location;
         }
 
         @NonNull
         @Override
         public TypeDetails getTypeDetails() {
             return (TypeDetails)mDetails;
-        }
-
-        @NonNull
-        @Override
-        public File getLocation() {
-            return mLocation;
         }
     }
 }

@@ -42,8 +42,6 @@ public class RepositoryPackagesTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        List<LocalPackage> locals = new ArrayList<>();
-        List<RemotePackage> remotes = new ArrayList<>();
 
         // p1 has no corresponding remote
         LocalPackage l1 = new FakeLocalPackage("p1");
@@ -64,7 +62,7 @@ public class RepositoryPackagesTest extends TestCase {
                 ImmutableList.of(r2, r3, r4));
     }
 
-    public void testConsolidated() throws Exception {
+    public void testConsolidated() {
         Map<String, UpdatablePackage> consolidated = mPackages.getConsolidatedPkgs();
         assertEquals(4, consolidated.size());
 
@@ -98,7 +96,7 @@ public class RepositoryPackagesTest extends TestCase {
         assertEquals("p4", updatable.getRepresentative().getPath());
     }
 
-    public void testNew() {
+    public void testNewPackages() {
         Set<RemotePackage> news = mPackages.getNewPkgs();
 
         assertEquals(1, news.size());

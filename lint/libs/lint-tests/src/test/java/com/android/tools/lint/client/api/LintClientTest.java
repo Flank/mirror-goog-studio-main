@@ -125,8 +125,7 @@ public class LintClientTest extends TestCase {
     private static LocalPackage getLocalPlatformPackage(MockFileOp fop, String version, int api) {
         fop.recordExistingFile("/sdk/platforms/android-" + version + "/build.prop", "");
         FakePackage.FakeLocalPackage local =
-                new FakePackage.FakeLocalPackage("platforms;android-" + version);
-        local.setInstalledPath(new File("/sdk/platforms/android-" + version));
+                new FakePackage.FakeLocalPackage("platforms;android-" + version, fop);
 
         DetailsTypes.PlatformDetailsType platformDetails =
                 AndroidSdkHandler.getRepositoryModule()
@@ -155,9 +154,7 @@ public class LintClientTest extends TestCase {
                 "");
         FakePackage.FakeLocalPackage local =
                 new FakePackage.FakeLocalPackage(
-                        "add-ons;addon-" + tag + "-" + vendor + "-" + version);
-        local.setInstalledPath(
-                new File("/sdk/add-ons/addon-" + tag + "-" + vendor + "-" + version));
+                        "add-ons;addon-" + tag + "-" + vendor + "-" + version, fop);
 
         DetailsTypes.AddonDetailsType addOnDetails =
                 AndroidSdkHandler.getAddonModule().createLatestFactory().createAddonDetailsType();

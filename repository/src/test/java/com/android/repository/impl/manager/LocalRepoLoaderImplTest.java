@@ -126,7 +126,7 @@ public class LocalRepoLoaderImplTest {
     }
 
     @Test
-    public void testNoScanningForMetadataFolders() throws Exception {
+    public void testNoScanningForMetadataFolders() {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         MockFileOp fop = new MockFileOp();
         // Allow the repo root name to start with metadata prefix. Although it wouldn't normally
@@ -148,7 +148,9 @@ public class LocalRepoLoaderImplTest {
         LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
         Map<String, LocalPackage> localPackages = loader.getPackages(progress);
         assertEquals(1, localPackages.size());
-        assertEquals(package1.getParent(), localPackages.values().iterator().next().getLocation().getPath());
+        assertEquals(
+                package1.getParent(),
+                localPackages.values().iterator().next().getLocation().toString());
     }
 
 }

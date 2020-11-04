@@ -18,10 +18,10 @@ package com.android.repository.io.impl;
 
 import com.android.annotations.NonNull;
 import com.android.repository.io.FileOpUtils;
-
 import java.io.File;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
 
 /**
  * Wraps some common {@link File} operations on files and folders.
@@ -45,6 +45,12 @@ public class FileOpImpl extends FileSystemFileOp {
     @Override
     public void deleteOnExit(File file) {
         file.deleteOnExit();
+    }
+
+    @NonNull
+    @Override
+    public File toFile(@NonNull Path path) {
+        return path.toFile();
     }
 
     @Override

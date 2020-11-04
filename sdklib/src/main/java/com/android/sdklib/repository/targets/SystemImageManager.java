@@ -103,7 +103,7 @@ public class SystemImageManager {
             init();
         }
         Multimap<IdDisplay, SystemImage> m = mValuesToImage.get(tag, version);
-        return m == null ? ImmutableList.<SystemImage>of() : m.get(vendor);
+        return m == null ? ImmutableList.of() : m.get(vendor);
     }
 
     private void init() {
@@ -136,7 +136,7 @@ public class SystemImageManager {
                 mRepoManager.getPackages().getLocalPackages().values();
         for (LocalPackage p : packages) {
             if (p.getTypeDetails() instanceof DetailsTypes.PlatformDetailsType) {
-                File skinDir = new File(p.getLocation(), SdkConstants.FD_SKINS);
+                File skinDir = mFop.toFile(p.getLocation().resolve(SdkConstants.FD_SKINS));
                 if (mFop.exists(skinDir)) {
                     platformSkins.put(((DetailsTypes.PlatformDetailsType) p.getTypeDetails())
                             .getAndroidVersion(), skinDir);
@@ -148,7 +148,7 @@ public class SystemImageManager {
             if (typeDetails instanceof DetailsTypes.SysImgDetailsType ||
                     typeDetails instanceof DetailsTypes.PlatformDetailsType ||
                     typeDetails instanceof DetailsTypes.AddonDetailsType) {
-                collectImages(p.getLocation(), p, 0, platformSkins, result);
+                collectImages(mFop.toFile(p.getLocation()), p, 0, platformSkins, result);
             }
         }
         return result;

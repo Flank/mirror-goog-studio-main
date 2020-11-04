@@ -18,6 +18,7 @@ package com.android.sdklib.internal.avd;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation;
@@ -62,6 +63,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -234,8 +236,6 @@ public class AvdManager {
     /**
      * AVD/config.ini key name representing the presence of the snapshots file.
      * This property is for UI purposes only. It is not used by the emulator.
-     *
-     * @see #SNAPSHOTS_IMG
      */
     public static final String AVD_INI_SNAPSHOT_PRESENT = "snapshot.present"; //$NON-NLS-1$
 
@@ -1012,19 +1012,21 @@ public class AvdManager {
     }
 
     /**
-     * Modifies an ini file to switch values from an old AVD name and path to
-     * a new AVD name and path.
-     * Values that are {@link oldName} are switched to {@link newName}
-     * Values that start with {@link oldPath} are modified to start with {@link newPath}
+     * Modifies an ini file to switch values from an old AVD name and path to a new AVD name and
+     * path. Values that are {@code oldName} are switched to {@code newName} Values that start with
+     * {@code oldPath} are modified to start with {@code newPath}
+     *
      * @return the updated ini settings
      */
     @Nullable
-    private Map<String, String> updateNameAndIniPaths(@NonNull File iniFile,
-                                                      @NonNull String oldName,
-                                                      @NonNull String oldPath,
-                                                      @NonNull String newName,
-                                                      @NonNull String newPath,
-                                                      @NonNull ILogger log) throws IOException {
+    private Map<String, String> updateNameAndIniPaths(
+            @NonNull File iniFile,
+            @NonNull String oldName,
+            @NonNull String oldPath,
+            @NonNull String newName,
+            @NonNull String newPath,
+            @NonNull ILogger log)
+            throws IOException {
         Map<String, String> iniVals = parseIniFile(new FileOpFileWrapper(iniFile, mFop, false), log);
         if (iniVals != null) {
             for (Map.Entry<String, String> iniEntry : iniVals.entrySet()) {
@@ -2093,15 +2095,14 @@ public class AvdManager {
                                 SdkConstants.mkSdCardCmdName(), SdkConstants.FD_EMULATOR));
                 throw new AvdMgrException();
             }
-            File mkSdCard = new File(p.getLocation(), SdkConstants.mkSdCardCmdName());
+            Path mkSdCard = p.getLocation().resolve(SdkConstants.mkSdCardCmdName());
 
-            if (!mFop.isFile(mkSdCard)) {
-                log.warning("'%1$s' is missing from the SDK tools folder.",
-                        mkSdCard.getName());
+            if (!CancellableFileIo.isRegularFile(mkSdCard)) {
+                log.warning("'%1$s' is missing from the SDK tools folder.", mkSdCard.getFileName());
                 throw new AvdMgrException();
             }
 
-            if (!createSdCard(mkSdCard.getAbsolutePath(), sdcard, path, log)) {
+            if (!createSdCard(mkSdCard.toAbsolutePath().toString(), sdcard, path, log)) {
                 // mksdcard output has already been displayed, no need to
                 // output anything else.
                 log.warning("Failed to create sdcard in the AVD folder.");

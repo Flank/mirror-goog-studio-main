@@ -45,21 +45,18 @@ import com.android.sdklib.devices.Software;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.devices.Storage;
 import com.android.sdklib.devices.Storage.Unit;
-import com.android.sdklib.repository.legacy.local.LocalSdk;
-import com.android.testutils.MockLog;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.local.LocalPlatformPkgInfo;
 import com.android.sdklib.repository.legacy.local.LocalSysImgPkgInfo;
-
-import org.junit.rules.ExternalResource;
-
+import com.android.testutils.MockLog;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.rules.ExternalResource;
 
 /**
  * {@link org.junit.rules.TestRule} that allocates a temporary SDK, a temporary AVD base folder
@@ -127,6 +124,7 @@ public class TempSdkManager extends ExternalResource {
      * impossible.
      */
     private void makeFakeSdk() throws IOException {
+        // TODO(jbakermalone): use jimfs
         // First we create a temp file to "reserve" the temp directory name we want to use.
         mFakeSdk = File.createTempFile(mTestName, "sdk");
         // Then erase the file and make the directory

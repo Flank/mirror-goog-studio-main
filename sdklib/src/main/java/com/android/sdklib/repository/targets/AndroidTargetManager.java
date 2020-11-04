@@ -117,8 +117,7 @@ public class AndroidTargetManager {
                             ((DetailsTypes.AddonDetailsType)details).getAndroidVersion();
                     PlatformTarget baseTarget = platformTargets.get(addonVersion);
                     if (baseTarget != null) {
-                        tempTargetToPackage.put(new AddonTarget(p, baseTarget,
-                          mSdkHandler.getSystemImageManager(progress), progress, mFop), p);
+                        tempTargetToPackage.put(new AddonTarget(p, baseTarget, progress, mFop), p);
                     }
                 }
             }
@@ -131,7 +130,7 @@ public class AndroidTargetManager {
                     PlatformTarget target = platformTargets.get(
                             ((DetailsTypes.ApiDetailsType)details).getAndroidVersion());
                     if (target != null) {
-                        target.setSources(p.getLocation());
+                        target.setSources(mFop.toFile(p.getLocation()));
                     }
                 }
             }

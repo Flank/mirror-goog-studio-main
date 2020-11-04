@@ -18,6 +18,7 @@ package com.android.sdklib.tool;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -55,10 +56,9 @@ import org.junit.Test;
  * <p>TODO: tests for command-line input
  */
 public class AvdManagerCliTest {
-    private static final String EMU_LOCATION = "/emulator";
-    private static final String EMU_LIB_LOCATION = "/emulator/lib";
-    private static final String SDK_LOCATION = "/sdk";
-    private static final String AVD_LOCATION = "/avd";
+    private static final String EMU_LIB_LOCATION = "/sdk/emulator/lib";
+    private static final File SDK_LOCATION = new File("/sdk").getAbsoluteFile();
+    private static final File AVD_LOCATION = new File("/avd").getAbsoluteFile();
 
     private MockFileOp mFileOp;
     private AndroidSdkHandler mSdkHandler;
@@ -72,7 +72,7 @@ public class AvdManagerCliTest {
         mFileOp = new MockFileOp();
         RepositoryPackages packages = new RepositoryPackages();
         String gApiPath = "system-images;android-25;google_apis;x86";
-        FakePackage.FakeLocalPackage p1 = new FakePackage.FakeLocalPackage(gApiPath);
+        FakePackage.FakeLocalPackage p1 = new FakePackage.FakeLocalPackage(gApiPath, mFileOp);
         DetailsTypes.SysImgDetailsType details1 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details1.setTag(IdDisplay.create("google_apis", "Google APIs"));
@@ -80,44 +80,44 @@ public class AvdManagerCliTest {
         details1.setVendor(IdDisplay.create("google", "Google"));
         details1.setApiLevel(25);
         p1.setTypeDetails((TypeDetails) details1);
-        p1.setInstalledPath(new File(SDK_LOCATION, "25-gapi-x86"));
-        mFileOp.recordExistingFile(new File(p1.getLocation(), SystemImageManager.SYS_IMG_NAME));
-        mFileOp.recordExistingFile(new File(p1.getLocation(), AvdManager.USERDATA_IMG));
+        mFileOp.recordExistingFile(p1.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
+        mFileOp.recordExistingFile(p1.getLocation().resolve(AvdManager.USERDATA_IMG));
 
         String wearPath = "system-images;android-26;android-wear;armeabi-v7a";
-        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(wearPath);
+        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(wearPath, mFileOp);
         DetailsTypes.SysImgDetailsType details2 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
         details2.setTag(IdDisplay.create("android-wear", "Google APIs"));
         details2.setAbi("armeabi-v7a");
         details2.setApiLevel(26);
         p2.setTypeDetails((TypeDetails) details2);
-        p2.setInstalledPath(new File(SDK_LOCATION, "26-wear-arm"));
-        mFileOp.recordExistingFile(new File(p2.getLocation(), SystemImageManager.SYS_IMG_NAME));
-        mFileOp.recordExistingFile(new File(p2.getLocation(), AvdManager.USERDATA_IMG));
+        mFileOp.recordExistingFile(p2.getLocation().resolve(SystemImageManager.SYS_IMG_NAME));
+        mFileOp.recordExistingFile(p2.getLocation().resolve(AvdManager.USERDATA_IMG));
 
         // Create a representative hardware configuration file
         String emuPath = "emulator";
-        FakePackage.FakeLocalPackage p3 = new FakePackage.FakeLocalPackage(emuPath);
-        p3.setInstalledPath(new File(EMU_LOCATION));
-        File hardwareDefs = new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI);
+        FakePackage.FakeLocalPackage p3 = new FakePackage.FakeLocalPackage(emuPath, mFileOp);
+        File hardwareDefs =
+                new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI).getAbsoluteFile();
         createHardwarePropertiesFile(hardwareDefs.getAbsolutePath());
 
         packages.setLocalPkgInfos(ImmutableList.of(p1, p2, p3));
 
-        RepoManager mgr = new FakeRepoManager(new File(SDK_LOCATION), packages);
+        RepoManager mgr = new FakeRepoManager(SDK_LOCATION, packages);
 
-        mSdkHandler =
-                new AndroidSdkHandler(new File(SDK_LOCATION), new File(AVD_LOCATION), mFileOp, mgr);
+        mSdkHandler = new AndroidSdkHandler(SDK_LOCATION, AVD_LOCATION, mFileOp, mgr);
         mLogger = new MockLog();
-        mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
-        mAvdManager = AvdManager.getInstance(mSdkHandler, new File(AVD_LOCATION), mLogger);
+        mCli =
+                new AvdManagerCli(
+                        mLogger, mSdkHandler, SDK_LOCATION.getPath(), AVD_LOCATION.getPath(), null);
+        mAvdManager = AvdManager.getInstance(mSdkHandler, AVD_LOCATION, mLogger);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);
         mGapiImage =
                 systemImageManager.getImageAt(
-                        mSdkHandler.getLocalPackage(gApiPath, progress).getLocation());
+                        mFileOp.toFile(
+                                mSdkHandler.getLocalPackage(gApiPath, progress).getLocation()));
     }
 
     @Test
@@ -236,19 +236,20 @@ public class AvdManagerCliTest {
     }
 
     @Test
-    public void listTargets() throws Exception {
+    public void listTargets() {
         RepoManager repoManager = mSdkHandler.getSdkManager(new FakeProgressIndicator());
 
-        FakePackage.FakeLocalPackage p1 = new FakePackage.FakeLocalPackage("platforms;android-25");
+        String p1Path = "platforms;android-25";
+        FakePackage.FakeLocalPackage p1 = new FakePackage.FakeLocalPackage(p1Path, mFileOp);
         DetailsTypes.PlatformDetailsType details1 =
                 AndroidSdkHandler.getRepositoryModule()
                         .createLatestFactory()
                         .createPlatformDetailsType();
         details1.setApiLevel(25);
         p1.setTypeDetails((TypeDetails) details1);
-        p1.setInstalledPath(new File(SDK_LOCATION, "platforms/android-25"));
-        mFileOp.recordExistingFile(new File(p1.getLocation(), SdkConstants.FN_BUILD_PROP));
-        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage("platforms;android-O");
+        mFileOp.recordExistingFile(p1.getLocation().resolve(SdkConstants.FN_BUILD_PROP));
+        String p2Path = "platforms;android-O";
+        FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(p2Path, mFileOp);
         DetailsTypes.PlatformDetailsType details2 =
                 AndroidSdkHandler.getRepositoryModule()
                         .createLatestFactory()
@@ -256,8 +257,7 @@ public class AvdManagerCliTest {
         details2.setApiLevel(25);
         details2.setCodename("O");
         p2.setTypeDetails((TypeDetails) details2);
-        p2.setInstalledPath(new File(SDK_LOCATION, "platforms/android-O"));
-        mFileOp.recordExistingFile(new File(p2.getLocation(), SdkConstants.FN_BUILD_PROP));
+        mFileOp.recordExistingFile(p2.getLocation().resolve(SdkConstants.FN_BUILD_PROP));
 
         repoManager.getPackages().setLocalPkgInfos(ImmutableList.of(p1, p2));
 
@@ -280,7 +280,7 @@ public class AvdManagerCliTest {
     }
 
     @Test
-    public void listDevices() throws Exception {
+    public void listDevices() {
         mCli.run(new String[] {"list", "devices", "-c"});
         assertEquals(
                 ImmutableList.of(
@@ -342,7 +342,9 @@ public class AvdManagerCliTest {
         assertTrue(mLogger.getMessages().contains("P Nexus 6P\n"));
         assertTrue(mLogger.getMessages().contains("P tv_1080p\n"));
         mLogger.clear();
-        mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
+        mCli =
+                new AvdManagerCli(
+                        mLogger, mSdkHandler, SDK_LOCATION.getPath(), AVD_LOCATION.getPath(), null);
         mCli.run(new String[] {"list", "devices"});
         assertTrue(
                 Joiner.on("")
@@ -377,22 +379,26 @@ public class AvdManagerCliTest {
                                "yes", AvdManagerCli.validateResponse("Yes", aProperty, mLogger));
                     assertEquals("Boolean 'no' should be valid",
                                "no", AvdManagerCli.validateResponse("no", aProperty, mLogger));
-                    assertEquals("Boolean 'true' should be invalid",
-                                 null, AvdManagerCli.validateResponse("true", aProperty, mLogger));
-                    assertEquals("Boolean 'maybe' should be invalid",
-                               null, AvdManagerCli.validateResponse("maybe", aProperty, mLogger));
+                    assertNull(
+                            "Boolean 'true' should be invalid",
+                            AvdManagerCli.validateResponse("true", aProperty, mLogger));
+                    assertNull(
+                            "Boolean 'maybe' should be invalid",
+                            AvdManagerCli.validateResponse("maybe", aProperty, mLogger));
                     break;
                 case "integerPropName":
                     assertEquals("Integer '123' should be valid",
                                  "123", AvdManagerCli.validateResponse("123", aProperty, mLogger));
-                    assertEquals("Integer '123x' should be invalid",
-                                 null, AvdManagerCli.validateResponse("123x", aProperty, mLogger));
+                    assertNull(
+                            "Integer '123x' should be invalid",
+                            AvdManagerCli.validateResponse("123x", aProperty, mLogger));
                     break;
                 case "integerEnumPropName":
                     assertEquals("Integer enum '40' should be valid",
                                  "40", AvdManagerCli.validateResponse("40", aProperty, mLogger));
-                    assertEquals("Integer enum '45' should be invalid",
-                                 null, AvdManagerCli.validateResponse("45", aProperty, mLogger));
+                    assertNull(
+                            "Integer enum '45' should be invalid",
+                            AvdManagerCli.validateResponse("45", aProperty, mLogger));
                     break;
                 case "stringPropName":
                     assertEquals("String 'Whatever$^*)#?!' should be valid",
@@ -401,8 +407,9 @@ public class AvdManagerCliTest {
                 case "stringEnumPropName":
                     assertEquals("String enum 'okString0' should be valid",
                                  "okString0", AvdManagerCli.validateResponse("okString0", aProperty, mLogger));
-                    assertEquals("String enum 'okString3' should be invalid",
-                                 null, AvdManagerCli.validateResponse("okString3", aProperty, mLogger));
+                    assertNull(
+                            "String enum 'okString3' should be invalid",
+                            AvdManagerCli.validateResponse("okString3", aProperty, mLogger));
                     break;
                 case "stringEnumTemplatePropName":
                     assertEquals("String enum 'fixedString' should be valid",
@@ -411,12 +418,16 @@ public class AvdManagerCliTest {
                                  "extensibleString0", AvdManagerCli.validateResponse("extensibleString0", aProperty, mLogger));
                     assertEquals("String enum 'extensibleString123' should be valid",
                                  "extensibleString123", AvdManagerCli.validateResponse("extensibleString123", aProperty, mLogger));
-                    assertEquals("String enum 'extensibleStringPlus' should be invalid",
-                                 null, AvdManagerCli.validateResponse("extensibleStringPlus", aProperty, mLogger));
-                    assertEquals("String enum '...' should be invalid",
-                                 null, AvdManagerCli.validateResponse("...", aProperty, mLogger));
-                    assertEquals("String enum 'fixedString3' should be invalid",
-                                 null, AvdManagerCli.validateResponse("fixedString3", aProperty, mLogger));
+                    assertNull(
+                            "String enum 'extensibleStringPlus' should be invalid",
+                            AvdManagerCli.validateResponse(
+                                    "extensibleStringPlus", aProperty, mLogger));
+                    assertNull(
+                            "String enum '...' should be invalid",
+                            AvdManagerCli.validateResponse("...", aProperty, mLogger));
+                    assertNull(
+                            "String enum 'fixedString3' should be invalid",
+                            AvdManagerCli.validateResponse("fixedString3", aProperty, mLogger));
                     break;
                 case "diskSizePropName":
                     assertEquals("Disk size '50MB' should be valid",
@@ -429,7 +440,7 @@ public class AvdManagerCliTest {
     }
 
     @Test
-    public void packageHelp() throws Exception {
+    public void packageHelp() {
         try {
             mCli.run(new String[] {"create", "avd", "--name", "testAvd", "-d", "Nexus 6P"});
             fail("Expected exception");
@@ -461,7 +472,7 @@ public class AvdManagerCliTest {
     }
 
     @Test
-    public void tagHelp() throws Exception {
+    public void tagHelp() {
         try {
             mCli.run(
                     new String[] {

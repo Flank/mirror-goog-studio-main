@@ -42,6 +42,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -96,7 +97,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      * If we can't find a package in a directory, we ask mFallback to find one. If it does, we write
      * out a {@code package.xml} so we can read it next time.
      */
-    private FallbackLocalRepoLoader mFallback;
+    private final FallbackLocalRepoLoader mFallback;
 
     /**
      * Constructor. Probably should only be used within repository framework.
@@ -242,17 +243,19 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
     private void addPackage(@NonNull LocalPackage p, @NonNull Map<String, LocalPackage> collector,
             @NonNull ProgressIndicator progress) {
         String filePath = p.getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar);
-        File desired = new File(mRoot, filePath);
-        File actual = p.getLocation();
+        Path desired = mFop.toPath(mRoot).resolve(filePath);
+        Path actual = p.getLocation();
         if (!desired.equals(actual)) {
-            progress.logWarning(String.format(
-                    "Observed package id '%1$s' in inconsistent location '%2$s' (Expected '%3$s')",
-                    p.getPath(), actual.getPath(), desired.getPath()));
+            progress.logWarning(
+                    String.format(
+                            "Observed package id '%1$s' in inconsistent location '%2$s' (Expected '%3$s')",
+                            p.getPath(), actual, desired));
             LocalPackage existing = collector.get(p.getPath());
             if (existing != null) {
-                progress.logWarning(String.format(
-                        "Already observed package id '%1$s' in '%2$s'. Skipping duplicate at '%3$s'",
-                        p.getPath(), existing.getLocation().getPath(), actual.getPath()));
+                progress.logWarning(
+                        String.format(
+                                "Already observed package id '%1$s' in '%2$s'. Skipping duplicate at '%3$s'",
+                                p.getPath(), existing.getLocation(), actual));
                 return;
             }
         }
@@ -271,9 +274,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
             @NonNull ProgressIndicator progress) {
         // We need a LocalPackageImpl to be able to save it.
         LocalPackageImpl impl = LocalPackageImpl.create(p);
-        OutputStream fos = null;
-        try {
-            fos = mFop.newFileOutputStream(packageXml);
+        try (OutputStream fos = mFop.newFileOutputStream(packageXml)) {
             Repository repo = impl.createFactory().createRepositoryType();
             repo.setLocalPackage(impl);
             License license = impl.getLicense();
@@ -282,21 +283,17 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
             }
 
             CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
-            SchemaModuleUtil.marshal(factory.generateRepository(repo),
-                                     mRepoManager.getSchemaModules(), fos,
-                                     mRepoManager.getResourceResolver(progress), progress);
+            SchemaModuleUtil.marshal(
+                    factory.generateRepository(repo),
+                    mRepoManager.getSchemaModules(),
+                    fos,
+                    mRepoManager.getResourceResolver(progress),
+                    progress);
         } catch (IOException e) {
             progress.logInfo("Exception while marshalling " + packageXml
                     + ". Probably the SDK is read-only");
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    // ignore.
-                }
-            }
         }
+        // ignore.
     }
 
     /**
@@ -329,7 +326,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                 progress.logWarning("Didn't find any local package in repository");
                 return null;
             }
-            p.setInstalledPath(packageXml.getParentFile());
+            p.setInstalledPath(mFop.toPath(packageXml.getParentFile()));
             return p;
         }
     }
@@ -442,7 +439,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         long latest = 0;
         for (File f : collectPackages()) {
             long t = mFop.lastModified(new File(f, PACKAGE_XML_FN));
-            latest = t > latest ? t : latest;
+            latest = Math.max(t, latest);
         }
         return latest;
     }

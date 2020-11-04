@@ -459,7 +459,7 @@ public class InstallerUtil {
             String check = path.getCanonicalPath() + File.separator;
 
             for (LocalPackage p : manager.getPackages().getLocalPackages().values()) {
-                String existing = p.getLocation().getCanonicalPath() + File.separator;
+                String existing = p.getLocation().normalize() + File.separator;
                 if (!existing.equals(check)) {
                     boolean childExists = existing.startsWith(check);
                     boolean parentExists = check.startsWith(existing);

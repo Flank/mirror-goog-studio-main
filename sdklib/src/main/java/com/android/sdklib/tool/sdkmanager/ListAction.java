@@ -186,7 +186,8 @@ class ListAction extends SdkAction {
                 "Location",
                 p ->
                         FileUtils.relativePossiblyNonExistingPath(
-                                p.getLocation(), getRepoManager().getLocalPath()),
+                                mSettings.getSdkHandler().getFileOp().toFile(p.getLocation()),
+                                getRepoManager().getLocalPath()),
                 9999,
                 0);
 

@@ -31,9 +31,12 @@ import com.android.repository.impl.meta.Archive;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
+import com.android.repository.io.FileOp;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Comparator;
 
@@ -50,28 +53,43 @@ public abstract class FakePackage implements RepoPackage {
      * A fake {@link LocalPackage} for use in unit tests.
      */
     public static class FakeLocalPackage extends FakePackage implements LocalPackage {
-        private File mLocation;
+        private Path mLocation;
 
         @Override
         @NonNull
-        public File getLocation() {
+        public Path getLocation() {
             return mLocation;
         }
 
         @Override
-        public void setInstalledPath(@NonNull File root) {
+        public void setInstalledPath(@NonNull Path root) {
             mLocation = root;
         }
 
         public FakeLocalPackage(@NonNull String path) {
             super(path);
-            String packagePath = getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar);
-            mLocation = new File("/sdk", packagePath);
+            mLocation = Paths.get(packagePathToFilesystemLocation(path));
+        }
+
+        public FakeLocalPackage(@NonNull String path, @NonNull Path location) {
+            super(path);
+            mLocation = location;
+        }
+
+        public FakeLocalPackage(@NonNull String path, @NonNull FileOp fileOp) {
+            super(path);
+            String location = packagePathToFilesystemLocation(path);
+            mLocation = fileOp.toPath(location);
         }
 
         @Override
         public int compareTo(@NonNull RepoPackage other) {
             return super.compareTo(other);
+        }
+
+        private static String packagePathToFilesystemLocation(String path) {
+            String packagePath = path.replace(RepoPackage.PATH_SEPARATOR, File.separatorChar);
+            return "/sdk/" + packagePath;
         }
     }
 

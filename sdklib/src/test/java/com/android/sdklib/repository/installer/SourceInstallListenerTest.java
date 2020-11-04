@@ -16,7 +16,6 @@
 package com.android.sdklib.repository.installer;
 
 import static com.android.sdklib.IAndroidTarget.SOURCES;
-import static com.android.utils.FileUtils.toSystemDependentPath;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -51,7 +50,7 @@ import junit.framework.TestCase;
  */
 public class SourceInstallListenerTest extends TestCase {
 
-    private static final File ROOT = new File("/sdk");
+    private static final File ROOT = new File("/sdk").getAbsoluteFile();
 
     public void testSourcePathUpdatedWithInstall() throws Exception {
         MockFileOp fop = new MockFileOp();
@@ -95,7 +94,7 @@ public class SourceInstallListenerTest extends TestCase {
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
         assertThat(target.getPath(SOURCES))
-                .isEqualTo(toSystemDependentPath("/sdk/platforms/android-23/sources"));
+                .isEqualTo(fop.getPlatformSpecificPath("/sdk/platforms/android-23/sources"));
 
         // Install
         InstallerFactory factory = SdkInstallerUtil.findBestInstallerFactory(remote, mockHandler);
@@ -106,10 +105,10 @@ public class SourceInstallListenerTest extends TestCase {
         // Assert that source path is updated to correct value
         progress.assertNoErrorsOrWarnings();
         assertThat(target.getPath(SOURCES))
-                .isEqualTo(toSystemDependentPath("/sdk/sources/android-23"));
+                .isEqualTo(fop.getPlatformSpecificPath("/sdk/sources/android-23"));
     }
 
-    public void testSourcePathUpdatedWithUnInstall() throws Exception {
+    public void testSourcePathUpdatedWithUnInstall() {
         MockFileOp fop = new MockFileOp();
 
         // Create local packages for platform;android-23 and sources;android-23
@@ -130,7 +129,7 @@ public class SourceInstallListenerTest extends TestCase {
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
         assertThat(target.getPath(SOURCES))
-                .isEqualTo(toSystemDependentPath("/sdk/sources/android-23"));
+                .isEqualTo(fop.getPlatformSpecificPath("/sdk/sources/android-23"));
 
         // Uninstall
         BasicInstallerFactory factory = new BasicInstallerFactory();
@@ -147,14 +146,14 @@ public class SourceInstallListenerTest extends TestCase {
         // Assert that source path is set back to null thus deprecated value is returned
         progress.assertNoErrorsOrWarnings();
         assertThat(target.getPath(SOURCES))
-                .isEqualTo(toSystemDependentPath("/sdk/platforms/android-23/sources"));
+                .isEqualTo(fop.getPlatformSpecificPath("/sdk/platforms/android-23/sources"));
     }
 
     @NonNull
     private static LocalPackage getLocalPlatformPackage(MockFileOp fop) {
         fop.recordExistingFile("/sdk/platforms/android-23/build.prop", "");
-        FakePackage.FakeLocalPackage local = new FakePackage.FakeLocalPackage("platforms;android-23");
-        local.setInstalledPath(new File("/sdk/platforms/android-23"));
+        FakePackage.FakeLocalPackage local =
+                new FakePackage.FakeLocalPackage("platforms;android-23", fop);
 
         DetailsTypes.PlatformDetailsType platformDetails =
                 AndroidSdkHandler.getRepositoryModule().createLatestFactory()
@@ -167,8 +166,8 @@ public class SourceInstallListenerTest extends TestCase {
     @NonNull
     private static LocalPackage getLocalSourcePackage(MockFileOp fop) {
         fop.recordExistingFile("/sdk/sources/android-23/build.prop", "");
-        FakePackage.FakeLocalPackage local = new FakePackage.FakeLocalPackage("sources;android-23");
-        local.setInstalledPath(new File("/sdk/sources/android-23"));
+        FakePackage.FakeLocalPackage local =
+                new FakePackage.FakeLocalPackage("sources;android-23", fop);
 
         DetailsTypes.SourceDetailsType sourceDetails =
                 AndroidSdkHandler.getRepositoryModule().createLatestFactory()

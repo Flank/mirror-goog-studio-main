@@ -22,6 +22,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.RepoManager;
 import com.android.repository.io.FileOp;
 import com.android.resources.KeyboardState;
@@ -47,6 +48,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -381,14 +383,20 @@ public class DeviceManager {
             RepoManager mgr = mSdkHandler.getSdkManager(progress);
             mgr.loadSynchronously(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, progress, null, null);
             mgr.getPackages().getLocalPackages().values().stream()
-              .filter(pkg -> pkg.getTypeDetails() instanceof DetailsTypes.SysImgDetailsType)
-              .sorted(Comparator.comparing(pkg -> ((DetailsTypes.SysImgDetailsType)pkg.getTypeDetails()).getAndroidVersion()))
-              .forEach(pkg -> {
-                  File deviceXml = new File(pkg.getLocation(), SdkConstants.FN_DEVICES_XML);
-                  if (mFop.isFile(deviceXml)) {
-                      mSysImgDevices.putAll(loadDevices(deviceXml));
-                  }
-              });
+                    .filter(pkg -> pkg.getTypeDetails() instanceof DetailsTypes.SysImgDetailsType)
+                    .sorted(
+                            Comparator.comparing(
+                                    pkg ->
+                                            ((DetailsTypes.SysImgDetailsType) pkg.getTypeDetails())
+                                                    .getAndroidVersion()))
+                    .forEach(
+                            pkg -> {
+                                Path deviceXml =
+                                        pkg.getLocation().resolve(SdkConstants.FN_DEVICES_XML);
+                                if (CancellableFileIo.isRegularFile(deviceXml)) {
+                                    mSysImgDevices.putAll(loadDevices(mFop.toFile(deviceXml)));
+                                }
+                            });
             return true;
         }
     }

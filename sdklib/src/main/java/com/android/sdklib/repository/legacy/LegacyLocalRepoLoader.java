@@ -47,6 +47,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -151,9 +152,13 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
                 addonLibraries = LegacyRepoUtils
                         .parseLegacyAdditionalLibraries(mWrapped.getLocalDir(), mProgress, mFop);
             }
-            return LegacyRepoUtils
-              .createTypeDetails(mWrapped.getDesc(), layoutVersion, addonLibraries, getLocation(),
-                mProgress, mFop);
+            return LegacyRepoUtils.createTypeDetails(
+                    mWrapped.getDesc(),
+                    layoutVersion,
+                    addonLibraries,
+                    mFop.toFile(getLocation()),
+                    mProgress,
+                    mFop);
         }
 
         @NonNull
@@ -265,12 +270,12 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
 
         @Override
         @NonNull
-        public File getLocation() {
-            return mWrapped.getLocalDir();
+        public Path getLocation() {
+            return mFop.toPath(mWrapped.getLocalDir());
         }
 
         @Override
-        public void setInstalledPath(File root) {
+        public void setInstalledPath(@NonNull Path root) {
             // Ignore, we already know our whole path.
         }
     }

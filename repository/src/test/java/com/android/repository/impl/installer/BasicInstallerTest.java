@@ -116,11 +116,12 @@ public class BasicInstallerTest extends TestCase {
         File otherFile2 = new File(otherDir2, "c");
         fop.recordExistingFile(otherFile2);
 
-        LocalPackage localPackage = new FakePackage.FakeLocalPackage("foo");
-        localPackage.setInstalledPath(toDeleteDir);
+        LocalPackage localPackage = new FakePackage.FakeLocalPackage("foo", fop);
+        localPackage.setInstalledPath(fop.toPath(toDeleteDir));
         RepositoryPackages packages =
                 new RepositoryPackages(
-                        ImmutableList.of(new FakePackage.FakeLocalPackage("bar"), localPackage),
+                        ImmutableList.of(
+                                new FakePackage.FakeLocalPackage("bar", fop), localPackage),
                         ImmutableList.of());
         RepoManager mgr = new FakeRepoManager(new File("/sdk"), packages);
         InstallerFactory factory = new BasicInstallerFactory();
@@ -266,9 +267,9 @@ public class BasicInstallerTest extends TestCase {
         // Load
         mgr.loadSynchronously(
                 RepoManager.DEFAULT_EXPIRATION_PERIOD_MS,
-                ImmutableList.<RepoManager.RepoLoadedListener>of(),
-                ImmutableList.<RepoManager.RepoLoadedListener>of(),
-                ImmutableList.<Runnable>of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
                 runner,
                 downloader,
                 new FakeSettingsController(false));
@@ -524,32 +525,39 @@ public class BasicInstallerTest extends TestCase {
         // be sure it was actually cancelled
         assertFalse(result);
         assertFalse(firstInstallProgress.getWarnings().isEmpty());
-        Downloader failingDownloader = new Downloader() {
-            @Nullable
-            @Override
-            public InputStream downloadAndStream(@NonNull URL url,
-                    @NonNull ProgressIndicator indicator) throws IOException {
-                fail();
-                return null;
-            }
+        Downloader failingDownloader =
+                new Downloader() {
+                    @Nullable
+                    @Override
+                    public InputStream downloadAndStream(
+                            @NonNull URL url, @NonNull ProgressIndicator indicator) {
+                        fail();
+                        return null;
+                    }
 
-            @Nullable
-            @Override
-            public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
-                    throws IOException {
-                fail();
-                return null;
-            }
+                    @Nullable
+                    @Override
+                    public Path downloadFully(
+                            @NonNull URL url, @NonNull ProgressIndicator indicator) {
+                        fail();
+                        return null;
+                    }
 
-            @Override
-            public void downloadFully(@NonNull URL url, @NonNull File target,
-                    @Nullable String checksum, @NonNull ProgressIndicator indicator)
-                    throws IOException {
-                assertEquals(checksum,
-                        Downloader.hash(fop.newFileInputStream(target),
-                                fop.length(target), indicator));
-            }
-        };
+                    @Override
+                    public void downloadFully(
+                            @NonNull URL url,
+                            @NonNull File target,
+                            @Nullable String checksum,
+                            @NonNull ProgressIndicator indicator)
+                            throws IOException {
+                        assertEquals(
+                                checksum,
+                                Downloader.hash(
+                                        fop.newFileInputStream(target),
+                                        fop.length(target),
+                                        indicator));
+                    }
+                };
         basicInstaller =
                 new BasicInstallerFactory().createInstaller(p, mgr, failingDownloader, fop);
         // Try again with the failing downloader; it should not be called.

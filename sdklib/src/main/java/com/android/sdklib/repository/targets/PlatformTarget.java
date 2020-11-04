@@ -71,15 +71,11 @@ public class PlatformTarget implements IAndroidTarget {
      */
     private static final String PLATFORM_NAME_PREVIEW = "Android %s (Preview)";
 
-    /**
-     * The {@link LocalPackage} from which this target was created.
-     */
-    private LocalPackage mPackage;
+    /** The {@link LocalPackage} from which this target was created. */
+    private final LocalPackage mPackage;
 
-    /**
-     * The {@link TypeDetails} of {@link #mPackage}.
-     */
-    private DetailsTypes.PlatformDetailsType mDetails;
+    /** The {@link TypeDetails} of {@link #mPackage}. */
+    private final DetailsTypes.PlatformDetailsType mDetails;
 
     /** Additional {@link OptionalLibrary}s provided by this target. */
     private List<OptionalLibrary> mOptionalLibraries = ImmutableList.of();
@@ -88,17 +84,15 @@ public class PlatformTarget implements IAndroidTarget {
      * The emulator skins for this target, including those included in the package as well as those
      * from associated system images.
      */
-    private Set<File> mSkins;
+    private final Set<File> mSkins;
 
     /**
      * Parsed version of the {@code build.prop} file in {@link #mPackage}.
      */
     private Map<String, String> mBuildProps;
 
-    /**
-     * Reference to the latest {@link BuildToolInfo}.
-     */
-    private BuildToolInfo mBuildToolInfo;
+    /** Reference to the latest {@link BuildToolInfo}. */
+    private final BuildToolInfo mBuildToolInfo;
 
     /**
      * Location of the sources for this package. If {@code null} the legacy path will be used.
@@ -115,7 +109,7 @@ public class PlatformTarget implements IAndroidTarget {
         assert details instanceof DetailsTypes.PlatformDetailsType;
         mDetails = (DetailsTypes.PlatformDetailsType) details;
 
-        File optionalDir = new File(p.getLocation(), "optional");
+        File optionalDir = fop.toFile(p.getLocation().resolve("optional"));
         if (optionalDir.isDirectory()) {
             File optionalJson = new File(optionalDir, "optional.json");
             if (optionalJson.isFile()) {
@@ -199,7 +193,7 @@ public class PlatformTarget implements IAndroidTarget {
     @Override
     @NonNull
     public String getLocation() {
-        return mPackage.getLocation().getPath() + File.separator;
+        return mPackage.getLocation() + File.separator;
     }
 
     /**

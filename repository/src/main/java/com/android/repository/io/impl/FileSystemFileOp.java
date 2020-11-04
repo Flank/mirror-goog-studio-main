@@ -32,6 +32,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -113,6 +114,25 @@ public abstract class FileSystemFileOp implements FileOp {
             }
         }
         delete(fileOrFolder);
+    }
+
+    @Override
+    public boolean deleteFileOrFolder(@NonNull Path fileOrFolder) {
+        boolean[] sawException = new boolean[1];
+        try (Stream<Path> contents = CancellableFileIo.walk(fileOrFolder)) {
+            contents.sorted(Comparator.reverseOrder())
+                    .forEach(
+                            path -> {
+                                try {
+                                    Files.delete(path);
+                                } catch (IOException e) {
+                                    sawException[0] = true;
+                                }
+                            });
+        } catch (IOException e) {
+            return false;
+        }
+        return !sawException[0];
     }
 
     @Override
@@ -245,7 +265,13 @@ public abstract class FileSystemFileOp implements FileOp {
     @NonNull
     @Override
     public final InputStream newFileInputStream(@NonNull File file) throws IOException {
-        return CancellableFileIo.newInputStream(toPath(file));
+        return newFileInputStream(toPath(file));
+    }
+
+    @NonNull
+    @Override
+    public final InputStream newFileInputStream(@NonNull Path path) throws IOException {
+        return CancellableFileIo.newInputStream(path);
     }
 
     @Override
@@ -274,6 +300,12 @@ public abstract class FileSystemFileOp implements FileOp {
     @NonNull
     @Override
     public Path toPath(@NonNull File file) {
-        return getFileSystem().getPath(file.getPath());
+        return toPath(file.getPath());
+    }
+
+    @NonNull
+    @Override
+    public Path toPath(@NonNull String path) {
+        return getFileSystem().getPath(path);
     }
 }

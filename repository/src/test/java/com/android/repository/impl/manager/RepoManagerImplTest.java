@@ -343,7 +343,7 @@ public class RepoManagerImplTest extends TestCase {
         MockFileOp fop = new MockFileOp();
         final Map<String, LocalPackage> localPackages = new HashMap<>();
         FakeLoader<LocalPackage> localLoader = new FakeLoader<>(localPackages);
-        localPackages.put("foo", new FakeLocalPackage("foo"));
+        localPackages.put("foo", new FakeLocalPackage("foo", fop));
 
         final Map<String, RemotePackage> remotePackages = Maps.newHashMap();
         FakeLoader<RemotePackage> remoteLoader = new FakeLoader<>(remotePackages);
@@ -378,7 +378,7 @@ public class RepoManagerImplTest extends TestCase {
         assertFalse(remoteRan.get());
 
         // update local and ensure the local listener fired
-        localPackages.put("bar", new FakeLocalPackage("bar"));
+        localPackages.put("bar", new FakeLocalPackage("bar", fop));
         mgr.loadSynchronously(-1, null, null, null, runner, downloader, null);
         assertTrue(localRan.compareAndSet(true, false));
         assertFalse(remoteRan.get());

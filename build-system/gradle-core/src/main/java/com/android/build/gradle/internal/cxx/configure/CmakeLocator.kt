@@ -352,7 +352,7 @@ fun findCmakePathLogic(
         // Gather acceptable SDK package paths
         for (localPackage in repositoryPackages()) {
             val packagePath = localPackage.location.resolve("bin")
-            if (cmakePaths.contains(packagePath.path)) continue
+            if (cmakePaths.contains(packagePath.toString())) continue
             val version = if (localPackage.version == forkCmakeSdkVersionRevision) {
                 forkCmakeReportedVersion
             } else {
@@ -362,7 +362,7 @@ fun findCmakePathLogic(
                 nonsatisfiers += "'$version' found in SDK"
                 continue
             }
-            cmakePaths.add(packagePath.path)
+            cmakePaths.add(packagePath.toString())
         }
     }
 

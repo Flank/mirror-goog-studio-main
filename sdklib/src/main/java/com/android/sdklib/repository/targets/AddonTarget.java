@@ -26,7 +26,6 @@ import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISystemImage;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.PackageParserUtils;
 import com.android.sdklib.repository.legacy.LegacyRepoUtils;
@@ -42,47 +41,38 @@ import java.util.Map;
  * Represents an add-on target in the SDK. An add-on extends a standard {@link PlatformTarget}.
  */
 public class AddonTarget implements IAndroidTarget {
-    /**
-     * The {@link LocalPackage} from which this target was created.
-     */
-    private LocalPackage mPackage;
+    /** The {@link LocalPackage} from which this target was created. */
+    private final LocalPackage mPackage;
 
-    /**
-     * The {@link TypeDetails} of {@link #mPackage}.
-     */
-    private DetailsTypes.AddonDetailsType mDetails;
+    /** The {@link TypeDetails} of {@link #mPackage}. */
+    private final DetailsTypes.AddonDetailsType mDetails;
 
-    /**
-     * The target on which this addon is based.
-     */
-    private IAndroidTarget mBasePlatform;
+    /** The target on which this addon is based. */
+    private final IAndroidTarget mBasePlatform;
 
     /**
      * All skins included in this target, including those in this addon, the base package, and
      * associated system images.
      */
-    private File[] mSkins;
+    private final File[] mSkins;
 
-    /**
-     * The default skin for this package, as (optionally) specified in the package xml.
-     */
-    private File mDefaultSkin;
+    /** The default skin for this package, as (optionally) specified in the package xml. */
+    private final File mDefaultSkin;
 
-    private List<OptionalLibrary> mAdditionalLibraries;
+    private final List<OptionalLibrary> mAdditionalLibraries;
 
     /**
      * Constructs a new {@link AddonTarget}.
      *
-     * @param p          The {@link LocalPackage} containing this target.
+     * @param p The {@link LocalPackage} containing this target.
      * @param baseTarget The {@link IAndroidTarget} on which this addon is based.
-     * @param sysImgMgr  A {@link SystemImageManager}, used to find {@link ISystemImage}s associated
-     *                   associated with this target.
-     * @param progress
-     * @param fop        {@link FileOp} to use for file operations. For normal use should be {@link
-     *                   FileOpUtils#create()}.
+     * @param fop {@link FileOp} to use for file operations. For normal use should be {@link
+     *     FileOpUtils#create()}.
      */
-    public AddonTarget(@NonNull LocalPackage p, @NonNull IAndroidTarget baseTarget,
-            @NonNull SystemImageManager sysImgMgr, @NonNull ProgressIndicator progress,
+    public AddonTarget(
+            @NonNull LocalPackage p,
+            @NonNull IAndroidTarget baseTarget,
+            @NonNull ProgressIndicator progress,
             @NonNull FileOp fop) {
         mPackage = p;
         mBasePlatform = baseTarget;
@@ -98,8 +88,9 @@ public class AddonTarget implements IAndroidTarget {
             skins.put(skin.getName(), skin);
         }
         // Finally collect skins from this package itself, which have highest priority.
-        for (File skin : PackageParserUtils
-                .parseSkinFolder(new File(p.getLocation(), SdkConstants.FD_SKINS), fop)) {
+        for (File skin :
+                PackageParserUtils.parseSkinFolder(
+                        fop.toFile(p.getLocation().resolve(SdkConstants.FD_SKINS)), fop)) {
             skins.put(skin.getName(), skin);
         }
         mSkins = skins.values().toArray(new File[0]);
@@ -131,10 +122,10 @@ public class AddonTarget implements IAndroidTarget {
                 if (library.getLocalJarPath() == null) {
                     // We must be looking at a legacy package. Abort and use the libraries derived
                     // in the old way.
-                    return LegacyRepoUtils
-                            .parseLegacyAdditionalLibraries(p.getLocation(), progress, fop);
+                    return LegacyRepoUtils.parseLegacyAdditionalLibraries(
+                            fop.toFile(p.getLocation()), progress, fop);
                 }
-                library.setPackagePath(p.getLocation());
+                library.setPackagePath(fop.toFile(p.getLocation()));
                 result.add(library);
             }
         }
@@ -145,7 +136,7 @@ public class AddonTarget implements IAndroidTarget {
     @Override
     @NonNull
     public String getLocation() {
-        return mPackage.getLocation().getPath() + File.separator;
+        return mPackage.getLocation().toString() + File.separator;
     }
 
     @Override
@@ -202,7 +193,7 @@ public class AddonTarget implements IAndroidTarget {
     @Override
     @NonNull
     public String getPath(int pathId) {
-        String installPath = mPackage.getLocation().getPath();
+        String installPath = mPackage.getLocation().toString();
         switch (pathId) {
             case SKINS:
                 return installPath + File.separator + SdkConstants.OS_SKINS_FOLDER;

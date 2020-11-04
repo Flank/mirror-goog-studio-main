@@ -40,7 +40,7 @@ public class AbstractUninstallerTest {
         MockFileOp fop = new MockFileOp();
         RepoManager mgr = new RepoManagerImpl(fop);
         mgr.setLocalPath(new File("/sdk"));
-        LocalPackage local = new FakeLocalPackage("foo;bar");
+        LocalPackage local = new FakeLocalPackage("foo;bar", fop);
         AbstractUninstaller uninstaller = new TestUninstaller(local, mgr, fop);
         assertSame(uninstaller.getPackage(), local);
         assertEquals(uninstaller.getName(), String.format("Uninstall %1$s (revision: %2$s)",

@@ -44,6 +44,14 @@ public interface FileOp {
     void deleteFileOrFolder(@NonNull File fileOrFolder);
 
     /**
+     * Helper to delete a file or a directory. For a directory, recursively deletes all of its
+     * content. It's ok for the file or folder to not exist at all.
+     *
+     * @return true if the delete was successful
+     */
+    boolean deleteFileOrFolder(@NonNull Path fileOrFolder);
+
+    /**
      * Sets the executable Unix permission (+x) on a file or folder.
      * <p>
      * This attempts to use File#setExecutable through reflection if
@@ -133,6 +141,10 @@ public interface FileOp {
     @NonNull
     InputStream newFileInputStream(@NonNull File file) throws IOException;
 
+    /** Creates a new {@link InputStream} for the given {@code file}. */
+    @NonNull
+    InputStream newFileInputStream(@NonNull Path path) throws IOException;
+
     /**
      * Returns the lastModified attribute of the file.
      *
@@ -198,4 +210,33 @@ public interface FileOp {
      */
     @NonNull
     Path toPath(@NonNull File file);
+
+    /**
+     * Convert the given {@code String} into a {@code Path}, using some means appropriate to this
+     * {@code FileOp}.
+     */
+    @NonNull
+    Path toPath(@NonNull String path);
+
+    /**
+     * Temporary functionality to help with File-to-Path migration. Should only be called when a
+     * FileOp is not available and with a Path that is backed by the default FileSystem (notably not
+     * in the context of any tests that use MockFileOp or jimfs).
+     *
+     * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
+     */
+    @NonNull
+    File toFile(@NonNull Path path);
+
+    /**
+     * Temporary functionality to help with File-to-Path migration. Should only be called when a
+     * FileOp is not available and with a Path that is backed by the default FileSystem (notably not
+     * in the context of any tests that use MockFileOp or jimfs).
+     *
+     * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
+     */
+    @NonNull
+    static File toFileUnsafe(@NonNull Path path) {
+        return path.toFile();
+    }
 }

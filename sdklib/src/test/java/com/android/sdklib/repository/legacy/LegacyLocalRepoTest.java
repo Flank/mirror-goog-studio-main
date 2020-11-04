@@ -284,7 +284,7 @@ public class LegacyLocalRepoTest extends TestCase {
             progress.assertNoErrorsOrWarnings();
         }
         LocalPackage local = repo.getLocalPackage();
-        local.setInstalledPath(mgr.getLocalPath());
+        local.setInstalledPath(mockFop.toPath(mgr.getLocalPath()));
 
         return local;
     }

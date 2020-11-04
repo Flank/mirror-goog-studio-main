@@ -804,7 +804,8 @@ public final class AndroidSdkHandler {
             return null;
         }
 
-        BuildToolInfo latestBuildTool = BuildToolInfo.fromLocalPackage(latestBuildToolPackage);
+        BuildToolInfo latestBuildTool =
+                BuildToolInfo.fromLocalPackage(latestBuildToolPackage, mFop);
 
         // Don't cache if preview.
         if (!latestBuildToolPackage.getVersion().isPreview()) {
@@ -832,7 +833,7 @@ public final class AndroidSdkHandler {
         if (p == null) {
             return null;
         }
-        return BuildToolInfo.fromLocalPackage(p);
+        return BuildToolInfo.fromLocalPackage(p, mFop);
     }
 
     /**

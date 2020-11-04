@@ -457,8 +457,11 @@ public class DefaultSdkLoader implements SdkLoader {
                         mSdkHandler.getLatestLocalPackageForPrefix(packageId, null, true, progress);
             }
         }
-        // getLatestLocalPackageForPrefix above should have set it to non-null by now, but let's be safe.
-        return localSdkToolPackage != null ? localSdkToolPackage.getLocation() : null;
+        // getLatestLocalPackageForPrefix above should have set it to non-null by now, but let's be
+        // safe.
+        return localSdkToolPackage != null
+                ? mSdkHandler.getFileOp().toFile(localSdkToolPackage.getLocation())
+                : null;
     }
 
     @Override
@@ -476,7 +479,7 @@ public class DefaultSdkLoader implements SdkLoader {
             // unintended side-effects such as invalidating pre-existing avd snapshots.
             return null;
         }
-        return localEmulatorPackage.getLocation();
+        return mSdkHandler.getFileOp().toFile(localEmulatorPackage.getLocation());
     }
 
     /**
