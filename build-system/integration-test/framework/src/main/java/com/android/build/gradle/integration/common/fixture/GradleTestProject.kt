@@ -1407,8 +1407,8 @@ buildCache {
             return
         }
 
-        gradlePropertiesFile.writeText(
-            gradleProperties.joinToString(separator = System.lineSeparator())
+        gradlePropertiesFile.appendText(
+            gradleProperties.joinToString(separator = System.lineSeparator(), prefix = System.lineSeparator(), postfix = System.lineSeparator())
         )
     }
 

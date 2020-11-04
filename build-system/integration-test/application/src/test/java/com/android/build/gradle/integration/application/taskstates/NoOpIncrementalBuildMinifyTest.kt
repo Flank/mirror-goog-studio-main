@@ -42,6 +42,7 @@ class NoOpIncrementalBuildMinifyTest {
                 // Lint declares no outputs, so it's never up-to-date. It's probably for the
                 // better, because it's hard to declare all inputs (they include the SDK
                 // and contents of the Google maven repo).
+                ":lintDebug",
                 ":lint"
             ),
             UP_TO_DATE to setOf(
@@ -82,6 +83,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":generateReleaseResources",
                 ":javaPreCompileDebug",
                 ":javaPreCompileDebugAndroidTest",
+                ":javaPreCompileDebugUnitTest",
                 ":javaPreCompileRelease",
                 ":javaPreCompileReleaseUnitTest",
                 ":mergeDebugAndroidTestAssets",
@@ -105,6 +107,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":packageRelease",
                 ":preBuild",
                 ":preDebugBuild",
+                ":preDebugUnitTestBuild",
                 ":preReleaseBuild",
                 ":preReleaseUnitTestBuild",
                 ":processDebugAndroidTestManifest",
@@ -137,6 +140,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":compileDebugAndroidTestRenderscript",
                 ":compileDebugAndroidTestShaders",
                 ":compileDebugRenderscript",
+                ":compileDebugUnitTestJavaWithJavac",
                 ":compileReleaseAidl",
                 ":compileReleaseRenderscript",
                 ":compileReleaseShaders",
@@ -174,7 +178,9 @@ class NoOpIncrementalBuildMinifyTest {
 
     @Test
     fun `check task states`() {
-        val result = project.executor().run {
+        val result = project.executor()
+                .with(BooleanOption.USE_NEW_LINT_MODEL, true)
+                .run {
             val tasks =
                 listOf("assembleRelease", "testReleaseUnitTest", "assembleDebugAndroidTest", "lint")
             run(tasks)
