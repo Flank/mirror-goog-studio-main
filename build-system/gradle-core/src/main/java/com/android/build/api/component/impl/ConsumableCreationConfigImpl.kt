@@ -97,21 +97,7 @@ open class ConsumableCreationConfigImpl(
         }
         val shrinker = getCodeShrinker()
         if (shrinker == CodeShrinker.R8) {
-            if (globalScope.projectOptions[BooleanOption.ENABLE_R8_DESUGARING]) {
-                return VariantScope.Java8LangSupport.R8
-            } else {
-                globalScope
-                        .dslServices
-                        .issueReporter
-                        .reportError(
-                                IssueReporter.Type.GENERIC, String.format(
-                                "Please add '%s=true' to your "
-                                        + "gradle.properties file to enable Java 8 "
-                                        + "language support.",
-                                BooleanOption.ENABLE_R8_DESUGARING.name),
-                                variantDslInfo.componentIdentity.name)
-                return VariantScope.Java8LangSupport.INVALID
-            }
+            return VariantScope.Java8LangSupport.R8
         } else {
             // D8 cannot be used if R8 is used
             return VariantScope.Java8LangSupport.D8

@@ -308,7 +308,6 @@ public class DesugarAppTest {
     private GradleTaskExecutor getProjectExecutor() {
         GradleTaskExecutor executor =
                 project.executor()
-                        .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
                         .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, java8LangSupport == R8)
                         .with(
                                 BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,

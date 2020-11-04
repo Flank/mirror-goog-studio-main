@@ -133,9 +133,6 @@ enum class BooleanOption(
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true, FeatureStage.Experimental),
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true, FeatureStage.Experimental),
 
-    /** Set to true by default, but has effect only if R8 is enabled. */
-    ENABLE_R8_DESUGARING("android.enableR8.desugaring", true, FeatureStage.Experimental),
-
     // Marked as stable to avoid reporting deprecation twice.
     CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies", true, FeatureStage.Experimental),
 
@@ -349,6 +346,16 @@ enum class BooleanOption(
         FeatureStage.Enforced(
             VERSION_7_0,
             "D8 desugaring is used by default, when applicable."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_R8_DESUGARING(
+        "android.enableR8.desugaring",
+        true,
+        FeatureStage.Enforced(
+            VERSION_7_0,
+            "R8 desugaring is used by default, when applicable."
         )
     ),
 
