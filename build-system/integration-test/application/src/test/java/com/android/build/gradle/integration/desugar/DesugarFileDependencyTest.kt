@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.desugar
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -42,8 +41,7 @@ class DesugarFileDependencyTest(var tool: Tool) {
     enum class Tool {
         D8_WITH_ARTIFACT_TRANSFORMS,
         D8_WITHOUT_ARTIFACT_TRANSFORMS,
-        R8,
-        DESUGAR
+        R8
     }
 
     companion object {
@@ -80,14 +78,7 @@ class DesugarFileDependencyTest(var tool: Tool) {
 
     @Test
     fun checkBuilds() {
-        val executor = executor().also {
-            if (tool == Tool.DESUGAR) {
-                // https://github.com/gradle/gradle/issues/13200
-                it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            }
-        }
-
-        executor.run("assembleDebug")
+        executor().run("assembleDebug")
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
             assertThat(apk)
                 .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")

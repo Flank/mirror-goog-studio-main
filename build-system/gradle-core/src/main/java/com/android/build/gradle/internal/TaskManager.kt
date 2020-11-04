@@ -135,7 +135,6 @@ import com.android.build.gradle.tasks.TransformClassesWithAsmTask
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import com.android.build.gradle.tasks.registerDataBindingOutputs
 import com.android.builder.core.BuilderConstants
-import com.android.builder.core.DesugarProcessArgs
 import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.isLegacyMultiDexMode
@@ -1587,7 +1586,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             createJacocoTask(creationConfig)
         }
         maybeCreateTransformClassesWithAsmTask(creationConfig, isTestCoverageEnabled)
-        maybeCreateDesugarTask(creationConfig, creationConfig.minSdkVersion, transformManager)
         val extension = creationConfig.globalScope.extension
 
         // Merge Java Resources.
@@ -1670,48 +1668,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createDexTasks(creationConfig, dexingType, registeredLegacyTransform)
         maybeCreateResourcesShrinkerTasks(creationConfig)
         maybeCreateDexSplitterTask(creationConfig)
-    }
-
-    private fun maybeCreateDesugarTask(
-            creationConfig: ApkCreationConfig,
-            minSdk: AndroidVersion,
-            transformManager: TransformManager) {
-        val variantScope = creationConfig.variantScope
-        if (creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.DESUGAR) {
-            creationConfig
-                    .transformManager
-                    .consumeStreams(
-                            ImmutableSet.of(QualifiedContent.Scope.EXTERNAL_LIBRARIES),
-                            TransformManager.CONTENT_CLASS)
-            taskFactory.register(DesugarTask.CreationAction(creationConfig))
-            if (minSdk.getFeatureLevel()
-                    >= DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
-                return
-            }
-            val testedType: QualifiedContent.ScopeType? =
-                    creationConfig.onTestedConfig<QualifiedContent.Scope>() {
-                        testedConfig: VariantCreationConfig ->
-                        if (!testedConfig.variantType.isAar) {
-                            // test variants, except for library, should not package
-                            // try-with-resources jar
-                            // as the tested variant already contains it.
-                            return@onTestedConfig QualifiedContent.Scope.PROVIDED_ONLY
-                        }
-                        null
-                    }
-            val scopeType = testedType ?: QualifiedContent.Scope.EXTERNAL_LIBRARIES
-
-            // add runtime classes for try-with-resources support
-            val extractTryWithResources = taskFactory.register(
-                    ExtractTryWithResourcesSupportJar.CreationAction(creationConfig))
-            variantScope.tryWithResourceRuntimeSupportJar.builtBy(extractTryWithResources)
-            transformManager.addStream(
-                    OriginalStream.builder("runtime-deps-try-with-resources")
-                            .addContentTypes(TransformManager.CONTENT_CLASS)
-                            .addScope(scopeType)
-                            .setFileCollection(variantScope.tryWithResourceRuntimeSupportJar)
-                            .build())
-        }
     }
 
     /**

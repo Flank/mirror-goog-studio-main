@@ -45,8 +45,7 @@ public class DesugarMultiProjectTest {
     private enum Tool {
         D8_WITH_ARTIFACT_TRANSFORMS,
         D8_WITHOUT_ARTIFACT_TRANSFORMS,
-        R8,
-        DESUGAR
+        R8
     }
 
     @Parameterized.Parameters(name = "{0}")

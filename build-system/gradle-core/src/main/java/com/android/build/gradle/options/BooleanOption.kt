@@ -170,8 +170,6 @@ enum class BooleanOption(
      * SOFTLY-ENFORCED FEATURES
      */
 
-    ENABLE_DESUGAR("android.enableDesugar", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.DESUGAR_TOOL)),
-
     /** Whether Jetifier will skip libraries that already support AndroidX. */
     JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
@@ -434,6 +432,13 @@ enum class BooleanOption(
         "android.enableIntermediateArtifactsCache",
         false,
         FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches are superseded by the Gradle build cache https://docs.gradle.org/current/userguide/build_cache.html")
+    ),
+
+    @Suppress("unused")
+    ENABLE_DESUGAR(
+            "android.enableDesugar",
+            true,
+            FeatureStage.Removed(VERSION_7_0, "Desugar tool has been removed from AGP.")
     ),
 
     ; // end of enums

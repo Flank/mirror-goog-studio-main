@@ -232,7 +232,7 @@ public class ProjectOptionsTest {
     public void deprecatedOptionsUse() {
         ImmutableMap<String, Object> gradleProperties =
                 ImmutableMap.of(
-                        "android.enableDesugar", "false",
+                        "android.jetifier.skipIfPossible", "false",
                         "android.enableIncrementalDexingTransform", "false");
         ProjectOptions projectOptions =
                 new ProjectOptions(
@@ -244,7 +244,7 @@ public class ProjectOptionsTest {
 
         gradleProperties =
                 ImmutableMap.of(
-                        "android.enableDesugar", "true",
+                        "android.jetifier.skipIfPossible", "true",
                         "android.enableIncrementalDexingTransform", "false");
         projectOptions =
                 new ProjectOptions(
@@ -256,7 +256,7 @@ public class ProjectOptionsTest {
 
         gradleProperties =
                 ImmutableMap.of(
-                        "android.enableDesugar", "true",
+                        "android.jetifier.skipIfPossible", "true",
                         "android.enableIncrementalDexingTransform", "true");
         projectOptions =
                 new ProjectOptions(

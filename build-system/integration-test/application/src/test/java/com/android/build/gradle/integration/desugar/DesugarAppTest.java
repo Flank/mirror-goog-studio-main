@@ -21,11 +21,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
 import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.D8;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.DESUGAR;
 import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.R8;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -45,7 +43,6 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -62,7 +59,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-/** Tests use of Java 8 language in the application module, for D8 and Desugar tool. */
+/** Tests use of Java 8 language in the application module, for D8 and R8 tools. */
 @RunWith(Parameterized.class)
 public class DesugarAppTest {
 
@@ -86,7 +83,6 @@ public class DesugarAppTest {
         ImmutableSet.Builder<Object[]> builder = new ImmutableSet.Builder<>();
         builder.add(new Object[]{D8, ArtifactTransform.NO_DESUGARING})
                 .add(new Object[]{D8, ArtifactTransform.WITH_DESUGARING})
-                .add(new Object[]{DESUGAR, ArtifactTransform.NO_DESUGARING})
                 .add(new Object[]{R8, ArtifactTransform.NO_DESUGARING});
 
         return builder.build();
@@ -112,7 +108,6 @@ public class DesugarAppTest {
                 project.model()
                         .with(BooleanOption.ENABLE_D8_DESUGARING, false)
                         .with(BooleanOption.ENABLE_R8_DESUGARING, false)
-                        .with(BooleanOption.ENABLE_DESUGAR, false)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects()
                         .getOnlyModelSyncIssues();
@@ -156,14 +151,6 @@ public class DesugarAppTest {
         getProjectExecutor().run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).hasDexVersion(35);
-
-        if (java8LangSupport == VariantScope.Java8LangSupport.DESUGAR) {
-            for (String klass :
-                    Iterables.concat(
-                            classes, DesugarAppWithDesugarToolTest.TRY_WITH_RESOURCES_RUNTIME)) {
-                assertThat(apk).containsClass(klass);
-            }
-        }
     }
 
     @Test
@@ -346,10 +333,6 @@ public class DesugarAppTest {
                         .with(
                                 BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
                                 artifactTransforms == ArtifactTransform.WITH_DESUGARING);
-        if (java8LangSupport == DESUGAR && artifactTransforms == ArtifactTransform.NO_DESUGARING) {
-            // https://github.com/gradle/gradle/issues/13200
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
-        }
         return executor;
     }
 }

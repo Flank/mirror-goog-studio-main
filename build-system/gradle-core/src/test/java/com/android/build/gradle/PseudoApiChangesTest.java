@@ -43,8 +43,6 @@ public class PseudoApiChangesTest {
                     "BuilderConstants",
                     "DefaultManifestParser",
                     "DefaultApiVersion",
-                    "DesugarProcessArgs",
-                    "DesugarProcessBuilder",
                     "LibraryRequest",
                     "ManifestAttributeSupplier",
                     "StandardOutErrMessageReceiver",

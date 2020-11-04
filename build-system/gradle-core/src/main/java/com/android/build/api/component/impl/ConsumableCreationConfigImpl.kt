@@ -106,9 +106,6 @@ open class ConsumableCreationConfigImpl(
                 return VariantScope.Java8LangSupport.D8
             }
         }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_DESUGAR]) {
-            return VariantScope.Java8LangSupport.DESUGAR
-        }
         val missingFlag = if (shrinker == CodeShrinker.R8) BooleanOption.ENABLE_R8_DESUGARING else BooleanOption.ENABLE_D8_DESUGARING
         globalScope
             .dslServices
