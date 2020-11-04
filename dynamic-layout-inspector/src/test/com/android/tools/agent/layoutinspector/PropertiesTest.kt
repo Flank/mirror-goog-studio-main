@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.AndroidComposeView
 import androidx.ui.tooling.inspector.InspectorNode
 import androidx.ui.tooling.inspector.NodeParameter
 import androidx.ui.tooling.inspector.ParameterType
+import androidx.ui.tooling.inspector.RawParameter
 import androidx.ui.tooling.inspector.TREE_ENTRY
 import com.android.tools.agent.layoutinspector.testing.CompanionSupplierRule
 import com.android.tools.agent.layoutinspector.testing.ResourceEntry
@@ -81,23 +82,23 @@ class PropertiesTest {
                     height = 56,
                     children = emptyList(),
                     parameters = listOf(
-                        NodeParameter("text", ParameterType.String, "Hello World")
+                        parameter("text", ParameterType.String, "Hello World")
                     )
                 )
             ),
             parameters = listOf(
-                NodeParameter("name", ParameterType.String, "Hello"),
-                NodeParameter("wrap", ParameterType.Boolean, true),
-                NodeParameter("number", ParameterType.Double, 321.5),
-                NodeParameter("factor", ParameterType.Float, 1.5f),
-                NodeParameter("count", ParameterType.Int32, 17),
-                NodeParameter("largeCount", ParameterType.Int64, 17L),
-                NodeParameter("color", ParameterType.Color, Color.BLUE),
-                NodeParameter("resId", ParameterType.Resource, fontId),
-                NodeParameter("elevation", ParameterType.DimensionDp, 2.0f),
-                NodeParameter("fontSize", ParameterType.DimensionSp, 12.0f),
-                NodeParameter("baseLineOffset", ParameterType.DimensionEm, 0.2f),
-                NodeParameter(
+                parameter("name", ParameterType.String, "Hello"),
+                parameter("wrap", ParameterType.Boolean, true),
+                parameter("number", ParameterType.Double, 321.5),
+                parameter("factor", ParameterType.Float, 1.5f),
+                parameter("count", ParameterType.Int32, 17),
+                parameter("largeCount", ParameterType.Int64, 17L),
+                parameter("color", ParameterType.Color, Color.BLUE),
+                parameter("resId", ParameterType.Resource, fontId),
+                parameter("elevation", ParameterType.DimensionDp, 2.0f),
+                parameter("fontSize", ParameterType.DimensionSp, 12.0f),
+                parameter("baseLineOffset", ParameterType.DimensionEm, 0.2f),
+                parameter(
                     "rect", ParameterType.String, "Rect", listOf(
                         NodeParameter("x", ParameterType.DimensionDp, 2.0f),
                         NodeParameter("y", ParameterType.DimensionDp, 2.0f)
@@ -232,7 +233,7 @@ class PropertiesTest {
         WindowInspector.getGlobalWindowViews().add(androidComposeView)
 
         val properties = Properties()
-        properties.setComposeParameters(nodes.associateBy({ it.id }, { it.parameters }))
+        properties.setComposeNodes(nodes.associateBy { it.id })
         properties.handleGetProperties(node.id, 21)
         val event = agentRule.events.poll(5, TimeUnit.SECONDS)!!
         val propertyEvent = event.layoutInspectorEvent.properties
@@ -272,8 +273,7 @@ class PropertiesTest {
         WindowInspector.getGlobalWindowViews().add(androidComposeView)
 
         val properties = Properties()
-        properties.setComposeParameters(nodes.flatMap { it.children }.plus(nodes)
-            .associateBy({ it.id }, { it.parameters }))
+        properties.setComposeNodes(nodes.flatMap { it.children }.plus(nodes).associateBy { it.id })
         properties.saveAllComposeParameters(24)
         val event1 = agentRule.events.poll(5, TimeUnit.SECONDS)!!
         val event2 = agentRule.events.poll(5, TimeUnit.SECONDS)!!
@@ -308,6 +308,13 @@ class PropertiesTest {
             assertThat(size).isEqualTo(index)
         }
     }
+
+    private fun parameter(
+        name: String,
+        type: ParameterType,
+        value: Any?,
+        elements: List<NodeParameter> = emptyList()
+    ): RawParameter = RawParameter(name, NodeParameter(name, type, value, elements))
 
     private class PropertyChecker(proto: LayoutInspectorProto.PropertyEvent) {
         private val table = StringTable(proto.stringList)

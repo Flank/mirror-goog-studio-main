@@ -35,4 +35,22 @@ class LayoutInspectorTree {
     @Suppress("UNCHECKED_CAST", "unused")  // called by reflection
     fun convert(view: View): List<InspectorNode> =
         view.getTag(TREE_ENTRY) as? List<InspectorNode> ?: emptyList()
+
+    /**
+     * Returns the [NodeParameter]s of an [InspectorNode]s from the Compose call stack.
+     *
+     * This is not the real implementation. Here we simply return the [NodeParameter] stored
+     * by the test in [RawParameter.value].
+     */
+    @Suppress("UNCHECKED_CAST", "unused")  // called by reflection
+    fun convertParameters(node: InspectorNode): List<NodeParameter> =
+        node.parameters.map { it.value as NodeParameter }
+
+    /**
+     * Reset the generated ids.
+     *
+     * This is not the real implementation. This is a noop.
+     */
+    @Suppress("unused")  // called by reflection
+    fun resetGeneratedId() {}
 }

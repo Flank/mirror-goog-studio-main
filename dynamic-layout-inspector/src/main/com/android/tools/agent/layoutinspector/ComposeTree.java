@@ -20,7 +20,6 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.android.tools.agent.layoutinspector.TreeBuilderWrapper.InspectorNodeWrapper;
-import com.android.tools.agent.layoutinspector.TreeBuilderWrapper.NodeParameterWrapper;
 import com.android.tools.agent.layoutinspector.common.StringTable;
 import java.util.HashMap;
 import java.util.List;
@@ -32,17 +31,12 @@ import java.util.Map;
 class ComposeTree {
     private final TreeBuilderWrapper mTreeBuilder;
     private final StringTable mStringTable;
-    private final Properties mProperties;
-    private Map<Long, List<NodeParameterWrapper>> mPropertyMap;
+    private Map<Long, InspectorNodeWrapper> mNodeMap;
 
-    ComposeTree(
-            @NonNull ClassLoader classLoader,
-            @NonNull StringTable stringTable,
-            @NonNull Properties properties)
+    ComposeTree(@NonNull ClassLoader classLoader, @NonNull StringTable stringTable)
             throws Exception {
         mTreeBuilder = new TreeBuilderWrapper(classLoader);
         mStringTable = stringTable;
-        mProperties = properties;
     }
 
     /**
@@ -53,19 +47,32 @@ class ComposeTree {
      */
     public void loadComposeTree(@NonNull View view, long parentView)
             throws ReflectiveOperationException {
-        mPropertyMap = new HashMap<>();
+        if (mNodeMap == null) {
+            mNodeMap = new HashMap<>();
+        }
         List<InspectorNodeWrapper> nodes = mTreeBuilder.convert(view);
         for (InspectorNodeWrapper node : nodes) {
             loadNode(node, parentView);
         }
-        mProperties.setComposeParameters(mPropertyMap);
-        mPropertyMap = null;
+    }
+
+    public void resetGeneratedId() {
+        try {
+            mTreeBuilder.resetGeneratedId();
+        } catch (ReflectiveOperationException ignore) {
+            // ignore
+        }
+    }
+
+    public void saveNodeParameters(@NonNull Properties properties) {
+        properties.setComposeNodes(mNodeMap);
+        mNodeMap = null;
     }
 
     private void loadNode(@NonNull InspectorNodeWrapper node, long parentBuffer)
             throws ReflectiveOperationException {
         long buffer = writeToProtoBuf(node, parentBuffer);
-        mPropertyMap.put(node.getId(), node.getParameters());
+        mNodeMap.put(node.getId(), node);
         for (InspectorNodeWrapper child : node.getChildren()) {
             loadNode(child, buffer);
         }

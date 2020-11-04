@@ -24,6 +24,7 @@ import android.view.inspector.WindowInspector;
 import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.android.tools.agent.layoutinspector.TreeBuilderWrapper.InspectorNodeWrapper;
 import com.android.tools.agent.layoutinspector.TreeBuilderWrapper.NodeParameterWrapper;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
@@ -41,15 +42,15 @@ import java.util.Set;
 /** Services for writing the properties of a View into a PropertyEvent protobuf. */
 class Properties {
     private final StringTable mStringTable = new StringTable();
-    private Map<Long, List<NodeParameterWrapper>> mComposeParameters;
+    private Map<Long, InspectorNodeWrapper> mComposeNodes;
 
     Properties() {
-        mComposeParameters = Collections.emptyMap();
+        mComposeNodes = Collections.emptyMap();
     }
 
     /** Keep track of the latest parameters found in the compose section. */
-    void setComposeParameters(@NonNull Map<Long, List<NodeParameterWrapper>> parameters) {
-        mComposeParameters = parameters;
+    void setComposeNodes(@NonNull Map<Long, InspectorNodeWrapper> nodes) {
+        mComposeNodes = nodes;
     }
 
     /**
@@ -58,10 +59,10 @@ class Properties {
      * @param viewId the id of the view or compose node to send the properties/parameters for.
      */
     void handleGetProperties(long viewId, int generation) {
-        Map<Long, List<NodeParameterWrapper>> tempThreadSafe = mComposeParameters;
-        List<NodeParameterWrapper> parameters = tempThreadSafe.get(viewId);
-        if (parameters != null) {
-            sendComposeParameters(viewId, parameters, generation);
+        Map<Long, InspectorNodeWrapper> tempThreadSafe = mComposeNodes;
+        InspectorNodeWrapper node = tempThreadSafe.get(viewId);
+        if (node != null) {
+            sendComposeParameters(viewId, node, generation);
             return;
         }
         View view = findViewById(viewId);
@@ -80,9 +81,9 @@ class Properties {
 
     /** Send the parameters of all compose nodes. */
     void saveAllComposeParameters(int generation) {
-        Map<Long, List<NodeParameterWrapper>> parameters = mComposeParameters;
-        mComposeParameters = Collections.emptyMap();
-        for (Map.Entry<Long, List<NodeParameterWrapper>> entry : parameters.entrySet()) {
+        Map<Long, InspectorNodeWrapper> nodes = mComposeNodes;
+        mComposeNodes = Collections.emptyMap();
+        for (Map.Entry<Long, InspectorNodeWrapper> entry : nodes.entrySet()) {
             sendComposeParameters(entry.getKey(), entry.getValue(), generation);
         }
     }
@@ -176,11 +177,11 @@ class Properties {
     }
 
     private void sendComposeParameters(
-            long viewId, @NonNull List<NodeParameterWrapper> parameters, int generation) {
+            long viewId, @NonNull InspectorNodeWrapper node, int generation) {
         mStringTable.clear();
         long event = allocatePropertyEvent();
         try {
-            writeParameters(parameters, event, 0);
+            writeParameters(node.getParameters(), event, 0);
             writeStringTable(event);
             sendPropertyEvent(event, viewId, generation);
         } catch (Throwable ex) {

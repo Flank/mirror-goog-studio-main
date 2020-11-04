@@ -74,10 +74,16 @@ class InspectorNode(
     /**
      * The parameters of this Composable.
      */
-    val parameters: List<NodeParameter>,
+    val parameters: List<RawParameter>,
 
     /**
      * The children nodes of this Composable.
      */
     val children: List<InspectorNode>
 )
+
+/**
+ * During testing this is used instead of the version in androidx-ui-tooling, since that library
+ * is not available during tests.
+ */
+class RawParameter(val name: String, val value: Any?)
