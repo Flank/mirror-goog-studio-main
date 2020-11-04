@@ -14,15 +14,36 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
+
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/installer/server/canary.h"
 #include "tools/base/deploy/installer/server/install_server.h"
+#include "tools/base/deploy/installer/server/parent_monitor.h"
 
 using namespace deploy;
 
+// Expected Arguments
+// [0] = executable_name
+// [1] = package_name
 int main(int argc, char* argv[]) {
   InitEventSystem();
 
-  InstallServer server(STDIN_FILENO, STDOUT_FILENO);
+  // Monitor parent process to stop operating when installerd dies.
+  ParentMonitor::Install();
+
+  if (argc < 2) {
+    char msg[] = "Missing package name parameter. Terminating\n";
+    write(STDERR_FILENO, msg, sizeof(msg));
+    exit(EXIT_FAILURE);
+  }
+
+  std::string package_name = argv[1];
+  Canary canary(package_name);
+  canary.Init();
+
+  close(STDERR_FILENO);
+  InstallServer server(STDIN_FILENO, STDOUT_FILENO, canary);
   server.Run();
 
   return EXIT_SUCCESS;

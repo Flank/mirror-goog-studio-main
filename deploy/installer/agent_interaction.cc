@@ -22,14 +22,18 @@
 
 namespace deploy {
 
+namespace {
+uint64_t socket_counter = 0;
+}
+
 bool AgentInteractionCommand::Attach(const std::vector<int>& pids,
-                                     const std::string& agent_path) const {
+                                     const std::string& agent_path) {
   Phase p("AttachAgents");
   CmdCommand cmd(workspace_);
   for (int pid : pids) {
     std::string output;
     LogEvent("Attaching agent: '"_s + agent_path + "'");
-    if (!cmd.AttachAgent(pid, agent_path, {Socket::kDefaultAddress}, &output)) {
+    if (!cmd.AttachAgent(pid, agent_path, {GetSocketName()}, &output)) {
       ErrEvent("Could not attach agent to process: "_s + output);
       return false;
     }
@@ -39,12 +43,19 @@ bool AgentInteractionCommand::Attach(const std::vector<int>& pids,
 
 bool AgentInteractionCommand::Attach(
     const google::protobuf::RepeatedField<int>& ppids,
-    const std::string& agent_path) const {
+    const std::string& agent_path) {
   std::vector<int> pids;
   for (int pid : ppids) {
     pids.emplace_back(pid);
   }
   return Attach(pids, agent_path);
+}
+
+std::string AgentInteractionCommand::GetSocketName() {
+  if (socket_name_.empty()) {
+    socket_name_ = Socket::kDefaultAddressPrefix + to_string(socket_counter++);
+  }
+  return socket_name_;
 }
 
 }  // namespace deploy

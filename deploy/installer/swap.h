@@ -25,7 +25,7 @@
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/installer/agent_interaction.h"
 #include "tools/base/deploy/installer/executor/executor.h"
-#include "tools/base/deploy/installer/server/install_server.h"
+#include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -44,7 +44,7 @@ class SwapCommand : public AgentInteractionCommand {
   std::string target_dir_;
   proto::SwapResponse* response_;
 
-  std::unique_ptr<InstallClient> client_;
+  InstallClient* client_;
 
   enum class User { SHELL_USER, APP_PACKAGE };
 
@@ -57,11 +57,11 @@ class SwapCommand : public AgentInteractionCommand {
   // Performs a swap by starting the server and attaching agents. Returns
   // SwapResponse::Status::OK if the swap succeeds; returns an appropriate error
   // code otherwise.
-  proto::SwapResponse::Status Swap() const;
+  proto::SwapResponse::Status Swap();
 
   // Request for the install-server to open a socket and begin listening for
   // agents to connect. Agents connect shortly after they are attached.
-  bool WaitForServer() const;
+  bool WaitForServer();
 
   // Runs a command with the provided arguments. If run_as_package is true,
   // the command is invoked with 'run-as'. If the command fails, prints the

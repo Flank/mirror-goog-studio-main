@@ -34,10 +34,14 @@ class AgentInteractionCommand : public Command {
  protected:
   // Tries to attach an agent to each process in the request; if any agent fails
   // to attach, returns false.
-  bool Attach(const std::vector<int>& pids,
-              const std::string& agent_path) const;
+  bool Attach(const std::vector<int>& pids, const std::string& agent_path);
   bool Attach(const google::protobuf::RepeatedField<int>& pids,
-              const std::string& agent_path) const;
+              const std::string& agent_path);
+
+  std::string GetSocketName();
+
+ private:
+  std::string socket_name_;
 };
 }  // namespace deploy
 
