@@ -63,6 +63,20 @@ public class PositionXmlParser {
     private static final Pattern ENCODING_PATTERN =
             Pattern.compile("encoding=['\"](\\S*)['\"]");
 
+    private static final DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY;
+    private static final SAXParserFactory SAX_PARSER_FACTORY;
+    private static final SAXParserFactory NAMESPACE_AWARE_SAX_PARSER_FACTORY;
+
+    static {
+        DOCUMENT_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
+        DOCUMENT_BUILDER_FACTORY.setNamespaceAware(true);
+        DOCUMENT_BUILDER_FACTORY.setValidating(false);
+        SAX_PARSER_FACTORY = SAXParserFactory.newInstance();
+        XmlUtils.configureSaxFactory(SAX_PARSER_FACTORY, false, false);
+        NAMESPACE_AWARE_SAX_PARSER_FACTORY = SAXParserFactory.newInstance();
+        XmlUtils.configureSaxFactory(NAMESPACE_AWARE_SAX_PARSER_FACTORY, true, false);
+    }
+
     /**
      * Parses the XML content from the given input stream.
      *
@@ -244,8 +258,8 @@ public class PositionXmlParser {
     private static void parseInternal(
             @NonNull String xml, boolean namespaceAware, @NonNull DefaultHandler handler)
             throws ParserConfigurationException, IOException, SAXException {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        XmlUtils.configureSaxFactory(factory, namespaceAware, false);
+        SAXParserFactory factory =
+                namespaceAware ? NAMESPACE_AWARE_SAX_PARSER_FACTORY : SAX_PARSER_FACTORY;
         SAXParser parser = XmlUtils.createSaxParser(factory, true);
         XMLReader xmlReader = parser.getXMLReader();
         xmlReader.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
@@ -736,10 +750,7 @@ public class PositionXmlParser {
         DomBuilder(String xml) throws ParserConfigurationException {
             mXml = xml;
 
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setValidating(false);
-            DocumentBuilder docBuilder = factory.newDocumentBuilder();
+            DocumentBuilder docBuilder = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
             mDocument = docBuilder.newDocument();
             mDocument.setUserData(CONTENT_KEY, xml, null);
         }
