@@ -259,6 +259,23 @@ class CmakeBasicProjectTest(
     }
 
     @Test
+    fun `build product golden locations`() {
+        project.execute("assembleDebug")
+        val golden = project.goldenBuildProducts()
+        println(golden)
+        Truth.assertThat(golden).isEqualTo("""
+            {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+            {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
+        """.trimIndent())
+    }
+
+    @Test
     fun `configuration build command golden flags`() {
         val golden = project.goldenConfigurationFlags(Abi.X86_64)
         println(golden)

@@ -88,6 +88,7 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
         val result = project.modelV2()
           .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
           .fetchNativeModules(emptyList(), emptyList())
+          .withCxxFileNormalizer()
         val nativeModule = result.container.singleModel
         val normalizer = result.normalizer
         for (variant in nativeModule.variants) {
@@ -136,7 +137,7 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
           .map { result.normalizer.normalize(File(it)) }
         ).containsExactly("{PROJECT}/blah.h{F}", "{PROJECT}/blah.txt{F}")
 
-        val translate = result.hashToKeyTranslator()
+        val translate = result.cxxFileVariantSegmentTranslator()
         when (CURRENT_PLATFORM) {
             PLATFORM_LINUX -> Truth.assertThat(
                 translate(syncedAbi.sourceFlagsFile.dumpCompileCommandsJsonBin(
