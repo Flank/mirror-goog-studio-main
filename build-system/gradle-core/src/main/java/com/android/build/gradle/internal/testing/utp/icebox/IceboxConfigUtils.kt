@@ -43,20 +43,20 @@ private fun computeRegistrationDirectoryContainer(): Path? {
     when {
         os.startsWith("mac") -> {
             return Paths.get(
-                System.getProperty("HOME") ?: "/",
+                System.getenv("HOME") ?: "/",
                 "Library",
                 "Caches",
                 "TemporaryItems"
             )
         }
         os.startsWith("win") -> {
-            return Paths.get(System.getProperty("LOCALAPPDATA") ?: "/", "Temp")
+            return Paths.get(System.getenv("LOCALAPPDATA") ?: "/", "Temp")
         }
         else -> { // Linux and Chrome OS.
             for (dirstr in arrayOf(
-                System.getProperty("XDG_RUNTIME_DIR"),
+                System.getenv("XDG_RUNTIME_DIR"),
                 "/run/user/${getUid()}",
-                (System.getProperty("HOME") ?: "/") + ".android"
+                (System.getenv("HOME") ?: "/") + ".android"
             )) {
                 if (dirstr == null) {
                     continue
