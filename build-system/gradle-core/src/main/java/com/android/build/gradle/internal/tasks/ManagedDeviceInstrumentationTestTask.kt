@@ -244,7 +244,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
     ): VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
 
-        override val name = computeTaskName(device.name, "test")
+        override val name = computeTaskName(device.name)
 
         override val type = ManagedDeviceInstrumentationTestTask::class.java
 

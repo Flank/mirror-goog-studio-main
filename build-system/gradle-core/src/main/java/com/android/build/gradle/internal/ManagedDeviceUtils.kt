@@ -50,3 +50,5 @@ fun computeAvdName(
     "dev${apiLevel}_${vendor}_${abi}_${hardwareProfile.replace(' ', '_')}"
 
 fun setupTaskName(device: ManagedVirtualDevice): String = "${device.name}Setup"
+
+fun managedDeviceAllVariantsTaskName(device: ManagedVirtualDevice): String = "${device.name}Check"

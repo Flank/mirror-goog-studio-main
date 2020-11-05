@@ -19,21 +19,13 @@ package com.android.build.gradle.integration.application.taskstates
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
-import com.android.build.gradle.options.BooleanOption
-import com.google.common.truth.Truth.assertThat
-import com.google.common.truth.Truth.assertWithMessage
-import net.bytebuddy.matcher.ElementMatcher
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.io.IOException
 
-private fun assertTaskExists(
-    project: GradleTestProject,
-    task: String) {
-
+private fun assertTaskExists(project: GradleTestProject, task: String) {
     project.executor()
         .withArgument("--dry-run")
         .run(task)
@@ -85,23 +77,30 @@ class UtpTestTaskStatesTest {
                             abi = "x86"
                         }
                     }
+                    execution = "ANDROIDX_TEST_ORCHESTRATOR"
                 }
             }
         """)
         assertTaskDoesNotExist(project, "app:cleanManagedDevices")
         assertTaskDoesNotExist(project, "app:device1Setup")
+        assertTaskDoesNotExist(project, "app:device1DebugAndroidTest")
+        assertTaskDoesNotExist(project, "app:allDevicesDebugAndroidTest")
+        assertTaskDoesNotExist(project, "app:device1Check")
+        assertTaskDoesNotExist(project, "app:allDevicesCheck")
     }
 
     @Test
-    fun checkUtpFlagAddsCleanTask() {
+    fun checkUtpFlagAddsCleanAndAllDevicesTask() {
         project.gradlePropertiesFile.appendText(
             "\nandroid.experimental.androidTest.useUnifiedTestPlatform=true\n")
 
         assertTaskExists(project, "app:cleanManagedDevices")
+        assertTaskExists(project, "app:allDevicesDebugAndroidTest")
+        assertTaskExists(project, "app:allDevicesCheck")
     }
 
     @Test
-    fun checkDslAddsSetupTasksWithFlag() {
+    fun checkDslAddsSetupAndTestTasksWithFlag() {
         project.gradlePropertiesFile.appendText(
             "\nandroid.experimental.androidTest.useUnifiedTestPlatform=true\n")
         appProject.buildFile.appendText("""
@@ -115,11 +114,16 @@ class UtpTestTaskStatesTest {
                             abi = "x86"
                         }
                     }
+                    execution = "ANDROIDX_TEST_ORCHESTRATOR"
                 }
             }
         """)
         assertTaskExists(project, "app:cleanManagedDevices")
         assertTaskExists(project, "app:device1Setup")
+        assertTaskExists(project, "app:device1DebugAndroidTest")
+        assertTaskExists(project, "app:allDevicesDebugAndroidTest")
+        assertTaskExists(project, "app:device1Check")
+        assertTaskExists(project, "app:allDevicesCheck")
     }
 
     @Test
@@ -143,11 +147,61 @@ class UtpTestTaskStatesTest {
                             abi = "x86"
                         }
                     }
+                    execution = "ANDROIDX_TEST_ORCHESTRATOR"
                 }
             }
         """)
         assertTaskExists(project, "app:cleanManagedDevices")
         assertTaskExists(project, "app:device1Setup")
         assertTaskExists(project, "app:someDeviceNameSetup")
+        assertTaskExists(project, "app:device1DebugAndroidTest")
+        assertTaskExists(project, "app:someDeviceNameDebugAndroidTest")
+        assertTaskExists(project, "app:allDevicesDebugAndroidTest")
+        assertTaskExists(project, "app:device1Check")
+        assertTaskExists(project, "app:someDeviceNameCheck")
+        assertTaskExists(project, "app:allDevicesCheck")
+    }
+
+    @Test
+    fun checkAddVariantAddsTests() {
+        project.gradlePropertiesFile.appendText(
+            "\nandroid.experimental.androidTest.useUnifiedTestPlatform=true\n")
+        appProject.buildFile.appendText("""
+            android {
+                flavorDimensions "version"
+                productFlavors {
+                    demo {
+                        dimension = "version"
+                        applicationIdSuffix = ".demo"
+                        versionNameSuffix = "-demo"
+                    }
+                    full {
+                        dimension = "version"
+                        applicationIdSuffix = ".full"
+                        versionNameSuffix = "-full"
+                    }
+                }
+                testOptions {
+                    devices {
+                        device1 (com.android.build.api.dsl.ManagedVirtualDevice) {
+                            device = "Pixel 2"
+                            apiLevel = 29
+                            systemImageSource = "aosp"
+                            abi = "x86"
+                        }
+                    }
+                    execution = "ANDROIDX_TEST_ORCHESTRATOR"
+                }
+            }
+        """)
+
+        assertTaskExists(project, "app:cleanManagedDevices")
+        assertTaskExists(project, "app:device1Setup")
+        assertTaskExists(project, "app:device1DemoDebugAndroidTest")
+        assertTaskExists(project, "app:allDevicesDemoDebugAndroidTest")
+        assertTaskExists(project, "app:device1FullDebugAndroidTest")
+        assertTaskExists(project, "app:allDevicesFullDebugAndroidTest")
+        assertTaskExists(project, "app:device1Check")
+        assertTaskExists(project, "app:allDevicesCheck")
     }
 }

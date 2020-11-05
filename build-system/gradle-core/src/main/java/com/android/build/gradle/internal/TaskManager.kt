@@ -1486,10 +1486,17 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     if (device is ManagedVirtualDevice) {
                         managedDevices.add(device)
                     }
-                };
+                }
         taskFactory.register(
                 ManagedDeviceCleanTask.CreationAction(
                         "cleanManagedDevices", globalScope, managedDevices.toList()))
+        val allDevices = taskFactory.register(
+            ALL_DEVICES_CHECK
+        ) { allDevicesCheckTask: Task ->
+            allDevicesCheckTask.description =
+                "Runs all device checks on all managed devices defined in the TestOptions dsl."
+            allDevicesCheckTask.group = JavaBasePlugin.VERIFICATION_GROUP
+        }
 
         for (device in managedDevices) {
             taskFactory.register(
@@ -1497,6 +1504,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     setupTaskName(device),
                     device,
                     globalScope))
+
+            val deviceAllVariantsTask = taskFactory.register(
+                managedDeviceAllVariantsTaskName(device)
+            ) { deviceVariantTask: Task ->
+                deviceVariantTask.description =
+                    "Runs all device checks on the managed device ${device.name}."
+                deviceVariantTask.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
+            allDevices.dependsOn(deviceAllVariantsTask)
         }
     }
 
@@ -1562,6 +1578,48 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.configure(
                     DEVICE_CHECK) { deviceAndroidTest: Task ->
                 deviceAndroidTest.dependsOn(serverTask)
+            }
+        }
+
+        if (globalScope.projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]) {
+            // Now for each managed device defined in the dsl
+            val managedDevices = mutableListOf<ManagedVirtualDevice>()
+            extension
+                .testOptions
+                .devices
+                .forEach { device ->
+                    if (device is ManagedVirtualDevice) {
+                        managedDevices.add(device)
+                    }
+                }
+            val variantName = androidTestProperties.testedConfig.name
+            val allDevicesVariantTask = taskFactory.register(
+                androidTestProperties.computeTaskName("allDevices")
+            ) { allDevicesVariant: Task ->
+                allDevicesVariant.description =
+                    "Runs the tests for $variantName on all managed devices in the dsl."
+                allDevicesVariant.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
+            taskFactory.configure(
+                ALL_DEVICES_CHECK
+            ) { allDevices: Task ->
+                allDevices.dependsOn(allDevicesVariantTask)
+            }
+            for (managedDevice in managedDevices) {
+                val managedDeviceTestTask = taskFactory.register(
+                    ManagedDeviceInstrumentationTestTask.CreationAction(
+                        androidTestProperties,
+                        managedDevice,
+                        testData
+                    )
+                )
+                managedDeviceTestTask.dependsOn(setupTaskName(managedDevice))
+                allDevicesVariantTask.dependsOn(managedDeviceTestTask)
+                taskFactory.configure(
+                    managedDeviceAllVariantsTaskName(managedDevice)
+                ) { managedDeviceTests: Task ->
+                    managedDeviceTests.dependsOn(managedDeviceTestTask)
+                }
             }
         }
     }
@@ -2676,6 +2734,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         const val DEVICE_CHECK = "deviceCheck"
         const val DEVICE_ANDROID_TEST = BuilderConstants.DEVICE + VariantType.ANDROID_TEST_SUFFIX
         const val CONNECTED_CHECK = "connectedCheck"
+        const val ALL_DEVICES_CHECK = "allDevicesCheck"
         const val CONNECTED_ANDROID_TEST =
                 BuilderConstants.CONNECTED + VariantType.ANDROID_TEST_SUFFIX
         const val ASSEMBLE_ANDROID_TEST = "assembleAndroidTest"
