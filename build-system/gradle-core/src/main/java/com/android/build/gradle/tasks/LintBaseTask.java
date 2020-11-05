@@ -41,6 +41,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsKt;
+import com.android.build.gradle.internal.StartParameterUtils;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.ide.dependencies.ArtifactCollections;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -116,6 +117,15 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
     public abstract Property<LintClassLoaderBuildService> getLintClassLoader();
 
     protected void runLint(LintBaseTaskDescriptor descriptor) {
+        if (Boolean.TRUE.equals(
+                StartParameterUtils.isConfigurationCache(
+                        getProject().getGradle().getStartParameter()))) {
+            throw new IllegalStateException(
+                    "Android Lint in Android Gradle Plugin "
+                            + Version.ANDROID_GRADLE_PLUGIN_VERSION
+                            + " is incompatible with configuration caching."
+                            + "\n Please try Android Gradle Plugin 7 or above, or disable configuration caching.");
+        }
         FileCollection lintClassPath = getLintClassPath();
         if (lintClassPath != null) {
             new ReflectiveLintRunner()

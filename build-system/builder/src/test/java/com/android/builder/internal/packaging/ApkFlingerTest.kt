@@ -36,14 +36,7 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.nio.file.Files
-import java.security.KeyFactory
-import java.security.PrivateKey
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
-import java.security.spec.PKCS8EncodedKeySpec
 import java.util.zip.Deflater
 
 class ApkFlingerTest {
@@ -276,22 +269,6 @@ class ApkFlingerTest {
             }
         }
         verifyApk(apkFile, minSdk, enableV4)
-    }
-
-    private fun getPrivateKey(): PrivateKey {
-        val bytes =
-            Files.readAllBytes(TestResources.getFile("/testData/packaging/rsa-2048.pk8").toPath())
-        return KeyFactory.getInstance("rsa").generatePrivate(PKCS8EncodedKeySpec(bytes))
-    }
-
-    private fun getCertificates(): List<X509Certificate> {
-        val bytes =
-            Files.readAllBytes(
-                TestResources.getFile("/testData/packaging/rsa-2048.x509.pem").toPath()
-            )
-        return CertificateFactory.getInstance("X.509")
-            .generateCertificates(ByteArrayInputStream(bytes))
-            .map { it as X509Certificate }
     }
 
     private fun verifyApk(apk: File, minSdk: Int, v4Enabled: Boolean) {

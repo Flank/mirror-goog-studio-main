@@ -197,7 +197,8 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                     RUNTIME_CLASSPATH, ALL, ArtifactType.JAVA_RES));
 
             // 4. The separately compile R class, if applicable.
-            if (!globalScope.getExtension().getAaptOptions().getNamespaced()) {
+            if (creationConfig.getBuildFeatures().getAndroidResources()
+                    && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
                 collection.from(creationConfig.getVariantScope().getRJarForUnitTests());
             }
 

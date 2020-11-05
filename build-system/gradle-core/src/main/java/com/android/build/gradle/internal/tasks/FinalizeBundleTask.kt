@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.signing.SigningConfigProviderParams
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.StringOption
+import com.android.builder.internal.packaging.AabFlinger
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
@@ -44,6 +45,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.Locale
+import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -111,37 +113,28 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
 
             parameters.signingConfig.orNull?.resolve()?.let {
                 val certificateInfo =
-                    KeystoreHelper.getCertificateInfo(
-                        it.storeType,
-                        it.storeFile!!,
-                        it.storePassword!!,
-                        it.keyPassword!!,
-                        it.keyAlias!!
+                        KeystoreHelper.getCertificateInfo(
+                                it.storeType,
+                                it.storeFile!!,
+                                it.storePassword!!,
+                                it.keyPassword!!,
+                                it.keyAlias!!
+                        )
+                AabFlinger(
+                        outputFile = parameters.finalBundleFile.asFile.get(),
+                        signerName = it.keyAlias.toUpperCase(Locale.US),
+                        privateKey = certificateInfo.key,
+                        certificates = listOf(certificateInfo.certificate),
+                        minSdkVersion = 18 // So that RSA + SHA256 are used
+                ).use {
+                    it.writeZip(
+                            parameters.intermediaryBundleFile.get().asFile,
+                            Deflater.DEFAULT_COMPRESSION
                     )
-                val signingConfig =
-                    ApkSigner.SignerConfig.Builder(
-                        it.keyAlias.toUpperCase(Locale.US),
-                        certificateInfo.key,
-                        listOf(certificateInfo.certificate)
-                    )
-                        .build()
-                val compressedBundleFile = createTempFile("compressedBundle", ".aab")
-                compressBundle(parameters.intermediaryBundleFile.asFile.get(), compressedBundleFile)
-                try {
-                    ApkSigner.Builder(listOf(signingConfig))
-                        .setOutputApk(parameters.finalBundleFile.asFile.get())
-                        .setInputApk(compressedBundleFile)
-                        .setV2SigningEnabled(false)
-                        .setV3SigningEnabled(false)
-                        .setV4SigningEnabled(false)
-                        .setMinSdkVersion(18) // So that RSA + SHA256 are used
-                        .build()
-                        .sign()
-                } finally {
-                    FileUtils.deleteIfExists(compressedBundleFile)
                 }
             } ?: run {
-                compressBundle(parameters.intermediaryBundleFile.asFile.get(), parameters.finalBundleFile.asFile.get())
+                compressBundle(parameters.intermediaryBundleFile.asFile.get(),
+                        parameters.finalBundleFile.asFile.get())
             }
         }
     }

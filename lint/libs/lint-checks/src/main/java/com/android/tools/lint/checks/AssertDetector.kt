@@ -102,6 +102,8 @@ class AssertDetector : Detector(), SourceCodeScanner {
             priority = 6,
             severity = Severity.WARNING,
             androidSpecific = true,
+	    // 170657532: AssertDetector warn false positive since AGP4.1
+	    enabledByDefault = false,
             implementation = Implementation(
                 AssertDetector::class.java,
                 Scope.JAVA_FILE_SCOPE

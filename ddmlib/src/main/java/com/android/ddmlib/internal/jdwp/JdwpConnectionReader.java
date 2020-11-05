@@ -120,8 +120,10 @@ public class JdwpConnectionReader {
     private void resizeBuffer(int requestedSize) {
         ByteBuffer newBuffer = ByteBuffer.allocate(requestedSize);
         // copy entire buffer to new buffer
+        int currPosition = mReadBuffer.position();
         mReadBuffer.position(0);
         newBuffer.put(mReadBuffer); // leaves "position" at end of copied
+        newBuffer.position(currPosition);
         mReadBuffer = newBuffer;
     }
 

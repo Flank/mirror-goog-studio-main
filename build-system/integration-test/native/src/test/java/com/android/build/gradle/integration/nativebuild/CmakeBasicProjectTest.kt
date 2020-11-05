@@ -98,6 +98,7 @@ class CmakeBasicProjectTest(
         android {
             compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
             buildToolsVersion "${GradleTestProject.DEFAULT_BUILD_TOOL_VERSION}"
+            lintOptions.checkReleaseBuilds = false // See b/160392650
             ndkPath "${project.ndkPath}"
             defaultConfig {
               externalNativeBuild {

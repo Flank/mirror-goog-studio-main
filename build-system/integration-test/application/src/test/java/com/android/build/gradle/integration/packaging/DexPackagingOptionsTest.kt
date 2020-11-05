@@ -40,6 +40,9 @@ class DexPackagingOptionsTest {
             .appendToBuild(
                 """
                     android {
+                        lintOptions {
+                            checkReleaseBuilds = false // TODO(b/146208910): Lint is not compatible with instant execution
+                        }
                         packagingOptions {
                             dex {
                                 useLegacyPackaging = true
@@ -61,8 +64,8 @@ class DexPackagingOptionsTest {
             .builder()
             .fromTestApp(multiModuleTestProject)
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-            // b/149978740, b/146208910
-            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=5")
+            // b/149978740
+            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
             .create()
 
     @Test

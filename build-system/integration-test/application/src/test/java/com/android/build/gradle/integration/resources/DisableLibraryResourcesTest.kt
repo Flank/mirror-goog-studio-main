@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -45,6 +46,27 @@ class DisableLibraryResourcesTest {
                 </resources>""".trimIndent()
         )
         .withFile("src/main/res/raw/raw_file", "leafLib")
+        .withFile("src/test/java/com/example/MyTest.java",
+            //language=java
+            """
+                package com.example;
+
+                import org.junit.Test;
+
+                public class MyTest {
+                    @Test
+                    public void check() {
+                        System.out.println("ExampleTest has some output");
+                    }
+                }
+                """.trimIndent())
+        .appendToBuild("""
+
+            dependencies {
+                testImplementation("junit:junit:4.12")
+            }
+
+        """.trimIndent())
 
     private val localLib = MinimalSubProject.lib("com.example.localLib")
         .withFile(
@@ -194,5 +216,15 @@ class DisableLibraryResourcesTest {
         assertThat(result.didWorkTasks).doesNotContain(":leafLib:generateDebugEmptyResourceFiles")
         assertThat(result.didWorkTasks).contains(":localLib:parseDebugLocalResources")
         assertThat(result.didWorkTasks).contains(":leafLib:parseDebugLocalResources")
+    }
+
+    @Test
+    fun testAndroidAndUnitTests() {
+        project.executor().with(BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES, false)
+            .run(":leaflib:assembleDebugAndroidTest", ":leaflib:test")
+        assertThat(project.file("leafLib/build/reports/tests/testReleaseUnitTest/classes/com.example.MyTest.html").readText())
+            .contains("ExampleTest has some output")
+        assertThat(project.file("leafLib/build/reports/tests/testDebugUnitTest/classes/com.example.MyTest.html").readText())
+            .contains("ExampleTest has some output")
     }
 }
