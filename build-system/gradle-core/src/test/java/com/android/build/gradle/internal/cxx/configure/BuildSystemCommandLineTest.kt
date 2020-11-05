@@ -20,19 +20,37 @@ import com.android.build.gradle.external.gnumake.PosixFileConventions
 import com.android.build.gradle.external.gnumake.WindowsFileConventions
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.BinaryOutputPath
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.GeneratorName
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.*
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-class CmakeCommandLineKtTest {
+class BuildSystemCommandLineKtTest {
 
     @Test
-    fun checkDefine() {
-        val parsed = parseCmakeArguments(listOf("-DX=Y"))
+    fun `ndk-build check define property`() {
+        val parsed = listOf("X=Y").toNdkBuildArguments()
+        assertThat(parsed).containsExactly(
+                DefineProperty("X=Y", "X", "Y")
+        )
+        val arg = parsed.single() as DefineProperty
+        assertThat(arg.sourceArgument).isEqualTo("X=Y")
+        assertThat(arg.propertyName).isEqualTo("X")
+        assertThat(arg.propertyValue).isEqualTo("Y")
+    }
+
+    @Test
+    fun `ndk-build --jobs flag`() {
+        for (jobsFlag in listOf("--jobs=5", "--jobs 5", "-j5", "-j 5")) {
+            val args = listOf("A=B", jobsFlag, "C=D").toNdkBuildArguments()
+            assertThat((args[1] as NdkBuildJobs).jobs).isEqualTo("5")
+            val removed = args.removeNdkBuildJobs().toStringList()
+            assertThat(removed).containsExactly("A=B", "C=D")
+        }
+    }
+
+    @Test
+    fun cmakeCheckDefine() {
+        val parsed = listOf("-DX=Y").toCmakeArguments()
         assertThat(parsed).containsExactly(
             DefineProperty("-DX=Y", "X", "Y")
         )
@@ -43,8 +61,8 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun checkCmakeListsPath() {
-        val parsed = parseCmakeArguments(listOf("-H<path-to-cmakelists>"))
+    fun cmakeCheckCmakeListsPath() {
+        val parsed = listOf("-H<path-to-cmakelists>").toCmakeArguments()
         assertThat(parsed).containsExactly(
             CmakeListsPath("-H<path-to-cmakelists>", "<path-to-cmakelists>"))
         val arg = parsed.single() as CmakeListsPath
@@ -53,28 +71,28 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun checkBinaryOutputPath() {
-        val parsed = parseCmakeArguments(listOf("-B<path-to-binary>"))
+    fun cmakeCheckBinaryOutputPath() {
+        val parsed = listOf("-B<path-to-binary>").toCmakeArguments()
         assertThat(parsed).containsExactly(
-            BinaryOutputPath("-B<path-to-binary>", "<path-to-binary>"))
-        val arg = parsed.single() as BinaryOutputPath
+            CmakeBinaryOutputPath("-B<path-to-binary>", "<path-to-binary>"))
+        val arg = parsed.single() as CmakeBinaryOutputPath
         assertThat(arg.sourceArgument).isEqualTo("-B<path-to-binary>")
         assertThat(arg.path).isEqualTo("<path-to-binary>")
     }
 
     @Test
-    fun checkGeneratorName() {
-        val parsed = parseCmakeArguments(listOf("-GAndroid Gradle - Ninja"))
+    fun cmakeCheckGeneratorName() {
+        val parsed = listOf("-GAndroid Gradle - Ninja").toCmakeArguments()
         assertThat(parsed).containsExactly(
-            GeneratorName("-GAndroid Gradle - Ninja", "Android Gradle - Ninja"))
-        val arg = parsed.single() as GeneratorName
+            CmakeGeneratorName("-GAndroid Gradle - Ninja", "Android Gradle - Ninja"))
+        val arg = parsed.single() as CmakeGeneratorName
         assertThat(arg.sourceArgument).isEqualTo("-GAndroid Gradle - Ninja")
         assertThat(arg.generator).isEqualTo("Android Gradle - Ninja")
     }
 
     @Test
-    fun checkUnknownArgument() {
-        val parsed = parseCmakeArguments(listOf("-X"))
+    fun cmakeCheckUnknownArgument() {
+        val parsed = listOf("-X").toCmakeArguments()
         assertThat(parsed).containsExactly(
             UnknownArgument("-X"))
         val arg = parsed.single() as UnknownArgument
@@ -82,7 +100,7 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun definePropertyFrom() {
+    fun cmakeDefinePropertyFrom() {
         val property = DefineProperty.from(ANDROID_NDK, "xyz")
         assertThat(property.sourceArgument).isEqualTo("-DANDROID_NDK=xyz")
     }
@@ -94,7 +112,7 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun hasBooleanPropertySet() {
+    fun cmakeHasBooleanPropertySet() {
         val prop = C_TEST_WAS_RUN
         val definedTrue = DefineProperty.from(prop, "true")
         val definedFalse = DefineProperty.from(prop, "false")
@@ -106,7 +124,7 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun getCmakeProperty() {
+    fun cmakeGetProperty() {
         val toolchain = CmakeListsPath.from("path")
         val buildType = DefineProperty.from(CMAKE_BUILD_TYPE, "type")
         val got = listOf(toolchain, buildType).getCmakeProperty(CMAKE_BUILD_TYPE)
@@ -114,7 +132,7 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun getCmakeListsPathValue() {
+    fun cmakeGetCmakeListsPathValue() {
         val toolchain = CmakeListsPath.from("path")
         val buildType = DefineProperty.from(CMAKE_BUILD_TYPE, "type")
         val got = listOf(toolchain, buildType).getCmakeListsFolder()
@@ -122,10 +140,10 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun removeProperty() {
+    fun cmakeRemoveProperty() {
         val toolchain = CmakeListsPath.from("path")
         val buildType = DefineProperty.from(CMAKE_BUILD_TYPE, "type")
-        val got = listOf(toolchain, buildType).removeProperty(CMAKE_BUILD_TYPE)
+        val got = listOf(toolchain, buildType).removeCmakeProperty(CMAKE_BUILD_TYPE)
         assertThat(got).isEqualTo(listOf(toolchain))
     }
 
@@ -133,89 +151,89 @@ class CmakeCommandLineKtTest {
     fun convertCmakeCommandLineArgumentsToStringList() {
         val arguments = listOf(
             DefineProperty.from(CMAKE_ANDROID_NDK, "ndk"))
-        assertThat(arguments.convertCmakeCommandLineArgumentsToStringList())
+        assertThat(arguments.toStringList())
             .isEqualTo(listOf("-D$CMAKE_ANDROID_NDK=ndk"))
     }
 
     @Test
-    fun `parse command-line -D`() {
+    fun `CMake parse command-line -D`() {
         val arguments = parseCmakeCommandLine("-DA=1 -D B=2")
-        assertThat(arguments.getCmakeProperty("A")).isEqualTo("1")
-        assertThat(arguments.getCmakeProperty("B")).isEqualTo("2")
+        assertThat(arguments.getProperty("A")).isEqualTo("1")
+        assertThat(arguments.getProperty("B")).isEqualTo("2")
         assertThat(arguments).hasSize(2)
     }
 
     @Test
-    fun `bug 159434435--check known and unknown flag combinability`() {
-        assertThat(looksCombinable("-N")).isFalse()
-        assertThat(looksCombinable("-D")).isTrue()
-        assertThat(looksCombinable("-X")).isTrue()
-        assertThat(looksCombinable("--XYZ")).isFalse()
-        assertThat(looksCombinable("-x")).isFalse()
-        assertThat(looksCombinable("--")).isFalse()
+    fun `CMake bug 159434435--check known and unknown flag combinability`() {
+        assertThat(cmakeFlagLooksCombinable("-N")).isFalse()
+        assertThat(cmakeFlagLooksCombinable("-D")).isTrue()
+        assertThat(cmakeFlagLooksCombinable("-X")).isTrue()
+        assertThat(cmakeFlagLooksCombinable("--XYZ")).isFalse()
+        assertThat(cmakeFlagLooksCombinable("-x")).isFalse()
+        assertThat(cmakeFlagLooksCombinable("--")).isFalse()
     }
 
     @Test
-    fun `bug 159434435--test unknown command-line arg`() {
+    fun `CMake bug 159434435--test unknown command-line arg`() {
         val arguments = parseCmakeCommandLine("-CD:\\Test\\TargetProperties.cmake")
         println(arguments)
         assertThat(arguments[0]).isEqualTo(UnknownArgument(sourceArgument = "-CD:\\Test\\TargetProperties.cmake"))
     }
 
     @Test
-    fun `bug 159434435--test unknown command-line arg with space`() {
+    fun `CMake bug 159434435--test unknown command-line arg with space`() {
         val arguments = parseCmakeCommandLine("-C D:\\Test\\TargetProperties.cmake")
         println(arguments)
         assertThat(arguments[0]).isEqualTo(UnknownArgument(sourceArgument = "-C D:\\Test\\TargetProperties.cmake"))
     }
 
     @Test
-    fun `parse command-line -G`() {
+    fun `CMake parse command-line -G`() {
         val arguments = parseCmakeCommandLine("-DX=Y -G Ninja -GNinja")
-        assertThat(arguments.getGenerator()).isEqualTo("Ninja")
+        assertThat(arguments.getCmakeGenerator()).isEqualTo("Ninja")
     }
 
     @Test
-    fun `parse command-line -B`() {
+    fun `CMake parse command-line -B`() {
         val arguments = parseCmakeCommandLine("-B/usr/path -DX=Y")
-        assertThat(arguments.getBuildRootFolder()).isEqualTo("/usr/path")
+        assertThat(arguments.getCmakeBinaryOutputPath()).isEqualTo("/usr/path")
     }
 
     @Test
-    fun `parse command-line -H`() {
+    fun `CMake parse command-line -H`() {
         val arguments = parseCmakeCommandLine("-H/usr/path -G Ninja")
         assertThat(arguments.getCmakeListsFolder()).isEqualTo("/usr/path")
     }
 
     @Test
-    fun `keep CMake Server arguments`() {
+    fun `CMake keep CMake Server arguments`() {
         val arguments =
             parseCmakeCommandLine("-H/usr/path -G Ninja -DX=Y")
-                .onlyKeepServerArguments()
-        assertThat(arguments.getCmakeProperty("X")).isEqualTo("Y")
+                .onlyKeepCmakeServerArguments()
+        assertThat(arguments.getProperty("X")).isEqualTo("Y")
         assertThat(arguments).hasSize(1)
     }
 
     @Test
-    fun `remove subsumed properties`() {
+    fun `CMake remove subsumed properties`() {
         val arguments =
             parseCmakeCommandLine("-D X=1 -DX=2")
                 .removeSubsumedArguments()
-        assertThat(arguments.getCmakeProperty("X")).isEqualTo("2")
+        assertThat(arguments.getProperty("X")).isEqualTo("2")
         assertThat(arguments).hasSize(1)
     }
 
     @Test
-    fun `remove subsumed generator`() {
+    fun `CMake remove subsumed generator`() {
         val arguments =
             parseCmakeCommandLine("-GA -GB")
                 .removeSubsumedArguments()
-        assertThat(arguments.getGenerator()).isEqualTo("B")
+        assertThat(arguments.getCmakeGenerator()).isEqualTo("B")
         assertThat(arguments).hasSize(1)
     }
 
     @Test
-    fun `remove blank properties`() {
+    fun `CMake remove blank properties`() {
         val arguments =
             parseCmakeCommandLine("-DX=\"\"")
                 .removeBlankProperties()
@@ -223,40 +241,54 @@ class CmakeCommandLineKtTest {
     }
 
     @Test
-    fun `property with quotes gets unquoted`() {
+    fun `CMake property with quotes gets unquoted`() {
         val arguments =
             parseCmakeCommandLine("-DX=\"1\" -D Y=\"2\"")
-        assertThat(arguments.getCmakeProperty("X")).isEqualTo("1")
-        assertThat(arguments.getCmakeProperty("Y")).isEqualTo("2")
+        assertThat(arguments.getProperty("X")).isEqualTo("1")
+        assertThat(arguments.getProperty("Y")).isEqualTo("2")
         assertThat(arguments).hasSize(2)
+    }
+
+    @Test
+    fun `fuzz ndk-build command-line parser`() {
+        // Ideally, this test should cover almost all lines in CMakeCommandLine.kt
+        RandomInstanceGenerator().strings(10000).forEach { argument ->
+            argument.toNdkBuildArgument()
+            listOf(argument).toNdkBuildArguments()
+        }
     }
 
     @Test
     fun `fuzz CMake command-line parser`() {
         // Ideally, this test should cover almost all lines in CMakeCommandLine.kt
         RandomInstanceGenerator().strings(10000).forEach { commandLine ->
+            parseCmakeCommandLine(commandLine) // Host conventions
             val windows = parseCmakeCommandLine(commandLine, WindowsFileConventions())
             val posix = parseCmakeCommandLine(commandLine, PosixFileConventions())
-            windows.onlyKeepServerArguments()
-            posix.onlyKeepServerArguments()
+            windows.onlyKeepUnknownArguments()
+            posix.onlyKeepUnknownArguments()
+            windows.onlyKeepProperties()
+            posix.onlyKeepProperties()
+            windows.onlyKeepCmakeServerArguments()
+            posix.onlyKeepCmakeServerArguments()
             windows.removeSubsumedArguments()
             posix.removeSubsumedArguments()
             windows.removeBlankProperties()
             posix.removeBlankProperties()
             windows.getCmakeBooleanProperty(C_TEST_WAS_RUN)
             posix.getCmakeBooleanProperty(C_TEST_WAS_RUN)
-            windows.removeProperty(C_TEST_WAS_RUN)
-            posix.removeProperty(C_TEST_WAS_RUN)
-            windows.getGenerator()
-            posix.getGenerator()
-            windows.getBuildRootFolder()
-            posix.getBuildRootFolder()
+            windows.removeCmakeProperty(C_TEST_WAS_RUN)
+            posix.removeCmakeProperty(C_TEST_WAS_RUN)
+            windows.getCmakeGenerator()
+            posix.getCmakeGenerator()
+            windows.getCmakeBinaryOutputPath()
+            posix.getCmakeBinaryOutputPath()
             windows.getCmakeListsFolder()
             posix.getCmakeListsFolder()
-            val windowsStrings = windows.convertCmakeCommandLineArgumentsToStringList()
-            val posixStrings = posix.convertCmakeCommandLineArgumentsToStringList()
-            parseCmakeArguments(windowsStrings)
-            parseCmakeArguments(posixStrings)
+            val windowsStrings = windows.toStringList()
+            val posixStrings = posix.toStringList()
+            windowsStrings.toCmakeArguments()
+            posixStrings.toCmakeArguments()
         }
     }
 }

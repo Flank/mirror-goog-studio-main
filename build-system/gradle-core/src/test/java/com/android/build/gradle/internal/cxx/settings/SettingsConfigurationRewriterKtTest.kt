@@ -19,34 +19,15 @@ package com.android.build.gradle.internal.cxx.settings
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
-import com.android.build.gradle.internal.cxx.configure.getBuildRootFolder
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.getCmakeBinaryOutputPath
+import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
-import com.android.build.gradle.internal.cxx.configure.getGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
-import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
-import com.android.build.gradle.internal.cxx.model.CmakeSettingsMock
-import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
-import com.android.build.gradle.internal.cxx.model.buildCommandFile
-import com.android.build.gradle.internal.cxx.model.buildOutputFile
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
-import com.android.build.gradle.internal.cxx.model.modelOutputFile
-import com.android.build.gradle.internal.cxx.model.soFolder
-import com.android.build.gradle.internal.cxx.model.toJsonString
-import com.android.build.gradle.internal.cxx.settings.Macro.ENV_THIS_FILE
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
+import com.android.build.gradle.internal.cxx.model.*
+import com.android.build.gradle.internal.cxx.settings.Macro.*
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
-
 import org.junit.Test
 import org.mockito.Mockito
 import java.io.File
@@ -113,7 +94,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 .rewriteCxxAbiModelWithCMakeSettings()
                 .getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
-            assertThat(variables.getGenerator()).isEqualTo("Ninja")
+            assertThat(variables.getCmakeGenerator()).isEqualTo("Ninja")
             assertThat(variables.getCmakeProperty(CMAKE_LIBRARY_OUTPUT_DIRECTORY)).isEqualTo(abi.soFolder.absolutePath)
             assertThat(variables.getCmakeProperty(CMAKE_CXX_FLAGS)).isEqualTo("-DCPP_FLAG_DEFINED")
             assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("Debug")
@@ -133,7 +114,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
-            assertThat(variables.getGenerator()).isEqualTo("some other generator")
+            assertThat(variables.getCmakeGenerator()).isEqualTo("some other generator")
             assertThat(variables.getCmakeProperty(CMAKE_LIBRARY_OUTPUT_DIRECTORY)?.replace('\\', '/'))
                 .endsWith("MyProject/Source/Android/build/android/lib/Debug/x86")
             assertThat(variables.getCmakeProperty(CMAKE_CXX_FLAGS)).isEqualTo("-DTEST_CPP_FLAG")
@@ -200,7 +181,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("PrecedenceCheckingBuildType")
-            assertThat(variables.getGenerator()).isEqualTo("PrecedenceCheckingGenerator")
+            assertThat(variables.getCmakeGenerator()).isEqualTo("PrecedenceCheckingGenerator")
             assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_TOOLCHAIN_FILE)).isEqualTo("PrecedenceCheckingToolchainFile")
         }
     }
@@ -212,13 +193,13 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
         val commands1 = abi1.getFinalCmakeCommandLineArguments()
         val commands2 = abi2.getFinalCmakeCommandLineArguments()
 
-        assertThat(commands1.getBuildRootFolder()).isNotNull()
-        assertThat(commands2.getBuildRootFolder()).isNotNull()
+        assertThat(commands1.getCmakeBinaryOutputPath()).isNotNull()
+        assertThat(commands2.getCmakeBinaryOutputPath()).isNotNull()
 
-        assertThat(File(commands1.getBuildRootFolder())).isNotEqualTo(File(commands2.getBuildRootFolder()))
-        assertThat(File(commands1.getBuildRootFolder()).parentFile)
-            .named("Comparing parent folders of ${commands1.getBuildRootFolder()} and ${commands1.getBuildRootFolder()}")
-            .isEqualTo(File(commands2.getBuildRootFolder()).parentFile)
+        assertThat(File(commands1.getCmakeBinaryOutputPath())).isNotEqualTo(File(commands2.getCmakeBinaryOutputPath()))
+        assertThat(File(commands1.getCmakeBinaryOutputPath()).parentFile)
+            .named("Comparing parent folders of ${commands1.getCmakeBinaryOutputPath()} and ${commands1.getCmakeBinaryOutputPath()}")
+            .isEqualTo(File(commands2.getCmakeBinaryOutputPath()).parentFile)
     }
 
     @Test
@@ -232,8 +213,8 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
 
         val commands1 = abi1.getFinalCmakeCommandLineArguments()
         val commands2 = abi2.getFinalCmakeCommandLineArguments()
-        val buildRoot1 = commands1.getBuildRootFolder()
-        val buildRoot2 = commands2.getBuildRootFolder()
+        val buildRoot1 = commands1.getCmakeBinaryOutputPath()
+        val buildRoot2 = commands2.getCmakeBinaryOutputPath()
 
         assertThat(buildRoot1).isNotNull()
         assertThat(buildRoot2).isNotNull()

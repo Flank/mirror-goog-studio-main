@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
-import com.android.build.gradle.internal.cxx.configure.convertCmakeCommandLineArgumentsToStringList
+import com.android.build.gradle.internal.cxx.configure.toStringList
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -115,7 +115,7 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
         builder.setExecutable(variant.module.cmake!!.cmakeExe)
         val arguments = mutableListOf<CommandLineArgument>()
         arguments.addAll(abi.getFinalCmakeCommandLineArguments())
-        builder.addArgs(arguments.convertCmakeCommandLineArgumentsToStringList())
+        builder.addArgs(arguments.toStringList())
         return builder
     }
 

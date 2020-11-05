@@ -16,15 +16,20 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.configure.*
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.*
 import com.android.build.gradle.internal.cxx.hashing.toBase36
 import com.android.build.gradle.internal.cxx.hashing.update
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.settings.Macro.*
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION
 import com.android.utils.tokenizeCommandLineToEscaped
+import com.google.common.collect.Lists
 import java.io.File
 import java.security.MessageDigest
 
@@ -123,7 +128,7 @@ private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
                     null -> cmakeToolchain
                     else -> null
                 },
-                generator = arguments.getGenerator() ?: generator,
+                generator = arguments.getCmakeGenerator() ?: generator,
                 variables = variables +
                         arguments.onlyKeepProperties().map {
                             SettingsConfigurationVariable(it.propertyName, it.propertyValue)
@@ -147,7 +152,7 @@ private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
             .accumulate(getSettingsConfiguration(variant.cmakeSettingsConfiguration))
     val configuration = combinedConfiguration
             .accumulate(combinedConfiguration.getCmakeCommandLineArguments())
-            .accumulate(parseCmakeArguments(variant.buildSystemArgumentList))
+            .accumulate(variant.buildSystemArgumentList.toCmakeArguments())
 
     // Translate to [CommandLineArgument]. Be sure that user variables from build.gradle get
     // passed after settings variables
@@ -194,7 +199,7 @@ private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
             configuration = SettingsConfiguration(
                     name = configuration.name,
                     description = "Composite reified CMakeSettings configuration",
-                    generator = arguments.getGenerator(),
+                    generator = arguments.getCmakeGenerator(),
                     configurationType = configuration.configurationType,
                     inheritEnvironments = configuration.inheritEnvironments,
                     buildRoot = configuration.buildRoot?.reify(),
@@ -271,6 +276,81 @@ fun CxxAbiModel.getFinalCmakeCommandLineArguments() : List<CommandLineArgument> 
     result += getCmakeCommandLineArguments()
     result += cmake!!.effectiveConfiguration.getCmakeCommandLineArguments()
     return result.removeSubsumedArguments().removeBlankProperties()
+}
+
+/**
+ * This is "our" version of the command-line arguments for ndk-build.
+ * The user may override or enhance with arguments from build.gradle.
+ */
+fun CxxAbiModel.getNdkBuildCommandLine(): List<String> {
+    val makeFile =
+            if (variant.module.makeFile.isDirectory) {
+                File(variant.module.makeFile, "Android.mk")
+            } else variant.module.makeFile
+    val applicationMk = File(makeFile.parent, "Application.mk").takeIf { it.exists() }
+
+    val result: MutableList<String> = Lists.newArrayList()
+    result.add("$NDK_PROJECT_PATH=null")
+    result.add("$APP_BUILD_SCRIPT=$makeFile")
+    // NDK_APPLICATION_MK specifies the Application.mk file.
+    applicationMk?.let {
+        result.add("$NDK_APPLICATION_MK=" + it.absolutePath)
+    }
+    if (shouldGeneratePrefabPackages()) {
+        if (variant.module.ndkVersion.major < 21) {
+            // These cannot be automatically imported prior to NDK r21 which started handling
+            // NDK_GRADLE_INJECTED_IMPORT_PATH, but the user can add that search path explicitly
+            // for older releases.
+            // TODO(danalbert): Include a link to the docs page when it is published.
+            // This can be worked around on older NDKs, but it's too verbose to include in the
+            // warning message.
+            warnln(
+                    NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION,
+                    "Prefab packages cannot be automatically imported until NDK r21."
+            )
+        }
+        result.add("NDK_GRADLE_INJECTED_IMPORT_PATH=" + prefabFolder.toString())
+    }
+
+    // APP_ABI and NDK_ALL_ABIS work together. APP_ABI is the specific ABI for this build.
+    // NDK_ALL_ABIS is the universe of all ABIs for this build. NDK_ALL_ABIS is set to just the
+    // current ABI. If we don't do this, then ndk-build will erase build artifacts for all abis
+    // aside from the current.
+    result.add("APP_ABI=" + abi.tag)
+    result.add("NDK_ALL_ABIS=" + abi.tag)
+    if (variant.isDebuggableEnabled) {
+        result.add("$NDK_DEBUG=1")
+    } else {
+        result.add("$NDK_DEBUG=0")
+    }
+    result.add("$APP_PLATFORM=android-$abiPlatformVersion")
+
+    // getObjFolder is set to the "local" subfolder in the user specified directory, therefore,
+    // NDK_OUT should be set to getObjFolder().getParent() instead of getObjFolder().
+    var ndkOut = File(variant.objFolder.path).parent
+    if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+        // Due to b.android.com/219225, NDK_OUT on Windows requires forward slashes.
+        // ndk-build.cmd is supposed to escape the back-slashes but it doesn't happen.
+        // Workaround here by replacing back slash with forward.
+        // ndk-build will have a fix for this bug in r14 but this gradle fix will make it
+        // work back to r13, r12, r11, and r10.
+        ndkOut = ndkOut.replace('\\', '/')
+    }
+    result.add("$NDK_OUT=$ndkOut")
+    result.add("$NDK_LIBS_OUT=${variant.soFolder.path}")
+
+    // Related to issuetracker.google.com/69110338. Semantics of APP_CFLAGS and APP_CPPFLAGS
+    // is that the flag(s) are unquoted. User may place quotes if it is appropriate for the
+    // target compiler. User in this case is build.gradle author of
+    // externalNativeBuild.ndkBuild.cppFlags or the author of Android.mk.
+    for (flag in variant.cFlagsList) {
+        result.add("$APP_CFLAGS+=$flag")
+    }
+    for (flag in variant.cppFlagsList) {
+        result.add("$APP_CPPFLAGS+=$flag")
+    }
+    result.addAll(variant.buildSystemArgumentList)
+    return result
 }
 
 /*

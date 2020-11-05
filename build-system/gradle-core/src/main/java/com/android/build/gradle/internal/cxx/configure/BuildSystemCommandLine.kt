@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +19,22 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.external.gnumake.AbstractOsFileConventions
 import com.android.build.gradle.external.gnumake.OsFileConventions
 import com.android.build.gradle.internal.cxx.cmake.isCmakeConstantTruthy
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.BinaryOutputPath
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.GeneratorName
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.*
+import com.google.common.annotations.VisibleForTesting
 
 /**
- * Classes and functions in this file are for dealing with CMake command-line parameters.
- * This is complete enough for compiler settings cache purposes. Any unrecognized flags are
- * classified as UnknownArgument.
+ * Classes and functions in this file are for dealing with CMake and ndk-build command-line
+ * parameters. Any unrecognized flags are classified as UnknownArgument.
  */
 
 /**
- * Interface that represents a single CMake command-line argument.
+ * Interface that represents a single CMake or ndk-build command-line argument.
+ * Argument types that are specific to only one build system are prefixed with Cmake (or in the
+ * future NdkBuild).
  */
 sealed class CommandLineArgument {
     abstract val sourceArgument : String
+
     /**
      * This is an argument that was not recognized.
      */
@@ -67,7 +66,7 @@ sealed class CommandLineArgument {
      * This is the build output folder. This is where the Ninja project is generated.
      * For us, it usually has a value like .cxx/cmake/debug/x86.
      */
-    data class BinaryOutputPath(
+    data class CmakeBinaryOutputPath(
         override val sourceArgument: String,
         val path : String) : CommandLineArgument() {
         companion object {
@@ -87,7 +86,7 @@ sealed class CommandLineArgument {
      *
      * The generator to use for this project.
      **/
-    data class GeneratorName(
+    data class CmakeGeneratorName(
         override val sourceArgument: String,
         val generator : String) : CommandLineArgument() {
         companion object {
@@ -96,11 +95,20 @@ sealed class CommandLineArgument {
              * Don't use if you also have an an original sourceArgument.
              */
             @JvmStatic
-            fun from(generator : String) : GeneratorName {
-                return GeneratorName("-G$generator", generator)
+            fun from(generator : String) : CmakeGeneratorName {
+                return CmakeGeneratorName("-G$generator", generator)
             }
         }
     }
+
+    /**
+     * For example, --jobs=4 or -j 8
+     *
+     * The number of jobs for this build.
+     **/
+    data class NdkBuildJobs(
+        override val sourceArgument: String,
+        val jobs : String) : CommandLineArgument()
 
     /**
      * For example, -DANDROID_PLATFORM=android-19
@@ -125,37 +133,25 @@ sealed class CommandLineArgument {
 }
 
 /**
- * Given a list of flags that probably came from android.defaultConfig.cmake.arguments
- * augmented by Json generator classes like CmakeServerExternalNativeJsonGenerator parse
- * the flags into implementors of CommandLineArgument.
- */
-fun parseCmakeArguments(args : List<String>) : List<CommandLineArgument> {
-    return args.map { arg ->
-        arg.toCmakeArgument()
-    }
-}
-
-
-/**
  * Check whether a CMake flag looks combinable with the argument that immediately follows it.
  * See: https://cmake.org/cmake/help/latest/manual/cmake.1.html
  *
- * There are some flags that are definitely known to be combinable (see [knownCombinable]).
- * There are some flags that are definitely known to not be combinable (see [knownNotCombinable]).
+ * There are some flags that are definitely known to be combinable (see [cmakeKnownCombinable]).
+ * There are some flags that are definitely known to not be combinable (see [cmakeKnownNotCombinable]).
  * For the remainder, a heuristic is used to decide whether it's combinable or not.
  *
  * Last updated CMake 3.18.1
  */
-fun looksCombinable(flag: String) =
+fun cmakeFlagLooksCombinable(flag: String) =
         // Is the flag in the allow-list of known combinable CMake flags?
-        knownCombinable.contains(flag) ||
+        cmakeKnownCombinable.contains(flag) ||
                 // Is the flag in the disallow-list of flags known to not be combinable?
-                (!knownNotCombinable.contains(flag) &&
+                (!cmakeKnownNotCombinable.contains(flag) &&
                         // Heuristic to guess whether the flag is combinable or not.
                         flag.length == 2 && flag[0]=='-' && flag[1].isUpperCase())
 
-private val knownNotCombinable = listOf("-N")
-private val knownCombinable = listOf("-S", "-B", "-C", "-D", "-U", "-G", "-T", "-A")
+private val cmakeKnownNotCombinable = listOf("-N")
+private val cmakeKnownCombinable = listOf("-S", "-B", "-C", "-D", "-U", "-G", "-T", "-A")
 
 /**
  * Parse a CMake command-line and returns the corresponding list of [CommandLineArgument].
@@ -178,7 +174,7 @@ fun parseCmakeCommandLine(
                     "${prior.first} $escaped".toCmakeArgument("${prior.second} $raw")
                 prior = null
             }
-            looksCombinable(escaped) -> prior = combinedToken
+            cmakeFlagLooksCombinable(escaped) -> prior = combinedToken
             else -> result += escaped.toCmakeArgument(raw)
         }
     }
@@ -206,17 +202,52 @@ fun String.toCmakeArgument(sourceArgument: String = this): CommandLineArgument {
         }
         startsWith("-B") -> {
             val path = substringAfter("-B")
-            BinaryOutputPath(sourceArgument, path)
+            CmakeBinaryOutputPath(sourceArgument, path)
         }
         startsWith("-G") -> {
             val path = substringAfter("-G")
-            GeneratorName(sourceArgument, path)
+            CmakeGeneratorName(sourceArgument, path)
         }
         else ->
             // Didn't recognize the flag so return unknown argument
             UnknownArgument(sourceArgument)
     }
 }
+
+/**
+ * Parse a set of flags passed to CMake.
+ */
+fun List<String>.toCmakeArguments() = map { it.toCmakeArgument() }
+
+/**
+ * Parse a single ndk-build command line argument.
+ */
+fun String.toNdkBuildArgument(sourceArgument: String = this): CommandLineArgument {
+    return when {
+        /*
+        Parse an ndk-build command-line property like X=Y
+         */
+        !startsWith("-") && contains("=") -> {
+            val propertyName = substringBefore("=").trim()
+            val propertyValue = substringAfter("=").trim()
+            DefineProperty(sourceArgument, propertyName, propertyValue)
+        }
+        startsWith("--jobs=") ->
+            NdkBuildJobs(sourceArgument, substringAfter("=").trim())
+        startsWith("--jobs ") || startsWith("-j ") ->
+            NdkBuildJobs(sourceArgument, substringAfter(" ").trim())
+        startsWith("-j") ->
+            NdkBuildJobs(sourceArgument, substringAfter("-j").trim())
+        else ->
+            // Didn't recognize the flag so return unknown argument
+            UnknownArgument(sourceArgument)
+    }
+}
+
+/**
+ * Parse a set of flags passed to ndk-build.
+ */
+fun List<String>.toNdkBuildArguments() = map { it.toNdkBuildArgument() }
 
 /**
  * Returns true when a set of args contains a property whose value would be considered true by
@@ -233,19 +264,27 @@ fun List<CommandLineArgument>.getCmakeBooleanProperty(property : CmakeProperty) 
  * then the last value is taken.
  */
 fun List<CommandLineArgument>.getCmakeProperty(property : CmakeProperty) =
-    getCmakeProperty(property.name)
+    getProperty(property.name)
 
 /**
  * Returns the value of the property. Null if not present. If the value is present more than once
  * then the last value is taken.
  */
-fun List<CommandLineArgument>.getCmakeProperty(property : String) =
+fun List<CommandLineArgument>.getNdkBuildProperty(property : NdkBuildProperty) =
+        getProperty(property.name)
+
+/**
+ * Returns the value of the property. Null if not present. If the value is present more than once
+ * then the last value is taken.
+ */
+@VisibleForTesting
+fun List<CommandLineArgument>.getProperty(property : String) =
     filterType<DefineProperty> { it.propertyName == property }?.propertyValue
 
 /**
  * Returns the generator. Null if none present
  */
-fun List<CommandLineArgument>.getGenerator() = filterType<GeneratorName>()?.generator
+fun List<CommandLineArgument>.getCmakeGenerator() = filterType<CmakeGeneratorName>()?.generator
 
 /**
  * Returns the folder of CMakeLists.txt.
@@ -255,37 +294,41 @@ fun List<CommandLineArgument>.getCmakeListsFolder() = filterType<CmakeListsPath>
 /**
  * Returns the buildRoot folder.
  */
-fun List<CommandLineArgument>.getBuildRootFolder() = filterType<BinaryOutputPath>()?.path
+fun List<CommandLineArgument>.getCmakeBinaryOutputPath() = filterType<CmakeBinaryOutputPath>()?.path
 
 /**
  * Remove all instances of the given property from the list of args
  */
-fun List<CommandLineArgument>.removeProperty(property : CmakeProperty) =
+fun List<CommandLineArgument>.removeCmakeProperty(property : CmakeProperty) =
     filter {
         !(it is DefineProperty &&  it.propertyName == property.name)
     }
 
 /**
+ * Remove --jobs flag from list.
+ */
+fun List<CommandLineArgument>.removeNdkBuildJobs() = filter { it !is NdkBuildJobs }
+
+/**
  * Utility method for filtering [CommandLineArgument] list by type and optional predicate.
  */
 private inline fun <reified T : CommandLineArgument> List<CommandLineArgument>.filterType(
-    predicate: (T) -> Boolean = { true }) = filterIsInstance<T>().lastOrNull { predicate(it) }
+    predicate: (T) -> Boolean = { true } ) = filterIsInstance<T>().lastOrNull { predicate(it) }
 
 /**
  * Convert to the equivalent command-line arguments String list.
  */
-fun List<CommandLineArgument>.convertCmakeCommandLineArgumentsToStringList() =
-    map { it.sourceArgument }
+fun List<CommandLineArgument>.toStringList() = map { it.sourceArgument }
 
 /**
  * Keep the [CommandLineArgument]s that should be passed to CMake Server. Remove the rest.
  */
-fun List<CommandLineArgument>.onlyKeepServerArguments() =
+fun List<CommandLineArgument>.onlyKeepCmakeServerArguments() =
     filter { argument ->
         when(argument) {
-            is BinaryOutputPath,
+            is CmakeBinaryOutputPath,
             is CmakeListsPath,
-            is GeneratorName -> false
+            is CmakeGeneratorName -> false
             else -> true
         }
     }
