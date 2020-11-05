@@ -502,6 +502,17 @@ coverage_report(
     ],
 )
 
+# Coverage report for compose-ide-plugin editor support.
+coverage_report(
+    name = "compose-ide-plugin",
+    srcpath_include = [
+        "tools/adt/idea/compose-ide-plugin/src/com/android/tools/compose",
+    ],
+    tests = [
+        "//tools/adt/idea/compose-ide-plugin:intellij.android.compose-ide-plugin.tests_tests",
+    ],
+)
+
 # Coverage report for parallel device test report
 coverage_report(
     name = "parallel-device-test-report",
@@ -545,6 +556,7 @@ combine_report_definitions(
         "app-inspection",
         "build-attribution",
         "cmake-vnext",
+        "compose-ide-plugin",
         "custom-views-preview",
         "dagger-editing",
         "database-inspector",
@@ -603,6 +615,7 @@ coverage_report(
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/connection-assistant:connection-assistant-test_tests",
         "//tools/adt/idea/dagger:intellij.android.dagger.tests_tests",
+        "//tools/adt/idea/compose-ide-plugin:intellij.android.compose-ide-plugin.tests_tests",
         "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
         "//tools/adt/idea/deploy:intellij.android.deploy_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
