@@ -54,11 +54,11 @@ class NoMappingTest(val apkCreatorType: ApkCreatorType) {
     fun checkEmptyMapping() {
         File(project.projectDir, "proguard-rules.pro").appendText("\n-dontobfuscate")
 
-        project.executor().with(OptionalBooleanOption.ENABLE_R8, true).run("assembleMinified")
+        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("assembleMinified")
         val mappingFile = project.file("build/outputs/mapping/minified/mapping.txt")
         assertThat(mappingFile).contains("com.android.tests.basic.Main -> com.android.tests.basic.Main")
 
-        project.executor().with(OptionalBooleanOption.ENABLE_R8, false).run("assembleMinified")
+        project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("assembleMinified")
         assertThat(mappingFile).hasContents("")
     }
 

@@ -272,7 +272,7 @@ class CompileLibraryResourcesTest {
         project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
             // http://b/149978740 and http://b/146208910
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .with(OptionalBooleanOption.ENABLE_R8, true)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .run(":app:assembleRelease")
 
         val compressed = project.getSubproject(":app").getIntermediateFile(

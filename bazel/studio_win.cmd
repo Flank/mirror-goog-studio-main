@@ -22,9 +22,7 @@ IF "%DETECT_FLAKES%"=="--detect_flakes" (
   set DETECT_FLAKES=--runs_per_test_detects_flakes
   set NOCACHE=--nocache_test_results
   set CONDITIONAL_FLAGS=!RUNS! !DETECT_FLAKES! !NOCACHE!
-)
-
-IF %IS_POST_SUBMIT% EQU 1 (
+) ELSE IF %IS_POST_SUBMIT% EQU 1 (
   SET NOCACHE=--nocache_test_results
   SET CONDITIONAL_FLAGS=!NOCACHE!
 )

@@ -63,7 +63,9 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
         GradleBuildResult result =
                 project.executor()
-                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(
+                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                                codeShrinker == CodeShrinker.R8)
                         .expectFailure()
                         .run("clean", ":test:assembleDebug");
         assertThat(result.getFailureMessage())
@@ -74,7 +76,9 @@ public class SeparateTestModuleWithMinifiedAppTest {
     @Test
     public void checkMappingsApplied() throws Exception {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("clean", ":test:assembleMinified");
 
         GradleTestProject testProject = project.getSubproject("test");

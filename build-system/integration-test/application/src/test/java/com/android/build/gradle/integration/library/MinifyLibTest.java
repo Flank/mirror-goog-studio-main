@@ -91,7 +91,9 @@ public class MinifyLibTest {
 
         ModelContainer<AndroidProject> container =
                 project.model()
-                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(
+                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                                codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects();
         ModelContainerSubject.assertThat(container)
@@ -119,6 +121,21 @@ public class MinifyLibTest {
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
         assertThat(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;");
+    }
+
+    /** Regression test for b/171364505. */
+    @Test
+    public void shrinkingLibWithMultidex() throws Exception {
+        enableLibShrinking();
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").getBuildFile(),
+                ""
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        multiDexEnabled true\n"
+                        + "    }\n"
+                        + "}");
+        getExecutor().run(":lib:assembleDebug");
     }
 
     /**
@@ -192,6 +209,8 @@ public class MinifyLibTest {
     @NonNull
     private GradleTaskExecutor getExecutor() {
         return project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8);
     }
 }

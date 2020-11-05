@@ -25,11 +25,14 @@ import com.android.tools.lint.checks.LintDetectorDetector
 import com.android.tools.lint.checks.SamDetector
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient.Companion.isStudio
+import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.CURRENT_API
 
 class StudioIssueRegistry : IssueRegistry() {
 
     override val api = CURRENT_API
+
+    override val vendor: Vendor = AOSP_VENDOR
 
     init {
         // Turn on some checks that are off by default but which we want run in Studio:
@@ -68,6 +71,9 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.PSI_COMPARE,
         LintDetectorDetector.CHECK_URL,
         LintDetectorDetector.DOLLAR_STRINGS,
+        // We're not including this check here;
+        // a vendor is not required for built-in checks
+        // LintDetectorDetector.MISSING_VENDOR,
         LintDetectorDetector.TEXT_FORMAT,
         LintDetectorDetector.TRIM_INDENT,
         LintDetectorDetector.UNEXPECTED_DOMAIN,

@@ -35,7 +35,9 @@ readonly invocation_id="$(uuidgen)"
   --test_tag_filters=${test_tag_filters} \
   --tool_tag=${script_name} \
   --profile=${dist_dir}/perfgate-profile-${build_number}.json.gz \
-  --runs_per_test=5 \
+  --nocache_test_results \
+  --runs_per_test=//prebuilts/studio/buildbenchmarks:.*@5 \
+  --runs_per_test=//tools/adt/idea/sync-perf-tests:intellij.android.sync-perf-tests.*@5 \
   -- \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   $(< "${script_dir}/targets")

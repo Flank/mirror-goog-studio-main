@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.lint
 
-import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
 import com.android.build.gradle.internal.ide.dependencies.ArtifactHandler
 import com.android.build.gradle.internal.ide.dependencies.DependencyModelBuilder
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact
@@ -30,7 +29,6 @@ import com.android.tools.lint.model.LintModelExternalLibrary
 import com.android.tools.lint.model.LintModelLibrary
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import java.io.File
 
 class LintDependencyModelBuilder(

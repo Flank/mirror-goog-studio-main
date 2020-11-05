@@ -2773,12 +2773,18 @@ public final class SdkConstants {
     public static final String VALUE_HORIZONTAL = "horizontal"; //$NON-NLS-1$
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
-    public static final String GRADLE_MINIMUM_VERSION = "6.7";
-    public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
+    /** The minimum version of Gradle that this version of Studio will support. */
+    public static final String GRADLE_MINIMUM_VERSION = "4.8.1";
+    /**
+     * The minimum version of Gradle that this version of the Gradle plugin will support. This also
+     * happens to be a version of Gradle that is embedded and distributed along with the Android
+     * Studio product. It need not actually be the latest version of Gradle, but it will most likely
+     * be fairly recent.
+     */
+    public static final String GRADLE_LATEST_VERSION = "6.7";
+
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";
-    // Temporary - can be removed once the recommended version supports AIA (with splits).
-    public static final String GRADLE_PLUGIN_LATEST_VERSION = GRADLE_PLUGIN_RECOMMENDED_VERSION;
 
     /** use api or implementation */
     @Deprecated public static final String GRADLE_COMPILE_CONFIGURATION = "compile";

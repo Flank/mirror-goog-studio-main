@@ -51,5 +51,5 @@ data class SettingsEnvironment(
     /**
      * Environment properties.
      */
-    val properties : Map<String, PropertyValue> = mapOf()
+    val properties : Map<String, String> = mapOf()
 )

@@ -19,7 +19,6 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/chunkio:studio.android.sdktools.chunkio[module]",
-        "//tools/base/chunkio-processor:studio.android.sdktools.chunkio-processor[module]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )

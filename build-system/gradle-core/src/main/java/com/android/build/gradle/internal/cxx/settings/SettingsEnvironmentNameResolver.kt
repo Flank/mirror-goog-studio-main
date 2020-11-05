@@ -75,7 +75,7 @@ class SettingsEnvironmentNameResolver(environments: List<SettingsEnvironment>) {
      */
     private data class Match(
         val groupPriority : Int,
-        val propertyValue: PropertyValue
+        val propertyValue: String
     )
 
     /**
@@ -117,7 +117,7 @@ class SettingsEnvironmentNameResolver(environments: List<SettingsEnvironment>) {
      */
     fun resolve(
         qualifiedName : String,
-        environmentNames: List<String>) : PropertyValue? {
+        environmentNames: List<String>) : String? {
         val (namespace, name) =
             if (qualifiedName.contains(".")) {
                 val split = qualifiedName.split(".")

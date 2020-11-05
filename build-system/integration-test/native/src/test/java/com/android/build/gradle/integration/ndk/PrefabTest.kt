@@ -19,11 +19,15 @@ package com.android.build.gradle.integration.ndk
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -79,10 +83,10 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
         Truth.assertThat(buildCommand).contains(expectedArgument)
     }
 
-    private fun verifyCMakePackage(pkg: String, abiDir: File, abi: Abi) {
+    private fun verifyCMakePackage(pkg: String, abi: CxxAbiModel) {
         assertThat(
-            abiDir.resolve(
-                "prefab/lib/${abi.gccExecutablePrefix}/cmake/$pkg/${pkg}Config.cmake"
+            abi.prefabFolder.resolve(
+                "prefab/lib/${abi.abi.gccExecutablePrefix}/cmake/$pkg/${pkg}Config.cmake"
             )
         ).exists()
     }
@@ -96,22 +100,20 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     @Test
     fun `build integrations are passed to build system`() {
         project.execute("assembleDebug")
-        val prefabDir = project.file("app/.cxx/${buildSystem.tag}/debug/prefab")
-        assertThat(prefabDir).exists()
-        for (abi in expectedAbis) {
-            val abiDir = prefabDir.resolve(abi.tag)
+        val abis = project.recoverExistingCxxAbiModels().sortedBy { it.abi.ordinal }
+        assertThat(abis.map { it.abi }).containsExactlyElementsIn(expectedAbis)
+        for (abi in abis) {
+            val abiDir = abi.prefabFolder
             assertThat(abiDir).exists()
             val packages = listOf("curl", "jsoncpp", "openssl")
             for (pkg in packages) {
                 when (buildSystem) {
-                    NativeBuildSystem.CMAKE -> verifyCMakePackage(pkg, abiDir, abi)
+                    NativeBuildSystem.CMAKE -> verifyCMakePackage(pkg, abi)
                     NativeBuildSystem.NDK_BUILD -> verifyNdkBuildPackage(pkg, abiDir)
                 }
             }
 
-            val buildCommand =
-                project.file("app/.cxx/${buildSystem.tag}/debug/${abi.tag}/build_command.txt")
-                    .readText()
+            val buildCommand = abi.buildCommandFile.readText()
             when (buildSystem) {
                 NativeBuildSystem.CMAKE -> verifyCMakeArgs(buildCommand, abiDir)
                 NativeBuildSystem.NDK_BUILD -> verifyNdkBuildArgs(buildCommand, abiDir)
@@ -123,8 +125,9 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     fun `build integrations are not cleaned up`() {
         project.execute("assembleDebug")
         project.execute("clean")
-        val prefabDir = project.file("app/.cxx/${buildSystem.tag}/debug/prefab")
-        assertThat(prefabDir).exists()
+        val abis = project.recoverExistingCxxAbiModels().sortedBy { it.abi.ordinal }
+        assertThat(abis.map { it.abi }).containsExactlyElementsIn(expectedAbis)
+        abis.forEach { assertThat(it.prefabFolder).exists() }
     }
 
     @Test

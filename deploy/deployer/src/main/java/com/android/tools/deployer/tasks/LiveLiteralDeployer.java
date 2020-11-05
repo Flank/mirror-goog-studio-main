@@ -40,9 +40,14 @@ public class LiveLiteralDeployer {
         final String key;
         final String type;
         final String value;
+        final int offset;
+        final String helper;
 
-        public UpdateLiveLiteralParam(String key, String type, String value) {
+        public UpdateLiveLiteralParam(
+                String key, int offset, String helper, String type, String value) {
             this.key = key;
+            this.offset = offset;
+            this.helper = helper;
             this.type = type;
             this.value = value;
         }
@@ -62,6 +67,8 @@ public class LiveLiteralDeployer {
                     .addUpdates(
                             Deploy.LiveLiteral.newBuilder()
                                     .setKey(param.key)
+                                    .setOffset(param.offset)
+                                    .setHelperClass(param.helper)
                                     .setType(param.type)
                                     .setValue(param.value))
                     .setArch(Deploy.Arch.ARCH_64_BIT);

@@ -20,6 +20,7 @@ import static com.android.repository.impl.meta.TypeDetails.GenericType;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.GenericFactory;
@@ -38,37 +39,27 @@ import org.w3c.dom.ls.LSResourceResolver;
 /**
  * Primary interface for interacting with repository packages.
  *
- * To set up an {@code RepoManager}:
+ * <p>To set up an {@code RepoManager}:
+ *
  * <ul>
- *     <li>
- *         Register the {@link SchemaModule}s used to parse the package.xml files and
- *         remote repositories used by this repo using {@link
- *         #registerSchemaModule(SchemaModule)}
- *     </li>
- *     <li>
- *         Set the path where the repo is installed locally using {@link #setLocalPath(File)}.
- *     </li>
- *     <li>
- *         If your local repo might contain packages created by a previous system, set a
- *         {@link FallbackLocalRepoLoader} that can recognize and convert those packages using
- *         {@link #setFallbackLocalRepoLoader(FallbackLocalRepoLoader)}.
- *     </li>
- *     <li>
- *         Add {@link RepositorySourceProvider}s to provide URLs for remotely-available packages.
- *     </li>
- *     <li>
- *         If some sources might be in a format used by a previous system, set a {@link
- *         FallbackRemoteRepoLoader} that can read and convert them.
- *     </li>
+ *   <li>Register the {@link SchemaModule}s used to parse the package.xml files and remote
+ *       repositories used by this repo using {@link #registerSchemaModule(SchemaModule)}
+ *   <li>Set the path where the repo is installed locally using {@link #setLocalPath(File)}.
+ *   <li>If your local repo might contain packages created by a previous system, set a {@link
+ *       FallbackLocalRepoLoader} that can recognize and convert those packages using {@link
+ *       #setFallbackLocalRepoLoader(FallbackLocalRepoLoader)}.
+ *   <li>Add {@link RepositorySourceProvider}s to provide URLs for remotely-available packages.
+ *   <li>If some sources might be in a format used by a previous system, set a {@link
+ *       FallbackRemoteRepoLoader} that can read and convert them.
  * </ul>
- * <p>
- * To load the local and remote packages, use {@link #load(long, List, List, List, ProgressRunner,
- * Downloader, SettingsController, boolean)}
- * <br>
+ *
+ * <p>To load the local and remote packages, use {@link #load(long, List, List, List,
+ * ProgressRunner, Downloader, SettingsController)} <br>
  * TODO: it would be nice if this could be redesigned such that load didn't need to be called
  * explicitly, or there was a better way to know if packages were or need to be loaded.
- * <p>
- * To use the loaded packages, get an {@link RepositoryPackages} object from {@link #getPackages()}.
+ *
+ * <p>To use the loaded packages, get an {@link RepositoryPackages} object from {@link
+ * #getPackages()}.
  */
 public abstract class RepoManager {
 
@@ -143,10 +134,8 @@ public abstract class RepoManager {
         return new RepoManagerImpl(fop);
     }
 
-    /**
-     * Register an {@link SchemaModule} that can be used when parsing XML for this repo.
-     */
-    public abstract void registerSchemaModule(@NonNull SchemaModule module);
+    /** Register an {@link SchemaModule} that can be used when parsing XML for this repo. */
+    public abstract void registerSchemaModule(@NonNull SchemaModule<?> module);
 
     /**
      * Gets the currently-registered {@link SchemaModule}s. This probably shouldn't be used except
@@ -222,7 +211,6 @@ public abstract class RepoManager {
     public abstract Set<RepositorySource> getSources(@Nullable Downloader downloader,
             @NonNull ProgressIndicator progress, boolean forceRefresh);
 
-
     /**
      * Sets the {@link FallbackRemoteRepoLoader} to try when we encounter a remote xml file that the
      * RepoManger can't read.
@@ -230,7 +218,37 @@ public abstract class RepoManager {
     public abstract void setFallbackRemoteRepoLoader(@Nullable FallbackRemoteRepoLoader remote);
 
     /**
-     * Load the local and remote repositories.
+     * Loads the local and remote repositories asynchronously.
+     *
+     * @param cacheExpirationMs How long must have passed since the last load for us to reload.
+     *     Specify {@code 0} to reload immediately.
+     * @param onLocalComplete When loading, the local repo load happens first, and should be
+     *     relatively fast. When complete, the {@code onLocalComplete} {@link RepoLoadedListener }s
+     *     are run. Will be called with a {@link RepositoryPackages} that contains only the local
+     *     packages.
+     * @param onSuccess Callbacks that are run when the entire load (local and remote) has completed
+     *     successfully. Called with an {@link RepositoryPackages} containing both the local and
+     *     remote packages.
+     * @param onError Callbacks that are run when there's an error at some point during the load.
+     * @param runner The {@link ProgressRunner} to use for any tasks started during the load,
+     *     including running the callbacks.
+     * @param downloader The {@link Downloader} to use for downloading remote files, including any
+     *     remote list of repo sources and the remote repositories themselves.
+     * @param settings The settings to use during the load, including for example proxy settings
+     *     used when fetching remote files.
+     *     <p>TODO: throw exception if cancelled
+     */
+    public abstract void load(
+            long cacheExpirationMs,
+            @Nullable List<RepoLoadedListener> onLocalComplete,
+            @Nullable List<RepoLoadedListener> onSuccess,
+            @Nullable List<Runnable> onError,
+            @NonNull ProgressRunner runner,
+            @Nullable Downloader downloader,
+            @Nullable SettingsController settings);
+
+    /**
+     * Loads the local and remote repositories synchronously.
      *
      * In callbacks, be careful of invoking tasks synchronously on other threads (e.g. the swing ui
      * thread), since they might also be used by the {@link ProgressRunner) passed in.
@@ -253,59 +271,63 @@ public abstract class RepoManager {
      *                          repositories themselves.
      * @param settings          The settings to use during the load, including for example proxy
      *                          settings used when fetching remote files.
-     * @param sync              If true, load synchronously. If false, load asynchronously (this
-     *                          method should return quickly, and the {@code onSuccess} callbacks
-     *                          can be used to process the completed results).
      *
      * TODO: throw exception if cancelled
      */
-    public abstract void load(long cacheExpirationMs,
+    @Slow
+    public abstract void loadSynchronously(
+            long cacheExpirationMs,
             @Nullable List<RepoLoadedListener> onLocalComplete,
             @Nullable List<RepoLoadedListener> onSuccess,
             @Nullable List<Runnable> onError,
             @NonNull ProgressRunner runner,
             @Nullable Downloader downloader,
-            @Nullable SettingsController settings,
-            boolean sync);
+            @Nullable SettingsController settings);
 
     /**
-     * Load the local and remote repositories synchronously.
+     * Loads the local and remote repositories synchronously.
      *
      * @param cacheExpirationMs How long must have passed since the last load for us to reload.
-     *                          Specify {@code 0} to reload immediately.
-     * @param progress          The {@link ProgressIndicator} to use for showing progress and
-     *                          logging.
-     * @param downloader        The {@link Downloader} to use for downloading remote files,
-     *                          including any remote list of repo sources and the remote
-     *                          repositories themselves.
-     * @param settings          The settings to use during the load, including for example proxy
-     *                          settings used when fetching remote files.
+     *     Specify {@code 0} to reload immediately.
+     * @param progress The {@link ProgressIndicator} to use for showing progress and logging.
+     * @param downloader The {@link Downloader} to use for downloading remote files, including any
+     *     remote list of repo sources and the remote repositories themselves.
+     * @param settings The settings to use during the load, including for example proxy settings
+     *     used when fetching remote files.
      * @return {@code true} if the load was successful (including if cached results were returned),
-     * false otherwise.
+     *     false otherwise.
      */
-    public final boolean loadSynchronously(long cacheExpirationMs,
-            @NonNull final ProgressIndicator progress,
-            @Nullable Downloader downloader, @Nullable SettingsController settings) {
-        final AtomicBoolean result = new AtomicBoolean(true);
-        load(cacheExpirationMs, null, null, ImmutableList.of(
-                () -> result.set(false)), new DummyProgressRunner(progress),
-                downloader, settings, true);
+    @Slow
+    public final boolean loadSynchronously(
+            long cacheExpirationMs,
+            @NonNull ProgressIndicator progress,
+            @Nullable Downloader downloader,
+            @Nullable SettingsController settings) {
+        AtomicBoolean result = new AtomicBoolean(true);
+        loadSynchronously(
+                cacheExpirationMs,
+                null,
+                null,
+                ImmutableList.of(() -> result.set(false)),
+                new DummyProgressRunner(progress),
+                downloader,
+                settings);
 
         return result.get();
     }
 
     /**
      * Causes cached results to be considered expired. The next time {@link #load(long, List, List,
-     * List, ProgressRunner, Downloader, SettingsController, boolean)} is called, a complete load
-     * will be done.
+     * List, ProgressRunner, Downloader, SettingsController)} is called, a complete load will be
+     * done.
      */
     public abstract void markInvalid();
 
     /**
      * Causes the cached results of the local repositories to be considered expired. The next time
-     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController,
-     * boolean)} is called, the load will be done only for the local repositories, the remotes being
-     * loaded from the cache if possible.
+     * {@link #load(long, List, List, List, ProgressRunner, Downloader, SettingsController)} is
+     * called, the load will be done only for the local repositories, the remotes being loaded from
+     * the cache if possible.
      */
     public abstract void markLocalCacheInvalid();
 
@@ -379,12 +401,11 @@ public abstract class RepoManager {
      * Callback for when repository load is completed/partially completed.
      */
     public interface RepoLoadedListener {
-
         /**
          * @param packages The packages that have been loaded so far. When this listener is used in
-         *                 the {@code onLocalComplete} argument to {@link #load(long, List, List,
-         *                 List, ProgressRunner, Downloader, SettingsController, boolean)} {@code
-         *                 packages} will only include local packages.
+         *     the {@code onLocalComplete} argument to {@link #load(long, List, List, List,
+         *     ProgressRunner, Downloader, SettingsController)} {@code packages} will only include
+         *     local packages.
          */
         void loaded(@NonNull RepositoryPackages packages);
     }

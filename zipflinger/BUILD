@@ -211,6 +211,6 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/base/testutils:studio.android.sdktools.testutils[module]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )

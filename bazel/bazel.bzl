@@ -59,12 +59,6 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
     )
     return plugin
 
-def accumulate_provider(provider, deps, runtime, compile_time):
-    deps += [provider]
-    runtime = depset(transitive = [runtime, provider.transitive_runtime_jars])
-    compile_time = depset(transitive = [compile_time, provider.full_compile_jars])
-    return deps, runtime, compile_time
-
 def _iml_module_jar_impl(
         ctx,
         name,
@@ -77,12 +71,11 @@ def _iml_module_jar_impl(
         res_zips,
         output_jar,
         java_deps,
+        java_runtime_deps,
         form_deps,
         exports,
         friends,
-        module_name,
-        transitive_compile_time_jars,
-        transitive_runtime_jars):
+        module_name):
     jars = []
     sourcepath = []
     forms = []
@@ -93,18 +86,14 @@ def _iml_module_jar_impl(
     # Kotlin
     kotlin_providers = []
     if kotlin_srcs:
-        kotlin_compile(
+        kotlin_providers += [kotlin_compile(
             ctx = ctx,
             name = module_name,
             srcs = java_srcs + kotlin_srcs,
-            deps = transitive_compile_time_jars,
+            deps = java_deps,
             friends = friends,
             out = kotlin_jar,
             jre = ctx.files._bootclasspath,
-        )
-        kotlin_providers += [JavaInfo(
-            output_jar = kotlin_jar,
-            compile_jar = kotlin_jar,
         )]
         jars += [kotlin_jar]
 
@@ -138,10 +127,16 @@ def _iml_module_jar_impl(
         if form_srcs:
             forms += relative_paths(ctx, form_srcs, roots)
 
+            # formc requires full compile jars (no ijars/hjars).
+            form_dep_jars = depset(transitive = [
+                java_common.make_non_strict(dep).full_compile_jars
+                for dep in java_deps
+            ])
+
             # Note: we explicitly include the bootclasspath from the current Java toolchain with
             # the classpath, because extracting it at runtime, when we are running in the
             # FormCompiler JVM, is not portable across JDKs (and made much harder on JDK9+).
-            form_classpath = depset(transitive = [transitive_runtime_jars, java_toolchain.bootclasspath])
+            form_classpath = depset(transitive = [form_dep_jars, java_toolchain.bootclasspath])
 
             args = ctx.actions.args()
             args.add_joined("-cp", form_classpath, join_with = ":")
@@ -196,59 +191,42 @@ def _iml_module_jar_impl(
         output_jar = output_jar,
         compile_jar = ijar,
         deps = java_deps,
+        runtime_deps = java_runtime_deps,
     )]
     providers += exports
 
     return java_common.merge(providers), forms, plugin
 
+def merge_runfiles(deps):
+    return depset(transitive = [
+        dep[DefaultInfo].default_runfiles.files
+        for dep in deps
+        if dep[DefaultInfo].default_runfiles
+    ])
+
 def _iml_module_impl(ctx):
     names = [iml.basename[:-4] for iml in ctx.files.iml_files if iml.basename.endswith(".iml")]
 
-    transitive_data = depset()
+    # Prod dependencies.
     java_deps = []
     form_deps = []
-
-    transitive_runtime_jars = depset(order = "preorder")
-    transitive_compile_time_jars = depset(order = "preorder")
-
     for this_dep in ctx.attr.deps:
         if hasattr(this_dep, "module"):
-            transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             form_deps += this_dep.module.forms
-        elif DefaultInfo in this_dep:
-            transitive_data = depset(transitive = [transitive_data, this_dep[DefaultInfo].default_runfiles.files])
+        if JavaInfo in this_dep:
+            java_deps += [this_dep[JavaInfo]]
 
-        if java_common.provider in this_dep:
-            java_deps, transitive_runtime_jars, transitive_compile_time_jars = accumulate_provider(
-                this_dep[java_common.provider],
-                java_deps,
-                transitive_runtime_jars,
-                transitive_compile_time_jars,
-            )
-
+    # Test dependencies (superset of prod).
     test_java_deps = []
     test_form_deps = []
-    transitive_test_runtime_jars = depset([ctx.outputs.production_jar], order = "preorder")
-    transitive_test_compile_time_jars = depset([ctx.outputs.production_jar], order = "preorder")
-
     for this_dep in ctx.attr.test_deps:
         if JavaInfo in this_dep:
-            test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars = accumulate_provider(
-                this_dep[JavaInfo],
-                test_java_deps,
-                transitive_test_runtime_jars,
-                transitive_test_compile_time_jars,
-            )
+            test_java_deps += [this_dep[JavaInfo]]
         if hasattr(this_dep, "module"):
-            transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             test_form_deps += this_dep.module.test_forms
-            test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars = accumulate_provider(
-                this_dep.module.test_provider,
-                test_java_deps,
-                transitive_test_runtime_jars,
-                transitive_test_compile_time_jars,
-            )
+            test_java_deps += [this_dep.module.test_provider]
 
+    # Exports.
     exports = []
     test_exports = []
     for export in ctx.attr.exports:
@@ -257,59 +235,63 @@ def _iml_module_impl(ctx):
         if hasattr(export, "module"):
             test_exports += [export.module.test_provider]
 
-    module_jars = ctx.outputs.production_jar
-    module_runtime = transitive_runtime_jars
-
-    transitive_data = depset(ctx.files.iml_files + ctx.files.data, transitive = [transitive_data])
+    # Runfiles.
+    # Note: the runfiles for test-only deps should technically not be in
+    # the prod module, but it is simpler this way (and not very harmful).
+    transitive_data = depset(
+        direct = ctx.files.iml_files + ctx.files.data,
+        transitive = [
+            merge_runfiles(ctx.attr.deps),
+            merge_runfiles(ctx.attr.test_deps),
+            merge_runfiles(ctx.attr.runtime_deps),
+        ],
+    )
+    runfiles = ctx.runfiles(transitive_files = transitive_data)
 
     # If multiple modules we use the label, otherwise use the exact module name
     module_name = names[0] if len(names) == 1 else ctx.label.name
     main_provider, main_forms, plugin_xml = _iml_module_jar_impl(
-        ctx,
-        ctx.label.name,
-        ctx.attr.roots,
-        ctx.files.java_srcs,
-        ctx.files.kotlin_srcs,
-        ctx.files.form_srcs,
-        ctx.files.resources,
-        ctx.attr.manifests,
-        ctx.files.res_zips,
-        ctx.outputs.production_jar,
-        java_deps,
-        form_deps,
-        exports,
-        [],
-        module_name,
-        transitive_compile_time_jars,
-        transitive_runtime_jars,
+        ctx = ctx,
+        name = ctx.label.name,
+        roots = ctx.attr.roots,
+        java_srcs = ctx.files.java_srcs,
+        kotlin_srcs = ctx.files.kotlin_srcs,
+        form_srcs = ctx.files.form_srcs,
+        resources = ctx.files.resources,
+        manifests = ctx.attr.manifests,
+        res_zips = ctx.files.res_zips,
+        output_jar = ctx.outputs.production_jar,
+        java_deps = java_deps,
+        java_runtime_deps = [dep[JavaInfo] for dep in ctx.attr.runtime_deps],
+        form_deps = form_deps,
+        exports = exports,
+        friends = [],
+        module_name = module_name,
     )
 
     test_provider, test_forms, _ = _iml_module_jar_impl(
-        ctx,
-        ctx.label.name + "_test",
-        ctx.attr.test_roots,
-        ctx.files.java_test_srcs,
-        ctx.files.kotlin_test_srcs,
-        ctx.files.form_test_srcs,
-        ctx.files.test_resources,
-        [],
-        [],
-        ctx.outputs.test_jar,
-        [main_provider] + test_java_deps,
-        test_form_deps,
-        exports + test_exports,
-        [ctx.outputs.production_jar] + ctx.files.test_friends,
-        module_name,
-        transitive_test_compile_time_jars,
-        transitive_test_runtime_jars,
+        ctx = ctx,
+        name = ctx.label.name + "_test",
+        roots = ctx.attr.test_roots,
+        java_srcs = ctx.files.java_test_srcs,
+        kotlin_srcs = ctx.files.kotlin_test_srcs,
+        form_srcs = ctx.files.form_test_srcs,
+        resources = ctx.files.test_resources,
+        manifests = [],
+        res_zips = [],
+        output_jar = ctx.outputs.test_jar,
+        java_deps = [main_provider] + test_java_deps,
+        java_runtime_deps = [],  # Runtime deps already inherited from prod module.
+        form_deps = test_form_deps,
+        exports = exports + test_exports,
+        friends = [ctx.outputs.production_jar] + ctx.files.test_friends,
+        module_name = module_name,
     )
 
     return struct(
         module = struct(
             bundled_deps = ctx.files.bundled_deps,
-            module_jars = module_jars,
-            module_runtime = module_runtime,
-            transitive_data = transitive_data,
+            module_jars = ctx.outputs.production_jar,
             forms = main_forms,
             test_forms = test_forms,
             java_deps = java_deps,
@@ -318,7 +300,10 @@ def _iml_module_impl(ctx):
             names = names,
             plugin = plugin_xml,
         ),
-        providers = [main_provider],
+        providers = [
+            main_provider,
+            DefaultInfo(runfiles = runfiles),
+        ],
     )
 
 _iml_module_ = rule(
@@ -345,6 +330,7 @@ _iml_module_ = rule(
         "roots": attr.string_list(),
         "test_roots": attr.string_list(),
         "deps": attr.label_list(),
+        "runtime_deps": attr.label_list(providers = [JavaInfo]),
         "test_deps": attr.label_list(),
         "test_friends": attr.label_list(),
         "data": attr.label_list(allow_files = True),
@@ -391,25 +377,16 @@ _iml_module_ = rule(
 )
 
 def _iml_test_module_impl(ctx):
-    providers = [ctx.attr.iml_module.module.test_provider]
-    for dep in ctx.attr.runtime_deps:
-        if JavaInfo in dep:
-            providers += [dep[JavaInfo]]
-        if hasattr(dep, "module"):
-            providers += [dep.module.test_provider]
-    java_info = java_common.merge(providers)
-    runfiles = ctx.runfiles(transitive_files = ctx.attr.iml_module.module.transitive_data)
+    runfiles = ctx.attr.iml_module[DefaultInfo].default_runfiles
     return [
-        java_info,
+        ctx.attr.iml_module.module.test_provider,  # JavaInfo.
         DefaultInfo(runfiles = runfiles),
     ]
 
 _iml_test_module_ = rule(
     attrs = {
         "iml_module": attr.label(),
-        "runtime_deps": attr.label_list(),
     },
-    fragments = ["java"],
     implementation = _iml_test_module_impl,
 )
 
@@ -536,6 +513,7 @@ def iml_module(
         iml_files = iml_files,
         exports = exports,
         deps = prod_deps + ["//tools/base/bazel:langtools"],
+        runtime_deps = runtime_deps,
         test_deps = test_deps + ["//tools/base/bazel:langtools"],
         test_friends = test_friends,
         data = data,
@@ -552,18 +530,12 @@ def iml_module(
             tags = tags,
         )
 
-    # Only add test utils to other than itself.
-    test_utils = [] if name == "studio.android.sdktools.testutils" else ["//tools/base/testutils:studio.android.sdktools.testutils"]
     _iml_test_module_(
         name = name + "_testlib",
         tags = tags,
         iml_module = ":" + name,
         testonly = True,
         visibility = visibility,
-        runtime_deps = runtime_deps + [
-            ":" + name,
-            "//tools/base/bazel:langtools",
-        ] + test_utils,
     )
 
     lint_srcs = srcs.javas + srcs.kotlins
@@ -594,6 +566,10 @@ def iml_module(
 
     if not test_srcs:
         return
+
+    # The default test_class (JarTestSuite) comes from testutils, so we add testutils as a runtime dep.
+    test_utils = [] if name == "studio.android.sdktools.testutils" else ["//tools/base/testutils:studio.android.sdktools.testutils_testlib"]
+
     if split_test_targets and test_flaky:
         fail("must use the Flaky attribute per split_test_target")
     if split_test_targets and test_shard_count:
@@ -605,7 +581,7 @@ def iml_module(
             split_test_targets = split_test_targets,
             test_tags = test_tags,
             test_data = test_data,
-            runtime_deps = [":" + name + "_testlib"],
+            runtime_deps = [":" + name + "_testlib"] + test_utils,
             timeout = test_timeout,
             jvm_flags = ["-Dtest.suite.jar=" + name + "_test.jar"],
             test_class = test_class,
@@ -617,7 +593,7 @@ def iml_module(
         coverage_java_test(
             name = name + "_tests",
             tags = test_tags,
-            runtime_deps = [":" + name + "_testlib"],
+            runtime_deps = [":" + name + "_testlib"] + test_utils,
             flaky = test_flaky,
             timeout = test_timeout,
             shard_count = test_shard_count,

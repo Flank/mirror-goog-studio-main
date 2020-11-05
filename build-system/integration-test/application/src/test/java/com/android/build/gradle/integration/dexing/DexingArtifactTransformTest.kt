@@ -186,7 +186,7 @@ class DexingArtifactTransformTest {
             }
         """.trimIndent()
         )
-        val result = executor().with(OptionalBooleanOption.ENABLE_R8, false).run("assembleDebug")
+        val result = executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("assembleDebug")
         assertThat(result.tasks).doesNotContain(":mergeExtDexDebug")
         assertThat(result.tasks).contains(":mergeDexDebug")
     }

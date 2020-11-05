@@ -55,6 +55,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
@@ -130,6 +131,7 @@ public class TestLintTask {
     boolean checkUInjectionHost = true;
     boolean useTestProject;
     boolean allowExceptions;
+    public String testName = null;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -446,6 +448,15 @@ public class TestLintTask {
     }
 
     /**
+     * Sets the test name (optional). This will place the tests in a temp directory including the
+     * test name which is sometimes helpful for debugging.
+     */
+    public TestLintTask testName(String testName) {
+        this.testName = testName;
+        return this;
+    }
+
+    /**
      * This method allows you to add a hook which you can run on a mock builder model to tweak it,
      * such as changing or augmenting the builder model classes
      */
@@ -708,12 +719,32 @@ public class TestLintTask {
             }
         }
 
+        // First create project directories (before populating them) since
+        // the directories need to exist to make relative path computations
+        // between the projects (used for example for dependencies) work
+        // properly.
         List<File> projectDirs = Lists.newArrayList();
         for (ProjectDescription project : allProjects) {
             try {
                 project.ensureUnique();
+                File projectDir = getProjectDirectory(project, rootDir);
+                dirToProjectDescription.put(projectDir, project);
+                if (!projectDir.isDirectory()) {
+                    boolean ok = projectDir.mkdirs();
+                    assertTrue("Couldn't create projectDir " + projectDir, ok);
+                }
+                projectDirs.add(projectDir);
 
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
+
+        // Populate project directories with source files
+        for (ProjectDescription project : allProjects) {
+            try {
                 TestFile[] files = project.getFiles();
+                File projectDir = getProjectDirectory(project, rootDir);
 
                 // Also create dependency files
                 if (!project.getDependsOn().isEmpty()) {
@@ -731,16 +762,15 @@ public class TestLintTask {
 
                     int index = 1;
                     for (ProjectDescription dependency : project.getDependsOn()) {
-                        propertyFile.property(
-                                "android.library.reference." + (index++),
-                                "../" + dependency.getName());
+                        File dependencyDir = getProjectDirectory(dependency, rootDir);
+                        TestLintClient client = new TestLintClient(LintClient.clientName);
+                        String relative = client.getRelativePath(projectDir, dependencyDir);
+                        String referenceKey = "android.library.reference." + (index++);
+                        propertyFile.property(referenceKey, relative);
                     }
                 }
 
-                File projectDir = new File(rootDir, project.getName());
-                dirToProjectDescription.put(projectDir, project);
                 populateProjectDirectory(project, projectDir, files);
-                projectDirs.add(projectDir);
 
                 if (baseline != null) {
                     baselineFile = baseline.createFile(projectDir);
@@ -751,6 +781,22 @@ public class TestLintTask {
         }
 
         return projectDirs;
+    }
+
+    @NonNull
+    private static File getProjectDirectory(
+            @NonNull ProjectDescription project, @NonNull File rootDir) {
+        if (project.getUnder() == null) {
+            return new File(rootDir, project.getName());
+        }
+        List<String> segments = new ArrayList<>();
+        do {
+            segments.add(project.getName());
+            project = project.getUnder();
+        } while (project != null);
+        Collections.reverse(segments);
+        String relativePath = Joiner.on(File.separator).join(segments);
+        return new File(rootDir, relativePath);
     }
 
     private boolean haveKotlinTestFiles() {
@@ -777,7 +823,15 @@ public class TestLintTask {
         alreadyRun = true;
         ensureConfigured();
 
-        File rootDir = rootDirectory != null ? rootDirectory : tempDir;
+        File rootDir;
+        if (rootDirectory != null) {
+            rootDir = rootDirectory;
+        } else if (testName != null) {
+            rootDir = new File(tempDir, testName);
+        } else {
+            rootDir = tempDir;
+        }
+
         try {
             // Use canonical path to make sure we don't end up failing
             // to chop off the prefix from Project#getDisplayPath

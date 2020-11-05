@@ -40,9 +40,9 @@ class SettingsNameResolverTest {
         """.trimIndent()).environments)
 
         assertThat(resolver.resolve("ndk.minPlatform",
-            listOf("android-ndk"))!!.get()).isEqualTo("16")
+            listOf("android-ndk"))!!).isEqualTo("16")
         assertThat(resolver.resolve("ndk.platformCode",
-            listOf("android-ndk-platform-29"))!!.get()).isEqualTo("Q")
+            listOf("android-ndk-platform-29"))!!).isEqualTo("Q")
     }
 
     @Test
@@ -58,7 +58,7 @@ class SettingsNameResolverTest {
         """.trimIndent()).environments)
 
         assertThat(resolver.resolve("name",
-            listOf("my-environment"))!!.get()).isEqualTo("value")
+            listOf("my-environment"))!!).isEqualTo("value")
     }
 
     @Test
@@ -79,11 +79,11 @@ class SettingsNameResolverTest {
         """.trimIndent()).environments)
 
         assertThat(resolver.resolve("ndk.minPlatform",
-            listOf("android-ndk-1", "android-ndk-2"))!!.get())
+            listOf("android-ndk-1", "android-ndk-2"))!!)
             .isEqualTo("16")
 
         assertThat(resolver.resolve("ndk.minPlatform",
-            listOf("android-ndk-2", "android-ndk-1"))!!.get())
+            listOf("android-ndk-2", "android-ndk-1"))!!)
             .isEqualTo("17")
     }
 
@@ -107,15 +107,15 @@ class SettingsNameResolverTest {
         """.trimIndent()).environments)
 
         assertThat(resolver.resolve("ndk.minPlatform",
-            listOf("android-ndk-1"))!!.get())
+            listOf("android-ndk-1"))!!)
             .isEqualTo("16")
 
         assertThat(resolver.resolve("ndk.minPlatform",
-            listOf("android-ndk-2"))!!.get())
+            listOf("android-ndk-2"))!!)
             .isEqualTo("17")
 
         assertThat(resolver.resolve("ndk.maxPlatform",
-            listOf("android-ndk-2"))!!.get())
+            listOf("android-ndk-2"))!!)
             .isEqualTo("28")
     }
 
@@ -140,7 +140,7 @@ class SettingsNameResolverTest {
         """.trimIndent()).environments)
 
         assertThat(resolver.resolve("ndk.minPlatform",
-            listOf("android-ndk-2"))!!.get())
+            listOf("android-ndk-2"))!!)
             .isEqualTo("16")
     }
 
@@ -166,7 +166,7 @@ class SettingsNameResolverTest {
         """.trimIndent()).environments)
 
         assertThat(resolver.resolve("ndk.minPlatform",
-            listOf("android-ndk-2"))!!.get())
+            listOf("android-ndk-2"))!!)
             .isEqualTo("16")
     }
 }

@@ -102,13 +102,6 @@ dependencies {
     }
 
     provided(files('../../../../prebuilts/r8/r8.jar'))
-
-    resourcesRuntime(project(path: ':external:desugar', configuration: 'fatJar')) {
-        transitive = false
-    }
-    resourcesRuntime(project(':external:desugar:tryWithResourcesRuntime')) {
-        transitive = false
-    }
 }
 
 sourceSets.main.compileClasspath += configurations.provided

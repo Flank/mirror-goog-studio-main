@@ -16,6 +16,7 @@
 package com.android.sdklib.tool.sdkmanager;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
@@ -41,6 +42,7 @@ class ListAction extends SdkAction {
         super(settings);
     }
 
+    @Slow
     @Override
     public void execute(@NonNull ProgressIndicator progress) {
         progress.setText("Loading package information...");

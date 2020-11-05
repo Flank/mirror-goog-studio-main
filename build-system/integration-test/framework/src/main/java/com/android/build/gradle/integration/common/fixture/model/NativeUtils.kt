@@ -21,9 +21,12 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.internal.cxx.model.soFolder
+import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.v2.models.ndk.NativeModule
+import com.android.builder.model.v2.models.ndk.NativeVariant
 import com.android.utils.cxx.streamCompileCommands
 import com.google.gson.JsonArray
 import java.io.File
@@ -72,6 +75,61 @@ fun File.dumpCompileCommandsJsonBin(normalizer: FileNormalizer): String =
         """.trimIndent()
                 }
 
+/**
+ * Return a report of build outputs (*.so, *.o, *.a).
+ */
+fun GradleTestProject.goldenBuildProducts() : String {
+    val fetchResult = modelV2().fetchNativeModules(listOf(), listOf())
+    val hashToKey = fetchResult.cxxFileVariantSegmentTranslator()
+    val projectFolder = recoverExistingCxxAbiModels().first().variant.module.project.rootBuildGradleFolder
+    return projectFolder.walk()
+            .filter { file -> file.extension in listOf("so", "o", "a") }
+            .map { fetchResult.normalizer.normalize(it) }
+            .map { hashToKey(it) }
+            .sorted()
+            .toList()
+            .joinToString("\n")
+}
+
+/**
+ * Output configuration flags for the given ABI.
+ */
+fun GradleTestProject.goldenConfigurationFlags(abi: Abi) : String {
+    val fetchResult =
+            modelV2().fetchNativeModules(listOf("debug"), listOf(abi.tag))
+    val abi = recoverExistingCxxAbiModels().single { it.abi == abi }
+    val hashToKey = fetchResult.cxxFileVariantSegmentTranslator()
+    return hashToKey(abi.goldenConfigurationFlags())
+}
+
+private fun CxxAbiModel.goldenConfigurationFlags() : String {
+    fun String.slash() : String = replace("\\", "/")
+    fun File.slash() : String = toString().slash()
+    return buildCommandFile.readText()
+            .slash()
+            .replace(variant.module.project.rootBuildGradleFolder.slash(), "{PROJECT}")
+            .replace(variant.module.ndkFolder.slash(), "{NDK}")
+            .trim()
+            .lines()
+            .map { line ->
+                if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
+                    val cmake = variant.module.cmake!!
+                    line
+                        .replace(cmake.cmakeExe!!.slash(), "{CMAKE}")
+                        .replace(cmake.ninjaExe!!.slash(), "{NINJA}")
+                        .replace("-GNinja", "-G{Generator}")
+                        .replace("-GAndroid Gradle - Ninja", "-G{Generator}")
+                } else line
+            }
+            .filter { !it.startsWith(" ") }
+            .filter { !it.isBlank() }
+            .filter { !it.startsWith("jvmArgs") }
+            .filter { !it.startsWith("arguments") }
+            .filter { !it.startsWith("Executable :") }
+            .sorted()
+            .joinToString("\n")
+}
+
 private val abiTags = Abi.values().map { abi -> abi.tag }.toSet()
 
 fun findAbiSegment(file: File) : String? {
@@ -89,23 +147,42 @@ fun findCxxSegment(file: File) : String? {
 fun findConfigurationSegment(file: File) : String? {
     val abi = findAbiSegment(file) ?: return null
     val cxx = findCxxSegment(file) ?: return null
-    val string = file.toString()
-    return string.substring(string.lastIndexOf(cxx) + cxx.length + 1, string.lastIndexOf(abi) - 1).replace("\\", "/")
+    val string = file.toString().replace("\\", "/")
+    return string.substring(
+            string.lastIndexOf(cxx) + cxx.length + 1,
+            string.lastIndexOf(abi) - 1)
 }
 
-private fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.hashEquivalents() : List<Pair<String, String>> =
-        container.infoMaps.values
-                .asSequence()
-                .map { it.values }
-                .flatten()
-                .map { it.model.variants }
-                .flatten()
-                .map { it.abis.map { abi -> "{${it.name.toUpperCase(Locale.ROOT)}}" to findConfigurationSegment(abi.sourceFlagsFile) } }
-                .flatten()
-                .filter { it.second != null }
-                .map { it.first to it.second!! }
-                .distinct()
-                .toList()
+/**
+ * Discover and build a map (list of pair) from output file subsegment to a human readable name
+ * that can be used in tests. For example,
+ *
+ *      cmake/debug ==> {DEBUG}
+ *      cmake/release ==> {RELEASE}
+ */
+private fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.hashEquivalents() : List<Pair<String, String>> {
+    val segments = container.infoMaps.values
+            .flatMap { it.values }
+            .flatMap { it.model.variants }
+            .flatMap { variant ->
+                variant.abis.map { abi ->
+                    findConfigurationSegment(abi.sourceFlagsFile)!! to "{${variant.name.toUpperCase(Locale.ROOT)}}"
+                }
+            }
+    val configurationAliases = segments
+            .map { (segment, alias) ->
+                "/.cxx/$segment" to "/.cxx/$alias"
+            }
+    val intermediatesCxxAliases = segments
+            .map { (segment, alias) ->
+                "/cxx/$segment" to "/$alias"
+            }
+    val intermediatesAliases = segments
+            .map { (segment, alias) ->
+                "/intermediates/$segment" to "/intermediates/$alias"
+            }
+    return configurationAliases + intermediatesCxxAliases + intermediatesAliases
+}
 
 /**
  * Recover existing CxxAbiModels that were written to disk during the configure phase.
@@ -144,8 +221,31 @@ private fun List<Pair<String, String>>.toTranslateFunction() = run {
     }
 }
 
-fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.hashToKeyTranslator() =
-        hashEquivalents().map { it.second to it.first }.toTranslateFunction()
+/**
+ * Build a translator that will convert from ".cxx/[some stuff in related to "debug" variant]/x86"
+ * to .cxx/{DEBUG}/x86 so that baselines can be compared even with "stuff" changes (as it is for
+ * configuration folding).
+ */
+fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.cxxFileVariantSegmentTranslator() =
+        hashEquivalents().toTranslateFunction()
+
+/**
+ * Sort [NativeModule] with variant names in alphabetic order and ABI names in ordinal order
+ * from [Abi].
+ */
+fun NativeModule.sorted() : NativeModule {
+    val module = this
+    fun sorted(variant : NativeVariant) = object : NativeVariant by variant {
+        override val abis = variant.abis
+                .sortedBy { abi -> Abi.getByName(abi.name)!!.ordinal }
+    }
+    return object : NativeModule by module {
+        override val variants = module.variants
+                    .map(::sorted)
+                    .sortedBy { variant -> variant.name }
+
+    }
+}
 
 /**
  * Dumps the content of [NativeModule] as a string. The dump format is like the following
@@ -164,21 +264,32 @@ fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.hashToKeyTranslat
  */
 fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.dump(map:(NativeModule)->NativeModule): String {
     val sb = StringBuilder()
-    val hashTranslator = hashToKeyTranslator()
-    val normalizer = object : FileNormalizer by normalizer {
-        override fun normalize(file: File) = hashTranslator(normalizer.normalize(file))
-    }
-    container.infoMaps.forEach { (_, modelMap) ->
-        modelMap.forEach { moduleName, (nativeModule: NativeModule, _) ->
-            sb.appendln("[$moduleName]")
-            sb.appendln(
-                    dump(NativeModule::class.java, normalizer) {
-                        map(nativeModule).writeToBuilder(this)
-                    }
-            )
+    withCxxFileNormalizer().apply {
+        container.infoMaps.forEach { (_, modelMap) ->
+            modelMap.forEach { moduleName, (nativeModule: NativeModule, _) ->
+                sb.appendln("[$moduleName]")
+                sb.appendln(
+                        dump(NativeModule::class.java, normalizer) {
+                            map(nativeModule.sorted()).writeToBuilder(this)
+                        }
+                )
+            }
         }
     }
     return sb.toString().trim().replace(System.lineSeparator(), "\n")
+}
+
+/**
+ * Add a C/C++ path normalizer to this [FetchResult]
+ */
+fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.withCxxFileNormalizer()
+        : ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>> {
+    val cxxSegmentTranslator = cxxFileVariantSegmentTranslator()
+    val normalizer = object : FileNormalizer by normalizer {
+        override fun normalize(file: File) =
+                cxxSegmentTranslator(normalizer.normalize(file))
+    }
+    return copy(normalizer = normalizer)
 }
 
 fun ModelBuilderV2.FetchResult<ModelContainerV2<NativeModule>>.dump() = dump { it }

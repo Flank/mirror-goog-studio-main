@@ -38,6 +38,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.LintXmlConfiguration;
+import com.android.tools.lint.client.api.Vendor;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -1582,6 +1583,15 @@ public class Main {
         System.out.println("Priority: " + issue.getPriority() + " / 10");
         System.out.println("Severity: " + issue.getDefaultSeverity().getDescription());
         System.out.println("Category: " + issue.getCategory().getFullName());
+        Vendor vendor = issue.getVendor();
+        IssueRegistry registry = issue.getRegistry();
+        if (vendor == null && registry != null) {
+            vendor = registry.getVendor();
+        }
+        if (vendor != null) {
+            String description = vendor.describe(TEXT);
+            System.out.print(description);
+        }
 
         if (!issue.isEnabledByDefault()) {
             System.out.println("NOTE: This issue is disabled by default!");

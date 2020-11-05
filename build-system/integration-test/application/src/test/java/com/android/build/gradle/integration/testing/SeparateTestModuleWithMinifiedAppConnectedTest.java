@@ -54,7 +54,9 @@ public class SeparateTestModuleWithMinifiedAppConnectedTest {
     public void checkRunOnDevice() throws Exception {
         adb.exclusiveAccess();
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run(":test:connectedAndroidTest");
     }
 }

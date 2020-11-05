@@ -108,13 +108,9 @@ public interface VariantScope {
         INVALID,
         UNUSED,
         D8,
-        DESUGAR,
         RETROLAMBDA,
         R8,
     }
-
-    @NonNull
-    ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();
 
     @NonNull
     FileCollection getBootClasspath();

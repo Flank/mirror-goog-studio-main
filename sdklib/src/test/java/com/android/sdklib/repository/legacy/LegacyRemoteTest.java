@@ -30,7 +30,6 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.net.URL;
 import java.util.Map;
@@ -73,9 +72,14 @@ public class LegacyRemoteTest extends TestCase {
                 getClass().getResourceAsStream("/repository_sample_10.xml"));
         FakeProgressRunner runner = new FakeProgressRunner();
 
-        mgr.load(0, Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList(), runner, downloader, settings, true);
+        mgr.loadSynchronously(
+                0,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                settings);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         RepositoryPackages packages = mgr.getPackages();
 
@@ -85,9 +89,14 @@ public class LegacyRemoteTest extends TestCase {
 
         settings.setChannel(Channel.create(1));
         mgr.markInvalid();
-        mgr.load(0, Lists.newArrayList(),
-                Lists.newArrayList(),
-                Lists.newArrayList(), runner, downloader, settings, true);
+        mgr.loadSynchronously(
+                0,
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                runner,
+                downloader,
+                settings);
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         packages = mgr.getPackages();
 

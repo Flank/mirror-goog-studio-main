@@ -338,6 +338,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     @NonNull
     protected TestLintTask lint() {
         TestLintTask task = TestLintTask.lint();
+        task.testName(this.getClass().getSimpleName() + "_" + getName());
         task.issues(getIssues().toArray(new Issue[0]));
         return task;
     }

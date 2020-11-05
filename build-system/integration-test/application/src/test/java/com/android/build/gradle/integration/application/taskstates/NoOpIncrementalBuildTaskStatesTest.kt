@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.TaskStateAssertionHelper
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
 
@@ -76,6 +77,12 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:validateSigningDebug",
                 ":app:writeDebugAppMetadata",
                 ":app:writeDebugSigningConfigVersions"
+            ).plus(
+                    if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                        setOf(":app:mapDebugSourceSetPaths")
+                    } else {
+                        emptySet()
+                    }
             ),
             SKIPPED to setOf(
                 ":app:compileDebugAidl",

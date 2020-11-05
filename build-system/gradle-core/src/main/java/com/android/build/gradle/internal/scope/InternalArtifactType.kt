@@ -150,6 +150,9 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_RES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // folder for the blame report on the merged resources
     object MERGED_RES_BLAME_FOLDER: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // File containing map between a source set identifier and an absolute resource sourceset path
+    // for generating absolute paths in resource linking error messages.
+    object SOURCE_SET_PATH_MAP: InternalArtifactType<RegularFile>(FILE), Replaceable
     // The R class jar for compile classpath use.
     object COMPILE_R_CLASS_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     // output of the resource merger for unit tests and the resource shrinker.
@@ -309,12 +312,8 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // The lint JAR to be published in the AAR.
     object LINT_PUBLISH_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
-    // Serialized Lint Model for this sub-project (contains all variants but no dependency info)
-    // This is a global artifact (not per-variant).
-    // The directory contains 1 module file and 1 file per variant.
-    object LINT_PROJECT_GLOBAL_MODEL:  InternalArtifactType<Directory>(DIRECTORY)
-    // Serialized Lint Model for the dependencies of one variant
-    object LINT_VARIANT_DEPENDENCIES_MODEL:  InternalArtifactType<Directory>(DIRECTORY)
+    // Serialized Lint Model for a variant
+    object LINT_MODEL:  InternalArtifactType<Directory>(DIRECTORY)
 
     // the zip file output of the extract annotation class.
     object ANNOTATIONS_ZIP: InternalArtifactType<RegularFile>(FILE), Replaceable

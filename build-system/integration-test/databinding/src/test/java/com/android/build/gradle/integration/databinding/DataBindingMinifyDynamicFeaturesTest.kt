@@ -148,7 +148,7 @@ class DataBindingMinifyDynamicFeaturesTest(val codeShrinker: CodeShrinker) {
     @Test
     fun assembleMinified() {
         val executor = project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
         executor.run("assembleMinified")
 
         val minifiedApk = "minified"

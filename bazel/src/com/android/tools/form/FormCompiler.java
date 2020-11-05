@@ -62,7 +62,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
     }
 
     @Override
-    protected boolean compile(List<String> files, String classPath, File outDir) throws IOException {
+    protected boolean compile(List<String> forwardedArgs, String classPath, File outDir) throws IOException {
         // Files can contain .jar and .form which will be added together into one output jar.
         mOutDir = outDir;
         final ArrayList<URL> urls = new ArrayList<>();
@@ -71,7 +71,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         addUrlsTo(classPath.replaceAll(":", File.pathSeparator), urls);
 
         Pattern formPattern = Pattern.compile("(.*)=(.*\\.form)");
-        for (String file : files) {
+        for (String file : forwardedArgs) {
             if (file.endsWith(".jar")) {
                 addUrlsTo(file, urls);
                 Unzipper unzipper = new Unzipper();

@@ -347,4 +347,109 @@ class DeprecationDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testChooserTargetServiceDeprecation() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import android.content.ComponentName;
+                import android.content.IntentFilter;
+                import android.service.chooser.ChooserTarget;
+                import android.service.chooser.ChooserTargetService;
+
+                @SuppressWarnings("unused")
+                public class DeprecationTestJava {
+                    public void test(Object driver) {
+                        ChooserClass chooser = new ChooserClass();
+                    }
+                }
+
+                class ChooserClass extends ChooserTargetService {
+                    @Override
+                    public List<ChooserTarget> onGetChooserTargets(
+                        ComponentName c, IntentFilter i) {
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import android.content.ComponentName;
+                import android.content.IntentFilter;
+                import android.service.chooser.ChooserTarget
+                import android.service.chooser.ChooserTargetService
+
+                @Suppress("unused", "UNUSED_VARIABLE")
+                class DeprecationTestKotlin {
+                    fun test(driver: Any) {
+                        val chooser = ChooserClass()
+                    }
+                }
+
+                class ChooserClass : ChooserTargetService() {
+                    override fun onGetChooserTargets(
+                        p0: ComponentName?,
+                    p1: IntentFilter?
+                    ): MutableList<ChooserTarget> {
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/DeprecationTestJava.java:14: Warning: ChooserClass extends the deprecated ChooserTargetService: Use the Share API instead [Deprecated]
+            class ChooserClass extends ChooserTargetService {
+                  ~~~~~~~~~~~~
+            src/test/pkg/DeprecationTestKotlin.kt:14: Warning: ChooserClass extends the deprecated ChooserTargetService: Use the Share API instead [Deprecated]
+            class ChooserClass : ChooserTargetService() {
+                  ~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Show URL for src/test/pkg/DeprecationTestJava.java line 14: https://developer.android.com/training/sharing/receive.html?source=studio#providing-direct-share-targets
+            Show URL for src/test/pkg/DeprecationTestKotlin.kt line 14: https://developer.android.com/training/sharing/receive.html?source=studio#providing-direct-share-targets
+            """
+        )
+    }
+
+    fun testUsesChooserTargetServicePermission() {
+        val expected =
+            """
+            AndroidManifest.xml:11: Warning: ChooserTargetService` is deprecated: Please see https://developer.android.com/training/sharing/receive.html?source=studio#providing-direct-share-targets [Deprecated]
+                        android:permission="android.permission.BIND_CHOOSER_TARGET_SERVICE">
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        lint().files(
+            xml(
+                "AndroidManifest.xml",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                    <uses-sdk android:minSdkVersion="1" />
+
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                        <service
+                            android:name=".ChooserService"
+                            android:label="@string/service_name"
+                            android:permission="android.permission.BIND_CHOOSER_TARGET_SERVICE">
+                            <intent-filter>
+                                <action android:name="android.service.chooser.ChooserTargetService" />
+                            </intent-filter>
+                        </service>
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(expected).expectFixDiffs(
+            """
+            Show URL for AndroidManifest.xml line 11: https://developer.android.com/training/sharing/receive.html?source=studio#providing-direct-share-targets
+            """
+        )
+    }
 }

@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.SKIPPED
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -84,6 +85,14 @@ class LibraryCacheabilityTest {
                 DID_WORK to setOf(
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */
+                ).plus(
+                        // mapDebugSourceSetPaths is not cacheable but exists to enable the main
+                        // resource compilation to be cacheable.
+                        if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                            setOf(":lib:mapReleaseSourceSetPaths")
+                        } else {
+                            emptySet()
+                        }
                 ),
                 SKIPPED to setOf(
                     ":lib:assembleRelease",

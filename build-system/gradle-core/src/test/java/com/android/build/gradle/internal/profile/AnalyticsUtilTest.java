@@ -373,5 +373,7 @@ public class AnalyticsUtilTest {
                 .isEqualTo(
                         GradleBuildProject.GradlePlugin
                                 .COM_GOOGLE_GMS_GOOGLESERVICES_GOOGLESERVICESPLUGIN);
+        assertThat(AnalyticsUtil.otherPluginToProto("com.example.FakePlugin"))
+                .isEqualTo(GradleBuildProject.GradlePlugin.UNKNOWN_GRADLE_PLUGIN);
     }
 }

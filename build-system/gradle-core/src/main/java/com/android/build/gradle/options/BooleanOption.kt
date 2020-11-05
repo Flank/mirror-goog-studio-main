@@ -132,10 +132,6 @@ enum class BooleanOption(
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.Experimental),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true, FeatureStage.Experimental),
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true, FeatureStage.Experimental),
-    ENABLE_D8_DESUGARING("android.enableD8.desugaring", true, FeatureStage.Experimental),
-
-    /** Set to true by default, but has effect only if R8 is enabled. */
-    ENABLE_R8_DESUGARING("android.enableR8.desugaring", true, FeatureStage.Experimental),
 
     // Marked as stable to avoid reporting deprecation twice.
     CONVERT_NON_NAMESPACED_DEPENDENCIES("android.convertNonNamespacedDependencies", true, FeatureStage.Experimental),
@@ -157,6 +153,7 @@ enum class BooleanOption(
     USE_NEW_APK_CREATOR("android.useNewApkCreator", true, FeatureStage.Experimental),
     EXCLUDE_RES_SOURCES_FOR_RELEASE_BUNDLES("android.bundle.excludeResSourcesForRelease", true, FeatureStage.Experimental),
     ENABLE_BUILD_CONFIG_AS_BYTECODE("android.enableBuildConfigAsBytecode", false, FeatureStage.Experimental),
+    ENABLE_SOURCE_SET_PATHS_MAP("android.experimental.enableSourceSetPathsMap", false, FeatureStage.Experimental),
 
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
@@ -168,8 +165,6 @@ enum class BooleanOption(
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
-
-    ENABLE_DESUGAR("android.enableDesugar", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.DESUGAR_TOOL)),
 
     /** Whether Jetifier will skip libraries that already support AndroidX. */
     JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
@@ -193,18 +188,6 @@ enum class BooleanOption(
      * DEPRECATED FEATURES
      */
 
-    @Suppress("unused")
-    ENABLE_BUILD_CACHE(
-        "android.enableBuildCache",
-        true,
-        FeatureStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
-    ),
-    @Suppress("unused")
-    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE(
-        "android.enableIntermediateArtifactsCache",
-        true,
-        FeatureStage.Deprecated(DeprecationReporter.DeprecationTarget.AGP_BUILD_CACHE)
-    ),
 
     /* -----------------
      * ENFORCED FEATURES
@@ -356,6 +339,26 @@ enum class BooleanOption(
         )
     ),
 
+    @Suppress("unused")
+    ENABLE_D8_DESUGARING(
+        "android.enableD8.desugaring",
+        true,
+        FeatureStage.Enforced(
+            VERSION_7_0,
+            "D8 desugaring is used by default, when applicable."
+        )
+    ),
+
+    @Suppress("unused")
+    ENABLE_R8_DESUGARING(
+        "android.enableR8.desugaring",
+        true,
+        FeatureStage.Enforced(
+            VERSION_7_0,
+            "R8 desugaring is used by default, when applicable."
+        )
+    ),
+
     /* ----------------
      * REMOVED FEATURES
      */
@@ -432,6 +435,27 @@ enum class BooleanOption(
         "android.generateRJava",
         false,
         FeatureStage.Removed(VERSION_4_1, "This feature was removed in AGP 4.1")),
+
+    @Suppress("unused")
+    ENABLE_BUILD_CACHE(
+        "android.enableBuildCache",
+        false,
+        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches are superseded by the Gradle build cache https://docs.gradle.org/current/userguide/build_cache.html")
+    ),
+
+    @Suppress("unused")
+    ENABLE_INTERMEDIATE_ARTIFACTS_CACHE(
+        "android.enableIntermediateArtifactsCache",
+        false,
+        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches are superseded by the Gradle build cache https://docs.gradle.org/current/userguide/build_cache.html")
+    ),
+
+    @Suppress("unused")
+    ENABLE_DESUGAR(
+            "android.enableDesugar",
+            true,
+            FeatureStage.Removed(VERSION_7_0, "Desugar tool has been removed from AGP.")
+    ),
 
     ; // end of enums
 

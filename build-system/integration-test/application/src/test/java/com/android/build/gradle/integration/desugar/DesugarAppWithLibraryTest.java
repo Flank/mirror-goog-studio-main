@@ -19,15 +19,12 @@ package com.android.build.gradle.integration.desugar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
 import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.D8;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.DESUGAR;
 import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.R8;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
@@ -48,7 +45,7 @@ public class DesugarAppWithLibraryTest {
     @Parameterized.Parameters(name = "tool = {0}")
     public static Object[] getParameters() {
         // noinspection unchecked
-        return new Object[] {D8, DESUGAR, R8};
+        return new Object[] {D8, R8};
     }
 
     @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
@@ -103,13 +100,9 @@ public class DesugarAppWithLibraryTest {
         }
         GradleTaskExecutor executor =
                 project.executor()
-                        .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
-                        .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
-                        .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8);
-        // https://github.com/gradle/gradle/issues/13200
-        if (java8LangSupport == DESUGAR) {
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
-        }
+                        .with(
+                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                                java8LangSupport == R8);
 
         executor.run(":app:assembleDebug");
         Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);

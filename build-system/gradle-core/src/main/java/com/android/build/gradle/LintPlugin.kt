@@ -26,16 +26,21 @@ import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCache
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
 import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService
 import com.android.build.gradle.internal.lint.AndroidLintTask
+import com.android.build.gradle.internal.lint.LintFixBuildService
+import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.plugins.BasePlugin
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsUtil
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.build.gradle.internal.tasks.LintStandaloneTask
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
 import com.google.wireless.android.sdk.stats.GradleBuildProject
@@ -46,6 +51,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.build.event.BuildEventsListenerRegistry
 import javax.inject.Inject
@@ -120,6 +126,22 @@ abstract class LintPlugin : Plugin<Project> {
         project.tasks.register("lintFix", AndroidLintTask::class.java) { task ->
             task.description = "Runs lint on `${project.name}` and applies any safe suggestions to the source code."
             task.configureForStandalone(project, projectServices.projectOptions, javaConvention, customLintChecksConfig, lintOptions!!, autoFix = true)
+        }
+
+        val lintModelWriterTask =
+            project.tasks.register("generateLintModel", LintModelWriterTask::class.java) { task ->
+                task.configureForStandalone(project, projectServices.projectOptions, javaConvention, customLintChecksConfig, lintOptions!!)
+                task.outputDirectory.setDisallowChanges(project.layout.buildDirectory.dir("intermediates/${AndroidArtifacts.ArtifactType.LINT_MODEL}"))
+            }
+
+        javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME) { mainSourceSet ->
+            project.configurations.getByName(mainSourceSet.runtimeElementsConfigurationName) { configuration ->
+                publishArtifactToConfiguration(
+                    configuration,
+                    lintModelWriterTask.flatMap { it.outputDirectory },
+                    AndroidArtifacts.ArtifactType.LINT_MODEL
+                )
+            }
         }
     }
 
@@ -251,5 +273,6 @@ abstract class LintPlugin : Plugin<Project> {
             project.provider { null },
             project.provider { null },
         ).execute()
+        LintFixBuildService.RegistrationAction(project).execute()
     }
 }

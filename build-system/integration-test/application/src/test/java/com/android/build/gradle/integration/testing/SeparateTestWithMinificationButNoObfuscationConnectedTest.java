@@ -55,7 +55,9 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
     public void connectedCheck() throws IOException, InterruptedException {
         adb.exclusiveAccess();
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run(":test:connectedCheck");
     }
 }

@@ -141,7 +141,7 @@ public class ProguardAarPackagingTest {
     public void checkDebugAarPackaging() throws Exception {
         androidProject
                 .executor()
-                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run("assembleDebug");
 
         androidProject.testAar(
@@ -159,7 +159,7 @@ public class ProguardAarPackagingTest {
     public void checkReleaseAarPackaging() throws Exception {
         androidProject
                 .executor()
-                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run("assembleRelease");
 
         androidProject.testAar(

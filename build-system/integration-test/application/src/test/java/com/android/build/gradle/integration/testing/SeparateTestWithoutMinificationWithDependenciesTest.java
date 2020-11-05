@@ -49,7 +49,9 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
                         + "        }\n");
         project.execute("clean");
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assemble");
     }
 

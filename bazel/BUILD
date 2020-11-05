@@ -318,6 +318,7 @@ java_library(
         "//tools/base/bazel:gradle",
         "//tools/base/common:tools.common",
         "//tools/base/perf-logger:studio.perf-logger_testlib",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
     ],

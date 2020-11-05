@@ -71,17 +71,21 @@ public class LibMinifyLibDepTest {
 
     @Test
     public void checkTestAssemblyWithR8() throws Exception {
-        executor().with(OptionalBooleanOption.ENABLE_R8, true).run("assembleAndroidTest");
+        executor()
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
+                .run("assembleAndroidTest");
     }
 
     @Test
     public void checkTestAssemblyWithProguard() throws Exception {
-        executor().with(OptionalBooleanOption.ENABLE_R8, false).run("assembleAndroidTest");
+        executor()
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false)
+                .run("assembleAndroidTest");
     }
 
     @NonNull
     private GradleTaskExecutor executor() {
         return project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8);
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, shrinker == CodeShrinker.R8);
     }
 }

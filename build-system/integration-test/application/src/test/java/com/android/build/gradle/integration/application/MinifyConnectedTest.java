@@ -50,7 +50,9 @@ public class MinifyConnectedTest {
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .executeConnectedCheck();
     }
 }

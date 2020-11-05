@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -601,7 +600,7 @@ class MinifyFeaturesTest(
         }
 
         val executor = project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
 
         executor.run("assembleMinified")
 
@@ -681,7 +680,7 @@ class MinifyFeaturesTest(
     @Test
     fun testBundleIsMinified() {
         val executor = project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
         executor.run("bundleMinified")
 
         val bundleFile = getApkFolderOutput("minified", ":baseModule").bundleFile
@@ -803,7 +802,7 @@ class MinifyFeaturesTest(
         AssumeUtil.assumeNotWindows()  // b/146571219
 
         val executor = project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
 
         executor.run("assembleMinified")
 
@@ -839,7 +838,7 @@ class MinifyFeaturesTest(
         )
 
         project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
             .run("assembleMinified")
 
         val apkType = GradleTestProject.ApkType.of("minified", true)
@@ -854,7 +853,7 @@ class MinifyFeaturesTest(
     @Test
     fun testMinifyEnabledToggling() {
         val executor = project.executor()
-            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, codeShrinker == CodeShrinker.R8)
 
         // first run with minifyEnabled true
         executor.run("assembleMinified")

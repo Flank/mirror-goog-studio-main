@@ -318,6 +318,7 @@ public class MultiDexTest {
 
     @NonNull
     private GradleTaskExecutor executor() {
-        return project.executor().with(OptionalBooleanOption.ENABLE_R8, tool == MainDexListTool.R8);
+        return project.executor()
+                .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, tool == MainDexListTool.R8);
     }
 }

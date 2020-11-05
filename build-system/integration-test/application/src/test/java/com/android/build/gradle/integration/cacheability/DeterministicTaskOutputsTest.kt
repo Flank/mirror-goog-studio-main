@@ -53,6 +53,10 @@ class DeterministicTaskOutputsTest {
             "app/build/intermediates/merged_java_res/debug/out.jar",
             "app/build/intermediates/merged_res_blame_folder/debug/out",
             "app/build/intermediates/res/merged/debug",
+            // MapSourceSetPathsTask is dependent on the absolute project path, as this test uses
+            // two different project file paths for comparisons it causes the file-map.txt
+            // contents to differ.
+            "app/build/intermediates/source_set_path_map/debug/file-map.txt",
             "app/build/outputs/apk/debug/app-debug.apk",
             "app/build/outputs/logs/manifest-merger-debug-report.txt",
 
@@ -86,11 +90,11 @@ class DeterministicTaskOutputsTest {
     @Before
     fun setUpProjects() {
         project1.getSubproject("app").buildFile.appendText("""
-            
+
             android.buildTypes.debug.testCoverageEnabled true
         """.trimIndent())
         project2.getSubproject("app").buildFile.appendText("""
-            
+
             android.buildTypes.debug.testCoverageEnabled true
         """.trimIndent())
     }

@@ -56,8 +56,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JNI
-import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_VARIANT_DEPENDENCIES_MODEL
-import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PROJECT_GLOBAL_MODEL
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_MODEL
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
@@ -245,9 +244,7 @@ class PublishingSpecs {
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_DEPENDENCIES_RESOURCES)
                 runtime(AAR_METADATA, ArtifactType.AAR_METADATA)
-
-                runtime(LINT_PROJECT_GLOBAL_MODEL, ArtifactType.LINT_PROJECT_GLOBAL_MODEL)
-                runtime(LINT_VARIANT_DEPENDENCIES_MODEL, ArtifactType.LINT_VARIANT_DEPENDENCIES_MODEL)
+                runtime(LINT_MODEL, ArtifactType.LINT_MODEL)
                 runtime(
                     com.android.build.api.artifact.ArtifactType.AAR,
                     ArtifactType.LOCAL_AAR_FOR_LINT)

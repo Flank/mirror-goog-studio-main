@@ -46,14 +46,18 @@ public class OptionalLibraryWithProguardTest {
     @Test
     public void testThatProguardCompilesWithOptionalClasses() throws Exception {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("clean", "app:assembleDebug");
     }
 
     @Test
     public void testUnitTestWithOptionalClasses() throws Exception {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("clean", "mylibrary:test");
     }
 }

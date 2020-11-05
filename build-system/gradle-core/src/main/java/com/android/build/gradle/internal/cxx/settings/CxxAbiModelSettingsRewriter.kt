@@ -17,24 +17,12 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.configure.*
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_FIND_ROOT_PATH
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.android.build.gradle.internal.cxx.hashing.toBase36
 import com.android.build.gradle.internal.cxx.hashing.update
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CPP_FLAGS
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_C_FLAGS
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DEFAULT_BUILD_TYPE
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PREFAB_PATH
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.StringPropertyValue
+import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
+import com.android.build.gradle.internal.cxx.settings.Macro.*
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.tokenizeCommandLineToEscaped
 import java.io.File
@@ -181,12 +169,9 @@ private fun CxxAbiModel.getCxxAbiRewriteModel() : RewriteConfiguration {
     // Fill in the ABI and configuration hash properties
     fun String.reify() = reifyString(this) { tokenMacro ->
         when(tokenMacro) {
-            NDK_ABI.qualifiedName ->
-                StringPropertyValue(abi.tag)
-            NDK_CONFIGURATION_HASH.qualifiedName ->
-                StringPropertyValue(configurationHash.substring(0, 8))
-            NDK_FULL_CONFIGURATION_HASH.qualifiedName ->
-                StringPropertyValue(configurationHash)
+            NDK_ABI.qualifiedName -> abi.tag
+            NDK_CONFIGURATION_HASH.qualifiedName -> configurationHash.substring(0, 8)
+            NDK_FULL_CONFIGURATION_HASH.qualifiedName -> configurationHash
             else -> resolver.resolve(tokenMacro, configuration.inheritEnvironments)
         }
     }!!
@@ -269,12 +254,14 @@ fun CxxAbiModel.getCmakeCommandLineArguments() : List<CommandLineArgument> {
     result += "-D$CMAKE_CXX_FLAGS=${resolveMacroValue(NDK_CPP_FLAGS)}".toCmakeArgument()
     result += "-D$CMAKE_C_FLAGS=${resolveMacroValue(NDK_C_FLAGS)}".toCmakeArgument()
 
-    // This can be passed a few different ways:
-    // https://cmake.org/cmake/help/latest/command/find_package.html#search-procedure
-    //
-    // <PACKAGE_NAME>_ROOT would probably be best, but it's not supported until 3.12, and we support
-    // CMake 3.6.
-    result += "-D$CMAKE_FIND_ROOT_PATH=${resolveMacroValue(NDK_PREFAB_PATH)}".toCmakeArgument()
+    if (shouldGeneratePrefabPackages()) {
+        // This can be passed a few different ways:
+        // https://cmake.org/cmake/help/latest/command/find_package.html#search-procedure
+        //
+        // <PACKAGE_NAME>_ROOT would probably be best, but it's not supported until 3.12, and we support
+        // CMake 3.6.
+        result += "-D$CMAKE_FIND_ROOT_PATH=${resolveMacroValue(NDK_PREFAB_PATH)}".toCmakeArgument()
+    }
 
     return result.removeSubsumedArguments().removeBlankProperties()
 }

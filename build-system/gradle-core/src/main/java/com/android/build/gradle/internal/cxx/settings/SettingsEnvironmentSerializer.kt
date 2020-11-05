@@ -16,14 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.LookupPropertyValue
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.StringPropertyValue
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
+import com.google.gson.*
 import java.lang.reflect.Type
 
 /**
@@ -41,7 +34,7 @@ class SettingsEnvironmentSerializer :
     ): SettingsEnvironment {
         val obj = element as JsonObject
         val result = SettingsEnvironment()
-        val properties: MutableMap<String, PropertyValue> = mutableMapOf()
+        val properties: MutableMap<String, String> = mutableMapOf()
         var namespace = ""
         var environment = ""
         var groupPriority: Int? = null
@@ -59,7 +52,7 @@ class SettingsEnvironmentSerializer :
                 }
                 else -> {
                     result.properties
-                    properties[key] = StringPropertyValue(value.asString)
+                    properties[key] = value.asString
                 }
             }
         }
@@ -83,10 +76,7 @@ class SettingsEnvironmentSerializer :
         list["groupPriority"] = environment.groupPriority
         list["inheritEnvironments"] = environment.inheritEnvironments
         for ((key, value) in environment.properties) {
-            when (value) {
-                is StringPropertyValue -> list[key] = value.value
-                is LookupPropertyValue -> list[key] = value.value()
-            }
+            list[key] = value
         }
         return context.serialize(list)
     }

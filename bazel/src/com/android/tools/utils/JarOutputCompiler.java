@@ -34,30 +34,21 @@ public abstract class JarOutputCompiler {
 
     private void usage(String message) {
         System.err.println("Error: " + message);
-        System.err.println("Usage: " + name + " [-cp class_path|@<file>] -o jar_file <files>...|@<file>");
+        System.err.println("Usage: " + name + " [-cp class_path|@<file>] -o jar_file <forwardedArgs>");
     }
 
     protected int run(List<String> args) throws IOException {
-        args = filterOptions(args);
         Options options = parseOptions(args.iterator());
         if (options.out == null) {
             usage("Output file not specified.");
             return 1;
         }
-        if (options.files.isEmpty()) {
-            usage("No input files specified.");
-            return 1;
-        }
         File tmp = new File(options.out.getAbsolutePath() + ".dir");
-        if (!compile(options.files, options.classPath, tmp)) {
+        if (!compile(options.forwardedArgs, options.classPath, tmp)) {
             return 1;
         }
         new Zipper().directoryToZip(tmp, options.out);
         return 0;
-    }
-
-    protected List<String> filterOptions(List<String> args) {
-        return args;
     }
 
     private Options parseOptions(Iterator<String> it) throws IOException {
@@ -77,9 +68,9 @@ public abstract class JarOutputCompiler {
                 }
             } else {
                 if (arg.startsWith("@")) {
-                    options.files.addAll(Files.readAllLines(Paths.get(arg.substring(1))));
+                    options.forwardedArgs.addAll(Files.readAllLines(Paths.get(arg.substring(1))));
                 } else {
-                    options.files.add(arg);
+                    options.forwardedArgs.add(arg);
                 }
             }
         }
@@ -88,10 +79,10 @@ public abstract class JarOutputCompiler {
 
     private static class Options {
         public File out;
-        public List<String> files = new LinkedList<>();
+        public List<String> forwardedArgs = new LinkedList<>();
         public String classPath = "";
     }
 
-    protected abstract boolean compile(List<String> files, String classPath, File outDir)
+    protected abstract boolean compile(List<String> forwardedArgs, String classPath, File outDir)
             throws IOException;
 }

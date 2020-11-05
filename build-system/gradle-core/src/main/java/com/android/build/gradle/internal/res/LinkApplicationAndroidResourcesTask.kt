@@ -165,6 +165,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @get:Internal
     abstract val mergeBlameLogFolder: DirectoryProperty
 
+    // No effect on task output, used for generating absolute paths for error messaging.
+    @get:Internal
+    abstract val sourceSetMaps: ConfigurableFileCollection
+
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -343,6 +347,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         abstract val packageName: Property<String>
         abstract val resourceConfigs: SetProperty<String>
         abstract val sharedLibraryDependencies: ConfigurableFileCollection
+        abstract val sourceSetMaps: ConfigurableFileCollection
         abstract val useConditionalKeepRules: Property<Boolean>
         abstract val useFinalIds: Property<Boolean>
         abstract val useMinimalKeepRules: Property<Boolean>
@@ -365,7 +370,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             val variantOutputsList: List<VariantOutputImpl.SerializedForm> = parameters.variantOutputs.get()
             val mainOutput = chooseOutput(variantOutputsList)
-
 
             invokeAaptForSplit(
                     mainOutput,
@@ -503,7 +507,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS, task.aaptFriendlyManifestFiles
             )
-            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
+            creationConfig.artifacts.setTaskInputToFinalProduct(task.taskInputType,
+                task.manifestFiles)
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS,
                 task.mergedManifestFiles
@@ -528,8 +533,18 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     InternalArtifactType.MERGED_RES_BLAME_FOLDER
                 )
             )
-
             val variantType = creationConfig.variantType
+
+            if (projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
+                val sourceSetMap =
+                        creationConfig.artifacts.get(InternalArtifactType.SOURCE_SET_PATH_MAP)
+                task.sourceSetMaps.fromDisallowChanges(
+                        creationConfig.services.fileCollection(sourceSetMap)
+                )
+                task.dependsOn(sourceSetMap)
+            } else {
+                task.sourceSetMaps.disallowChanges()
+            }
 
             // Tests should not have feature dependencies, however because they include the
             // tested production component in their dependency graph, we see the tested feature
@@ -611,7 +626,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 LinkApplicationAndroidResourcesTask::textSymbolOutputFileProperty
-            ).withName( SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.RUNTIME_SYMBOL_LIST)
+            ).withName(SdkConstants.FN_RESOURCE_TEXT).on(InternalArtifactType.RUNTIME_SYMBOL_LIST)
 
             if (!creationConfig.services.projectOptions[BooleanOption.ENABLE_APP_COMPILE_TIME_R_CLASS]) {
                 // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created
@@ -806,7 +821,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     parameters.packageName.get()
                 }
 
-
                 // we have to clean the source folder output in case the package name changed.
                 srcOut = parameters.sourceOutputDirectory.orNull?.asFile
                 if (srcOut != null) {
@@ -850,11 +864,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setDependentFeatures(featurePackagesBuilder.build())
                         .setImports(parameters.imports.files)
                         .setIntermediateDir(parameters.incrementalDirectory.get().asFile)
-                        .setAndroidJarPath(parameters.androidJarInput.get().getAndroidJar().get().absolutePath)
+                        .setAndroidJarPath(parameters.androidJarInput.get()
+                            .getAndroidJar()
+                            .get().absolutePath)
                         .setUseConditionalKeepRules(parameters.useConditionalKeepRules.get())
                         .setUseMinimalKeepRules(parameters.useMinimalKeepRules.get())
                         .setUseFinalIds(parameters.useFinalIds.get())
-                        .addResourceDirectories(parameters.compiledDependenciesResources.files.reversed().toImmutableList())
+                        .addResourceDirectories(parameters.compiledDependenciesResources.files.reversed()
+                            .toImmutableList())
                         .setEmitStableIdsFile(parameters.outputStableIdsFile.orNull?.asFile)
                         .setConsumeStableIdsFile(stableIdsInputFile)
                         .setLocalSymbolTableFile(parameters.localResourcesFile.orNull?.asFile)
@@ -875,7 +892,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     processResources(
                         aapt = aapt2,
                         aaptConfig = configBuilder.build(),
-                        rJar = if(generateRClass) parameters.rClassOutputJar.orNull?.asFile else null,
+                        rJar = if (generateRClass) parameters.rClassOutputJar.orNull?.asFile else null,
                         logger = logger,
                         errorFormatMode = parameters.aapt2.get().getErrorFormatMode(),
                         symbolTableLoader = parameters.symbolTableBuildService.get()::loadClasspath

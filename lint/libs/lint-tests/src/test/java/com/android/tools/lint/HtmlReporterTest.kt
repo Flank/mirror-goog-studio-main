@@ -16,26 +16,44 @@
 
 package com.android.tools.lint
 
-import com.android.tools.lint.checks.infrastructure.TestFiles.image
-import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
-import com.android.tools.lint.checks.infrastructure.TestFiles.xml
-import org.junit.Assert.assertTrue
-
 import com.android.testutils.TestUtils
+import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.LogDetector
 import com.android.tools.lint.checks.ManifestDetector
+import com.android.tools.lint.checks.infrastructure.TestFiles.image
+import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestResultTransformer
-import java.io.File
+import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.client.api.LintDriver
+import com.android.tools.lint.client.api.LintRequest
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestName
+import java.io.File
 
 class HtmlReporterTest {
+    @get:Rule
+    val testName = TestName()
+
     @Test
     fun testBasic() {
-        val client = TestLintClient()
+        val client = object : TestLintClient() {
+            override fun createDriver(registry: IssueRegistry, request: LintRequest): LintDriver {
+                // Temporarily switch HardcodedValuesDetector.ISSUE to a custom
+                // registry with an example vendor to test output of vendor info
+                // (which we normally omit for built-in checks)
+                HardcodedValuesDetector.ISSUE.vendor = createTestVendor()
+
+                return super.createDriver(registry, request)
+            }
+        }
+
         client.flags.enabledIds.add(LogDetector.CONDITIONAL.id)
         val transformer = TestResultTransformer { output ->
             var report: String
@@ -57,7 +75,8 @@ class HtmlReporterTest {
             report
         }
 
-        TestLintTask.lint().sdkHome(TestUtils.getSdk()).files(
+        val testName = javaClass.simpleName + "_" + testName.methodName
+        TestLintTask.lint().testName(testName).sdkHome(TestUtils.getSdk()).files(
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -312,6 +331,12 @@ There are quickfixes to automatically extract this hardcoded string into a resou
 <br/></div>
 </div>
 </div>
+<div class="vendor">
+Vendor: AOSP Unit Tests<br/>
+Identifier: mylibrary-1.0<br/>
+Contact: lint@example.com<br/>
+Feedback: <a href="https://example.com/lint/file-new-bug.html">https://example.com/lint/file-new-bug.html</a><br/>
+</div>
 <div class="chips">
 <span class="mdl-chip">
     <span class="mdl-chip__text">HardcodedText</span>
@@ -433,5 +458,6 @@ For more information, see <a href="https://developer.android.com/studio/write/li
 </html>""",
                 transformer
             )
+        HardcodedValuesDetector.ISSUE.vendor = BuiltinIssueRegistry().vendor
     }
 }

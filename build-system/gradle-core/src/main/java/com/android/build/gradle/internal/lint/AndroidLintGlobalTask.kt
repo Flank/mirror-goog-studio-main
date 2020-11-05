@@ -57,8 +57,5 @@ abstract class AndroidLintGlobalTask: NonIncrementalGlobalTask() {
     }
 
     override fun doTaskAction() {
-        if (name == "lintFix") {
-            throw NotImplementedError("lintFix is not yet implemented for the new lint integration")
-        }
     }
 }

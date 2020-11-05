@@ -51,7 +51,9 @@ public class MinifyLibAndAppWithJavaResTest {
     @Test
     public void testDebugPackaging() throws Exception {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run(":app:assembleDebug");
         Apk debugApk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertNotNull(debugApk);
@@ -68,7 +70,9 @@ public class MinifyLibAndAppWithJavaResTest {
     @Test
     public void testReleasePackaging() throws Exception {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 // http://b/149978740 and http://b/146208910
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .run(":app:assembleRelease");

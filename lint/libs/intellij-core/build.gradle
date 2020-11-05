@@ -13,5 +13,9 @@ jar {
     from zipTree("../../../../../prebuilts/tools/common/lint-psi/intellij-core/intellij-core.jar")
 }
 
+tasks.getByName("sourcesJar") {
+    from zipTree("../../../../../prebuilts/tools/common/lint-psi/intellij-core/intellij-core-sources.jar")
+}
+
 project.ext.pomName = 'IntelliJ IDEA Core'
 project.ext.pomDesc = 'IntelliJ IDEA Core'

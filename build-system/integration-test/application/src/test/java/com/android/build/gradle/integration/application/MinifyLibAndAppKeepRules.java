@@ -91,7 +91,9 @@ public class MinifyLibAndAppKeepRules {
                         "}");
 
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run(":app:assembleRelease");
         assertThat(project.getSubproject("app").getApk("release"))
                 .containsClass("LNoPackage;");
@@ -118,7 +120,9 @@ public class MinifyLibAndAppKeepRules {
                         + "}");
 
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run(":app:assembleRelease");
         assertThat(confOutput).exists();
 

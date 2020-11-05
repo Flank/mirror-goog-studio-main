@@ -33,8 +33,11 @@ import java.io.File.separator
 class VersionCheckPlugin: Plugin<Project> {
 
     companion object {
+        // The minimum version of Gradle that this plugin should accept is the version of Gradle
+        // whose features the plugin uses, which may be substantially later than the earliest
+        // version of Gradle that has all the features that Studio uses directly.
         @JvmField
-        val GRADLE_MIN_VERSION = GradleVersion.parse(SdkConstants.GRADLE_MINIMUM_VERSION)
+        val GRADLE_MIN_VERSION = GradleVersion.parse(SdkConstants.GRADLE_LATEST_VERSION)
     }
 
     override fun apply(project: Project) {

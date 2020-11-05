@@ -60,11 +60,9 @@ import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -74,24 +72,18 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.attributes.LibraryElements;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
 /** A scope containing data for a specific variant. */
 public class VariantScopeImpl implements VariantScope {
-
-    private static final String PUBLISH_ERROR_MSG =
-            "Publishing to %1$s with no %1$s configuration object. VariantType: %2$s";
 
     // Variant specific Data
     @NonNull private final ComponentIdentity componentIdentity;
@@ -109,8 +101,6 @@ public class VariantScopeImpl implements VariantScope {
     // other
 
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
-
-    private final Supplier<ConfigurableFileCollection> desugarTryWithResourcesRuntimeJar;
 
     @NonNull private final PostProcessingOptions postProcessingOptions;
 
@@ -135,18 +125,6 @@ public class VariantScopeImpl implements VariantScope {
         if (globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
             throw new RuntimeException("InstantRun mode is not supported");
         }
-        Project project = globalScope.getProject();
-
-        this.desugarTryWithResourcesRuntimeJar =
-                Suppliers.memoize(
-                        () ->
-                                project.files(
-                                        FileUtils.join(
-                                                pathHelper.getIntermediatesDir(),
-                                                "processing-tools",
-                                                "runtime-deps",
-                                                variantDslInfo.getDirName(),
-                                                "desugar_try_with_resources.jar")));
         this.postProcessingOptions = variantDslInfo.getPostProcessingOptions();
 
         configureNdk();
@@ -188,10 +166,15 @@ public class VariantScopeImpl implements VariantScope {
         for (PublishedConfigType configType : PublishedConfigType.values()) {
             if (configTypes.contains(configType)) {
                 Configuration config = variantDependencies.getElements(configType);
-                Preconditions.checkNotNull(
-                        config,
-                        String.format(
-                                PUBLISH_ERROR_MSG, configType, variantDslInfo.getVariantType()));
+                if (config == null) {
+                    throw new NullPointerException(
+                            "Publishing to "
+                                    + configType
+                                    + " with no "
+                                    + configType
+                                    + " configuration object. VariantType: "
+                                    + variantDslInfo.getVariantType());
+                }
                 if (configType.isPublicationConfig()) {
                     String classifier = null;
                     if (configType.isClassifierRequired()) {
@@ -468,12 +451,6 @@ public class VariantScopeImpl implements VariantScope {
                     .getArtifacts()
                     .get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR.INSTANCE);
         }
-    }
-
-    @NonNull
-    @Override
-    public ConfigurableFileCollection getTryWithResourceRuntimeSupportJar() {
-        return desugarTryWithResourcesRuntimeJar.get();
     }
 
     @Override

@@ -107,6 +107,29 @@ class NamespaceDetectorTest : AbstractCheckTest() {
         return NamespaceDetector()
     }
 
+    fun testNamespaceInAttributeValue() {
+        // An XML namespace should not be marked as unused if only used in attribute value.
+        lint().files(
+            xml(
+                "res/layout/namespace5.xml",
+                """
+                    <LinearLayout
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        xmlns:library="http://schemas.android.com/apk/res/com.example.lib"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                          android:id="@+id/textView"
+                          android:layout_height="40dp"
+                          android:layout_width="match_parent"
+                          android:text="@library:string/hello"/>
+                    </LinearLayout>
+                """.trimIndent()
+            )
+        ).run().expectClean()
+    }
+
     fun testCustom() {
         val expected =
             """

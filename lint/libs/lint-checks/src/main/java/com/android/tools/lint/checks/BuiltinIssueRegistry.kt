@@ -17,6 +17,7 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintClient.Companion.isStudio
+import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Scope
@@ -26,6 +27,8 @@ import java.util.EnumSet
 
 /** Registry which provides a list of checks to be performed on an Android project */
 open class BuiltinIssueRegistry : IssueRegistry() {
+
+    override val vendor: Vendor = AOSP_VENDOR
 
     companion object {
         /**
@@ -39,7 +42,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
             IssueRegistry.reset()
         }
 
-        private var builtinIssues: List<Issue> = unmodifiableList(
+        private val builtinIssues: List<Issue> = unmodifiableList(
             listOf(
                 AccessibilityDetector.ISSUE,
                 ActionsXmlDetector.ISSUE,
@@ -430,6 +433,13 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 WrongThreadInterproceduralDetector.ISSUE
             )
         )
+    }
+
+    init {
+        for (issue in builtinIssues) {
+            //noinspection LeakingThis
+            issue.registry = this
+        }
     }
 
     public override fun cacheable(): Boolean {

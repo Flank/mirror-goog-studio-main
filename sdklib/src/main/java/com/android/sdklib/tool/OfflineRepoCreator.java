@@ -18,6 +18,7 @@ package com.android.sdklib.tool;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.Channel;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.License;
@@ -64,6 +65,7 @@ public class OfflineRepoCreator {
         mConfig = config;
     }
 
+    @Slow
     public void run() throws IOException {
         File tempDir = FileOpUtils.getNewTempDir("OfflineRepoCreator", mConfig.mFop);
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(tempDir);

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.desugar
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -42,8 +41,7 @@ class DesugarFileDependencyTest(var tool: Tool) {
     enum class Tool {
         D8_WITH_ARTIFACT_TRANSFORMS,
         D8_WITHOUT_ARTIFACT_TRANSFORMS,
-        R8,
-        DESUGAR
+        R8
     }
 
     companion object {
@@ -80,14 +78,7 @@ class DesugarFileDependencyTest(var tool: Tool) {
 
     @Test
     fun checkBuilds() {
-        val executor = executor().also {
-            if (tool == Tool.DESUGAR) {
-                // https://github.com/gradle/gradle/issues/13200
-                it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            }
-        }
-
-        executor.run("assembleDebug")
+        executor().run("assembleDebug")
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
             assertThat(apk)
                 .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")
@@ -137,12 +128,8 @@ class DesugarFileDependencyTest(var tool: Tool) {
     }
 
     private fun executor(): GradleTaskExecutor {
-        val enableD8Desugaring =
-            tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS || tool == Tool.D8_WITHOUT_ARTIFACT_TRANSFORMS
         return project.executor()
-            .with(BooleanOption.ENABLE_D8_DESUGARING, enableD8Desugaring)
-            .with(OptionalBooleanOption.ENABLE_R8, tool == Tool.R8)
-            .with(BooleanOption.ENABLE_R8_DESUGARING, tool == Tool.R8)
+            .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, tool == Tool.R8)
             .with(
                 BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
                 tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS

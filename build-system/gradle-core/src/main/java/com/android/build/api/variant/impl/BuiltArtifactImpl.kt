@@ -38,7 +38,8 @@ data class BuiltArtifactImpl private constructor(
     override val outputFile: String,
     override val versionCode: Int?,
     override val versionName: String?,
-    val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
+    val variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
+    val attributes: Map<String, String> = mapOf()
 ) : BuiltArtifact, CommonBuiltArtifact, Serializable, VariantOutputConfiguration by variantOutputConfiguration {
 
     fun newOutput(newOutputFile: Path): BuiltArtifactImpl {
@@ -46,7 +47,8 @@ data class BuiltArtifactImpl private constructor(
             outputFile = newOutputFile.toString(),
             versionCode = versionCode,
             versionName = versionName,
-            variantOutputConfiguration = variantOutputConfiguration
+            variantOutputConfiguration = variantOutputConfiguration,
+            attributes = attributes
         )
     }
 
@@ -60,12 +62,14 @@ data class BuiltArtifactImpl private constructor(
             outputFile: String,
             versionCode: Int? = null,
             versionName: String? = null,
-            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl()
+            variantOutputConfiguration: VariantOutputConfiguration = VariantOutputConfigurationImpl(),
+            attributes: Map<String, String> = mapOf()
         )
                     = BuiltArtifactImpl(FileUtils.toSystemIndependentPath(outputFile),
                 versionCode,
                 versionName,
-                variantOutputConfiguration
+                variantOutputConfiguration,
+                attributes
         )
 
     }
@@ -80,6 +84,14 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
             out.beginObject()
             out.name("filterType").value(filter.filterType.toString())
             out.name("value").value(filter.identifier)
+            out.endObject()
+        }
+        out.endArray()
+        out.name("attributes").beginArray()
+        for (attribute in value.attributes) {
+            out.beginObject()
+            out.name("key").value(attribute.key)
+            out.name("value").value(attribute.value)
             out.endObject()
         }
         out.endArray()
@@ -98,7 +110,8 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
             },
             { outputFile: String,
                 versionCode: Int,
-                versionName: String ->
+                versionName: String,
+                attributes: Map<String, String> ->
                 BuiltArtifactImpl.make(
                     outputFile = outputFile,
                     versionCode = versionCode,
@@ -107,7 +120,8 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
                     VariantOutputConfigurationImpl(
                         isUniversal = OutputType.UNIVERSAL.name == outputType,
                         filters = filters.build()
-                    )
+                    ),
+                    attributes = attributes
                 )
             })
     }

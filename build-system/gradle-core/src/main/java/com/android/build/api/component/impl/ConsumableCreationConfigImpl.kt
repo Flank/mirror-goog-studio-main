@@ -62,7 +62,7 @@ open class ConsumableCreationConfigImpl(
 
     open fun getCodeShrinker(): CodeShrinker? {
         val codeShrinker: CodeShrinker = variantDslInfo.getPostProcessingOptions().getCodeShrinker() ?: return null
-        var enableR8 = globalScope.projectOptions[OptionalBooleanOption.ENABLE_R8]
+        var enableR8 = globalScope.projectOptions[OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8]
         if (variantDslInfo.variantType.isAar && !globalScope.projectOptions[BooleanOption.ENABLE_R8_LIBRARIES]) {
                 // R8 is disabled for libraries
                 enableR8 = false
@@ -97,30 +97,11 @@ open class ConsumableCreationConfigImpl(
         }
         val shrinker = getCodeShrinker()
         if (shrinker == CodeShrinker.R8) {
-            if (globalScope.projectOptions[BooleanOption.ENABLE_R8_DESUGARING]) {
-                return VariantScope.Java8LangSupport.R8
-            }
+            return VariantScope.Java8LangSupport.R8
         } else {
             // D8 cannot be used if R8 is used
-            if (globalScope.projectOptions[BooleanOption.ENABLE_D8_DESUGARING]) {
-                return VariantScope.Java8LangSupport.D8
-            }
+            return VariantScope.Java8LangSupport.D8
         }
-        if (globalScope.projectOptions[BooleanOption.ENABLE_DESUGAR]) {
-            return VariantScope.Java8LangSupport.DESUGAR
-        }
-        val missingFlag = if (shrinker == CodeShrinker.R8) BooleanOption.ENABLE_R8_DESUGARING else BooleanOption.ENABLE_D8_DESUGARING
-        globalScope
-            .dslServices
-            .issueReporter
-            .reportError(
-                    IssueReporter.Type.GENERIC, String.format(
-                    "Please add '%s=true' to your "
-                            + "gradle.properties file to enable Java 8 "
-                            + "language support.",
-                    missingFlag.name),
-                    variantDslInfo.componentIdentity.name)
-        return VariantScope.Java8LangSupport.INVALID
     }
 
     val isCoreLibraryDesugaringEnabled: Boolean

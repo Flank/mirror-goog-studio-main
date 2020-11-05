@@ -20,9 +20,12 @@ import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.goldenBuildProducts
+import com.android.build.gradle.integration.common.fixture.model.goldenConfigurationFlags
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.testutils.AssumeUtil
@@ -87,8 +90,8 @@ class NdkBuildBuildSettingsTest {
         project.execute("clean", "assembleDebug")
 
         // No BuildSettings.json, should have empty BuildSettingsConfiguration
-        debugBuildModelFiles()
-            .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
+        project.recoverExistingCxxAbiModels()
+            .map { it.buildSettings }
             .forEach {
                 assertThat(it).isEqualTo(BuildSettingsConfiguration())
             }
@@ -96,7 +99,7 @@ class NdkBuildBuildSettingsTest {
 
     @Test
     fun `uses BuildSettings environment variables during the build`() {
-        AssumeUtil.assumeIsLinux()
+        AssumeUtil.assumeNotWindows()
         val launcher = setupTestLauncher()
 
         // NDK_CCACHE sets a launcher for ndk-build
@@ -121,8 +124,8 @@ class NdkBuildBuildSettingsTest {
         project.execute("clean", "assembleDebug")
 
         // Verify that environment variables should be set in BuildSettings
-        debugBuildModelFiles()
-            .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
+        project.recoverExistingCxxAbiModels()
+            .map { it.buildSettings }
             .forEach {
                 assertThat(it.environmentVariables).isEqualTo(
                     listOf(
@@ -136,25 +139,40 @@ class NdkBuildBuildSettingsTest {
         assertThat(launcherOutput.readText().trim()).isEqualTo("output to launcher_output.txt")
     }
 
+    @Test
+    fun `build product golden locations`() {
+        project.execute("assembleDebug")
+        val golden = project.goldenBuildProducts()
+        assertThat(golden).isEqualTo("""
+            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/arm64-v8a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/arm64-v8a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/local/arm64-v8a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/local/arm64-v8a/objs-debug/hello-jni/hello-jni.o{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/local/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/local/armeabi-v7a/objs-debug/hello-jni/hello-jni.o{F}
+        """.trimIndent())
+    }
 
-    private fun debugBuildModelFiles(): List<File> {
-        val arm64DebugModel = join(
-            project.projectDir,
-            ".cxx",
-            "ndkBuild",
-            "debug",
-            "arm64-v8a",
-            "build_model.json"
-        )
-        val armeabiDebugModel = join(
-            project.projectDir,
-            ".cxx",
-            "ndkBuild",
-            "debug",
-            "armeabi-v7a",
-            "build_model.json"
-        )
-        return listOf(armeabiDebugModel, arm64DebugModel)
+    @Test
+    fun `configuration build command golden flags`() {
+        val golden = project.goldenConfigurationFlags(Abi.ARMEABI_V7A)
+        println(golden)
+        assertThat(golden).isEqualTo("""
+            -B
+            -n
+            APP_ABI=armeabi-v7a
+            APP_BUILD_SCRIPT={PROJECT}/src/main/jni/Android.mk
+            APP_PLATFORM=android-16
+            APP_SHORT_COMMANDS=false
+            LOCAL_SHORT_COMMANDS=false
+            NDK_ALL_ABIS=armeabi-v7a
+            NDK_DEBUG=1
+            NDK_LIBS_OUT={PROJECT}/build/intermediates/{DEBUG}/lib
+            NDK_OUT={PROJECT}/build/intermediates/{DEBUG}/obj
+            NDK_PROJECT_PATH=null
+        """.trimIndent())
     }
 
     private fun setupTestLauncher(): File {

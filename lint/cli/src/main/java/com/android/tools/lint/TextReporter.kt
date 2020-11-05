@@ -92,9 +92,10 @@ class TextReporter(
         } else {
             var lastIssue: Issue? = null
             for (incident in issues) {
-                if (incident.issue !== lastIssue) {
+                val issue = incident.issue
+                if (issue !== lastIssue) {
                     explainIssue(output, lastIssue)
-                    lastIssue = incident.issue
+                    lastIssue = issue
                 }
                 val startLength = output.length
                 val p = incident.displayPath
@@ -123,8 +124,17 @@ class TextReporter(
                     )
                 )
                 output.append(' ').append('[')
-                output.append(incident.issue.id)
+                output.append(issue.id)
+
+                val from = issue.vendor ?: issue.registry?.vendor
+                from?.identifier?.let { identifier ->
+                    if (from != IssueRegistry.AOSP_VENDOR && identifier.isNotBlank()) {
+                        output.append(" from ")
+                        output.append(TextFormat.RAW.convertTo(identifier, TextFormat.TEXT))
+                    }
+                }
                 output.append(']')
+
                 output.append('\n')
                 if (incident.wasAutoFixed) {
                     output.append("This issue has been automatically fixed.\n")
@@ -289,6 +299,14 @@ class TextReporter(
                 output.append('\n')
             }
             output.append('\n')
+        }
+
+        val issueVendor = issue.vendor ?: issue.registry?.vendor
+        issueVendor?.let { vendor ->
+            if (vendor != IssueRegistry.AOSP_VENDOR) {
+                vendor.describeInto(output, TextFormat.TEXT, indent)
+                output.append('\n')
+            }
         }
     }
 

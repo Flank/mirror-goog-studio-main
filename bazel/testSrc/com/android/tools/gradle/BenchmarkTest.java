@@ -70,6 +70,10 @@ public class BenchmarkTest {
     private boolean fromStudio = false;
     @Nullable private String agpVersion = null;
     private boolean failOnWarning = true;
+    private boolean enableYourKit = false;
+    private String yourKitAgentPath = null;
+    private String yourKitLibraryPath = null;
+    private String yourKitSettingsPath = null;
 
     @Before
     public void setUp() throws Exception {
@@ -154,6 +158,13 @@ public class BenchmarkTest {
         if (value != null && !value.isEmpty()) {
             failOnWarning = Boolean.parseBoolean(value);
         }
+        value = System.getProperty("enable_yourkit");
+        if (value != null && !value.isEmpty()) {
+            enableYourKit = Boolean.parseBoolean(value);
+        }
+        yourKitAgentPath = getStringProperty("yourkit_agent_path");
+        yourKitLibraryPath = getStringProperty("yourkit_library_path");
+        yourKitSettingsPath = getStringProperty("yourkit_settings");
     }
 
     @Nullable
@@ -289,7 +300,8 @@ public class BenchmarkTest {
         }
 
         File projectRoot = new File(src, testProjectGradleRootFromSourceRoot);
-        addJvmArgs(new File(projectRoot, "gradle.properties"));
+        addJvmArgs(
+                new File(projectRoot, "gradle.properties"), enableYourKit, src, yourKitAgentPath);
         try (Gradle gradle = new Gradle(projectRoot, out, distribution)) {
             gradle.addRepo(repo);
             gradle.addRepo(new File(data, "repo.zip"));
@@ -309,6 +321,9 @@ public class BenchmarkTest {
             if (failOnWarning) {
                 gradle.addArgument("--warning-mode=fail");
             }
+            if (enableYourKit) {
+                gradle.withYourKit(new File(yourKitLibraryPath), new File(yourKitSettingsPath));
+            }
             buildProperties.forEach(gradle::addArgument);
 
             listeners.forEach(it -> it.configure(home, gradle, benchmarkRun));
@@ -320,6 +335,10 @@ public class BenchmarkTest {
             for (int i = 0; i < benchmarkRun.warmUps + benchmarkRun.iterations; i++) {
                 if (!cleanups.isEmpty()) {
                     gradle.run(cleanups);
+                }
+
+                if (i == benchmarkRun.warmUps && enableYourKit) {
+                    gradle.startYourKitProfiling();
                 }
 
                 for (int j = 0; j < diffs.length; j++) {
@@ -356,10 +375,16 @@ public class BenchmarkTest {
                 perfData.addBenchmark(benchmark);
                 perfData.commit();
             }
+
+            if (enableYourKit) {
+                gradle.captureYourKitSnapshot();
+            }
         }
     }
 
-    private static void addJvmArgs(File gradleProperties) throws Exception {
+    private void addJvmArgs(
+            File gradleProperties, boolean enableYourKit, File srcDir, String yourKitAgentPath)
+            throws Exception {
         Properties p = new Properties();
 
         if (gradleProperties.exists()) {
@@ -370,7 +395,32 @@ public class BenchmarkTest {
 
         String jvmArgs = p.getProperty("org.gradle.jvmargs", "");
         jvmArgs += " -XX:+UseParallelGC";
+        // See https://www.yourkit.com/docs/java/help/startup_options.jsp for a comprehensive list
+        // of all agent options.
+        if (enableYourKit) {
+            File snapshotsDir = new File(System.getenv("TEST_UNDECLARED_OUTPUTS_DIR"), "snapshots");
+            snapshotsDir.mkdirs();
+            jvmArgs +=
+                    " -agentpath:"
+                            + new File(yourKitAgentPath).getAbsolutePath()
+                            + "="
+                            + String.join(
+                                    ",",
+                                    // Workaround for YourKit instrumentation bug (b/142887436)
+                                    "disableall",
+                                    "exceptions=off",
+                                    // make sure we collect the agent log, useful for
+                                    // troubleshooting
+                                    "logdir=" + snapshotsDir.getAbsolutePath(),
+                                    // snapshot config
+                                    "dir=" + snapshotsDir.getAbsolutePath(),
+                                    "snapshot_name_format="
+                                            + benchmarkName
+                                            + "-{sessionname}-{datetime}");
+        }
+
         p.put("org.gradle.jvmargs", jvmArgs);
+
         try (FileWriter fw = new FileWriter(gradleProperties)) {
             p.store(fw, "");
         }

@@ -17,6 +17,7 @@
 package com.android.build.gradle.options
 
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.options.Version.VERSION_7_0
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.AndroidProject
 
@@ -26,7 +27,6 @@ enum class OptionalBooleanOption(
     SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED, ApiStage.Stable),
     SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, ApiStage.Stable),
     IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, ApiStage.Stable),
-    ENABLE_R8("android.enableR8", FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.ENABLE_R8)),
 
     /**
      * This project property is read by the firebase plugin, and has no direct impact on AGP behavior.
@@ -37,6 +37,18 @@ enum class OptionalBooleanOption(
 
     // Flags for Android Test Retention
     ENABLE_TEST_FAILURE_RETENTION_COMPRESS_SNAPSHOT("android.experimental.testOptions.failureRetention.compressSnapshots", ApiStage.Experimental),
+
+    /* ----------------
+     * ENFORCED FEATURES
+     */
+    @Suppress("unused")
+    ENABLE_R8(
+        "android.enableR8",
+        FeatureStage.Enforced(VERSION_7_0, "Please remove it from `gradle.properties`.")
+    ),
+    // This option is added only to allow AGP to continue running Proguard tests, until the code
+    // is fully removed.
+    INTERNAL_ONLY_ENABLE_R8("unsafe.android.enableR8", FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.ENABLE_R8)),
 
     /* ----------------
      * REMOVED FEATURES

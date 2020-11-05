@@ -54,8 +54,8 @@ import kotlin.streams.toList
  * Build a C/C++ project.
  */
 class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuilder {
-    override val objFolder: File get() = configurationModel.activeAbis.single().objFolder
-    override val soFolder: File get() = configurationModel.activeAbis.single().soFolder
+    override val objFolder: File get() = configurationModel.activeAbis.first().objFolder
+    override val soFolder: File get() = configurationModel.activeAbis.first().soFolder
 
     private val variant get() = configurationModel.variant
     private val abis get() = configurationModel.activeAbis

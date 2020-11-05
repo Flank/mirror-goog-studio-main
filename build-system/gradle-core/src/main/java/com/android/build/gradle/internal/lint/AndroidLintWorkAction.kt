@@ -33,12 +33,16 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         abstract val classpath: ConfigurableFileCollection
         abstract val android: Property<Boolean>
         abstract val fatalOnly: Property<Boolean>
+        abstract val lintFixBuildService: Property<LintFixBuildService>
     }
 
     @get:Inject
     abstract val process: ExecOperations
 
     override fun execute() {
+        // The lint fix build service, when present, prevents multiple lint fix actions from running
+        // concurrently potentially on the same sources.
+        parameters.lintFixBuildService.orNull
         val logger = Logging.getLogger(this.javaClass)
         val arguments = parameters.arguments.get()
         logger.lifecycle("Running lint " + arguments.joinToString(" "))

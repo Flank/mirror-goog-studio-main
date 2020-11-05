@@ -44,18 +44,19 @@ public class LintDependencyModelTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static LintInvocationType[] getParams() {
-        return new LintInvocationType[] {
-            LintInvocationType.REFLECTIVE_LINT_RUNNER
-        }; // TODO(b/160392650)
+        return LintInvocationType.values();
     }
 
     @Rule
     public final GradleTestProject project;
 
+    private final LintInvocationType lintInvocationType;
+
     public LintDependencyModelTest(LintInvocationType lintInvocationType) {
         this.project = lintInvocationType.testProjectBuilder()
                 .fromTestProject("lintDeps")
                 .create();
+        this.lintInvocationType = lintInvocationType;
     }
 
 
@@ -72,16 +73,16 @@ public class LintDependencyModelTest {
                         .replace("\\", "/");
 
         // Library dependency graph:
-        //    app +----> androidlib +----> indirectlib2
-        //        |                 |
-        //        +----> javalib ---+----> indirectlib
-        //        +----> javalib2
+        //        ----------app----------
+        //       /            \          \            depends on
+        //   javalib2      androidlib    javalib
+        //          \     /         \                 which depend on
+        //        indirectlib      indirectlib2
 
-        // Should have SdCatdPath errors in all five libs.
-        // The javalib/lint.xml file which turns SdCardPath into an error should
-        // apply in javalib and its dependency (indirectlib2), but indirectlib
-        // is directly depended on by multiple upstream projects so it's ambiguous
-        // which should apply.
+        // All five libraries will trigger the SdCardPath detector.
+        // The lint.xml in androidLib marks it as information, which applies to indirectLib2.
+        // However, indirectlib is reachable via two projects (javalib2 and androidlib) so it's
+        // ambiguous which should apply. (TODO: b/160392650: decide on a deterministic semantic)
 
         // We've configured SdCardPath to be an error, so we expect to see it
         // in androidlib and indirectlib2 as error; in indirectlib1 there's more
@@ -90,9 +91,13 @@ public class LintDependencyModelTest {
         assertThat(textReport).contains("androidlib/src/main/java/com/example/mylibrary/MyClass.java:4: Information: Do not hardcode");
         assertThat(textReport).contains("javalib/src/main/java/com/example/MyClass.java:4: Warning: Do not hardcode");
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:4: Warning: Do not hardcode");
-        assertThat(textReport).contains("indirectlib/src/main/java/com/example/MyClass2.java:4: Information: Do not hardcode");
-        assertThat(textReport).contains("indirectlib2/src/main/java/com/example2/MyClass2.java:4: Information: Do not hardcode");
-
+        if(lintInvocationType == LintInvocationType.REFLECTIVE_LINT_RUNNER) {
+            // TODO(b/160392650): Inheritance of lint severity configurations between projects
+            assertThat(textReport).contains(
+                    "indirectlib/src/main/java/com/example/MyClass2.java:4: Information: Do not hardcode");
+            assertThat(textReport).contains(
+                    "indirectlib2/src/main/java/com/example2/MyClass2.java:4: Information: Do not hardcode");
+        }
         // This issue is turned off in javalib but still returns to (default) enabled when processing
         // its sibling
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:5: Warning: Use Boolean.valueOf(false)");

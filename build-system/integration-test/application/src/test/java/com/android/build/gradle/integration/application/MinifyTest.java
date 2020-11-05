@@ -72,7 +72,9 @@ public class MinifyTest {
     public void model() throws Exception {
         AndroidProject model =
                 project.model()
-                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(
+                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                                codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
                         .getOnlyModel();
@@ -92,7 +94,9 @@ public class MinifyTest {
     public void appApkIsMinified() throws Exception {
         GradleBuildResult result =
                 project.executor()
-                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(
+                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                                codeShrinker == CodeShrinker.R8)
                         .run("assembleMinified");
         try (Scanner stdout = result.getStdout()) {
             ScannerSubject.assertThat(stdout).doesNotContain("Note");
@@ -171,7 +175,9 @@ public class MinifyTest {
                         + "}");
 
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assembleMinified");
 
         Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
@@ -216,7 +222,9 @@ public class MinifyTest {
                         + "}");
 
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assembleMinified");
 
         Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
@@ -252,7 +260,9 @@ public class MinifyTest {
                         + "}");
 
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assembleMinified");
 
         Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
@@ -264,7 +274,9 @@ public class MinifyTest {
     public void testApkIsNotMinified_butMappingsAreApplied() throws Exception {
         // Run just a single task, to make sure task dependencies are correct.
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assembleMinifiedAndroidTest");
 
         GradleTestProject.ApkType testMinified =
@@ -295,7 +307,9 @@ public class MinifyTest {
                 "getDefaultProguardFile('proguard-android.txt')",
                 "getDefaultProguardFile('proguard-android-optimize.txt')");
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assembleMinified");
     }
 
@@ -305,7 +319,9 @@ public class MinifyTest {
         Files.createDirectories(javaRes.getParent());
         Files.createFile(javaRes);
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assembleMinified");
         assertThat(project.getApk(GradleTestProject.ApkType.of("minified", true)))
                 .contains("my_res.txt");
@@ -314,13 +330,17 @@ public class MinifyTest {
     @Test
     public void testAndroidTestIsNotUpToDate() throws IOException, InterruptedException {
         project.executor()
-                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(
+                        OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                        codeShrinker == CodeShrinker.R8)
                 .run("assembleMinified", "assembleMinifiedAndroidTest");
 
         TestFileUtils.appendToFile(project.file("proguard-rules.pro"), "\n-keep class **");
         GradleBuildResult minifiedAndroidTest =
                 project.executor()
-                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(
+                                OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
+                                codeShrinker == CodeShrinker.R8)
                         .run("assembleMinifiedAndroidTest");
 
         TaskStateList.TaskInfo taskInfo =

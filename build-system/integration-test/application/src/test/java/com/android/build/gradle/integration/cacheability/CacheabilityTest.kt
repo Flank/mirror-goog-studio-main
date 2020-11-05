@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -88,7 +89,15 @@ class CacheabilityTest {
                 ":app:desugarDebugFileDependencies", /* Bug 160138798 */
                 ":app:mergeDebugResources", /* Bug 141301405 */
                 ":app:packageDebug", /* Bug 74595859 */
-                ":app:processDebugResources" /* Bug 141301405 */
+                ":app:processDebugResources", /* Bug 141301405 */
+            ).plus(
+                    // mapDebugSourceSetPaths is not cacheable but exists to enable the main resource
+                    // compilation to be cacheable.
+                    if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                        setOf(":app:mapDebugSourceSetPaths")
+                    } else {
+                        emptySet()
+                    }
             ),
             UP_TO_DATE to setOf(
                 ":app:clean",
@@ -154,6 +163,14 @@ class CacheabilityTest {
                     ":app:packageRelease",
                     ":app:processReleaseResources",
                     ":app:sdkReleaseDependencyData"
+            ).plus(
+                    // mapDebugSourceSetPaths is not cacheable but exists to enable the main
+                    // resource compilation to be cacheable.
+                    if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                        setOf(":app:mapReleaseSourceSetPaths")
+                    } else {
+                        emptySet()
+                    }
             ),
             UP_TO_DATE to setOf(
                     ":app:clean",

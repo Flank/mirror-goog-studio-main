@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.tasks.createCxxConfigureTask
-import com.android.build.gradle.tasks.createReferringCxxBuildTask
 import com.android.build.gradle.tasks.createVariantCxxCleanTask
 import com.android.build.gradle.tasks.createWorkingCxxBuildTask
 import com.android.builder.errors.IssueReporter
@@ -78,7 +77,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                     is Configure -> {
                         taskFactory.register(createCxxConfigureTask(
                                 global,
-                                task.representative.toConfigurationModel(),
+                                task.representatives.toConfigurationModel(),
                                 name))
                     }
                     is Build -> {
@@ -90,9 +89,9 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                     is VariantBuild -> {
                         val variant = variantMap.getValue(task.variantName)
                         val configuration = task.representatives.toConfigurationModel()
-                        val buildTask = taskFactory.register(createReferringCxxBuildTask(
+                        val buildTask = taskFactory.register(createWorkingCxxBuildTask(
+                                global,
                                 task.representatives.toConfigurationModel(),
-                                variant,
                                 name))
                         variant.taskContainer.cxxConfigurationModel = configuration
                         variant.taskContainer.externalNativeBuildTask = buildTask
@@ -154,36 +153,17 @@ fun createPrefabTasks(taskFactory: TaskFactory, libraryVariant: LibraryVariantIm
 fun createCxxTaskDependencyModel(abis: List<CxxAbiModel>) : CxxTaskDependencyModel {
     val tasks = mutableMapOf<String, CxxGradleTaskModel>()
     val edges = mutableListOf<Pair<String, String>>()
-    val builds = mutableMapOf<String, MutableList<CxxAbiModel>>()
     abis
-            .filter { abi -> abi.isActiveAbi }
-            .forEach { abi ->
-                val variantName = "".appendCapitalized(abi.variant.variantName)
-                val taskSuffix = "Cxx$variantName[${abi.abi.tag}]"
-                val configureTaskName = "configure$taskSuffix"
-                val configureTask = Configure(abi)
-                tasks[configureTaskName] = configureTask
-
-                val buildTaskName = "build$taskSuffix"
-                val buildTask = Build(abi)
-                tasks[buildTaskName] = buildTask
-
-                val generateJsonTaskName = "generateJsonModel$variantName"
-                tasks.computeIfAbsent(generateJsonTaskName) { Anchor(abi.variant.variantName) }
-
-                val externalNativeBuildTaskName = "externalNativeBuild$variantName"
-                val buildAbis = builds.computeIfAbsent(externalNativeBuildTaskName) { mutableListOf() }
-                buildAbis += abi
-
-                edges += buildTaskName to configureTaskName
-                edges += generateJsonTaskName to configureTaskName
-                edges += externalNativeBuildTaskName to buildTaskName
-                edges += externalNativeBuildTaskName to generateJsonTaskName
+        .groupBy { it.variant.variantName }
+            .forEach { (variantName, abis) ->
+                if (abis.any { abi -> abi.isActiveAbi }) {
+                    val configureName = "generateJsonModel".appendCapitalized(variantName)
+                    val buildName = "externalNativeBuild".appendCapitalized(variantName)
+                    tasks[configureName] = Configure(abis)
+                    tasks[buildName] = VariantBuild(variantName, abis)
+                    edges += buildName to configureName
+                }
             }
-
-    builds.forEach { (taskName, abis) ->
-        tasks[taskName] = VariantBuild(abis.first().variant.variantName, abis.distinct())
-    }
 
     return CxxTaskDependencyModel(
             tasks = tasks,

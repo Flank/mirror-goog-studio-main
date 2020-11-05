@@ -347,7 +347,7 @@ class UtpConfigFactory {
                             .getPath(BuildToolInfo.PathId.DEXDUMP)
                     }
                     testLogDirBuilder.apply {
-                        path = testLogDir.absolutePath
+                        path = testLogDir.path // Must be relative path to outputDir
                     }
                     testRunLogBuilder.apply {
                         path = TEST_RUNNER_LOG_FILE_NAME

@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.TaskStateList.Execution
 import com.android.build.gradle.integration.common.truth.TaskStateList.ExecutionState.UP_TO_DATE
 import com.android.build.gradle.integration.common.utils.CacheabilityTestHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -168,6 +169,15 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:mergeDebugResources",
                     ":feature2:packageDebug",
                     ":feature2:processDebugResources"
+                ).plus(
+                        if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                            setOf(":app:mapDebugSourceSetPaths",
+                                    ":feature1:mapDebugSourceSetPaths",
+                                    ":feature2:mapDebugSourceSetPaths"
+                            )
+                        } else {
+                            emptySet()
+                        }
                 ),
                 SKIPPED to setOf(
                     ":app:assembleDebug",

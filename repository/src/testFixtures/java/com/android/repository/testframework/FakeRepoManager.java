@@ -41,16 +41,14 @@ import org.w3c.dom.ls.LSResourceResolver;
  * A fake {@link RepoManager}, for use in unit tests.
  */
 public class FakeRepoManager extends RepoManager {
-
-    private RepositoryPackages mPackages;
+    private final RepositoryPackages mPackages;
     private File mLocalPath;
-    private List<SchemaModule<?>> mModules = Lists
-            .newArrayList(RepoManager.getCommonModule(), RepoManager.getGenericModule());
+    private final List<SchemaModule<?>> mModules =
+            Lists.newArrayList(RepoManager.getCommonModule(), RepoManager.getGenericModule());
 
     public FakeRepoManager(@Nullable File localPath, @NonNull RepositoryPackages packages) {
         mLocalPath = localPath;
         mPackages = packages;
-
     }
 
     public FakeRepoManager(@NonNull RepositoryPackages packages) {
@@ -58,7 +56,7 @@ public class FakeRepoManager extends RepoManager {
     }
 
     @Override
-    public void registerSchemaModule(@NonNull SchemaModule module) {
+    public void registerSchemaModule(@NonNull SchemaModule<?> module) {
         mModules.add(module);
     }
 
@@ -81,12 +79,10 @@ public class FakeRepoManager extends RepoManager {
 
     @Override
     public void setFallbackLocalRepoLoader(@Nullable FallbackLocalRepoLoader local) {
-
     }
 
     @Override
     public void registerSourceProvider(@NonNull RepositorySourceProvider provider) {
-
     }
 
     @NonNull
@@ -103,26 +99,34 @@ public class FakeRepoManager extends RepoManager {
 
     @Override
     public void setFallbackRemoteRepoLoader(@Nullable FallbackRemoteRepoLoader remote) {
-
     }
 
     @Override
-    public void load(long cacheExpirationMs,
+    public void load(
+            long cacheExpirationMs,
             @Nullable List<RepoLoadedListener> onLocalComplete,
             @Nullable List<RepoLoadedListener> onSuccess,
-            @Nullable List<Runnable> onError, @NonNull ProgressRunner runner,
-            @Nullable Downloader downloader, @Nullable SettingsController settings, boolean sync) {
+            @Nullable List<Runnable> onError,
+            @NonNull ProgressRunner runner,
+            @Nullable Downloader downloader,
+            @Nullable SettingsController settings) {}
 
-    }
+    @Override
+    public void loadSynchronously(
+            long cacheExpirationMs,
+            @Nullable List<RepoLoadedListener> onLocalComplete,
+            @Nullable List<RepoLoadedListener> onSuccess,
+            @Nullable List<Runnable> onError,
+            @NonNull ProgressRunner runner,
+            @Nullable Downloader downloader,
+            @Nullable SettingsController settings) {}
 
     @Override
     public void markInvalid() {
-
     }
 
     @Override
     public void markLocalCacheInvalid() {
-
     }
 
     @Override
@@ -161,12 +165,10 @@ public class FakeRepoManager extends RepoManager {
     @Override
     public void installBeginning(@NonNull RepoPackage repoPackage,
             @NonNull PackageOperation installer) {
-
     }
 
     @Override
     public void installEnded(@NonNull RepoPackage repoPackage) {
-
     }
 
     @Nullable

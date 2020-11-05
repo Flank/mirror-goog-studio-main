@@ -187,7 +187,9 @@ public interface FileOp {
 
     /**
      * @see File#deleteOnExit()
+     * @deprecated The application may not exit for a very long time. Prefer explicit cleanup.
      */
+    @Deprecated
     void deleteOnExit(File file);
 
     /**
