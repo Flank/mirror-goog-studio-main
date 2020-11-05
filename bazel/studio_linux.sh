@@ -68,6 +68,7 @@ then
 
 elif [[ $IS_POST_SUBMIT ]]; then
   conditional_flags+=(--nocache_test_results)
+  conditional_flags+=(--flaky_test_attempts=2)
 fi
 
 readonly script_dir="$(dirname "$0")"
