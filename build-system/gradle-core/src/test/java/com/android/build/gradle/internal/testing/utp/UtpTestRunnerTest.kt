@@ -36,6 +36,7 @@ import com.google.protobuf.TextFormat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
+import org.gradle.api.file.ConfigurableFileCollection
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -74,6 +75,7 @@ class UtpTestRunnerTest {
     private val utpDependencies = object: UtpDependencies() {
         override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
         override val core = FakeConfigurableFileCollection(File("/pathToCORE.jar"))
+        override val deviceProviderGradle = FakeConfigurableFileCollection(File(""))
         override val deviceProviderLocal = FakeConfigurableFileCollection(File(""))
         override val deviceProviderVirtual = FakeConfigurableFileCollection(File(""))
         override val driverInstrumentation = FakeConfigurableFileCollection(File(""))

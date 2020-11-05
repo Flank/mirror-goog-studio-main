@@ -1609,6 +1609,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 val managedDeviceTestTask = taskFactory.register(
                     ManagedDeviceInstrumentationTestTask.CreationAction(
                         androidTestProperties,
+                        globalScope.avdComponents,
                         managedDevice,
                         testData
                     )

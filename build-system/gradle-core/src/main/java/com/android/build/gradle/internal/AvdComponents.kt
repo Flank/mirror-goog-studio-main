@@ -53,6 +53,17 @@ abstract class AvdComponentsBuildService @Inject constructor(
     }
 
     /**
+     * Returns the location of the shared avd folder.
+     */
+    val avdFolder: Provider<Directory> = parameters.avdLocation
+
+    /**
+     * Returns the location of the emulator.
+     */
+    val emulatorDirectory: Provider<Directory> =
+        parameters.sdkService.get().emulatorDirectoryProvider
+
+    /**
      * Returns the names of all avds currently in the shared avd folder.
      */
     fun allAvds(): List<String> = avdManager.allAvds()

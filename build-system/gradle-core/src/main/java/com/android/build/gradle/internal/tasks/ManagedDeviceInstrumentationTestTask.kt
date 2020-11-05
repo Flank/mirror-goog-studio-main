@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.SdkConstants.FN_EMULATOR
+import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -49,6 +51,7 @@ import com.android.builder.core.BuilderConstants.MANAGED_DEVICE
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.TestOptions
 import com.android.ide.common.process.JavaProcessExecutor
+import com.android.prefs.AndroidLocation
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import org.gradle.api.Action
@@ -59,6 +62,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -141,6 +145,15 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
     @Input
     abstract fun getAvdName(): Property<String>
 
+    @Input
+    abstract fun getApiLevel(): Property<Int>
+
+    @Input
+    abstract fun getAbi(): Property<String>
+
+    @Internal
+    abstract fun getAvdComponents(): Property<AvdComponentsBuildService>
+
     @Internal
     override fun getTestFailed(): Boolean {
         return hasFailures
@@ -164,20 +177,19 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         val managedDevice = UtpManagedDevice(
             getDeviceName().get(),
             getAvdName().get(),
-            // TODO: generate unique ID, device name is okay for now, but is insufficient for
-            // TODO: release.
-            getDeviceName().get(),
-            getReportsDir().get().asFile.absolutePath,
-            getReportsDir().get().asFile.absolutePath,
-            // TODO(b/141510559) create emulator script in temp directory.
-            "TODO")
+            getApiLevel().get(),
+            getAbi().get(),
+            getAvdComponents().get().avdFolder.get().asFile.absolutePath,
+            path,
+            getAvdComponents().get()
+                .emulatorDirectory.get().asFile.resolve(FN_EMULATOR).absolutePath)
 
         DeviceProviderInstrumentTestTask.checkForNonApks(getBuddyApks().files)
             { message: String ->
                 throw InvalidUserDataException(message)
             }
 
-        val resultsOutDir = getResultsDir().get().asFile
+        val resultsOutDir = resultsDir.get().asFile
         FileUtils.cleanOutputDir(resultsOutDir)
 
         val success = if (!testsFound()) {
@@ -239,8 +251,9 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
     class CreationAction (
         creationConfig: VariantCreationConfig,
-        val device: ManagedVirtualDevice,
-        val testData: AbstractTestDataImpl
+        private val avdComponents: Provider<AvdComponentsBuildService>,
+        private val device: ManagedVirtualDevice,
+        private val testData: AbstractTestDataImpl
     ): VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
 
@@ -263,6 +276,11 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
             task.getDeviceName().setDisallowChanges(device.name)
             task.getAvdName().setDisallowChanges(computeAvdName(device))
+
+            task.getApiLevel().setDisallowChanges(device.apiLevel)
+            task.getAbi().setDisallowChanges(device.abi)
+
+            task.getAvdComponents().setDisallowChanges(avdComponents)
 
             task.group = JavaBasePlugin.VERIFICATION_GROUP
 
@@ -290,7 +308,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                         launcher::from to UtpDependency.LAUNCHER,
                         core::from to UtpDependency.CORE,
                         deviceProviderLocal::from to UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL,
-                        deviceProviderVirtual::from to UtpDependency.ANDROID_DEVICE_PROVIDER_VIRTUAL,
+                        deviceProviderGradle::from to UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE,
                         driverInstrumentation::from to UtpDependency.ANDROID_DRIVER_INSTRUMENTATION,
                         testPlugin::from to UtpDependency.ANDROID_TEST_PLUGIN,
                         testDeviceInfoPlugin::from to UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN,

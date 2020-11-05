@@ -21,7 +21,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 
 private const val NITROGEN_MAVEN_GROUP_ID = "com.google.testing.platform"
@@ -45,9 +44,9 @@ enum class UtpDependency(
     ANDROID_DEVICE_PROVIDER_LOCAL(
             "android-device-provider-local",
             "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"),
-    ANDROID_DEVICE_PROVIDER_VIRTUAL(
-            "android-device-provider-virtual",
-            "com.google.testing.platform.runtime.android.provider.virtual.VirtualAndroidDeviceProvider"),
+    ANDROID_DEVICE_PROVIDER_GRADLE(
+            "android-device-provider-gradle",
+            "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider"),
     ANDROID_DRIVER_INSTRUMENTATION(
             "android-driver-instrumentation",
             "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"),
@@ -76,6 +75,9 @@ abstract class UtpDependencies {
     @get:Optional
     @get:Classpath
     abstract val core: ConfigurableFileCollection
+    @get:Optional
+    @get:Classpath
+    abstract val deviceProviderGradle: ConfigurableFileCollection
     @get:Optional
     @get:Classpath
     abstract val deviceProviderLocal: ConfigurableFileCollection

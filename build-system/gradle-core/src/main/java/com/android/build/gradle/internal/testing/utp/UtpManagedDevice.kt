@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import java.io.File
-
 /**
  * Processed data from the Android Gradle Plugin to UTP regarding a specific Managed Virtual Device
  * as specified from the DSL.
@@ -25,21 +23,17 @@ import java.io.File
  * @param deviceName the device name, as specified from the DSL.
  * @param avdName the name of the avd inside the gradle avd folder corresponding to the device.
  *   This name is created from the contents of the managed device DSL.
+ * @param avdFolder the folder for the avds used by gradle, to be passed into the UTP server.
  * @param id A unique identifier used to identify the emulator after device creation. This allows
  *   for devices to share the same AVD, or share the same device name in the case of multiple gradle
  *   modules.
- * @param logcatPath the path in the output directory to direct the logs from the emulated device
- *   to.
- * @param launchMetadataPath the path in the output directory to write the metadata of the emulator
- *   after the emulator is launched.
- * @param emulatorLauncherPath the path to the emulator launcher script, which will start the device
- *   for the Unified Test Platform.
+ * @param emulatorPath the absolute path to the emulator executable.
  */
 data class UtpManagedDevice(
     val deviceName: String,
     val avdName: String,
+    val api: Int,
+    val abi: String,
+    val avdFolder: String,
     val id: String,
-    val logcatPath: String,
-    val launchMetadataPath: String,
-    /* TODO(b/141510559): emulatorLauncherPath needs to be generated. */
-    val emulatorLauncherPath: String)
+    val emulatorPath: String)

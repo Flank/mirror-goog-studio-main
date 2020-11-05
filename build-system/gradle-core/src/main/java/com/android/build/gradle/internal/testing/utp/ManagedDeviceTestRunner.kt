@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
+import com.android.builder.testing.api.DeviceException
+import com.android.builder.testing.api.TestException
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
@@ -46,7 +48,7 @@ class ManagedDeviceTestRunner(
         helperApks: Set<File>,
         logger: ILogger
     ): Boolean {
-        val testApks = getTestApks(testData)
+        val testedApks = getTestedApks(testData, managedDevice, logger)
         val utpOutputDir = outputDirectory
         val utpTmpDir = Files.createTempDir()
         val utpTestLogDir = Files.createTempDir()
@@ -56,7 +58,7 @@ class ManagedDeviceTestRunner(
                 configFactory.createRunnerConfigProtoForManagedDevice(
                     managedDevice,
                     testData,
-                    testApks.union(helperApks) + testData.testApk,
+                    testedApks.union(helperApks) + testData.testApk,
                     utpDependencies,
                     sdkComponents,
                     utpOutputDir,
@@ -94,8 +96,26 @@ class ManagedDeviceTestRunner(
         }
     }
 
-    private fun getTestApks(testData: StaticTestData): List<File> {
-        // TODO(b/141510559): need to find default apk or find best fit for the device category.
+    private fun getTestedApks(
+        testData: StaticTestData, device: UtpManagedDevice, logger: ILogger): List<File> {
+
+        val minSdk = testData.minSdkVersion.apiLevel
+        if (device.api < minSdk) {
+            throw TestException(
+                DeviceException(
+                    "Device ${device.deviceName} invalid: minSdkVersion $minSdk > deviceApiLevel " +
+                        "${device.api}"))
+        }
+        val deviceConfigProvider = ManagedDeviceConfigProvider(device)
+        if (!testData.isLibrary) {
+            val testedApks =
+                testData.testedApkFinder.invoke(deviceConfigProvider, logger)
+
+            if (testedApks.isEmpty()) {
+                logger.warning("No matching Apks found for ${device.deviceName}.")
+            }
+            return testedApks
+        }
         return listOf()
     }
 }
