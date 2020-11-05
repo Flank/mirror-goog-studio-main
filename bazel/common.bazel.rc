@@ -144,9 +144,14 @@ build:dynamic --strategy=JavaIjar=dynamic
 build:dynamic --strategy=JavaDeployJar=dynamic
 build:dynamic --strategy=JavaSourceJar=dynamic
 build:dynamic --strategy=Turbine=dynamic
+# Studio build actions, see b/171900265 for details
+build:dynamic --strategy=zipper=dynamic
+build:dynamic --strategy=zipmerger=dynamic
+build:dynamic --strategy=chkplugin=dynamic
+build:dynamic --strategy=stamper=dynamic
+build:dynamic --strategy=PythonZipper=dynamic
 # We want to use persistent workers, if supported (Javac, kotlinc, formc)
 build:dynamic --dynamic_local_strategy=worker,local
-
 # Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
 # so there is no need to keep workers alive after the build.
 build:dynamic --worker_quit_after_build
