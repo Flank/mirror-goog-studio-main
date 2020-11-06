@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
-import com.android.build.gradle.internal.cxx.gradle.generator.*
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -76,7 +76,8 @@ fun createCxxVariantModel(
             configurationParameters.cxxFolder,
             configurationParameters.buildSystem.tag,
             configurationParameters.variantName,
-            "prefab")
+            "prefab"),
+        stlType = module.determineUsedStl(configurationParameters.nativeVariantConfig.arguments).argumentName,
     )
 }
 

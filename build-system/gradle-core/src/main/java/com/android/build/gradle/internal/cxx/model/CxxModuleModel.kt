@@ -17,10 +17,20 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_STL
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_STL
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
+import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
+import com.android.build.gradle.internal.cxx.configure.getNdkBuildProperty
+import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
+import com.android.build.gradle.internal.cxx.configure.toNdkBuildArguments
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import java.io.File
@@ -164,3 +174,71 @@ val CxxModuleModel.cmakeSettingsFile: File
 /** The user's BuildSettings.json file next to CMakeLists.txt */
 val CxxModuleModel.buildSettingsFile : File
     get() = join(makeFile.parentFile, "BuildSettings.json")
+
+/**
+ * Call [compute] if this is a CMake build.
+ */
+fun <T> CxxModuleModel.ifCMake(compute : () -> T?) =
+        if (buildSystem == CMAKE) compute() else null
+
+/**
+ * Call [compute] if this is an ndk-build build.
+ */
+fun <T> CxxModuleModel.ifNdkBuild(compute : () -> T?) =
+        if (buildSystem == NDK_BUILD) compute() else null
+
+/**
+ * Determine, for CMake, which STL is used based on command-line arguments from the user.
+ */
+fun CxxModuleModel.determineUsedStlForCmake(arguments: List<CommandLineArgument>): Stl {
+    val stlFromArgument = arguments.getCmakeProperty(ANDROID_STL)
+    if (stlFromArgument != null) {
+        val result = Stl.fromArgumentName(stlFromArgument)
+        if (result != null) return result
+        warnln("Unable to parse STL from build.gradle arguments: $stlFromArgument")
+    }
+    return ndkDefaultStl
+}
+
+/**
+ * Determine, for ndk-build, which STL is used based on command-line arguments from the user.
+ */
+fun CxxModuleModel.determineUsedStlForNdkBuild(arguments: List<CommandLineArgument>): Stl {
+    val stlFromArgument = arguments.getNdkBuildProperty(APP_STL)
+    if (stlFromArgument != null) {
+        val result = Stl.fromArgumentName(stlFromArgument)
+        if (result != null) return result
+        warnln("Unable to parse STL from build.gradle arguments: $stlFromArgument")
+    }
+
+    // For ndk-build, the STL may also be specified in the project's Application.mk.
+    // Try parsing the user's STL from their Application.mk, and emit an error if we can't. If
+    // we can't parse it the user will need to take some action (alter their Application.mk such
+    // that APP_STL becomes trivially parsable, or define it in their build.gradle instead.
+    var appStl: String? = null
+    val applicationMk = makeFile.resolveSibling("Application.mk")
+    if (applicationMk.exists()) {
+        for (line in applicationMk.readText().lines()) {
+            val match = Regex("^APP_STL\\s*:?=\\s*(.*)$").find(line.trim()) ?: continue
+            val appStlMatch = match.groups[1]
+            require(appStlMatch != null) // Should be impossible.
+            appStl = appStlMatch.value.takeIf { it.isNotEmpty() }
+        }
+
+        if (appStl != null) {
+            val result = Stl.fromArgumentName(appStl)
+            if (result != null) return result
+            warnln("Unable to parse APP_STL from $applicationMk: $appStl")
+        }
+    }
+
+    // Otherwise the default it used.
+    return ndkDefaultStl
+}
+
+/**
+ * Determine which STL is used based on command-line arguments from the user.
+ */
+fun CxxModuleModel.determineUsedStl(arguments: List<String>) =
+        ifCMake { determineUsedStlForCmake(arguments.toCmakeArguments()) }
+                ?: determineUsedStlForNdkBuild(arguments.toNdkBuildArguments())

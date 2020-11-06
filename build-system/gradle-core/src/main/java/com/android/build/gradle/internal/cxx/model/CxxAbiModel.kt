@@ -81,6 +81,11 @@ data class CxxAbiModel(
      * Whether or not this abi is active in the build or not.
      */
     val isActiveAbi: Boolean,
+
+    /**
+     * If present, the STL .so file that needs to be distributed with the libraries built.
+     */
+    val stlLibraryFile: File?,
 )
 
 /**

@@ -21,8 +21,10 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.internal.cxx.settings.SettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
+import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
+import java.io.File
 
 /**
  * Construct a [CxxAbiModel].
@@ -38,31 +40,38 @@ fun createCxxAbiModel(
         configurationParameters.buildSystem.tag,
         configurationParameters.variantName,
         abi.tag)
-    return CxxAbiModel(
-        variant = variant,
-        abi = abi,
-        info = variant.module.ndkMetaAbiList.single { it.abi == abi },
-        originalCxxBuildFolder = cxxBuildFolder,
-        cxxBuildFolder = cxxBuildFolder,
-        abiPlatformVersion =
-            sdkComponents
-                .ndkHandler
-                .ndkPlatform
-                .getOrThrow()
-                .ndkInfo
-                .findSuitablePlatformVersion(abi.tag, configurationParameters.minSdkVersion),
-        cmake =
-            if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
-                CxxCmakeAbiModel(
-                    cmakeServerLogFile = join(cxxBuildFolder, "cmake_server_log.txt"),
-                    effectiveConfiguration = SettingsConfiguration(),
-                    cmakeArtifactsBaseFolder = cxxBuildFolder
-                )
-            } else {
-                null
-            },
-        buildSettings = createBuildSettingsFromFile(variant.module.buildSettingsFile),
-        isActiveAbi = variant.validAbiList.contains(abi),
-        prefabFolder = variant.prefabDirectory.resolve(abi.tag)
-    )
+    with(variant) {
+        return CxxAbiModel(
+                variant = this,
+                abi = abi,
+                info = module.ndkMetaAbiList.single { it.abi == abi },
+                originalCxxBuildFolder = cxxBuildFolder,
+                cxxBuildFolder = cxxBuildFolder,
+                abiPlatformVersion =
+                sdkComponents
+                        .ndkHandler
+                        .ndkPlatform
+                        .getOrThrow()
+                        .ndkInfo
+                        .findSuitablePlatformVersion(abi.tag,
+                                configurationParameters.minSdkVersion),
+                cmake =
+                if (module.buildSystem == NativeBuildSystem.CMAKE) {
+                    CxxCmakeAbiModel(
+                            cmakeServerLogFile = join(cxxBuildFolder, "cmake_server_log.txt"),
+                            effectiveConfiguration = SettingsConfiguration(),
+                            cmakeArtifactsBaseFolder = cxxBuildFolder
+                    )
+                } else {
+                    null
+                },
+                buildSettings = createBuildSettingsFromFile(module.buildSettingsFile),
+                isActiveAbi = validAbiList.contains(abi),
+                prefabFolder = prefabDirectory.resolve(abi.tag),
+                stlLibraryFile =
+                    Stl.fromArgumentName(stlType)
+                            ?.let { module.stlSharedObjectMap.getValue(it)[abi]?.toString() }
+                            ?.let { File(it) }
+        )
+    }
 }

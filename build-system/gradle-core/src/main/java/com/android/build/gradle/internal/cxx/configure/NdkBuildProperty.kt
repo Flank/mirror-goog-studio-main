@@ -26,6 +26,7 @@ enum class NdkBuildProperty {
     APP_CPPFLAGS,
     APP_PLATFORM,
     APP_SHORT_COMMANDS,
+    APP_STL,
     LOCAL_SHORT_COMMANDS,
     NDK_ALL_ABIS,
     NDK_APPLICATION_MK,

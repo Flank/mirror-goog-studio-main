@@ -20,14 +20,11 @@ import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
-import com.android.build.gradle.internal.cxx.model.determineUsedStl
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
@@ -212,17 +209,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
     }
 
     private fun createAbiData() : List<PrefabAbiData> {
-        val generator = createCxxMetadataGenerator(configurationModel, analyticsService.get())
-        val variantModel = generator.variant
-        val abiModels = generator.abis
-
-        val stl = when (val result = variantModel.determineUsedStl()) {
-            is DetermineUsedStlResult.Success -> result.stl
-            is DetermineUsedStlResult.Failure -> {
-                errorln(result.error)
-                return listOf()
-            }
-        }
+        val abiModels = configurationModel.activeAbis
 
         return abiModels.map {
             // Pull up the app's minSdkVersion to be within the bounds for the ABI and NDK.
@@ -245,7 +232,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
                     it.abi,
                     max(it.abiPlatformVersion, max(minVersionForAbi, minVersionForNdk)),
                     ndkVersion,
-                    stl.argumentName,
+                    it.variant.stlType,
                     it.jsonFile
             )
         }
