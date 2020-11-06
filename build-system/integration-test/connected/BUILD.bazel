@@ -12,6 +12,7 @@ kotlin_library(
     #keep sorted
     deps = [
         "//tools/base/bazel/avd:emulator_rule",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
     ],
 )

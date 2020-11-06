@@ -8,6 +8,9 @@ repositories {
 
 dependencies {
     compile project(':base:bazel:avd')
+    implementation libs.junit
+    implementation project(':base:testutils')
+
 
     testCompile project(':base:build-system:integration-test:framework')
     testCompile project(':analytics-library:protos')
