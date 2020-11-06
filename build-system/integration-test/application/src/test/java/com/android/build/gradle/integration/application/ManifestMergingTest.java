@@ -431,15 +431,10 @@ public class ManifestMergingTest {
     }
 
     @Test
-    public void checkPackageNameFromApplicationId() throws Exception {
+    public void checkPackageNameFromDsl() throws Exception {
         TestFileUtils.appendToFile(
                 flavors.getBuildFile(),
-                "android {\n"
-                        + "    compileSdkVersion 24\n"
-                        + "    defaultConfig {\n"
-                        + "        applicationId \"com.android.tests.flavors\"\n"
-                        + "    }\n"
-                        + "}");
+                "android {\n    packageName \"com.android.tests.flavors\"\n}\n");
         File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
         TestFileUtils.searchAndReplace(appManifest, "package=\"com.android.tests.flavors\">", ">");
         GradleBuildResult buildResult = flavors.executor().run("clean", "assembleF1FaDebug");
@@ -452,13 +447,6 @@ public class ManifestMergingTest {
 
     @Test
     public void checkNoAvailablePackageName() throws Exception {
-        TestFileUtils.appendToFile(
-                flavors.getBuildFile(),
-                "android {\n"
-                        + "    compileSdkVersion 24\n"
-                        + "    defaultConfig {\n"
-                        + "    }\n"
-                        + "}");
         File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
         TestFileUtils.searchAndReplace(appManifest, "package=\"com.android.tests.flavors\">", ">");
         GradleBuildResult buildResult =

@@ -24,12 +24,9 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.SyncIssue
-import com.google.common.collect.Iterables
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
-import java.util.stream.Collectors
-import kotlin.test.assertEquals
 
 class NoManifestTest {
 
@@ -65,7 +62,7 @@ class NoManifestTest {
     }
 
     @Test
-    fun noManifestSyncNoIssuesTest() {
+    fun noManifestSyncWithApplicationIdsTest() {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile, """
                 android.defaultConfig {
@@ -75,6 +72,26 @@ class NoManifestTest {
             """.trimIndent()
         )
         val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
+
+        Truth.assertThat(issues).named("full issues list").hasSize(1)
+        val issue = issues.first()
+        assertThat(issue).hasType(SyncIssue.TYPE_UNSUPPORTED_PROJECT_OPTION_USE)
+        assertThat(issue).hasSeverity(SyncIssue.SEVERITY_WARNING)
+    }
+
+    @Test
+    fun noManifestSyncWithPackageNameTest() {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").buildFile,
+                """
+                    android.packageName "com.example.app"
+                    """.trimIndent()
+        )
+        val issues =
+                project.model()
+                        .with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true)
+                        .ignoreSyncIssues()
+                        .fetchAndroidProjects().onlyModelSyncIssues
 
         Truth.assertThat(issues).named("full issues list").hasSize(1)
         val issue = issues.first()

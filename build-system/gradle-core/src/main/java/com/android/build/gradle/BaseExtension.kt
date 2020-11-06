@@ -501,7 +501,8 @@ abstract class BaseExtension protected constructor(
 
     abstract override val testOptions: TestOptions
 
-    // this is indirectly implemented by extensions when they implement the new public
+    // these are indirectly implemented by extensions when they implement the new public
     // extension interfaces via delegates.
     abstract val buildFeatures: BuildFeatures
+    abstract var packageName: String?
 }
