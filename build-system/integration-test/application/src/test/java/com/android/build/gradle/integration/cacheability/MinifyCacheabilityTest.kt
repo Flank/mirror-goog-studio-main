@@ -68,6 +68,7 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":compressMinifiedAssets",
             ":extractDeepLinksMinified",
             ":generateMinifiedBuildConfig",
+            ":generateMinifiedJacocoPropertiesFile",
             ":generateMinifiedResValues",
             ":jacocoMinified",
             ":javaPreCompileMinified",

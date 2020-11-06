@@ -159,4 +159,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
 
     fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection
+
+    val packageJacocoRuntime: Boolean
 }

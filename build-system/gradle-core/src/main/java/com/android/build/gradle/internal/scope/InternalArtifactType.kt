@@ -129,6 +129,9 @@ InternalArtifactType<T : FileSystemLocation>(
     object CODE_COVERAGE: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS), Replaceable
     // The jacoco code coverage from the device provider tasks.
     object DEVICE_PROVIDER_CODE_COVERAGE: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
+    // The automatically generated jacoco config file
+    object JACOCO_CONFIG_RESOURCES_JAR: InternalArtifactType<RegularFile>(FILE)
+
     // Additional test output data from the connected task
     object CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS)
     // Additional test output data from the device provider tasks.

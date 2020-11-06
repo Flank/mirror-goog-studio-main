@@ -732,6 +732,10 @@ abstract class ComponentImpl(
             )
         }
     }
+
+    override val packageJacocoRuntime: Boolean
+        get() = false
+
     companion object {
         // String to
         final val ENABLE_LEGACY_API: String =

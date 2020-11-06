@@ -92,6 +92,11 @@ public class MinifyTest {
 
     @Test
     public void appApkIsMinified() throws Exception {
+        if (codeShrinker == CodeShrinker.PROGUARD) {
+            // Jacoco has references to java.lang.Module that trigger notes
+            TestFileUtils.appendToFile(
+                    project.file("proguard-rules.pro"), "\n" + "-dontnote org.jacoco.agent.**\n");
+        }
         GradleBuildResult result =
                 project.executor()
                         .with(

@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
+import com.android.build.gradle.internal.coverage.JacocoPropertiesTask
 import com.android.build.gradle.internal.coverage.JacocoReportTask
 import com.android.build.gradle.internal.cxx.configure.createCxxTasks
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -1940,19 +1941,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun handleJacocoDependencies(creationConfig: ComponentCreationConfig) {
-        val variantDslInfo = creationConfig.variantDslInfo
-        // we add the jacoco jar if coverage is enabled, but we don't add it
-        // for test apps as it's already part of the tested app.
-        // For library project, since we cannot use the local jars of the library,
-        // we add it as well.
-        val isTestCoverageEnabled = (variantDslInfo.isTestCoverageEnabled
-                && (!creationConfig.variantType.isTestComponent
-                || (variantDslInfo.testedVariant != null
-                && variantDslInfo
-                .testedVariant!!
-                .variantType
-                .isAar)))
-        if (isTestCoverageEnabled) {
+        if (creationConfig.packageJacocoRuntime) {
             val jacocoAgentRuntimeDependency = JacocoConfigurations.getAgentRuntimeDependency(
                     JacocoTask.getJacocoVersion(creationConfig))
             project.dependencies
@@ -1967,6 +1956,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .resolutionStrategy { r: ResolutionStrategy ->
                         r.force(jacocoAgentRuntimeDependency)
                     }
+            taskFactory.register(JacocoPropertiesTask.CreationAction(creationConfig))
         }
     }
 

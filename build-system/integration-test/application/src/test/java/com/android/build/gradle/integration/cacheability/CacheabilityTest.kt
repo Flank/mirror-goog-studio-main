@@ -57,6 +57,7 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "dexBuilder", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "extractDeepLinks", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "generate", "BuildConfig", listOf("Debug", "Release")),
+            TaskInfo(FROM_CACHE, "generate", "JacocoPropertiesFile", listOf("Debug")),
             TaskInfo(FROM_CACHE, "generate", "ResValues", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "generate", "Config", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "jacoco", "", listOf("Debug")),

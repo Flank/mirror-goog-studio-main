@@ -314,6 +314,9 @@ fun getProjectJavaRes(
     if (creationConfig.globalScope.extension.aaptOptions.namespaced) {
         javaRes.from(creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
     }
+    if (creationConfig.packageJacocoRuntime) {
+        javaRes.from(creationConfig.artifacts.get(InternalArtifactType.JACOCO_CONFIG_RESOURCES_JAR))
+    }
     return javaRes
 }
 

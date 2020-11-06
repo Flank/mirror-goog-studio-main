@@ -22,7 +22,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
 
-/** Test for the mutablitly of   */
+/** Test for the mutablitly of Packaging Options */
 class PackagingOptionsTest {
 
     private lateinit var packagingOptions: PackagingOptions
@@ -72,7 +72,8 @@ class PackagingOptionsTest {
         assertThat(packagingOptions.pickFirsts).isEmpty()
         assertThat(packagingOptions.merges)
             .containsExactly(
-                "/META-INF/services/**"
+                "/META-INF/services/**",
+                "jacoco-agent.properties",
             )
         assertThat(packagingOptions.doNotStrip).isEmpty()
     }

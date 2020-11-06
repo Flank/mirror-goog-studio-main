@@ -220,5 +220,7 @@ open class ApplicationVariantImpl @Inject constructor(
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
 
-
+    // Apps include the jacoco agent if test coverage is enabled
+    override val packageJacocoRuntime: Boolean
+        get() = variantDslInfo.isTestCoverageEnabled
 }
