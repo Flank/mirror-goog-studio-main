@@ -17,7 +17,7 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
-  config_options="--config=cloud_resultstore"
+  config_options=""
   target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
@@ -65,7 +65,7 @@ if [[ $lsb_release == "crostini" ]]; then
 
   readonly test_invocation_id="$(uuidgen)"
 
-  #Run the tests one at a time for crostini
+  # Run the tests one at a time after all dependencies get built
   "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
