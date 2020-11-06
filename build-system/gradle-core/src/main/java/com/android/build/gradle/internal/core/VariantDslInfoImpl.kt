@@ -88,7 +88,8 @@ open class VariantDslInfoImpl internal constructor(
     @Deprecated("Only used for merged flavor")
     private val dslServices: DslServices,
     private val services: VariantPropertiesApiServices,
-    private val buildDirectory: DirectoryProperty
+    private val buildDirectory: DirectoryProperty,
+    private val dslPackageName: String?
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?
@@ -277,37 +278,52 @@ open class VariantDslInfoImpl internal constructor(
             // Special case for test components
             // The package name is the tested component package name + .test
             testedVariantImpl != null -> {
-                testedVariantImpl.packageName.map {
-                    "$it.test"
-                }
+                testedVariantImpl.packageName.map { "$it.test" }
             }
 
             // -------------
             // Special case for separate test sub-projects
-            // if there is no manifest with no packageName but there is a testApplicationId
-            // then we use that. This allows the test project to not have a manifest if all
-            // is declared in the DSL.
+            // If there is no packageName from the DSL or package attribute in the manifest, we use
+            // testApplicationId, if present. This allows the test project to not have a manifest if
+            // all is declared in the DSL.
+            // TODO(Issue 172361895) Remove this special case - users should use packageName DSL
+            // instead of testApplicationId DSL for this.
             variantType.isSeparateTestProject -> {
-                val testAppIdFromFlavors =
-                    productFlavorList.asSequence().map { it.testApplicationId }
-                        .firstOrNull { it != null }
-                        ?: defaultConfig.testApplicationId
+                if (dslPackageName != null) {
+                    services.provider { dslPackageName }
+                } else {
+                    val testAppIdFromFlavors =
+                            productFlavorList.asSequence().map { it.testApplicationId }
+                                    .firstOrNull { it != null }
+                                    ?: defaultConfig.testApplicationId
 
-                dataProvider.manifestData.map {
-                    it.packageName
-                        ?: testAppIdFromFlavors
-                        ?: throw RuntimeException("Package Name not found in ${dataProvider.manifestLocation}")
+                    dataProvider.manifestData.map {
+                        it.packageName
+                                ?: testAppIdFromFlavors
+                                ?: throw RuntimeException(
+                                        "Package Name not found in ${dataProvider.manifestLocation}"
+                                )
+                    }
                 }
             }
 
             // -------------
-            // All other types of projects, just read from the manifest.
-            else -> {
-                dataProvider.manifestData.map {
-                    it.packageName
-                        ?: applicationId.get()
-                        ?: throw RuntimeException("Package Name not found in ${dataProvider.manifestLocation}")
-                }
+            // All other types of projects, get it from the DSL or read it from the manifest.
+            else -> dslOrManifestPackageName
+        }
+    }
+
+    // The packageName as specified by the user, either via the DSL or the `package` attribute of
+    // the source AndroidManifest.xml
+    private val dslOrManifestPackageName: Provider<String> by lazy {
+        if (dslPackageName != null) {
+            services.provider { dslPackageName }
+        } else {
+            dataProvider.manifestData.map {
+                it.packageName
+                        ?: throw RuntimeException(
+                                "Package Name not found in ${dataProvider.manifestLocation}"
+                        )
             }
         }
     }
@@ -356,15 +372,10 @@ open class VariantDslInfoImpl internal constructor(
                     ?: defaultConfig.applicationId
 
             return if (appIdFromFlavors == null) {
-                // No appId value set from DSL,  rely on package name value from manifest.
+                // No appId value set from DSL, rely on package name value from DSL or manifest.
                 // using map will allow us to keep task dependency should the manifest be generated
                 // or transformed via a task.
-                dataProvider.manifestData.map {
-                    it.packageName?.let { pName ->
-                        "$pName${computeApplicationIdSuffix()}"
-                    }
-                        ?: throw RuntimeException("Package Name not found in ${dataProvider.manifestLocation}")
-                }
+                dslOrManifestPackageName.map { "$it${computeApplicationIdSuffix()}" }
             } else {
                 // use value from flavors/defaultConfig
                 // needed to make nullability work in kotlinc

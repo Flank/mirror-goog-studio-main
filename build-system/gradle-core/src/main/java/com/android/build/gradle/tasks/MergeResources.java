@@ -920,7 +920,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 HasConfigurableValuesKt.setDisallowChanges(
-                        task.getPackageName(), creationConfig.getVariantDslInfo().getPackageName());
+                        task.getPackageName(), creationConfig.getPackageName());
                 HasConfigurableValuesKt.setDisallowChanges(
                         task.getUseAndroidX(),
                         creationConfig
