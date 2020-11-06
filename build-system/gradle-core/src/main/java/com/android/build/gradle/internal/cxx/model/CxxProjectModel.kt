@@ -29,18 +29,6 @@ data class CxxProjectModel(
     val rootBuildGradleFolder: File = File("."),
 
     /**
-     * Folder storing project-level C/C++ information
-     *   ex, source-root/.cxx
-     */
-    val cxxFolder : File = File("."),
-
-    /**
-     * Location of project-wide compiler settings cache
-     *   ex, $projectRoot/.cxx
-     */
-    val compilerSettingsCacheFolder: File = File("."),
-
-    /**
      * Install folder of SDK
      *   ex, sdk.dir=/path/to/sdk
      */
@@ -61,6 +49,11 @@ data class CxxProjectModel(
      * When true, CMake Build Cohabitation is turned on.
      */
     val isCmakeBuildCohabitationEnabled: Boolean = false,
+
+    /**
+     * When true, C/C++ configuration folding is enabled.
+     */
+    val isConfigurationFoldingEnabled: Boolean = false,
 
     /**
      * Directory containing all build attribution file in Chrome trace format. See

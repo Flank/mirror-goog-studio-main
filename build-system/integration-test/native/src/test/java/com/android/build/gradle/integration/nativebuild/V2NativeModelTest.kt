@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.fixture.model.*
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Before

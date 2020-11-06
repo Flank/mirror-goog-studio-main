@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.model.objFolder
-import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
@@ -178,7 +177,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                         "Unknown ABI seen ${library.abi}"
                 )
                 val expectedOutputFile = FileUtils.join(
-                        variant.objFolder,
+                        variant.soFolder,
                         abi.tag,
                         output.name
                 )
@@ -193,7 +192,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 }
 
                 for (runtimeFile in library.runtimeFiles) {
-                    val dest = FileUtils.join(variant.objFolder, abi.tag, runtimeFile.name)
+                    val dest = FileUtils.join(variant.soFolder, abi.tag, runtimeFile.name)
                     hardLinkOrCopy(runtimeFile, dest)
                 }
             }

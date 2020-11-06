@@ -16,16 +16,45 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.android.SdkConstants
-import com.android.build.gradle.internal.cxx.configure.*
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
-import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_FIND_ROOT_PATH
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_BUILD_SCRIPT
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_CFLAGS
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_CPPFLAGS
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_PLATFORM
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_APPLICATION_MK
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_DEBUG
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_LIBS_OUT
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_OUT
+import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.NDK_PROJECT_PATH
+import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
+import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
+import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
+import com.android.build.gradle.internal.cxx.configure.onlyKeepProperties
+import com.android.build.gradle.internal.cxx.configure.onlyKeepUnknownArguments
+import com.android.build.gradle.internal.cxx.configure.parseCmakeCommandLine
+import com.android.build.gradle.internal.cxx.configure.removeBlankProperties
+import com.android.build.gradle.internal.cxx.configure.removeSubsumedArguments
+import com.android.build.gradle.internal.cxx.configure.toCmakeArgument
+import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
 import com.android.build.gradle.internal.cxx.hashing.toBase36
 import com.android.build.gradle.internal.cxx.hashing.update
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CPP_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_C_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DEFAULT_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PREFAB_PATH
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION
 import com.android.utils.tokenizeCommandLineToEscaped
@@ -59,7 +88,6 @@ fun CxxAbiModel.rewriteCxxAbiModelWithCMakeSettings() : CxxAbiModel {
                 module = module
         )
         val cmakeAbi = original.cmake?.copy(
-                cmakeArtifactsBaseFolder = configuration.buildRoot.toFile()!!,
                 effectiveConfiguration = configuration
         )
         return original.copy(
@@ -324,20 +352,8 @@ fun CxxAbiModel.getNdkBuildCommandLine(): List<String> {
         result.add("$NDK_DEBUG=0")
     }
     result.add("$APP_PLATFORM=android-$abiPlatformVersion")
-
-    // getObjFolder is set to the "local" subfolder in the user specified directory, therefore,
-    // NDK_OUT should be set to getObjFolder().getParent() instead of getObjFolder().
-    var ndkOut = File(variant.objFolder.path).parent
-    if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-        // Due to b.android.com/219225, NDK_OUT on Windows requires forward slashes.
-        // ndk-build.cmd is supposed to escape the back-slashes but it doesn't happen.
-        // Workaround here by replacing back slash with forward.
-        // ndk-build will have a fix for this bug in r14 but this gradle fix will make it
-        // work back to r13, r12, r11, and r10.
-        ndkOut = ndkOut.replace('\\', '/')
-    }
-    result.add("$NDK_OUT=$ndkOut")
-    result.add("$NDK_LIBS_OUT=${variant.soFolder.path}")
+    result.add("$NDK_OUT=${variant.intermediatesFolder}/obj")
+    result.add("$NDK_LIBS_OUT=${variant.intermediatesFolder}/lib")
 
     // Related to issuetracker.google.com/69110338. Semantics of APP_CFLAGS and APP_CPPFLAGS
     // is that the flag(s) are unquoted. User may place quotes if it is appropriate for the

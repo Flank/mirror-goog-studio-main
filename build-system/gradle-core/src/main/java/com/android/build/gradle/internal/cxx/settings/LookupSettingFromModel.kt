@@ -23,11 +23,9 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.utils.FileUtils.join
 import com.google.common.base.Joiner
-import java.lang.RuntimeException
-import java.util.Locale
+import java.util.*
 
 /**
  * Look up CMakeSettings.json [macro] equivalent value from the C++ build abi model.
@@ -140,7 +138,7 @@ private fun CxxAbiModel.getToolchainFile(): String {
     // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
     // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
     // programmatically.
-    val originalToolchain = variant.module.originalCmakeToolchainFile.absolutePath
+    val originalToolchain = variant.module.cmakeToolchainFile.absolutePath
     return if (variant.module.ndkVersion.major >= 15) {
         // Add our toolchain file.
         // Note: When setting this flag, Cmake's android toolchain would end up calling our

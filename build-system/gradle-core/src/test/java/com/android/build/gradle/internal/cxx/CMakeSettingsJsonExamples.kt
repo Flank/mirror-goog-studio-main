@@ -16,11 +16,30 @@
 
 package com.android.build.gradle.internal.cxx
 
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_ABI
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_PLATFORM
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_ARCH_ABI
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_EXPORT_COMPILE_COMMANDS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_MAKE_PROGRAM
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_NAME
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_VERSION
 import com.android.build.gradle.internal.cxx.model.DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
 import com.android.build.gradle.internal.cxx.model.NO_ABI_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION
 import com.android.build.gradle.internal.cxx.model.NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.settings.Macro
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DEFAULT_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_NINJA_EXECUTABLE
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_SYSTEM_VERSION
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
 
 /**
  * Examples of CMakeSettings.json files that are parsable.
@@ -65,10 +84,11 @@ val PARSABLE_CMAKE_SETTINGS_JSON_DOMAIN = listOf(
     """.trimIndent(),
     """{
           "environments": [{
-            "name": "ndkSetup",
+            "environment": "ndk-setup",
+            "namespace": "ndkSetup",
             "inheritEnvironments": ["ndk"],
-            "outputRoot": "${'$'}{ndk.projectDir}/.cxx/cmake/build",
-            "hashAbi": "${'$'}{ndk.shortConfigurationHash}/${'$'}{ndk.abi}"
+            "outputRoot": "${Macro.ENV_WORKSPACE_ROOT.ref}/.cxx/cmake/build",
+            "hashAbi": "${'$'}{ndk.configurationHash}/${'$'}{ndk.abi}"
           }],
           "configurations": [{
             "name": "android-gradle-plugin-predetermined-name",

@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
-import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import org.gradle.process.ExecOperations

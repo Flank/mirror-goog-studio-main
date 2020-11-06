@@ -27,7 +27,9 @@ import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.settings.Macro.ENV_WORKSPACE_ROOT
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -150,7 +152,7 @@ class CmakeSettingsSharedBuildTest(cmakeVersionInDsl: String) {
                 * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/x86/additional_project_files.txt{!}
              * NativeAbi:
                 * name                            = "x86_64"
-                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/x86_64/compile_commands.json.bin{!}
+                * sourceFlagsFile                 = {PROJECT}/.cxx/{DEBUG}/x86_64/compile_commands.json.bin{F}
                 * symbolFolderIndexFile           = {PROJECT}/.cxx/{DEBUG}/x86_64/symbol_folder_index.txt{F}
                 * buildFileIndexFile              = {PROJECT}/.cxx/{DEBUG}/x86_64/build_file_index.txt{F}
                 * additionalProjectFilesIndexFile = {PROJECT}/.cxx/{DEBUG}/x86_64/additional_project_files.txt{F}

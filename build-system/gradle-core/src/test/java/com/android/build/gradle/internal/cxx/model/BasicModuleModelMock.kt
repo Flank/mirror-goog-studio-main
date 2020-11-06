@@ -69,7 +69,7 @@ import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import java.io.File
-import java.util.Locale
+import java.util.*
 
 /**
  * Set up up a mock for constructing [CxxModuleModel]. It takes a lot of plumbing so this can
@@ -380,6 +380,8 @@ open class BasicModuleModelMock {
             doReturn(false).`when`(buildFeatures).prefab
             doReturn(true)
                 .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
+            doReturn(true)
+                .`when`(projectOptions).get(BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING)
             doReturn(null)
                 .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
             doReturn(false)

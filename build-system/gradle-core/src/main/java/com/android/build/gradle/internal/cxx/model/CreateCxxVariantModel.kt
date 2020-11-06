@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationPa
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
 import java.io.File
+import java.util.*
 
 /**
  * Construct a [CxxVariantModel]
@@ -37,48 +38,62 @@ fun createCxxVariantModel(
                         module.ndkDefaultAbiList,
                         configurationParameters.nativeVariantConfig.externalNativeBuildAbiFilters,
                         configurationParameters.nativeVariantConfig.ndkAbiFilters,
-                        module.splitsAbiFilterSet,
+                        configurationParameters.splitsAbiFilterSet,
                         module.project.isBuildOnlyTargetAbiEnabled,
                         module.project.ideBuildTargetAbi
                 )
         ).validAbis.toList()
     }
-    val variantIntermediatesFolder = join(
-            configurationParameters.intermediatesFolder,
-            configurationParameters.buildSystem.tag,
-            configurationParameters.variantName
-    )
-    return CxxVariantModel(
-        buildTargetSet = configurationParameters.nativeVariantConfig.targets,
-        implicitBuildTargetSet = configurationParameters.implicitBuildTargetSet,
-        module = module,
-        buildSystemArgumentList = configurationParameters.nativeVariantConfig.arguments,
-        cFlagsList = configurationParameters.nativeVariantConfig.cFlags,
-        cppFlagsList = configurationParameters.nativeVariantConfig.cppFlags,
-        variantName = configurationParameters.variantName,
-        // TODO remove this after configuration has been added to DSL
-        // If CMakeSettings.json has a configuration with this exact name then
-        // it will be used. The point is to delay adding 'configuration' to the
-        // DSL.
-        cmakeSettingsConfiguration = "android-gradle-plugin-predetermined-name",
-        objFolder = if (configurationParameters.buildSystem == NativeBuildSystem.NDK_BUILD) {
-            // ndkPlatform-build create libraries in a "local" subfolder.
-            join(variantIntermediatesFolder, "obj", "local")
-        } else {
-            join(variantIntermediatesFolder, "obj")
-        },
-        soFolder = join(variantIntermediatesFolder, "lib"),
-        isDebuggableEnabled = configurationParameters.isDebuggable,
-        validAbiList = validAbiList,
-        prefabClassPathFileCollection = configurationParameters.prefabClassPath,
-        prefabPackageDirectoryListFileCollection = configurationParameters.prefabPackageDirectoryList,
-        prefabDirectory = join(
-            configurationParameters.cxxFolder,
-            configurationParameters.buildSystem.tag,
-            configurationParameters.variantName,
-            "prefab"),
-        stlType = module.determineUsedStl(configurationParameters.nativeVariantConfig.arguments).argumentName,
-    )
+    with(module) {
+        val arguments = configurationParameters.nativeVariantConfig.arguments
+        val build = ifCMake { "cmake" } ?: "ndkBuild"
+        val isDebuggable = configurationParameters.isDebuggable
+        val variantName = configurationParameters.variantName
+        val intermediates = join(intermediatesFolder, build, variantName)
+
+        return CxxVariantModel(
+                buildTargetSet = configurationParameters.nativeVariantConfig.targets,
+                implicitBuildTargetSet = configurationParameters.implicitBuildTargetSet,
+                module = this,
+                buildSystemArgumentList = arguments,
+                cFlagsList = configurationParameters.nativeVariantConfig.cFlags,
+                cppFlagsList = configurationParameters.nativeVariantConfig.cppFlags,
+                variantName = variantName,
+                // TODO remove this after configuration has been added to DSL
+                // If CMakeSettings.json has a configuration with this exact name then
+                // it will be used. The point is to delay adding 'configuration' to the
+                // DSL.
+                cmakeSettingsConfiguration = "android-gradle-plugin-predetermined-name",
+                isDebuggableEnabled = isDebuggable,
+                validAbiList = validAbiList,
+                cxxBuildFolder = join(cxxFolder, build, variantName),
+                prefabClassPathFileCollection = configurationParameters.prefabClassPath,
+                prefabPackageDirectoryListFileCollection = configurationParameters.prefabPackageDirectoryList,
+                intermediatesFolder = intermediates,
+                soFolder = join(intermediates, ifCMake { "obj" } ?: "obj/local"),
+                stlType = determineUsedStl(arguments).argumentName,
+                optimizationTag = run {
+                    val lower = variantName.toLowerCase(Locale.ROOT)
+
+                    when {
+                        lower.endsWith("release") -> "Release"
+                        lower.endsWith("debug") -> "Debug"
+                        lower.endsWith("relwithdebinfo") -> "RelWithDebInfo"
+                        lower.endsWith("minsizerel") -> "MinSizeRel"
+                        lower.contains("release") -> "Release"
+                        lower.contains("debug") -> "Debug"
+                        lower.contains("relwithdebinfo") -> "RelWithDebInfo"
+                        lower.contains("minsizerel") -> "MinSizeRel"
+                        else ->
+                            if (isDebuggable) {
+                                "Debug"
+                            } else {
+                                "Release"
+                            }
+                    }
+                }
+        )
+    }
 }
 
 val CxxVariantModel.prefabClassPath : File?
@@ -87,10 +102,4 @@ val CxxVariantModel.prefabClassPath : File?
 val CxxVariantModel.prefabPackageDirectoryList : List<File>
     get() = prefabPackageDirectoryListFileCollection?.toList()?:listOf()
 
-/**
- * The gradle build output folder
- *   ex, '$moduleRootFolder/.cxx/cxx/debug'
- */
-val CxxVariantModel.gradleBuildOutputFolder
-        get() = join(module.cxxFolder, "cxx", variantName)
 

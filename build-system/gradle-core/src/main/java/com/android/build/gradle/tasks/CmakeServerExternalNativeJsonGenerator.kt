@@ -16,13 +16,23 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.external.cmake.CmakeUtils
-import com.android.build.gradle.external.cmake.server.*
+import com.android.build.gradle.external.cmake.server.ComputeResult
+import com.android.build.gradle.external.cmake.server.ConfigureCommandResult
+import com.android.build.gradle.external.cmake.server.HandshakeRequest
+import com.android.build.gradle.external.cmake.server.ProtocolVersion
+import com.android.build.gradle.external.cmake.server.Server
+import com.android.build.gradle.external.cmake.server.ServerFactory
+import com.android.build.gradle.external.cmake.server.ServerUtils
 import com.android.build.gradle.external.cmake.server.Target
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver
 import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
 import com.android.build.gradle.internal.cxx.cmake.parseLinkLibraries
-import com.android.build.gradle.internal.cxx.configure.*
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
+import com.android.build.gradle.internal.cxx.configure.getCmakeBinaryOutputPath
+import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
+import com.android.build.gradle.internal.cxx.configure.onlyKeepCmakeServerArguments
+import com.android.build.gradle.internal.cxx.configure.toStringList
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue
@@ -33,6 +43,7 @@ import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
+import com.android.build.gradle.internal.cxx.model.cmakeServerLogFile
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
@@ -43,7 +54,11 @@ import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBuildSystemType.CMAKE
 import org.gradle.process.ExecOperations
-import java.io.*
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.PrintWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
@@ -90,7 +105,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         // - perform a handshake
         // - configure and compute.
         // Create the NativeBuildConfigValue and write the required JSON file.
-        val cmakeServerLogFile = abi.cmake!!.cmakeServerLogFile.absoluteFile
+        val cmakeServerLogFile = abi.cmakeServerLogFile.absoluteFile
         cmakeServerLogFile.parentFile.mkdirs()
         PassThroughPrintWriterLoggingEnvironment(
             PrintWriter(cmakeServerLogFile, "UTF-8"),

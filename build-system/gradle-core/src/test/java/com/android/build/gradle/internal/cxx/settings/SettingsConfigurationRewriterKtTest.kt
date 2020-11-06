@@ -17,15 +17,26 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.getCmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
-import com.android.build.gradle.internal.cxx.model.*
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
+import com.android.build.gradle.internal.cxx.model.CmakeSettingsMock
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
+import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
+import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
+import com.android.build.gradle.internal.cxx.model.toJsonString
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -33,27 +44,6 @@ import org.mockito.Mockito
 import java.io.File
 
 class CxxAbiModelCMakeSettingsRewriterKtTest {
-
-    @Test
-    fun `ensure that Android Gradle Plugin per-abi file names are invariant`() {
-        CmakeSettingsMock().apply {
-            RandomInstanceGenerator().cmakeSettingsJsons().forEach { settingsJson ->
-                val cmakeSettingsFile = File(abi.resolveMacroValue(ENV_THIS_FILE))
-                cmakeSettingsFile.writeText(settingsJson)
-                abi.toJsonString() // Force lazy fields to evaluate
-                val rewritten = abi.rewriteCxxAbiModelWithCMakeSettings()
-                rewritten.toJsonString() // Force lazy fields to evaluate
-
-                // All of these files should not change during rewrite because they need to
-                // be in a predictable location that can't be altered by CMakeSettings.json.
-                assertThat(abi.jsonGenerationLoggingRecordFile).isEqualTo(rewritten.jsonGenerationLoggingRecordFile)
-                assertThat(abi.modelOutputFile).isEqualTo(rewritten.modelOutputFile)
-                assertThat(abi.buildCommandFile).isEqualTo(rewritten.buildCommandFile)
-                assertThat(abi.buildOutputFile).isEqualTo(rewritten.buildOutputFile)
-                assertThat(abi.cmake!!.cmakeServerLogFile).isEqualTo(rewritten.cmake!!.cmakeServerLogFile)
-            }
-        }
-    }
 
     @Test
     fun `ensure traditional environment rewrite above ABI is nop`() {

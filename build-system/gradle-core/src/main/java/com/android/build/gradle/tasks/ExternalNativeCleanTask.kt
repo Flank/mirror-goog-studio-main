@@ -106,9 +106,9 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
             }
             infoln("$processBuilder")
             createProcessOutputJunction(
-                    configurationModel.variant.objFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
-                    configurationModel.variant.objFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
-                    configurationModel.variant.objFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
+                    configurationModel.variant.soFolder.resolve("android_gradle_clean_command_$commandIndex.txt"),
+                    configurationModel.variant.soFolder.resolve("android_gradle_clean_stdout_$commandIndex.txt"),
+                    configurationModel.variant.soFolder.resolve("android_gradle_clean_stderr_$commandIndex.txt"),
                     processBuilder,
                     ""
             )

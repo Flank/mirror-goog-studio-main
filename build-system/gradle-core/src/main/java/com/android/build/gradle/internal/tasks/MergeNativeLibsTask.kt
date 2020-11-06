@@ -224,7 +224,7 @@ fun getProjectNativeLibs(creationConfig: VariantCreationConfig): FileCollection 
         getBuildService<SdkComponentsBuildService>(creationConfig.services.buildServiceRegistry).get()
 
     // add content of the local external native build if there is one
-    taskContainer.cxxConfigurationModel?.variant?.objFolder?.let { objFolder ->
+    taskContainer.cxxConfigurationModel?.variant?.soFolder?.let { objFolder ->
         nativeLibs.from(
             creationConfig.services.fileCollection(objFolder)
                     .builtBy(taskContainer.externalNativeBuildTask?.name)

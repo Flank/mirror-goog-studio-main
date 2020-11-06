@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.cxx.configure.NdkBuildProperty.APP_STL
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
 import com.android.build.gradle.internal.cxx.configure.getNdkBuildProperty
+import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
 import com.android.build.gradle.internal.cxx.configure.toNdkBuildArguments
 import com.android.build.gradle.internal.cxx.logging.warnln
@@ -41,12 +42,6 @@ import java.io.File
 data class CxxModuleModel(
 
     val cxxFolder : File,
-
-    /**
-     * The abiFilters from build.gradle
-     *   ex, android.splits.abiFilters 'x86', 'x86_64'
-     */
-    val splitsAbiFilterSet: Set<String>,
 
     /**
      * Folder for intermediates
@@ -82,13 +77,6 @@ data class CxxModuleModel(
      *   ex, CMAKE
      */
     val buildSystem: NativeBuildSystem,
-
-    /**
-     * The value of buildStagingDirectory from build.gradle
-     *   ex, myBuildStagingDirectory
-     * Null means not specified.
-     */
-    val buildStagingFolder: File?,
 
     /**
      * Folder path to the NDK
@@ -131,12 +119,6 @@ data class CxxModuleModel(
     val ndkMetaAbiList: List<AbiInfo>,
 
     /**
-     * Path to the CMake toolchain in NDK as it was before any rewrites.
-     * ex, /path/to/ndk/android.toolchain.cmake
-     */
-    val originalCmakeToolchainFile: File,
-
-    /**
      * Path to the CMake toolchain in NDK after wrapping (if necessary). For NDK 15 and above,
      * this is equal to the originalCmakeToolchainFile.
      * ex, /path/to/ndk/android.toolchain.cmake
@@ -163,10 +145,6 @@ data class CxxModuleModel(
     val project: CxxProjectModel
 )
 
-/**  Get the NDK level CMakeSettings.json file */
-val CxxModuleModel.ndkCmakeSettingsJsonFile: File
-    get() = join(ndkFolder, "meta", "CMakeSettings.json")
-
 /** The user's CMakeSettings.json file next to CMakeLists.txt */
 val CxxModuleModel.cmakeSettingsFile: File
     get() = join(makeFile.parentFile, "CMakeSettings.json")
@@ -174,6 +152,38 @@ val CxxModuleModel.cmakeSettingsFile: File
 /** The user's BuildSettings.json file next to CMakeLists.txt */
 val CxxModuleModel.buildSettingsFile : File
     get() = join(makeFile.parentFile, "BuildSettings.json")
+
+/** The folder of the make file (CMakeLists.txt or Android.mk */
+val CxxModuleModel.makeFileFolder : File
+    get() = makeFile.parentFile
+
+/** Human-readable name of this module */
+val CxxModuleModel.moduleName : String
+    get() = gradleModulePathName.substringAfterLast(":")
+
+/** The minimum platform for the NDK */
+val CxxModuleModel.ndkMinPlatform : String
+    get() = ndkMetaPlatforms?.min?.toString() ?: ""
+
+/** The maximum platform for the NDK */
+val CxxModuleModel.ndkMaxPlatform : String
+    get() = ndkMetaPlatforms?.max?.toString() ?: ""
+
+/** The major version of the NDK*/
+val CxxModuleModel.ndkMajorVersion : String
+    get() = ndkVersion.major.toString()
+
+/** The minor version of the NDK*/
+val CxxModuleModel.ndkMinorVersion : String
+    get() = ndkVersion.minor.toString()
+
+/** The minor version of the NDK*/
+val CxxModuleModel.cmakeGenerator : String
+    get() = when {
+        cmake == null -> ""
+        cmake.minimumCmakeVersion.isCmakeForkVersion() -> "Android Gradle - Ninja"
+        else -> "Ninja"
+    }
 
 /**
  * Call [compute] if this is a CMake build.

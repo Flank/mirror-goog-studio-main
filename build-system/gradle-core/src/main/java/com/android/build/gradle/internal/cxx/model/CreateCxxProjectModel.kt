@@ -17,11 +17,8 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
-import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
-import com.android.utils.FileUtils.join
 import java.io.File
 
 /**
@@ -42,13 +39,11 @@ fun createCxxProjectModel(
     }
     return CxxProjectModel(
       rootBuildGradleFolder = configurationParameters.rootDir,
-      cxxFolder = join(configurationParameters.rootDir, ".cxx"),
       sdkFolder = sdkComponents.sdkDirectoryProvider.get().asFile,
       isBuildOnlyTargetAbiEnabled = configurationParameters.isBuildOnlyTargetAbiEnabled,
       ideBuildTargetAbi = configurationParameters.ideBuildTargetAbi,
+      isConfigurationFoldingEnabled = configurationParameters.isConfigurationFoldingEnabled,
       isCmakeBuildCohabitationEnabled = configurationParameters.isCmakeBuildCohabitationEnabled,
-      compilerSettingsCacheFolder = localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR)
-        ?: join(configurationParameters.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
       chromeTraceJsonFolder = configurationParameters.chromeTraceJsonFolder,
       isPrefabEnabled = configurationParameters.isPrefabEnabled
     )

@@ -17,6 +17,10 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.*
+import com.android.build.gradle.internal.cxx.configure.getProperty
+import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import org.gradle.api.file.FileCollection
@@ -51,16 +55,22 @@ data class CxxVariantModel(
     val variantName: String,
 
     /**
-     * Base folder for .o files
-     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
-     */
-    val objFolder: File,
-
-    /**
      * Base folder for .so files
      *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
      */
     val soFolder: File,
+
+    /**
+     * The .cxx build folder
+     *   ex, $moduleRootFolder/.cxx/ndkBuild/debug
+     */
+    val cxxBuildFolder: File,
+
+    /**
+     * The folder of intermediates.
+     *   ex, $moduleRootFolder/build/intermediates/cxx/debug
+     */
+    val intermediatesFolder: File,
 
     /**
      * Whether this variant build is debuggable
@@ -86,12 +96,14 @@ data class CxxVariantModel(
      */
     val implicitBuildTargetSet : Set<String>,
 
-    /**  The CMakeSettings.json configuration
+    /**
+     * The CMakeSettings.json configuration
      *      ex, android
      *          .defaultConfig
      *          .cmake
      *          .externalNativeBuild
-     *          .configuration 'my-configuration' */
+     *          .configuration 'my-configuration'
+     */
     val cmakeSettingsConfiguration : String,
 
     /**
@@ -112,15 +124,50 @@ data class CxxVariantModel(
     val prefabPackageDirectoryListFileCollection: FileCollection?,
 
     /**
-     * Path to the prefab output to be passed to the native build system.
-     *
-     * For example: app/.cxx/cmake/debug/prefab
-     */
-    val prefabDirectory: File,
-
-    /**
      * If present, the type of the STL.
      */
     val stlType: String,
+
+    /**
+     *  A word like Debug, Release, or MinSizeRel. It represents the optimization level common to
+     *  all ABIs in a variant.
+     */
+    val optimizationTag : String,
 )
+
+/**
+ * The list of C flags as a single string.
+ */
+val CxxVariantModel.cFlags
+    get() = cFlagsList.joinToString(" ")
+
+/**
+ * The list of C++ flags as a single string.
+ */
+val CxxVariantModel.cppFlags
+    get() = cppFlagsList.joinToString(" ")
+
+/**
+ * Return true if this is a CMake project.
+ */
+val CxxVariantModel.isCMake
+    get() = (module.buildSystem == NativeBuildSystem.CMAKE)
+
+/**
+ * Call [compute] if this is a CMake build.
+ */
+fun <T> CxxVariantModel.ifCMake(compute : () -> T?) =
+        if (isCMake) compute() else null
+
+/**
+ * Return true if this is a CMake project.
+ */
+val CxxVariantModel.isNdkBuild
+    get() = (module.buildSystem == NativeBuildSystem.NDK_BUILD)
+
+/**
+ * Call [compute] if this is an ndk-build build.
+ */
+fun <T> CxxVariantModel.ifNdkBuild(compute : () -> T?) =
+        if (isNdkBuild) compute() else null
 
