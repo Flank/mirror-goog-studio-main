@@ -1808,7 +1808,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/7.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/8.0.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1816,7 +1816,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-analysis",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/7.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/8.0.1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
@@ -1824,7 +1824,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-commons",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/7.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/8.0.1:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":org.ow2.asm_asm",
@@ -1836,7 +1836,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-tree",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/7.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/8.0.1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm"],
 )
@@ -1844,7 +1844,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/7.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/8.0.1:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":org.ow2.asm_asm",
