@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.connected.application;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -33,20 +33,25 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 
 public class JacocoConnectedTest {
+
+    @ClassRule public static final ExternalResource emulator = EmulatorUtils.getEmulator();
+
     @Rule
     public final GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
+                    .addGradleProperties(
+                            "org.gradle.unsafe.configuration-cache.max-problems=23") // b/158092419
                     .create();
-
-    @Rule public Adb adb = new Adb();
 
     @Before
     public void setUp() throws IOException {
@@ -55,9 +60,7 @@ public class JacocoConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        adb.exclusiveAccess();
         project.executor().run("connectedCheck");
         assertThat(project.file("build/reports/coverage/debug/index.html")).exists();
         assertThat(
@@ -67,12 +70,11 @@ public class JacocoConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Ignore("b/172657145")
     public void connectedCheckNamespacedRClasses() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.aaptOptions.namespaced = true\n");
 
-        adb.exclusiveAccess();
         project.executor().run("connectedCheck");
 
         assertThat(
@@ -82,7 +84,7 @@ public class JacocoConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Ignore("b/172655677")
     public void connectedCheckWithOrchestrator() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -117,7 +119,6 @@ public class JacocoConnectedTest {
         Files.createDirectories(exampleTest.getParent());
         Files.write(exampleTest, testSrc.getBytes());
 
-        adb.exclusiveAccess();
         project.executor().run("connectedCheck");
         List<File> files =
                 FileUtils.find(
@@ -144,7 +145,6 @@ public class JacocoConnectedTest {
                         + "    renderScript = false\n"
                         + "  }\n"
                         + "}\n");
-        adb.exclusiveAccess();
         project.executor().run("connectedCheck");
         assertThat(
                         project.file(

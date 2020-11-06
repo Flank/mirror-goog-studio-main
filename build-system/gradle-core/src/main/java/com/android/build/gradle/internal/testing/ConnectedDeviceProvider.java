@@ -132,7 +132,7 @@ public class ConnectedDeviceProvider extends DeviceProvider {
                     AndroidDebugBridge.createBridge(
                             adbLocation.getAbsolutePath(),
                             false /*forceNewBridge*/,
-                            timeOut,
+                            timeOut == 0 ? Long.MAX_VALUE : timeOut,
                             timeOutUnit);
 
             if (bridge == null) {
