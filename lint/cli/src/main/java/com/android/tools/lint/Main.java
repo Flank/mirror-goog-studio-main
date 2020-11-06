@@ -156,7 +156,6 @@ public class Main {
     private IssueRegistry globalIssueRegistry;
     @Nullable private File sdkHome;
     @Nullable private File jdkHome;
-    private static Set<File> ourAlreadyWarned = null;
 
     /** Creates a CLI driver */
     public Main() {}
