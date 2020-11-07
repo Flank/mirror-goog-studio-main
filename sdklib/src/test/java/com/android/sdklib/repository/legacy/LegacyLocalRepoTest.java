@@ -38,8 +38,6 @@ import com.android.sdklib.repository.meta.SdkCommonFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -50,7 +48,7 @@ import junit.framework.TestCase;
  */
 public class LegacyLocalRepoTest extends TestCase {
 
-    public void testParseLegacy() throws URISyntaxException, FileNotFoundException {
+    public void testParseLegacy() {
         MockFileOp mockFop = new MockFileOp();
         mockFop.recordExistingFolder("/sdk/tools");
         mockFop.recordExistingFile("/sdk/tools/source.properties",
@@ -70,8 +68,9 @@ public class LegacyLocalRepoTest extends TestCase {
                 new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
         progress.assertNoErrorsOrWarnings();
 
-        LocalRepoLoader sdk = new LocalRepoLoaderImpl(root, mgr,
-                                                      new LegacyLocalRepoLoader(root, mockFop), mockFop);
+        LocalRepoLoader sdk =
+                new LocalRepoLoaderImpl(
+                        mockFop.toPath(root), mgr, new LegacyLocalRepoLoader(root, mockFop));
         Map<String, LocalPackage> packages = sdk.getPackages(progress);
         progress.assertNoErrorsOrWarnings();
         assertEquals(1, packages.size());
@@ -284,7 +283,7 @@ public class LegacyLocalRepoTest extends TestCase {
             progress.assertNoErrorsOrWarnings();
         }
         LocalPackage local = repo.getLocalPackage();
-        local.setInstalledPath(mockFop.toPath(mgr.getLocalPath()));
+        local.setInstalledPath(mgr.getLocalPath());
 
         return local;
     }

@@ -591,15 +591,11 @@ public final class AndroidSdkHandler {
          */
         private RemoteListSourceProvider mAddonsListSourceProvider;
 
-        /**
-         * Provider for the main new-style {@link RepositorySource}
-         */
-        private ConstantSourceProvider mRepositorySourceProvider;
+        /** Provider for the main new-style {@link RepositorySource} */
+        private final ConstantSourceProvider mRepositorySourceProvider;
 
-        /**
-         * Extra source providers that were added externally.
-         */
-        private Set<RepositorySourceProvider> mCustomSourceProviders = new HashSet<>();
+        /** Extra source providers that were added externally. */
+        private final Set<RepositorySourceProvider> mCustomSourceProviders = new HashSet<>();
 
         /**
          * Sets up our {@link SchemaModule}s and {@link RepositorySourceProvider}s if they haven't
@@ -700,7 +696,7 @@ public final class AndroidSdkHandler {
                 @Nullable File localLocation,
                 @Nullable LocalSourceProvider userProvider,
                 @NonNull FileOp fop) {
-            RepoManager result = RepoManager.create(fop);
+            RepoManager result = RepoManager.create();
 
             // Create the schema modules etc. if they haven't been already.
             result.registerSchemaModule(ADDON_MODULE);
@@ -725,7 +721,7 @@ public final class AndroidSdkHandler {
             }
             result.setFallbackRemoteRepoLoader(new LegacyRemoteRepoLoader());
 
-            result.setLocalPath(localLocation);
+            result.setLocalPath(localLocation == null ? null : fop.toPath(localLocation));
 
             if (localLocation != null) {
                 // If we have a local sdk path set, set up the old-style loader so we can parse
@@ -756,12 +752,10 @@ public final class AndroidSdkHandler {
                         .getPackages()
                         .getLocalPackagesForPrefix(prefix);
 
-        return allBuildTools
-                .stream()
+        // Consider highest versions first:
+        return allBuildTools.stream()
                 .filter(p -> range.contains(p.getVersion()))
-                // Consider highest versions first:
-                .sorted(Comparator.comparing(LocalPackage::getVersion).reversed())
-                .findFirst()
+                .max(Comparator.comparing(LocalPackage::getVersion))
                 .orElse(null);
     }
 

@@ -103,7 +103,7 @@ public class AvdManagerCliTest {
 
         packages.setLocalPkgInfos(ImmutableList.of(p1, p2, p3));
 
-        RepoManager mgr = new FakeRepoManager(SDK_LOCATION, packages);
+        RepoManager mgr = new FakeRepoManager(mFileOp.toPath(SDK_LOCATION), packages);
 
         mSdkHandler = new AndroidSdkHandler(SDK_LOCATION, AVD_LOCATION, mFileOp, mgr);
         mLogger = new MockLog();

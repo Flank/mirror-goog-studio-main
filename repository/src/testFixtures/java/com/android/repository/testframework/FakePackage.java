@@ -134,8 +134,12 @@ public abstract class FakePackage implements RepoPackage {
 
         @Override
         @NonNull
-        public File getInstallDir(@NonNull RepoManager manager, @NonNull ProgressIndicator progress) {
-            return new File(manager.getLocalPath(),
+        public File getInstallDir(
+                @NonNull RepoManager manager,
+                @NonNull ProgressIndicator progress,
+                @NonNull FileOp fop) {
+            return new File(
+                    fop.toFile(manager.getLocalPath()),
                     getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar));
         }
 

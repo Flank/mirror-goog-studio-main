@@ -55,7 +55,7 @@ public class AbstractPackageOperationTest {
         MockFileOp fop = new MockFileOp();
         RepositoryPackages packages = new RepositoryPackages();
         FakePackage.FakeRemotePackage remotePackage = new FakePackage.FakeRemotePackage("foo");
-        RepoManager mgr = new FakeRepoManager(new File("/sdk"), packages);
+        RepoManager mgr = new FakeRepoManager(fop.toPath("/sdk"), packages);
         AtomicReference<PackageOperation.InstallStatus> status = new AtomicReference<>(
                 InstallStatus.NOT_STARTED);
         TestOperation op = new TestOperation(remotePackage, mgr, new FakeDownloader(fop), fop,

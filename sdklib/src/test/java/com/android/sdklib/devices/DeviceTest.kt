@@ -34,7 +34,7 @@ class DeviceTest {
 
   private val fileOp = MockFileOp()
   val repoPackages = RepositoryPackages()
-  val repoMgr = FakeRepoManager(File(SDK_LOCATION), repoPackages)
+  val repoMgr = FakeRepoManager(fileOp.toPath(SDK_LOCATION), repoPackages)
   val sdkHandler = AndroidSdkHandler(File(SDK_LOCATION), File(AVD_LOCATION), fileOp, repoMgr)
   val devMgr = DeviceManager.createInstance(sdkHandler, NoErrorsOrWarningsLogger())
 

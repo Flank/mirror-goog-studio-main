@@ -55,8 +55,8 @@ public class AbstractInstallerTest {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
@@ -83,8 +83,8 @@ public class AbstractInstallerTest {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
@@ -95,7 +95,7 @@ public class AbstractInstallerTest {
         TestInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
         // Install will still work, but in a different directory
         assertTrue(installer.prepare(progress));
-        assertEquals(new File("/sdk/foo-2"), installer.getLocation(progress));
+        assertEquals(new File("/sdk/foo-2").getAbsoluteFile(), installer.getLocation(progress));
     }
 
     @Test
@@ -114,8 +114,8 @@ public class AbstractInstallerTest {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
@@ -128,7 +128,7 @@ public class AbstractInstallerTest {
         assertTrue(
                 progress.getWarnings().stream()
                         .anyMatch(warning -> warning.contains("(foo;notbar)")));
-        assertEquals(new File("/sdk/foo/bar-2"), installer.getLocation(progress));
+        assertEquals(new File("/sdk/foo/bar-2").getAbsoluteFile(), installer.getLocation(progress));
     }
 
     @Test
@@ -147,8 +147,8 @@ public class AbstractInstallerTest {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
 
@@ -166,8 +166,8 @@ public class AbstractInstallerTest {
     @Test
     public void deleteUnusedDirs() {
         MockFileOp fop = new MockFileOp();
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeRemotePackage remote = new FakeRemotePackage("foo;bar");
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
@@ -187,7 +187,9 @@ public class AbstractInstallerTest {
         // This will cause the newly created temp dir to be deleted.
         installer.complete(new FakeProgressIndicator(true));
         for (int i = 1; i < AbstractPackageOperation.MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
-            File dir = AbstractPackageOperation.getPackageOperationTempDir(mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, i);
+            File dir =
+                    AbstractPackageOperation.getPackageOperationTempDir(
+                            mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, i, fop);
             // Only temp dir 2 should remain, since it's still referenced by the incomplete install.
             assertEquals(fop.exists(dir), i == 2);
         }
@@ -196,8 +198,8 @@ public class AbstractInstallerTest {
     @Test
     public void installerProperties() {
         MockFileOp fop = new MockFileOp();
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         RemotePackage remote = new FakeRemotePackage("foo;bar");
         FakeDownloader downloader = new FakeDownloader(fop);
         AbstractInstaller installer = new TestInstaller(remote, mgr, downloader, fop);

@@ -19,8 +19,8 @@ package com.android.repository.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.impl.manager.LocalRepoLoaderImpl;
-
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * An implementation of a local repository parser to use to try to identify a package if the normal
@@ -37,7 +37,7 @@ public interface FallbackLocalRepoLoader {
      * package's information. Otherwise return {@code null}.
      */
     @Nullable
-    LocalPackage parseLegacyLocalPackage(@NonNull File f, @NonNull ProgressIndicator progress);
+    LocalPackage parseLegacyLocalPackage(@NonNull Path f, @NonNull ProgressIndicator progress);
 
     /**
      * Refreshes the loader's internal state if necessary. This should probably be done (by the repo
@@ -48,5 +48,5 @@ public interface FallbackLocalRepoLoader {
     /**
      * Returns {@code true} if it looks like we should try to find a package in the given directory.
      */
-    boolean shouldParse(@NonNull File root);
+    boolean shouldParse(@NonNull Path root);
 }

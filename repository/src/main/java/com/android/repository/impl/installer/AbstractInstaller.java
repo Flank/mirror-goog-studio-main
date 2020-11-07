@@ -96,7 +96,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
 
     @NonNull
     private File getNonConflictingPath(@NonNull ProgressIndicator progress) {
-        File dir = mPackage.getInstallDir(getRepoManager(), progress);
+        File dir = mPackage.getInstallDir(getRepoManager(), progress, mFop);
         if (!mFop.exists(dir)) {
             return dir;
         }

@@ -101,7 +101,12 @@ public abstract class FileSystemFileOp implements FileOp {
 
     @Override
     public final boolean setLastModified(@NonNull File file, long time) throws IOException {
-        Files.setLastModifiedTime(toPath(file), FileTime.fromMillis(time));
+        return setLastModified(toPath(file), time);
+    }
+
+    @Override
+    public final boolean setLastModified(@NonNull Path file, long time) throws IOException {
+        Files.setLastModifiedTime(file, FileTime.fromMillis(time));
         return true;
     }
 

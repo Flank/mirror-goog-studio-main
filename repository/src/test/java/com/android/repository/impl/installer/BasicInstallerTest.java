@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -72,9 +73,8 @@ public class BasicInstallerTest extends TestCase {
                 .toByteArray(getClass().getResourceAsStream("/testPackage2.xml")));
 
         // Set up a RepoManager.
-        RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo").getAbsoluteFile();
-        mgr.setLocalPath(root);
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/repo"));
 
         FakeProgressRunner runner = new FakeProgressRunner();
         // Load the local packages.
@@ -101,7 +101,7 @@ public class BasicInstallerTest extends TestCase {
         assertTrue(fop.exists(new File("/repo/dummy/bar/package.xml")));
     }
 
-    public void testDeleteNonstandardLocation() throws Exception {
+    public void testDeleteNonstandardLocation() {
         File toDeleteDir = new File("/sdk/foo with space");
         File otherDir1 = new File("/sdk/foo");
         File otherDir2 = new File("/sdk/bar");
@@ -123,7 +123,7 @@ public class BasicInstallerTest extends TestCase {
                         ImmutableList.of(
                                 new FakePackage.FakeLocalPackage("bar", fop), localPackage),
                         ImmutableList.of());
-        RepoManager mgr = new FakeRepoManager(new File("/sdk"), packages);
+        RepoManager mgr = new FakeRepoManager(fop.toPath("/sdk"), packages);
         InstallerFactory factory = new BasicInstallerFactory();
         Uninstaller uninstaller = factory.createUninstaller(localPackage, mgr, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -143,8 +143,8 @@ public class BasicInstallerTest extends TestCase {
         // We have a different package installed already.
         fop.recordExistingFile("/repo/dummy/foo/package.xml", ByteStreams
                 .toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
-        RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo").getAbsoluteFile();
+        RepoManager mgr = new RepoManagerImpl();
+        Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/dummy.xml");
@@ -192,7 +192,8 @@ public class BasicInstallerTest extends TestCase {
         RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
         Installer basicInstaller =
                 new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop);
-        File repoTempDir = new File(mgr.getLocalPath(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
+        File repoTempDir =
+                new File(mgr.getLocalPath().toString(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
         File packageOperationDir = new File(repoTempDir, String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
         File unzipDir = new File(packageOperationDir, BasicInstaller.FN_UNZIP_DIR);
         assertFalse(fop.exists(unzipDir));
@@ -213,12 +214,12 @@ public class BasicInstallerTest extends TestCase {
                 downloader,
                 new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
-        File[] contents = fop.listFiles(new File(root, "dummy"));
+        Path[] contents = Files.list(root.resolve("dummy")).toArray(Path[]::new);
 
         // Ensure it was installed on the filesystem
         assertEquals(2, contents.length);
-        assertEquals(new File(root, "dummy/bar"), contents[0]);
-        assertEquals(new File(root, "dummy/foo"), contents[1]);
+        assertEquals(root.resolve("dummy/bar"), contents[0]);
+        assertEquals(root.resolve("dummy/foo"), contents[1]);
 
         // Ensure it was recognized as a package.
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
@@ -236,8 +237,8 @@ public class BasicInstallerTest extends TestCase {
         // We have a different package installed already.
         fop.recordExistingFile("/repo/dummy/foo/package.xml", ByteStreams
           .toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
-        RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo").getAbsoluteFile();
+        RepoManager mgr = new RepoManagerImpl();
+        Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/dummy.xml");
@@ -309,11 +310,11 @@ public class BasicInstallerTest extends TestCase {
                 downloader,
                 new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
-        File[] contents = fop.listFiles(new File(root, "dummy"));
+        File[] contents = fop.listFiles(new File(root.toString(), "dummy"));
 
         // Ensure the package we cancelled the installation for is not on the filesystem
         assertEquals(1, contents.length);
-        assertEquals(new File(root, "dummy/foo"), contents[0]);
+        assertEquals(new File(root.toString(), "dummy/foo"), contents[0]);
 
         // Ensure it was not recognized as a package.
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
@@ -330,17 +331,16 @@ public class BasicInstallerTest extends TestCase {
         RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
         Installer basicInstaller =
                 spy(new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop));
-        File repoTempDir = new File(mgr.getLocalPath(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
-        File packageOperationDir =
-                new File(
-                        repoTempDir,
+        Path repoTempDir = mgr.getLocalPath().resolve(AbstractPackageOperation.REPO_TEMP_DIR_FN);
+        Path packageOperationDir =
+                repoTempDir.resolve(
                         String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
-        File unzipDir = new File(packageOperationDir, BasicInstaller.FN_UNZIP_DIR);
-        assertFalse(fop.exists(unzipDir));
+        Path unzipDir = packageOperationDir.resolve(BasicInstaller.FN_UNZIP_DIR);
+        assertFalse(Files.exists(unzipDir));
         basicInstaller.prepare(progress.createSubProgress(0.5));
-        assertFalse(fop.exists(unzipDir));
+        assertFalse(Files.exists(unzipDir));
         basicInstaller.complete(progress.createSubProgress(1));
-        assertFalse(fop.exists(unzipDir));
+        assertFalse(Files.exists(unzipDir));
         progress.assertNoErrorsOrWarnings();
         verify((BasicInstaller) basicInstaller, times(1)).cleanup(any());
     }
@@ -354,8 +354,8 @@ public class BasicInstallerTest extends TestCase {
                 .toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
         fop.recordExistingFile("/repo/dummy/bar/package.xml", ByteStreams.toByteArray(
                 getClass().getResourceAsStream("/testPackage2-lowerVersion.xml")));
-        RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo").getAbsoluteFile();
+        RepoManager mgr = new RepoManagerImpl();
+        Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
 
         // Create the archive and register the repo to be downloaded.
@@ -420,10 +420,10 @@ public class BasicInstallerTest extends TestCase {
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
 
         // Ensure the files are still there
-        File[] contents = fop.listFiles(new File(root, "dummy"));
+        Path[] contents = Files.list(root.resolve("dummy")).toArray(Path[]::new);
         assertEquals(2, contents.length);
-        assertEquals(new File(root, "dummy/bar"), contents[0]);
-        assertEquals(new File(root, "dummy/foo"), contents[1]);
+        assertEquals(root.resolve("dummy/bar"), contents[0]);
+        assertEquals(root.resolve("dummy/foo"), contents[1]);
 
         // Ensure the packages are still there
         locals = mgr.getPackages().getLocalPackages();
@@ -441,8 +441,8 @@ public class BasicInstallerTest extends TestCase {
 
     public void testExistingDownload() throws Exception {
         MockFileOp fop = new MockFileOp();
-        RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo").getAbsoluteFile();
+        RepoManager mgr = new RepoManagerImpl();
+        Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
         FakeDownloader downloader = new FakeDownloader(fop) {
             @Override
@@ -579,10 +579,10 @@ public class BasicInstallerTest extends TestCase {
                 downloader,
                 new FakeSettingsController(false));
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
-        File[] contents = fop.listFiles(new File(root, "dummy"));
+        Path[] contents = Files.list(root.resolve("dummy")).toArray(Path[]::new);
 
         // Ensure it was installed on the filesystem
-        assertEquals(new File(root, "dummy/bar"), contents[0]);
+        assertEquals(root.resolve("dummy/bar"), contents[0]);
 
         // Ensure it was recognized as a package.
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();

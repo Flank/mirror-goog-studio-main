@@ -75,10 +75,10 @@ public class MavenInstallListenerTest extends TestCase {
 
     public void testInstallFirst() throws Exception {
         MockFileOp fop = new MockFileOp();
-        RepoManager mgr = new RepoManagerImpl(fop);
+        RepoManager mgr = new RepoManagerImpl();
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
-        mgr.setLocalPath(ROOT);
+        mgr.setLocalPath(fop.toPath(ROOT));
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/sample.xml");
 
@@ -192,10 +192,10 @@ public class MavenInstallListenerTest extends TestCase {
         fop.recordExistingFile(
                 "/repo/m2repository/com/android/group1/artifact1/1.0.0/artifact1-1.0.0.pom",
                 POM_1_0_0_CONTENTS);
-        RepoManager mgr = new RepoManagerImpl(fop);
+        RepoManager mgr = new RepoManagerImpl();
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
-        mgr.setLocalPath(ROOT);
+        mgr.setLocalPath(fop.toPath(ROOT));
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/sample.xml");
 
@@ -357,8 +357,8 @@ public class MavenInstallListenerTest extends TestCase {
                         + "  </versioning>\n"
                         + "</metadata>\n");
 
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(ROOT);
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath(ROOT));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
@@ -441,8 +441,8 @@ public class MavenInstallListenerTest extends TestCase {
                         + "  </versioning>\n"
                         + "</metadata>\n");
 
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(ROOT);
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath(ROOT));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 

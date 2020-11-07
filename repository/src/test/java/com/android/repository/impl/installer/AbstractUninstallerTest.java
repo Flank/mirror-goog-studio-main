@@ -36,10 +36,10 @@ import org.junit.Test;
  */
 public class AbstractUninstallerTest {
     @Test
-    public void uninstallerProperties() throws Exception {
+    public void uninstallerProperties() {
         MockFileOp fop = new MockFileOp();
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         LocalPackage local = new FakeLocalPackage("foo;bar", fop);
         AbstractUninstaller uninstaller = new TestUninstaller(local, mgr, fop);
         assertSame(uninstaller.getPackage(), local);

@@ -397,7 +397,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     }
 
     private void deleteOrphanedTempDirs(@NonNull ProgressIndicator progress) {
-        Path root = mFop.toPath(mRepoManager.getLocalPath());
+        Path root = mRepoManager.getLocalPath();
         Path suffixPath = mFop.toPath(new File(InstallerUtil.INSTALLER_DIR_FN, INSTALL_DATA_FN));
         try (Stream<Path> paths = Files.walk(root)) {
             Set<File> tempDirs =
@@ -416,7 +416,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     @VisibleForTesting
     static File getNewPackageOperationTempDir(@NonNull RepoManager repoManager, @NonNull String base, @NonNull FileOp fileOp) {
         for (int i = 1; i < MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
-            File folder = getPackageOperationTempDir(repoManager, base, i);
+            File folder = getPackageOperationTempDir(repoManager, base, i, fileOp);
             if (!fileOp.exists(folder)) {
                 fileOp.mkdirs(folder);
                 return folder;
@@ -426,16 +426,17 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     }
 
     @VisibleForTesting
-    static File getPackageOperationTempDir(@NonNull RepoManager repoManager, @NonNull String base, int index) {
-        File rootTempDir = new File(repoManager.getLocalPath(), REPO_TEMP_DIR_FN);
+    static File getPackageOperationTempDir(
+            @NonNull RepoManager repoManager, @NonNull String base, int index, FileOp fop) {
+        File rootTempDir = new File(fop.toFile(repoManager.getLocalPath()), REPO_TEMP_DIR_FN);
         return new File(rootTempDir, String.format(Locale.US, "%1$s%2$02d", base, index));
     }
 
-    private void retainPackageOperationTempDirs(Set<File> retain, String base, FileOp mFop) {
+    private void retainPackageOperationTempDirs(Set<File> retain, String base, FileOp fop) {
         for (int i = 1; i < MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
-            File dir = getPackageOperationTempDir(getRepoManager(), base, i);
-            if (mFop.exists(dir) && !retain.contains(dir)) {
-                mFop.deleteFileOrFolder(dir);
+            File dir = getPackageOperationTempDir(getRepoManager(), base, i, fop);
+            if (fop.exists(dir) && !retain.contains(dir)) {
+                fop.deleteFileOrFolder(dir);
             }
         }
     }

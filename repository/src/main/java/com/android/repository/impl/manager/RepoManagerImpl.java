@@ -36,15 +36,13 @@ import com.android.repository.api.SchemaModule;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.SchemaModuleUtil;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.impl.FileOpImpl;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,11 +73,8 @@ public class RepoManagerImpl extends RepoManager {
     @Nullable
     private FallbackLocalRepoLoader mFallbackLocalRepoLoader;
 
-    /**
-     * The path under which to look for installed packages.
-     */
-    @Nullable
-    private File mLocalPath;
+    /** The path under which to look for installed packages. */
+    @Nullable private Path mLocalPath;
 
     /**
      * The {@link FallbackRemoteRepoLoader} to use if the normal {@link RemoteRepoLoaderImpl} can't
@@ -92,12 +87,10 @@ public class RepoManagerImpl extends RepoManager {
      * The {@link RepositorySourceProvider}s from which to get {@link RepositorySource}s to load
      * from.
      */
-    private Set<RepositorySourceProvider> mSourceProviders = Sets.newHashSet();
+    private final Set<RepositorySourceProvider> mSourceProviders = Sets.newHashSet();
 
-    /**
-     * The loaded packages.
-     */
-    private RepositoryPackages mPackages = new RepositoryPackages();
+    /** The loaded packages. */
+    private final RepositoryPackages mPackages = new RepositoryPackages();
 
     /**
      * When we last loaded the remote packages.
@@ -123,12 +116,6 @@ public class RepoManagerImpl extends RepoManager {
      * Lock used when setting {@link #mTask}.
      */
     private final Object mTaskLock = new Object();
-
-    /**
-     * {@link FileOp} to be used for local file operations. Should be {@link FileOpImpl} for normal
-     * operation.
-     */
-    private final FileOp mFop;
 
     /**
      * Listeners that will be called when the known local packages change.
@@ -165,25 +152,22 @@ public class RepoManagerImpl extends RepoManager {
     /**
      * Create a new {@code RepoManagerImpl}. Before anything can be loaded, at least a local path
      * and/or at least one {@link RepositorySourceProvider} must be set.
-     *
-     * @param fop {@link FileOp} to use for local file operations. Should only be null if you're
-     *            never planning to load a local repo using this {@code RepoManagerImpl}.
      */
-    public RepoManagerImpl(@Nullable FileOp fop) {
-        this(fop, null, null);
+    public RepoManagerImpl() {
+        this(null, null);
     }
 
     /**
-     * @param localFactory  If {@code null}, {@link LocalRepoLoaderFactoryImpl} will be used. Can be
-     *                      non-null for testing.
+     * @param localFactory If {@code null}, {@link LocalRepoLoaderFactoryImpl} will be used. Can be
+     *     non-null for testing.
      * @param remoteFactory If {@code null}, {@link RemoteRepoLoaderFactoryImpl} will be used. Can
-     *                      be non-null for testing.
-     * @see #RepoManagerImpl(FileOp)
+     *     be non-null for testing.
+     * @see #RepoManagerImpl()
      */
     @VisibleForTesting
-    public RepoManagerImpl(@Nullable FileOp fop, @Nullable LocalRepoLoaderFactory localFactory,
+    public RepoManagerImpl(
+            @Nullable LocalRepoLoaderFactory localFactory,
             @Nullable RemoteRepoLoaderFactory remoteFactory) {
-        mFop = fop;
         registerSchemaModule(getCommonModule());
         registerSchemaModule(getGenericModule());
         mLocalRepoLoaderFactory = localFactory == null ? new LocalRepoLoaderFactoryImpl()
@@ -194,7 +178,7 @@ public class RepoManagerImpl extends RepoManager {
 
     @Nullable
     @Override
-    public File getLocalPath() {
+    public Path getLocalPath() {
         return mLocalPath;
     }
 
@@ -226,7 +210,7 @@ public class RepoManagerImpl extends RepoManager {
      * called.
      */
     @Override
-    public void setLocalPath(@Nullable File path) {
+    public void setLocalPath(@Nullable Path path) {
         mLocalPath = path;
         markInvalid();
     }
@@ -432,7 +416,7 @@ public class RepoManagerImpl extends RepoManager {
                 runner.runAsyncWithProgress(mTask);
             }
         } else if (sync) {
-            // Otherwise wait for artifactsthe semaphore to be released by the callback if we're
+            // Otherwise wait for the semaphore to be released by the callback if we're
             // running synchronously.
             runner.runSyncWithProgress(
                     (indicator, runner2) -> {
@@ -511,9 +495,9 @@ public class RepoManagerImpl extends RepoManager {
          */
         private class Callback {
 
-            private RepoLoadedListener mCallback;
+            private final RepoLoadedListener mCallback;
 
-            private ProgressRunner mRunner;
+            private final ProgressRunner mRunner;
 
             public Callback(@NonNull RepoLoadedListener callback, @Nullable ProgressRunner runner) {
                 mCallback = callback;
@@ -707,9 +691,9 @@ public class RepoManagerImpl extends RepoManager {
         @Override
         @Nullable
         public LocalRepoLoader createLocalRepoLoader() {
-            if (mLocalPath != null && mFop != null) {
-                return new LocalRepoLoaderImpl(mLocalPath, RepoManagerImpl.this,
-                        mFallbackLocalRepoLoader, mFop);
+            if (mLocalPath != null) {
+                return new LocalRepoLoaderImpl(
+                        mLocalPath, RepoManagerImpl.this, mFallbackLocalRepoLoader);
             }
             return null;
         }

@@ -21,6 +21,7 @@ import static com.android.SdkConstants.FN_SOURCE_PROP;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.Revision;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.FallbackLocalRepoLoader;
@@ -87,12 +88,14 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
 
     /**
      * Tries to parse a package rooted in the specified directory.
+     *
      * @return A {@link LocalPackage} if one was found, otherwise null.
      */
     @Override
     @Nullable
-    public LocalPackage parseLegacyLocalPackage(@NonNull File dir,
-            @NonNull ProgressIndicator progress) {
+    public LocalPackage parseLegacyLocalPackage(
+            @NonNull Path dirPath, @NonNull ProgressIndicator progress) {
+        File dir = mFop.toFile(dirPath);
         if (!mFop.exists(new File(dir, FN_SOURCE_PROP))) {
             return null;
         }
@@ -122,8 +125,8 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
     }
 
     @Override
-    public boolean shouldParse(@NonNull File root) {
-        return mFop.exists(new File(root, FN_SOURCE_PROP));
+    public boolean shouldParse(@NonNull Path root) {
+        return CancellableFileIo.exists(root.resolve(FN_SOURCE_PROP));
     }
 
     /**

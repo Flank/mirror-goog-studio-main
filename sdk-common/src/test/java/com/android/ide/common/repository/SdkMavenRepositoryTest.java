@@ -52,7 +52,7 @@ public class SdkMavenRepositoryTest extends TestCase {
                         SDK_HOME,
                         null,
                         mFileOp,
-                        new FakeRepoManager(SDK_HOME, mRepositoryPackages));
+                        new FakeRepoManager(mFileOp.toPath(SDK_HOME), mRepositoryPackages));
     }
 
     private void registerRepo(@NonNull String vendor) {
@@ -64,8 +64,9 @@ public class SdkMavenRepositoryTest extends TestCase {
         mRepositoryPackages.setLocalPkgInfos(existing.values());
         // SdkMavenRepo requires that the path exists.
         ProgressIndicator progress = new FakeProgressIndicator();
-        mFileOp.mkdirs(new FakePackage.FakeRemotePackage(path)
-                .getInstallDir(mSdkHandler.getSdkManager(progress), progress));
+        mFileOp.mkdirs(
+                new FakePackage.FakeRemotePackage(path)
+                        .getInstallDir(mSdkHandler.getSdkManager(progress), progress, mFileOp));
     }
 
     private void registerAndroidRepo() {

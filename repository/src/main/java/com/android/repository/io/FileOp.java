@@ -205,6 +205,12 @@ public interface FileOp {
     boolean setLastModified(@NonNull File file, long time) throws IOException;
 
     /**
+     * @see File#setLastModified(long)
+     * @throws IOException if there is an error setting the modification time.
+     */
+    boolean setLastModified(@NonNull Path file, long time) throws IOException;
+
+    /**
      * Convert the given {@code File} into a {@code Path}, using some means appropriate to this
      * {@code FileOp}.
      */

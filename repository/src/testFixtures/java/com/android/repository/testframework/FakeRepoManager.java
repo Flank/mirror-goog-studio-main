@@ -31,7 +31,7 @@ import com.android.repository.api.SchemaModule;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.google.common.collect.Lists;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -42,11 +42,11 @@ import org.w3c.dom.ls.LSResourceResolver;
  */
 public class FakeRepoManager extends RepoManager {
     private final RepositoryPackages mPackages;
-    private File mLocalPath;
+    private Path mLocalPath;
     private final List<SchemaModule<?>> mModules =
             Lists.newArrayList(RepoManager.getCommonModule(), RepoManager.getGenericModule());
 
-    public FakeRepoManager(@Nullable File localPath, @NonNull RepositoryPackages packages) {
+    public FakeRepoManager(@Nullable Path localPath, @NonNull RepositoryPackages packages) {
         mLocalPath = localPath;
         mPackages = packages;
     }
@@ -67,13 +67,13 @@ public class FakeRepoManager extends RepoManager {
     }
 
     @Override
-    public void setLocalPath(@Nullable File path) {
+    public void setLocalPath(@Nullable Path path) {
         mLocalPath = path;
     }
 
     @Nullable
     @Override
-    public File getLocalPath() {
+    public Path getLocalPath() {
         return mLocalPath;
     }
 

@@ -18,6 +18,7 @@ package com.android.repository.impl.manager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.FallbackLocalRepoLoader;
 import com.android.repository.api.License;
 import com.android.repository.api.LocalPackage;
@@ -30,8 +31,6 @@ import com.android.repository.impl.installer.AbstractPackageOperation;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.LocalPackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -42,12 +41,15 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.xml.bind.JAXBException;
 
 /**
@@ -79,19 +81,13 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      */
     private Map<String, LocalPackage> mPackages = null;
 
-    /**
-     * Set of directories we think probably have packages in them.
-     */
-    private Set<File> mPackageRoots = null;
+    /** Set of directories we think probably have packages in them. */
+    private Set<Path> mPackageRoots = null;
 
-    /**
-     * Directory under which we look for packages.
-     */
-    private final File mRoot;
+    /** Directory under which we look for packages. */
+    private final Path mRoot;
 
     private final RepoManager mRepoManager;
-
-    private final FileOp mFop;
 
     /**
      * If we can't find a package in a directory, we ask mFallback to find one. If it does, we write
@@ -102,19 +98,18 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
     /**
      * Constructor. Probably should only be used within repository framework.
      *
-     * @param root     The root directory under which we'll look for packages.
-     * @param manager  A RepoManager, notably containing the {@link SchemaModule}s we'll use for
-     *                 reading and writing {@link LocalPackage}s
+     * @param root The root directory under which we'll look for packages.
+     * @param manager A RepoManager, notably containing the {@link SchemaModule}s we'll use for
+     *     reading and writing {@link LocalPackage}s
      * @param fallback The {@link FallbackLocalRepoLoader} we'll use if we can't find a package in a
-     *                 directory.
-     * @param fop      The {@link FileOp} to use for file operations. Should be
-     *                 {@link FileOpUtils#create()} for normal operation.
+     *     directory.
      */
-    public LocalRepoLoaderImpl(@NonNull File root, @NonNull RepoManager manager,
-            @Nullable FallbackLocalRepoLoader fallback, @NonNull FileOp fop) {
+    public LocalRepoLoaderImpl(
+            @NonNull Path root,
+            @NonNull RepoManager manager,
+            @Nullable FallbackLocalRepoLoader fallback) {
         mRoot = root;
         mRepoManager = manager;
-        mFop = fop;
         mFallback = fallback;
     }
 
@@ -122,7 +117,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
     @NonNull
     public Map<String, LocalPackage> getPackages(@NonNull ProgressIndicator progress) {
         if (mPackages == null) {
-            Set<File> possiblePackageDirs = collectPackages();
+            Set<Path> possiblePackageDirs = collectPackages();
             mPackages = parsePackages(possiblePackageDirs, progress);
             if (!mPackages.isEmpty()) {
                 writeHashFile(getLocalPackagesHash());
@@ -150,13 +145,13 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
     }
 
     @NonNull
-    private Map<String, LocalPackage> parsePackages(@NonNull Collection<File> possiblePackageDirs,
-            @NonNull ProgressIndicator progress) {
+    private Map<String, LocalPackage> parsePackages(
+            @NonNull Collection<Path> possiblePackageDirs, @NonNull ProgressIndicator progress) {
         Map<String, LocalPackage> result = Maps.newHashMap();
-        for (File packageDir : possiblePackageDirs) {
-            File packageXml = new File(packageDir, PACKAGE_XML_FN);
+        for (Path packageDir : possiblePackageDirs) {
+            Path packageXml = packageDir.resolve(PACKAGE_XML_FN);
             LocalPackage p = null;
-            if (mFop.exists(packageXml)) {
+            if (CancellableFileIo.exists(packageXml)) {
                 try {
                     p = parsePackage(packageXml, progress);
                 }
@@ -173,8 +168,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                 p = mFallback.parseLegacyLocalPackage(packageDir, progress);
                 if (p != null) {
                     writePackage(p, packageXml, progress);
-                }
-                else if (mFop.exists(packageXml)) {
+                } else if (CancellableFileIo.exists(packageXml)) {
                     progress.logWarning(String.format(
                       "Invalid package.xml found at %1$s and failed to parse using fallback.", packageXml));
                 /*
@@ -197,13 +191,11 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         return result;
     }
 
-    /**
-     * Gets a sorted set of all paths that might contain packages.
-     */
+    /** Gets a sorted set of all paths that might contain packages. */
     @NonNull
-    private Set<File> collectPackages() {
+    private Set<Path> collectPackages() {
         if (mPackageRoots == null) {
-            Set<File> dirs = Sets.newTreeSet();
+            Set<Path> dirs = Sets.newTreeSet();
             collectPackages(dirs, mRoot, 0);
             mPackageRoots = dirs;
         }
@@ -221,24 +213,30 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
     @SuppressWarnings(
             "FileComparisons") // We only want to skip if root and mRoot are the same object
     private void collectPackages(
-            @NonNull Collection<File> collector, @NonNull File root, int depth) {
+            @NonNull Collection<Path> collector, @NonNull Path root, int depth) {
         if (depth > MAX_SCAN_DEPTH) {
             return;
         }
-        // Do not scan metadata folders and return right away. Allow the SDK root to start with the prefix though.
-        if ((root != mRoot) && mFop.isDirectory(root) && root.getName().startsWith(AbstractPackageOperation.METADATA_FILENAME_PREFIX)) {
+        // Do not scan metadata folders and return right away. Allow the SDK root to start with the
+        // prefix though.
+        if ((root != mRoot)
+                && CancellableFileIo.isDirectory(root)
+                && root.getFileName()
+                        .toString()
+                        .startsWith(AbstractPackageOperation.METADATA_FILENAME_PREFIX)) {
             return;
         }
 
-        File packageXml = new File(root, PACKAGE_XML_FN);
-        if (mFop.exists(packageXml) ||
-            (mFallback != null && mFallback.shouldParse(root))) {
+        Path packageXml = root.resolve(PACKAGE_XML_FN);
+        if (CancellableFileIo.exists(packageXml)
+                || (mFallback != null && mFallback.shouldParse(root))) {
             collector.add(root);
         } else {
-            for (File f : mFop.listFiles(root)) {
-                if (mFop.isDirectory(f)) {
-                    collectPackages(collector, f, depth + 1);
-                }
+            try (Stream<Path> contents = CancellableFileIo.list(root)) {
+                contents.filter(CancellableFileIo::isDirectory)
+                        .forEach(f -> collectPackages(collector, f, depth + 1));
+            } catch (IOException e) {
+                // don't add anything
             }
         }
     }
@@ -246,7 +244,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
     private void addPackage(@NonNull LocalPackage p, @NonNull Map<String, LocalPackage> collector,
             @NonNull ProgressIndicator progress) {
         String filePath = p.getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar);
-        Path desired = mFop.toPath(mRoot).resolve(filePath);
+        Path desired = mRoot.resolve(filePath);
         Path actual = p.getLocation();
         if (!desired.equals(actual)) {
             progress.logWarning(
@@ -269,15 +267,22 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      * If the {@link FallbackLocalRepoLoader} finds a package, we write out a package.xml so we can
      * load it next time without falling back.
      *
-     * @param p          The {@link LocalPackage} to write out.
+     * @param p The {@link LocalPackage} to write out.
      * @param packageXml The destination to write to.
-     * @param progress   {@link ProgressIndicator} for logging.
+     * @param progress {@link ProgressIndicator} for logging.
      */
-    private void writePackage(@NonNull LocalPackage p, @NonNull File packageXml,
+    private void writePackage(
+            @NonNull LocalPackage p,
+            @NonNull Path packageXml,
             @NonNull ProgressIndicator progress) {
         // We need a LocalPackageImpl to be able to save it.
         LocalPackageImpl impl = LocalPackageImpl.create(p);
-        try (OutputStream fos = mFop.newFileOutputStream(packageXml)) {
+        try (OutputStream fos =
+                Files.newOutputStream(
+                        packageXml,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.TRUNCATE_EXISTING)) {
             Repository repo = impl.createFactory().createRepositoryType();
             repo.setLocalPackage(impl);
             License license = impl.getLicense();
@@ -299,19 +304,17 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         // ignore.
     }
 
-    /**
-     * Unmarshal a package.xml file and extract the {@link LocalPackage}.
-     */
+    /** Unmarshal a package.xml file and extract the {@link LocalPackage}. */
     @Nullable
-    private LocalPackage parsePackage(@NonNull File packageXml,
-            @NonNull ProgressIndicator progress) throws JAXBException {
+    private LocalPackage parsePackage(@NonNull Path packageXml, @NonNull ProgressIndicator progress)
+            throws JAXBException {
         Repository repo;
         try {
             progress.logVerbose("Parsing " + packageXml);
             repo =
                     (Repository)
                             SchemaModuleUtil.unmarshal(
-                                    mFop.newFileInputStream(packageXml),
+                                    CancellableFileIo.newInputStream(packageXml),
                                     mRepoManager.getSchemaModules(),
                                     false,
                                     progress);
@@ -329,7 +332,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                 progress.logWarning("Didn't find any local package in repository");
                 return null;
             }
-            p.setInstalledPath(mFop.toPath(packageXml.getParentFile()));
+            p.setInstalledPath(packageXml.getParent());
             return p;
         }
     }
@@ -340,12 +343,13 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      * @return The file, or {@code null} if it doesn't exist and couldn't be created.
      */
     @Nullable
-    private File getKnownPackagesHashFile(boolean create) {
-        File f = new File(mRoot, KNOWN_PACKAGES_HASH_FN);
-        if (!mFop.exists(f)) {
+    private Path getKnownPackagesHashFile(boolean create) {
+        Path f = mRoot.resolve(KNOWN_PACKAGES_HASH_FN);
+        if (CancellableFileIo.notExists(f)) {
             if (create) {
                 try {
-                    mFop.createNewFile(f);
+                    Files.createDirectories(f.getParent());
+                    Files.createFile(f);
                 } catch (IOException e) {
                     return null;
                 }
@@ -364,14 +368,16 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      *         is required).
      */
     private boolean updateKnownPackageHashFileIfNecessary() {
-        File knownPackagesHashFile = getKnownPackagesHashFile(false);
+        Path knownPackagesHashFile = getKnownPackagesHashFile(false);
         if (knownPackagesHashFile != null) {
             byte[] buf = null;
             // If we haven't updated any package more recently than the file, check the file
             // contents as well before updating. Otherwise we'll always update the file.
-            if (getLatestPackageUpdateTime() <= mFop.lastModified(knownPackagesHashFile)) {
-                try (DataInputStream is = new DataInputStream(mFop.newFileInputStream(knownPackagesHashFile))){
-                    buf = new byte[(int) mFop.length(knownPackagesHashFile)];
+            if (getLatestPackageUpdateTime() <= getLastModifiedTime(knownPackagesHashFile)) {
+                try (DataInputStream is =
+                        new DataInputStream(
+                                CancellableFileIo.newInputStream(knownPackagesHashFile))) {
+                    buf = new byte[(int) CancellableFileIo.size(knownPackagesHashFile)];
                     is.readFully(buf);
                 }
                 catch (IOException e) {
@@ -392,16 +398,31 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         return false;
     }
 
+    private long getLastModifiedTime(Path file) {
+        long knownPackagesModificationTime;
+        try {
+            knownPackagesModificationTime = CancellableFileIo.getLastModifiedTime(file).toMillis();
+        } catch (IOException e) {
+            knownPackagesModificationTime = 0L;
+        }
+        return knownPackagesModificationTime;
+    }
+
     /**
      * Actually writes the data to the hash file.
      */
     private void writeHashFile(@NonNull byte[] buf) {
-        File knownPackagesHashFile = getKnownPackagesHashFile(true);
+        Path knownPackagesHashFile = getKnownPackagesHashFile(true);
         if (knownPackagesHashFile == null) {
             return;
         }
-        try (OutputStream os = new BufferedOutputStream(
-                mFop.newFileOutputStream(knownPackagesHashFile))) {
+        try (OutputStream os =
+                new BufferedOutputStream(
+                        Files.newOutputStream(
+                                knownPackagesHashFile,
+                                StandardOpenOption.CREATE,
+                                StandardOpenOption.WRITE,
+                                StandardOpenOption.TRUNCATE_EXISTING))) {
             os.write(buf);
         } catch (IOException e) {
             // nothing
@@ -415,9 +436,9 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      * @return {@code true} if it has been updated (and thus we should reload our local packages).
      */
     private boolean checkKnownPackagesUpdateTime(long lastUpdate) {
-        File knownPackagesHashFile = getKnownPackagesHashFile(false);
+        Path knownPackagesHashFile = getKnownPackagesHashFile(false);
         return knownPackagesHashFile == null
-                || mFop.lastModified(knownPackagesHashFile) > lastUpdate;
+                || getLastModifiedTime(knownPackagesHashFile) > lastUpdate;
     }
 
     /**
@@ -427,10 +448,10 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      */
     @NonNull
     private byte[] getLocalPackagesHash() {
-        Set<File> dirs = collectPackages();
+        Set<Path> dirs = collectPackages();
         Hasher digester = Hashing.md5().newHasher();
-        for (File f : dirs) {
-            digester.putBytes(f.getAbsolutePath().getBytes());
+        for (Path f : dirs) {
+            digester.putBytes(f.toAbsolutePath().toString().getBytes());
         }
         return digester.hash().asBytes();
     }
@@ -440,8 +461,8 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      */
     private long getLatestPackageUpdateTime() {
         long latest = 0;
-        for (File f : collectPackages()) {
-            long t = mFop.lastModified(new File(f, PACKAGE_XML_FN));
+        for (Path f : collectPackages()) {
+            long t = getLastModifiedTime(f.resolve(PACKAGE_XML_FN));
             latest = Math.max(t, latest);
         }
         return latest;

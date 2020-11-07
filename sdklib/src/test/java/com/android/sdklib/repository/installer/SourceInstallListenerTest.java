@@ -69,9 +69,10 @@ public class SourceInstallListenerTest extends TestCase {
         // Create local package for platform;android-23
         LocalPackage local = getLocalPlatformPackage(fop);
 
-        FakeRepoManager mgr = new FakeRepoManager(ROOT,
-                new RepositoryPackages(ImmutableList.of(local),
-                        ImmutableList.of(remote)));
+        FakeRepoManager mgr =
+                new FakeRepoManager(
+                        fop.toPath(ROOT),
+                        new RepositoryPackages(ImmutableList.of(local), ImmutableList.of(remote)));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getRepositoryModule());
 
@@ -115,9 +116,11 @@ public class SourceInstallListenerTest extends TestCase {
         LocalPackage localPlatform = getLocalPlatformPackage(fop);
         LocalPackage localSource = getLocalSourcePackage(fop);
 
-        FakeRepoManager mgr = new FakeRepoManager(ROOT,
-                new RepositoryPackages(ImmutableList.of(localPlatform, localSource),
-                        ImmutableList.of()));
+        FakeRepoManager mgr =
+                new FakeRepoManager(
+                        fop.toPath(ROOT),
+                        new RepositoryPackages(
+                                ImmutableList.of(localPlatform, localSource), ImmutableList.of()));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getRepositoryModule());
 
