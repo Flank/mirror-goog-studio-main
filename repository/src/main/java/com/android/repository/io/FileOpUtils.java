@@ -21,9 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.impl.FileOpImpl;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -239,7 +239,7 @@ public final class FileOpUtils {
     @VisibleForTesting
     public static File getTempDir(@NonNull String base, int i) {
         File rootTempDir = new File(System.getProperty("java.io.tmpdir"));
-        return new File(rootTempDir, String.format("%1$s%2$02d", base, i));
+        return new File(rootTempDir, String.format(Locale.US, "%1$s%2$02d", base, i));
     }
 
     /**

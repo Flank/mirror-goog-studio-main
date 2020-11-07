@@ -214,11 +214,14 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      * Collect packages under the given root into {@code collector}.
      *
      * @param collector The collector.
-     * @param root      Directory we're looking in.
-     * @param depth     The depth we've descended to so far. Once we reach {@link #MAX_SCAN_DEPTH}
-     *                  we'll stop recursing.
+     * @param root Directory we're looking in.
+     * @param depth The depth we've descended to so far. Once we reach {@link #MAX_SCAN_DEPTH} we'll
+     *     stop recursing.
      */
-    private void collectPackages(@NonNull Collection<File> collector, @NonNull File root, int depth) {
+    @SuppressWarnings(
+            "FileComparisons") // We only want to skip if root and mRoot are the same object
+    private void collectPackages(
+            @NonNull Collection<File> collector, @NonNull File root, int depth) {
         if (depth > MAX_SCAN_DEPTH) {
             return;
         }
