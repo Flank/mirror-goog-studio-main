@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.meta.DetailsTypes;
-import java.io.File;
+import java.nio.file.Path;
 
 /** An optional library provided by an Android Target */
 public interface OptionalLibrary {
@@ -33,7 +33,7 @@ public interface OptionalLibrary {
      * be in some cases when retrieved from an {@link DetailsTypes.AddonDetailsType}.
      */
     @Nullable
-    File getJar();
+    Path getJar();
 
     /** Description of the library. */
     @NonNull

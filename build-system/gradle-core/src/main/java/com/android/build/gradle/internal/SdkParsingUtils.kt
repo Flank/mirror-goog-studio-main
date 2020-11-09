@@ -22,7 +22,6 @@ import com.android.repository.api.ConsoleProgressIndicator
 import com.android.repository.api.LocalPackage
 import com.android.repository.api.Repository
 import com.android.repository.impl.meta.SchemaModuleUtil
-import com.android.repository.io.FileOp
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
@@ -99,7 +98,7 @@ fun parseAdditionalLibraries(localPackage: LocalPackage): List<OptionalLibrary> 
     return details.libraries?.let { libraries ->
         libraries.library
             .filter { it.localJarPath != null }
-            .onEach { it.setPackagePath(FileOp.toFileUnsafe(localPackage.location)) }
+            .onEach { it.setPackagePath(localPackage.location) }
     } ?: emptyList()
 }
 
@@ -113,7 +112,7 @@ fun parseAdditionalLibraries(localPackage: LocalPackage): List<OptionalLibrary> 
 fun parseOptionalLibraries(localPackage: LocalPackage): List<OptionalLibrary> {
     val optionalJson = localPackage.location.resolve("optional/optional.json")
     if (CancellableFileIo.isRegularFile(optionalJson)) {
-        return PlatformTarget.getLibsFromJson(FileOp.toFileUnsafe(optionalJson))
+        return PlatformTarget.getLibsFromJson(optionalJson)
     }
     return emptyList()
 }

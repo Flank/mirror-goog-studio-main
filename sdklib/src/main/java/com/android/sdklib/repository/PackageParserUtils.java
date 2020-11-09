@@ -18,14 +18,14 @@ package com.android.sdklib.repository;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.Revision;
-import com.android.repository.io.FileOp;
-
-import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * Misc utilities to help extracting elements and attributes out of a repository XML document.
@@ -80,36 +80,27 @@ public class PackageParserUtils {
         return props.getProperty(propKey, defaultValue);
     }
 
-
     /**
      * Parses the skin folder and builds the skin list.
      *
      * @param skinRootFolder The path to the skin root folder.
      */
     @NonNull
-    public static List<File> parseSkinFolder(@NonNull File skinRootFolder, @NonNull FileOp fileOp) {
-        if (fileOp.isDirectory(skinRootFolder)) {
-            ArrayList<File> skinList = new ArrayList<File>();
-
-            File[] files = fileOp.listFiles(skinRootFolder);
-
-            for (File skinFolder : files) {
-                if (fileOp.isDirectory(skinFolder)) {
-                    // check for layout file
-                    File layout = new File(skinFolder, SdkConstants.FN_SKIN_LAYOUT);
-
-                    if (fileOp.isFile(layout)) {
-                        // for now we don't parse the content of the layout and
-                        // simply add the directory to the list.
-                        skinList.add(skinFolder);
-                    }
-                }
+    public static List<Path> parseSkinFolder(@NonNull Path skinRootFolder) {
+        if (CancellableFileIo.isDirectory(skinRootFolder)) {
+            try {
+                return CancellableFileIo.list(skinRootFolder)
+                        .filter(CancellableFileIo::isDirectory)
+                        .filter(
+                                dir ->
+                                        CancellableFileIo.isRegularFile(
+                                                dir.resolve(SdkConstants.FN_SKIN_LAYOUT)))
+                        .sorted()
+                        .collect(Collectors.toList());
+            } catch (IOException e) {
+                return Collections.emptyList();
             }
-
-            Collections.sort(skinList);
-            return skinList;
         }
-
         return Collections.emptyList();
     }
 

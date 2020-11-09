@@ -94,7 +94,7 @@ public class SourceInstallListenerTest extends TestCase {
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
-        assertThat(target.getPath(SOURCES))
+        assertThat(target.getPath(SOURCES).toString())
                 .isEqualTo(fop.getPlatformSpecificPath("/sdk/platforms/android-23/sources"));
 
         // Install
@@ -105,7 +105,7 @@ public class SourceInstallListenerTest extends TestCase {
 
         // Assert that source path is updated to correct value
         progress.assertNoErrorsOrWarnings();
-        assertThat(target.getPath(SOURCES))
+        assertThat(target.getPath(SOURCES).toString())
                 .isEqualTo(fop.getPlatformSpecificPath("/sdk/sources/android-23"));
     }
 
@@ -131,7 +131,7 @@ public class SourceInstallListenerTest extends TestCase {
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
-        assertThat(target.getPath(SOURCES))
+        assertThat(target.getPath(SOURCES).toString())
                 .isEqualTo(fop.getPlatformSpecificPath("/sdk/sources/android-23"));
 
         // Uninstall
@@ -148,7 +148,7 @@ public class SourceInstallListenerTest extends TestCase {
 
         // Assert that source path is set back to null thus deprecated value is returned
         progress.assertNoErrorsOrWarnings();
-        assertThat(target.getPath(SOURCES))
+        assertThat(target.getPath(SOURCES).toString())
                 .isEqualTo(fop.getPlatformSpecificPath("/sdk/platforms/android-23/sources"));
     }
 

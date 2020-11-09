@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -216,8 +217,8 @@ public class SystemImageManager {
         }
         File[] skins;
         if (skinDir != null) {
-            List<File> skinList = PackageParserUtils.parseSkinFolder(skinDir, mFop);
-            skins = skinList.toArray(new File[0]);
+            List<Path> skinList = PackageParserUtils.parseSkinFolder(mFop.toPath(skinDir));
+            skins = skinList.stream().map(mFop::toFile).toArray(File[]::new);
         } else {
             skins = new File[0];
         }

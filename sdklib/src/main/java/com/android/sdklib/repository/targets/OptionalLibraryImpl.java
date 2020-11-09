@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.meta.Library;
 import com.google.common.base.Objects;
-import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Internal implementation of OptionalLibrary
@@ -33,15 +33,14 @@ public class OptionalLibraryImpl implements OptionalLibrary {
 
     @NonNull
     private final String mLibraryName;
-    @NonNull
-    private final File mJarFile;
+    @NonNull private final Path mJarFile;
     @NonNull
     private final String mDescription;
     private final boolean mRequireManifestEntry;
 
     public OptionalLibraryImpl(
             @NonNull String libraryName,
-            @NonNull File jarFile,
+            @NonNull Path jarFile,
             @NonNull String description,
             boolean requireManifestEntry) {
         mLibraryName = libraryName;
@@ -58,7 +57,7 @@ public class OptionalLibraryImpl implements OptionalLibrary {
 
     @Override
     @NonNull
-    public File getJar() {
+    public Path getJar() {
         return mJarFile;
     }
 
@@ -76,7 +75,7 @@ public class OptionalLibraryImpl implements OptionalLibrary {
     @Nullable
     @Override
     public String getLocalJarPath() {
-        return getJar().getName();
+        return getJar().getFileName().toString();
     }
 
     public boolean equals(Object o) {

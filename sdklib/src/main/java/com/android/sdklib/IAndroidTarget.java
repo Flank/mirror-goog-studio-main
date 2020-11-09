@@ -18,6 +18,7 @@ package com.android.sdklib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -130,24 +131,12 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
 
     /**
      * Returns the path of a platform component.
-     * @param pathId the id representing the path to return.
-     *        Any of the constants defined in the {@link IAndroidTarget} interface can be used.
-     */
-    @NonNull
-    String getPath(int pathId);
-
-    /**
-     * Returns the path of a platform component.
-     * <p>
-     * This is like the legacy {@link #getPath(int)} method except it returns a {@link File}.
      *
-     * @param pathId the id representing the path to return.
-     *        Any of the constants defined in the {@link IAndroidTarget} interface can be used.
+     * @param pathId the id representing the path to return. Any of the constants defined in the
+     *     {@link IAndroidTarget} interface can be used.
      */
     @NonNull
-    default File getFile(int pathId) {
-        return new File(getPath(pathId));
-    }
+    Path getPath(int pathId);
 
     /**
      * Returns a BuildToolInfo for backward compatibility. If an older SDK is used this will return
@@ -204,26 +193,28 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
 
     /**
      * Returns the available skin folders for this target.
-     * <p>
-     * To get the skin names, use {@link File#getName()}. <br>
+     *
+     * <p>To get the skin names, use {@link File#getName()}. <br>
      * Skins come either from:
+     *
      * <ul>
-     * <li>a platform ({@code sdk/platforms/N/skins/name})</li>
-     * <li>an add-on ({@code sdk/addons/name/skins/name})</li>
-     * <li>a tagged system-image ({@code sdk/system-images/platform-N/tag/abi/skins/name}.)</li>
+     *   <li>a platform ({@code sdk/platforms/N/skins/name})
+     *   <li>an add-on ({@code sdk/addons/name/skins/name})
+     *   <li>a tagged system-image ({@code sdk/system-images/platform-N/tag/abi/skins/name}.)
      * </ul>
+     *
      * The array can be empty but not null.
      */
     @NonNull
-    File[] getSkins();
+    Path[] getSkins();
 
     /**
      * Returns the default skin folder for this target.
-     * <p>
-     * To get the skin name, use {@link File#getName()}.
+     *
+     * <p>To get the skin name, use {@link File#getName()}.
      */
     @Nullable
-    File getDefaultSkin();
+    Path getDefaultSkin();
 
     /**
      * Returns the list of libraries available for a given platform.

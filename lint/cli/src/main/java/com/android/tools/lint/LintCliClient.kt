@@ -878,7 +878,7 @@ open class LintCliClient : LintClient {
 
         val buildTarget = pickBuildTarget(knownProjects)
         if (buildTarget != null) {
-            val file: File? = buildTarget.getFile(IAndroidTarget.ANDROID_JAR)
+            val file: File? = buildTarget.getPath(IAndroidTarget.ANDROID_JAR)?.toFile()
             if (file != null) {
                 // because we're partially mocking it in some tests
                 files.add(file)

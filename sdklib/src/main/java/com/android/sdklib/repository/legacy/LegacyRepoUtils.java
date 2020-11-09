@@ -18,6 +18,7 @@ package com.android.sdklib.repository.legacy;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.FallbackLocalRepoLoader;
 import com.android.repository.api.FallbackRemoteRepoLoader;
 import com.android.repository.api.ProgressIndicator;
@@ -26,7 +27,6 @@ import com.android.repository.api.RepoPackage;
 import com.android.repository.impl.meta.GenericFactory;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.SdkVersionInfo;
@@ -46,6 +46,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -75,13 +76,14 @@ public class LegacyRepoUtils {
      */
     private static final String ADDON_LIBRARIES    = "libraries";            //$NON-NLS-1$
 
-    /**
-     * Convert a {@link IPkgDesc} and other old-style information into a {@link TypeDetails}.
-     */
+    /** Convert a {@link IPkgDesc} and other old-style information into a {@link TypeDetails}. */
     @NonNull
-    static TypeDetails createTypeDetails(@NonNull IPkgDesc desc,
-            int layoutLibVersion, @NonNull Collection<OptionalLibrary> addonLibraries,
-            @Nullable File packageDir, @NonNull ProgressIndicator progress, @NonNull FileOp fop) {
+    static TypeDetails createTypeDetails(
+            @NonNull IPkgDesc desc,
+            int layoutLibVersion,
+            @NonNull Collection<OptionalLibrary> addonLibraries,
+            @Nullable Path packageDir,
+            @NonNull FileOp fop) {
 
         SdkCommonFactory sdkFactory = AndroidSdkHandler.getCommonModule().createLatestFactory();
         RepoFactory repoFactory = AndroidSdkHandler.getRepositoryModule().createLatestFactory();
@@ -153,16 +155,14 @@ public class LegacyRepoUtils {
                     Library lib = sdkFactory.createLibraryType();
                     lib.setDescription(addonLib.getDescription());
                     lib.setName(addonLib.getName());
-                    String jarPath = addonLib.getJar().getPath();
+                    String jarPath = addonLib.getJar().toString();
                     if (packageDir != null) {
                         lib.setPackagePath(packageDir);
-                        try {
-                            jarPath = FileOpUtils
-                                    .makeRelative(new File(packageDir, SdkConstants.FD_ADDON_LIBS),
-                                            new File(jarPath), fop);
-                        } catch (IOException e) {
-                            progress.logWarning("Error finding library", e);
-                        }
+                        jarPath =
+                                packageDir
+                                        .resolve(SdkConstants.FD_ADDON_LIBS)
+                                        .relativize(fop.toPath(jarPath))
+                                        .toString();
                     }
                     if (!jarPath.isEmpty()) {
                         lib.setLocalJarPath(jarPath);
@@ -224,20 +224,20 @@ public class LegacyRepoUtils {
     }
 
     public static List<OptionalLibrary> parseLegacyAdditionalLibraries(
-            @NonNull File packageLocation, @NonNull ProgressIndicator progress,
-            @NonNull FileOp fop) {
+            @NonNull Path packageLocation, @NonNull ProgressIndicator progress) {
         List<OptionalLibrary> result = Lists.newArrayList();
-        File addOnManifest = new File(packageLocation, SdkConstants.FN_MANIFEST_INI);
+        Path addOnManifest = packageLocation.resolve(SdkConstants.FN_MANIFEST_INI);
 
-        if (!fop.isFile(addOnManifest)) {
+        if (!CancellableFileIo.isRegularFile(addOnManifest)) {
             return result;
         }
         Map<String, String> propertyMap;
         try {
-            propertyMap = ProjectProperties.parsePropertyStream(
-                    fop.newFileInputStream(addOnManifest),
-                    addOnManifest.getPath(),
-                    null);
+            propertyMap =
+                    ProjectProperties.parsePropertyStream(
+                            CancellableFileIo.newInputStream(addOnManifest),
+                            addOnManifest.toString(),
+                            null);
 
         } catch (IOException e) {
             progress.logWarning("Failed to find " + addOnManifest, e);

@@ -22,6 +22,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.OptionalLibrary;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,7 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
-    public File getDefaultSkin() {
+    public Path getDefaultSkin() {
         return null;
     }
 
@@ -64,7 +65,7 @@ public class MockAddonTarget implements IAndroidTarget {
     @Override
     @NonNull
     public String getLocation() {
-        return "/sdk/add-ons/addon-" + mName;
+        return "/sdk/add-ons/addon-" + mName + File.separator;
     }
 
     @Override
@@ -90,7 +91,7 @@ public class MockAddonTarget implements IAndroidTarget {
 
     @Override
     @NonNull
-    public String getPath(int pathId) {
+    public Path getPath(int pathId) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 
@@ -127,8 +128,8 @@ public class MockAddonTarget implements IAndroidTarget {
 
     @Override
     @NonNull
-    public File[] getSkins() {
-        return new File[0];
+    public Path[] getSkins() {
+        return new Path[0];
     }
 
     @Override

@@ -563,8 +563,9 @@ class AvdManagerCli extends CommandLineParser {
                 if (!libraries.isEmpty()) {
                     mSdkLog.info("     Libraries:\n");
                     for (OptionalLibrary library : libraries) {
-                        mSdkLog.info("      * %1$s (%2$s)\n",
-                                library.getName(), library.getJar().getName());
+                        mSdkLog.info(
+                                "      * %1$s (%2$s)\n",
+                                library.getName(), library.getJar().getFileName().toString());
                         mSdkLog.info("          %1$s\n", library.getDescription());
                     }
                 }

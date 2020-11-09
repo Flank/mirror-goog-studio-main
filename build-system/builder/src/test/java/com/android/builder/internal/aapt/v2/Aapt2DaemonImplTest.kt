@@ -181,7 +181,7 @@ class Aapt2DaemonImplTest {
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
         val request = AaptPackageConfig(
-            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR).toString(),
             manifestFile = manifest,
             resourceDirs = ImmutableList.of(compiledDir),
             resourceOutputApk = outputFile,
@@ -218,7 +218,7 @@ class Aapt2DaemonImplTest {
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
         val request = AaptPackageConfig(
-            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR).toString(),
             manifestFile = manifest,
             resourceOutputApk = outputFile,
             resourceDirs = ImmutableList.of(compiledDir),
@@ -283,7 +283,7 @@ class Aapt2DaemonImplTest {
         )
         val protoLinkedFile = File(temporaryFolder.newFolder(), "proto.apk")
         val request = AaptPackageConfig(
-            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+            androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR).toString(),
             manifestFile = manifest,
             resourceDirs = ImmutableList.of(compiledDir),
             resourceOutputApk = protoLinkedFile,

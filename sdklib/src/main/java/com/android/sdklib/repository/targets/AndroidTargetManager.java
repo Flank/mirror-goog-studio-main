@@ -91,7 +91,7 @@ public class AndroidTargetManager {
                 TypeDetails details = p.getTypeDetails();
                 if (details instanceof DetailsTypes.PlatformDetailsType) {
                     try {
-                        PlatformTarget target = new PlatformTarget(p, mSdkHandler, mFop, progress);
+                        PlatformTarget target = new PlatformTarget(p, mSdkHandler, progress);
                         AndroidVersion androidVersion = target.getVersion();
                         // If we've already seen a platform with this version, replace the existing
                         // with this if this is the "real" package (with the expected path).
@@ -117,7 +117,7 @@ public class AndroidTargetManager {
                             ((DetailsTypes.AddonDetailsType)details).getAndroidVersion();
                     PlatformTarget baseTarget = platformTargets.get(addonVersion);
                     if (baseTarget != null) {
-                        tempTargetToPackage.put(new AddonTarget(p, baseTarget, progress, mFop), p);
+                        tempTargetToPackage.put(new AddonTarget(p, baseTarget, progress), p);
                     }
                 }
             }
@@ -130,7 +130,7 @@ public class AndroidTargetManager {
                     PlatformTarget target = platformTargets.get(
                             ((DetailsTypes.ApiDetailsType)details).getAndroidVersion());
                     if (target != null) {
-                        target.setSources(mFop.toFile(p.getLocation()));
+                        target.setSources(p.getLocation());
                     }
                 }
             }

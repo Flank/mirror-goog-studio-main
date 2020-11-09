@@ -21,7 +21,9 @@ import static com.android.tools.lint.checks.ApiLookup.SDK_DATABASE_MIN_VERSION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.io.FileOp;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
@@ -32,6 +34,8 @@ import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.io.URLUtil;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,9 +99,10 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
         if (target != null
                 && target.isPlatform()
                 && target.getVersion().getFeatureLevel() >= SDK_DATABASE_MIN_VERSION) {
-            File file = new File(target.getFile(IAndroidTarget.DATA), SDK_ANNOTATIONS_PATH);
-            if (file.isFile()) {
-                return file;
+            Path file = target.getPath(IAndroidTarget.DATA).resolve(SDK_ANNOTATIONS_PATH);
+            if (Files.isRegularFile(file)) {
+                AndroidSdkHandler sdk = client.getSdk();
+                return sdk == null ? FileOp.toFileUnsafe(file) : sdk.getFileOp().toFile(file);
             }
         }
 

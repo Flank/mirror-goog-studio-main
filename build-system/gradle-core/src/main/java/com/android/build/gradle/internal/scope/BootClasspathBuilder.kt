@@ -131,7 +131,7 @@ object BootClasspathBuilder {
                     if (libraryRequests.contains(lib.name)) {
                         libraryRequests.remove(lib.name)
                     }
-                    jar
+                    jar?.toFile()
                 }).orNull
             }
             .filter { Objects.nonNull(it) }
@@ -154,7 +154,7 @@ object BootClasspathBuilder {
                         if (libraryRequested) {
                             libraryRequests.remove(lib.name)
                         }
-                        jar
+                        jar?.toFile()
                     } else {
                         null
                     }

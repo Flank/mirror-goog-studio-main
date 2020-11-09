@@ -152,16 +152,12 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
             }
             List<OptionalLibrary> addonLibraries = Lists.newArrayList();
             if (mWrapped instanceof LocalAddonPkgInfo) {
-                addonLibraries = LegacyRepoUtils
-                        .parseLegacyAdditionalLibraries(mWrapped.getLocalDir(), mProgress, mFop);
+                addonLibraries =
+                        LegacyRepoUtils.parseLegacyAdditionalLibraries(
+                                mFop.toPath(mWrapped.getLocalDir()), mProgress);
             }
             return LegacyRepoUtils.createTypeDetails(
-                    mWrapped.getDesc(),
-                    layoutVersion,
-                    addonLibraries,
-                    mFop.toFile(getLocation()),
-                    mProgress,
-                    mFop);
+                    mWrapped.getDesc(), layoutVersion, addonLibraries, getLocation(), mFop);
         }
 
         @NonNull

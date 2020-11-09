@@ -96,7 +96,7 @@ class Aapt2DaemonTimeoutTest {
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
         val request = AaptPackageConfig(
-                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR).toString(),
                 manifestFile = manifest,
                 resourceOutputApk = outputFile,
                 options = AaptOptions(),

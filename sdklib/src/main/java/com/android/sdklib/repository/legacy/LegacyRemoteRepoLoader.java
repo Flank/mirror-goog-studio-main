@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
@@ -147,14 +148,22 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                 if (mWrapped instanceof RemoteAddonPkgInfo) {
                     for (RemoteAddonPkgInfo.Lib wrappedLib : ((RemoteAddonPkgInfo) mWrapped)
                             .getLibs()) {
-                        libs.add(new OptionalLibraryImpl(wrappedLib.getName(), new File(""),
-                                wrappedLib.getDescription(), false));
+                        libs.add(
+                                new OptionalLibraryImpl(
+                                        wrappedLib.getName(),
+                                        Paths.get(""),
+                                        wrappedLib.getDescription(),
+                                        false));
                     }
                 }
                 ProgressIndicator progress = new ConsoleProgressIndicator();
-                mDetails = LegacyRepoUtils
-                        .createTypeDetails(mWrapped.getPkgDesc(), layoutlibApi, libs, null,
-                                progress, FileOpUtils.create());
+                mDetails =
+                        LegacyRepoUtils.createTypeDetails(
+                                mWrapped.getPkgDesc(),
+                                layoutlibApi,
+                                libs,
+                                null,
+                                FileOpUtils.create());
             }
             return mDetails;
         }
