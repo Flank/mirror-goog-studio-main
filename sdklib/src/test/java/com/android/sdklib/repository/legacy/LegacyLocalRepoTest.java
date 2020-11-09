@@ -64,7 +64,7 @@ public class LegacyLocalRepoTest extends TestCase {
         mockFop.recordExistingFile("/sdk/tools/" + LocalSdk.androidCmdName(), "placeholder");
         mockFop.recordExistingFile("/sdk/tools/" + SdkConstants.FN_EMULATOR, "placeholder");
 
-        File root = new File("/sdk");
+        File root = new File("/sdk").getAbsoluteFile();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepoManager mgr =
                 new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
@@ -262,7 +262,7 @@ public class LegacyLocalRepoTest extends TestCase {
             MockFileOp mockFop, String rootPath, String packagePath, boolean allowWarnings)
             throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        File root = new File(rootPath);
+        File root = new File(rootPath).getAbsoluteFile();
         RepoManager mgr = new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
 
         if (!allowWarnings) {

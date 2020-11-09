@@ -73,7 +73,7 @@ public class BasicInstallerTest extends TestCase {
 
         // Set up a RepoManager.
         RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo");
+        File root = new File("/repo").getAbsoluteFile();
         mgr.setLocalPath(root);
 
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -143,7 +143,7 @@ public class BasicInstallerTest extends TestCase {
         fop.recordExistingFile("/repo/dummy/foo/package.xml", ByteStreams
                 .toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
         RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo");
+        File root = new File("/repo").getAbsoluteFile();
         mgr.setLocalPath(root);
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/dummy.xml");
@@ -236,7 +236,7 @@ public class BasicInstallerTest extends TestCase {
         fop.recordExistingFile("/repo/dummy/foo/package.xml", ByteStreams
           .toByteArray(getClass().getResourceAsStream("/testPackage.xml")));
         RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo");
+        File root = new File("/repo").getAbsoluteFile();
         mgr.setLocalPath(root);
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/dummy.xml");
@@ -354,7 +354,7 @@ public class BasicInstallerTest extends TestCase {
         fop.recordExistingFile("/repo/dummy/bar/package.xml", ByteStreams.toByteArray(
                 getClass().getResourceAsStream("/testPackage2-lowerVersion.xml")));
         RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo");
+        File root = new File("/repo").getAbsoluteFile();
         mgr.setLocalPath(root);
 
         // Create the archive and register the repo to be downloaded.
@@ -441,7 +441,7 @@ public class BasicInstallerTest extends TestCase {
     public void testExistingDownload() throws Exception {
         MockFileOp fop = new MockFileOp();
         RepoManager mgr = new RepoManagerImpl(fop);
-        File root = new File("/repo");
+        File root = new File("/repo").getAbsoluteFile();
         mgr.setLocalPath(root);
         FakeDownloader downloader = new FakeDownloader(fop) {
             @Override

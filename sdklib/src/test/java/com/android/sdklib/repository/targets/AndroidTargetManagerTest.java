@@ -39,7 +39,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import junit.framework.TestCase;
 
 /**
@@ -58,7 +57,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordGoogleApisSysImg23(fop);
 
         AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop);
+                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
@@ -85,7 +84,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordGoogleApisSysImg23(fop);
 
         AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop);
+                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -107,7 +106,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordGoogleApisSysImg23(fop);
 
         AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop);
+                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -126,13 +125,13 @@ public class AndroidTargetManagerTest extends TestCase {
         recordPlatform23(fop);
 
         AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop);
+                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         IAndroidTarget target = mgr.getTargets(progress).iterator().next();
         progress.assertNoErrorsOrWarnings();
         String sourcesPath = target.getPath(IAndroidTarget.SOURCES);
-        assertEquals("/sdk/platforms/android-23/sources", fop.getAgnosticAbsPath(sourcesPath));
+        assertEquals(fop.getPlatformSpecificPath("/sdk/platforms/android-23/sources"), sourcesPath);
 
         recordSources23(fop);
         handler.getSdkManager(progress).loadSynchronously(0, progress, null, null);
@@ -140,58 +139,85 @@ public class AndroidTargetManagerTest extends TestCase {
         target = mgr.getTargets(progress).iterator().next();
         progress.assertNoErrorsOrWarnings();
         sourcesPath = target.getPath(IAndroidTarget.SOURCES);
-        assertEquals("/sdk/sources/android-23", fop.getAgnosticAbsPath(sourcesPath));
+        assertEquals(fop.getPlatformSpecificPath("/sdk/sources/android-23"), sourcesPath);
     }
 
     private static void verifyPlatform13(IAndroidTarget target, MockFileOp fop) {
         assertEquals(new AndroidVersion(13, null), target.getVersion());
         assertEquals("Android Open Source Project", target.getVendor());
-        assertEquals("/sdk/platforms/android-13/", fop.getAgnosticAbsPath(target.getLocation()));
+        assertEquals(
+                fop.getPlatformSpecificPath("/sdk/platforms/android-13/"), target.getLocation());
         assertNull(target.getParent());
 
-        assertEquals(ImmutableSet.of(new File("/sdk/platforms/android-13/skins/HVGA"),
-                new File("/sdk/platforms/android-13/skins/WVGA800")),
+        assertEquals(
+                ImmutableSet.of(
+                        new File("/sdk/platforms/android-13/skins/HVGA").getAbsoluteFile(),
+                        new File("/sdk/platforms/android-13/skins/WVGA800").getAbsoluteFile()),
                 ImmutableSet.copyOf(target.getSkins()));
-        assertEquals(ImmutableList.of("/sdk/platforms/android-13/android.jar"),
-                target.getBootClasspath().stream().map(fop::getAgnosticAbsPath)
-                        .collect(Collectors.toList()));
-        assertEquals(new File("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
-        assertEquals(new File("/sdk/platforms/android-13/skins/WXGA"), target.getDefaultSkin());
+        assertEquals(
+                ImmutableList.of(
+                        fop.getPlatformSpecificPath("/sdk/platforms/android-13/android.jar")),
+                target.getBootClasspath());
+        assertEquals(
+                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
+                target.getBuildToolInfo().getLocation());
+        assertEquals(
+                new File("/sdk/platforms/android-13/skins/WXGA").getAbsoluteFile(),
+                target.getDefaultSkin());
     }
 
     private static void verifyPlatform23(IAndroidTarget target, MockFileOp fop) {
         assertEquals(new AndroidVersion(23, null), target.getVersion());
         assertEquals("Android Open Source Project", target.getVendor());
-        assertEquals("/sdk/platforms/android-23/", fop.getAgnosticAbsPath(target.getLocation()));
+        assertEquals(
+                fop.getPlatformSpecificPath("/sdk/platforms/android-23/"), target.getLocation());
         assertNull(target.getParent());
-        assertTrue(Arrays.deepEquals(new File[]{new File("/sdk/platforms/android-23/skins/HVGA"),
-                        new File("/sdk/platforms/android-23/skins/WVGA800")},
-                target.getSkins()));
-        assertEquals(ImmutableList.of("/sdk/platforms/android-23/android.jar"),
-                target.getBootClasspath().stream().map(fop::getAgnosticAbsPath)
-                        .collect(Collectors.toList()));
-        assertEquals(new File("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
-        assertEquals(new File("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
+        assertTrue(
+                Arrays.deepEquals(
+                        new File[] {
+                            new File("/sdk/platforms/android-23/skins/HVGA").getAbsoluteFile(),
+                            new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile()
+                        },
+                        target.getSkins()));
+        assertEquals(
+                ImmutableList.of(
+                        fop.getPlatformSpecificPath("/sdk/platforms/android-23/android.jar")),
+                target.getBootClasspath());
+        assertEquals(
+                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
+                target.getBuildToolInfo().getLocation());
+        assertEquals(
+                new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile(),
+                target.getDefaultSkin());
     }
 
     private static void verifyAddon13(IAndroidTarget target, IAndroidTarget platform13,
             MockFileOp fop) {
         assertEquals(new AndroidVersion(13, null), target.getVersion());
         assertEquals("Google Inc.", target.getVendor());
-        assertEquals("/sdk/add-ons/addon-google_tv_addon-google-13/",
-                fop.getAgnosticAbsPath(target.getLocation()));
+        assertEquals(
+                fop.getPlatformSpecificPath("/sdk/add-ons/addon-google_tv_addon-google-13/"),
+                target.getLocation());
         assertEquals(platform13, target.getParent());
-        assertEquals(ImmutableSet.of(
-                new File("/sdk/platforms/android-13/skins/HVGA"),
-                new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p"),
-                new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan"),
-                new File("/sdk/platforms/android-13/skins/WVGA800")),
+        assertEquals(
+                ImmutableSet.of(
+                        new File("/sdk/platforms/android-13/skins/HVGA").getAbsoluteFile(),
+                        new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p")
+                                .getAbsoluteFile(),
+                        new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan")
+                                .getAbsoluteFile(),
+                        new File("/sdk/platforms/android-13/skins/WVGA800").getAbsoluteFile()),
                 ImmutableSet.copyOf(target.getSkins()));
-        assertEquals(ImmutableList.of("/sdk/platforms/android-13/android.jar"),
-                target.getBootClasspath().stream().map(fop::getAgnosticAbsPath)
-                        .collect(Collectors.toList()));
-        assertEquals(new File("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
-        assertEquals(new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p"),
+        assertEquals(
+                ImmutableList.of(
+                        fop.getPlatformSpecificPath("/sdk/platforms/android-13/android.jar")),
+                target.getBootClasspath());
+        assertEquals(
+                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
+                target.getBuildToolInfo().getLocation());
+        assertEquals(
+                new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p")
+                        .getAbsoluteFile(),
                 target.getDefaultSkin());
     }
 
@@ -199,34 +225,45 @@ public class AndroidTargetManagerTest extends TestCase {
             MockFileOp fop) {
         assertEquals(new AndroidVersion(23, null), target.getVersion());
         assertEquals("Google Inc.", target.getVendor());
-        assertEquals("/sdk/add-ons/addon-google_apis-google-23/",
-                fop.getAgnosticAbsPath(target.getLocation()));
+        assertEquals(
+                fop.getPlatformSpecificPath("/sdk/add-ons/addon-google_apis-google-23/"),
+                target.getLocation());
         assertEquals(platform23, target.getParent());
-        assertEquals(ImmutableSet.of(new File("/sdk/platforms/android-23/skins/HVGA"),
-                new File("/sdk/platforms/android-23/skins/WVGA800")),
+        assertEquals(
+                ImmutableSet.of(
+                        new File("/sdk/platforms/android-23/skins/HVGA").getAbsoluteFile(),
+                        new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile()),
                 ImmutableSet.copyOf(target.getSkins()));
-        assertEquals(ImmutableList.of("/sdk/platforms/android-23/android.jar"),
-                target.getBootClasspath().stream().map(fop::getAgnosticAbsPath).collect(
-                        Collectors.toList()));
-        assertEquals(new File("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
-        assertEquals(new File("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
+        assertEquals(
+                ImmutableList.of(
+                        fop.getPlatformSpecificPath("/sdk/platforms/android-23/android.jar")),
+                target.getBootClasspath());
+        assertEquals(
+                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
+                target.getBuildToolInfo().getLocation());
+        assertEquals(
+                new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile(),
+                target.getDefaultSkin());
 
         Set<OptionalLibrary> desired =
                 Sets.newHashSet(
                         new OptionalLibraryImpl(
                                 "com.google.android.maps",
-                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar"),
+                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar")
+                                        .getAbsoluteFile(),
                                 "",
                                 false),
                         new OptionalLibraryImpl(
                                 "com.android.future.usb.accessory",
-                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar"),
+                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar")
+                                        .getAbsoluteFile(),
                                 "",
                                 false),
                         new OptionalLibraryImpl(
                                 "com.google.android.media.effects",
                                 new File(
-                                        "/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar"),
+                                                "/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar")
+                                        .getAbsoluteFile(),
                                 "",
                                 false));
 

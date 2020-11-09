@@ -84,7 +84,7 @@ public class FakeDownloader implements Downloader {
     @Override
     public void downloadFully(@NonNull URL url, @NonNull File target, @Nullable String checksum,
             @NonNull ProgressIndicator indicator) throws IOException {
-        mFileOp.recordExistingFile(mFileOp.getAgnosticAbsPath(target), mRegisteredFiles.get(url));
+        mFileOp.recordExistingFile(target.getAbsolutePath(), mRegisteredFiles.get(url));
     }
 
     /**

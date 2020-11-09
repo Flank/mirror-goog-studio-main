@@ -65,7 +65,7 @@ public class LocalRepoLoaderImplTest {
     public void testHashFile() throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         MockFileOp fop = new MockFileOp();
-        File repoRoot = new File("/repo");
+        File repoRoot = new File("/repo").getAbsoluteFile();
         File knownPackagesFile = new File(repoRoot, LocalRepoLoaderImpl.KNOWN_PACKAGES_HASH_FN);
         fop.mkdirs(repoRoot);
         RepoManager mgr = new RepoManagerImpl(fop);
@@ -131,7 +131,9 @@ public class LocalRepoLoaderImplTest {
         MockFileOp fop = new MockFileOp();
         // Allow the repo root name to start with metadata prefix. Although it wouldn't normally
         // be the case, there is no reason to disallow that.
-        File repoRoot = new File("/" + AbstractPackageOperation.METADATA_FILENAME_PREFIX + "repo");
+        File repoRoot =
+                new File("/" + AbstractPackageOperation.METADATA_FILENAME_PREFIX + "repo")
+                        .getAbsoluteFile();
         fop.mkdirs(repoRoot);
         RepoManager mgr = new RepoManagerImpl(fop);
 

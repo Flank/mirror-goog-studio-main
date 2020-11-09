@@ -158,7 +158,9 @@ public class AbstractInstallerTest {
 
         TestInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
         assertTrue(installer.prepare(progress));
-        assertEquals(new File("/sdk/foo/notbar"), installer.getLocation(progress));
+        assertEquals(
+                fop.getPlatformSpecificPath("/sdk/foo/notbar"),
+                installer.getLocation(progress).toString());
     }
 
     @Test
