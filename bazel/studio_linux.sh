@@ -29,6 +29,8 @@ function copy_bazel_artifacts() {
   cp -a ${1}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
   cp -a ${1}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
   cp -a ${1}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
+  cp -a ${1}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}
+  cp -a ${1}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}
 }
 
 if [[ $BUILD_NUMBER != SNAPSHOT ]];
@@ -104,6 +106,8 @@ readonly invocation_id="$(uuidgen)"
   //tools/base/profiler/native/trace_processor_daemon \
   //tools/adt/idea/studio:test_studio \
   //tools/adt/idea/studio:searchable_options_test \
+  //tools/vendor/google/game-tools/packaging:packaging-linux \
+  //tools/vendor/google/game-tools/packaging:packaging-win \
   $(< "${script_dir}/targets")
 # Workaround: This invocation [ab]uses --runs_per_test to disable caching for the
 # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
