@@ -126,6 +126,10 @@ public class NinePatch {
             ensure9Patch(image);
         }
 
+        if (image.getWidth() < 2 || image.getHeight() < 2) {
+            // This image is not a valid 9-patch.
+            return null;
+        }
         return new NinePatch(image);
     }
 
