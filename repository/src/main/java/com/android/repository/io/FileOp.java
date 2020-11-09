@@ -18,17 +18,13 @@ package com.android.repository.io;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.Properties;
-
 
 /**
  * Wraps some common {@link File} operations on files and folders.
@@ -167,11 +163,9 @@ public interface FileOp {
      */
     File ensureRealFile(@NonNull File in) throws IOException;
 
-    /**
-     * @see com.google.common.io.Files#toString(File, Charset)
-     */
+    /** @see com.android.io.CancellableFileIo#readText(Path) */
     @NonNull
-    String toString(@NonNull File f, @NonNull Charset c) throws IOException;
+    String readText(@NonNull File f) throws IOException;
 
     /**
      * @see File#list(FilenameFilter)

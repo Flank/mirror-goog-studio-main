@@ -739,10 +739,10 @@ public class AvdManager {
             alternative = new File(alternative, "pid");
         }
         if (mFop.exists(f)) {
-            return mFop.toString(f, Charsets.UTF_8).trim();
+            return mFop.readText(f).trim();
         }
         if (mFop.exists(alternative)){
-            return mFop.toString(alternative, Charsets.UTF_8).trim();
+            return mFop.readText(alternative).trim();
         }
         return null;
     }

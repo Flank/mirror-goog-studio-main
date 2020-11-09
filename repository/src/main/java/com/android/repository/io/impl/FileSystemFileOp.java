@@ -24,7 +24,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -59,7 +58,7 @@ public abstract class FileSystemFileOp implements FileOp {
 
     @NonNull
     @Override
-    public final String toString(@NonNull File f, @NonNull Charset c) throws IOException {
+    public final String readText(@NonNull File f) throws IOException {
         return CancellableFileIo.readText(toPath(f));
     }
 

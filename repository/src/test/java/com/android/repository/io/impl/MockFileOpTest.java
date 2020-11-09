@@ -17,16 +17,11 @@
 package com.android.repository.io.impl;
 
 import com.android.repository.testframework.MockFileOp;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
-
 import junit.framework.TestCase;
 
 /**
@@ -186,9 +181,9 @@ public class MockFileOpTest extends TestCase {
 
     public void testToString() throws Exception {
         m.recordExistingFile("/root/blah", "foo");
-        assertEquals("foo", m.toString(new File("/root/blah"), Charsets.UTF_8));
+        assertEquals("foo", m.readText(new File("/root/blah")));
         try {
-            m.toString(new File("/root/bogus"), Charsets.UTF_8);
+            m.readText(new File("/root/bogus"));
             fail();
         }
         catch (Exception expected) {
