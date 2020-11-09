@@ -274,6 +274,10 @@ public final class SdkConstants {
     public static final String FN_ADB =
             "adb" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
+    /** sqlite3 executable (with extension for the current OS) */
+    public static final String FN_SQLITE3 =
+            "sqlite3" + ext(".exe", ""); // $NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
     /** emulator executable for the current OS */
     public static final String FN_EMULATOR =
             "emulator" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
