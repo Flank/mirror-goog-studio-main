@@ -42,13 +42,13 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
     abstract val incrementalMergedDir: Property<String>
 
     @get:Internal
-    abstract val aaptEnv: Property<String>
-
-    @get:Internal
     lateinit var resourceComputer: DependencyResourcesComputer
 
     @get:Input
     abstract val resourcePaths: ListProperty<String>
+
+    @get:Internal
+    abstract val aaptEnv: Property<String>
 
     @get:OutputFile
     abstract val filepathMappingFile : RegularFileProperty
@@ -60,8 +60,10 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
         val uncreatedSourceSets = listOfNotNull(
                 generatedPngsOutputDir.orNull,
                 mergeResourcesOutputDir.orNull,
-                getPathIfPresentOrNull(incrementalMergedDir, listOf("merged.dir")),
-                getPathIfPresentOrNull(incrementalMergedDir, listOf("stripped.dir"))
+                getPathIfPresentOrNull(
+                        incrementalMergedDir, listOf(SdkConstants.FD_MERGED_DOT_DIR)),
+                getPathIfPresentOrNull(
+                        incrementalMergedDir, listOf(SdkConstants.FD_STRIPPED_DOT_DIR))
         )
         val resourceSourceSetFolders: List<File> =
                 resourcePaths.getOrElse(emptyList()).map(::File) + uncreatedSourceSets.map(::File)
@@ -75,7 +77,8 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     internal class CreateAction(
             creationConfig: ComponentCreationConfig,
-            val mergeResourcesTask: TaskProvider<MergeResources>) :
+            val mergeResourcesTask: TaskProvider<MergeResources>,
+            val includeDependencies: Boolean) :
             VariantTaskCreationAction<MapSourceSetPathsTask, ComponentCreationConfig>(creationConfig) {
         override val name: String = computeTaskName("map", "SourceSetPaths")
 
@@ -99,7 +102,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                     .getEnvVariable(ANDROID_AAPT_IGNORE)
             task.aaptEnv.setDisallowChanges(aapt)
             task.resourceComputer = DependencyResourcesComputer()
-            task.resourceComputer.initFromVariantScope(creationConfig, false)
+            task.resourceComputer.initFromVariantScope(creationConfig, includeDependencies)
             val resourceSourceSets = task.computedResourceSourceSetPaths(
                     task.resourceComputer,
                     true,

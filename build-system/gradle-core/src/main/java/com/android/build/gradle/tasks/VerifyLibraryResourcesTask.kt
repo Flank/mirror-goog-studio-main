@@ -41,6 +41,7 @@ import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.ResourceCompilationService
+import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableSet
@@ -131,6 +132,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
         abstract val manifestMergeBlameFile: RegularFileProperty
         abstract val compiledDirectory: DirectoryProperty
         abstract val mergeBlameFolder: DirectoryProperty
+        abstract val sourceSetMaps: ConfigurableFileCollection
     }
 
     /**
@@ -160,6 +162,8 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
             val compiledDependenciesResourcesDirs =
                 parameters.compiledDependenciesResources.reversed()
+            val identifiedSourceSetMap =
+                    mergeIdentifiedSourceSetFiles(parameters.sourceSetMaps.files.filterNotNull())
             val config = AaptPackageConfig.Builder()
                 .setManifestFile(manifestFile = parameters.manifestFile.get().asFile)
                 .addResourceDirectories(compiledDependenciesResourcesDirs)
@@ -170,6 +174,7 @@ abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
                 .setAndroidTarget(androidJar = parameters.androidJar.get().asFile)
                 .setMergeBlameDirectory(parameters.mergeBlameFolder.get().asFile)
                 .setManifestMergeBlameFile(parameters.manifestMergeBlameFile.get().asFile)
+                .setIdentifiedSourceSetMap(identifiedSourceSetMap)
                 .build()
 
             workerExecutor.await() // All compilation must be done before linking.

@@ -23,6 +23,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
+import java.util.Scanner
 
 /** Tests the error message rewriting logic.  */
 class MessageRewriteTest {
@@ -39,12 +40,37 @@ class MessageRewriteTest {
                 .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
                 .expectFailure()
                 .run("assembleF1Debug")
-            result.stdout.use { stdout ->
-                ScannerSubject.assertThat(stdout)
-                    .contains(
-                        FileUtils.join("src", "main", "res", "layout", "main.xml")
-                    )
-            }
+            checkPathInOutput(
+                    FileUtils.join("src", "main", "res", "layout", "main.xml"), result.stdout)
         }
     }
+
+    @Test
+    fun nonExistentResourceReferenceInLayout() {
+        TemporaryProjectModification.doTest(project) {
+            it.replaceInFile("src/main/res/layout/main.xml","@string/text", "@string/agloe")
+            val result = project.executor()
+                    .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false)
+                    .expectFailure()
+                    .run("assembleDebug")
+            checkPathInOutput(
+                    FileUtils.join("src", "main", "res", "layout", "main.xml"), result.stderr)
+        }
+    }
+
+    @Test
+    fun nonExistentResourceReferenceInValues() {
+        TemporaryProjectModification.doTest(project) {
+            it.replaceInFile("src/main/res/values/strings.xml", "string", "")
+            val result = project.executor()
+                    .with(BooleanOption.ENABLE_JVM_RESOURCE_COMPILER, false)
+                    .expectFailure()
+                    .run("assembleDebug")
+            checkPathInOutput(
+                    FileUtils.join("src", "main", "res", "values", "strings.xml"), result.stderr)
+        }
+    }
+
+    fun checkPathInOutput(path: String, output: Scanner) =
+        output.use { out -> ScannerSubject.assertThat(out).contains(path) }
 }

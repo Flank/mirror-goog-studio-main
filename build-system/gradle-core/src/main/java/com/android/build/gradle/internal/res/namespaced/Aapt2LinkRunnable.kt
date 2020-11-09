@@ -31,9 +31,9 @@ abstract class Aapt2LinkRunnable : ProfileAwareWorkAction<Aapt2LinkRunnable.Para
 
     override fun run() {
         runAapt2Link(
-            parameters.aapt2ServiceKey.get(),
-            parameters.request.get(),
-            parameters.errorFormatMode.get()
+                parameters.aapt2ServiceKey.get(),
+                parameters.request.get(),
+                parameters.errorFormatMode.get()
         )
     }
 
@@ -45,9 +45,9 @@ abstract class Aapt2LinkRunnable : ProfileAwareWorkAction<Aapt2LinkRunnable.Para
 }
 
 fun runAapt2Link(
-    aapt2ServiceKey: Aapt2DaemonServiceKey,
-    request: AaptPackageConfig,
-    errorFormatMode: SyncOptions.ErrorFormatMode
+        aapt2ServiceKey: Aapt2DaemonServiceKey,
+        request: AaptPackageConfig,
+        errorFormatMode: SyncOptions.ErrorFormatMode
 ) {
     val logger = Logging.getLogger(Aapt2LinkRunnable::class.java)
     useAaptDaemon(aapt2ServiceKey) { daemon ->
@@ -55,11 +55,12 @@ fun runAapt2Link(
             daemon.link(request, LoggerWrapper(logger))
         } catch (exception: Aapt2Exception) {
             throw rewriteLinkException(
-                exception,
-                errorFormatMode,
-                null,
-                null,
-                logger
+                    exception,
+                    errorFormatMode,
+                    null,
+                    null,
+                    emptyMap(),
+                    logger
             )
         }
     }

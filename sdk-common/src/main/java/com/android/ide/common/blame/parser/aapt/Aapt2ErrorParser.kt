@@ -19,20 +19,23 @@ package com.android.ide.common.blame.parser.aapt
 import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.parser.ParsingFailedException
 import com.android.ide.common.blame.parser.util.OutputLineReader
+import com.android.ide.common.resources.relativeResourcePathToAbsolutePath
+import com.android.ide.common.resources.relativeResourceSeparator
 import com.android.utils.ILogger
 import java.util.ArrayList
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /** Single line aapt2 error parser containing a path */
-class Aapt2ErrorParser : AbstractAaptOutputParser() {
+class Aapt2ErrorParser(val identifiedSourceSetMap: Map<String, String> = emptyMap())
+    : AbstractAaptOutputParser() {
 
     private val parsers = ArrayList<MessageParser>()
 
     init {
         // [ERROR: ]<path>:<line>:<colStart>-<colEnd> <error>
         parsers.add(object :
-            MessageParser("^(?:ERROR:\\s)?(.+?):(\\d+):(\\d+)-(\\d+)(?::)?\\s(.+)$") {
+                MessageParser("^(?:ERROR:\\s)?(.+?):(\\d+):(\\d+)-(\\d+)(?::)?\\s(.+)$", identifiedSourceSetMap) {
             override fun getLineNumber(m: Matcher): String = m.group(2)
             override fun getColumnStart(m: Matcher): String = m.group(3)
             override fun getColumnEnd(m: Matcher): String = m.group(4)
@@ -41,7 +44,7 @@ class Aapt2ErrorParser : AbstractAaptOutputParser() {
 
         // [ERROR: ]<path>:<line>:<column> <error>
         parsers.add(object :
-            MessageParser("^(?:ERROR:\\s)?(.+?):(\\d+):(\\d+)(?::)?\\s(.+)$") {
+                MessageParser("^(?:ERROR:\\s)?(.+?):(\\d+):(\\d+)(?::)?\\s(.+)$", identifiedSourceSetMap) {
             override fun getLineNumber(m: Matcher): String = m.group(2)
             override fun getColumnStart(m: Matcher): String = m.group(3)
             override fun getMessageText(m: Matcher): String = m.group(4)
@@ -49,14 +52,14 @@ class Aapt2ErrorParser : AbstractAaptOutputParser() {
 
         // [ERROR: ]<path>:<line> <error>
         parsers.add(object :
-            MessageParser("^(?:ERROR:\\s)?(.+?):(\\d+)(?::)?\\s(.+)$") {
+                MessageParser("^(?:ERROR:\\s)?(.+?):(\\d+)(?::)?\\s(.+)$", identifiedSourceSetMap) {
             override fun getLineNumber(m: Matcher): String = m.group(2)
             override fun getMessageText(m: Matcher): String = m.group(3)
         })
 
         // [ERROR: ]<path> <error>
         parsers.add(object :
-            MessageParser("^(?:ERROR:\\s)?(.+?)(?::)?\\s(.+)$") {
+                MessageParser("^(?:ERROR:\\s)?(.+?)(?::)?\\s(.+)$", identifiedSourceSetMap) {
             override fun getMessageText(m: Matcher): String = m.group(2)
         })
     }
@@ -74,10 +77,10 @@ class Aapt2ErrorParser : AbstractAaptOutputParser() {
      */
     @Throws(ParsingFailedException::class)
     override fun parse(
-        line: String,
-        reader: OutputLineReader,
-        messages: MutableList<Message>,
-        logger: ILogger
+            line: String,
+            reader: OutputLineReader,
+            messages: MutableList<Message>,
+            logger: ILogger
     ): Boolean {
         for (parser in parsers) {
             val message = parser.parse(line, logger)
@@ -89,7 +92,7 @@ class Aapt2ErrorParser : AbstractAaptOutputParser() {
         return false
     }
 
-    private abstract class MessageParser internal constructor(pattern: String) {
+    private abstract class MessageParser(pattern: String, val sourceSetMap: Map<String, String>) {
         private val pattern: Pattern = Pattern.compile(pattern)
 
         @Throws(ParsingFailedException::class)
@@ -97,16 +100,24 @@ class Aapt2ErrorParser : AbstractAaptOutputParser() {
             val m = pattern.matcher(line)
             return if (!m.matches()) {
                 null
-            } else createMessage(
-                Message.Kind.ERROR,
-                getMessageText(m),
-                getSourcePath(m),
-                getLineNumber(m),
-                getColumnStart(m),
-                getColumnEnd(m),
-                "",
-                logger
-            )
+            } else {
+                val rawSourcePath = getSourcePath(m)
+                val absoluteSourcePath = if (relativeResourceSeparator() in rawSourcePath) {
+                    relativeResourcePathToAbsolutePath(rawSourcePath, sourceSetMap)
+                } else {
+                    rawSourcePath
+                }
+                createMessage(
+                        Message.Kind.ERROR,
+                        getMessageText(m),
+                        absoluteSourcePath,
+                        getLineNumber(m),
+                        getColumnStart(m),
+                        getColumnEnd(m),
+                        "",
+                        logger
+                )
+            }
 
         }
 

@@ -710,11 +710,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val alsoOutputNotCompiledResources = (creationConfig.variantType.isApk
                 && !creationConfig.variantType.isForTesting
                 && creationConfig.useResourceShrinker())
+        val includeDependencies = true
         val mergeResourcesTask = basicCreateMergeResourcesTask(
                 creationConfig,
                 MergeType.MERGE,
                 null /*outputLocation*/,
-                true /*includeDependencies*/,
+                includeDependencies,
                 processResources,
                 alsoOutputNotCompiledResources,
                 flags,
@@ -723,7 +724,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .services
                         .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
             taskFactory.register(
-                    MapSourceSetPathsTask.CreateAction(creationConfig, mergeResourcesTask))
+                    MapSourceSetPathsTask.CreateAction(
+                        creationConfig,
+                        mergeResourcesTask,
+                        includeDependencies
+                    ))
         }
     }
 

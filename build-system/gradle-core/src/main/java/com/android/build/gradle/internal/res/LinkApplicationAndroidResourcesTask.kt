@@ -58,6 +58,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.resources.FileStatus
+import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
 import com.android.ide.common.symbols.SymbolIo
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -302,6 +303,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             parameters.namespace.set(namespace)
             parameters.resourceConfigs.set(resourceConfigs)
             parameters.sharedLibraryDependencies.from(sharedLibraryDependencies)
+            parameters.sourceSetMaps.from(sourceSetMaps)
             parameters.useConditionalKeepRules.set(useConditionalKeepRules)
             parameters.useFinalIds.set(useFinalIds)
             parameters.useMinimalKeepRules.set(useMinimalKeepRules)
@@ -539,8 +541,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 val sourceSetMap =
                         creationConfig.artifacts.get(InternalArtifactType.SOURCE_SET_PATH_MAP)
                 task.sourceSetMaps.fromDisallowChanges(
-                        creationConfig.services.fileCollection(sourceSetMap)
-                )
+                        creationConfig.services.fileCollection(sourceSetMap))
                 task.dependsOn(sourceSetMap)
             } else {
                 task.sourceSetMaps.disallowChanges()
@@ -888,13 +889,18 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
                     val logger = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
 
+                    configBuilder.setIdentifiedSourceSetMap(
+                            mergeIdentifiedSourceSetFiles(
+                                    parameters.sourceSetMaps.files.filterNotNull())
+                    )
+
                     processResources(
                         aapt = aapt2,
                         aaptConfig = configBuilder.build(),
                         rJar = if (generateRClass) parameters.rClassOutputJar.orNull?.asFile else null,
                         logger = logger,
                         errorFormatMode = parameters.aapt2.get().getErrorFormatMode(),
-                        symbolTableLoader = parameters.symbolTableBuildService.get()::loadClasspath
+                        symbolTableLoader = parameters.symbolTableBuildService.get()::loadClasspath,
                     )
 
                     if (LOG.isInfoEnabled) {
