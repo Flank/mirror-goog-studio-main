@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package androidx.ui.tooling.inspector
+package androidx.compose.ui.tooling.inspector
 
 import android.view.View
 

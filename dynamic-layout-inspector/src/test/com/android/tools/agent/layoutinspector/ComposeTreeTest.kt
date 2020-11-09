@@ -19,8 +19,8 @@ package com.android.tools.agent.layoutinspector
 import android.util.Log
 import android.widget.RootLinearLayout
 import androidx.compose.ui.platform.AndroidComposeView
-import androidx.ui.tooling.inspector.InspectorNode
-import androidx.ui.tooling.inspector.TREE_ENTRY
+import androidx.compose.ui.tooling.inspector.InspectorNode
+import androidx.compose.ui.tooling.inspector.TREE_ENTRY
 import com.android.tools.agent.layoutinspector.testing.StandardView
 import com.android.tools.agent.layoutinspector.testing.StringTable
 import com.android.tools.layoutinspector.proto.LayoutInspectorProto

@@ -21,11 +21,11 @@ import android.graphics.Color
 import android.view.View
 import android.view.inspector.WindowInspector
 import androidx.compose.ui.platform.AndroidComposeView
-import androidx.ui.tooling.inspector.InspectorNode
-import androidx.ui.tooling.inspector.NodeParameter
-import androidx.ui.tooling.inspector.ParameterType
-import androidx.ui.tooling.inspector.RawParameter
-import androidx.ui.tooling.inspector.TREE_ENTRY
+import androidx.compose.ui.tooling.inspector.InspectorNode
+import androidx.compose.ui.tooling.inspector.NodeParameter
+import androidx.compose.ui.tooling.inspector.ParameterType
+import androidx.compose.ui.tooling.inspector.RawParameter
+import androidx.compose.ui.tooling.inspector.TREE_ENTRY
 import com.android.tools.agent.layoutinspector.testing.CompanionSupplierRule
 import com.android.tools.agent.layoutinspector.testing.ResourceEntry
 import com.android.tools.agent.layoutinspector.testing.StandardView
