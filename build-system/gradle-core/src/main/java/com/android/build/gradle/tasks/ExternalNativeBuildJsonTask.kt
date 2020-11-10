@@ -27,7 +27,11 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.process.ExecOperations
 import javax.inject.Inject
 
@@ -54,9 +58,7 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
                             configurationModel,
                             analyticsService = analyticsService.get()
                     )
-            for (future in generator.getMetadataGenerators(ops, false, null)) {
-                future.call()
-            }
+            generator.generate(ops, false, null)
         }
     }
 }

@@ -14,28 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks
+package com.android.build.gradle.internal.cxx.gradle.generator
 
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
-import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.process.ExecOperations
-import java.util.concurrent.Callable
 
 /**
  * NOP C/C++ metadata generator to be used when there was an earlier
- * configuration error. It returns an empty list from getMetadataGenerators
- * so that the calling code does nothing and expects no outputs.
+ * configuration error.
  */
 class CxxNopMetadataGenerator(
-        override val variant: CxxVariantModel,
-        override val abis: List<CxxAbiModel>,
         override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
-    override fun getMetadataGenerators(
-            ops: ExecOperations,
-            forceGeneration: Boolean,
-            abiName: String?): List<Callable<Unit>> = listOf()
-
+    override fun generate(ops: ExecOperations, forceGeneration: Boolean, abiName: String?) { }
 }

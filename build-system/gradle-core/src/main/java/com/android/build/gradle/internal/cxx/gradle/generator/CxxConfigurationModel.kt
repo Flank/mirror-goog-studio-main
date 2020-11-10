@@ -52,7 +52,6 @@ import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
 import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
-import com.android.build.gradle.tasks.CxxNopMetadataGenerator
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.getPrefabFromMaven
@@ -263,10 +262,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
     }
 
     return CxxConfigurationParameters(
-        cxxFolder = findCxxFolder(
-            global.project.projectDir,
-            buildStagingFolder,
-            global.project.buildFile),
+        cxxFolder = cxxFolder,
         buildSystem = buildSystem,
         makeFile = makeFile,
         buildStagingFolder = buildStagingFolder,
@@ -280,10 +276,10 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,
         gradleModulePathName = global.project.path,
+        isConfigurationFoldingEnabled = option(ENABLE_NATIVE_CONFIGURATION_FOLDING),
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),
         isCmakeBuildCohabitationEnabled = option(ENABLE_CMAKE_BUILD_COHABITATION),
-        isConfigurationFoldingEnabled = option(ENABLE_NATIVE_CONFIGURATION_FOLDING),
         chromeTraceJsonFolder = chromeTraceJsonFolder,
         isPrefabEnabled = variant.buildFeatures.prefab,
         prefabClassPath = prefabClassPath,
@@ -329,9 +325,7 @@ private fun getProjectPath(config: ExternalNativeBuild)
 /**
  * This function is used at task execution time to construct a [CxxMetadataGenerator] to do the
  * task's work. It should only have parameters that can be obtained after task graph
- * deserialization. Effectively, this limits us to Gradle build services like [CxxMetadataGenerator]
- * and to the information saved in the [CxxConfigurationModel] constructed during configuration
- * phase by [tryCreateCxxConfigurationModel].
+ * deserialization.
  */
 fun createCxxMetadataGenerator(
     configurationModel: CxxConfigurationModel,
@@ -347,6 +341,7 @@ fun createCxxMetadataGenerator(
 
     val variantBuilder = analyticsService.getVariantBuilder(
         variant.module.gradleModulePathName, variant.variantName)
+
     return when (variant.module.buildSystem) {
         NativeBuildSystem.NDK_BUILD -> NdkBuildExternalNativeJsonGenerator(
             variant,
@@ -358,7 +353,7 @@ fun createCxxMetadataGenerator(
                 Objects.requireNonNull(variant.module.cmake)!!
             if (!cmake.isValidCmakeAvailable) {
                 errorln(CMAKE_IS_MISSING, "No valid CMake executable was found.")
-                return CxxNopMetadataGenerator(variant, abis, variantBuilder)
+                return CxxNopMetadataGenerator(variantBuilder)
             }
             val cmakeRevision = cmake.minimumCmakeVersion
             variantBuilder?.nativeCmakeVersion = cmakeRevision.toString()
@@ -372,7 +367,7 @@ fun createCxxMetadataGenerator(
                     CMAKE_VERSION_IS_UNSUPPORTED,
                     "Unsupported CMake version $cmakeRevision. Try 3.7.0 or later."
                 )
-                return CxxNopMetadataGenerator(variant, abis, variantBuilder)
+                return CxxNopMetadataGenerator(variantBuilder)
             }
 
             val isPreCmakeFileApiVersion = cmakeRevision.major == 3 && cmakeRevision.minor < 15

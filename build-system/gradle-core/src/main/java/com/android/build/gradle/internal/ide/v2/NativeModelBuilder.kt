@@ -17,12 +17,15 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.gradle.internal.cxx.configure.toConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.ifCMake
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.errors.SyncIssueReporter
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -30,7 +33,8 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.model.v2.models.ndk.NativeBuildSystem
+import com.android.builder.model.v2.models.ndk.NativeBuildSystem.CMAKE
+import com.android.builder.model.v2.models.ndk.NativeBuildSystem.NDK_BUILD
 import com.android.builder.model.v2.models.ndk.NativeModelBuilderParameter
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.builder.model.v2.models.ndk.NativeVariant
@@ -40,8 +44,6 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecSpec
 import org.gradle.process.JavaExecSpec
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
 
 class NativeModelBuilder(
     private val issueReporter: SyncIssueReporter,
@@ -59,18 +61,21 @@ class NativeModelBuilder(
     private val ideRefreshExternalNativeModel
         get() =
             projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL)
-    private val enableParallelNativeJsonGen
-        get() =
-            projectOptions.get(BooleanOption.ENABLE_PARALLEL_NATIVE_JSON_GEN)
     private val scopes: List<ComponentImpl> by lazy {
         (variantModel.variants + variantModel.testComponents)
             .filter { it.taskContainer.cxxConfigurationModel != null }
     }
-    private val generators: List<CxxMetadataGenerator> by lazy {
-        IssueReporterLoggingEnvironment(issueReporter).use {
-            scopes.map { scope ->
+    private val configurationModels by lazy {
+        scopes.map { scope -> scope.name to scope.taskContainer.cxxConfigurationModel!! }.distinct()
+    }
+    private val generators =
+            mutableMapOf<CxxConfigurationModel, CxxMetadataGenerator>()
+
+    fun createGenerator(model: CxxConfigurationModel) : CxxMetadataGenerator {
+        return generators.computeIfAbsent(model) { model ->
+            IssueReporterLoggingEnvironment(issueReporter).use {
                 createCxxMetadataGenerator(
-                    scope.taskContainer.cxxConfigurationModel!!,
+                    model,
                     getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
                 )
             }
@@ -90,23 +95,25 @@ class NativeModelBuilder(
         params: NativeModelBuilderParameter?,
         project: Project
     ): NativeModule? = IssueReporterLoggingEnvironment(issueReporter).use {
-        if (generators.isEmpty()) return@use null
-        val cxxModuleModel = generators.first().variant.module
-        val buildSystem = when (cxxModuleModel.buildSystem) {
-            com.android.build.gradle.tasks.NativeBuildSystem.CMAKE -> NativeBuildSystem.CMAKE
-            com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD -> NativeBuildSystem.NDK_BUILD
-        }
-        val variants: List<NativeVariant> = generators.map { generator ->
-            NativeVariantImpl(generator.variant.variantName, generator.abis.map { cxxAbiModel ->
-                NativeAbiImpl(
-                  cxxAbiModel.abi.tag,
-                  cxxAbiModel.compileCommandsJsonBinFile.canonicalFile,
-                  cxxAbiModel.symbolFolderIndexFile.canonicalFile,
-                  cxxAbiModel.buildFileIndexFile.canonicalFile,
-                  cxxAbiModel.additionalProjectFilesIndexFile
-                )
-            })
-        }
+        if (configurationModels.isEmpty()) return@use null
+        val cxxModuleModel = configurationModels.first().second.variant.module
+
+        val buildSystem = cxxModuleModel.ifCMake { CMAKE } ?: NDK_BUILD
+
+        val variants: List<NativeVariant> = configurationModels
+                .flatMap { (variantName, model) -> model.activeAbis.map { variantName to it } }
+                .groupBy { (variantName, abi) -> variantName }
+                .map { (variantName, abis) ->
+                    NativeVariantImpl(variantName, abis.map { (_,abi) ->
+                        NativeAbiImpl(
+                                abi.abi.tag,
+                                abi.compileCommandsJsonBinFile.canonicalFile,
+                                abi.symbolFolderIndexFile.canonicalFile,
+                                abi.buildFileIndexFile.canonicalFile,
+                                abi.additionalProjectFilesIndexFile
+                        )
+                    })
+                }
         NativeModuleImpl(
             project.name,
             variants,
@@ -125,44 +132,12 @@ class NativeModelBuilder(
     }
 
     private fun generateBuildFilesAndCompileCommandsJson(filter: (variant: String, abi: String) -> Boolean) {
-        val buildSteps = generators.flatMap { generator ->
-            generator.abis.flatMap { cxxAbiModel ->
-                if (filter(generator.variant.variantName, cxxAbiModel.abi.tag)) {
-                    generator.getMetadataGenerators(
-                        ops,
-                        ideRefreshExternalNativeModel,
-                        cxxAbiModel.abi.tag
-                    )
-                } else {
-                    emptyList()
+        configurationModels
+                .flatMap { (variantName, model) -> model.activeAbis.map { abi -> variantName to abi } }
+                .filter { (variantName, abi) -> filter(variantName, abi.abi.tag) }
+                .map { (_, abi) -> abi }
+                .forEach { abi ->
+                    createGenerator(abi.toConfigurationModel()).generate(ops, ideRefreshExternalNativeModel)
                 }
-            }
-        }
-        if (enableParallelNativeJsonGen) {
-            val cpuCores = Runtime.getRuntime().availableProcessors()
-            val threadNumber = cpuCores.coerceAtMost(8)
-            val nativeJsonGenExecutor = Executors.newFixedThreadPool(threadNumber)
-
-            try {
-                // Need to get each result even if we're not using the output because that's how we
-                // propagate exceptions.
-                nativeJsonGenExecutor.invokeAll(
-                    buildSteps.map { step ->
-                        Callable {
-                            IssueReporterLoggingEnvironment(issueReporter).use {
-                                step.call()
-                            }
-                        }
-                    }
-                ).map { it.get() }
-            } catch (e: InterruptedException) {
-                throw RuntimeException(
-                    "Thread was interrupted while native build JSON generation was in progress.",
-                    e
-                )
-            }
-        } else {
-            buildSteps.forEach { it.call() }
-        }
     }
 }

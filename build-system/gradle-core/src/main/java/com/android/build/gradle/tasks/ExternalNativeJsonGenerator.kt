@@ -76,8 +76,8 @@ const val ANDROID_GRADLE_BUILD_VERSION = "2"
  */
 abstract class ExternalNativeJsonGenerator internal constructor(
     @get:Internal("Temporary to suppress Gradle warnings (bug 135900510), may need more investigation")
-    final override val variant: CxxVariantModel,
-    @get:Internal override val abis: List<CxxAbiModel>,
+    val variant: CxxVariantModel,
+    @get:Internal val abis: List<CxxAbiModel>,
     @get:Internal override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
 
@@ -107,11 +107,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         return result
     }
 
-    override fun getMetadataGenerators(
-        ops: ExecOperations,
-        forceGeneration: Boolean,
-        abiName: String?
-    ): List<Callable<Unit>> {
+    override fun generate(ops: ExecOperations, forceGeneration: Boolean, abiName: String?) {
         requireExplicitLogger()
         val buildSteps = mutableListOf<Callable<Unit>>()
         // These are lazily initialized values that can only be computed from a Gradle managed
@@ -120,30 +116,24 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         variant.prefabClassPath
         for (abi in abis) {
             if (abiName != null && abiName != abi.abi.tag) continue
-            buildSteps.add(
-                Callable {
-                    requireExplicitLogger()
-                    try {
-                        buildForOneConfiguration(ops, forceGeneration, abi)
-                    } catch (e: GradleException) {
-                        errorln(
-                            METADATA_GENERATION_FAILURE,
-                            "exception while building Json %s",
-                            e.message!!
-                        )
-                    } catch (e: ProcessException) {
-                        errorln(
-                            METADATA_GENERATION_FAILURE,
-                            "error when building with %s using %s: %s",
-                            variant.module.buildSystem.tag,
-                            variant.module.makeFile,
-                            e.message!!
-                        )
-                    }
-                }
-            )
+            try {
+                buildForOneConfiguration(ops, forceGeneration, abi)
+            } catch (e: GradleException) {
+                errorln(
+                        METADATA_GENERATION_FAILURE,
+                        "exception while building Json %s",
+                        e.message!!
+                )
+            } catch (e: ProcessException) {
+                errorln(
+                        METADATA_GENERATION_FAILURE,
+                        "error when building with %s using %s: %s",
+                        variant.module.buildSystem.tag,
+                        variant.module.makeFile,
+                        e.message!!
+                )
+            }
         }
-        return buildSteps
     }
 
     protected open fun checkPrefabConfig() {}
