@@ -9,6 +9,8 @@ repositories {
 }
 
 dependencies {
+    implementation project(':base:build-system:integration-test:framework')
+
     testCompile project(':base:build-system:integration-test:framework')
     testCompile project(':analytics-library:protos')
     testCompile project(':apksig')
