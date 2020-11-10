@@ -278,7 +278,8 @@ message AgentLiveLiteralUpdateResponse {
   enum Status {
     UNKNOWN = 0;
     OK = 1;
-    ERROR = 2;
+    INSTRUMENTATION_FAILED = 2;
+    ERROR = 3;
   }
   Status status = 1;
 }

@@ -101,6 +101,7 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
                                         .setKey("key8")
                                         .setType("Z")
                                         .setValue("true"))
+                        .setPackageName(PACKAGE)
                         .build();
         installer.update(request);
 
@@ -157,6 +158,7 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
                                         .setOffset(159)
                                         .setType("I")
                                         .setValue("100"))
+                        .setPackageName(PACKAGE)
                         .build();
         installer.update(request);
         Deploy.AgentLiveLiteralUpdateResponse response = installer.getLiveLiteralAgentResponse();
