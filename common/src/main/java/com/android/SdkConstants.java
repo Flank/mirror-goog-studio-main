@@ -941,6 +941,13 @@ public final class SdkConstants {
 
     /* Compose constants */
     public static final String CLASS_COMPOSE = "androidx.compose.Compose";
+    /** Name of the Compose interoperability view that can be injected in regular XML layouts. */
+    public static final String CLASS_COMPOSE_VIEW = "androidx.compose.ui.platform.ComposeView";
+
+    public static final String CLASS_COMPOSE_VIEW_ADAPTER =
+            "androidx.compose.ui.tooling.preview.ComposeViewAdapter";
+
+    public static final String ATTR_COMPOSABLE_NAME = "composableName";
 
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
