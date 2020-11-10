@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.integration.library
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
@@ -30,7 +29,6 @@ import org.junit.Test
 
 /** Tests for [AarMetadataTask]. */
 class AarMetadataTaskTest {
-
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create()
@@ -49,7 +47,7 @@ class AarMetadataTaskTest {
         project.getSubproject("lib").withAar("debug") {
             val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
-            ZipArchive(this.file.toFile()).use { aar ->
+            ZipArchive(file).use { aar ->
                 val aarMetadataBytes =
                     toByteArray(aar.getContent(aarMetadataEntryPath.toString()))
                 assertThat(aarMetadataBytes).isEqualTo(expectedAarMetadataBytes)
@@ -75,7 +73,7 @@ class AarMetadataTaskTest {
         project.getSubproject("lib").withAar("debug") {
             val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
-            ZipArchive(this.file.toFile()).use { aar ->
+            ZipArchive(file).use { aar ->
                 val aarMetadataBytes =
                     toByteArray(aar.getContent(aarMetadataEntryPath.toString()))
                 assertThat(aarMetadataBytes).isEqualTo(expectedAarMetadataBytes)
@@ -113,7 +111,7 @@ class AarMetadataTaskTest {
         project.getSubproject("lib").withAar(listOf("premium", "debug")) {
             val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
-            ZipArchive(this.file.toFile()).use { aar ->
+            ZipArchive(file).use { aar ->
                 val aarMetadataBytes =
                     toByteArray(aar.getContent(aarMetadataEntryPath.toString()))
                 assertThat(aarMetadataBytes).isEqualTo(expectedAarMetadataBytes)
@@ -152,7 +150,7 @@ class AarMetadataTaskTest {
         project.getSubproject("lib").withAar(listOf("premium", "debug")) {
             val aarMetadataEntryPath = getEntry(AarMetadataTask.AAR_METADATA_ENTRY_PATH)
             assertThat(aarMetadataEntryPath).isNotNull()
-            ZipArchive(this.file.toFile()).use { aar ->
+            ZipArchive(file).use { aar ->
                 val aarMetadataBytes =
                     toByteArray(aar.getContent(aarMetadataEntryPath.toString()))
                 assertThat(aarMetadataBytes).isEqualTo(expectedAarMetadataBytes)

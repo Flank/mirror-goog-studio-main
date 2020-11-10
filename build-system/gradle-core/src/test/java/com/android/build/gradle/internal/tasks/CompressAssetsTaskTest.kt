@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth.assertThat
@@ -32,7 +31,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.MockitoAnnotations
-import java.io.File
+import java.nio.file.Path
 import java.util.function.Predicate
 import java.util.zip.Deflater
 
@@ -40,16 +39,15 @@ import java.util.zip.Deflater
  * Unit tests for [CompressAssetsTask].
  */
 class CompressAssetsTaskTest {
-
     @get: Rule
     val temporaryFolder = TemporaryFolder()
 
     private lateinit var workQueue: WorkQueue
-    private lateinit var inputDir: File
-    private lateinit var asset1: File
-    private lateinit var asset2: File
-    private lateinit var noCompressAsset: File
-    private lateinit var outputDir: File
+    private lateinit var inputDir: Path
+    private lateinit var asset1: Path
+    private lateinit var asset2: Path
+    private lateinit var noCompressAsset: Path
+    private lateinit var outputDir: Path
 
     @Before
     fun setUp() {
@@ -59,18 +57,18 @@ class CompressAssetsTaskTest {
         workQueue = FakeGradleWorkExecutor(project.objects, temporaryFolder.newFolder()).noIsolation()
 
         // create input dir with various assets, one of which won't be compressed
-        inputDir = temporaryFolder.newFolder("inputDir")
-        asset1 = File(inputDir, "asset1")
-        FileUtils.createFile(asset1, "asset1")
+        inputDir = temporaryFolder.newFolder("inputDir").toPath()
+        asset1 = inputDir.resolve("asset1")
+        FileUtils.createFile(asset1.toFile(), "asset1")
         assertThat(asset1).exists()
-        asset2 = FileUtils.join(inputDir, "dir", "asset2")
-        FileUtils.createFile(asset2, "asset2")
+        asset2 = inputDir.resolve("dir/asset2")
+        FileUtils.createFile(asset2.toFile(), "asset2")
         assertThat(asset2).exists()
-        noCompressAsset = File(inputDir, "noCompressAsset")
-        FileUtils.createFile(noCompressAsset, "noCompressAsset")
+        noCompressAsset = inputDir.resolve("noCompressAsset")
+        FileUtils.createFile(noCompressAsset.toFile(), "noCompressAsset")
         assertThat(noCompressAsset).exists()
 
-        outputDir = temporaryFolder.newFolder("outputDir")
+        outputDir = temporaryFolder.newFolder("outputDir").toPath()
     }
 
     @Test
@@ -80,54 +78,54 @@ class CompressAssetsTaskTest {
         val compressionLevel = Deflater.BEST_SPEED
         val nonIncrementalChanges =
             listOf(
-                FakeFileChange(asset1, ChangeType.ADDED, FileType.FILE, "asset1"),
-                FakeFileChange(asset2, ChangeType.ADDED, FileType.FILE, "dir/asset2"),
-                FakeFileChange(noCompressAsset, ChangeType.ADDED, FileType.FILE, "noCompressAsset"),
-                FakeFileChange(asset2.parentFile, ChangeType.ADDED, FileType.DIRECTORY, "dir")
+                FakeFileChange(asset1.toFile(), ChangeType.ADDED, FileType.FILE, "asset1"),
+                FakeFileChange(asset2.toFile(), ChangeType.ADDED, FileType.FILE, "dir/asset2"),
+                FakeFileChange(noCompressAsset.toFile(), ChangeType.ADDED, FileType.FILE, "noCompressAsset"),
+                FakeFileChange(asset2.parent.toFile(), ChangeType.ADDED, FileType.DIRECTORY, "dir")
             )
         CompressAssetsDelegate(
             workQueue,
-            inputDir,
-            outputDir,
+            inputDir.toFile(),
+            outputDir.toFile(),
             noCompressPredicate,
             compressionLevel,
             nonIncrementalChanges
         ).run()
 
         // check asset1
-        val assetJar1 = FileUtils.join(outputDir, "assets", "asset1.jar")
+        val assetJar1 = outputDir.resolve("assets/asset1.jar")
         assertThat(assetJar1).exists()
         val entryMap1 = ZipArchive.listEntries(assetJar1)
         assertThat(entryMap1.keys).containsExactly("assets/asset1")
         assertThat(entryMap1["assets/asset1"]?.isCompressed).isTrue()
 
         // check asset2
-        val assetJar2 = FileUtils.join(outputDir, "assets", "dir", "asset2.jar")
+        val assetJar2 = outputDir.resolve("assets/dir/asset2.jar")
         assertThat(assetJar2).exists()
         val entryMap2 = ZipArchive.listEntries(assetJar2)
         assertThat(entryMap2.keys).containsExactly("assets/dir/asset2")
         assertThat(entryMap2["assets/dir/asset2"]?.isCompressed).isTrue()
 
         // check noCompressAsset
-        val noCompressAssetJar = FileUtils.join(outputDir, "assets", "noCompressAsset.jar")
+        val noCompressAssetJar = outputDir.resolve("assets/noCompressAsset.jar")
         assertThat(noCompressAssetJar).exists()
         val noCompressEntryMap = ZipArchive.listEntries(noCompressAssetJar)
         assertThat(noCompressEntryMap.keys).containsExactly("assets/noCompressAsset")
         assertThat(noCompressEntryMap["assets/noCompressAsset"]?.isCompressed).isFalse()
 
         // then test incremental run
-        asset1.writeText("changed")
-        FileUtils.deleteRecursivelyIfExists(asset2.parentFile)
+        asset1.toFile().writeText("changed")
+        FileUtils.deleteRecursivelyIfExists(asset2.parent.toFile())
         val incrementalChanges =
             listOf(
-                FakeFileChange(asset1, ChangeType.MODIFIED, FileType.FILE, "asset1"),
-                FakeFileChange(asset2, ChangeType.REMOVED, FileType.FILE, "dir/asset2"),
-                FakeFileChange(asset2.parentFile, ChangeType.REMOVED, FileType.DIRECTORY, "dir")
+                FakeFileChange(asset1.toFile(), ChangeType.MODIFIED, FileType.FILE, "asset1"),
+                FakeFileChange(asset2.toFile(), ChangeType.REMOVED, FileType.FILE, "dir/asset2"),
+                FakeFileChange(asset2.parent.toFile(), ChangeType.REMOVED, FileType.DIRECTORY, "dir")
             )
         CompressAssetsDelegate(
             workQueue,
-            inputDir,
-            outputDir,
+            inputDir.toFile(),
+            outputDir.toFile(),
             noCompressPredicate,
             compressionLevel,
             incrementalChanges
@@ -144,7 +142,7 @@ class CompressAssetsTaskTest {
         // assetJar2's parent directory still exists. This is intentional because deleting empty
         // directories would require calling workers.await() in the task, which is undesirable, and
         // empty directories are ignored by the downstream packaging task.
-        assertThat(assetJar2.parentFile).exists()
+        assertThat(assetJar2.parent).exists()
 
         // check noCompressAsset
         assertThat(noCompressAssetJar).exists()

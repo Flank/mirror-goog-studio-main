@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
@@ -23,11 +22,9 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.files.KeyedFileCache
 import com.android.builder.packaging.PackagingUtils
-import com.android.utils.FileUtils
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.io.Files
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileType
 import org.gradle.api.file.RegularFileProperty
@@ -48,6 +45,7 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkQueue
 import java.io.File
+import java.nio.file.Files
 import java.util.function.Predicate
 import java.util.zip.Deflater
 import java.util.zip.Deflater.BEST_SPEED
@@ -65,7 +63,6 @@ import javax.inject.Inject
  */
 @CacheableTask
 abstract class CompressAssetsTask : NewIncrementalTask() {
-
     @get:Incremental
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -179,17 +176,17 @@ abstract class CompressAssetsWorkAction @Inject constructor(
 ): WorkAction<CompressAssetsWorkParameters> {
 
     override fun execute() {
-        val output = compressAssetsWorkParameters.output.get().asFile
+        val output = compressAssetsWorkParameters.output.get().asFile.toPath()
         val changeType = compressAssetsWorkParameters.changeType.get()
         if (changeType != ChangeType.ADDED) {
-            FileUtils.deleteIfExists(output)
+            Files.deleteIfExists(output)
         }
         if (changeType != ChangeType.REMOVED) {
-            Files.createParentDirs(output)
+            Files.createDirectories(output.parent)
             ZipArchive(output).use { jar ->
                 jar.add(
                     BytesSource(
-                        compressAssetsWorkParameters.input.get().asFile,
+                        compressAssetsWorkParameters.input.get().asFile.toPath(),
                         compressAssetsWorkParameters.entryPath.get(),
                         compressAssetsWorkParameters.entryCompressionLevel.get()
                     )

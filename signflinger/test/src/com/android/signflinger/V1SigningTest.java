@@ -113,7 +113,7 @@ public class V1SigningTest extends BaseSigning {
         SignedApkOptions options = getOptions(signerConfig, false);
         try (SignedApk signedApk = new SignedApk(zipFile, options)) {}
 
-        Map<String, Entry> entries = ZipArchive.listEntries(zipFile);
+        Map<String, Entry> entries = ZipArchive.listEntries(zipFile.toPath());
 
         Entry manifest = entries.get(SignedApk.MANIFEST_ENTRY_NAME);
         Assert.assertTrue("MANIFEST.MF is not compressed", manifest.isCompressed());
@@ -127,7 +127,7 @@ public class V1SigningTest extends BaseSigning {
 
     private void verifyManifestAttributes(File zipFile, HashMap<String, String> expectedAttributes)
             throws IOException {
-        try (ZipArchive zipArchive = new ZipArchive(zipFile)) {
+        try (ZipArchive zipArchive = new ZipArchive(zipFile.toPath())) {
             ByteBuffer byteBuffer = zipArchive.getContent(SignedApk.MANIFEST_ENTRY_NAME);
             Manifest manifest =
                     new Manifest(

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.transform.QualifiedContent.ContentType
@@ -48,7 +47,6 @@ import kotlin.test.assertFailsWith
 
 /** Test cases for [MergeJavaResWorkAction].  */
 class MergeJavaResWorkActionTest {
-
     @get:Rule
     var tmpDir = TemporaryFolder()
 
@@ -212,7 +210,7 @@ class MergeJavaResWorkActionTest {
 
         // Make sure the output is a jar with entries having the expected compression
         assertThat(outputFile).isFile()
-        val entries = ZipArchive.listEntries(outputFile)
+        val entries = ZipArchive.listEntries(outputFile.toPath())
         assertThat(entries["from_jar.compress"]?.isCompressed).isTrue()
         assertThat(entries["from_dir.compress"]?.isCompressed).isTrue()
         assertThat(entries["from_jar.no_compress"]?.isCompressed).isFalse()
@@ -359,7 +357,7 @@ class MergeJavaResWorkActionTest {
         }
 
         // Now add a resource to the jar file and merge incrementally
-        ZipArchive(jarFile).use {
+        ZipArchive(jarFile.toPath()).use {
             it.add(BytesSource(ByteArray(0), "javaRes2", 0))
         }
 

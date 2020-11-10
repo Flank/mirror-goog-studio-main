@@ -366,7 +366,7 @@ class MlGeneratedClassTest {
         }
 
         // Check model.tflite is uncompressed (Issue 152875817)
-        val entry = ZipArchive.listEntries(apk.file.toFile())[apkModelFile]
+        val entry = ZipArchive.listEntries(apk.file)[apkModelFile]
         assertThat(entry?.compressionFlag).isEqualTo(ZipEntry.STORED)
     }
 

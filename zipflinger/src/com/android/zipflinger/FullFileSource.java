@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
@@ -21,7 +20,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.zip.Deflater;
 
 public class FullFileSource extends BytesSource {
@@ -31,32 +29,30 @@ public class FullFileSource extends BytesSource {
         DO_NOT_FOLLOW
     };
 
-    public FullFileSource(@NonNull String filePath, @NonNull String entryName, int compressionLevel)
+    public FullFileSource(@NonNull Path file, @NonNull String entryName, int compressionLevel)
             throws IOException {
-        this(filePath, entryName, compressionLevel, Symlink.FOLLOW);
+        this(file, entryName, compressionLevel, Symlink.FOLLOW);
     }
 
     public FullFileSource(
-            @NonNull String filePath,
+            @NonNull Path file,
             @NonNull String entryName,
             int compressionLevel,
             Symlink symlinkPolicy)
             throws IOException {
         super(entryName);
 
-        Path path = Paths.get(filePath);
-
-        if (Files.isExecutable(path)) {
+        if (Files.isExecutable(file)) {
             externalAttributes |= PERMISSION_EXEC;
         }
 
         byte[] bytes;
-        if (!Files.isSymbolicLink(path) || symlinkPolicy == Symlink.FOLLOW) {
-            bytes = Files.readAllBytes(path);
+        if (!Files.isSymbolicLink(file) || symlinkPolicy == Symlink.FOLLOW) {
+            bytes = Files.readAllBytes(file);
         } else {
             externalAttributes |= PERMISSION_LINK;
             compressionLevel = Deflater.NO_COMPRESSION;
-            Path target = Files.readSymbolicLink(path);
+            Path target = Files.readSymbolicLink(file);
             bytes = target.toString().getBytes(StandardCharsets.US_ASCII);
         }
 

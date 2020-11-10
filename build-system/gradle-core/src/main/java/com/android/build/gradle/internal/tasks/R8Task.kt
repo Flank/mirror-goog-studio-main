@@ -365,7 +365,7 @@ abstract class R8Task: ProguardConfigurableTask() {
         if (featureJavaResourceJarsList.isNotEmpty()) {
             val paths: MutableSet<String> = mutableSetOf()
             resources.toList().plus(featureJavaResourceJarsList).forEach { file ->
-                ZipArchive(file).use { jar ->
+                ZipArchive(file.toPath()).use { jar ->
                     jar.listEntries().forEach { path ->
                         if (!path.startsWith("META-INF/services/") && !paths.add(path)) {
                             throw RuntimeException(

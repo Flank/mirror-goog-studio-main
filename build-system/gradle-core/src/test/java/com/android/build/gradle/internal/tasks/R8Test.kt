@@ -373,7 +373,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         // Check feature java resource output
         val featureJavaResOutput = featureJavaResourceOutputDir.resolve("feature.jar")
         FileSubject.assertThat(featureJavaResOutput).exists()
-        ZipArchive(featureJavaResOutput).use {
+        ZipArchive(featureJavaResOutput.toPath()).use {
             assertThat(it.listEntries()).containsExactly("foo.txt")
         }
 
@@ -410,7 +410,7 @@ class R8Test(val r8OutputType: R8OutputType) {
 
         // Check feature java resource output
         FileSubject.assertThat(featureJavaResOutput).exists()
-        ZipArchive(featureJavaResOutput).use {
+        ZipArchive(featureJavaResOutput.toPath()).use {
             assertThat(it.listEntries()).containsExactly("foo.txt")
         }
 
@@ -439,7 +439,7 @@ class R8Test(val r8OutputType: R8OutputType) {
 
         // Check feature java resource output
         FileSubject.assertThat(featureJavaResOutput).exists()
-        ZipArchive(featureJavaResOutput).use {
+        ZipArchive(featureJavaResOutput.toPath()).use {
             assertThat(it.listEntries()).containsExactly("foo.txt")
         }
 

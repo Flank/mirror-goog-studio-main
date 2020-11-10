@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -28,14 +28,14 @@ import java.util.zip.ZipInputStream;
 public class Verify {
     public static void main(String[] args) throws IOException {
         for (String archivePath : args) {
-            verifyArchive(new File(archivePath));
+            verifyArchive(Paths.get(archivePath));
         }
     }
 
-    private static Map<String, Entry> verifyArchive(File archiveFile) throws IOException {
+    private static Map<String, Entry> verifyArchive(Path archiveFile) throws IOException {
         System.out.println("Verifying: '" + archiveFile + "'");
         HashMap<String, ZipEntry> topDownEntries = new HashMap<>();
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(archiveFile))) {
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(archiveFile))) {
             byte[] buffer = new byte[10_240];
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {

@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import com.android.testutils.TestUtils;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -34,37 +32,30 @@ import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 public abstract class AbstractZipflingerTest {
-    protected static long[] ALIGNMENTS = {FreeStore.DEFAULT_ALIGNMENT, FreeStore.PAGE_ALIGNMENT};
-
+    protected static final long[] ALIGNMENTS = {
+        FreeStore.DEFAULT_ALIGNMENT, FreeStore.PAGE_ALIGNMENT
+    };
 
     protected static final String BASE = "tools/base/zipflinger/test/resource/";
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    protected static File getFile(String filename) {
+    protected static Path getPath(String filename) {
         String fullPath = BASE + filename;
-        File prospect = new File(fullPath);
-        if (prospect.exists()) {
+        Path prospect = Paths.get(fullPath);
+        if (Files.exists(prospect)) {
             return prospect;
         }
-        return TestUtils.resolveWorkspacePath(fullPath).toFile();
-    }
-
-    protected static Path getPath(String filename) {
-        return getFile(filename).toPath();
-    }
-
-    protected File getTestFile(String filename) throws IOException {
-        return new File(temporaryFolder.newFolder(), filename);
+        return TestUtils.resolveWorkspacePath(fullPath);
     }
 
     protected Path getTestPath(String filename) throws IOException {
-        return getTestFile(filename).toPath();
+        return temporaryFolder.newFolder().toPath().resolve(filename);
     }
 
-    protected static Map<String, Entry> verifyArchive(File archiveFile) throws IOException {
+    protected static Map<String, Entry> verifyArchive(Path archiveFile) throws IOException {
         HashMap<String, ZipEntry> topDownEntries = new HashMap<>();
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(archiveFile))) {
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(archiveFile))) {
             byte[] buffer = new byte[10_240];
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
@@ -110,23 +101,21 @@ public abstract class AbstractZipflingerTest {
         return bottomUpEntries;
     }
 
-    protected byte[] toByteArray(ByteBuffer byteBuffer) {
+    protected static byte[] toByteArray(ByteBuffer byteBuffer) {
         byte[] bytes = new byte[byteBuffer.remaining()];
         byteBuffer.get(bytes);
         return bytes;
     }
 
-    protected void createZip(File archive, File[] files) throws IOException {
-        if (archive.exists()) {
-            archive.delete();
-        }
+    protected static void createZip(Path archive, Path[] files) throws IOException {
+        Files.deleteIfExists(archive);
 
-        try (FileOutputStream f = new FileOutputStream(archive);
+        try (OutputStream f = Files.newOutputStream(archive);
                 ZipOutputStream s = new ZipOutputStream(f)) {
-            for (File file : files) {
-                String name = file.getName();
+            for (Path file : files) {
+                String name = file.getFileName().toString();
                 ZipEntry entry = new ZipEntry(name);
-                byte[] bytes = Files.readAllBytes(file.toPath());
+                byte[] bytes = Files.readAllBytes(file);
                 s.putNextEntry(entry);
                 s.write(bytes);
                 s.closeEntry();
@@ -134,13 +123,11 @@ public abstract class AbstractZipflingerTest {
         }
     }
 
-    static void createZip(long numFiles, int sizePerFile, File file) throws IOException {
-        if (file.exists()) {
-            file.delete();
-        }
+    static void createZip(long numFiles, int sizePerFile, Path file) throws IOException {
+        Files.deleteIfExists(file);
 
         long fileId = 0;
-        try (FileOutputStream f = new FileOutputStream(file);
+        try (OutputStream f = Files.newOutputStream(file);
                 ZipOutputStream s = new ZipOutputStream(f)) {
             s.setLevel(ZipOutputStream.STORED);
             for (int i = 0; i < numFiles; i++) {

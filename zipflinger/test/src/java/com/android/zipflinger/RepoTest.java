@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.Random;
 import java.util.zip.Deflater;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class RepoTest extends AbstractZipflingerTest {
-
     @Test
     public void testGetInputStream() throws Exception {
         byte[][] files = new byte[2][1024];
@@ -36,7 +34,7 @@ public class RepoTest extends AbstractZipflingerTest {
             r.nextBytes(bytes);
         }
 
-        File file = getTestFile("testGetContent.zip");
+        Path file = getTestPath("testGetContent.zip");
         try (ZipArchive archive = new ZipArchive(file)) {
             for (int i = 0; i < files.length; i++) {
                 archive.add(
@@ -64,7 +62,7 @@ public class RepoTest extends AbstractZipflingerTest {
             r.nextBytes(bytes);
         }
 
-        File file = getTestFile("testGetContent.zip");
+        Path file = getTestPath("testGetContent.zip");
         try (ZipArchive archive = new ZipArchive(file)) {
             for (int i = 0; i < files.length; i++) {
                 archive.add(

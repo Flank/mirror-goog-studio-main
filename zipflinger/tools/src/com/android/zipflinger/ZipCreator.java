@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ZipCreator {
     public static void main(String[] args) throws IOException {
@@ -26,15 +27,13 @@ public class ZipCreator {
             return;
         }
 
-        File dst = new File(args[0]);
-        if (dst.exists()) {
-            dst.delete();
-        }
+        Path dst = Paths.get(args[0]);
+        Files.deleteIfExists(dst);
 
         try (ZipArchive archive = new ZipArchive(dst)) {
             for (int i = 1; i < args.length; i++) {
-                File src = new File(args[i]);
-                BytesSource source = new BytesSource(src, src.getName(), 0);
+                Path src = Paths.get(args[i]);
+                BytesSource source = new BytesSource(src, src.getFileName().toString(), 0);
                 archive.add(source);
             }
         }

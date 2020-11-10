@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 public class ZipReader implements Closeable {
-
-    private File file;
+    private final Path file;
     private FileChannel channel;
     private boolean isOpen;
 
-    ZipReader(File file) {
+    ZipReader(Path file) {
         this.file = file;
         isOpen = false;
     }
@@ -52,9 +50,9 @@ public class ZipReader implements Closeable {
         if (isOpen) {
             return;
         }
-        this.channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+        this.channel = FileChannel.open(file, StandardOpenOption.READ);
         if (!channel.isOpen()) {
-            throw new IllegalStateException("Unable to open Channel to " + file.getAbsolutePath());
+            throw new IllegalStateException("Unable to open Channel to " + file.toAbsolutePath());
         }
         isOpen = true;
     }

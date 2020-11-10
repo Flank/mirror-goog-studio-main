@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
@@ -34,11 +33,11 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.lang.StringBuilder
+import java.nio.file.Files
 import java.util.zip.Deflater
 
 /** Tests for [CheckAarMetadataTask]. */
 class CheckAarMetadataTaskTest {
-
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create()
@@ -285,14 +284,11 @@ class CheckAarMetadataTaskTest {
     ) {
         project.executor().run(":lib:assembleDebug")
         // Copy lib's .aar build output to the app's libs directory
-        val aarFile =
-            File(
-                File(project.getSubproject("app").projectDir, "libs").also { it.mkdirs() },
-                "library.aar"
-            )
+        val aarFile = project.getSubproject("app").projectDir.toPath().resolve("libs/library.aar")
+        Files.createDirectories(aarFile.parent)
         FileUtils.copyFile(
             project.getSubproject("lib").getOutputFile("aar", "lib-debug.aar"),
-            aarFile
+            aarFile.toFile()
         )
 
         // Manually write (possibly invalid) AAR metadata entry

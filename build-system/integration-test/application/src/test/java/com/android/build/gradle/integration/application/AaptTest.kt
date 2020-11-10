@@ -9,7 +9,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils.searchAnd
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import com.google.common.truth.Truth
-import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -57,7 +56,7 @@ class AaptTest {
         Truth.assertThat(tracesFolder.listFiles()!!.size).isEqualTo(1)
         FileUtils.deleteDirectoryContents(tracesFolder)
 
-        TestFileUtils.searchAndReplace(project.buildFile, additionalParams, "")
+        searchAndReplace(project.buildFile, additionalParams, "")
 
         project.executor().run("assembleDebug")
 
@@ -101,7 +100,7 @@ class AaptTest {
         // Check that APK entries are uncompressed
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
             // TODO (Issue 70118728) res/layout/main.xml should be uncompressed too.
-            val entry = ZipArchive.listEntries(apk.file.toFile())["classes.dex"]
+            val entry = ZipArchive.listEntries(apk.file)["classes.dex"]
             Truth.assertThat(entry?.compressionFlag).isEqualTo(ZipEntry.STORED)
         }
     }
@@ -116,7 +115,7 @@ class AaptTest {
         project.executor().run("clean", "assembleDebug")
 
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
-            val entryMap = ZipArchive.listEntries(apk.file.toFile())
+            val entryMap = ZipArchive.listEntries(apk.file)
             Truth.assertThat(entryMap).containsKey("assets/kept")
             Truth.assertThat(entryMap).doesNotContainKey("assets/ignored")
         }
@@ -138,7 +137,7 @@ class AaptTest {
         project.executor().run("clean", "assembleDebug")
 
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
-            val entryMap = ZipArchive.listEntries(apk.file.toFile())
+            val entryMap = ZipArchive.listEntries(apk.file)
             Truth.assertThat(entryMap).containsKey("assets/kept")
             Truth.assertThat(entryMap).doesNotContainKey("assets/ignored")
         }
@@ -202,18 +201,18 @@ class AaptTest {
         // test that tasks run when aapt options changed via the DSL
         searchAndReplace(project.buildFile, "noCompressDsl", "noCompressDsl2")
         project.executor().run(assembleTask).let { result ->
-            assertThat(result.didWorkTasks)
+            Truth.assertThat(result.didWorkTasks)
                 .containsAtLeastElementsIn(expectedTasksThatDidWorkOnANoCompressChange)
         }
         searchAndReplace(project.buildFile, "ignoreAssetsPatternDsl", "ignoreAssetsPatternDsl2")
         project.executor().run(assembleTask).let { result ->
-            assertThat(result.didWorkTasks)
+            Truth.assertThat(result.didWorkTasks)
                 .containsAtLeastElementsIn(expectedTasksThatDidWorkOnANoIgnoreAssetsChange)
         }
         // test that tasks run when aapt options changed via the variant API
         searchAndReplace(project.buildFile, "ignoreAssetsPatternApi", "ignoreAssetsPatternApi2")
         project.executor().run(assembleTask).let { result ->
-            assertThat(result.didWorkTasks)
+            Truth.assertThat(result.didWorkTasks)
                 .containsAtLeastElementsIn(expectedTasksThatDidWorkOnANoIgnoreAssetsChange)
         }
     }

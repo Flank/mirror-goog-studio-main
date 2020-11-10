@@ -29,11 +29,11 @@ import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -228,7 +228,7 @@ public class OptimisticApkInstallerTest {
 
     private Apk buildApk(String name, String checksum, Map<String, String> files)
             throws IOException {
-        File apkFile = new File(folder.getRoot(), name + "-" + checksum);
+        Path apkFile = folder.getRoot().toPath().resolve(name + "-" + checksum);
 
         ZipArchive zip = new ZipArchive(apkFile);
         for (Map.Entry<String, String> entry : files.entrySet()) {
@@ -242,13 +242,13 @@ public class OptimisticApkInstallerTest {
                 Apk.builder()
                         .setName(name)
                         .setChecksum(checksum)
-                        .setPath(apkFile.getAbsolutePath())
+                        .setPath(apkFile.toAbsolutePath().toString())
                         .addLibraryAbi(TEST_ABI)
                         .setPackageName(TEST_PACKAGE)
                         .setTargetPackages(ImmutableList.of())
                         .setIsolatedServices(ImmutableList.of());
 
-        ByteBuffer buffer = ByteBuffer.wrap(Files.readAllBytes(apkFile.toPath()));
+        ByteBuffer buffer = ByteBuffer.wrap(Files.readAllBytes(apkFile));
         buffer.position((int) info.cd.first);
         List<ZipUtils.ZipEntry> entries = ZipUtils.readZipEntries(buffer);
         for (ZipUtils.ZipEntry entry : entries) {

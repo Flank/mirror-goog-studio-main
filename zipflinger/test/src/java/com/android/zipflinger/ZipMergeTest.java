@@ -30,17 +30,17 @@ public class ZipMergeTest extends AbstractZipflingerTest {
     public void testMergeZips() throws Exception {
         Path dst = getTestPath("newArchive.zip");
 
-        ZipArchive zipArchive = new ZipArchive(dst.toFile());
+        ZipArchive zipArchive = new ZipArchive(dst);
 
-        ZipSource zs1 = ZipSource.selectAll(getFile("1-2-3files.zip"));
+        ZipSource zs1 = ZipSource.selectAll(getPath("1-2-3files.zip"));
         zipArchive.add(zs1);
 
-        ZipSource zs2 = ZipSource.selectAll(getFile("4-5files.zip"));
+        ZipSource zs2 = ZipSource.selectAll(getPath("4-5files.zip"));
         zipArchive.add(zs2);
 
         zipArchive.close();
 
-        Map<String, Entry> entries = ZipArchive.listEntries(dst.toFile());
+        Map<String, Entry> entries = ZipArchive.listEntries(dst);
         Assert.assertEquals("Num entries", 5, entries.size());
         Assert.assertTrue("Entries contains file1.txt", entries.containsKey("file1.txt"));
         Assert.assertTrue("Entries contains file2.txt", entries.containsKey("file2.txt"));
@@ -49,6 +49,6 @@ public class ZipMergeTest extends AbstractZipflingerTest {
         Assert.assertTrue("Entries contains file5.txt", entries.containsKey("file5.txt"));
 
         // Topdown parsing with SDK zip.
-        verifyArchive(dst.toFile());
+        verifyArchive(dst);
     }
 }

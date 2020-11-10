@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.signflinger;
 
 import com.android.zipflinger.BytesSource;
@@ -22,7 +21,6 @@ import java.io.File;
 import org.junit.Rule;
 
 public abstract class BaseSigning {
-
     @Rule public final Workspace workspace = new Workspace();
 
     public void testSimpleZipWithOneFile() throws Exception {
@@ -61,12 +59,12 @@ public abstract class BaseSigning {
 
         // Incremental signing with file
         signedApk = new SignedApk(file, options);
-        signedApk.add(new BytesSource(workspace.getResourceFile("test1.txt"), "test1.txt", 1));
+        signedApk.add(new BytesSource(workspace.getResourcePath("test1.txt"), "test1.txt", 1));
         signedApk.close();
 
         // Incremental signing with zip
         signedApk = new SignedApk(file, options);
-        ZipSource zipSource = new ZipSource(workspace.getResourceFile("1-2-3files.zip"));
+        ZipSource zipSource = new ZipSource(workspace.getResourcePath("1-2-3files.zip"));
         zipSource.select("file2.txt", "file2.txt");
         signedApk.add(zipSource);
         signedApk.close();

@@ -21,9 +21,9 @@ import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.idea.protobuf.ByteString;
 import com.android.zipflinger.ZipArchive;
 import com.google.common.collect.ArrayListMultimap;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +75,7 @@ public class ApkEntryExtractor {
     private void extractFromApk(
             Apk apk, List<ApkEntry> entries, Map<ApkEntry, ByteString> extracted)
             throws DeployerException {
-        try (ZipArchive zip = new ZipArchive(new File(apk.path))) {
+        try (ZipArchive zip = new ZipArchive(Paths.get(apk.path))) {
             for (ApkEntry apkEntry : entries) {
                 ByteBuffer content = zip.getContent(apkEntry.getName());
                 if (content == null) {

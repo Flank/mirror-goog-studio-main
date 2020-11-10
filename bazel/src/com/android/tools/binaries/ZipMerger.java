@@ -24,14 +24,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.ByteStreams;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -73,14 +70,14 @@ public class ZipMerger {
                 override = true;
                 dataPath = dataPath.substring(1);
             }
-            adds.add(new ZipFile(root, new File(dataPath), override));
+            adds.add(new ZipFile(root, Paths.get(dataPath), override));
         }
 
         mergeZips(out, adds, level);
     }
 
     private static class ZipFile {
-        ZipFile(String root, File file, boolean override) {
+        ZipFile(String root, Path file, boolean override) {
             this.root = root;
             this.file = file;
             this.override = override;
@@ -88,7 +85,7 @@ public class ZipMerger {
 
         final boolean override;
         final String root;
-        final File file;
+        final Path file;
     }
 
     private static class Entry {
@@ -114,10 +111,8 @@ public class ZipMerger {
      */
     private static void mergeZips(String out, List<ZipFile> files, int compressionLevel)
             throws Exception {
-        File outFile = new File(out);
-        if (outFile.exists()) {
-            outFile.delete();
-        }
+        Path outFile = Paths.get(out);
+        Files.deleteIfExists(outFile);
 
         ListMultimap<String, Entry> entries = ArrayListMultimap.create();
         for (ZipFile add : files) {
@@ -152,19 +147,19 @@ public class ZipMerger {
                         doNotOverride = zip;
                     }
                 }
-                File tmp = File.createTempFile(new File(newName).getName(), ".mrg.tmp");
+                Path tmp = File.createTempFile(new File(newName).getName(), ".mrg.tmp").toPath();
                 List<ZipFile> toMerge = new ArrayList<>();
                 for (Entry zip : zips) {
-                    File part = extract(zip.zip.file, zip.entry);
+                    Path part = extract(zip.zip.file, zip.entry);
                     toMerge.add(new ZipFile("", part, zip.zip.override));
                 }
-                mergeZips(tmp.getAbsolutePath(), toMerge, compressionLevel);
-                tmp.deleteOnExit();
+                mergeZips(tmp.toAbsolutePath().toString(), toMerge, compressionLevel);
+                tmp.toFile().deleteOnExit();
 
-                File mergedZip = File.createTempFile("merged", ".zip");
+                Path mergedZip = File.createTempFile("merged", ".zip").toPath();
                 createZip(mergedZip, tmp, newName, compressionLevel);
                 merged.put(new ZipFile("", mergedZip, false), newName);
-                mergedZip.deleteOnExit();
+                mergedZip.toFile().deleteOnExit();
             } else {
                 // Merging files - Pick the one override, or fail.
                 Entry chosen = null;
@@ -197,22 +192,20 @@ public class ZipMerger {
         }
     }
 
-    private static void createZip(File zip, File file, String entry, int level) throws IOException {
-        if (zip.exists()) {
-            zip.delete();
-        }
+    private static void createZip(Path zip, Path file, String entry, int level) throws IOException {
+        Files.deleteIfExists(zip);
         try (ZipArchive a = new ZipArchive(zip)) {
             a.add(new BytesSource(file, entry, level));
         }
     }
 
-    private static File extract(File file, String entry) throws IOException {
-        File o = File.createTempFile(new File(entry).getName(), ".tmp");
+    private static Path extract(Path file, String entry) throws IOException {
+        Path o = File.createTempFile(new File(entry).getName(), ".tmp").toPath();
         try (ZipRepo archive = new ZipRepo(file);
-             FileOutputStream fos = new FileOutputStream(o)) {
+                OutputStream fos = Files.newOutputStream(o)) {
             ByteStreams.copy(archive.getInputStream(entry), fos);
         }
-        o.deleteOnExit();
+        o.toFile().deleteOnExit();
         return o;
     }
 
