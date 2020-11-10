@@ -124,6 +124,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -275,6 +276,7 @@ public abstract class BasePlugin<
         optionService = new ProjectOptionService.RegistrationAction(project).execute().get();
 
         createProjectServices(project);
+        checkMinJvmVersion();
 
         ProjectOptions projectOptions = projectServices.getProjectOptions();
 
@@ -943,5 +945,23 @@ public abstract class BasePlugin<
                         aapt2FromMaven,
                         project.getGradle().getStartParameter().getMaxWorkerCount(),
                         project::file);
+    }
+
+    private void checkMinJvmVersion() {
+        JavaVersion current = JavaVersion.current();
+        JavaVersion minRequired = JavaVersion.VERSION_11;
+        if (!current.isCompatibleWith(minRequired)) {
+            syncIssueReporter.reportError(
+                    Type.GENERIC,
+                    "Android Gradle plugin requires Java "
+                            + minRequired.toString()
+                            + " to run. You are currently using Java "
+                            + current.toString()
+                            + ".\n"
+                            + "You can try some of the following options:\n"
+                            + "  - changing the IDE settings.\n"
+                            + "  - changing the JAVA_HOME environment variable.\n"
+                            + "  - changing `org.gradle.java.home` in `gradle.properties`.");
+        }
     }
 }
