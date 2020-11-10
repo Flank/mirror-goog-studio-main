@@ -51,7 +51,7 @@ class BasicUninstaller extends AbstractUninstaller {
     protected boolean doComplete(@Nullable File tempPath, @NonNull ProgressIndicator progress) {
         Path location = getPackage().getLocation();
 
-        mFop.deleteFileOrFolder(location);
+        FileOp.deleteFileOrFolder(location);
         getRepoManager().markLocalCacheInvalid();
 
         boolean successfullyDeleted = CancellableFileIo.notExists(location);

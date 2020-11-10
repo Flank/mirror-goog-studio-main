@@ -22,7 +22,6 @@ import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -250,19 +249,14 @@ public class MockFileOpTest extends TestCase {
         }
     }
 
-    public void testListWithFilter() throws Exception {
+    public void testListWithFilter() {
         m.recordExistingFile("/root/foo/a.txt");
         m.recordExistingFile("/root/foo/b.csv");
         m.recordExistingFile("/root/foo/c.txt");
         m.recordExistingFile("/root/foo/d.txt/d.txtWasActuallyAFolder");
         m.recordExistingFile("/root/foofoo/blah");
         m.recordExistingFile("/root/foo/bar/baz.txt");
-        String[] result = m.list(new File("/root/foo"), new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".txt");
-            }
-        });
+        String[] result = m.list(new File("/root/foo"), (dir, name) -> name.endsWith(".txt"));
         assertEquals(result.length, 3);
         List<String> resultList = Lists.newArrayList(result);
         assertTrue(resultList.contains("a.txt"));

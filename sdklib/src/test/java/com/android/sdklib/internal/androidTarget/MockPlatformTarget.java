@@ -16,11 +16,9 @@
 package com.android.sdklib.internal.androidTarget;
 
 import com.android.annotations.NonNull;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISystemImage;
 import com.android.sdklib.OptionalLibrary;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -34,7 +32,6 @@ import java.util.Map;
 public class MockPlatformTarget implements IAndroidTarget {
     private final int mApiLevel;
     private final int mRevision;
-    private ISystemImage[] mSystemImages;
 
     public MockPlatformTarget(int apiLevel, int revision) {
         mApiLevel = apiLevel;
@@ -124,7 +121,7 @@ public class MockPlatformTarget implements IAndroidTarget {
     @Override
     @NonNull
     public File[] getSkins() {
-        return FileOp.EMPTY_FILE_ARRAY;
+        return new File[0];
     }
 
     /**
@@ -134,7 +131,7 @@ public class MockPlatformTarget implements IAndroidTarget {
      */
     @Override
     public String getVendor() {
-        return "vendor " + Integer.toString(mApiLevel);
+        return "vendor " + mApiLevel;
     }
 
     /**
@@ -142,7 +139,7 @@ public class MockPlatformTarget implements IAndroidTarget {
      */
     @Override
     public String getName() {
-        return "platform r" + Integer.toString(mApiLevel);
+        return "platform r" + mApiLevel;
     }
 
     @Override
@@ -173,7 +170,7 @@ public class MockPlatformTarget implements IAndroidTarget {
     }
 
     @Override
-    public int compareTo(IAndroidTarget o) {
+    public int compareTo(@NonNull IAndroidTarget o) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 

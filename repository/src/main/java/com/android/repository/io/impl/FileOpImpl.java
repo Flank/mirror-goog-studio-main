@@ -17,6 +17,7 @@
 package com.android.repository.io.impl;
 
 import com.android.annotations.NonNull;
+import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import java.io.File;
 import java.nio.file.FileSystem;
@@ -25,12 +26,12 @@ import java.nio.file.Path;
 
 /**
  * Wraps some common {@link File} operations on files and folders.
- * <p>
- * This makes it possible to override/mock/stub some file operations in unit tests.
- * <p>
- * Instances should be obtained through {@link FileOpUtils#create()}
+ *
+ * <p>This makes it possible to override/mock/stub some file operations in unit tests.
+ *
+ * <p>Instances should be obtained through {@link FileOpUtils#create()}
  */
-public class FileOpImpl extends FileSystemFileOp {
+public class FileOpImpl extends FileOp {
 
     @Override
     public FileSystem getFileSystem() {

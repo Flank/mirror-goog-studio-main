@@ -16,7 +16,6 @@
 package com.android.sdklib.internal.androidTarget;
 
 import com.android.annotations.NonNull;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -129,7 +128,7 @@ public class MockAddonTarget implements IAndroidTarget {
     @Override
     @NonNull
     public File[] getSkins() {
-        return FileOp.EMPTY_FILE_ARRAY;
+        return new File[0];
     }
 
     @Override
@@ -170,7 +169,7 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
-    public int compareTo(IAndroidTarget o) {
+    public int compareTo(@NonNull IAndroidTarget o) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 

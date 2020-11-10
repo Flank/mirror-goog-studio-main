@@ -741,7 +741,7 @@ public class AvdManager {
         if (mFop.exists(f)) {
             return mFop.readText(f).trim();
         }
-        if (mFop.exists(alternative)){
+        if (mFop.exists(alternative)) {
             return mFop.readText(alternative).trim();
         }
         return null;

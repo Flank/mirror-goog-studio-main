@@ -17,9 +17,9 @@ package com.android.repository.testframework;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.io.impl.FileOpImpl;
-import com.android.repository.io.impl.FileSystemFileOp;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -39,18 +39,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Mock version of {@link FileOpImpl} that wraps some common {@link File}
- * operations on files and folders.
- * <p>
- * This version does not perform any file operation. Instead it records a textual
- * representation of all the file operations performed.
+ * Mock version of {@link FileOpImpl} that wraps some common {@link File} operations on files and
+ * folders.
  *
- * @deprecated Use {@link com.google.common.jimfs.Jimfs} and
- *     {@link com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
+ * <p>This version does not perform any file operation. Instead it records a textual representation
+ * of all the file operations performed.
+ *
+ * <p>To avoid cross-platform path issues (e.g. Windows path), the methods here should always use
+ * rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3". When processing {@link File},
+ * you can convert them using {@link #getPlatformSpecificPath(File)}.
+ *
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs} and {@code
+ *     com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
 @Deprecated
-public class MockFileOp extends FileSystemFileOp {
-    private FileSystem mFileSystem;
+public class MockFileOp extends FileOp {
+    private FileSystem mFileSystem = createFileSystem();
 
     public MockFileOp() {
         mIsWindows = FileOpUtils.create().isWindows();

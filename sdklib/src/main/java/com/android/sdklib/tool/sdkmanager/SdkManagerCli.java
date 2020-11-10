@@ -20,8 +20,8 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
+import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import com.android.repository.io.impl.FileSystemFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import java.io.BufferedReader;
@@ -52,7 +52,7 @@ public class SdkManagerCli {
     }
 
     private static void main(@NonNull List<String> args) throws CommandFailedException {
-        FileSystemFileOp fop = (FileSystemFileOp) FileOpUtils.create();
+        FileOp fop = (FileOp) FileOpUtils.create();
         SdkManagerCliSettings settings;
         try {
             settings = SdkManagerCliSettings.createSettings(args, fop.getFileSystem());

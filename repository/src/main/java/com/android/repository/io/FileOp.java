@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,35 +13,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.repository.io;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.CopyOption;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Wraps some common {@link File} operations on files and folders.
- * <p>
- * This makes it possible to override/mock/stub some file operations in unit tests.
+ *
+ * <p>This makes it possible to override/mock/stub some file operations in unit tests. Uses {@link
+ * CancellableFileIo} to check for cancellation before read I/O operations.
  */
-public interface FileOp {
+public abstract class FileOp {
+    protected boolean mIsWindows;
 
-    File[] EMPTY_FILE_ARRAY = new File[0];
+    public FileOp() {
+        mIsWindows = System.getProperty("os.name").startsWith("Windows");
+    }
+
+    /** Returns the {@link FileSystem} this is based on. */
+    public abstract FileSystem getFileSystem();
 
     /**
-     * Helper to delete a file or a directory.
-     * For a directory, recursively deletes all of its content.
-     * Files that cannot be deleted right away are marked for deletion on exit.
-     * It's ok for the file or folder to not exist at all.
+     * Helper to delete a file or a directory. For a directory, recursively deletes all of its
+     * content. Files that cannot be deleted right away are marked for deletion on exit. It's ok for
+     * the file or folder to not exist at all.
      */
-    void deleteFileOrFolder(@NonNull File fileOrFolder);
+    public final void deleteFileOrFolder(@NonNull File fileOrFolder) {
+        if (isDirectory(fileOrFolder)) {
+            // Must delete content recursively first
+            for (File item : listFiles(fileOrFolder)) {
+                deleteFileOrFolder(item);
+            }
+        }
+        delete(fileOrFolder);
+    }
 
     /**
      * Helper to delete a file or a directory. For a directory, recursively deletes all of its
@@ -49,180 +77,329 @@ public interface FileOp {
      *
      * @return true if the delete was successful
      */
-    boolean deleteFileOrFolder(@NonNull Path fileOrFolder);
+    public static boolean deleteFileOrFolder(@NonNull Path fileOrFolder) {
+        boolean[] sawException = new boolean[1];
+        try (Stream<Path> contents = CancellableFileIo.walk(fileOrFolder)) {
+            contents.sorted(Comparator.reverseOrder())
+                    .forEach(
+                            path -> {
+                                try {
+                                    Files.delete(path);
+                                } catch (IOException e) {
+                                    sawException[0] = true;
+                                }
+                            });
+        } catch (IOException e) {
+            return false;
+        }
+        return !sawException[0];
+    }
 
     /**
      * Sets the executable Unix permission (+x) on a file or folder.
-     * <p>
-     * This attempts to use File#setExecutable through reflection if
-     * it's available.
-     * If this is not available, this invokes a chmod exec instead,
-     * so there is no guarantee of it being fast.
-     * <p>
-     * Caller must make sure to not invoke this under Windows.
+     *
+     * <p>Caller must make sure to not invoke this under Windows.
      *
      * @param file The file to set permissions on.
      * @throws IOException If an I/O error occurs
      */
-    void setExecutablePermission(@NonNull File file) throws IOException;
+    public final void setExecutablePermission(@NonNull File file) throws IOException {
+        Path path = toPath(file);
+        Set<PosixFilePermission> permissions = EnumSet.copyOf(Files.getPosixFilePermissions(path));
+        permissions.add(PosixFilePermission.OWNER_EXECUTE);
+        permissions.add(PosixFilePermission.GROUP_EXECUTE);
+        permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+        Files.setPosixFilePermissions(path, permissions);
+    }
 
     /**
      * Sets the file or directory as read-only.
      *
      * @param file The file or directory to set permissions on.
      */
-    void setReadOnly(@NonNull File file) throws IOException;
+    public final void setReadOnly(@NonNull File file) throws IOException {
+        Path path = toPath(file);
+        Set<PosixFilePermission> permissions = EnumSet.copyOf(Files.getPosixFilePermissions(path));
+        permissions.remove(PosixFilePermission.OWNER_WRITE);
+        permissions.remove(PosixFilePermission.GROUP_WRITE);
+        permissions.remove(PosixFilePermission.OTHERS_WRITE);
+        Files.setPosixFilePermissions(path, permissions);
+    }
 
-    /**
-     * Copies a binary file.
-     *
-     * @param source the source file to copy.
-     * @param dest the destination file to write.
-     * @throws FileNotFoundException if the source file doesn't exist.
-     * @throws IOException if there's a problem reading or writing the file.
-     */
-    void copyFile(@NonNull File source, @NonNull File dest) throws IOException;
+    // TODO: make this final so we can migrate from FileOp to using Paths directly
+    public void copyFile(@NonNull File source, @NonNull File dest) throws IOException {
+        Files.copy(toPath(source), toPath(dest));
+    }
 
     /**
      * Checks whether 2 binary files are the same.
      *
      * @param file1 the source file to copy
      * @param file2 the destination file to write
-     * @throws FileNotFoundException if the source files don't exist.
      * @throws IOException if there's a problem reading the files.
      */
-    boolean isSameFile(@NonNull File file1, @NonNull File file2)
-            throws IOException;
+    public final boolean isSameFile(@NonNull File file1, @NonNull File file2) throws IOException {
+        return CancellableFileIo.isSameFile(toPath(file1), toPath(file2));
+    }
 
-    /** Invokes {@link File#exists()} on the given {@code file}. */
-    boolean exists(@NonNull File file);
-
-    /** Invokes {@link File#isFile()} on the given {@code file}. */
-    boolean isFile(@NonNull File file);
-
-    /** Invokes {@link File#isDirectory()} on the given {@code file}. */
-    boolean isDirectory(@NonNull File file);
-
-    /** Invokes {@link File#canWrite()} on the given {@code file}. */
-    boolean canWrite(@NonNull File file);
-
-    /** Invokes {@link File#length()} on the given {@code file}. */
-    long length(@NonNull File file) throws IOException;
+    /** Invokes {@link CancellableFileIo#exists(Path, LinkOption...)} on the given {@code file}. */
+    public final boolean exists(@NonNull File file) {
+        return CancellableFileIo.exists(toPath(file));
+    }
 
     /**
-     * Invokes {@link File#delete()} on the given {@code file}.
-     * Note: for a recursive folder version, consider {@link #deleteFileOrFolder(File)}.
+     * Invokes {@link CancellableFileIo#isRegularFile(Path, LinkOption...)} on the given {@code
+     * file}.
      */
-    boolean delete(@NonNull File file);
-
-    /** Invokes {@link File#mkdirs()} on the given {@code file}. */
-    boolean mkdirs(@NonNull File file);
+    public final boolean isFile(@NonNull File file) {
+        return CancellableFileIo.isRegularFile(toPath(file));
+    }
 
     /**
-     * Invokes {@link File#listFiles()} on the given {@code file}.
-     * Contrary to the Java API, this returns an empty array instead of null when the
-     * directory does not exist.
+     * Invokes {@link CancellableFileIo#isDirectory(Path, LinkOption...)} (Path, LinkOption...)} on
+     * the given {@code file}.
+     */
+    public final boolean isDirectory(@NonNull File file) {
+        return CancellableFileIo.isDirectory(toPath(file));
+    }
+
+    /**
+     * Invokes {@link CancellableFileIo#isWritable(Path)}on the given {@code file}.
+     *
+     * <p>TODO: make this final so we can migrate from FileOp to using Paths directly
+     */
+    public boolean canWrite(@NonNull File file) {
+        return CancellableFileIo.isWritable(toPath(file));
+    }
+
+    /** Invokes {@link CancellableFileIo#size(Path)} on the given {@code file}. */
+    public final long length(@NonNull File file) throws IOException {
+        return CancellableFileIo.size(toPath(file));
+    }
+
+    /**
+     * Invokes {@link Files#delete(Path)} on the given {@code file}. Note: for a recursive folder
+     * version, consider {@link #deleteFileOrFolder(File)}.
+     *
+     * <p>TODO: make this final so we can migrate from FileOp to using Paths directly
+     */
+    public boolean delete(@NonNull File file) {
+        try {
+            Files.delete(toPath(file));
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /** Invokes {@link Files#createDirectories(Path, FileAttribute[])} on the given {@code file}. */
+    public final boolean mkdirs(@NonNull File file) {
+        try {
+            Files.createDirectories(toPath(file));
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Invokes {@link CancellableFileIo#list(Path)} on the given {@code file}. Contrary to the Java
+     * API, this returns an empty array instead of null when the directory does not exist.
      */
     @NonNull
-    File[] listFiles(@NonNull File file);
+    public final File[] listFiles(@NonNull File file) {
+        try (Stream<Path> children = CancellableFileIo.list(toPath(file))) {
+            return children.map(path -> new File(path.toString())).toArray(File[]::new);
+        } catch (IOException e) {
+            return new File[0];
+        }
+    }
 
-    /** Invokes {@link File#renameTo(File)} on the given files. */
-    boolean renameTo(@NonNull File oldDir, @NonNull File newDir);
+    /**
+     * Uses {@link Files#move(Path, Path, CopyOption...)} to rename {@code oldFile} to {
+     *
+     * @code newFile}.
+     *     <p>TODO: make this final so we can migrate from FileOp to using Paths directly
+     */
+    public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
+        try {
+            Files.move(toPath(oldFile), toPath(newFile));
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 
-    /** Creates a new {@link OutputStream} for the given {@code file}. */
+    /**
+     * Creates a new {@link OutputStream} for the given {@code file}.
+     *
+     * <p>TODO: make this final so we can migrate from FileOp to using Paths directly
+     */
     @NonNull
-    OutputStream newFileOutputStream(@NonNull File file) throws IOException;
+    public OutputStream newFileOutputStream(@NonNull File file) throws IOException {
+        return newFileOutputStream(file, false);
+    }
 
-    /** Creates a new {@link OutputStream} for the given {@code file}. */
+    /**
+     * Creates a new {@link OutputStream} for the given {@code file}, either truncating an existing
+     * file or appending to it.
+     *
+     * <p>TODO: make this final so we can migrate from FileOp to using Paths directly
+     */
     @NonNull
-    OutputStream newFileOutputStream(@NonNull File file, boolean append) throws IOException;
+    public OutputStream newFileOutputStream(@NonNull File file, boolean append) throws IOException {
+        if (append) {
+            return Files.newOutputStream(
+                    toPath(file),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.APPEND);
+        } else {
+            return Files.newOutputStream(
+                    toPath(file),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
+        }
+    }
 
     /** Creates a new {@link InputStream} for the given {@code file}. */
     @NonNull
-    InputStream newFileInputStream(@NonNull File file) throws IOException;
+    public final InputStream newFileInputStream(@NonNull File file) throws IOException {
+        return newFileInputStream(toPath(file));
+    }
 
-    /** Creates a new {@link InputStream} for the given {@code file}. */
+    /** Creates a new {@link InputStream} for the given {@code path}. */
     @NonNull
-    InputStream newFileInputStream(@NonNull Path path) throws IOException;
+    public final InputStream newFileInputStream(@NonNull Path path) throws IOException {
+        return CancellableFileIo.newInputStream(path);
+    }
 
     /**
      * Returns the lastModified attribute of the file.
      *
-     * @see File#lastModified()
+     * @see Files#getLastModifiedTime(Path, LinkOption...)
      * @param file The non-null file of which to retrieve the lastModified attribute.
      * @return The last-modified attribute of the file, in milliseconds since The Epoch.
      */
-    long lastModified(@NonNull File file);
+    public final long lastModified(@NonNull File file) {
+        try {
+            return CancellableFileIo.getLastModifiedTime(toPath(file)).toMillis();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
+    /** Creates a new file. See {@link Files#createFile(Path, FileAttribute[])}. */
+    public final boolean createNewFile(@NonNull File file) throws IOException {
+        try {
+            Path path = toPath(file);
+            Files.createDirectories(path.getParent());
+            Files.createFile(path);
+            return true;
+        } catch (FileAlreadyExistsException e) {
+            return false;
+        }
+    }
+
+    public final boolean isWindows() {
+        return mIsWindows;
+    }
+
+    /** @see Files#isExecutable(Path) */
+    public final boolean canExecute(@NonNull File file) {
+        return CancellableFileIo.isExecutable(toPath(file));
+    }
 
     /**
-     * Creates a new file. See {@link File#createNewFile()}.
+     * If {@code in} is an in-memory file, write it out as a proper file and return it. Otherwise
+     * just return {@code in}.
      */
-    boolean createNewFile(@NonNull File file) throws IOException;
+    public abstract File ensureRealFile(@NonNull File in) throws IOException;
 
-    /**
-     * Returns {@code true} if we're on windows, {@code false} otherwise.
-     */
-    boolean isWindows();
-
-    /**
-     * @see File#canExecute()
-     */
-    boolean canExecute(@NonNull File file);
-
-    /**
-     * If {@code in} is an in-memory file, write it out as a proper file and return it.
-     * Otherwise just return {@code in}.
-     */
-    File ensureRealFile(@NonNull File in) throws IOException;
-
-    /** @see com.android.io.CancellableFileIo#readText(Path) */
+    /** Returns {@code true} if we're on windows, {@code false} otherwise. */
     @NonNull
-    String readText(@NonNull File f) throws IOException;
+    public final String readText(@NonNull File f) throws IOException {
+        return CancellableFileIo.readText(toPath(f));
+    }
 
-    /**
-     * @see File#list(FilenameFilter)
-     */
-    @Nullable
-    String[] list(@NonNull File folder, @Nullable FilenameFilter filenameFilter);
+    /** @see File#list(FilenameFilter) */
+    public final String[] list(@NonNull File folder, @Nullable FilenameFilter filenameFilter) {
+        File[] contents = listFiles(folder);
+        String[] names = new String[contents.length];
+        for (int i = 0; i < contents.length; i++) {
+            names[i] = contents[i].getName();
+        }
+        if (filenameFilter == null) {
+            return names;
+        }
+        List<String> result = new ArrayList<>();
+        for (String name : names) {
+            if (filenameFilter.accept(folder, name)) {
+                result.add(name);
+            }
+        }
+        return result.toArray(new String[0]);
+    }
 
-    /**
-     * @see File#listFiles(FilenameFilter)
-     */
-    @Nullable
-    File[] listFiles(@NonNull File folder, @Nullable FilenameFilter filenameFilter);
+    /** @see File#listFiles(FilenameFilter) */
+    public final File[] listFiles(@NonNull File folder, @Nullable FilenameFilter filenameFilter) {
+        File[] contents = listFiles(folder);
+        if (filenameFilter == null) {
+            return contents;
+        }
+        List<File> result = new ArrayList<>();
+        for (File f : contents) {
+            if (filenameFilter.accept(folder, f.getName())) {
+                result.add(f);
+            }
+        }
+        return result.toArray(new File[0]);
+    }
 
     /**
      * @see File#deleteOnExit()
      * @deprecated The application may not exit for a very long time. Prefer explicit cleanup.
      */
     @Deprecated
-    void deleteOnExit(File file);
+    public abstract void deleteOnExit(File file);
 
     /**
-     * @see File#setLastModified(long)
+     * @see Files#setLastModifiedTime(Path, FileTime)
      * @throws IOException if there is an error setting the modification time.
      */
-    boolean setLastModified(@NonNull File file, long time) throws IOException;
+    public final boolean setLastModified(@NonNull File file, long time) throws IOException {
+        return setLastModified(toPath(file), time);
+    }
 
     /**
-     * @see File#setLastModified(long)
+     * @see Files#setLastModifiedTime(Path, FileTime)
      * @throws IOException if there is an error setting the modification time.
      */
-    boolean setLastModified(@NonNull Path file, long time) throws IOException;
+    public final boolean setLastModified(@NonNull Path file, long time) throws IOException {
+        Files.setLastModifiedTime(file, FileTime.fromMillis(time));
+        return true;
+    }
 
     /**
      * Convert the given {@code File} into a {@code Path}, using some means appropriate to this
      * {@code FileOp}.
+     *
+     * <p>TODO: make final once tests can work on windows without special-casing.
      */
     @NonNull
-    Path toPath(@NonNull File file);
+    public Path toPath(@NonNull File file) {
+        return toPath(file.getPath());
+    }
 
     /**
      * Convert the given {@code String} into a {@code Path}, using some means appropriate to this
      * {@code FileOp}.
      */
     @NonNull
-    Path toPath(@NonNull String path);
+    public Path toPath(@NonNull String path) {
+        return getFileSystem().getPath(path);
+    }
 
     /**
      * Temporary functionality to help with File-to-Path migration. Should only be called when a
@@ -232,7 +409,7 @@ public interface FileOp {
      * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
      */
     @NonNull
-    File toFile(@NonNull Path path);
+    public abstract File toFile(@NonNull Path path);
 
     /**
      * Temporary functionality to help with File-to-Path migration. Should only be called when a
@@ -242,7 +419,7 @@ public interface FileOp {
      * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
      */
     @NonNull
-    static File toFileUnsafe(@NonNull Path path) {
+    public static File toFileUnsafe(@NonNull Path path) {
         return path.toFile();
     }
 }
