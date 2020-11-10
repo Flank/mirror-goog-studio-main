@@ -50,8 +50,8 @@ public class LintMultipleLintJarsTest {
     @Test
     public void checkBothErrorsFound() throws Exception {
         // Run twice to catch issues with configuration caching
-        project.execute("clean", ":app:lintDebug");
-        project.execute("clean", ":app:lintDebug");
+        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
+        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
 
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-results.xml");
         assertThat(file).exists();

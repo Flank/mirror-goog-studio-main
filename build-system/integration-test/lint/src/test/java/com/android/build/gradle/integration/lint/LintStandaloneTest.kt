@@ -48,7 +48,7 @@ class LintStandaloneTest(lintInvocationType: LintInvocationType) {
 
     @Test
     fun checkStandaloneLint() {
-        project.execute("clean", "lint")
+        project.executor().run(":cleanLint", ":lint")
 
         val file = project.file("lint-results.txt")
         assertThat(file).exists()
@@ -64,8 +64,8 @@ class LintStandaloneTest(lintInvocationType: LintInvocationType) {
             "textOutput file(\"lint-results2.txt\")"
         )
         // Run twice to catch issues with configuration caching
-        project.execute("lint")
-        project.execute("lint")
+        project.executor().run(":cleanLint", ":lint")
+        project.executor().run(":cleanLint", ":lint")
 
         val secondFile = project.file("lint-results2.txt")
         assertThat(secondFile).exists()

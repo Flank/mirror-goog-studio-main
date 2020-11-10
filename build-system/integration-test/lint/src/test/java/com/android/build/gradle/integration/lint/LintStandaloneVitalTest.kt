@@ -50,9 +50,11 @@ class LintStandaloneVitalTest(lintInvocationType: LintInvocationType) {
 
     @Test
     fun checkStandaloneLintVital() {
-        project.executeExpectingFailure("clean", "lintVital")
+        // Run twice to catch issues with configuration caching
+        project.executor().expectFailure().run(":cleanLintVital", "lintVital")
+        val result = project.executor().expectFailure().run(":cleanLintVital", "lintVital")
 
-        project.buildResult.stderr.use {
+        result.stderr.use {
             ScannerSubject.assertThat(it).contains(
                 "" +
                         "Lint found errors in the project; aborting build.\n" +

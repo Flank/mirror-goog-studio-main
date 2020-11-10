@@ -51,8 +51,8 @@ public class LintResourceResolveTest {
     @Test
     public void checkClean() throws Exception {
         // Run twice to catch issues with configuration caching
-        project.execute("clean", ":app:lintDebug");
-        project.execute("clean", ":app:lintDebug");
+        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
+        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getProjectDir(), "lint-report.txt");
         assertThat(file).exists();
         assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.");
