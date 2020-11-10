@@ -18,7 +18,10 @@ package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.settings.Macro.*
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PLATFORM_SYSTEM_VERSION
 
 /**
  * Expand ${ndk.abi} and ${abi.systemVersion} in environment names.
@@ -29,7 +32,7 @@ fun Settings.expandInheritEnvironmentMacros(abi: CxxAbiModel) : Settings {
                 inheritEnvironments = configuration.inheritEnvironments.map { environment ->
                     val result = environment
                             .replace(NDK_ABI.ref, abi.abi.tag)
-                            .replace(NDK_SYSTEM_VERSION.ref, abi.abiPlatformVersion.toString()
+                            .replace(NDK_PLATFORM_SYSTEM_VERSION.ref, abi.abiPlatformVersion.toString()
                             )
                     result
                 }

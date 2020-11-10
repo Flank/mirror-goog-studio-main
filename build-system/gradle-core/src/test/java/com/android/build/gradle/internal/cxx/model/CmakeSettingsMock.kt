@@ -60,17 +60,17 @@ class CmakeSettingsMock : BasicModuleModelMock() {
                     "cmakeToolchain": "my/path/to/toolchain",
                     "variables": [
                         {"name": "${CmakeProperty.ANDROID_ABI}", "value": "${Macro.NDK_ABI.ref}"},
-                        {"name": "${CmakeProperty.ANDROID_PLATFORM}", "value": "${Macro.NDK_SYSTEM_VERSION.ref}"},
+                        {"name": "${CmakeProperty.ANDROID_PLATFORM}", "value": "${Macro.NDK_PLATFORM_SYSTEM_VERSION.ref}"},
                         {"name": "${CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY}", "value":
-                           "${Macro.NDK_PROJECT_DIR.ref}/build/android/lib/${Macro.NDK_DEFAULT_BUILD_TYPE.ref}/${Macro.NDK_ABI.ref}" },
-                        {"name": "${CmakeProperty.ANDROID_NDK}", "value": "${Macro.NDK_DIR.ref}"},
+                           "${Macro.ENV_WORKSPACE_ROOT.ref}/build/android/lib/${Macro.NDK_VARIANT_OPTIMIZATION_TAG.ref}/${Macro.NDK_ABI.ref}" },
+                        {"name": "${CmakeProperty.ANDROID_NDK}", "value": "${Macro.NDK_MODULE_NDK_DIR.ref}"},
                         {"name": "${CmakeProperty.CMAKE_SYSTEM_NAME}", "value": "Android"},
                         {"name": "${CmakeProperty.CMAKE_ANDROID_ARCH_ABI}", "value": "${Macro.NDK_ABI.ref}"},
                         {"name": "${CmakeProperty.CMAKE_BUILD_TYPE}", "value": "MyCustomBuildType"},
-                        {"name": "${CmakeProperty.CMAKE_SYSTEM_VERSION}", "value": "${Macro.NDK_SYSTEM_VERSION.ref}"},
+                        {"name": "${CmakeProperty.CMAKE_SYSTEM_VERSION}", "value": "${Macro.NDK_PLATFORM_SYSTEM_VERSION.ref}"},
                         {"name": "${CmakeProperty.CMAKE_EXPORT_COMPILE_COMMANDS}", "value": "ON"},
-                        {"name": "${CmakeProperty.CMAKE_ANDROID_NDK}", "value": "${Macro.NDK_DIR.ref}"},
-                        {"name": "${CmakeProperty.CMAKE_MAKE_PROGRAM}", "value": "${Macro.NDK_NINJA_EXECUTABLE.ref}"},
+                        {"name": "${CmakeProperty.CMAKE_ANDROID_NDK}", "value": "${Macro.NDK_MODULE_NDK_DIR.ref}"},
+                        {"name": "${CmakeProperty.CMAKE_MAKE_PROGRAM}", "value": "${Macro.NDK_MODULE_NINJA_EXECUTABLE.ref}"},
                         {"name": "${CmakeProperty.CMAKE_C_FLAGS}", "value": "-DTEST_C_FLAG -DTEST_C_FLAG_2"},
                         {"name": "${CmakeProperty.CMAKE_CXX_FLAGS}", "value": "-DTEST_CPP_FLAG"},
                     ]

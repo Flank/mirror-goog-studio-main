@@ -32,14 +32,13 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTE
 import com.android.build.gradle.internal.cxx.model.DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
 import com.android.build.gradle.internal.cxx.model.NO_ABI_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION
 import com.android.build.gradle.internal.cxx.model.NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION
-import com.android.build.gradle.internal.cxx.settings.Macro
+import com.android.build.gradle.internal.cxx.settings.Macro.ENV_WORKSPACE_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DEFAULT_BUILD_TYPE
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DIR
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_NINJA_EXECUTABLE
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_SYSTEM_VERSION
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NINJA_EXECUTABLE
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PLATFORM_SYSTEM_VERSION
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_NAME
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_OPTIMIZATION_TAG
 
 /**
  * Examples of CMakeSettings.json files that are parsable.
@@ -87,7 +86,7 @@ val PARSABLE_CMAKE_SETTINGS_JSON_DOMAIN = listOf(
             "environment": "ndk-setup",
             "namespace": "ndkSetup",
             "inheritEnvironments": ["ndk"],
-            "outputRoot": "${Macro.ENV_WORKSPACE_ROOT.ref}/.cxx/cmake/build",
+            "outputRoot": "${ENV_WORKSPACE_ROOT.ref}/.cxx/cmake/build",
             "hashAbi": "${'$'}{ndk.configurationHash}/${'$'}{ndk.abi}"
           }],
           "configurations": [{
@@ -112,17 +111,17 @@ val PARSABLE_CMAKE_SETTINGS_JSON_DOMAIN = listOf(
                 "cmakeToolchain": "my/path/to/toolchain",
                 "variables": [
                     {"name": "$ANDROID_ABI", "value": "${NDK_ABI.ref}"},
-                    {"name": "$ANDROID_PLATFORM", "value": "${NDK_SYSTEM_VERSION.ref}"},
+                    {"name": "$ANDROID_PLATFORM", "value": "${NDK_PLATFORM_SYSTEM_VERSION.ref}"},
                     {"name": "$CMAKE_LIBRARY_OUTPUT_DIRECTORY", "value":
-                       "${NDK_PROJECT_DIR.ref}/build/android/lib/${NDK_DEFAULT_BUILD_TYPE.ref}/${NDK_ABI.ref}" },
-                    {"name": "$ANDROID_NDK", "value": "${NDK_DIR.ref}"},
+                       "${ENV_WORKSPACE_ROOT.ref}/build/android/lib/${NDK_VARIANT_OPTIMIZATION_TAG.ref}/${NDK_ABI.ref}" },
+                    {"name": "$ANDROID_NDK", "value": "${NDK_MODULE_NDK_DIR.ref}"},
                     {"name": "$CMAKE_SYSTEM_NAME", "value": "Android"},
                     {"name": "$CMAKE_ANDROID_ARCH_ABI", "value": "${NDK_ABI.ref}"},
                     {"name": "$CMAKE_BUILD_TYPE", "value": "MyCustomBuildType"},
-                    {"name": "$CMAKE_SYSTEM_VERSION", "value": "${NDK_SYSTEM_VERSION.ref}"},
+                    {"name": "$CMAKE_SYSTEM_VERSION", "value": "${NDK_PLATFORM_SYSTEM_VERSION.ref}"},
                     {"name": "$CMAKE_EXPORT_COMPILE_COMMANDS", "value": "ON"},
-                    {"name": "$CMAKE_ANDROID_NDK", "value": "${NDK_DIR.ref}"},
-                    {"name": "$CMAKE_MAKE_PROGRAM", "value": "${NDK_NINJA_EXECUTABLE.ref}"},
+                    {"name": "$CMAKE_ANDROID_NDK", "value": "${NDK_MODULE_NDK_DIR.ref}"},
+                    {"name": "$CMAKE_MAKE_PROGRAM", "value": "${NDK_MODULE_NINJA_EXECUTABLE.ref}"},
                     {"name": "$CMAKE_C_FLAGS", "value": "-DTEST_C_FLAG -DTEST_C_FLAG_2"},
                     {"name": "$CMAKE_CXX_FLAGS", "value": "-DTEST_CPP_FLAG"},
                 ]

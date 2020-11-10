@@ -50,11 +50,11 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CPP_FLAGS
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_C_FLAGS
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DEFAULT_BUILD_TYPE
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PREFAB_PATH
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_CPP_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_C_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_VARIANT_OPTIMIZATION_TAG
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_FEATURE_NOT_SUPPORTED_FOR_VERSION
 import com.android.utils.tokenizeCommandLineToEscaped
@@ -282,10 +282,10 @@ fun CxxAbiModel.getCmakeCommandLineArguments() : List<CommandLineArgument> {
     } else {
         "-GNinja".toCmakeArgument()
     }
-    result += "-D$CMAKE_BUILD_TYPE=${resolveMacroValue(NDK_DEFAULT_BUILD_TYPE)}".toCmakeArgument()
+    result += "-D$CMAKE_BUILD_TYPE=${resolveMacroValue(NDK_VARIANT_OPTIMIZATION_TAG)}".toCmakeArgument()
     result += "-D$CMAKE_TOOLCHAIN_FILE=${resolveMacroValue(NDK_CMAKE_TOOLCHAIN)}".toCmakeArgument()
-    result += "-D$CMAKE_CXX_FLAGS=${resolveMacroValue(NDK_CPP_FLAGS)}".toCmakeArgument()
-    result += "-D$CMAKE_C_FLAGS=${resolveMacroValue(NDK_C_FLAGS)}".toCmakeArgument()
+    result += "-D$CMAKE_CXX_FLAGS=${resolveMacroValue(NDK_VARIANT_CPP_FLAGS)}".toCmakeArgument()
+    result += "-D$CMAKE_C_FLAGS=${resolveMacroValue(NDK_VARIANT_C_FLAGS)}".toCmakeArgument()
 
     if (shouldGeneratePrefabPackages()) {
         // This can be passed a few different ways:
@@ -293,7 +293,7 @@ fun CxxAbiModel.getCmakeCommandLineArguments() : List<CommandLineArgument> {
         //
         // <PACKAGE_NAME>_ROOT would probably be best, but it's not supported until 3.12, and we support
         // CMake 3.6.
-        result += "-D$CMAKE_FIND_ROOT_PATH=${resolveMacroValue(NDK_PREFAB_PATH)}".toCmakeArgument()
+        result += "-D$CMAKE_FIND_ROOT_PATH=${resolveMacroValue(NDK_PREFAB_PATH)}/prefab".toCmakeArgument()
     }
 
     return result.removeSubsumedArguments().removeBlankProperties()

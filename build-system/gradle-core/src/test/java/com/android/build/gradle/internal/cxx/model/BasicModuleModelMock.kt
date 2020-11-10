@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
-import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.CmakeOptions
@@ -220,12 +219,6 @@ open class BasicModuleModelMock {
         VariantDslInfo::class.java,
         throwUnmocked
     )
-
-    val configurationModel by lazy {
-        tryCreateCxxConfigurationModel(
-                variantImpl
-        )!!
-    }
 
     val configurationParameters by lazy {
         tryCreateConfigurationParameters(

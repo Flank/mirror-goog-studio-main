@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.cmake.cmakeBoolean
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
@@ -296,19 +297,19 @@ val CxxAbiModel.tag
  * True if this ABI is 64 bits.
  */
 val CxxAbiModel.is64Bits
-    get() = bitness == 64
+    get() = cmakeBoolean(bitness == 64)
 
 /**
  * True if this ABI is a default ABI.
  */
 val CxxAbiModel.isDefault
-    get() = info.isDefault
+    get() = cmakeBoolean(info.isDefault)
 
 /**
  * True if this ABI is deprecated.
  */
 val CxxAbiModel.isDeprecated
-    get() = info.isDefault
+    get() = cmakeBoolean(info.isDeprecated)
 
 /**
  * A platform tag for Android (ex android-19)

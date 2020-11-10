@@ -17,11 +17,12 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
+import com.android.build.gradle.internal.cxx.configure.createInitialCxxModel
 import com.android.build.gradle.internal.cxx.configure.getCmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
@@ -33,10 +34,11 @@ import com.android.build.gradle.internal.cxx.model.DIFFERENT_MOCK_CMAKE_SETTINGS
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.toJsonString
+import com.android.build.gradle.internal.cxx.settings.Macro.ENV_WORKSPACE_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
-import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PROJECT_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_NDK_DIR
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -115,14 +117,11 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
     @Test
     fun `map CMAKE_BUILD_TYPE to MinSizeRel`() {
         CmakeSettingsMock().apply {
-            val variant = variant.copy(
-                variantName = "myMinSizeRel" // Should cause CMAKE_BUILD_TYPE to be MinSizeRel
+            val configurationParameters = configurationParameters.copy(
+                    variantName = "myMinSizeRel"
             )
-            val abi = createCxxAbiModel(
-                sdkComponents,
-                configurationParameters,
-                variant,
-                Abi.X86).rewriteCxxAbiModelWithCMakeSettings()
+            val model = createInitialCxxModel(sdkComponents, listOf(configurationParameters))
+            val abi = model.single { it.abi == Abi.X86 }
             val variables = abi.getFinalCmakeCommandLineArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("MinSizeRel")
@@ -161,7 +160,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 buildSystemArgumentList =
                     listOf("-GPrecedenceCheckingGenerator",
                         "-D$CMAKE_BUILD_TYPE=PrecedenceCheckingBuildType",
-                        "-D${CmakeProperty.CMAKE_TOOLCHAIN_FILE}=PrecedenceCheckingToolchainFile")
+                        "-D$CMAKE_TOOLCHAIN_FILE=PrecedenceCheckingToolchainFile")
             )
             val abi = createCxxAbiModel(
                 sdkComponents,
@@ -172,7 +171,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             println(variables.joinToString("\n") { it.sourceArgument })
             assertThat(variables.getCmakeProperty(CMAKE_BUILD_TYPE)).isEqualTo("PrecedenceCheckingBuildType")
             assertThat(variables.getCmakeGenerator()).isEqualTo("PrecedenceCheckingGenerator")
-            assertThat(variables.getCmakeProperty(CmakeProperty.CMAKE_TOOLCHAIN_FILE)).isEqualTo("PrecedenceCheckingToolchainFile")
+            assertThat(variables.getCmakeProperty(CMAKE_TOOLCHAIN_FILE)).isEqualTo("PrecedenceCheckingToolchainFile")
         }
     }
 
@@ -227,7 +226,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                         },
                         {
                             "name": "NDK_DIR",
-                            "value": "${'$'}{ndk.dir}"
+                            "value": "${NDK_MODULE_NDK_DIR.ref}"
                         }
                     ]
                 }
@@ -239,7 +238,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
             assertThat(abi.buildSettings.environmentVariables).isEqualTo(
                 listOf(
                     EnvironmentVariable("NDK_ABI", "\${ndk.abi}"),
-                    EnvironmentVariable("NDK_DIR", "\${ndk.dir}")
+                    EnvironmentVariable("NDK_DIR", "\${ndk.moduleNdkDir}")
                 )
             )
 
@@ -268,13 +267,13 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                     "name": "android-gradle-plugin-predetermined-name",
                     "description": "Configuration generated by Android Gradle Plugin",
                     "inheritEnvironments": ["ndk"],
-                    "buildRoot": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/build/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}",
+                    "buildRoot": "${ENV_WORKSPACE_ROOT.ref}/.cxx/cmake/build/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}",
                     "cmakeCommandArgs": "-DFULL_HASH=${NDK_FULL_CONFIGURATION_HASH.ref}",
                     "variables": [
                         {"name": "$CMAKE_LIBRARY_OUTPUT_DIRECTORY",
-                         "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/lib/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"},
+                         "value": "${ENV_WORKSPACE_ROOT.ref}/.cxx/cmake/lib/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"},
                         {"name": "$CMAKE_RUNTIME_OUTPUT_DIRECTORY",
-                         "value": "${NDK_PROJECT_DIR.ref}/.cxx/cmake/runtime/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"}
+                         "value": "${ENV_WORKSPACE_ROOT.ref}/.cxx/cmake/runtime/${NDK_CONFIGURATION_HASH.ref}/${NDK_ABI.ref}"}
                     ]
                 }]
                 }""".trimIndent()
