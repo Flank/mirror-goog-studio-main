@@ -47,22 +47,6 @@ if [[ $lsb_release == "crostini" ]]; then
     -- \
     //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar
 
-  # Generate a UUID for use as the bazel invocation id
-  readonly build_invocation_id="$(uuidgen)"
-
-  #Build the project for crostini, 2 jobs at a time to address OOM issues
-  "${script_dir}/../bazel" \
-    --max_idle_secs=60 \
-    build \
-    ${config_options} \
-    --jobs=2 \
-    --invocation_id=${build_invocation_id} \
-    --define=meta_android_build_number=${build_number} \
-    --build_tag_filters=${target_filters} \
-    --tool_tag=${script_name} \
-    -- \
-    //tools/adt/idea/android-uitests/...
-
   readonly test_invocation_id="$(uuidgen)"
 
   # Run the tests one at a time after all dependencies get built
@@ -71,7 +55,7 @@ if [[ $lsb_release == "crostini" ]]; then
     test \
     --keep_going \
     ${config_options} \
-    --jobs=1 \
+    --test_strategy=exclusive \
     --invocation_id=${test_invocation_id} \
     --define=meta_android_build_number=${build_number} \
     --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
