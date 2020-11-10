@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchRegexAndReplace;
-import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.truth.Truth.assertThat;
@@ -392,10 +391,9 @@ public class VectorDrawableTest {
 
     @Test
     public void defaultDensitiesWork() throws Exception {
-        assumeNotWindows(); // b/145232572
         // Remove the lines that configure generated densities.
         searchRegexAndReplace(
-                project.getBuildFile(), "generatedDensities.*" + System.lineSeparator(), "");
+                project.getBuildFile(), "generatedDensities.*\n", "");
 
         project.executor().run("clean", "assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
