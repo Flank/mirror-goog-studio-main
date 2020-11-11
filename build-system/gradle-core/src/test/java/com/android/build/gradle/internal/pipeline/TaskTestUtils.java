@@ -39,6 +39,8 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.profile.NameAnonymizer;
+import com.android.builder.profile.NameAnonymizerSerializer;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -119,6 +121,11 @@ public class TaskTestUtils {
                             it.getParameters()
                                     .getProfile()
                                     .set(Base64.getEncoder().encodeToString(profile));
+                            it.getParameters()
+                                    .getAnonymizer()
+                                    .set(
+                                            new NameAnonymizerSerializer()
+                                                    .toJson(new NameAnonymizer()));
                             it.getParameters().getProjects().set(new HashMap());
                             it.getParameters().getEnableProfileJson().set(true);
                             it.getParameters().getTaskMetadata().set(new HashMap());

@@ -25,6 +25,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.profile.AnalyticsProfileWriter
 import com.android.builder.profile.NameAnonymizer
+import com.android.builder.profile.NameAnonymizerSerializer
 import com.android.builder.profile.Recorder
 import com.android.builder.profile.ThreadRecorder
 import com.android.tools.analytics.Anonymizer
@@ -65,13 +66,14 @@ import java.util.concurrent.atomic.AtomicLong
  * [AnalyticsResourceManager] manages all build profile data for [AnalyticsConfiguratorService] and
  * [AnalyticsService].
  */
-class AnalyticsResourceManager(
+class AnalyticsResourceManager constructor(
     private val profileBuilder: GradleBuildProfile.Builder,
     private val projects: ConcurrentHashMap<String, ProjectData>,
     private var enableProfileJson: Boolean,
     private var profileDir: File?,
     private val taskMetadata: ConcurrentHashMap<String, TaskMetadata>,
-    private var rootProjectPath: String?
+    private var rootProjectPath: String?,
+    private val nameAnonymizer: NameAnonymizer = NameAnonymizer(),
 ) {
     var initialMemorySample = createMemorySample()
     val configurationSpans = ConcurrentLinkedQueue<GradleBuildProfileSpan>()
@@ -80,7 +82,6 @@ class AnalyticsResourceManager(
     val executionSpans = ConcurrentLinkedQueue<GradleBuildProfileSpan>()
     private val applicationIds = ConcurrentLinkedQueue<String>()
 
-    private val nameAnonymizer = NameAnonymizer()
     private var lastRecordId: AtomicLong? = null
     private val taskRecords = ConcurrentHashMap<String, TaskProfilingRecord>()
     private val otherEvents =
@@ -270,6 +271,7 @@ class AnalyticsResourceManager(
 
     fun configureAnalyticsService(params: AnalyticsService.Params) {
         params.profile.set(Base64.getEncoder().encodeToString(profileBuilder.build().toByteArray()))
+        params.anonymizer.set(NameAnonymizerSerializer().toJson(nameAnonymizer))
         params.projects.set(projects)
         params.enableProfileJson.set(enableProfileJson)
         params.profileDir.set(profileDir)

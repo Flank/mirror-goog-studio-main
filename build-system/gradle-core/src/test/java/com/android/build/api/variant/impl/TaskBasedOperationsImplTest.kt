@@ -33,6 +33,8 @@ import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
+import com.android.builder.profile.NameAnonymizer
+import com.android.builder.profile.NameAnonymizerSerializer
 import com.google.common.base.Joiner
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
@@ -287,6 +289,7 @@ class TaskBasedOperationsImplTest {
             it.parameters.profileDir.set(profileDir)
             val profile = GradleBuildProfile.newBuilder().build().toByteArray()
             it.parameters.profile.set(Base64.getEncoder().encodeToString(profile))
+            it.parameters.anonymizer.set(NameAnonymizerSerializer().toJson(NameAnonymizer()))
 
             val taskInfo = mutableMapOf<String, TaskMetadata>()
             taskInfo[taskPath] = TaskMetadata(projectPath,"variantName", "typeName")

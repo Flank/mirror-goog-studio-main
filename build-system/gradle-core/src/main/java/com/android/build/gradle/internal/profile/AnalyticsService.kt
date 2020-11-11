@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.profile.AnalyticsService.Params
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.builder.profile.AnalyticsProfileWriter
+import com.android.builder.profile.NameAnonymizerSerializer
 import com.android.builder.profile.Recorder
 import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.Environment
@@ -61,6 +62,7 @@ abstract class AnalyticsService :
 {
     interface Params : BuildServiceParameters {
         val profile: Property<String>
+        val anonymizer: Property<String>
         val projects: MapProperty<String, ProjectData>
         val enableProfileJson: Property<Boolean>
         val profileDir: Property<File?>
@@ -77,7 +79,8 @@ abstract class AnalyticsService :
             parameters.enableProfileJson.get(),
             parameters.profileDir.orNull,
             ConcurrentHashMap(parameters.taskMetadata.get()),
-            parameters.rootProjectPath.get()
+            parameters.rootProjectPath.get(),
+            NameAnonymizerSerializer().fromJson(parameters.anonymizer.get())
         )
 
     private val gradleEnvironment: Environment = GradleAnalyticsEnvironment(provider)
