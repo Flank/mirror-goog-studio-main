@@ -231,12 +231,6 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @Override
     @NonNull
     public TextResource getApplicationIdTextResource() {
-        services.getDeprecationReporter()
-                .reportDeprecatedApi(
-                        "VariantProperties.applicationId",
-                        "BaseVariant.getApplicationIdTextResource",
-                        "TBD",
-                        DeprecationReporter.DeprecationTarget.VERSION_7_0);
         return getVariantData().applicationIdTextResource;
     }
 
