@@ -3,13 +3,13 @@ apply plugin: 'com.android.tools.publish'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
-    compile(libs.guava)
-    compile(libs.findbugs_jsr)
-    compile project(':base:annotations')
+    implementation(libs.guava)
+    implementation(libs.findbugs_jsr)
+    implementation project(':base:annotations')
 
-    testCompile(libs.junit)
-    testCompile(libs.truth)
-    testCompile project(":base:testutils")
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
+    testImplementation project(":base:testutils")
 }
 
 sourceSets {
