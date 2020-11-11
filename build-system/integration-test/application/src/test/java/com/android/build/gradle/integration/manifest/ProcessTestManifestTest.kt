@@ -41,6 +41,9 @@ class ProcessTestManifestTest {
                     variant.maxSdkVersion = 29
                     variant.targetSdkVersion = new AndroidVersion(22, null)
                 })
+                androidTest(selector().all(), { androidTest ->
+                    androidTest.packaging.jniLibs.useLegacyPackaging.set(false)
+                })
             }
         """.trimIndent())
         FileUtils.createFile(
@@ -123,6 +126,10 @@ class ProcessTestManifestTest {
         assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=21")
         assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=22")
         assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:maxSdkVersion(0x01010271)=29")
+        assertManifestContent(
+            manifestContent,
+            "A: http://schemas.android.com/apk/res/android:extractNativeLibs(0x010104ea)=false"
+        )
     }
 
     fun assertManifestContent(manifestContent: Iterable<String>, stringToAssert: String) {
