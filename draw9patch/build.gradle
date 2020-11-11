@@ -8,7 +8,7 @@ archivesBaseName = 'draw9patch'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    testCompile libs.junit
+    testImplementation libs.junit
 }
 
 sourceSets {

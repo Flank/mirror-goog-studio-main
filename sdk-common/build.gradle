@@ -26,6 +26,7 @@ dependencies {
     compile libs.kotlin_reflect
     compile libs.protobuf
     compile libs.javax_inject
+    implementation libs.kxml
     compile libs.trove4j
     compile libs.aapt2_proto
     compile libs.xerces

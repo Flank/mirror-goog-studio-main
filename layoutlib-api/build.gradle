@@ -8,12 +8,12 @@ archivesBaseName = 'layoutlib-api'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile project(':base:common')
-    compile 'net.sf.kxml:kxml2:2.3.0'
-    compile project(':base:annotations')
-    compile 'org.jetbrains:annotations:13.0'
+    implementation project(':base:common')
+    implementation 'net.sf.kxml:kxml2:2.3.0'
+    implementation project(':base:annotations')
+    implementation 'org.jetbrains:annotations:13.0'
 
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 }
 
 project.ext.pomName = 'Android Tools layoutlib-api'

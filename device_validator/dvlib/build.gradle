@@ -4,8 +4,8 @@ apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
-    compile project(':base:common')
-    testCompile libs.junit
+    implementation project(':base:common')
+    testImplementation libs.junit
 }
 
 group = 'com.android.tools'

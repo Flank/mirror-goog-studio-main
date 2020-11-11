@@ -5,6 +5,7 @@ apply plugin: 'com.android.tools.kotlin'
 dependencies {
     compile project(':base:build-system:aapt2-proto')
     compile project(':base:layoutlib-api')
+    implementation project(':base:common')
 
     compile libs.guava
     compile libs.kotlin_stdlib

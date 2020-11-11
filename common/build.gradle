@@ -5,13 +5,13 @@ apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
-    compile project(':base:annotations')
-    compile libs.guava
+    api project(':base:annotations')
+    api libs.guava
     implementation libs.kotlin_stdlib
 
-    testCompile libs.junit
-    testCompile project(':base:testutils')
-    testCompile libs.truth
+    testImplementation libs.junit
+    testImplementation project(':base:testutils')
+    testImplementation libs.truth
 }
 
 group = 'com.android.tools'
