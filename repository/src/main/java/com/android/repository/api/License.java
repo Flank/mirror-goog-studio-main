@@ -20,14 +20,16 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.io.FileOp;
+import com.android.io.CancellableFileIo;
 import com.google.common.base.Objects;
 import com.google.common.hash.Hashing;
 import com.google.common.io.CharStreams;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -133,20 +135,18 @@ public abstract class License implements Comparable<License> {
 
     /**
      * Checks whether this license has previously been accepted.
+     *
      * @param repositoryRoot The root directory of the repository
      * @return true if this license has already been accepted
      */
-    public boolean checkAccepted(@Nullable File repositoryRoot, @NonNull FileOp fop) {
+    public boolean checkAccepted(@Nullable Path repositoryRoot) {
         if (repositoryRoot == null) {
             return false;
         }
-        File licenseDir = new File(repositoryRoot, LICENSE_DIR);
-        File licenseFile = new File(licenseDir, getId() == null ? getLicenseHash() : getId());
-        if (!fop.exists(licenseFile)) {
-            return false;
-        }
-        try (InputStreamReader licenseReader = new InputStreamReader(
-                fop.newFileInputStream(licenseFile))) {
+        Path licenseDir = repositoryRoot.resolve(LICENSE_DIR);
+        Path licenseFile = licenseDir.resolve(getId());
+        try (InputStreamReader licenseReader =
+                new InputStreamReader(CancellableFileIo.newInputStream(licenseFile))) {
             for (String hash : CharStreams.readLines(licenseReader)) {
                 if (hash.equals(getLicenseHash())) {
                     return true;
@@ -164,25 +164,25 @@ public abstract class License implements Comparable<License> {
      * @param repositoryRoot The root directory of the repository
      * @return true if the acceptance was persisted successfully.
      */
-    public boolean setAccepted(@Nullable File repositoryRoot, @NonNull FileOp fop) {
+    public boolean setAccepted(@Nullable Path repositoryRoot) {
         if (repositoryRoot == null) {
             return false;
         }
-        if (checkAccepted(repositoryRoot, fop)) {
+        if (checkAccepted(repositoryRoot)) {
             return true;
         }
-        File licenseDir = new File(repositoryRoot, LICENSE_DIR);
-        if (fop.exists(licenseDir) && !fop.isDirectory(licenseDir)) {
+        Path licenseDir = repositoryRoot.resolve(LICENSE_DIR);
+        if (Files.exists(licenseDir) && !Files.isDirectory(licenseDir)) {
             return false;
         }
-        if (!fop.exists(licenseDir)) {
-            if (!fop.mkdirs(licenseDir)) {
-                return false;
+        try {
+            Files.createDirectories(licenseDir);
+            Path licenseFile = licenseDir.resolve(getId());
+            try (OutputStream os =
+                    Files.newOutputStream(
+                            licenseFile, StandardOpenOption.APPEND, StandardOpenOption.CREATE)) {
+                os.write(String.format("%n%s", getLicenseHash()).getBytes());
             }
-        }
-        File licenseFile = new File(licenseDir, getId() == null ? getLicenseHash(): getId());
-        try (OutputStream os = fop.newFileOutputStream(licenseFile, true)) {
-            os.write(String.format("%n%s", getLicenseHash()).getBytes());
         }
         catch (IOException e) {
             return false;

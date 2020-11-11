@@ -61,7 +61,7 @@ class LicensesAction extends SdkAction {
         ImmutableList.Builder<License> licensesNotYetAcceptedBuilder = ImmutableList.builder();
         FileOp fop = getSdkHandler().getFileOp();
         for (License license : licenses) {
-            boolean accepted = license.checkAccepted(getSdkHandler().getLocation(), fop);
+            boolean accepted = license.checkAccepted(fop.toPath(getSdkHandler().getLocation()));
 
             if (!accepted) {
                 licensesNotYetAcceptedBuilder.add(license);
@@ -97,7 +97,7 @@ class LicensesAction extends SdkAction {
             License license = licensesNotYetAccepted.get(i);
             if (SdkManagerCli.askForLicense(license, getOutputStream(), getInputReader())) {
                 Path repoPath = getRepoManager().getLocalPath();
-                license.setAccepted(repoPath == null ? null : fop.toFile(repoPath), fop);
+                license.setAccepted(repoPath);
                 newlyAcceptedCount++;
             }
         }

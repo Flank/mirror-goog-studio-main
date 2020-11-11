@@ -353,9 +353,7 @@ public class DefaultSdkLoader implements SdkLoader {
                             + License.LICENSE_DIR);
             FileOp fileOp = mSdkHandler.getFileOp();
             if (p.getLicense() != null
-                    && !p.getLicense()
-                            .checkAccepted(
-                                    localPath == null ? null : fileOp.toFile(localPath), fileOp)) {
+                    && !p.getLicense().checkAccepted(repoManager.getLocalPath())) {
                 progress.logWarning("License for package " + p.getDisplayName() + " not accepted.");
                 installResults.put(p, InstallResultType.LICENSE_FAIL);
             } else {
