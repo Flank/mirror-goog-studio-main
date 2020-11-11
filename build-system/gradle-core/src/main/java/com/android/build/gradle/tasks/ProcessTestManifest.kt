@@ -51,6 +51,7 @@ import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -247,6 +248,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     )
                     .addLibraryManifest(generatedTestManifest)
                     .addNavigationJsons(navigationJsons)
+                    .addFlavorAndBuildTypeManifests(*manifestOverlays.get().toTypedArray())
                 // we override these properties
                 invoker.setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                 invoker.setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
@@ -389,6 +391,10 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     @get:Input
     abstract val jniLibsUseLegacyPackaging: Property<Boolean>
 
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    abstract val manifestOverlays: ListProperty<File>
+
     /**
      * Compute the final list of providers based on the manifest file collection.
      * @return the list of providers.
@@ -448,6 +454,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.testManifestFile
                 .set(project.provider(variantSources::mainManifestIfExists))
             task.testManifestFile.disallowChanges()
+            task.manifestOverlays.set(task.project.provider(variantSources::manifestOverlays))
+            task.manifestOverlays.disallowChanges()
             task.apkData.set(creationConfig.outputs.getMainSplit())
             task.variantType.setDisallowChanges(creationConfig.variantType.toString())
             task.tmpDir = FileUtils.join(
