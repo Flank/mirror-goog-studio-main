@@ -19,7 +19,13 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.external.gnumake.AbstractOsFileConventions
 import com.android.build.gradle.external.gnumake.OsFileConventions
 import com.android.build.gradle.internal.cxx.cmake.isCmakeConstantTruthy
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.*
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeBinaryOutputPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeGeneratorName
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildAppendProperty
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildJobs
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
 import com.google.common.annotations.VisibleForTesting
 
 /**
@@ -130,6 +136,16 @@ sealed class CommandLineArgument {
             }
         }
     }
+
+    /**
+     * For example, APP_CFLAGS+=-DMY_FLAG
+     *
+     * An ndk-build build command to append a flag to the given list
+     */
+    data class NdkBuildAppendProperty(
+            override val sourceArgument : String,
+            val listProperty : String,
+            val flagValue : String) : CommandLineArgument()
 }
 
 /**
@@ -224,9 +240,13 @@ fun List<String>.toCmakeArguments() = map { it.toCmakeArgument() }
  */
 fun String.toNdkBuildArgument(sourceArgument: String = this): CommandLineArgument {
     return when {
-        /*
-        Parse an ndk-build command-line property like X=Y
-         */
+        // Parse an ndk-build command-line additive property like X+=Y
+        !startsWith("-") && contains("+=") -> {
+            val listProperty = substringBefore("+=").trim()
+            val flagValue = substringAfter("+=").trim()
+            NdkBuildAppendProperty(sourceArgument, listProperty, flagValue)
+        }
+        // Parse an ndk-build command-line property like X=Y
         !startsWith("-") && contains("=") -> {
             val propertyName = substringBefore("=").trim()
             val propertyValue = substringAfter("=").trim()
@@ -235,7 +255,7 @@ fun String.toNdkBuildArgument(sourceArgument: String = this): CommandLineArgumen
         startsWith("--jobs=") ->
             NdkBuildJobs(sourceArgument, substringAfter("=").trim())
         startsWith("--jobs ") || startsWith("-j ") ->
-            NdkBuildJobs(sourceArgument, substringAfter(" ").trim())
+            NdkBuildJobs(sourceArgument, substringAfterLast(" ").trim())
         startsWith("-j") ->
             NdkBuildJobs(sourceArgument, substringAfter("-j").trim())
         else ->
@@ -354,6 +374,7 @@ fun List<CommandLineArgument>.removeSubsumedArguments() =
     .distinctBy {
         when (it) {
             is DefineProperty -> it.propertyName
+            is NdkBuildAppendProperty,
             is UnknownArgument -> it.sourceArgument
             else -> it.javaClass
         }

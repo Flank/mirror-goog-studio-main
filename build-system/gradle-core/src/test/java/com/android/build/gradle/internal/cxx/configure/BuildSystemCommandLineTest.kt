@@ -19,8 +19,17 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.external.gnumake.PosixFileConventions
 import com.android.build.gradle.external.gnumake.WindowsFileConventions
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.C_TEST_WAS_RUN
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeBinaryOutputPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeGeneratorName
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildAppendProperty
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.NdkBuildJobs
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -36,6 +45,19 @@ class BuildSystemCommandLineKtTest {
         assertThat(arg.sourceArgument).isEqualTo("X=Y")
         assertThat(arg.propertyName).isEqualTo("X")
         assertThat(arg.propertyValue).isEqualTo("Y")
+    }
+
+    @Test
+    fun `ndk-build check subsumed doesn't removed additive`() {
+        val parsed = listOf("X+=Y", "X+=Z").toNdkBuildArguments().removeSubsumedArguments()
+        assertThat(parsed).containsExactly(
+                NdkBuildAppendProperty("X+=Y", "X", "Y"),
+                NdkBuildAppendProperty("X+=Z", "X", "Z"),
+        )
+        val arg = parsed.first() as NdkBuildAppendProperty
+        assertThat(arg.sourceArgument).isEqualTo("X+=Y")
+        assertThat(arg.listProperty).isEqualTo("X")
+        assertThat(arg.flagValue).isEqualTo("Y")
     }
 
     @Test

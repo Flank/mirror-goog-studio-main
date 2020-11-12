@@ -24,3 +24,8 @@ data class Settings(
     val configurations: List<SettingsConfiguration> = listOf()
 )
 
+/**
+ * Get a named [SettingsConfiguration] if present.
+ */
+fun Settings.getConfiguration(configurationName : String) : SettingsConfiguration? =
+    configurations.firstOrNull { it.name == configurationName }

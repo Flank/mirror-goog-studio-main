@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
+import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
@@ -42,7 +43,6 @@ import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
-import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
@@ -67,7 +67,6 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.concurrent.Callable
 
 const val ANDROID_GRADLE_BUILD_VERSION = "2"
 
@@ -109,7 +108,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     override fun generate(ops: ExecOperations, forceGeneration: Boolean, abiName: String?) {
         requireExplicitLogger()
-        val buildSteps = mutableListOf<Callable<Unit>>()
         // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
         variant.prefabPackageDirectoryList
@@ -167,7 +165,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
                 // See whether the current build command matches a previously written build command.
                 val currentBuildCommand = """
-                    ${processBuilder}
+                    $processBuilder
                     Build command args: ${abi.getBuildCommandArguments()}
                     Version: $ANDROID_GRADLE_BUILD_VERSION
                     """.trimIndent()

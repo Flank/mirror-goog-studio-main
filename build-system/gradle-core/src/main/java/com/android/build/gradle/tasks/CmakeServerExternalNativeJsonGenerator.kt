@@ -28,10 +28,10 @@ import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessag
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver
 import com.android.build.gradle.internal.cxx.cmake.makeCmakeMessagePathsAbsolute
 import com.android.build.gradle.internal.cxx.cmake.parseLinkLibraries
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
 import com.android.build.gradle.internal.cxx.configure.getCmakeBinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.getCmakeGenerator
 import com.android.build.gradle.internal.cxx.configure.onlyKeepCmakeServerArguments
+import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
 import com.android.build.gradle.internal.cxx.configure.toStringList
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
@@ -44,9 +44,8 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.cmakeServerLogFile
+import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
-import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.google.common.annotations.VisibleForTesting
@@ -85,11 +84,8 @@ internal class CmakeServerExternalNativeJsonGenerator(
 
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
-
         builder.setExecutable(cmake.cmakeExe!!)
-        val arguments = mutableListOf<CommandLineArgument>()
-        arguments.addAll(abi.getFinalCmakeCommandLineArguments())
-        builder.addArgs(arguments.toStringList())
+        builder.addArgs(abi.configurationArguments)
         return builder
     }
 
@@ -147,8 +143,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                 )
             }
             return try {
-                val arguments =
-                    abi.getFinalCmakeCommandLineArguments()
+                val arguments = abi.configurationArguments.toCmakeArguments()
                 val cacheArgumentsList =
                     arguments.onlyKeepCmakeServerArguments()
                         .toStringList()

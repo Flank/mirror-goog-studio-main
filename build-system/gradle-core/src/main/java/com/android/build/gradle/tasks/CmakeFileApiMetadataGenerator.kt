@@ -19,21 +19,18 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.cmake.readCmakeFileApiReply
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
-import com.android.build.gradle.internal.cxx.configure.toStringList
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.clientQueryFolder
 import com.android.build.gradle.internal.cxx.model.clientReplyFolder
+import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
-import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils.join
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -98,9 +95,7 @@ internal class CmakeQueryMetadataGenerator(
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
         builder.setExecutable(variant.module.cmake!!.cmakeExe!!)
-        val arguments = mutableListOf<CommandLineArgument>()
-        arguments.addAll(abi.getFinalCmakeCommandLineArguments())
-        builder.addArgs(arguments.toStringList())
+        builder.addArgs(abi.configurationArguments)
         return builder
     }
 

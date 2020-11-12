@@ -79,8 +79,8 @@ fun reifyRequestedConfiguration(
  * A macro, when expanded, may include other macros so this function loops until there are no
  * macros to expand.
  */
-fun reifyString(value : String?, reifier : (String) -> String?) : String? {
-    var prior = value ?: return null
+fun reifyString(value : String?, reifier : (String) -> String?) : String {
+    var prior = value ?: return ""
     var replaced: Boolean
     val seen = mutableSetOf<String>()
     do {

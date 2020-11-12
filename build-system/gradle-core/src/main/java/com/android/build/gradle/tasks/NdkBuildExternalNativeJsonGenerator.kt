@@ -25,9 +25,14 @@ import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.*
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
+import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.settings.getNdkBuildCommandLine
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import com.google.common.base.Charsets
@@ -57,7 +62,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
         val builder = ProcessInfoBuilder()
         builder.setExecutable(ndkBuild)
             .addArgs(
-                abi.getNdkBuildCommandLine()
+                abi.configurationArguments
                         + listOf(
                             // Disable any response files so we can parse the command line.
                             "$APP_SHORT_COMMANDS=false",
@@ -112,7 +117,7 @@ internal class NdkBuildExternalNativeJsonGenerator(
         // TODO(jomof): This NativeBuildConfigValue is probably consuming a lot of memory for large
         // projects. Should be changed to a streaming model where NativeBuildConfigValueBuilder
         // provides a streaming JsonReader rather than a full object.
-        val commandLine = listOf(ndkBuild) + abi.getNdkBuildCommandLine()
+        val commandLine = listOf(ndkBuild) + abi.configurationArguments
         val builder =
           NativeBuildConfigValueBuilder(
             makeFile,
