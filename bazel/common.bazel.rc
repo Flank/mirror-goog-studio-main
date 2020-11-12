@@ -109,9 +109,6 @@ build:remote --strategy=CppLink=remote
 build:remote --show_timestamps
 build:remote --action_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 
-# Needed for remote execution (see https://github.com/bazelbuild/bazel/issues/7254)
-build:remote --define=EXECUTOR=remote
-
 # Enable remote execution so actions are performed on the remote systems.
 build:remote --remote_executor=remotebuildexecution.googleapis.com
 
