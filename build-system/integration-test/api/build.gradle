@@ -16,7 +16,6 @@
 
 apply plugin: 'com.android.tools.java'
 apply plugin: 'com.android.tools.kotlin'
-apply plugin: 'jacoco-tools-base'
 
 repositories {
     maven { url = uri(rootProject.cloneArtifacts.repository) }

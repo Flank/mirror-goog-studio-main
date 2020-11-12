@@ -1,7 +1,6 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools.build'

@@ -6,7 +6,6 @@ plugins {
     id 'com.android.tools.kotlin'
     id 'com.android.tools.publish'
     id 'java-gradle-plugin'
-    id 'jacoco-tools-base'
     id 'license-report'
     id 'com.google.protobuf'
     id 'idea'
