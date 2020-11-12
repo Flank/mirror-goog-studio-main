@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.api.dsl.PackagingOptions
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.google.common.collect.Sets
