@@ -23,6 +23,6 @@ class DeviceGroupFactory(private val dslServices: DslServices) :
     NamedDomainObjectFactory<com.android.build.api.dsl.DeviceGroup> {
 
     override fun create(name: String): DeviceGroup {
-        return dslServices.newInstance(DeviceGroup::class.java, name, dslServices);
+        return dslServices.newInstance(DeviceGroup::class.java, dslServices, name);
     }
 }

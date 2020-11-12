@@ -1542,11 +1542,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .forEach { device ->
                     if (device is ManagedVirtualDevice) {
                         managedDevices.add(device)
+                    } else {
+                        error("Unsupported managed device type: ${device.javaClass}")
                     }
                 }
         taskFactory.register(
                 ManagedDeviceCleanTask.CreationAction(
-                        "cleanManagedDevices", globalScope, managedDevices.toList()))
+                    "cleanManagedDevices",
+                    globalScope,
+                    managedDevices))
         val allDevices = taskFactory.register(
             ALL_DEVICES_CHECK
         ) { allDevicesCheckTask: Task ->
@@ -1570,6 +1574,17 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 deviceVariantTask.group = JavaBasePlugin.VERIFICATION_GROUP
             }
             allDevices.dependsOn(deviceAllVariantsTask)
+        }
+
+        val deviceGroups = extension.testOptions.deviceGroups
+        for (group in deviceGroups) {
+            taskFactory.register(
+                managedDeviceGroupAllVariantsTaskName(group)
+            ) { deviceGroupTask: Task ->
+                deviceGroupTask.description =
+                    "Runs all device checks on all devices defined in group ${group.name}."
+                deviceGroupTask.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
         }
     }
 
@@ -1662,6 +1677,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             ) { allDevices: Task ->
                 allDevices.dependsOn(allDevicesVariantTask)
             }
+            val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
             for (managedDevice in managedDevices) {
                 val managedDeviceTestTask = taskFactory.register(
                     ManagedDeviceInstrumentationTestTask.CreationAction(
@@ -1677,6 +1693,25 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     managedDeviceAllVariantsTaskName(managedDevice)
                 ) { managedDeviceTests: Task ->
                     managedDeviceTests.dependsOn(managedDeviceTestTask)
+                }
+                deviceToProvider[managedDevice.name] = managedDeviceTestTask
+            }
+            // Lastly the Device Group Tasks.
+            for (group in extension.testOptions.deviceGroups) {
+                val variantDeviceGroupTask = taskFactory.register(
+                    managedDeviceGroupSingleVariantTaskName(androidTestProperties, group)
+                ) { deviceGroupVariant: Task ->
+                    deviceGroupVariant.description =
+                        "Runs the tests for $variantName on all devices defined in ${group.name}."
+                    deviceGroupVariant.group = JavaBasePlugin.VERIFICATION_GROUP
+                }
+                for (device in group.targetDevices) {
+                    variantDeviceGroupTask.dependsOn(deviceToProvider.getValue(device.name))
+                }
+                taskFactory.configure(
+                    managedDeviceGroupAllVariantsTaskName(group)
+                ) { deviceGroupTask: Task ->
+                    deviceGroupTask.dependsOn(variantDeviceGroupTask)
                 }
             }
         }

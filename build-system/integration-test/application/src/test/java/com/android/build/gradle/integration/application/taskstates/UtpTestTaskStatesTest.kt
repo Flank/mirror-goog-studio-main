@@ -204,4 +204,38 @@ class UtpTestTaskStatesTest {
         assertTaskExists(project, "app:device1Check")
         assertTaskExists(project, "app:allDevicesCheck")
     }
+
+    @Test
+    fun checkDeviceGroupTasks() {
+        project.gradlePropertiesFile.appendText(
+            "\nandroid.experimental.androidTest.useUnifiedTestPlatform=true\n")
+        appProject.buildFile.appendText("""
+            android {
+                testOptions {
+                    devices {
+                        device1 (com.android.build.api.dsl.ManagedVirtualDevice) {
+                            device = "Pixel 2"
+                            apiLevel = 29
+                            systemImageSource = "aosp"
+                            abi = "x86"
+                        }
+                    }
+                    deviceGroups {
+                        test {
+                            targetDevices.add(devices.device1)
+                        }
+                    }
+                    execution = "ANDROIDX_TEST_ORCHESTRATOR"
+                }
+            }
+        """)
+        assertTaskExists(project, "app:cleanManagedDevices")
+        assertTaskExists(project, "app:device1Setup")
+        assertTaskExists(project, "app:device1DebugAndroidTest")
+        assertTaskExists(project, "app:testGroupDebugAndroidTest")
+        assertTaskExists(project, "app:allDevicesDebugAndroidTest")
+        assertTaskExists(project, "app:device1Check")
+        assertTaskExists(project, "app:testGroupCheck")
+        assertTaskExists(project, "app:allDevicesCheck")
+    }
 }

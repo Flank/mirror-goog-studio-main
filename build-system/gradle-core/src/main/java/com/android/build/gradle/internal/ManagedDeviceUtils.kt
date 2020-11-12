@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal
 
+import com.android.build.api.dsl.DeviceGroup
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.prefs.AndroidLocation
 import org.gradle.api.file.DirectoryProperty
@@ -52,3 +54,10 @@ fun computeAvdName(
 fun setupTaskName(device: ManagedVirtualDevice): String = "${device.name}Setup"
 
 fun managedDeviceAllVariantsTaskName(device: ManagedVirtualDevice): String = "${device.name}Check"
+
+fun managedDeviceGroupAllVariantsTaskName(deviceGroup: DeviceGroup): String =
+    "${deviceGroup.name}GroupCheck"
+
+fun managedDeviceGroupSingleVariantTaskName(
+    creationConfig: VariantCreationConfig, deviceGroup: DeviceGroup): String =
+    creationConfig.computeTaskName("${deviceGroup.name}Group")
