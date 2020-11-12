@@ -1,4 +1,4 @@
-load("//tools/base/build-system/integration-test:integration-test.bzl", "single_gradle_integration_test_per_source")
+load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 
@@ -13,9 +13,9 @@ kotlin_library(
     ],
 )
 
-single_gradle_integration_test_per_source(
+gradle_integration_test(
     name = "tests",
-    package_name = "tools/base/build-system/integration-test/lint",
+    timeout = "long",
     srcs = glob([
         "src/test/java/**/*.java",
         "src/test/java/**/*.kt",
@@ -48,6 +48,7 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system/integration-test:support_library_latest",
     ],
     resources = glob(["src/test/resources/**"]),
+    shard_count = 4,
     deps = [
         ":framework",
         "//tools/base/annotations",
