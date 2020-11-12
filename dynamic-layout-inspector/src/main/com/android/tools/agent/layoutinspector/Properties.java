@@ -277,6 +277,8 @@ class Properties {
                 return ValueType.DIMENSION_SP;
             case "DimensionEm":
                 return ValueType.DIMENSION_EM;
+            case "Lambda":
+                return ValueType.LAMBDA;
             default:
                 Log.w("Compose", "Could not map this type: " + type);
                 return ValueType.OBJECT;
@@ -396,9 +398,71 @@ class Properties {
             case INTERPOLATOR:
                 return addIntProperty(
                         event, property, name, isLayout, type, toInt(value.getClass().getName()));
+            case LAMBDA:
+                return addLambdaProperty(event, property, name, value);
             default:
                 return 0;
         }
+    }
+
+    private long addLambdaProperty(long event, long property, int name, Object value) {
+        Class<?> lambdaClass = value.getClass();
+        String lambdaClassName = lambdaClass.getName();
+        String enclosedClassName = substringBefore(lambdaClassName, '$', "");
+        String lambdaName = substringAfter(lambdaClassName, '$');
+        if (enclosedClassName.isEmpty()) {
+            return 0L;
+        }
+        return addLambdaProperty(
+                event,
+                property,
+                name,
+                toPackageName(enclosedClassName),
+                toClassName(enclosedClassName),
+                toInt(lambdaName),
+                lambdaClass);
+    }
+
+    private int toPackageName(@NonNull String fullyQualifiedClassName) {
+        return toInt(substringBeforeLast(fullyQualifiedClassName, '.', ""));
+    }
+
+    private int toClassName(@NonNull String fullyQualifiedClassName) {
+        return toInt(substringAfterLast(fullyQualifiedClassName, '.'));
+    }
+
+    // Similar to kotlins String.substringBefore(Char,String)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringBefore(
+            @NonNull String value, char delimiter, @NonNull String missingDelimiterValue) {
+        int index = value.indexOf(delimiter);
+        return index >= 0 ? value.substring(0, index) : missingDelimiterValue;
+    }
+
+    // Similar to kotlins String.substringAfter(Char)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringAfter(@NonNull String value, char delimiter) {
+        int index = value.indexOf(delimiter);
+        return index >= 0 ? value.substring(index + 1) : value;
+    }
+
+    // Similar to kotlins String.substringBeforeLast(Char,String)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringBeforeLast(
+            @NonNull String value, char delimiter, @NonNull String missingDelimiterValue) {
+        int index = value.lastIndexOf(delimiter);
+        return index >= 0 ? value.substring(0, index) : missingDelimiterValue;
+    }
+
+    // Similar to kotlins String.substringAfterLast(Char)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringAfterLast(@NonNull String value, char delimiter) {
+        int index = value.lastIndexOf(delimiter);
+        return index >= 0 ? value.substring(index + 1) : value;
     }
 
     @Nullable
@@ -517,6 +581,16 @@ class Properties {
 
     /** Adds a flag property value into the flag property protobuf. */
     private native void addFlagPropertyValue(long property, int flag);
+
+    /** Adds a lambda property into the event or property protobuf. */
+    private native long addLambdaProperty(
+            long event,
+            long property,
+            int name,
+            int enclosedPackageName,
+            int enclosedSimpleName,
+            int lambdaName,
+            @NonNull Class<?> lambdaClass);
 
     /** Adds a resource property value into the property protobuf. */
     private native void addPropertySource(long propertyId, int namespace, int type, int name);

@@ -57,4 +57,5 @@ enum class ParameterType {
     DimensionDp,
     DimensionSp,
     DimensionEm,
+    Lambda,
 }

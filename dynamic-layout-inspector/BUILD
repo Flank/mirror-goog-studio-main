@@ -227,6 +227,7 @@ cc_library(
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/transport/native/agent",
         "//tools/base/transport/native/agent:jni_wrappers",
+        "//tools/base/transport/native/agent:jvmti_helper",
         "//tools/base/transport/native/utils",
         "//tools/base/transport/proto:cc_proto",
     ],

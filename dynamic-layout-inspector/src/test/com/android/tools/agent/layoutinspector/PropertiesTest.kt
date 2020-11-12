@@ -56,6 +56,9 @@ class PropertiesTest {
 
     private val fontId = 17
 
+    private val lambdaValue = {}
+    private val lambdaLine = Thread.currentThread().stackTrace[1].lineNumber - 1
+
     private val node =
         InspectorNode(
             id = 77,
@@ -103,7 +106,8 @@ class PropertiesTest {
                         NodeParameter("x", ParameterType.DimensionDp, 2.0f),
                         NodeParameter("y", ParameterType.DimensionDp, 2.0f)
                     )
-                )
+                ),
+                parameter("lambda", ParameterType.Lambda, lambdaValue)
             )
         )
 
@@ -129,7 +133,7 @@ class PropertiesTest {
         var index = 0
         assertThat(propertyEvent.viewId).isEqualTo(view.uniqueDrawingId)
         assertThat(propertyEvent.generation).isEqualTo(19)
-        with (PropertyChecker(propertyEvent)) {
+        with(PropertyChecker(propertyEvent)) {
             check(index++, "focused", Type.BOOLEAN, 1)
             check(index++, "byte", Type.BYTE, 7)
             check(index++, "char", Type.CHAR, 'g'.toInt())
@@ -142,8 +146,10 @@ class PropertiesTest {
             check(index++, "backgroundTint", Type.COLOR, Color.BLUE)
             check(index++, "background", Type.COLOR, Color.YELLOW)
             check(index++, "outlineSpotShadowColor", Type.COLOR, Color.RED)
-            check(index++, "foregroundGravity", Type.GRAVITY,
-                ImmutableSet.of("top", "fill_horizontal"))
+            check(
+                index++, "foregroundGravity", Type.GRAVITY,
+                ImmutableSet.of("top", "fill_horizontal")
+            )
             check(index++, "visibility", Type.INT_ENUM, "invisible")
             check(index++, "labelFor", Type.RESOURCE, ResourceEntry("id", "pck", "other"))
             check(index++, "scrollIndicators", Type.INT_FLAG, ImmutableSet.of("left", "bottom"))
@@ -174,7 +180,7 @@ class PropertiesTest {
         assertThat(propertyEvent2.viewId).isEqualTo(text.uniqueDrawingId)
         assertThat(propertyEvent2.generation).isEqualTo(23)
         var index = 0
-        with (PropertyChecker(propertyEvent1)) {
+        with(PropertyChecker(propertyEvent1)) {
             check(index++, "focused", Type.BOOLEAN, 0)
             check(index++, "byte", Type.BYTE, 0)
             check(index++, "char", Type.CHAR, 0)
@@ -192,7 +198,7 @@ class PropertiesTest {
             assertThat(size).isEqualTo(index)
         }
         index = 0
-        with (PropertyChecker(propertyEvent2)) {
+        with(PropertyChecker(propertyEvent2)) {
             check(index++, "focused", Type.BOOLEAN, 1)
             check(index++, "byte", Type.BYTE, 7)
             check(index++, "char", Type.CHAR, 'g'.toInt())
@@ -205,8 +211,10 @@ class PropertiesTest {
             check(index++, "backgroundTint", Type.COLOR, Color.BLUE)
             check(index++, "background", Type.COLOR, Color.YELLOW)
             check(index++, "outlineSpotShadowColor", Type.COLOR, Color.RED)
-            check(index++, "foregroundGravity", Type.GRAVITY,
-                ImmutableSet.of("top", "fill_horizontal"))
+            check(
+                index++, "foregroundGravity", Type.GRAVITY,
+                ImmutableSet.of("top", "fill_horizontal")
+            )
             check(index++, "visibility", Type.INT_ENUM, "invisible")
             check(index++, "labelFor", Type.RESOURCE, ResourceEntry("id", "pck", "other"))
             check(index++, "scrollIndicators", Type.INT_FLAG, ImmutableSet.of("left", "bottom"))
@@ -240,7 +248,7 @@ class PropertiesTest {
         var index = 0
         assertThat(propertyEvent.viewId).isEqualTo(node.id)
         assertThat(propertyEvent.generation).isEqualTo(21)
-        with (PropertyChecker(propertyEvent)) {
+        with(PropertyChecker(propertyEvent)) {
             check(index++, "name", Type.STRING, "Hello")
             check(index++, "wrap", Type.BOOLEAN, 1)
             check(index++, "number", Type.DOUBLE, 321.5)
@@ -255,6 +263,15 @@ class PropertiesTest {
             check(index, 0, "x", Type.DIMENSION_DP, 2.0f)
             check(index, 1, "y", Type.DIMENSION_DP, 2.0f)
             check(index++, "rect", Type.STRING, "Rect")
+            val holder =
+                LambdaValueHolder(
+                    packageName = "com.android.tools.agent.layoutinspector",
+                    className = "PropertiesTest",
+                    lambdaName = "lambdaValue\$1",
+                    startLine = lambdaLine,
+                    endLine = lambdaLine
+                )
+            check(index++, "lambda", Type.LAMBDA, holder)
             assertThat(size).isEqualTo(index)
         }
     }
@@ -286,11 +303,11 @@ class PropertiesTest {
         assertThat(propertyEvent2.viewId).isEqualTo(node.id)
         assertThat(propertyEvent2.generation).isEqualTo(24)
         var index = 0
-        with (PropertyChecker(propertyEvent1)) {
+        with(PropertyChecker(propertyEvent1)) {
             check(index++, "text", Type.STRING, "Hello World")
         }
         index = 0
-        with (PropertyChecker(propertyEvent2)) {
+        with(PropertyChecker(propertyEvent2)) {
             check(index++, "name", Type.STRING, "Hello")
             check(index++, "wrap", Type.BOOLEAN, 1)
             check(index++, "number", Type.DOUBLE, 321.5)
@@ -305,6 +322,15 @@ class PropertiesTest {
             check(index, 0, "x", Type.DIMENSION_DP, 2.0f)
             check(index, 1, "y", Type.DIMENSION_DP, 2.0f)
             check(index++, "rect", Type.STRING, "Rect")
+            val holder =
+                LambdaValueHolder(
+                    packageName = "com.android.tools.agent.layoutinspector",
+                    className = "PropertiesTest",
+                    lambdaName = "lambdaValue\$1",
+                    startLine = lambdaLine,
+                    endLine = lambdaLine
+                )
+            check(index++, "lambda", Type.LAMBDA, holder)
             assertThat(size).isEqualTo(index)
         }
     }
@@ -354,8 +380,25 @@ class PropertiesTest {
                     property.flagValue.flagList.map { id: Int? -> table[id!!] }
                 ).containsExactlyElementsIn(value as Set<String>)
                 Type.RESOURCE -> assertThat(table[property.resourceValue]).isEqualTo(value)
+                Type.LAMBDA -> {
+                    val lambda = property.lambdaValue
+                    val holder = value as LambdaValueHolder
+                    assertThat(table[lambda.packageName]).isEqualTo(holder.packageName)
+                    assertThat(table[lambda.className]).isEqualTo(holder.className)
+                    assertThat(table[lambda.lambdaName]).isEqualTo(holder.lambdaName)
+                    assertThat(lambda.startLineNumber).isEqualTo(holder.startLine)
+                    assertThat(lambda.endLineNumber).isEqualTo(holder.endLine)
+                }
                 else -> Assert.fail("Unmapped name: $name, type: $type")
             }
         }
     }
 }
+
+private class LambdaValueHolder(
+    val packageName: String,
+    val className: String,
+    val lambdaName: String,
+    val startLine: Int,
+    val endLine: Int
+)

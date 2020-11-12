@@ -49,6 +49,7 @@ class Log {
     static constexpr const char *const TRANSPORT = "StudioTransport";
     static constexpr const char *const PROFILER = "StudioProfiler";
     static constexpr const char *const APPINSPECT = "AppInspection";
+    static constexpr const char *const LAYOUT_INSPECT = "LayoutInspector";
     static constexpr const char *const DDMLIB = "Ddmlib";
   };
 };
