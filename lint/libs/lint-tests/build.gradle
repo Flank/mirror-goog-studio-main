@@ -2,17 +2,9 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
 
-import org.gradle.internal.jvm.Jvm
-
 group = 'com.android.tools.lint'
 archivesBaseName = 'lint-tests'
 version = rootProject.ext.baseVersion
-
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
 
 dependencies {
     compile project(':base:lint')
@@ -32,7 +24,7 @@ dependencies {
     testCompile project(':base:apkparser:binary-resources')
     testCompile project(':base:apkparser:apkanalyzer')
     testCompile libs.truth
-    testCompile files(Jvm.current().toolsJar)
+    testCompile files(toolsJarForJava8)
     testCompile testFixtures(project(":base:repository"))
 }
 
@@ -43,3 +35,7 @@ sourceSets {
 
 project.ext.pomName = 'Android Tools Lint Test API'
 project.ext.pomDesc = 'API to build lint check tests'
+
+test {
+    jvmArgs '-Djdk.attach.allowAttachSelf=true'
+}
