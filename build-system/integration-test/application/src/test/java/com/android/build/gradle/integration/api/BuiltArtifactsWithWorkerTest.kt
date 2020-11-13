@@ -123,8 +123,7 @@ abstract class ProducerTask extends DefaultTask {
         new VariantOutputConfigurationImpl(false,
           [
             new FilterConfiguration(FilterConfiguration.FilterType.DENSITY, identifier)
-          ]),
-        Collections.emptyMap()
+          ])
       )
     }
 }

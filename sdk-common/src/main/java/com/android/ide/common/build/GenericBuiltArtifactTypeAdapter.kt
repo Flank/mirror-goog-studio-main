@@ -72,8 +72,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         instantiate: (
             outputFile: String,
             versionCode: Int,
-            versionName: String,
-            attributes: ImmutableMap<String, String>
+            versionName: String
         ) -> T
     ): T {
 
@@ -81,7 +80,6 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         var versionCode = 0
         var versionName: String? = null
         var outputFile: String? = null
-        var attributes: ImmutableMap<String, String> = ImmutableMap.of()
 
         while (reader.hasNext()) {
             when (val attributeName = reader.nextName()) {
@@ -90,7 +88,6 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
                 "versionCode" -> versionCode = reader.nextInt()
                 "versionName" -> versionName = reader.nextString()
                 "outputFile" -> outputFile = reader.nextString()
-                "attributes" -> readAttributes(reader, attributes)
                 else -> handleAttribute(attributeName)
             }
         }
@@ -99,8 +96,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         return instantiate(
             outputFile!!,
             versionCode,
-            versionName.orEmpty(),
-            attributes
+            versionName.orEmpty()
         )
 
     }
@@ -125,13 +121,6 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
             reader.endObject()
         }
         reader.endArray()
-    }
-
-    @Throws(IOException::class)
-    private fun readAttributes(reader: JsonReader, attributes: ImmutableMap<String, String>) {
-        val tmp: ImmutableMap.Builder<String, String> = ImmutableMap.Builder()
-        tmp.putAll(attributes)
-        readProperties(reader, tmp)
     }
 }
 
@@ -165,8 +154,7 @@ internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<G
             },
             { outputFile: String,
                 versionCode: Int,
-                versionName: String,
-                attributes: ImmutableMap<String, String> ->
+                versionName: String ->
                 GenericBuiltArtifact(
                     outputType = outputType.orEmpty(),
                     filters = filters.build(),
