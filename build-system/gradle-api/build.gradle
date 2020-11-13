@@ -9,6 +9,15 @@ configurations {
     additionalDokkaClasspath
 }
 
+// Add buildscript repositories directly to this project as Dokka tries to resolve dependencies
+// using these repositories. If it fails, it tries to do so using the parent project which is
+// deprecated in Gradle 6.0 and will be removed in 7.0.
+buildscript {
+    repositories {
+        maven { url "$rootDir/../prebuilts/tools/common/m2/repository" }
+    }
+}
+
 dependencies {
     compile project(':base:builder-test-api')
     compile libs.guava
@@ -57,7 +66,17 @@ version = rootProject.ext.buildVersion
 project.ext.pomName = 'Android Gradle API'
 project.ext.pomDesc = 'APIs to customize Android Gradle Builds'
 
-dokka {
+/** Dokka task with fixed input annotations. */
+abstract class FixedDokka extends org.jetbrains.dokka.gradle.DokkaTask {
+    @Internal
+    String outputDirectory
+
+    @Internal
+    boolean reportNotDocumented = false
+}
+
+def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
+    outputDirectory = new File(project.buildDir, "dokka").absolutePath
     outputFormat = 'dac'
     jdkVersion = 8
 
@@ -118,8 +137,8 @@ def writeVersionFileProvider = tasks.register("writeDocsVersionFile", WriteVersi
 }
 
 task dokkaZip(type: Zip) {
-    dependsOn dokka
-    from dokka.outputDirectory
+    dependsOn fixedDokkaProvider
+    from fixedDokkaProvider.map { it.outputDirectory }
     from writeVersionFileProvider.map { it.outputDirectory }
     destinationDirectory = layout.projectDirectory.dir("$rootDir/../out/dist")
     archiveFileName = "documentation.zip"
