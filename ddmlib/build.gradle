@@ -15,6 +15,7 @@ dependencies {
     testImplementation project(':base:fakeadbserver')
     testImplementation project(':base:testutils')
     testImplementation libs.easymock
+    testImplementation libs.mockito_core
     testImplementation libs.junit
 }
 

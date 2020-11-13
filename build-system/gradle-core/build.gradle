@@ -112,30 +112,43 @@ gradlePlugin {
 
 
 dependencies {
-    compile project(':base:builder')
-    compile project(':base:build-system:aapt2-proto')
-    compile project(':base:build-system:aaptcompiler')
-    compile project(':analytics-library:crash')
-    compile project(':base:lint-gradle-api')
-    compile project(':base:gradle-api')
-    compile project(':dataBinding:compilerCommon')
+    implementation project(':base:builder')
+    implementation project(':base:builder-model')
+    implementation project(':base:sdk-common')
+    implementation project(':base:sdklib')
+    implementation project(':base:repository')
+    implementation project(':base:ddmlib')
+    implementation project(':base:build-system:aapt2-proto')
+    implementation project(':base:build-system:aaptcompiler')
+    implementation project(':analytics-library:crash')
+    implementation project(':analytics-library:shared')
+    implementation project(':base:lint-gradle-api')
+    api project(':base:gradle-api')
+    implementation project(':dataBinding:compilerCommon')
+    implementation project(':dataBinding:baseLibrary')
+    implementation project(':dataBinding:baseLibrarySupport')
+    implementation project(':base:builder-test-api')
+    implementation project(':base:layoutlib-api')
 
-    compile libs.kotlin_stdlib
-    compile libs.transform_api_deprecated
-    compile libs.asm
-    compile libs.asm_analysis
-    compile libs.asm_commons
-    compile libs.asm_util
-    compile libs.jopt
-    compile libs.proguard
-    compile libs.bundle_tool
-    compile libs.jetifier_core
-    compile libs.jetifier_processor
-    compile libs.javapoet
-    compile libs.protobuf
-    compile libs.protobuf_util
-    compile libs.tink
-    compile libs.unified_test_platform
+    implementation libs.kotlin_stdlib
+    implementation libs.transform_api_deprecated
+    implementation libs.apache_httpmime
+    implementation libs.apache_commons_io
+    implementation libs.asm
+    implementation libs.asm_analysis
+    implementation libs.asm_commons
+    implementation libs.asm_util
+    implementation libs.jaxb_runtime
+    implementation libs.jopt
+    implementation libs.proguard
+    implementation libs.bundle_tool
+    implementation libs.jetifier_core
+    implementation libs.jetifier_processor
+    implementation libs.javapoet
+    implementation libs.protobuf
+    implementation libs.protobuf_util
+    implementation libs.tink
+    implementation libs.unified_test_platform
 
     compileOnly libs.kotlin_gradle_plugin
 
@@ -148,23 +161,25 @@ dependencies {
     // not exposed as a runtime dependency.
     provided gradleApi()
 
-    testCompile gradleApi()
-    testCompile libs.junit
-    testCompile libs.truth
-    testCompile libs.kotlin_test
-    testCompile libs.mockito_core
-    testCompile libs.guava
-    testCompile libs.equalsverifier
-    testCompile project(':base:project-test-lib')
-    testCompile project(':base:testutils')
-    testCompile 'org.jetbrains:annotations:13.0'
-    testCompile libs.jsoup
-    testCompile libs.jacoco_core
-    testCompile libs.jacoco_report
-    testCompile libs.kotlin_gradle_plugin
-    testCompile testFixtures(project(":base:repository"))
-    apiTestCompile project(":base:apkparser:apkanalyzer")
-    apiTestCompile project(":base:apkparser:apkanalyzer-cli")
+    testImplementation gradleApi()
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.kotlin_test
+    testImplementation libs.mockito_core
+    testImplementation libs.guava
+    testImplementation libs.jimfs
+    testImplementation libs.equalsverifier
+    testImplementation project(':base:project-test-lib')
+    testImplementation project(':base:testutils')
+    testImplementation 'org.jetbrains:annotations:13.0'
+    testImplementation libs.bouncycastle_prov
+    testImplementation libs.jsoup
+    testImplementation libs.jacoco_core
+    testImplementation libs.jacoco_report
+    testImplementation libs.kotlin_gradle_plugin
+    testImplementation testFixtures(project(":base:repository"))
+    apiTestImplementation project(":base:apkparser:apkanalyzer")
+    apiTestImplementation project(":base:apkparser:apkanalyzer-cli")
     testCompileOnly project(':base:profile')
 
     // mlkit-common
@@ -256,11 +271,7 @@ tasks.compileJava {
     outputs.dir(generatedSources)
 }
 
-// Configure validateTaskProperties task
-tasks.validateTaskProperties.configure {
-    // Always run this task so we can see the report in the console with every run
-    outputs.upToDateWhen { false }
-
+validatePlugins {
     // Enable strict mode so we can see more warnings
     enableStricterValidation = true
 }

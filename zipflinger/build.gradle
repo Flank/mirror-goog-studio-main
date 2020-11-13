@@ -18,12 +18,12 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
 
 dependencies {
-    compile project(':base:annotations')
+    implementation project(':base:annotations')
 
-    testCompile 'junit:junit:4.12'
-    testCompile project(':apkzlib')
-    testCompile project(':base:testutils')
-    testCompile project(':base:build-system:gradle-core')
+    testImplementation 'junit:junit:4.12'
+    testImplementation project(':apkzlib')
+    testImplementation project(':base:testutils')
+    testImplementation project(':base:build-system:gradle-core')
 }
 
 sourceSets {

@@ -13,11 +13,11 @@ compileKotlin {
 }
 
 dependencies {
-    compile project(':base:common')
-    compile project(':base:sdk-common')
-    compile project(':base:builder-model')
-    compile libs.kotlin_stdlib
-    compile libs.kxml
+    implementation project(':base:common')
+    implementation project(':base:sdk-common')
+    implementation project(':base:builder-model')
+    implementation libs.kotlin_stdlib
+    implementation libs.kxml
 }
 
 project.ext.pomName = 'Android Tools Lint Build System Model'

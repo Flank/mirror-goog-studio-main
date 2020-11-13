@@ -14,17 +14,22 @@ compileKotlin {
 }
 
 dependencies {
-    compile project(':base:lint-checks')
-    compile libs.guava
-    compile project(':base:uast')
-    compile project(':base:kotlin-compiler')
-    compile project(':base:manifest-merger')
-    compile project(':analytics-library:shared')
-    compile project(':analytics-library:protos')
-    compile project(':analytics-library:tracker')
+    api project(':base:lint-checks')
+    implementation libs.guava
+    implementation project(':base:uast')
+    implementation project(':base:sdk-common')
+    implementation project(':base:sdklib')
+    implementation project(':base:common')
+    implementation project(':base:kotlin-compiler')
+    implementation project(':base:intellij-core')
+    implementation project(':base:manifest-merger')
+    implementation project(':base:layoutlib-api')
+    implementation project(':analytics-library:shared')
+    implementation project(':analytics-library:protos')
+    implementation project(':analytics-library:tracker')
 
-    compile libs.kotlin_reflect
-    compile libs.kotlin_stdlib
+    implementation libs.kotlin_reflect
+    implementation libs.kotlin_stdlib
 }
 
 sourceSets {

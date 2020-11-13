@@ -9,19 +9,20 @@ configurations {
 }
 
 dependencies {
-    compile project(':base:builder-test-api')
-    compile libs.guava
-    compile libs.kotlin_stdlib
-    compile libs.asm
+    implementation project(':base:builder-test-api')
+    implementation libs.guava
+    implementation libs.kotlin_stdlib
+    implementation libs.asm
 
     provided gradleApi()
     provided project(':base:builder-model') // Only present for legacy reasons.
 
-    testCompile libs.junit
-    testCompile project(':base:testutils')
-    testCompile gradleApi()
-    testCompile project(':base:builder-model')
-    testCompile libs.mockito_core
+    testImplementation libs.junit
+    testImplementation project(':base:testutils')
+    testImplementation gradleApi()
+    testImplementation project(':base:builder-model')
+    testImplementation project(':base:annotations')
+    testImplementation libs.mockito_core
 
     additionalDokkaClasspath gradleApi()
 }
@@ -46,7 +47,7 @@ javadoc {
 task javadocZip(type: Zip) {
   dependsOn javadoc
   from javadoc.destinationDir
-  baseName 'javadoc'
+  archiveBaseName.set('javadoc')
 }
 
 group = 'com.android.tools.build'

@@ -2,17 +2,17 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 
 dependencies {
-    compile project(':base:annotations')
-    compile project(':base:common')
-    compile project(':analytics-library:tracker')
-    compile libs.guava
-    compile libs.gson
+    implementation project(':base:annotations')
+    api project(':base:common')
+    implementation project(':analytics-library:tracker')
+    implementation libs.guava
+    implementation libs.gson
 
-    compile libs.kotlin_stdlib
+    implementation libs.kotlin_stdlib
 
-    testCompile libs.junit
-    testCompile libs.truth
-    testCompile libs.mockito_core
-    testCompile libs.jimfs
-    testCompile libs.kotlin_test
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.mockito_core
+    testImplementation libs.jimfs
+    testImplementation libs.kotlin_test
 }

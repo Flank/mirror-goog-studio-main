@@ -17,28 +17,31 @@ dependencies {
     // NOTE NOTE NOTE - before changing this, note that lint dependencies
     // must also be reflected in [LintClassLoaderProvider#computeUrls] as well
     // so update both in sync
-    compile project(':base:sdk-common')
-    compile project(':base:builder')
-    compile project(':base:builder-model')
-    compile project(':base:intellij-core')
-    compile project(':base:kotlin-compiler')
-    compile project(':base:uast')
-    compile project(':base:manifest-merger')
-    compile project(':base:lint')
-    compile project(':base:lint-gradle-api')
-    compile project(':base:zipflinger')
+    implementation project(':base:sdk-common')
+    implementation project(':base:sdklib')
+    implementation project(':base:common')
+    implementation project(':base:builder')
+    implementation project(':base:builder-model')
+    implementation project(':base:intellij-core')
+    implementation project(':base:kotlin-compiler')
+    implementation project(':base:uast')
+    implementation project(':base:manifest-merger')
+    implementation project(':base:lint')
+    api project(':base:lint-gradle-api')
+    implementation project(':base:zipflinger')
+    implementation project(':base:repository')
     compileOnly gradleApi()
 
-    compile libs.groovy
-    compile libs.kotlin_reflect
-    compile libs.kotlin_stdlib
+    implementation libs.groovy
+    implementation libs.kotlin_reflect
+    implementation libs.kotlin_stdlib
 
-    testCompile gradleApi()
-    testCompile libs.junit
-    testCompile libs.truth
-    testCompile libs.mockito_core
-    testCompile project(':base:testutils')
-    testCompile project(':base:lint-tests')
+    testImplementation gradleApi()
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.mockito_core
+    testImplementation project(':base:testutils')
+    testImplementation project(':base:lint-tests')
 }
 
 sourceSets {

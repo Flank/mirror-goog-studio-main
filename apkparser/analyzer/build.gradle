@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.smali_dexlib)
     implementation(libs.baksmali_dexlib)
     implementation project(':base:sdk-common')
+    implementation project(':base:common')
     implementation project(':base:sdklib')
     implementation project(':base:annotations')
     implementation project(':base:apkparser:binary-resources')
@@ -37,6 +38,7 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation project(":base:testutils")
+    testImplementation libs.jimfs
 }
 
 jardeps.each { file ->

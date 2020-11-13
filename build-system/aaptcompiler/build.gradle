@@ -3,17 +3,18 @@ apply plugin: 'com.android.tools.publish'
 apply plugin: 'com.android.tools.kotlin'
 
 dependencies {
-    compile project(':base:build-system:aapt2-proto')
-    compile project(':base:layoutlib-api')
+    implementation project(':base:build-system:aapt2-proto')
+    implementation project(':base:layoutlib-api')
     implementation project(':base:common')
+    implementation libs.protobuf
 
-    compile libs.guava
-    compile libs.kotlin_stdlib
+    implementation libs.guava
+    implementation libs.kotlin_stdlib
 
-    testCompile libs.kotlin_test
-    testCompile libs.junit
-    testCompile libs.truth
-    testCompile project(':base:testutils')
+    testImplementation libs.kotlin_test
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation project(':base:testutils')
 }
 
 group = 'com.android.tools.build'

@@ -14,13 +14,13 @@ compileKotlin {
 }
 
 dependencies {
-    compile project(':base:sdklib')
-    compile project(':base:lint-model')
+    implementation project(':base:sdklib')
+    api project(':base:lint-model')
     compileOnly gradleApi()
-    compile project(':base:gradle-api')
-    compile libs.kotlin_reflect
-    compile libs.kotlin_stdlib
-    compile libs.guava
+    implementation project(':base:gradle-api')
+    implementation libs.kotlin_reflect
+    implementation libs.kotlin_stdlib
+    implementation libs.guava
 }
 
 sourceSets {

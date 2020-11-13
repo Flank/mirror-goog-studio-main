@@ -9,19 +9,21 @@ archivesBaseName = 'sdklib'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile project(':base:layoutlib-api')
-    compile project(':base:dvlib')
-    compile project(':base:repository')
+    implementation project(':base:layoutlib-api')
+    implementation project(':base:dvlib')
+    api project(':base:repository')
+    implementation project(':base:common')
 
-    compile libs.gson
-    compile libs.apache_compress
-    compile libs.apache_httpmime
-    compile libs.apache_httpcore
+    implementation libs.gson
+    implementation libs.jaxb_runtime
+    implementation libs.apache_compress
+    implementation libs.apache_httpmime
+    implementation libs.apache_httpcore
 
-    testCompile libs.junit
-    testCompile libs.truth
-    testCompile project(':base:testutils')
-    testCompile testFixtures(project(":base:repository"))
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation project(':base:testutils')
+    testImplementation testFixtures(project(":base:repository"))
 }
 
 test {

@@ -13,7 +13,7 @@ def prebuiltJars = [
 
 prebuiltJars.forEach {
     jar.from(zipTree(it))
-    dependencies.compile(files(it)) // For Symbol resolution in Intellij IDEA
+    dependencies.implementation(files(it)) // For Symbol resolution in Intellij IDEA
 }
 
 project.ext.pomName = 'Unified AST'

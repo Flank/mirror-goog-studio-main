@@ -16,12 +16,14 @@ dependencies {
 
     implementation project(':analytics-library:protos')
     implementation project(':analytics-library:tracker')
+    implementation project(':base:layoutlib-api')
     api project(':apksig')
     api project(':apkzlib')
 
     implementation libs.kotlin_stdlib
     api libs.javawriter
     implementation libs.bouncycastle_pkix
+    implementation libs.apache_commons_codec
     implementation libs.bouncycastle_prov
     implementation libs.asm
     implementation libs.asm_tree

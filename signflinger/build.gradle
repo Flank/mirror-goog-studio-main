@@ -18,12 +18,13 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
 
 dependencies {
-    compile project(':apksig')
-    compile project(':base:zipflinger')
+    implementation project(':apksig')
+    implementation project(':base:zipflinger')
+    implementation project(':base:annotations')
 
-    testCompile 'junit:junit:4.12'
-    testCompile project(':base:annotations')
-    testCompile project(':base:testutils')
+    testImplementation 'junit:junit:4.12'
+    testImplementation project(':base:annotations')
+    testImplementation project(':base:testutils')
 }
 
 sourceSets {

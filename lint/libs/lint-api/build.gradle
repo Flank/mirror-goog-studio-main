@@ -14,20 +14,25 @@ compileKotlin {
 }
 
 dependencies {
-    compile project(':base:sdk-common')
-    compile project(':base:lint-model')
+    implementation project(':base:sdk-common')
+    implementation project(':base:sdklib')
+    implementation project(':base:common')
+    api project(':base:lint-model')
     implementation project(':base:builder-model')
-    compile libs.guava
-    compile project(':base:intellij-core')
-    compile project(':base:kotlin-compiler')
-    compile project(':base:uast')
-    compile project(':base:manifest-merger')
+    implementation libs.guava
+    implementation project(':base:intellij-core')
+    implementation project(':base:kotlin-compiler')
+    implementation project(':base:uast')
+    implementation project(':base:manifest-merger')
+    implementation project(':base:layoutlib-api')
 
-    compile libs.asm
-    compile libs.asm_tree
+    implementation libs.apache_commons_io
+    implementation libs.asm
+    implementation libs.asm_tree
+    implementation libs.kxml
 
-    compile libs.kotlin_reflect
-    compile libs.kotlin_stdlib
+    implementation libs.kotlin_reflect
+    implementation libs.kotlin_stdlib
 }
 
 sourceSets {

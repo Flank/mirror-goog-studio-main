@@ -6,8 +6,8 @@ archivesBaseName = 'ninepatch'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    testCompile libs.junit
-    compile libs.guava
+    testImplementation libs.junit
+    implementation libs.guava
 }
 
 sourceSets {

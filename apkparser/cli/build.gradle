@@ -6,6 +6,8 @@ dependencies {
     implementation project(':base:apkparser:apkanalyzer')
     implementation project(':base:annotations')
     implementation project(':base:sdk-common')
+    implementation project(':base:common')
+    implementation project(':base:sdklib')
     implementation project(':base:apkparser:binary-resources')
     implementation(libs.smali_dexlib)
 
