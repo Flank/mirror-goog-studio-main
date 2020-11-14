@@ -17,7 +17,8 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
-  config_options=""
+  # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
+  config_options="--config=cloud_resultstore --noremote_accept_cached"
   target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
