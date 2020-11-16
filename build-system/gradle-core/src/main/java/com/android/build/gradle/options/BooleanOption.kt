@@ -165,7 +165,6 @@ enum class BooleanOption(
     // Options related to new Variant API
     USE_SAFE_PROPERTIES("android.variant.safe.properties", false, FeatureStage.Experimental),
 
-    USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", false, FeatureStage.Experimental),
 
     ENABLE_TEST_FIXTURES("android.experimental.enableTestFixtures", false, FeatureStage.Experimental),
 
@@ -183,6 +182,8 @@ enum class BooleanOption(
 
     /** Whether to use lint's partial analysis functionality. */
     USE_LINT_PARTIAL_ANALYSIS("android.enableParallelLint", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
+    USE_NEW_DSL_INTERFACES("android.experimental.newDslInterfaces", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0)),
 
     /* -------------------
      * DEPRECATED FEATURES
