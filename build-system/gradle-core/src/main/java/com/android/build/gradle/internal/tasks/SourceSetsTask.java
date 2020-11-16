@@ -25,15 +25,13 @@ import com.android.builder.core.VariantType;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.diagnostics.AbstractReportTask;
+import org.gradle.api.tasks.diagnostics.ProjectBasedReportTask;
 import org.gradle.api.tasks.diagnostics.internal.ReportRenderer;
 import org.gradle.api.tasks.diagnostics.internal.TextReportRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
 
-/**
- * Prints out the DSL names and directory names of available source sets.
- */
-public class SourceSetsTask extends AbstractReportTask {
+/** Prints out the DSL names and directory names of available source sets. */
+public class SourceSetsTask extends ProjectBasedReportTask {
 
     private final TextReportRenderer mRenderer = new TextReportRenderer();
 
