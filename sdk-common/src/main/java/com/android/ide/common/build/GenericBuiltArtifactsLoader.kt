@@ -69,7 +69,8 @@ object GenericBuiltArtifactsLoader {
                         versionCode = builtArtifact.versionCode,
                         versionName = builtArtifact.versionName,
                         outputType = builtArtifact.outputType,
-                        filters = builtArtifact.filters
+                        filters = builtArtifact.filters,
+                        attributes = builtArtifact.attributes
                     )
                 }
                 .toList(),

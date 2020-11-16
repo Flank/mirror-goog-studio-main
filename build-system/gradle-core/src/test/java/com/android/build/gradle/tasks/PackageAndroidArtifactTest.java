@@ -35,6 +35,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -115,7 +116,8 @@ public class PackageAndroidArtifactTest {
                                 "/tmp/file_main.out",
                                 -1,
                                 "version_name",
-                                new VariantOutputConfigurationImpl(false, ImmutableList.of())),
+                                new VariantOutputConfigurationImpl(false, ImmutableList.of()),
+                                Collections.emptyMap()),
                         BuiltArtifactImpl.make(
                                 "/tmp/file_xxhdpi.out",
                                 -1,
@@ -125,7 +127,8 @@ public class PackageAndroidArtifactTest {
                                         ImmutableList.of(
                                                 new FilterConfiguration(
                                                         FilterConfiguration.FilterType.DENSITY,
-                                                        "xxhdpi")))),
+                                                        "xxhdpi"))),
+                                Collections.emptyMap()),
                         BuiltArtifactImpl.make(
                                 "/tmp/filefr.out",
                                 -1,
@@ -135,7 +138,8 @@ public class PackageAndroidArtifactTest {
                                         ImmutableList.of(
                                                 new FilterConfiguration(
                                                         FilterConfiguration.FilterType.LANGUAGE,
-                                                        "fr")))),
+                                                        "fr"))),
+                                Collections.emptyMap()),
                         BuiltArtifactImpl.make(
                                 "/tmp/fileen.out",
                                 -1,
@@ -145,7 +149,8 @@ public class PackageAndroidArtifactTest {
                                         ImmutableList.of(
                                                 new FilterConfiguration(
                                                         FilterConfiguration.FilterType.LANGUAGE,
-                                                        "en")))));
+                                                        "en"))),
+                                Collections.emptyMap()));
         PackageAndroidArtifact.checkFileNameUniqueness(
                 new BuiltArtifactsImpl(
                         BuiltArtifacts.METADATA_FILE_VERSION,
@@ -168,7 +173,8 @@ public class PackageAndroidArtifactTest {
                                         ImmutableList.of(
                                                 new FilterConfiguration(
                                                         FilterConfiguration.FilterType.LANGUAGE,
-                                                        "fr")))),
+                                                        "fr"))),
+                                Collections.emptyMap()),
                         BuiltArtifactImpl.make(
                                 "/tmp/file.out",
                                 -1,
@@ -178,7 +184,8 @@ public class PackageAndroidArtifactTest {
                                         ImmutableList.of(
                                                 new FilterConfiguration(
                                                         FilterConfiguration.FilterType.LANGUAGE,
-                                                        "en")))));
+                                                        "en"))),
+                                Collections.emptyMap()));
 
         try {
             PackageAndroidArtifact.checkFileNameUniqueness(

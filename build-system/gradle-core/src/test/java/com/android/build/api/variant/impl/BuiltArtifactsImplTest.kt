@@ -72,6 +72,7 @@ class BuiltArtifactsImplTest {
     {
       "type": "SINGLE",
       "filters": [],
+      "attributes": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file1.apk"
@@ -115,6 +116,7 @@ class BuiltArtifactsImplTest {
     {
       "type": "SINGLE",
       "filters": [],
+      "attributes": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "inner_folder"
@@ -187,6 +189,7 @@ class BuiltArtifactsImplTest {
           "value": "xhdpi"
         }
       ],
+      "attributes": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file1.apk"
@@ -199,6 +202,7 @@ class BuiltArtifactsImplTest {
           "value": "xxhdpi"
         }
       ],
+      "attributes": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file2.apk"
@@ -211,6 +215,7 @@ class BuiltArtifactsImplTest {
           "value": "xxxhdpi"
         }
       ],
+      "attributes": [],
       "versionCode": 123,
       "versionName": "version_name",
       "outputFile": "file3.apk"
@@ -251,6 +256,53 @@ class BuiltArtifactsImplTest {
           "value": "xhdpi"
         }
       ],
+      "attributes": [],
+      "versionCode": 123,
+      "versionName": "123",
+      "outputFile": "file1.apk"
+    }
+  ],
+  "elementType": "File"
+}"""
+        )
+    }
+
+    @Test
+    fun testWithAttributes() {
+        val outputFolder = tmpFolder.newFolder("some_folder")
+        createBuiltArtifacts(
+            createBuiltArtifact(
+                outputFolder = outputFolder,
+                fileName = "file1", versionCode = 123, densityValue = "xhdpi", attributes = mapOf("DeliveryType" to "install-time")
+            )).save(FakeGradleDirectory(outputFolder))
+
+        val outputJsonFile = File(outputFolder, BuiltArtifactsImpl.METADATA_FILE_NAME)
+        Truth.assertThat(outputJsonFile.exists())
+        val jsonContent = outputJsonFile.readText(Charsets.UTF_8)
+        Truth.assertThat(jsonContent).isEqualTo(
+            """{
+  "version": 3,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "com.android.test",
+  "variantName": "debug",
+  "elements": [
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "DENSITY",
+          "value": "xhdpi"
+        }
+      ],
+      "attributes": [
+        {
+          "key": "DeliveryType",
+          "value": "install-time"
+        }
+      ],
       "versionCode": 123,
       "versionName": "123",
       "outputFile": "file1.apk"
@@ -267,11 +319,11 @@ class BuiltArtifactsImplTest {
         createBuiltArtifacts(
             createBuiltArtifact(
                 outputFolder = outputFolder,
-                fileName = "file1", versionCode = 123, densityValue = "xhdpi"
+                fileName = "file1", versionCode = 123, densityValue = "xhdpi", attributes = mapOf("deliveryType" to "install-time", "a" to "b")
             ),
             createBuiltArtifact(
                 outputFolder = outputFolder, fileName = "file2",
-                versionCode = 124, densityValue = "xxhdpi"
+                versionCode = 124, densityValue = "xxhdpi", attributes = mapOf("deliveryType" to "install-time")
             )
         ).save(FakeGradleDirectory(outputFolder))
 
@@ -307,6 +359,7 @@ class BuiltArtifactsImplTest {
                 Truth.assertThat(filter.filterType).isEqualTo("DENSITY")
                 Truth.assertThat(filter.identifier).isAnyOf("xxhdpi", "xhdpi")
             }
+            Truth.assertThat(builtArtifact.attributes).containsEntry("deliveryType", "install-time")
         }
     }
 
@@ -454,7 +507,8 @@ class BuiltArtifactsImplTest {
         outputFolder: File,
         fileName: String,
         versionCode: Int,
-        densityValue: String
+        densityValue: String,
+        attributes: Map<String, String> = mapOf()
     ) =
         BuiltArtifactImpl.make(
             outputFile = createOutputFile(outputFolder, "$fileName.apk").absolutePath,
@@ -464,7 +518,8 @@ class BuiltArtifactsImplTest {
                 isUniversal = false,
                 filters = listOf(
                     FilterConfiguration(FilterConfiguration.FilterType.DENSITY, densityValue)
-                ))
+                )),
+            attributes = attributes
         )
 
     private fun createBuiltArtifacts(vararg elements: BuiltArtifactImpl) =
