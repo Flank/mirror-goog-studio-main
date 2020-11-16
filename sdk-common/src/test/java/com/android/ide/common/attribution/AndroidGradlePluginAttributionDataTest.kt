@@ -32,7 +32,13 @@ class AndroidGradlePluginAttributionDataTest {
         taskNameToClassNameMap = mapOf("a" to "b", "c" to "d"),
         tasksSharingOutput = mapOf("e" to listOf("f", "g")),
         garbageCollectionData = mapOf("gc" to 100L),
-        buildSrcPlugins = setOf("h", "i")
+        buildSrcPlugins = setOf("h", "i"),
+        javaInfo = AndroidGradlePluginAttributionData.JavaInfo(
+            version = "11.0.8",
+            vendor = "JetBrains s.r.o",
+            home = "/tmp/test/java/home",
+            vmArguments = listOf("-Xmx8G", "-XX:+UseSerialGC")
+        )
     )
 
     @Test
@@ -46,7 +52,7 @@ class AndroidGradlePluginAttributionDataTest {
             SdkConstants.FN_AGP_ATTRIBUTION_DATA
         )
         assertThat(file.readLines()[0]).isEqualTo(
-            """{"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],"garbageCollectionData":[{"gcName":"gc","duration":100}],"buildSrcPlugins":["h","i"]}"""
+            """{"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],"garbageCollectionData":[{"gcName":"gc","duration":100}],"buildSrcPlugins":["h","i"],"javaInfo":{"javaVersion":"11.0.8","javaVendor":"JetBrains s.r.o","javaHome":"/tmp/test/java/home","vmArguments":["-Xmx8G","-XX:+UseSerialGC"]}}"""
         )
     }
 
