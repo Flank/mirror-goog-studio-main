@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.testing.utp
 import org.gradle.api.NonExtensible
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Optional
@@ -32,34 +33,44 @@ private const val NITROGEN_DEFAULT_VERSION = "0.0.6-dev"
 enum class UtpDependency(
         val artifactId: String,
         val mainClass: String,
-        val configurationName: String = "_internal-unified-test-platform-${artifactId}",
-        private val groupId: String = NITROGEN_MAVEN_GROUP_ID,
-        private val version: String = NITROGEN_DEFAULT_VERSION) {
+        val mapperFunc: (UtpDependencies) -> ConfigurableFileCollection) {
     LAUNCHER(
             "launcher",
-            "com.google.testing.platform.launcher.Launcher"),
+            "com.google.testing.platform.launcher.Launcher",
+            UtpDependencies::launcher),
     CORE(
             "core",
-            "com.google.testing.platform.main.MainKt"),
+            "com.google.testing.platform.main.MainKt",
+            UtpDependencies::core),
     ANDROID_DEVICE_PROVIDER_LOCAL(
             "android-device-provider-local",
-            "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"),
+            "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider",
+            UtpDependencies::deviceProviderLocal),
     ANDROID_DEVICE_PROVIDER_GRADLE(
             "android-device-provider-gradle",
-            "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider"),
+            "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider",
+            UtpDependencies::deviceProviderGradle),
     ANDROID_DRIVER_INSTRUMENTATION(
             "android-driver-instrumentation",
-            "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"),
+            "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver",
+            UtpDependencies::driverInstrumentation),
     ANDROID_TEST_PLUGIN(
-        "android-test-plugin",
-        "com.google.testing.platform.plugin.android.AndroidDevicePlugin"),
+            "android-test-plugin",
+            "com.google.testing.platform.plugin.android.AndroidDevicePlugin",
+            UtpDependencies::testPlugin),
     ANDROID_TEST_DEVICE_INFO_PLUGIN(
-        "android-test-plugin-host-device-info",
-        "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"),
+            "android-test-plugin-host-device-info",
+            "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin",
+            UtpDependencies::testDeviceInfoPlugin),
     ANDROID_TEST_PLUGIN_HOST_RETENTION(
             "android-test-plugin-host-retention",
-            "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin"),
+            "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin",
+            UtpDependencies::testPluginHostRetention),
     ;
+
+    val configurationName: String = "_internal-unified-test-platform-${artifactId}"
+    private val groupId: String = NITROGEN_MAVEN_GROUP_ID
+    private val version: String = NITROGEN_DEFAULT_VERSION
 
     /**
      * Returns a maven coordinate string to download dependencies from the Maven repository.
@@ -72,27 +83,35 @@ abstract class UtpDependencies {
     @get:Optional
     @get:Classpath
     abstract val launcher: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val core: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val deviceProviderGradle: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val deviceProviderLocal: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val deviceProviderVirtual: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val driverInstrumentation: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val testPlugin: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val testDeviceInfoPlugin: ConfigurableFileCollection
+
     @get:Optional
     @get:Classpath
     abstract val testPluginHostRetention: ConfigurableFileCollection
@@ -115,5 +134,16 @@ fun maybeCreateUtpConfigurations(project: Project) {
         project.dependencies.add(
                 nitrogenDependency.configurationName,
                 nitrogenDependency.mavenCoordinate())
+    }
+}
+
+/**
+ * Resolves the UTP dependencies and populates this [UtpDependencies] object from the
+ * given [ConfigurationContainer].
+ */
+fun UtpDependencies.resolveDependencies(configurationsContainer: ConfigurationContainer) {
+    UtpDependency.values().forEach { utpDependency ->
+        utpDependency.mapperFunc(this)
+                .from(configurationsContainer.getByName(utpDependency.configurationName))
     }
 }

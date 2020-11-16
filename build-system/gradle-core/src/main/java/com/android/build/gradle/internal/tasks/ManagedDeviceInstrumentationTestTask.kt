@@ -38,10 +38,10 @@ import com.android.build.gradle.internal.testing.TestData
 import com.android.build.gradle.internal.testing.utp.ManagedDeviceTestRunner
 import com.android.build.gradle.internal.testing.utp.RetentionConfig
 import com.android.build.gradle.internal.testing.utp.UtpDependencies
-import com.android.build.gradle.internal.testing.utp.UtpDependency
 import com.android.build.gradle.internal.testing.utp.UtpManagedDevice
 import com.android.build.gradle.internal.testing.utp.createRetentionConfig
 import com.android.build.gradle.internal.testing.utp.maybeCreateUtpConfigurations
+import com.android.build.gradle.internal.testing.utp.resolveDependencies
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
@@ -50,8 +50,6 @@ import com.android.builder.core.BuilderConstants.FD_REPORTS
 import com.android.builder.core.BuilderConstants.MANAGED_DEVICE
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.TestOptions
-import com.android.ide.common.process.JavaProcessExecutor
-import com.android.prefs.AndroidLocation
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import org.gradle.api.Action
@@ -303,23 +301,9 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                             "\"ANDROIDX_TEST_ORCHESTRATOR\"\n to your build file or unset " +
                             BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM.propertyName)
 
-                val mapping = with(task.getTestRunnerFactory().getUtpDependencies()) {
-                    listOf(
-                        launcher::from to UtpDependency.LAUNCHER,
-                        core::from to UtpDependency.CORE,
-                        deviceProviderLocal::from to UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL,
-                        deviceProviderGradle::from to UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE,
-                        driverInstrumentation::from to UtpDependency.ANDROID_DRIVER_INSTRUMENTATION,
-                        testPlugin::from to UtpDependency.ANDROID_TEST_PLUGIN,
-                        testDeviceInfoPlugin::from to UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN,
-                        testPluginHostRetention::from to UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION)
-                }
-
                 maybeCreateUtpConfigurations(task.project)
-                val configurations = task.project.configurations
-                mapping.forEach { (setter, utpDependency) ->
-                    setter(arrayOf(configurations.getByName(utpDependency.configurationName)))
-                }
+                task.getTestRunnerFactory().getUtpDependencies()
+                        .resolveDependencies(task.project.configurations)
             }
 
             task.getTestRunnerFactory()
