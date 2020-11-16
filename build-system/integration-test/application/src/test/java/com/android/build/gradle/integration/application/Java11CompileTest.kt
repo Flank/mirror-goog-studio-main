@@ -75,6 +75,11 @@ class Java11CompileTest {
                         //Local-variable syntax for lambda parameters is the language feature available from Java 11
                         java.util.function.Function<Integer, String> foo = (var input) -> input.toString();
                     }
+
+                    public void stringConcat() {
+                        String hello = "hello";
+                        String combine = hello + "world";
+                    }
                 }
             """.trimIndent()
         )

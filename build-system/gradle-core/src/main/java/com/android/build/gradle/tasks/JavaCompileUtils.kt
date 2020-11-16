@@ -76,6 +76,8 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
         val jdkImage = getJdkImageFromTransform(globalScope.project)
 
         this.options.compilerArgumentProviders.add(JdkImageInput(jdkImage))
+        // Make Javac generate legacy bytecode for string concatenation, see b/65004097
+        this.options.compilerArgs.add("-XDstringConcat=inline")
         this.classpath = project.files(
             // classes(e.g. android.jar) that were previously passed through bootstrapClasspath need to be provided
             // through classpath
