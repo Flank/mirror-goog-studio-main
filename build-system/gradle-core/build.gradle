@@ -27,7 +27,7 @@ configurations {
 }
 
 licenseReport {
-    ignored = ['org.jetbrains.trove4j:trove4j:20160824']
+    ignored = libs.trove4j
 }
 
 // Set the version of the plugin in the manifest. This is used by 3rd party plugin (like Kotlin)
