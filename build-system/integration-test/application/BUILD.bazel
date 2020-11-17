@@ -75,7 +75,8 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/bytecodeGenerationHooks",
     "//tools/base/build-system/integration-test:test-projects/combinedAbiDensitySplits",
     "//tools/base/build-system/integration-test:test-projects/combinedDensityAndLanguageSplits",
-    "//tools/base/build-system/integration-test:test-projects/composeHelloWorld",
+    # Compose disabled in 4.2 Beta
+    #"//tools/base/build-system/integration-test:test-projects/composeHelloWorld",
     "//tools/base/build-system/integration-test:test-projects/conditionalApiUse",
     "//tools/base/build-system/integration-test:test-projects/customArtifactDep",
     "//tools/base/build-system/integration-test:test-projects/daggerOne",

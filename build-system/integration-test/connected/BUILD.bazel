@@ -111,13 +111,14 @@ gradle_connected_test(
     deps = TEST_DEPS,
 )
 
-gradle_connected_test(
-    name = "ComposeHelloWorldConnectedTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
-    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
-    maven_repos = TEST_MAVEN_REPOS,
-    deps = TEST_DEPS,
-)
+# Compose disabled in 4.2 Beta
+#gradle_connected_test(
+#    name = "ComposeHelloWorldConnectedTest",
+#    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+#    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
+#    maven_repos = TEST_MAVEN_REPOS,
+#    deps = TEST_DEPS,
+#)
 
 gradle_connected_test(
     name = "CoreLibraryDesugarConversionConnectedTest",
