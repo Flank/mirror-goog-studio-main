@@ -22,12 +22,14 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.fakeadbserver.devicecommandhandlers.JdwpCommandHandler;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
@@ -56,6 +58,7 @@ public class FakeAdbTestRule extends ExternalResource {
     myServer.start();
     // Test that we obtain 1 device via the ddmlib APIs
     AndroidDebugBridge.enableFakeAdbServerMode(myServer.getPort());
+    DdmPreferences.setJdwpProxyPort(getFreePort());
     AndroidDebugBridge.initIfNeeded(true);
     AndroidDebugBridge bridge = AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
     assertNotNull("Debug bridge", bridge);
@@ -83,8 +86,8 @@ public class FakeAdbTestRule extends ExternalResource {
 
 
   public static ClientImpl launchAndWaitForProcess(DeviceState device, boolean waitingForDebugger) throws Exception {
-        CountDownLatch latch = new CountDownLatch(2);
-    ClientImpl[] launchedClient = new ClientImpl[1];
+      CountDownLatch latch = new CountDownLatch(2);
+      ClientImpl[] launchedClient = new ClientImpl[1];
         AndroidDebugBridge.IDeviceChangeListener deviceListener =
                 new AndroidDebugBridge.IDeviceChangeListener() {
                     @Override
@@ -112,7 +115,7 @@ public class FakeAdbTestRule extends ExternalResource {
     AndroidDebugBridge.addClientChangeListener(clientListener);
         AndroidDebugBridge.addDeviceChangeListener(deviceListener);
     device.startClient(PID, 4321, CLIENT_PACKAGE_NAME, waitingForDebugger);
-    assertThat(latch.await(TEST_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+    assertThat(latch.await(TEST_TIMEOUT_MS, TimeUnit.HOURS)).isTrue();
     AndroidDebugBridge.removeClientChangeListener(clientListener);
         AndroidDebugBridge.removeDeviceChangeListener(deviceListener);
     return launchedClient[0];
@@ -158,4 +161,13 @@ public class FakeAdbTestRule extends ExternalResource {
     channel.socket().getInputStream().read(buffer.array());
     assertThat(JdwpHandshake.findHandshake(buffer)).isNotEqualTo(JdwpHandshake.HANDSHAKE_GOOD);
   }
+
+    private static int getFreePort() {
+        try (ServerSocket s = new ServerSocket(0)) {
+            return s.getLocalPort();
+        }
+        catch (IOException e) {
+            return -1;
+        }
+    }
 }

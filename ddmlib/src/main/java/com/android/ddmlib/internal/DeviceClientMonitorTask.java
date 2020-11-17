@@ -337,9 +337,21 @@ class DeviceClientMonitorTask implements Runnable {
 
         SocketChannel clientSocket;
         try {
-          clientSocket =
-            AdbHelper.createPassThroughConnection(
-              new InetSocketAddress("localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT), device.getSerialNumber(), pid);
+
+            if (DdmPreferences.isJdwpProxyEnabled()) {
+                clientSocket =
+                        AdbHelper.createPassThroughConnection(
+                                new InetSocketAddress(
+                                        "localhost", DdmPreferences.getJdwpProxyPort()),
+                                device.getSerialNumber(),
+                                pid);
+            } else {
+                clientSocket =
+                        AdbHelper.createPassThroughConnection(
+                                AndroidDebugBridge.getSocketAddress(),
+                                device.getSerialNumber(),
+                                pid);
+            }
 
             // required for Selector
             clientSocket.configureBlocking(false);

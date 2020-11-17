@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.2.0-dev">
+<issues format="5" by="lint 7.0.0-dev">
 
     <issue
         id="DefaultLocale"
@@ -46,6 +46,14 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
+            line="759"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
             line="760"/>
     </issue>
 
@@ -54,7 +62,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="761"/>
+            line="770"/>
     </issue>
 
     <issue
@@ -62,7 +70,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="771"/>
+            line="780"/>
     </issue>
 
     <issue
@@ -78,15 +86,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="782"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceImpl.java"
-            line="792"/>
+            line="791"/>
     </issue>
 
     <issue
@@ -166,7 +166,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/jdwp/chunkhandler/JdwpPacket.java"
-            line="303"/>
+            line="328"/>
     </issue>
 
     <issue
@@ -174,7 +174,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/ddmlib/internal/jdwp/chunkhandler/JdwpPacket.java"
-            line="309"/>
+            line="334"/>
     </issue>
 
     <issue
@@ -253,104 +253,8 @@
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
-            file="src/main/java/com/android/ddmlib/internal/ClientImpl.java"
-            line="687"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/ClientImpl.java"
-            line="811"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/ClientImpl.java"
-            line="820"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/ClientImpl.java"
-            line="825"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
             file="src/main/java/com/android/ddmlib/DdmPreferences.java"
-            line="119"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/Debugger.java"
-            line="285"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceClientMonitorTask.java"
-            line="92"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceClientMonitorTask.java"
-            line="169"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceClientMonitorTask.java"
-            line="215"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceClientMonitorTask.java"
-            line="227"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceClientMonitorTask.java"
-            line="303"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceClientMonitorTask.java"
-            line="342"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceClientMonitorTask.java"
-            line="411"/>
+            line="122"/>
     </issue>
 
     <issue
@@ -358,7 +262,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="84"/>
+            line="89"/>
     </issue>
 
     <issue
@@ -366,7 +270,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="116"/>
+            line="121"/>
     </issue>
 
     <issue
@@ -374,7 +278,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="126"/>
+            line="131"/>
     </issue>
 
     <issue
@@ -382,7 +286,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="132"/>
+            line="137"/>
     </issue>
 
     <issue
@@ -390,7 +294,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="136"/>
+            line="141"/>
     </issue>
 
     <issue
@@ -398,111 +302,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="140"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="181"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="230"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="231"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="233"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="250"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="260"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="265"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="266"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="268"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="279"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="289"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="292"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ddmlib/internal/DeviceMonitor.java"
-            line="319"/>
+            line="145"/>
     </issue>
 
     <issue

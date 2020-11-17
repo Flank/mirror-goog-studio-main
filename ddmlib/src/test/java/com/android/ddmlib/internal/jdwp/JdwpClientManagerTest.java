@@ -53,8 +53,7 @@ public class JdwpClientManagerTest {
     // FakeAdbTestRule cannot be initialized as a rule in this class because some test need to have
     // a customized initialization order for FakeAdb
     FakeAdbTestRule myFakeAdb = new FakeAdbTestRule();
-    JdwpProxyServer myServer =
-            new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {});
+    JdwpProxyServer myServer = new JdwpProxyServer(DdmPreferences.getJdwpProxyPort(), () -> {});
 
     @After
     public void shutdown() {

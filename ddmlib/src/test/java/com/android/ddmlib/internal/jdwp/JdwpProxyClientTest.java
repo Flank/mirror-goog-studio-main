@@ -35,13 +35,11 @@ public class JdwpProxyClientTest {
 
     @Test
     public void validateHandshakeSwitch() throws Exception {
-        JdwpProxyServer server =
-                new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {});
+        JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.getJdwpProxyPort(), () -> {});
         server.start();
         SocketChannel channel =
                 SocketChannel.open(
-                        new InetSocketAddress(
-                                "localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT));
+                        new InetSocketAddress("localhost", DdmPreferences.getJdwpProxyPort()));
         Selector selector = Selector.open();
         JdwpProxyClient client =
                 new JdwpProxyClient(channel, new JdwpClientManagerFactory(selector));
@@ -53,13 +51,11 @@ public class JdwpProxyClientTest {
 
     @Test
     public void validateConnection() throws Exception {
-        JdwpProxyServer server =
-                new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {});
+        JdwpProxyServer server = new JdwpProxyServer(DdmPreferences.getJdwpProxyPort(), () -> {});
         server.start();
         SocketChannel channel =
                 SocketChannel.open(
-                        new InetSocketAddress(
-                                "localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT));
+                        new InetSocketAddress("localhost", DdmPreferences.getJdwpProxyPort()));
         Selector selector = Selector.open();
         JdwpProxyClient client =
                 new JdwpProxyClient(channel, new JdwpClientManagerFactory(selector));

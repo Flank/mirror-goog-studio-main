@@ -72,7 +72,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** A Device. It can be a physical device or an emulator. */
-@VisibleForTesting
 public final class DeviceImpl implements IDevice {
     /** Serial number of the device */
     private final String mSerialNumber;
