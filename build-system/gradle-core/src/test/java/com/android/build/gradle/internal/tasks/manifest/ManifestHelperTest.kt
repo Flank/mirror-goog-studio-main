@@ -61,7 +61,7 @@ class ManifestHelperTest {
             12        android:allowBackup="true"
             12-->$filePath:6:9-6:35
             13        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-            13-->[androidx.core:core:1.0.1] /usr/.gradle/caches/transforms-2/files-2.1/cb5e0295e6631df8cf1172ae152a4ad4/AndroidManifest.xml:22:18-22:86
+            13-->[androidx.core:core:1.0.1] /usr/.gradle/caches/transforms-3/cb5e0295e6631df8cf1172ae152a4ad4/transformed/core-1.0.1/AndroidManifest.xml:22:18-22:86
             14        android:debuggable="true"
             15        android:icon="@mipmap/ic_launcher"
             15-->$filePath:7:9-7:43
@@ -88,7 +88,7 @@ class ManifestHelperTest {
             25            </intent-filter>
             26        </activity>
             27        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-            27-->[androidx.core:core:1.0.1] /usr/[path] with space/.gradle/caches/transforms-2/files-2.1/cb5e0295e6631df8cf1172ae152a4ad4/AndroidManifest.xml:22:18-22:86
+            27-->[androidx.core:core:1.0.1] /usr/[path] with space/.gradle/caches/transforms-3/cb5e0295e6631df8cf1172ae152a4ad4/transformed/core-1.0.1/AndroidManifest.xml:22:18-22:86
             28    </application>
             29
             30</manifest>
@@ -130,7 +130,7 @@ class ManifestHelperTest {
         checkSourcePosition(
             13,
             outputList,
-            "/usr/.gradle/caches/transforms-2/files-2.1/cb5e0295e6631df8cf1172ae152a4ad4/AndroidManifest.xml",
+            "/usr/.gradle/caches/transforms-3/cb5e0295e6631df8cf1172ae152a4ad4/transformed/core-1.0.1/AndroidManifest.xml",
             SourcePosition(21, 17, -1, 21, 85, -1),
             mergedManifestFile
         )
@@ -138,7 +138,7 @@ class ManifestHelperTest {
         checkSourcePosition(
             27,
             outputList,
-            "/usr/[path] with space/.gradle/caches/transforms-2/files-2.1/cb5e0295e6631df8cf1172ae152a4ad4/AndroidManifest.xml",
+            "/usr/[path] with space/.gradle/caches/transforms-3/cb5e0295e6631df8cf1172ae152a4ad4/transformed/core-1.0.1/AndroidManifest.xml",
             SourcePosition(21, 17, -1, 21, 85, -1),
             mergedManifestFile
         )

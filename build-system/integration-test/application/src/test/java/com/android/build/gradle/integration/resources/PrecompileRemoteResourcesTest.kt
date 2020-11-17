@@ -282,7 +282,7 @@ class PrecompileRemoteResourcesTest {
         for (subdirectory in transformCacheDir.listFiles()!!) {
             if (subdirectory.isDirectory) {
                 val outputDirCandidate =
-                    File(subdirectory, "com.precompileRemoteResourcesTest.publishedLib")
+                    File(subdirectory, "transformed/com.precompileRemoteResourcesTest.publishedLib")
                 if (outputDirCandidate.exists() && outputDirCandidate.isDirectory) {
                     assertWithMessage("Found more than one directory that could contain the output of the transform").that(
                         outputDir

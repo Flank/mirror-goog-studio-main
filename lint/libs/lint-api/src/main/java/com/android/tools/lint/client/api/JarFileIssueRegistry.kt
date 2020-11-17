@@ -73,12 +73,12 @@ private constructor(
     companion object Factory {
         /**
          * Pattern for matching lint jar paths in Gradle's cache, like
-         * ../../../../../.gradle/caches/transforms-2/files-2.1/7ea1fb10a49aec17439ff96dc10e54cb/annotation-experimental-1.0.0/jars/lint.jar
+         * ../../../../../.gradle/caches/transforms-3/4f61605fce02e0e38b0af6e34f10c4a6/transformed/lifecycle-runtime-ktx-2.2.0/jars/lint.jar
          * and on Windows,
-         * C:\users\example\.gradle\caches\transforms-2\files-2.1\7ea1fb10a49aec17439ff96dc10e54cb\annotation-experimental-1.0.0\jars\lint.jar
+         * C:\users\example\.gradle\caches\transforms-3\4f61605fce02e0e38b0af6e34f10c4a6\transformed\annotation-experimental-1.0.0\jars\lint.jar
          *
          */
-        private val ARTIFACT_PATTERN = Pattern.compile(".*[/\\\\].gradle[/\\\\]caches[/\\\\]transforms-[0-9]+[/\\\\]files-[0-9.]+[/\\\\][0-9a-f]+[/\\\\](.+)[/\\\\]jars[/\\\\]lint\\.jar$")
+        private val ARTIFACT_PATTERN = Pattern.compile(".*[/\\\\].gradle[/\\\\]caches[/\\\\]transforms-[0-9]+[/\\\\][0-9a-f]+[/\\\\]transformed[/\\\\](.+)[/\\\\]jars[/\\\\]lint\\.jar$")
 
         /** Service key for automatic discovery of lint rules */
         private const val SERVICE_KEY =
