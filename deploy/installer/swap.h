@@ -72,10 +72,8 @@ class SwapCommand : public Command {
   bool RunCmd(const std::string& shell_cmd, User run_as,
               const std::vector<std::string>& args, std::string* output) const;
 
-  // Copies the agent and server binarys from the directory specified by
-  // src_path to the destination specified by dst_path.
-  bool CopyBinaries(const std::string& src_path,
-                    const std::string& dst_path) const noexcept;
+  // Copies the agent and server binaries to the app /data/data/PKG.
+  bool CopyBinaries() const noexcept;
 };
 
 }  // namespace deploy
