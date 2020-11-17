@@ -27,8 +27,8 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelSerialization
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Nested
@@ -70,14 +70,14 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         project: Project,
         projectOptions: ProjectOptions,
         javaConvention: JavaPluginConvention,
-        customLintChecksConfig: Configuration,
+        customLintChecks: FileCollection,
         lintOptions: LintOptions
     ) {
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
         this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         this.projectInputs.initializeForStandalone(project, javaConvention, lintOptions)
-        this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, customLintChecksConfig, lintOptions)
+        this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, customLintChecks, lintOptions)
     }
 
     class CreationAction(
