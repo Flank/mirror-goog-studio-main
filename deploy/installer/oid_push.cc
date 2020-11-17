@@ -20,6 +20,7 @@
 
 #include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
@@ -59,7 +60,8 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   auto update_request = install_request.mutable_overlay_request();
   update_request->set_expected_overlay_id(request_.prev_oid());
   update_request->set_overlay_id(request_.next_oid());
-  update_request->set_overlay_path("code_cache");
+  const std::string pkg = request_.package_name();
+  update_request->set_overlay_path(Sites::AppOverlays(pkg));
   update_request->set_wipe_all_files(request_.wipe_overlays());
 
   std::unique_ptr<InstallClient> client_ = StartInstallServer(

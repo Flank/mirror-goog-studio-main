@@ -18,6 +18,7 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/executor.h"
@@ -45,7 +46,6 @@ OverlaySwapCommand::PrepareAndBuildRequest() {
   std::unique_ptr<proto::SwapRequest> request(new proto::SwapRequest());
 
   std::string version = workspace_.GetVersion() + "-";
-  std::string code_cache = "/data/data/" + package_name_ + "/code_cache/";
 
   // Determine which agent we need to use.
 #if defined(__aarch64__) || defined(__x86_64__)
@@ -55,8 +55,8 @@ OverlaySwapCommand::PrepareAndBuildRequest() {
   std::string agent = kAgent;
 #endif
 
-  std::string startup_path = code_cache + "startup_agents/";
-  std::string studio_path = code_cache + ".studio/";
+  std::string startup_path = Sites::AppStartupAgent(package_name_);
+  std::string studio_path = Sites::AppStudio(package_name_);
   std::string agent_path = startup_path + version + agent;
 
   std::unordered_set<std::string> missing_files;
@@ -126,8 +126,8 @@ void OverlaySwapCommand::BuildOverlayUpdateRequest(
   request->set_overlay_id(request_.overlay_id());
   request->set_expected_overlay_id(request_.expected_overlay_id());
 
-  const std::string overlay_path =
-      "/data/data/" + request_.package_name() + "/code_cache";
+  const std::string pkg = request_.package_name();
+  const std::string overlay_path = Sites::AppOverlays(pkg);
   request->set_overlay_path(overlay_path);
 
   for (auto clazz : request_.new_classes()) {

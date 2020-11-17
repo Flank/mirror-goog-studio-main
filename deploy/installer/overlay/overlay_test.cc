@@ -28,12 +28,25 @@
 
 namespace deploy {
 
+static std::string kBase = "foo/";
+static std::string kOverlayFolder = kBase + ".bar/";
+
+static int system(const std::string& cmd) { return ::system(cmd.c_str()); }
+
+static int mkdir(const std::string& path, int args) {
+  return ::mkdir(path.c_str(), args);
+}
+
+static int access(const std::string& path, int args) {
+  return ::access(path.c_str(), args);
+}
+
 class OverlayTest : public ::testing::Test {
  public:
   OverlayTest() {}
-  void SetUp() override { ASSERT_EQ(0, mkdir("code_cache", S_IRWXU)); }
+  void SetUp() override { ASSERT_EQ(0, mkdir(kBase, S_IRWXU)); }
 
-  void TearDown() override { ASSERT_EQ(0, system("rm -rf code_cache")); }
+  void TearDown() override { ASSERT_EQ(0, system("rm -rf " + kBase)); }
 
   void CheckFile(const std::string& path, const std::string& value) {
     std::string content;
@@ -43,68 +56,68 @@ class OverlayTest : public ::testing::Test {
 };
 
 TEST_F(OverlayTest, TestOverlayCreate) {
-  ASSERT_FALSE(Overlay::Exists("code_cache/.overlay", "id"));
+  ASSERT_FALSE(Overlay::Exists(kOverlayFolder, "id"));
 
-  Overlay overlay("code_cache/.overlay", "id");
+  Overlay overlay(kOverlayFolder, "id");
   ASSERT_TRUE(overlay.Open());
   // Open should create the overlay folder
-  ASSERT_EQ(0, access("code_cache/.overlay", F_OK));
+  ASSERT_EQ(0, access(kOverlayFolder, F_OK));
 
   ASSERT_TRUE(overlay.Commit());
   // Commit should create the id file
-  ASSERT_EQ(0, access("code_cache/.overlay/id", F_OK));
+  ASSERT_EQ(0, access(kOverlayFolder + "id", F_OK));
 
-  ASSERT_TRUE(Overlay::Exists("code_cache/.overlay", "id"));
+  ASSERT_TRUE(Overlay::Exists(kOverlayFolder, "id"));
 
-  Overlay new_overlay("code_cache/.overlay", "new_id");
+  Overlay new_overlay(kOverlayFolder, "new_id");
   ASSERT_TRUE(new_overlay.Open());
 
   // ID file was deleted.
-  ASSERT_NE(0, access("code_cache/.overlay/id", F_OK));
+  ASSERT_NE(0, access(kOverlayFolder + "id", F_OK));
 
   // If overlay object is already open, can re-open.
   ASSERT_TRUE(new_overlay.Open());
 
   // Other overlay cannot open already open overlay.
-  Overlay other("code_cache/.overlay", "new_id");
+  Overlay other(kOverlayFolder, "new_id");
   ASSERT_FALSE(other.Open());
 
   ASSERT_TRUE(new_overlay.Commit());
-  ASSERT_TRUE(Overlay::Exists("code_cache/.overlay", "new_id"));
+  ASSERT_TRUE(Overlay::Exists(kOverlayFolder, "new_id"));
 };
 
 TEST_F(OverlayTest, TestOverlayWriteFile) {
-  Overlay overlay("code_cache/.overlay", "id");
+  Overlay overlay(kOverlayFolder, "id");
   ASSERT_TRUE(overlay.Open());
   ASSERT_TRUE(overlay.WriteFile("apk/test.txt", "alpha"));
   ASSERT_TRUE(overlay.WriteFile("apk/sub/other.txt", "beta"));
   ASSERT_TRUE(overlay.WriteFile("other/sub/sub/test.txt", "gamma"));
 
-  ASSERT_EQ(0, access("code_cache/.overlay", F_OK));
-  CheckFile("code_cache/.overlay/apk/test.txt", "alpha");
-  CheckFile("code_cache/.overlay/apk/sub/other.txt", "beta");
-  CheckFile("code_cache/.overlay/other/sub/sub/test.txt", "gamma");
+  ASSERT_EQ(0, access(kOverlayFolder.c_str(), F_OK));
+  CheckFile(kOverlayFolder + "apk/test.txt", "alpha");
+  CheckFile(kOverlayFolder + "apk/sub/other.txt", "beta");
+  CheckFile(kOverlayFolder + "other/sub/sub/test.txt", "gamma");
 
   ASSERT_TRUE(overlay.Commit());
 };
 
 TEST_F(OverlayTest, TestOverlayDeleteFile) {
-  Overlay overlay("code_cache/.overlay", "id");
+  Overlay overlay(kOverlayFolder, "id");
   ASSERT_TRUE(overlay.Open());
   ASSERT_TRUE(overlay.WriteFile("apk/test.txt", "alpha"));
   ASSERT_TRUE(overlay.WriteFile("apk/sub/other.txt", "beta"));
 
-  ASSERT_EQ(0, access("code_cache/.overlay", F_OK));
-  CheckFile("code_cache/.overlay/apk/test.txt", "alpha");
-  CheckFile("code_cache/.overlay/apk/sub/other.txt", "beta");
+  ASSERT_EQ(0, access(kOverlayFolder, F_OK));
+  CheckFile(kOverlayFolder + "apk/test.txt", "alpha");
+  CheckFile(kOverlayFolder + "apk/sub/other.txt", "beta");
 
   ASSERT_TRUE(overlay.Commit());
 
   ASSERT_TRUE(overlay.Open());
   ASSERT_TRUE(overlay.DeleteFile("apk/test.txt"));
 
-  CheckFile("code_cache/.overlay/apk/sub/other.txt", "beta");
-  ASSERT_NE(0, access("code_cache/.overlay/apk/test.txt", F_OK));
+  CheckFile(kOverlayFolder + "apk/sub/other.txt", "beta");
+  ASSERT_NE(0, access(kOverlayFolder + "apk/test.txt", F_OK));
 
   ASSERT_TRUE(overlay.Commit());
 };

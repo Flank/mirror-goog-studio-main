@@ -151,10 +151,5 @@ bool WriteFile(const std::string& file_path, const T& content) {
 
   return true;
 }
-
-// Get the path where the agent will write exception logs.
-// TODO: This probably shouldn't live here.
-std::string GetAgentExceptionLogDir(const std::string& package_name);
-
 }  // namespace deploy
 #endif

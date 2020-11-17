@@ -35,7 +35,7 @@ namespace deploy {
 const std::string kIdFile = "id";
 
 bool Overlay::Exists(const std::string& overlay_folder, const std::string& id) {
-  const std::string id_file = overlay_folder + "/" + kIdFile;
+  const std::string id_file = overlay_folder + kIdFile;
   std::string content;
   if (!deploy::ReadFile(id_file.c_str(), &content)) {
     ErrEvent("Checking for overlay id '" + id +
@@ -59,7 +59,7 @@ bool Overlay::Open() {
 
   if (IO::access(overlay_folder_, F_OK) != 0) {
     // If overlay directory does not already exist, create one.
-    if (IO::mkdir(overlay_folder_, S_IRWXU) < 0) {
+    if (!IO::mkpath(overlay_folder_, S_IRWXU)) {
       ErrEvent("Could not create overlay folder at '" + overlay_folder_ +
                "': " + strerror(errno));
       return false;

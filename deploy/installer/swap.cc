@@ -32,6 +32,7 @@
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/proto_pipe.h"
+#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
@@ -60,8 +61,8 @@ void SwapCommand::ParseParameters(const proto::InstallerRequest& request) {
   request_ = request.swap_request();
 
   // Set this value here so we can re-use it in other methods.
-  target_dir_ =
-      "/data/data/" + request_.package_name() + "/code_cache/.studio/";
+  const std::string& pkg = request_.package_name();
+  target_dir_ = Sites::AppStudio(pkg);
   ready_to_run_ = true;
 }
 
@@ -150,11 +151,10 @@ bool SwapCommand::CopyBinaries() const noexcept {
   ExtractBinaries(workspace_.GetTmpFolder(), to_extract);
 
   // Copy binaries from tmp folder to app world.
-  const std::string dst_dir =
-      "/data/data/" + request_.package_name() + "/code_cache/.studio/";
+  std::string pkg = request_.package_name();
+  const std::string dst_dir = Sites::AppStudio(pkg);
 
   std::string cp_output;
-
   if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", tmp_dir, dst_dir}, &cp_output)) {
     cp_output.clear();
     // We don't need to check the output of this. It will fail if the code_cache
