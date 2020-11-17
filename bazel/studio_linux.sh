@@ -8,6 +8,31 @@ AS_BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
 AS_BUILD_NUMBER="${BUILD_NUMBER/P/0}"  # for AB presubmit: satisfy Integer.parseInt in BuildNumber.parseBuildNumber
 BUILD_NUMBER="${BUILD_NUMBER:-SNAPSHOT}"
 
+####################################
+# Copies bazel artifacts to an output directory named 'artifacts'.
+# Globals:
+#   DIST_DIR
+# Arguments:
+#   The bazel-bin directory.
+####################################
+function copy_bazel_artifacts() {
+  readonly artifacts_dir="${DIST_DIR}/artifacts"
+  mkdir -p ${artifacts_dir}
+
+  cp -a ${1}/tools/adt/idea/studio/android-studio.linux.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
+  cp -a ${1}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
+  cp -a ${1}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
+
+  cp -a ${1}/tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir}
+  cp -a ${1}/tools/base/sdklib/commandlinetools_*.zip ${artifacts_dir}
+  cp -a ${1}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
+  cp -a ${1}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}
+  cp -a ${1}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}
+}
+
 if [[ $BUILD_NUMBER != SNAPSHOT ]];
 then
   WORKER_INSTANCES=auto
@@ -62,7 +87,6 @@ readonly invocation_id="$(uuidgen)"
   test \
   --keep_going \
   ${config_options} \
-  --remote_download_minimal \
   --worker_max_instances=${WORKER_INSTANCES} \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
@@ -105,34 +129,17 @@ if [[ -d "${DIST_DIR}" ]]; then
     readonly perfgate_arg=""
   fi
 
-  declare -a download_arg
-  if [[ ! $skip_bazel_artifacts ]]; then
-    readonly artifacts_dir="${DIST_DIR}/artifacts"
-    mkdir -p ${artifacts_dir}
-
-    download_arg+=(-download tools/adt/idea/studio/android-studio.linux.zip ${artifacts_dir})
-    download_arg+=(-download tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir})
-    download_arg+=(-download tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir})
-    download_arg+=(-download tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir})
-    download_arg+=(-download tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir})
-    download_arg+=(-download tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir})
-    download_arg+=(-download tools/base/dynamic-layout-inspector/skiaparser.zip ${artifacts_dir})
-    download_arg+=(-download tools/base/sdklib/commandlinetools_linux.zip ${artifacts_dir})
-    download_arg+=(-download tools/base/sdklib/commandlinetools_win.zip ${artifacts_dir})
-    download_arg+=(-download tools/base/sdklib/commandlinetools_mac.zip ${artifacts_dir})
-    download_arg+=(-download tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir})
-    download_arg+=(-download tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir})
-    download_arg+=(-download tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir})
-  fi
-
   "${script_dir}/bazel" \
     run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
     ${config_options} \
     -- \
     -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
     -testlogs "${DIST_DIR}/logs/junit" \
-    ${perfgate_arg} \
-    ${download_arg[@]}
+    ${perfgate_arg}
+
+  if [[ ! $skip_bazel_artifacts ]]; then
+    copy_bazel_artifacts "${bin_dir}"
+  fi
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3
