@@ -20,8 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
-import org.junit.AfterClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -29,20 +28,13 @@ import org.junit.Test;
  */
 public class JarJarTest {
 
-    @ClassRule
-    public static GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("jarjarIntegration")
-                    .create();
-
-    @AfterClass
-    public static void tearDown() {
-        project = null;
-    }
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("jarjarIntegration").create();
 
     @Test
     public void checkRepackagedGsonLibraryFormonodex() throws Exception {
-        project.executeAndReturnModel("clean", "assembleDebug");
+        project.executeAndReturnModel("assembleDebug");
         verifyApk();
     }
 
@@ -57,7 +49,7 @@ public class JarJarTest {
                         + "    multiDexEnabled true\n"
                         + "}\n");
 
-        project.executeAndReturnModel("clean", "assembleDebug");
+        project.executeAndReturnModel("assembleDebug");
         verifyApk();
     }
 
@@ -70,7 +62,7 @@ public class JarJarTest {
                         + "    multiDexEnabled true\n"
                         + "}\n");
 
-        project.executor().run("clean", "assembleDebug");
+        project.executor().run("assembleDebug");
         project.model().fetchAndroidProjects().getOnlyModel();
         verifyApk();
     }
