@@ -20,9 +20,9 @@ dependencies {
     api project(':base:lint-model')
     implementation project(':base:builder-model')
     implementation libs.guava
-    implementation project(':base:intellij-core')
+    api project(':base:intellij-core')
     implementation project(':base:kotlin-compiler')
-    implementation project(':base:uast')
+    api project(':base:uast')
     implementation project(':base:manifest-merger')
     implementation project(':base:layoutlib-api')
 
