@@ -739,6 +739,24 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
+    public SocketChannel rawBinder(String service, String[] parameters)
+            throws AdbCommandRejectedException, TimeoutException, IOException {
+        final String[] command = new String[parameters.length + 1];
+        command[0] = service;
+        System.arraycopy(parameters, 0, command, 1, parameters.length);
+
+        if (supportsFeature(Feature.ABB_EXEC)) {
+            return AdbHelper.rawAdbService(
+                    AndroidDebugBridge.getSocketAddress(),
+                    this,
+                    String.join("\u0000", command),
+                    AdbHelper.AdbService.ABB_EXEC);
+        } else {
+            return AdbHelper.rawExec(AndroidDebugBridge.getSocketAddress(), this, "cmd", command);
+        }
+    }
+
+    @Override
     public void runEventLogService(LogReceiver receiver)
             throws TimeoutException, AdbCommandRejectedException, IOException {
         AdbHelper.runEventLogService(AndroidDebugBridge.getSocketAddress(), this, receiver);
