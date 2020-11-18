@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="utp-core-proto">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.6-dev/core-proto-0.0.6-dev.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.7-dev/core-proto-0.0.7-dev.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
