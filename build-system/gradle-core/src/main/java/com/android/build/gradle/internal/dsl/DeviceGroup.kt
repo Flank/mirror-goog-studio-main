@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.DomainObjectSet
 import javax.inject.Inject
 
-class DeviceGroup @Inject constructor(dslServices: DslServices, private val name: String):
+open class DeviceGroup @Inject constructor(dslServices: DslServices, private val name: String):
     DeviceGroup {
 
     override fun getName(): String = name

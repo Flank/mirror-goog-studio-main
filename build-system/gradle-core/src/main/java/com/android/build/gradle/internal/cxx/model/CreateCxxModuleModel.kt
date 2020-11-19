@@ -21,13 +21,18 @@ import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.cxx.configure.*
+import com.android.build.gradle.internal.cxx.configure.CmakeLocator
+import com.android.build.gradle.internal.cxx.configure.CmakeVersionRequirements
+import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
+import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
+import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.utils.FileUtils.join
 import java.io.File
 import java.io.FileReader
-import java.util.function.Consumer
 
 /**
  * Create module-level C/C++ build module ([CxxModuleModel]).
@@ -44,7 +49,7 @@ fun createCxxModuleModel(
             .getProperty(property) ?: return null
         return File(path)
     }
-    val ndk= sdkComponents.ndkHandler.ndkPlatform.getOrThrow()
+    val ndk = sdkComponents.ndkHandler.ndkPlatform.getOrThrow()
     val ndkFolder = trySymlinkNdk(
             ndk.ndkDirectory,
             cxxFolder,
@@ -64,7 +69,6 @@ fun createCxxModuleModel(
         ndkMetaPlatforms = ndkMetaPlatforms,
         ndkMetaAbiList = NdkAbiFile(ndkMetaAbisFile(ndkFolder)).abiInfoList,
         cmakeToolchainFile = join(ndkFolder, "build", "cmake", "android.toolchain.cmake"),
-        originalCmakeToolchainFile = join(ndkFolder, "build", "cmake", "android.toolchain.cmake"),
         cmake =
                 if (configurationParameters.buildSystem == CMAKE) {
                     val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
@@ -99,11 +103,9 @@ fun createCxxModuleModel(
         ndkDefaultStl = ndk.ndkInfo.getDefaultStl(configurationParameters.buildSystem),
         makeFile = configurationParameters.makeFile,
         buildSystem = configurationParameters.buildSystem,
-        splitsAbiFilterSet = configurationParameters.splitsAbiFilterSet,
         intermediatesFolder = configurationParameters.intermediatesFolder,
         gradleModulePathName = configurationParameters.gradleModulePathName,
         moduleRootFolder = configurationParameters.moduleRootFolder,
-        buildStagingFolder = configurationParameters.buildStagingFolder,
         stlSharedObjectMap =
             ndk.ndkInfo.supportedStls
                 .map { stl ->
@@ -112,7 +114,7 @@ fun createCxxModuleModel(
                         ndk.ndkInfo.getStlSharedObjectFiles(stl, ndk.ndkInfo.supportedAbis)
                     )
                 }
-                .toMap()
+                .toMap(),
     )
 }
 

@@ -50,7 +50,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class DownloadCacheTest {
-    private static final File ANDROID_FOLDER = new File("/android-home");
+    private static final File ANDROID_FOLDER = new File("/android-home").getAbsoluteFile();
     private OutputStreamMockFileOp mFileOp;
 
     static class OutputStreamMockFileOp extends MockFileOp {
@@ -80,7 +80,7 @@ public class DownloadCacheTest {
         public String getWrittenFiles() {
             StringBuilder sb = new StringBuilder();
             for (File f : mWrittenFiles) {
-                sb.append('<').append(getAgnosticAbsPath(f)).append(": ");
+                sb.append('<').append(getPlatformSpecificPath(f)).append(": ");
                 byte[] data = super.getContent(f);
                 if (data == null) {
                     sb.append("(stream not closed properly)>");
@@ -232,14 +232,22 @@ public class DownloadCacheTest {
                 .isEqualTo("Blah blah blah");
         assertThat(sanitize(d3, mFileOp.getWrittenFiles()))
                 .isAnyOf(
-                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
-                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                        "<$CACHE"
+                                + File.separator
+                                + "sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE"
+                                + File.separator
+                                + "sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
                                 + "#<creation timestamp>\n"
                                 + "URL=http\\://www.example.com/download1.xml\n"
                                 + "Status-Code=200\n"
                                 + "'>",
-                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
-                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                        "<$CACHE"
+                                + File.separator
+                                + "sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE"
+                                + File.separator
+                                + "sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
                                 + "#<creation timestamp>\n"
                                 + "Status-Code=200\n"
                                 + "URL=http\\://www.example.com/download1.xml\n"
@@ -255,14 +263,22 @@ public class DownloadCacheTest {
                 .isEqualTo("Blah blah blah");
         assertThat(sanitize(d4, mFileOp.getWrittenFiles()))
                 .isAnyOf(
-                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
-                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                        "<$CACHE"
+                                + File.separator
+                                + "sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE"
+                                + File.separator
+                                + "sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
                                 + "#<creation timestamp>\n"
                                 + "Status-Code=200\n"
                                 + "URL=http\\://www.example.com/download1.xml\n"
                                 + "'>",
-                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
-                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                        "<$CACHE"
+                                + File.separator
+                                + "sdkbin-1_9b8dc757-download1_xml: 'Blah blah blah'>"
+                                + "<$CACHE"
+                                + File.separator
+                                + "sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
                                 + "#<creation timestamp>\n"
                                 + "URL=http\\://www.example.com/download1.xml\n"
                                 + "Status-Code=200\n"
@@ -275,16 +291,15 @@ public class DownloadCacheTest {
         NoDownloadCache d1 = new NoDownloadCache(mFileOp, DownloadCache.Strategy.ONLY_CACHE);
         d1.registerResponse("http://www.example.com/download1.xml", 200, "This is the new content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d1.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d1.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
                 "This is the cached content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d1.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d1.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
-                "URL=http\\://www.example.com/download1.xml\n" +
-                        "Status-Code=200\n");
+                "URL=http\\://www.example.com/download1.xml\n" + "Status-Code=200\n");
         InputStream is1 = d1.openCachedUrl("http://www.example.com/download1.xml");
         // Only-cache strategy returns the value from the cache, not the actual resource.
         assertThat(new BufferedReader(new InputStreamReader(is1, Charsets.UTF_8)).readLine())
@@ -301,16 +316,15 @@ public class DownloadCacheTest {
         NoDownloadCache d2 = new NoDownloadCache(mFileOp, DownloadCache.Strategy.DIRECT);
         d2.registerResponse("http://www.example.com/download1.xml", 200, "This is the new content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d2.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d2.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
                 "This is the cached content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d2.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d2.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
-                "URL=http\\://www.example.com/download1.xml\n" +
-                        "Status-Code=200\n");
+                "URL=http\\://www.example.com/download1.xml\n" + "Status-Code=200\n");
         InputStream is2 = d2.openCachedUrl("http://www.example.com/download1.xml");
         // Direct strategy ignores the cache.
         assertThat(new BufferedReader(new InputStreamReader(is2, Charsets.UTF_8)).readLine())
@@ -328,16 +342,15 @@ public class DownloadCacheTest {
         NoDownloadCache d3 = new NoDownloadCache(mFileOp, DownloadCache.Strategy.SERVE_CACHE);
         d3.registerResponse("http://www.example.com/download1.xml", 200, "This is the new content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d3.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d3.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
                 "This is the cached content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d3.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d3.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
-                "URL=http\\://www.example.com/download1.xml\n" +
-                        "Status-Code=200\n");
+                "URL=http\\://www.example.com/download1.xml\n" + "Status-Code=200\n");
         InputStream is3 = d3.openCachedUrl("http://www.example.com/download1.xml");
         // We get content from the cache.
         assertThat(new BufferedReader(new InputStreamReader(is3, Charsets.UTF_8)).readLine())
@@ -356,16 +369,15 @@ public class DownloadCacheTest {
         NoDownloadCache d4 = new NoDownloadCache(mFileOp, DownloadCache.Strategy.FRESH_CACHE);
         d4.registerResponse("http://www.example.com/download1.xml", 200, "This is the new content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d4.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d4.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
                 "This is the cached content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(
-                        FileOpUtils.append(d4.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d4.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 123456L,
-                "URL=http\\://www.example.com/download1.xml\n" +
-                        "Status-Code=200\n");
+                "URL=http\\://www.example.com/download1.xml\n" + "Status-Code=200\n");
         InputStream is4 = d4.openCachedUrl("http://www.example.com/download1.xml");
         // Cache is discarded, actual resource is returned.
         assertThat(new BufferedReader(new InputStreamReader(is4, Charsets.UTF_8)).readLine())
@@ -374,14 +386,22 @@ public class DownloadCacheTest {
         // Cache isn updated since something fresh was read.
         assertThat(sanitize(d4, mFileOp.getWrittenFiles()))
                 .isAnyOf(
-                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'This is the new content'>"
-                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                        "<$CACHE"
+                                + File.separator
+                                + "sdkbin-1_9b8dc757-download1_xml: 'This is the new content'>"
+                                + "<$CACHE"
+                                + File.separator
+                                + "sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
                                 + "#<creation timestamp>\n"
                                 + "Status-Code=200\n"
                                 + "URL=http\\://www.example.com/download1.xml\n"
                                 + "'>",
-                        "<$CACHE/sdkbin-1_9b8dc757-download1_xml: 'This is the new content'>"
-                                + "<$CACHE/sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
+                        "<$CACHE"
+                                + File.separator
+                                + "sdkbin-1_9b8dc757-download1_xml: 'This is the new content'>"
+                                + "<$CACHE"
+                                + File.separator
+                                + "sdkinf-1_9b8dc757-download1_xml: '### Meta data for SDK Manager cache. Do not modify.\n"
                                 + "#<creation timestamp>\n"
                                 + "URL=http\\://www.example.com/download1.xml\n"
                                 + "Status-Code=200\n"
@@ -396,14 +416,15 @@ public class DownloadCacheTest {
         NoDownloadCache d5 = new NoDownloadCache(mFileOp, DownloadCache.Strategy.FRESH_CACHE);
         d5.registerResponse("http://www.example.com/download1.xml", 200, "This is the new content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(FileOpUtils.append(d5.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d5.getCacheRoot(), "sdkbin-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 System.currentTimeMillis() - 1000,
                 "This is the cached content");
         mFileOp.recordExistingFile(
-                mFileOp.getAgnosticAbsPath(FileOpUtils.append(d5.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")),
+                FileOpUtils.append(d5.getCacheRoot(), "sdkinf-1_9b8dc757-download1_xml")
+                        .getAbsolutePath(),
                 System.currentTimeMillis() - 1000,
-                "URL=http\\://www.example.com/download1.xml\n" +
-                "Status-Code=200\n");
+                "URL=http\\://www.example.com/download1.xml\n" + "Status-Code=200\n");
         InputStream is5 = d5.openCachedUrl("http://www.example.com/download1.xml");
         // Cache is used.
         assertThat(new BufferedReader(new InputStreamReader(is5, Charsets.UTF_8)).readLine())
@@ -418,7 +439,7 @@ public class DownloadCacheTest {
         if (msg != null) {
             msg = msg.replace("\r\n", "\n");
 
-            String absRoot = mFileOp.getAgnosticAbsPath(dc.getCacheRoot());
+            String absRoot = mFileOp.getPlatformSpecificPath(dc.getCacheRoot());
             msg = msg.replace(absRoot, "$CACHE");
 
             // Cached files also contain a creation timestamp which we need to find and remove.

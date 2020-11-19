@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.testing.utp
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
-import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_VIRTUAL
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
@@ -34,6 +34,7 @@ import com.google.testing.platform.proto.api.config.DeviceProto
 import com.google.testing.platform.proto.api.config.EnvironmentProto
 import com.google.testing.platform.proto.api.config.ExecutorProto
 import com.google.testing.platform.proto.api.config.FixtureProto
+import com.google.testing.platform.proto.api.config.GradleManagedAndroidDeviceProviderProto
 import com.google.testing.platform.proto.api.config.LocalAndroidDeviceProviderProto
 import com.google.testing.platform.proto.api.config.NetworkTypeProto
 import com.google.testing.platform.proto.api.config.OpenGlDriverProto
@@ -60,8 +61,6 @@ private const val DEFAULT_EMULATOR_GRPC_ADDRESS = "localhost"
 
 // Default port for adb.
 private const val DEFAULT_ADB_SERVER_PORT = 5037
-
-private const val DEFAULT_LONG_PRESS_TIMEOUT = 1000L
 
 private const val TEST_RUNNER_LOG_FILE_NAME = "test-results.log"
 
@@ -122,7 +121,7 @@ class UtpConfigFactory {
         retentionConfig: RetentionConfig
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
-            addDevice(createVirtualDevice(device, testData, utpDependencies))
+            addDevice(createGradleManagedDevice(device, testData, utpDependencies))
             addTestFixture(
                 createTestFixture(
                     null, apks, testData, utpDependencies, sdkComponents,
@@ -177,7 +176,7 @@ class UtpConfigFactory {
         }.build()
     }
 
-    private fun createVirtualDevice(
+    private fun createGradleManagedDevice(
         managedDevice: UtpManagedDevice,
         testData: StaticTestData,
         utpDependencies: UtpDependencies
@@ -186,55 +185,42 @@ class UtpConfigFactory {
             deviceIdBuilder.apply {
                 id = managedDevice.id
             }
-            provider = createVirtualDeviceProvider(managedDevice, utpDependencies)
+            provider = createGradleDeviceProvider(managedDevice, utpDependencies)
         }.build()
     }
 
-    private fun createVirtualDeviceProvider(
+    private fun createGradleDeviceProvider(
         deviceInfo: UtpManagedDevice,
         utpDependencies: UtpDependencies
     ): ExtensionProto.Extension {
         return ExtensionProto.Extension.newBuilder().apply {
             label = LabelProto.Label.newBuilder().apply {
-                label = "virtual_android_device_provider_config"
+                label = "gradle_managed_android_device_provider_config"
             }.build()
-            className = ANDROID_DEVICE_PROVIDER_VIRTUAL.mainClass
-            addAllJar(utpDependencies.deviceProviderVirtual.files.map {
+            className = ANDROID_DEVICE_PROVIDER_GRADLE.mainClass
+            addAllJar(utpDependencies.deviceProviderGradle.files.map {
                 PathProto.Path.newBuilder().apply {
                     path = it.absolutePath
                 }.build()
             })
             config =
                 Any.pack(
-                    VirtualAndroidDeviceProviderConfigProto.VirtualAndroidDeviceProviderConfig
-                        .newBuilder().apply {
-                            enableConsoleAuth = true
-                            runDex2OatOnCloud = true
-                            emulatorLauncherPath = PathProto.Path.newBuilder().apply {
-                                path = deviceInfo.emulatorLauncherPath
-                            }.build()
-                            adbServerPort = DEFAULT_ADB_SERVER_PORT
-                            networkType = NetworkTypeProto.NetworkType.FASTNET
-                            // TODO(b/168606024): find or retrieve kvm_device path
-                            kvmDevice = PathProto.Path.newBuilder().apply {
-                                path = "usr/bin/kvm"
-                            }.build()
-                            // TODO(b/168606029): customize initial_locale
-                            initialLocale = "en_US"
-                            // TODO(b/168606029): customize initial_ime
-                            // TODO(b/168606029): customize extra certs
-                            longPressTimeout = DEFAULT_LONG_PRESS_TIMEOUT
-                            openGlDriver = OpenGlDriverProto.OpenGlDriver.SWIFTSHADER_INDIRECT
-                            launcherTimeout = 70
-                            logcatPath = PathProto.Path.newBuilder().apply {
-                                path = deviceInfo.logcatPath
-                            }.build()
-                            // TODO(b/168606029): customize system apks to install
-                            grantRuntimePermissions = true
-                            exportLaunchMetadataPath = PathProto.Path.newBuilder().apply {
-                                path = deviceInfo.launchMetadataPath
-                            }.build()
-                        }.build())
+                    GradleManagedAndroidDeviceProviderProto
+                        .GradleManagedAndroidDeviceProviderConfig
+                            .newBuilder().apply {
+                                managedDeviceBuilder.apply {
+                                    avdFolder = PathProto.Path.newBuilder().apply {
+                                        path = deviceInfo.avdFolder
+                                    }.build()
+                                    avdName = deviceInfo.avdName
+                                    avdId = deviceInfo.id
+                                    enableDisplay = false
+                                    emulatorPath = PathProto.Path.newBuilder().apply {
+                                        path = deviceInfo.emulatorPath
+                                    }.build()
+                                }
+                                adbServerPort = DEFAULT_ADB_SERVER_PORT
+                            }.build())
         }.build()
     }
 

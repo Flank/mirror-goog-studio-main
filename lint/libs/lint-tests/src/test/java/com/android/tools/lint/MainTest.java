@@ -666,6 +666,120 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {"--check", "HardcodedText", project.getPath()});
     }
 
+    public void testWall() throws Exception {
+        File project = getProjectDir(null, java("class Test {\n    // STOPSHIP\n}"));
+        checkDriver(
+                ""
+                        + "Scanning MainTest_testWall: ..\n"
+                        + "Scanning MainTest_testWall (Phase 2): .\n"
+                        + "src/Test.java:2: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                        + "    // STOPSHIP\n"
+                        + "       ~~~~~~~~\n"
+                        + "1 errors, 0 warnings",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "-Wall", "--disable", "LintError,UsesMinSdkAttributes", project.getPath()
+                });
+    }
+
+    public void testWerror() throws Exception {
+        File project =
+                getProjectDir(null, java("class Test {\n    String s = \"/sdcard/path\";\n}"));
+        checkDriver(
+                ""
+                        + "Scanning MainTest_testWerror: ..\n"
+                        + "Scanning MainTest_testWerror (Phase 2): .\n"
+                        + "src/Test.java:2: Error: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "    String s = \"/sdcard/path\";\n"
+                        + "               ~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "-Werror", "--disable", "LintError,UsesMinSdkAttributes", project.getPath()
+                });
+    }
+
+    public void testNoWarn() throws Exception {
+        File project =
+                getProjectDir(null, java("class Test {\n    String s = \"/sdcard/path\";\n}"));
+        checkDriver(
+                "No issues found.",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "-w", "--disable", "LintError,UsesMinSdkAttributes", project.getPath()
+                });
+    }
+
+    public void testWrongThreadOff() throws Exception {
+        // Make sure the wrong thread interprocedural check is not included with -Wall
+        File project =
+                getProjectDir(
+                        null,
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.UiThread;\n"
+                                        + "import android.support.annotation.WorkerThread;\n"
+                                        + "\n"
+                                        + "@FunctionalInterface\n"
+                                        + "public interface Runnable {\n"
+                                        + "  public abstract void run();\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "class Test {\n"
+                                        + "  @UiThread static void uiThreadStatic() { unannotatedStatic(); }\n"
+                                        + "  static void unannotatedStatic() { workerThreadStatic(); }\n"
+                                        + "  @WorkerThread static void workerThreadStatic() {}\n"
+                                        + "\n"
+                                        + "  @UiThread void uiThread() { unannotated(); }\n"
+                                        + "  void unannotated() { workerThread(); }\n"
+                                        + "  @WorkerThread void workerThread() {}\n"
+                                        + "\n"
+                                        + "  @UiThread void runUi() {}\n"
+                                        + "  void runIt(Runnable r) { r.run(); }\n"
+                                        + "  @WorkerThread void callRunIt() {\n"
+                                        + "    runIt(() -> runUi());\n"
+                                        + "  }\n"
+                                        + "\n"
+                                        + "  public static void main(String[] args) {\n"
+                                        + "    Test instance = new Test();\n"
+                                        + "    instance.uiThread();\n"
+                                        + "  }\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_CLASS_PATH,
+                        SUPPORT_ANNOTATIONS_JAR);
+        checkDriver(
+                ""
+                        + "Scanning MainTest_testWrongThreadOff: ..\n"
+                        + "Scanning MainTest_testWrongThreadOff (Phase 2): .\n"
+                        + "No issues found.",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                new String[] {
+                    "-Wall", "--disable", "LintError,UsesMinSdkAttributes", project.getPath()
+                });
+    }
+
     public void testInvalidLintXmlId() throws Exception {
         // Regression test for
         // 37070812: Lint does not fail when invalid issue ID is referenced in XML

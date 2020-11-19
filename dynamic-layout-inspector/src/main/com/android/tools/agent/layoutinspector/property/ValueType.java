@@ -46,4 +46,5 @@ public enum ValueType {
     DIMENSION_DP,
     DIMENSION_SP,
     DIMENSION_EM,
+    LAMBDA,
 }

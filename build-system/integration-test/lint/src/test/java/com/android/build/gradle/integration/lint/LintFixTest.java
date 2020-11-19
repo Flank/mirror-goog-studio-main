@@ -49,7 +49,7 @@ public class LintFixTest {
 
     @Test
     public void checkFindNestedResult() throws Exception {
-        GradleBuildResult result = project.executor().expectFailure().run("clean", ":app:lintFix");
+        GradleBuildResult result = project.executor().expectFailure().run(":app:lintFix");
         assertThat(result.getStderr())
                 .contains(
                         "Aborting build since sources were modified to apply quickfixes after compilation");

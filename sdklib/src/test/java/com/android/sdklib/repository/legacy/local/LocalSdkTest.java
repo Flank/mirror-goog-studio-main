@@ -17,20 +17,16 @@
 package com.android.sdklib.repository.legacy.local;
 
 import com.android.SdkConstants;
+import com.android.repository.Revision;
+import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.BuildToolInfo.PathId;
-import com.android.repository.testframework.MockFileOp;
-import com.android.repository.Revision;
 import com.android.sdklib.repository.legacy.descriptors.PkgType;
-
-import com.android.sdklib.repository.legacy.local.*;
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.regex.Pattern;
+import junit.framework.TestCase;
 
 @SuppressWarnings("MethodMayBeStatic")
 public class LocalSdkTest extends TestCase {
@@ -42,7 +38,7 @@ public class LocalSdkTest extends TestCase {
     protected void setUp() {
         mFOp = new MockFileOp();
         mLS = new LocalSdk(mFOp);
-        mLS.setLocation(new File("/sdk"));
+        mLS.setLocation(new File("/sdk").getAbsoluteFile());
     }
 
     public final void testLocalSdkTest_allPkgTypes() {
@@ -84,7 +80,7 @@ public class LocalSdkTest extends TestCase {
         LocalPkgInfo pi = mLS.getPkgInfo(PkgType.PKG_TOOLS);
         assertNotNull(pi);
         assertTrue(pi instanceof LocalToolPkgInfo);
-        assertEquals(new File("/sdk/tools"), pi.getLocalDir());
+        assertEquals(new File("/sdk/tools").getAbsoluteFile(), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
         assertEquals(new Revision(22, 3, 4), pi.getDesc().getRevision());
@@ -113,7 +109,7 @@ public class LocalSdkTest extends TestCase {
         LocalPkgInfo pi = mLS.getPkgInfo(PkgType.PKG_PLATFORM_TOOLS);
         assertNotNull(pi);
         assertTrue(pi instanceof LocalPlatformToolPkgInfo);
-        assertEquals(new File("/sdk/platform-tools"), pi.getLocalDir());
+        assertEquals(new File("/sdk/platform-tools").getAbsoluteFile(), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
         assertEquals(new Revision(18, 19, 20), pi.getDesc().getRevision());
@@ -142,7 +138,7 @@ public class LocalSdkTest extends TestCase {
         LocalPkgInfo pi = mLS.getPkgInfo(PkgType.PKG_DOC);
         assertNotNull(pi);
         assertTrue(pi instanceof LocalDocPkgInfo);
-        assertEquals(new File("/sdk/docs"), pi.getLocalDir());
+        assertEquals(new File("/sdk/docs").getAbsoluteFile(), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
         assertEquals(new Revision(2), pi.getDesc().getRevision());
@@ -172,7 +168,7 @@ public class LocalSdkTest extends TestCase {
         BuildToolInfo bt = mLS.getLatestBuildTool();
         assertNotNull(bt);
         assertEquals(new Revision(16, 0, 0), bt.getRevision());
-        assertEquals(new File("/sdk/platform-tools"), bt.getLocation());
+        assertEquals(new File("/sdk/platform-tools").getAbsoluteFile(), bt.getLocation());
 
         // clearing local packages also clears the legacy build-tools
         mLS.clearLocalPkg(PkgType.PKG_ALL);
@@ -225,7 +221,7 @@ public class LocalSdkTest extends TestCase {
         BuildToolInfo bt18a = mLS.getLatestBuildTool();
         assertNotNull(bt18a);
         assertEquals(new Revision(18, 1, 2), bt18a.getRevision());
-        assertEquals(new File("/sdk/build-tools/18.1.2"), bt18a.getLocation());
+        assertEquals(new File("/sdk/build-tools/18.1.2").getAbsoluteFile(), bt18a.getLocation());
 
         // -- get specific build tools by version
 
@@ -235,7 +231,7 @@ public class LocalSdkTest extends TestCase {
         BuildToolInfo bt17 = mLS.getBuildTool(new Revision(17, 0, 0));
         assertNotNull(bt17);
         assertEquals(new Revision(17, 0, 0), bt17.getRevision());
-        assertEquals(new File("/sdk/build-tools/17"), bt17.getLocation());
+        assertEquals(new File("/sdk/build-tools/17").getAbsoluteFile(), bt17.getLocation());
 
         assertNull(mLS.getBuildTool(new Revision(0)));
         assertNull(mLS.getBuildTool(new Revision(16, 17, 18)));
@@ -244,7 +240,7 @@ public class LocalSdkTest extends TestCase {
         assertNotNull(pi);
         assertTrue(pi instanceof LocalBuildToolPkgInfo);
         assertSame(bt18a, ((LocalBuildToolPkgInfo)pi).getBuildToolInfo());
-        assertEquals(new File("/sdk/build-tools/18.1.2"), pi.getLocalDir());
+        assertEquals(new File("/sdk/build-tools/18.1.2").getAbsoluteFile(), pi.getLocalDir());
         assertSame(mLS, pi.getLocalSdk());
         assertEquals(null, pi.getLoadError());
         assertEquals(new Revision(18, 1, 2), pi.getDesc().getRevision());
@@ -320,7 +316,7 @@ public class LocalSdkTest extends TestCase {
         assertEquals(
                 "path1",
                 ((LocalExtraPkgInfo)pi1).getDesc().getPath());
-        assertEquals(new File("/sdk/extras/vendor1/path1"), pi1.getLocalDir());
+        assertEquals(new File("/sdk/extras/vendor1/path1").getAbsoluteFile(), pi1.getLocalDir());
         assertSame(mLS, pi1.getLocalSdk());
         assertEquals(null, pi1.getLoadError());
         assertEquals(new Revision(11, 0, 0), pi1.getDesc().getRevision());

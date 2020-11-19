@@ -134,8 +134,8 @@ public class MergeResourceWriterWithCompilerTest {
 
         try (ExecutorServiceAdapter facade =
                 new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService())) {
-            MergedResourceWriter writer =
-                    new MergedResourceWriter(
+            MergedResourceWriterRequest request =
+                    new MergedResourceWriterRequest(
                             facade,
                             root,
                             null,
@@ -146,7 +146,9 @@ public class MergeResourceWriterWithCompilerTest {
                             null,
                             null,
                             false,
-                            false);
+                            false,
+                            new HashMap<>());
+            MergedResourceWriter writer = new MergedResourceWriter(request);
 
             /*
              * Add the file.
@@ -164,19 +166,7 @@ public class MergeResourceWriterWithCompilerTest {
             /*
              * Remove the file.
              */
-            writer =
-                    new MergedResourceWriter(
-                            facade,
-                            root,
-                            null,
-                            null,
-                            mEmptyPreprocessor,
-                            mSimpleCompiler,
-                            tmpFolder,
-                            null,
-                            null,
-                            false,
-                            false);
+            writer = new MergedResourceWriter(request);
 
             mResourceItems.get(name).setRemoved();
             writer.start(DocumentBuilderFactory.newInstance());

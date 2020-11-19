@@ -154,7 +154,7 @@ open class PackagingOptions @Inject constructor(dslServices: DslServices) :
         excludes.addAll(newExcludes)
     }
 
-    override fun exclude(pattern: String) {
+    fun exclude(pattern: String) {
         excludes.add(pattern);
     }
 
@@ -166,7 +166,7 @@ open class PackagingOptions @Inject constructor(dslServices: DslServices) :
         pickFirsts.addAll(newPickFirsts)
     }
 
-    override fun pickFirst(pattern: String) {
+    fun pickFirst(pattern: String) {
         pickFirsts.add(pattern);
     }
 
@@ -178,7 +178,7 @@ open class PackagingOptions @Inject constructor(dslServices: DslServices) :
         merges.addAll(newMerges)
     }
 
-    override fun merge(pattern: String) {
+    fun merge(pattern: String) {
         merges.add(pattern);
     }
 
@@ -190,7 +190,7 @@ open class PackagingOptions @Inject constructor(dslServices: DslServices) :
         doNotStrip.addAll(newDoNotStrip)
     }
 
-    override fun doNotStrip(pattern: String) {
+    fun doNotStrip(pattern: String) {
         doNotStrip.add(pattern);
     }
 

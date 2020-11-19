@@ -1,7 +1,6 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools.lint'
@@ -15,12 +14,19 @@ compileKotlin {
 }
 
 dependencies {
-    compile project(':base:lint-api')
-    compile libs.guava
-    compile project(':base:intellij-core')
-    compile project(':base:kotlin-compiler')
-    compile project(':base:uast')
-    compile libs.asm_analysis
+    api project(':base:lint-api')
+    implementation project(':base:sdk-common')
+    implementation project(':base:sdklib')
+    implementation project(':base:common')
+    implementation project(':base:layoutlib-api')
+    implementation libs.guava
+    implementation libs.gson
+    implementation project(':base:intellij-core')
+    implementation project(':base:kotlin-compiler')
+    implementation project(':base:uast')
+    implementation libs.asm_analysis
+    implementation libs.kxml
+    implementation libs.trove4j
 }
 
 sourceSets {

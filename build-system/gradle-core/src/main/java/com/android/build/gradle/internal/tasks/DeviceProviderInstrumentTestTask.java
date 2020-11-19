@@ -55,7 +55,6 @@ import com.android.build.gradle.internal.testing.TestData;
 import com.android.build.gradle.internal.testing.TestRunner;
 import com.android.build.gradle.internal.testing.utp.RetentionConfig;
 import com.android.build.gradle.internal.testing.utp.UtpDependencies;
-import com.android.build.gradle.internal.testing.utp.UtpDependency;
 import com.android.build.gradle.internal.testing.utp.UtpDependencyUtilsKt;
 import com.android.build.gradle.internal.testing.utp.UtpTestRunner;
 import com.android.build.gradle.options.BooleanOption;
@@ -87,7 +86,6 @@ import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -620,51 +618,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 + BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM
                                         .getPropertyName());
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
-                ConfigurationContainer configurations = task.getProject().getConfigurations();
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getLauncher()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.LAUNCHER.getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getCore()
-                        .from(configurations.getByName(UtpDependency.CORE.getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getDeviceProviderLocal()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
-                                                .getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getDriverInstrumentation()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
-                                                .getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getTestPlugin()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.ANDROID_TEST_PLUGIN.getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getTestDeviceInfoPlugin()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
-                                                .getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getTestPluginHostRetention()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
-                                                .getConfigurationName()));
+                UtpDependencyUtilsKt.resolveDependencies(
+                        task.getTestRunnerFactory().getUtpDependencies(),
+                        task.getProject().getConfigurations());
             }
 
             task.getTestRunnerFactory()

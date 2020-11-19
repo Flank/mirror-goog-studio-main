@@ -1,7 +1,6 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools.build'
@@ -9,17 +8,17 @@ archivesBaseName = 'manifest-merger'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile project(':base:common')
-    compile project(':base:sdklib')
-    compile project(':base:sdk-common')
-    compile libs.gson
-    compile libs.kotlin_stdlib
-    compile libs.kxml
+    implementation project(':base:common')
+    implementation project(':base:sdklib')
+    implementation project(':base:sdk-common')
+    implementation libs.gson
+    implementation libs.kotlin_stdlib
+    implementation libs.kxml
 
-    testCompile libs.junit
-    testCompile libs.truth
-    testCompile libs.mockito_core
-    testCompile project(':base:testutils')
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.mockito_core
+    testImplementation project(':base:testutils')
 }
 
 sourceSets {

@@ -78,6 +78,12 @@ class CacheabilityTest {
                 ":app:validateSigningDebug",
                 ":app:writeDebugAppMetadata",
                 ":app:writeDebugSigningConfigVersions"
+            ).plus(
+                    if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                        setOf(":app:processDebugResources")
+                    } else {
+                        emptySet()
+                    }
             ),
             /*
              * The following tasks are either not yet cacheable, or not intended to be cacheable
@@ -89,14 +95,13 @@ class CacheabilityTest {
                 ":app:desugarDebugFileDependencies", /* Bug 160138798 */
                 ":app:mergeDebugResources", /* Bug 141301405 */
                 ":app:packageDebug", /* Bug 74595859 */
-                ":app:processDebugResources", /* Bug 141301405 */
             ).plus(
                     // mapDebugSourceSetPaths is not cacheable but exists to enable the main resource
                     // compilation to be cacheable.
                     if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                         setOf(":app:mapDebugSourceSetPaths")
                     } else {
-                        emptySet()
+                        setOf(":app:processDebugResources" /* Bug 141301405 */)
                     }
             ),
             UP_TO_DATE to setOf(
@@ -154,6 +159,12 @@ class CacheabilityTest {
                     ":app:testReleaseUnitTest",
                     ":app:writeReleaseAppMetadata",
                     ":app:writeReleaseSigningConfigVersions"
+            ).plus(
+                    if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                        setOf(":app:processReleaseResources")
+                    } else {
+                        emptySet()
+                    }
             ),
             DID_WORK to setOf(
                     ":app:collectReleaseDependencies",
@@ -161,7 +172,6 @@ class CacheabilityTest {
                     ":app:lintVitalRelease",
                     ":app:mergeReleaseResources",
                     ":app:packageRelease",
-                    ":app:processReleaseResources",
                     ":app:sdkReleaseDependencyData"
             ).plus(
                     // mapDebugSourceSetPaths is not cacheable but exists to enable the main
@@ -169,7 +179,7 @@ class CacheabilityTest {
                     if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                         setOf(":app:mapReleaseSourceSetPaths")
                     } else {
-                        emptySet()
+                        setOf(":app:processReleaseResources" /* Bug 141301405 */)
                     }
             ),
             UP_TO_DATE to setOf(

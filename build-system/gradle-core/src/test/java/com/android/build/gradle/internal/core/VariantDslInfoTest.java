@@ -60,6 +60,7 @@ public class VariantDslInfoTest {
     private BuildType buildType;
     private DslServices dslServices;
     private VariantPropertiesApiServices variantPropertiesApiServices;
+    private String packageName;
 
     @Before
     public void setUp() throws Exception {
@@ -281,6 +282,17 @@ public class VariantDslInfoTest {
         assertThat(variant.getApplicationId().get()).isEqualTo("com.example.mapp");
     }
 
+    @Test
+    public void testPackageName() {
+        initNoDeviceApiInjection();
+
+        packageName = "com.example.myPackageName";
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getPackageName().get()).isEqualTo("com.example.myPackageName");
+    }
+
     private VariantDslInfo getVariant() {
         return createVariant(null /*signingOverride*/);
     }
@@ -303,7 +315,8 @@ public class VariantDslInfoTest {
                         signingOverride,
                         Mockito.mock(LazyManifestParser.class),
                         dslServices,
-                        variantPropertiesApiServices);
+                        variantPropertiesApiServices,
+                        packageName);
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
@@ -358,5 +371,6 @@ public class VariantDslInfoTest {
         flavorConfig = dslServices.newInstance(ProductFlavor.class, "flavor", dslServices);
         flavorConfig.dimension("dimension1");
         buildType = dslServices.newInstance(BuildType.class, "debug", dslServices);
+        packageName = null;
     }
 }

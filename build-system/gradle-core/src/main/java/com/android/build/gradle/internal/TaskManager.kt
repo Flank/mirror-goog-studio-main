@@ -27,7 +27,6 @@ import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.getFeatureLevel
@@ -86,14 +85,60 @@ import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.tasks.*
+import com.android.build.gradle.internal.tasks.AndroidReportTask
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
+import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
+import com.android.build.gradle.internal.tasks.CheckProguardFiles
+import com.android.build.gradle.internal.tasks.CompressAssetsTask
+import com.android.build.gradle.internal.tasks.D8MainDexListTask
+import com.android.build.gradle.internal.tasks.DependencyReportTask
+import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
+import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
+import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
+import com.android.build.gradle.internal.tasks.DexMergingAction
+import com.android.build.gradle.internal.tasks.DexMergingTask
+import com.android.build.gradle.internal.tasks.DexSplitterTask
+import com.android.build.gradle.internal.tasks.ExtractProguardFiles
+import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
+import com.android.build.gradle.internal.tasks.InstallVariantTask
+import com.android.build.gradle.internal.tasks.JacocoTask
+import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
+import com.android.build.gradle.internal.tasks.LintCompile
+import com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask
+import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
+import com.android.build.gradle.internal.tasks.ManagedDeviceSetupTask
+import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction
+import com.android.build.gradle.internal.tasks.MergeClassesTask
+import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
+import com.android.build.gradle.internal.tasks.MergeNativeLibsTask
+import com.android.build.gradle.internal.tasks.OptimizeResourcesTask
+import com.android.build.gradle.internal.tasks.PackageForUnitTest
+import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish
+import com.android.build.gradle.internal.tasks.ProcessJavaResTask
+import com.android.build.gradle.internal.tasks.ProguardTask
+import com.android.build.gradle.internal.tasks.R8Task
+import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask
+import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
+import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask
+import com.android.build.gradle.internal.tasks.SigningConfigWriterTask
+import com.android.build.gradle.internal.tasks.SigningReportTask
+import com.android.build.gradle.internal.tasks.SourceSetsTask
 import com.android.build.gradle.internal.tasks.TestServerTask.TestServerTaskCreationAction
+import com.android.build.gradle.internal.tasks.UninstallTask
+import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments.Companion.createArguments
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
-import com.android.build.gradle.internal.tasks.factory.*
+import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
+import com.android.build.gradle.internal.tasks.factory.TaskFactory
+import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
+import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.tasks.featuresplit.getFeatureName
 import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass
 import com.android.build.gradle.internal.test.AbstractTestDataImpl
@@ -112,8 +157,20 @@ import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.tasks.*
+import com.android.build.gradle.tasks.AidlCompile
+import com.android.build.gradle.tasks.AnalyzeDependenciesTask
+import com.android.build.gradle.tasks.CleanBuildCache
+import com.android.build.gradle.tasks.CompatibleScreensManifest
+import com.android.build.gradle.tasks.GenerateBuildConfig
+import com.android.build.gradle.tasks.GenerateManifestJarTask
+import com.android.build.gradle.tasks.GenerateResValues
+import com.android.build.gradle.tasks.GenerateTestConfig
 import com.android.build.gradle.tasks.GenerateTestConfig.TestConfigInputs
+import com.android.build.gradle.tasks.JavaCompileCreationAction
+import com.android.build.gradle.tasks.JavaPreCompileTask
+import com.android.build.gradle.tasks.LintFixTask
+import com.android.build.gradle.tasks.LintGlobalTask
+import com.android.build.gradle.tasks.LintPerVariantTask
 import com.android.build.gradle.tasks.LintPerVariantTask.VitalCreationAction
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MapSourceSetPathsTask
@@ -169,7 +226,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.Callable
 import java.util.function.Consumer
 import java.util.stream.Collectors
@@ -953,8 +1010,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                 project.files(
                                         artifacts.get(
                                                 COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)))
-                if (!creationConfig.debuggable
-                        && projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]) {
+                if (!creationConfig.debuggable &&
+                        !creationConfig.variantType.isForTesting &&
+                         projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]) {
                     taskFactory.register(OptimizeResourcesTask.CreateAction(creationConfig))
                 }
             }
@@ -1484,11 +1542,22 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 .forEach { device ->
                     if (device is ManagedVirtualDevice) {
                         managedDevices.add(device)
+                    } else {
+                        error("Unsupported managed device type: ${device.javaClass}")
                     }
-                };
+                }
         taskFactory.register(
                 ManagedDeviceCleanTask.CreationAction(
-                        "cleanManagedDevices", globalScope, managedDevices.toList()))
+                    "cleanManagedDevices",
+                    globalScope,
+                    managedDevices))
+        val allDevices = taskFactory.register(
+            ALL_DEVICES_CHECK
+        ) { allDevicesCheckTask: Task ->
+            allDevicesCheckTask.description =
+                "Runs all device checks on all managed devices defined in the TestOptions dsl."
+            allDevicesCheckTask.group = JavaBasePlugin.VERIFICATION_GROUP
+        }
 
         for (device in managedDevices) {
             taskFactory.register(
@@ -1496,6 +1565,26 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     setupTaskName(device),
                     device,
                     globalScope))
+
+            val deviceAllVariantsTask = taskFactory.register(
+                managedDeviceAllVariantsTaskName(device)
+            ) { deviceVariantTask: Task ->
+                deviceVariantTask.description =
+                    "Runs all device checks on the managed device ${device.name}."
+                deviceVariantTask.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
+            allDevices.dependsOn(deviceAllVariantsTask)
+        }
+
+        val deviceGroups = extension.testOptions.deviceGroups
+        for (group in deviceGroups) {
+            taskFactory.register(
+                managedDeviceGroupAllVariantsTaskName(group)
+            ) { deviceGroupTask: Task ->
+                deviceGroupTask.description =
+                    "Runs all device checks on all devices defined in group ${group.name}."
+                deviceGroupTask.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
         }
     }
 
@@ -1561,6 +1650,69 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             taskFactory.configure(
                     DEVICE_CHECK) { deviceAndroidTest: Task ->
                 deviceAndroidTest.dependsOn(serverTask)
+            }
+        }
+
+        if (globalScope.projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]) {
+            // Now for each managed device defined in the dsl
+            val managedDevices = mutableListOf<ManagedVirtualDevice>()
+            extension
+                .testOptions
+                .devices
+                .forEach { device ->
+                    if (device is ManagedVirtualDevice) {
+                        managedDevices.add(device)
+                    }
+                }
+            val variantName = androidTestProperties.testedConfig.name
+            val allDevicesVariantTask = taskFactory.register(
+                androidTestProperties.computeTaskName("allDevices")
+            ) { allDevicesVariant: Task ->
+                allDevicesVariant.description =
+                    "Runs the tests for $variantName on all managed devices in the dsl."
+                allDevicesVariant.group = JavaBasePlugin.VERIFICATION_GROUP
+            }
+            taskFactory.configure(
+                ALL_DEVICES_CHECK
+            ) { allDevices: Task ->
+                allDevices.dependsOn(allDevicesVariantTask)
+            }
+            val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
+            for (managedDevice in managedDevices) {
+                val managedDeviceTestTask = taskFactory.register(
+                    ManagedDeviceInstrumentationTestTask.CreationAction(
+                        androidTestProperties,
+                        globalScope.avdComponents,
+                        managedDevice,
+                        testData
+                    )
+                )
+                managedDeviceTestTask.dependsOn(setupTaskName(managedDevice))
+                allDevicesVariantTask.dependsOn(managedDeviceTestTask)
+                taskFactory.configure(
+                    managedDeviceAllVariantsTaskName(managedDevice)
+                ) { managedDeviceTests: Task ->
+                    managedDeviceTests.dependsOn(managedDeviceTestTask)
+                }
+                deviceToProvider[managedDevice.name] = managedDeviceTestTask
+            }
+            // Lastly the Device Group Tasks.
+            for (group in extension.testOptions.deviceGroups) {
+                val variantDeviceGroupTask = taskFactory.register(
+                    managedDeviceGroupSingleVariantTaskName(androidTestProperties, group)
+                ) { deviceGroupVariant: Task ->
+                    deviceGroupVariant.description =
+                        "Runs the tests for $variantName on all devices defined in ${group.name}."
+                    deviceGroupVariant.group = JavaBasePlugin.VERIFICATION_GROUP
+                }
+                for (device in group.targetDevices) {
+                    variantDeviceGroupTask.dependsOn(deviceToProvider.getValue(device.name))
+                }
+                taskFactory.configure(
+                    managedDeviceGroupAllVariantsTaskName(group)
+                ) { deviceGroupTask: Task ->
+                    deviceGroupTask.dependsOn(variantDeviceGroupTask)
+                }
             }
         }
     }
@@ -2675,6 +2827,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         const val DEVICE_CHECK = "deviceCheck"
         const val DEVICE_ANDROID_TEST = BuilderConstants.DEVICE + VariantType.ANDROID_TEST_SUFFIX
         const val CONNECTED_CHECK = "connectedCheck"
+        const val ALL_DEVICES_CHECK = "allDevicesCheck"
         const val CONNECTED_ANDROID_TEST =
                 BuilderConstants.CONNECTED + VariantType.ANDROID_TEST_SUFFIX
         const val ASSEMBLE_ANDROID_TEST = "assembleAndroidTest"

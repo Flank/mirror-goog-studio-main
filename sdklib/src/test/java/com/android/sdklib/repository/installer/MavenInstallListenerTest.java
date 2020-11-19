@@ -71,7 +71,7 @@ public class MavenInstallListenerTest extends TestCase {
                     + "  <name>test package 1 version 1.2.3</name>\n"
                     + "</project>";
 
-    private static final File ROOT = new File("/repo");
+    private static final File ROOT = new File("/repo").getAbsoluteFile();
 
     public void testInstallFirst() throws Exception {
         MockFileOp fop = new MockFileOp();

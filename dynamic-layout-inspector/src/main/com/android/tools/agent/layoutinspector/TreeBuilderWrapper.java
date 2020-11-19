@@ -34,6 +34,8 @@ import java.util.List;
 class TreeBuilderWrapper {
     private final Object mInstance;
     private final Method mConvert;
+    private final Method mConvertParameters;
+    private final Method mResetGeneratedId;
     private final Method mGetId;
     private final Method mGetName;
     private final Method mGetFileName;
@@ -45,7 +47,6 @@ class TreeBuilderWrapper {
     private final Method mGetWidth;
     private final Method mGetHeight;
     private final Method mGetChildren;
-    private final Method mGetParameters;
     private final Method mGetParamName;
     private final Method mGetParamType;
     private final Method mGetParamValue;
@@ -53,12 +54,16 @@ class TreeBuilderWrapper {
 
     TreeBuilderWrapper(@NonNull ClassLoader classLoader) throws ReflectiveOperationException {
         Class<?> builderClass =
-                classLoader.loadClass("androidx.ui.tooling.inspector.LayoutInspectorTree");
-        Class<?> nodeClass = classLoader.loadClass("androidx.ui.tooling.inspector.InspectorNode");
-        Class<?> paramClass = classLoader.loadClass("androidx.ui.tooling.inspector.NodeParameter");
+                classLoader.loadClass("androidx.compose.ui.tooling.inspector.LayoutInspectorTree");
+        Class<?> nodeClass =
+                classLoader.loadClass("androidx.compose.ui.tooling.inspector.InspectorNode");
+        Class<?> paramClass =
+                classLoader.loadClass("androidx.compose.ui.tooling.inspector.NodeParameter");
         Class<?> viewClass = classLoader.loadClass("android.view.View");
         mInstance = builderClass.newInstance();
         mConvert = builderClass.getDeclaredMethod("convert", viewClass);
+        mConvertParameters = builderClass.getDeclaredMethod("convertParameters", nodeClass);
+        mResetGeneratedId = builderClass.getDeclaredMethod("resetGeneratedId");
         mGetId = nodeClass.getDeclaredMethod("getId");
         mGetName = nodeClass.getDeclaredMethod("getName");
         mGetFileName = nodeClass.getDeclaredMethod("getFileName");
@@ -70,7 +75,6 @@ class TreeBuilderWrapper {
         mGetWidth = nodeClass.getDeclaredMethod("getWidth");
         mGetHeight = nodeClass.getDeclaredMethod("getHeight");
         mGetChildren = nodeClass.getDeclaredMethod("getChildren");
-        mGetParameters = nodeClass.getDeclaredMethod("getParameters");
         mGetParamName = paramClass.getDeclaredMethod("getName");
         mGetParamType = paramClass.getDeclaredMethod("getType");
         mGetParamValue = paramClass.getDeclaredMethod("getValue");
@@ -80,21 +84,28 @@ class TreeBuilderWrapper {
     /** See documentation for androidx.compose.tooling.inspector.LayoutInspectorTree */
     public List<InspectorNodeWrapper> convert(@NonNull View view)
             throws ReflectiveOperationException {
-        //noinspection unchecked
-        return wrap((List<Object>) mConvert.invoke(mInstance, view));
+        return wrap(mConvert.invoke(mInstance, view));
     }
 
-    private List<InspectorNodeWrapper> wrap(@NonNull List<Object> nodes) {
+    public void resetGeneratedId() throws ReflectiveOperationException {
+        if (mResetGeneratedId != null) {
+            mResetGeneratedId.invoke(mInstance);
+        }
+    }
+
+    private List<InspectorNodeWrapper> wrap(@NonNull Object nodes) {
         List<InspectorNodeWrapper> views = new ArrayList<>();
-        for (Object node : nodes) {
+        //noinspection unchecked
+        for (Object node : (List<Object>) nodes) {
             views.add(new InspectorNodeWrapper(node));
         }
         return views;
     }
 
-    private List<NodeParameterWrapper> wrapParameters(@NonNull List<Object> composeParameters) {
+    private List<NodeParameterWrapper> wrapParameters(@NonNull Object composeParameters) {
         List<NodeParameterWrapper> parameters = new ArrayList<>();
-        for (Object parameter : composeParameters) {
+        //noinspection unchecked
+        for (Object parameter : (List<Object>) composeParameters) {
             parameters.add(new NodeParameterWrapper(parameter));
         }
         return parameters;
@@ -152,14 +163,13 @@ class TreeBuilderWrapper {
 
         @NonNull
         public List<NodeParameterWrapper> getParameters() throws ReflectiveOperationException {
-            //noinspection unchecked
-            return wrapParameters((List<Object>) mGetParameters.invoke(mInstance));
+            return wrapParameters(
+                    mConvertParameters.invoke(TreeBuilderWrapper.this.mInstance, mInstance));
         }
 
         @NonNull
         public List<InspectorNodeWrapper> getChildren() throws ReflectiveOperationException {
-            //noinspection unchecked
-            return wrap((List<Object>) mGetChildren.invoke(mInstance));
+            return wrap(mGetChildren.invoke(mInstance));
         }
     }
 
@@ -192,8 +202,7 @@ class TreeBuilderWrapper {
 
         @NonNull
         public List<NodeParameterWrapper> getElements() throws ReflectiveOperationException {
-            //noinspection unchecked
-            return wrapParameters((List<Object>) mGetParamElements.invoke(mInstance));
+            return wrapParameters(mGetParamElements.invoke(mInstance));
         }
     }
 }

@@ -41,11 +41,11 @@ class LintDynamicFeatureTest(lintInvocationType: LintInvocationType) {
     @Test
     fun runLint() {
         // Run twice to catch issues with configuration caching
-        project.execute("clean", ":feature1:lint")
-        project.execute("clean", ":feature1:lint")
+        project.execute(":feature1:clean", ":feature1:lint")
+        project.execute(":feature1:clean", ":feature1:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
 
-        project.execute("clean", ":feature2:lint")
+        project.execute(":feature2:clean", ":feature2:lint")
         assertThat(project.buildResult.failedTasks).isEmpty()
     }
 }

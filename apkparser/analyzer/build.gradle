@@ -25,18 +25,20 @@ def jardeps = [
 ]
 
 dependencies {
-    compile(libs.smali_dexlib)
-    compile(libs.baksmali_dexlib)
-    compile project(':base:sdk-common')
-    compile project(':base:sdklib')
-    compile project(':base:annotations')
-    compile project(':base:apkparser:binary-resources')
-    compile project(':base:lint-api')
-    compile project(':base:lint-checks')
-    compile files(jardeps)
+    implementation(libs.smali_dexlib)
+    implementation(libs.baksmali_dexlib)
+    implementation project(':base:sdk-common')
+    implementation project(':base:common')
+    implementation project(':base:sdklib')
+    implementation project(':base:annotations')
+    implementation project(':base:apkparser:binary-resources')
+    implementation project(':base:lint-api')
+    implementation project(':base:lint-checks')
+    implementation files(jardeps)
 
-    testCompile(libs.junit)
-    testCompile project(":base:testutils")
+    testImplementation(libs.junit)
+    testImplementation project(":base:testutils")
+    testImplementation libs.jimfs
 }
 
 jardeps.each { file ->

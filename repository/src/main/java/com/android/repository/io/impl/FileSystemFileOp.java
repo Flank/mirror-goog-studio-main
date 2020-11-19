@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.repository.io.impl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.io.FileOp;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -33,26 +31,24 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 /**
- * Base class for {@link FileOp} implementations based on a {@link java.io.FileSystem}.
+ * Base class for {@link FileOp} implementations based on a {@link java.nio.file.Files}.
+ * Uses {@link CancellableFileIo} to check for cancellation before read I/O operations.
  */
 public abstract class FileSystemFileOp implements FileOp {
-
     protected boolean mIsWindows;
 
     public FileSystemFileOp() {
         mIsWindows = System.getProperty("os.name").startsWith("Windows");
     }
 
-    /**
-     * Gets the {@link FileSystem} this is based on.
-     * @return
-     */
+    /** Returns the {@link FileSystem} this is based on. */
     public abstract FileSystem getFileSystem();
 
     @Override
@@ -62,22 +58,21 @@ public abstract class FileSystemFileOp implements FileOp {
 
     @NonNull
     @Override
-    public final String toString(@NonNull File f, @NonNull Charset c) throws IOException {
-        return new String(Files.readAllBytes(toPath(f)), c);
+    public final String readText(@NonNull File f) throws IOException {
+        return CancellableFileIo.readText(toPath(f));
     }
 
     @Override
-    @Nullable
     public final String[] list(@NonNull File folder, @Nullable FilenameFilter filenameFilter) {
-        File contents[] = listFiles(folder);
-        String names[] = new String[contents.length];
+        File[] contents = listFiles(folder);
+        String[] names = new String[contents.length];
         for (int i = 0; i < contents.length; i++) {
             names[i] = contents[i].getName();
         }
         if (filenameFilter == null) {
             return names;
         }
-        List<String> result = Lists.newArrayList();
+        List<String> result = new ArrayList<>();
         for (String name : names) {
             if (filenameFilter.accept(folder, name)) {
                 result.add(name);
@@ -88,13 +83,12 @@ public abstract class FileSystemFileOp implements FileOp {
     }
 
     @Override
-    @Nullable
     public final File[] listFiles(@NonNull File folder, @Nullable FilenameFilter filenameFilter) {
-        File contents[] = listFiles(folder);
+        File[] contents = listFiles(folder);
         if (filenameFilter == null) {
             return contents;
         }
-        List<File> result = Lists.newArrayList();
+        List<File> result = new ArrayList<>();
         for (File f : contents) {
             if (filenameFilter.accept(folder, f.getName())) {
                 result.add(f);
@@ -133,7 +127,7 @@ public abstract class FileSystemFileOp implements FileOp {
 
     @Override
     public final boolean canExecute(@NonNull File file) {
-        return Files.isExecutable(toPath(file));
+        return CancellableFileIo.isExecutable(toPath(file));
     }
 
     // TODO: make this final so we can migrate from FileOp to using Paths directly
@@ -155,33 +149,33 @@ public abstract class FileSystemFileOp implements FileOp {
 
     @Override
     public final boolean isSameFile(@NonNull File file1, @NonNull File file2) throws IOException {
-        return Files.isSameFile(toPath(file1), toPath(file2));
+        return CancellableFileIo.isSameFile(toPath(file1), toPath(file2));
     }
 
     @Override
     public final boolean isFile(@NonNull File file) {
-        return Files.isRegularFile(toPath(file));
+        return CancellableFileIo.isRegularFile(toPath(file));
     }
 
     @Override
     public final boolean isDirectory(@NonNull File file) {
-        return Files.isDirectory(toPath(file));
+        return CancellableFileIo.isDirectory(toPath(file));
     }
 
     // TODO: make this final so we can migrate from FileOp to using Paths directly
     @Override
     public boolean canWrite(@NonNull File file) {
-        return Files.isWritable(toPath(file));
+        return CancellableFileIo.isWritable(toPath(file));
     }
 
     @Override
     public final boolean exists(@NonNull File file) {
-        return Files.exists(toPath(file));
+        return CancellableFileIo.exists(toPath(file));
     }
 
     @Override
     public final long length(@NonNull File file) throws IOException {
-        return Files.size(toPath(file));
+        return CancellableFileIo.size(toPath(file));
     }
 
     // TODO: make this final so we can migrate from FileOp to using Paths directly
@@ -208,7 +202,7 @@ public abstract class FileSystemFileOp implements FileOp {
     @NonNull
     @Override
     public final File[] listFiles(@NonNull File file) {
-        try (Stream<Path> children = Files.list(toPath(file))) {
+        try (Stream<Path> children = CancellableFileIo.list(toPath(file))) {
             return children.map(path -> new File(path.toString())).toArray(File[]::new);
         }
         catch (IOException e) {
@@ -251,13 +245,13 @@ public abstract class FileSystemFileOp implements FileOp {
     @NonNull
     @Override
     public final InputStream newFileInputStream(@NonNull File file) throws IOException {
-        return Files.newInputStream(toPath(file));
+        return CancellableFileIo.newInputStream(toPath(file));
     }
 
     @Override
     public final long lastModified(@NonNull File file) {
         try {
-            return Files.getLastModifiedTime(toPath(file)).toMillis();
+            return CancellableFileIo.getLastModifiedTime(toPath(file)).toMillis();
         }
         catch (IOException e) {
             return 0;

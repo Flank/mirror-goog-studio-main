@@ -351,7 +351,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_core-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.5-dev:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.7-dev:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1334,7 +1334,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.7:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.7.1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )
@@ -1676,14 +1676,6 @@ maven_java_library(
         ":org.jetbrains.kotlin_kotlin-stdlib",
         ":org.jetbrains.kotlin_kotlin-stdlib-common",
     ],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
-    name = "org.jetbrains.trove4j_trove4j",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/trove4j/trove4j/20160824:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

@@ -16,7 +16,6 @@
 
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 
 sourceSets {
     main.resources.srcDir 'src/main/java'

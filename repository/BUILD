@@ -20,6 +20,7 @@ iml_module(
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/adt/idea/.idea/libraries:jimfs[test]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
@@ -57,6 +58,7 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
         "//tools/base/third_party:org.apache.commons_commons-compress",

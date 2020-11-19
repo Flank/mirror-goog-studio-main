@@ -364,7 +364,7 @@ public class AdbInstaller implements Installer {
             return unwrap(bufferPayload);
         } catch (IOException e) {
             // If the connection has been broken an IOException 'broken pipe' will be received here.
-            logger.error(e, "Error while reading InstallerChannel");
+            logger.warning("Error while reading InstallerChannel");
             return null;
         }
     }

@@ -1,14 +1,19 @@
 apply plugin: 'com.android.tools.java-library'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
-    compile(libs.jopt)
-    compile project(':base:apkparser:apkanalyzer')
+    implementation(libs.jopt)
+    implementation project(':base:apkparser:apkanalyzer')
+    implementation project(':base:annotations')
+    implementation project(':base:sdk-common')
+    implementation project(':base:common')
+    implementation project(':base:sdklib')
+    implementation project(':base:apkparser:binary-resources')
+    implementation(libs.smali_dexlib)
 
-    testCompile(libs.junit)
-    testCompile(libs.mockito_core)
-    testCompile project(":base:testutils")
+    testImplementation(libs.junit)
+    testImplementation(libs.mockito_core)
+    testImplementation project(":base:testutils")
 }
 
 sourceSets {

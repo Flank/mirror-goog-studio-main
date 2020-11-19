@@ -1,8 +1,10 @@
 apply plugin: 'com.android.tools.java-library'
 
 dependencies {
-    compile gradleApi()
+    implementation gradleApi()
     compileOnly project(":base:builder")
+    compileOnly project(":base:common")
+    compileOnly project(":base:ddmlib")
     compileOnly project(":base:builder-test-api")
     compileOnly project(":base:build-system:gradle-core")
     compileOnly libs.guava

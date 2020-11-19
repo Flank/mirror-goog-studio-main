@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.SdkConstants.*
+import com.android.SdkConstants.CURRENT_PLATFORM
+import com.android.SdkConstants.PLATFORM_DARWIN
+import com.android.SdkConstants.PLATFORM_LINUX
+import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
@@ -24,10 +27,14 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.fixture.model.*
+import com.android.build.gradle.integration.common.fixture.model.FileNormalizer
+import com.android.build.gradle.integration.common.fixture.model.ModelComparator
+import com.android.build.gradle.integration.common.fixture.model.cxxFileVariantSegmentTranslator
+import com.android.build.gradle.integration.common.fixture.model.dumpCompileCommandsJsonBin
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
+import com.android.build.gradle.integration.common.fixture.model.withCxxFileNormalizer
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
-import com.android.build.gradle.internal.cxx.model.soFolder
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -58,7 +65,7 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
         @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
         fun data() = arrayOf(
-          arrayOf(BAKING_CMAKE_VERSION),
+          arrayOf(DEFAULT_CMAKE_VERSION),
           // With the GradleTestProject fixture, CMake 3.10.2 is not available.
           arrayOf("3.10.4819442")
         )

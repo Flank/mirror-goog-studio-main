@@ -22,8 +22,10 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.api.variant.impl.getApiString
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
+import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
@@ -49,6 +51,7 @@ import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -116,6 +119,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             computeProviders(),
             placeholdersValues.get(),
             navJsons,
+            jniLibsUseLegacyPackaging.orNull,
             manifestOutputFile,
             tmpDir!!
         )
@@ -150,6 +154,10 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
      * @param manifestProviders the manifest providers
      * @param manifestPlaceholders used placeholders in the manifest
      * @param navigationJsons the list of navigation JSON files
+     * @param jniLibsUseLegacyPackaging whether or not native libraries will be compressed in the
+     * APK. If false, native libraries will be uncompressed, so `android:extractNativeLibs="false"`
+     * will be injected in the manifest's application tag, unless that attribute is already
+     * explicitly set. If true, nothing if injected.
      * @param outManifest the output location for the merged manifest
      * @param tmpDir temporary dir used for processing
      */
@@ -166,6 +174,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         manifestProviders: List<ManifestProvider?>,
         manifestPlaceholders: Map<String?, Any?>,
         navigationJsons: Collection<File>,
+        jniLibsUseLegacyPackaging: Boolean?,
         outManifest: File,
         tmpDir: File
     ) {
@@ -239,6 +248,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     )
                     .addLibraryManifest(generatedTestManifest)
                     .addNavigationJsons(navigationJsons)
+                    .addFlavorAndBuildTypeManifests(*manifestOverlays.get().toTypedArray())
                 // we override these properties
                 invoker.setOverride(ManifestSystemProperty.PACKAGE, testApplicationId)
                 invoker.setOverride(ManifestSystemProperty.MIN_SDK_VERSION, minSdkVersion)
@@ -257,6 +267,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                     invoker.setOverride(
                         ManifestSystemProperty.TARGET_SDK_VERSION, targetSdkVersion
                     )
+                }
+                if (jniLibsUseLegacyPackaging == false) {
+                    invoker.withFeatures(ManifestMerger2.Invoker.Feature.DO_NOT_EXTRACT_NATIVE_LIBS)
                 }
                 val mergingReport = invoker.merge()
                 if (manifestProviders.isEmpty()) {
@@ -374,6 +387,14 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
     @get:Input
     abstract val placeholdersValues: MapProperty<String, String>
 
+    @get:Optional
+    @get:Input
+    abstract val jniLibsUseLegacyPackaging: Property<Boolean>
+
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles
+    abstract val manifestOverlays: ListProperty<File>
+
     /**
      * Compute the final list of providers based on the manifest file collection.
      * @return the list of providers.
@@ -433,6 +454,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             task.testManifestFile
                 .set(project.provider(variantSources::mainManifestIfExists))
             task.testManifestFile.disallowChanges()
+            task.manifestOverlays.set(task.project.provider(variantSources::manifestOverlays))
+            task.manifestOverlays.disallowChanges()
             task.apkData.set(creationConfig.outputs.getMainSplit())
             task.variantType.setDisallowChanges(creationConfig.variantType.toString())
             task.tmpDir = FileUtils.join(
@@ -469,6 +492,21 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
                             AndroidArtifacts.ArtifactType.NAVIGATION_JSON
                         )
                 )
+            }
+            when (creationConfig) {
+                is AndroidTestCreationConfig -> {
+                    task.jniLibsUseLegacyPackaging.setDisallowChanges(
+                        creationConfig.packaging.jniLibs.useLegacyPackaging
+                    )
+                }
+                is TestVariantCreationConfig -> {
+                    task.jniLibsUseLegacyPackaging.setDisallowChanges(
+                        creationConfig.packaging.jniLibs.useLegacyPackaging
+                    )
+                }
+                else -> {
+                    task.jniLibsUseLegacyPackaging.disallowChanges()
+                }
             }
         }
     }

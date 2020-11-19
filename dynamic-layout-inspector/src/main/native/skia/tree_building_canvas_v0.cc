@@ -15,6 +15,7 @@
  */
 #include "tree_building_canvas_v0.h"
 
+#include <SkClipOp.h>
 #include <memory>
 #include <stack>
 
@@ -79,7 +80,7 @@ void TreeBuildingCanvas::didConcat(const SkMatrix& matrix) {
 }
 
 void TreeBuildingCanvas::didTranslate(SkScalar dx, SkScalar dy) {
-  this->didConcat(SkMatrix::MakeTrans(dx, dy));
+  this->didConcat(SkMatrix::Translate(dx, dy));
 }
 
 void TreeBuildingCanvas::fixTranslation(const SkMatrix& matrix,
@@ -166,11 +167,10 @@ void TreeBuildingCanvas::onDrawShadowRec(const SkPath& path,
 }
 
 void TreeBuildingCanvas::onDrawVerticesObject(const SkVertices* vertices,
-                                              const SkVertices::Bone* bones,
-                                              int boneCount, SkBlendMode mode,
+                                              SkBlendMode mode,
                                               const SkPaint& paint) {
   nonHeaderCommand();
-  views.back().canvas->drawVertices(vertices, bones, boneCount, mode, paint);
+  views.back().canvas->drawVertices(vertices, mode, paint);
 }
 
 void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
@@ -186,14 +186,6 @@ void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
 #endif
 
   views.back().canvas->drawImageRect(image, *src, dst, paint, constraint);
-}
-
-void TreeBuildingCanvas::onDrawBitmapRect(const SkBitmap& bitmap,
-                                          const SkRect* src, const SkRect& dst,
-                                          const SkPaint* paint,
-                                          SrcRectConstraint constraint) {
-  nonHeaderCommand();
-  views.back().canvas->drawBitmapRect(bitmap, *src, dst, paint, constraint);
 }
 
 void TreeBuildingCanvas::onDrawPaint(const SkPaint& paint) {
@@ -288,26 +280,9 @@ void TreeBuildingCanvas::onDrawImageLattice(const SkImage* image,
   views.back().canvas->drawImageLattice(image, lattice, dst, paint);
 }
 
-void TreeBuildingCanvas::onDrawBitmap(const SkBitmap& bitmap, SkScalar dx,
-                                      SkScalar dy, const SkPaint* paint) {
+void TreeBuildingCanvas::onClipShader(sk_sp<SkShader> shader, SkClipOp clipOp) {
   nonHeaderCommand();
-  views.back().canvas->drawBitmap(bitmap, dx, dy, paint);
-}
-
-void TreeBuildingCanvas::onDrawBitmapNine(const SkBitmap& bitmap,
-                                          const SkIRect& center,
-                                          const SkRect& dst,
-                                          const SkPaint* paint) {
-  nonHeaderCommand();
-  views.back().canvas->drawBitmapNine(bitmap, center, dst, paint);
-}
-
-void TreeBuildingCanvas::onDrawBitmapLattice(const SkBitmap& bitmap,
-                                             const Lattice& lattice,
-                                             const SkRect& dst,
-                                             const SkPaint* paint) {
-  nonHeaderCommand();
-  views.back().canvas->drawBitmapLattice(bitmap, lattice, dst, paint);
+  views.back().canvas->clipShader(shader, clipOp);
 }
 
 void TreeBuildingCanvas::onDrawAtlas(const SkImage* atlas,

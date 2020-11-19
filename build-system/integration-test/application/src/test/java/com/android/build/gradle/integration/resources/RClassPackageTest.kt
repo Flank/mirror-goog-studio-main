@@ -130,4 +130,89 @@ class RClassPackageTest {
         assertThatApk(project.getTestApk()).hasPackageName("com.foo.bar")
 
     }
+
+    @Test
+    fun testCustomPackageName() {
+        project.buildFile.appendText(
+                """
+                android.packageName "com.example.fromDsl"
+            """)
+
+        // Update the R class namespaces in MyClass.java and MyTestClass.java
+        val appClass = project.file("src/main/java/com/example/app/MyClass.java")
+        assertThat(appClass).exists()
+        TestFileUtils.searchAndReplace(appClass, "R", "com.example.fromDsl.R")
+        val testClass = project.file("src/androidTest/java/com/example/app/test/MyTestClass.java")
+        assertThat(testClass).exists()
+        TestFileUtils.searchAndReplace(testClass, "com.example.app.R", "com.example.fromDsl.R")
+        TestFileUtils.searchAndReplace(
+                testClass,
+                "com.example.app.test.R",
+                "com.example.fromDsl.test.R"
+        )
+
+        project.execute("assembleDebug", "assembleAndroidTest")
+        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .hasPackageName("com.example.fromDsl")
+        assertThatApk(project.getTestApk()).hasPackageName("com.example.fromDsl.test")
+    }
+
+    @Test
+    fun testCustomPackageNameAndApplicationId() {
+        project.buildFile.appendText(
+                """
+                android.packageName "com.example.packageName"
+                android.defaultConfig.applicationId "com.example.applicationId"
+            """)
+
+        // Update the R class namespaces in MyClass.java and MyTestClass.java
+        val appClass = project.file("src/main/java/com/example/app/MyClass.java")
+        assertThat(appClass).exists()
+        TestFileUtils.searchAndReplace(appClass, "R", "com.example.packageName.R")
+        val testClass = project.file("src/androidTest/java/com/example/app/test/MyTestClass.java")
+        assertThat(testClass).exists()
+        TestFileUtils.searchAndReplace(testClass, "com.example.app.R", "com.example.packageName.R")
+        // TODO(170945282): migrate everything to use the actual package name in AGP 7.0, in which
+        // case we'll replace this with "com.example.packageName.test.R".
+        TestFileUtils.searchAndReplace(
+                testClass,
+                "com.example.app.test.R",
+                "com.example.applicationId.test.R"
+        )
+
+        project.execute("assembleDebug", "assembleAndroidTest")
+        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .hasPackageName("com.example.applicationId")
+        assertThatApk(project.getTestApk()).hasPackageName("com.example.applicationId.test")
+    }
+
+    @Test
+    fun testCustomPackageNameApplicationIdAndTestApplicationId() {
+        project.buildFile.appendText(
+                """
+                android.packageName "com.example.packageName"
+                android.defaultConfig.applicationId "com.example.applicationId"
+                android.defaultConfig.testApplicationId "com.example.testApplicationId"
+            """)
+
+        // Update the R class namespaces in MyClass.java and MyTestClass.java
+        val appClass = project.file("src/main/java/com/example/app/MyClass.java")
+        assertThat(appClass).exists()
+        TestFileUtils.searchAndReplace(appClass, "R", "com.example.packageName.R")
+        val testClass = project.file("src/androidTest/java/com/example/app/test/MyTestClass.java")
+        assertThat(testClass).exists()
+        TestFileUtils.searchAndReplace(testClass, "com.example.app.R", "com.example.packageName.R")
+        // TODO(170945282): migrate everything to use the actual package name in AGP 7.0, in which
+        // case we'll replace this with "com.example.packageName.test.R".
+        TestFileUtils.searchAndReplace(
+                testClass,
+                "com.example.app.test.R",
+                "com.example.testApplicationId.R"
+        )
+
+        project.execute("assembleDebug", "assembleAndroidTest")
+        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .hasPackageName("com.example.applicationId")
+        assertThatApk(project.getTestApk()).hasPackageName("com.example.testApplicationId")
+    }
 }

@@ -49,6 +49,8 @@ class SdkLoadingStrategy(
     fun getEmulatorLibFolder(): File? =
         directLoad.getEmulatorLibFolder()?: fullLoad.getEmulatorLibFolder()
 
+    fun getCoreForSystemModulesJar(): File? = if (directLoad.loadedSuccessfully()) directLoad.getCoreForSystemModulesJar() else fullLoad.getCoreForSystemModulesJar()
+
     @Synchronized
     fun reset() {
         directLoad.reset()

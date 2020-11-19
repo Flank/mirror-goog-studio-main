@@ -17,7 +17,9 @@
 @file:JvmName("EmulatorUtils")
 package com.android.build.gradle.integration.connected.utils
 
+import com.android.testutils.TestUtils
 import com.android.tools.bazel.avd.Emulator
+import org.junit.rules.ExternalResource
 
 /**
  * Path to the executable that the avd rule generates.
@@ -39,4 +41,11 @@ private const val PORT = 5554
 /**
  * Return an [Emulator] using default port 5554
  */
-fun getEmulator() = Emulator(DEVICE, PORT)
+fun getEmulator(): ExternalResource {
+    if (TestUtils.runningFromBazel()) {
+        return Emulator(DEVICE, PORT)
+    } else {
+        // Don't manage the emulator when running from Gradle for now
+        return object : ExternalResource() {}
+    }
+}

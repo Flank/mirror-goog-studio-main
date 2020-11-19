@@ -455,10 +455,12 @@ public class InstallerUtilTest extends TestCase {
                         + "    </localPackage>\n"
                         + "</repo:repository>");
         RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        mgr.setLocalPath(new File("/sdk").getAbsoluteFile());
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertTrue(InstallerUtil.checkValidPath(new File("/sdk/foo"), mgr, progress));
+        assertTrue(
+                InstallerUtil.checkValidPath(
+                        new File("/sdk/foo").getAbsoluteFile(), mgr, progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -477,10 +479,12 @@ public class InstallerUtilTest extends TestCase {
                         + "    </localPackage>\n"
                         + "</repo:repository>");
         RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        mgr.setLocalPath(new File("/sdk").getAbsoluteFile());
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertTrue(InstallerUtil.checkValidPath(new File("/sdk/foo2"), mgr, progress));
+        assertTrue(
+                InstallerUtil.checkValidPath(
+                        new File("/sdk/foo2").getAbsoluteFile(), mgr, progress));
         progress.assertNoErrorsOrWarnings();
     }
 

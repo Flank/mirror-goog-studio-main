@@ -59,12 +59,11 @@ public class LintDependencyModelTest {
         this.lintInvocationType = lintInvocationType;
     }
 
-
     @Test
-    public void checkFindNestedResult() {
+    public void checkFindNestedResult() throws Exception {
         // Run twice to catch issues with configuration caching
-        project.execute("clean", ":app:lintDebug");
-        project.execute("clean", ":app:lintDebug");
+        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
+        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
 
         File textReportFile = project.file("app/lint-report.txt");
         String textReport =

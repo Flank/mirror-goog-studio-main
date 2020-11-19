@@ -5,3 +5,4 @@ test.inspector.TodoInspectorFactory
 test.inspector.TestCancellationInspectorFactory
 test.inspector.TestExecutorsInspectorFactory
 test.inspector.TestNoReplyInspectorFactory
+test.inspector.PayloadInspectorFactory

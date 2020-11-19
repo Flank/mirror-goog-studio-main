@@ -21,8 +21,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -48,7 +48,7 @@ class HeaderInCmakeListsTest(private val cmakeVersionInDsl: String) {
         @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
         fun data() =
-            arrayOf(DEFAULT_CMAKE_VERSION, BAKING_CMAKE_VERSION)
+            arrayOf(DEFAULT_CMAKE_VERSION, OFF_STAGE_CMAKE_VERSION)
     }
 
     @Rule

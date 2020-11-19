@@ -4,9 +4,9 @@ apply plugin: 'com.android.tools.publish'
 apply plugin: 'sdk-java-lib'
 
 dependencies {
-    compile project(':base:annotations')
+    implementation project(':base:annotations')
     implementation libs.kotlin_stdlib
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
     testImplementation libs.guava
     testImplementation project(':base:testutils')
 }

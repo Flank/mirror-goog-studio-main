@@ -1,5 +1,4 @@
 apply plugin: 'com.android.tools.java-library'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
 apply plugin: 'org.jetbrains.dokka'
@@ -9,20 +8,30 @@ configurations {
     additionalDokkaClasspath
 }
 
+// Add buildscript repositories directly to this project as Dokka tries to resolve dependencies
+// using these repositories. If it fails, it tries to do so using the parent project which is
+// deprecated in Gradle 6.0 and will be removed in 7.0.
+buildscript {
+    repositories {
+        maven { url "$rootDir/../prebuilts/tools/common/m2/repository" }
+    }
+}
+
 dependencies {
-    compile project(':base:builder-test-api')
-    compile libs.guava
-    compile libs.kotlin_stdlib
-    compile libs.asm
+    implementation project(':base:builder-test-api')
+    implementation libs.guava
+    implementation libs.kotlin_stdlib
+    implementation libs.asm
 
     provided gradleApi()
     provided project(':base:builder-model') // Only present for legacy reasons.
 
-    testCompile libs.junit
-    testCompile project(':base:testutils')
-    testCompile gradleApi()
-    testCompile project(':base:builder-model')
-    testCompile libs.mockito_core
+    testImplementation libs.junit
+    testImplementation project(':base:testutils')
+    testImplementation gradleApi()
+    testImplementation project(':base:builder-model')
+    testImplementation project(':base:annotations')
+    testImplementation libs.mockito_core
 
     additionalDokkaClasspath gradleApi()
 }
@@ -47,7 +56,7 @@ javadoc {
 task javadocZip(type: Zip) {
   dependsOn javadoc
   from javadoc.destinationDir
-  baseName 'javadoc'
+  archiveBaseName.set('javadoc')
 }
 
 group = 'com.android.tools.build'
@@ -57,7 +66,17 @@ version = rootProject.ext.buildVersion
 project.ext.pomName = 'Android Gradle API'
 project.ext.pomDesc = 'APIs to customize Android Gradle Builds'
 
-dokka {
+/** Dokka task with fixed input annotations. */
+abstract class FixedDokka extends org.jetbrains.dokka.gradle.DokkaTask {
+    @Internal
+    String outputDirectory
+
+    @Internal
+    boolean reportNotDocumented = false
+}
+
+def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
+    outputDirectory = new File(project.buildDir, "dokka").absolutePath
     outputFormat = 'dac'
     jdkVersion = 8
 
@@ -79,9 +98,9 @@ dokka {
 }
 
 task dokkaZip(type: Zip) {
-    dependsOn dokka
-    from dokka.outputDirectory
-    def versionFile = new File(dokka.outputDirectory, "version.txt")
+    dependsOn fixedDokkaProvider
+    from fixedDokkaProvider.map { it.outputDirectory }
+    def versionFile = new File(fixedDokkaProvider.map { it.outputDirectory }.get(), "version.txt")
     doFirst {
         versionFile.createNewFile()
         def stream = new FileOutputStream(versionFile)

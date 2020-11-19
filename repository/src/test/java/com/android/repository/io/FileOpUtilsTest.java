@@ -24,16 +24,13 @@ import com.android.annotations.NonNull;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.Sets;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import org.junit.Test;
 
 /**
  * Tests for FileOpUtils
@@ -361,30 +358,31 @@ public class FileOpUtilsTest {
     @Test
     public void safeRecursiveOverwriteCantDeleteDestPartial() throws Exception {
         AtomicBoolean deletedSomething = new AtomicBoolean(false);
-        MockFileOp fop = new MockFileOp() {
-            @Override
-            public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                if (getAgnosticAbsPath(oldFile).equals("/root/dest")) {
-                    return false;
-                }
-                return super.renameTo(oldFile, newFile);
-            }
+        MockFileOp fop =
+                new MockFileOp() {
+                    @Override
+                    public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
+                        if (oldFile.getPath().equals(getPlatformSpecificPath("/root/dest"))) {
+                            return false;
+                        }
+                        return super.renameTo(oldFile, newFile);
+                    }
 
-            @Override
-            public boolean delete(@NonNull File oldFile) {
-                if (getAgnosticAbsPath(oldFile.getPath()).startsWith(("/root/dest/"))) {
-                    if (deletedSomething.compareAndSet(false, true)) {
+                    @Override
+                    public boolean delete(@NonNull File oldFile) {
+                        if (oldFile.getPath().startsWith(getPlatformSpecificPath("/root/dest/"))) {
+                            if (deletedSomething.compareAndSet(false, true)) {
+                                return super.delete(oldFile);
+                            }
+                            return false;
+                        }
                         return super.delete(oldFile);
                     }
-                    return false;
-                }
-                return super.delete(oldFile);
-            }
-        };
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File d1 = new File("/root/dest/b");
-        File d2 = new File("/root/dest/bar/b");
+                };
+        File s1 = new File("/root/src/a").getAbsoluteFile();
+        File s2 = new File("/root/src/foo/a").getAbsoluteFile();
+        File d1 = new File("/root/dest/b").getAbsoluteFile();
+        File d2 = new File("/root/dest/bar/b").getAbsoluteFile();
 
         fop.recordExistingFile(s1.getPath(), "content1");
         fop.recordExistingFile(s2.getPath(), "content2");
@@ -392,7 +390,10 @@ public class FileOpUtilsTest {
         fop.recordExistingFile(d2.getPath(), "content4");
 
         try {
-            FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
+            FileOpUtils.safeRecursiveOverwrite(
+                    new File("/root/src/").getAbsoluteFile(),
+                    new File("/root/dest").getAbsoluteFile(),
+                    fop,
                     new FakeProgressIndicator());
             fail("Expected exception");
         }
@@ -411,35 +412,41 @@ public class FileOpUtilsTest {
 
     @Test
     public void safeRecursiveOverwriteCantWrite() throws Exception {
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File d1 = new File("/root/dest/a");
+        File s1 = new File("/root/src/a").getAbsoluteFile();
+        File s2 = new File("/root/src/foo/a").getAbsoluteFile();
+        File d1 = new File("/root/dest/a").getAbsoluteFile();
 
-        MockFileOp fop = new MockFileOp() {
-            @Override
-            public void copyFile(@NonNull File source, @NonNull File dest) throws IOException {
-                if (source.equals(s1) && dest.equals(d1)) {
-                    throw new IOException("failed to copy");
-                }
-                super.copyFile(source, dest);
-            }
+        MockFileOp fop =
+                new MockFileOp() {
+                    @Override
+                    public void copyFile(@NonNull File source, @NonNull File dest)
+                            throws IOException {
+                        if (source.equals(s1) && dest.equals(d1)) {
+                            throw new IOException("failed to copy");
+                        }
+                        super.copyFile(source, dest);
+                    }
 
-            @Override
-            public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                if (getAgnosticAbsPath(oldFile.getPath()).equals("/root/src") &&
-                        getAgnosticAbsPath(newFile.getPath()).equals("/root/dest")) {
-                    return false;
-                }
-                return super.renameTo(oldFile, newFile);
-            }
-        };
+                    @Override
+                    public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
+                        if (oldFile.getPath().equals(getPlatformSpecificPath("/root/src"))
+                                && newFile.getPath()
+                                        .equals(getPlatformSpecificPath("/root/dest"))) {
+                            return false;
+                        }
+                        return super.renameTo(oldFile, newFile);
+                    }
+                };
 
         fop.recordExistingFile(s1.getPath(), "content1");
         fop.recordExistingFile(s2.getPath(), "content2");
         fop.recordExistingFile(d1.getPath(), "content3");
 
         try {
-            FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
+            FileOpUtils.safeRecursiveOverwrite(
+                    new File("/root/src/").getAbsoluteFile(),
+                    new File("/root/dest").getAbsoluteFile(),
+                    fop,
                     new FakeProgressIndicator());
             fail("Expected exception");
         }
@@ -589,7 +596,10 @@ public class FileOpUtilsTest {
             root = root.getParentFile();
         }
         FileOpUtils.retainTempDirs(retain, "Test", fop);
-        desiredResult = desiredResult.stream().map(fop::getAgnosticAbsPath).collect(Collectors.toSet());
+        desiredResult =
+                desiredResult.stream()
+                        .map(fop::getPlatformSpecificPath)
+                        .collect(Collectors.toSet());
 
         assertEquals(desiredResult, Sets.newHashSet(fop.getExistingFolders()));
     }

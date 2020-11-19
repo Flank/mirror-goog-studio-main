@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
-import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
-import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModelImpl
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth.assertThat
@@ -32,9 +30,11 @@ class CreateCxxModuleModelTest {
     @Test
     fun `no native build`() {
         BasicModuleModelMock().let {
-            assertThat(tryCreateCxxConfigurationModel(
+            assertThat(
+            tryCreateConfigurationParameters(
                     it.variantImpl
-            )).isNull()
+            )
+            ).isNull()
         }
     }
 
@@ -65,7 +65,7 @@ class CreateCxxModuleModelTest {
             doReturn(join(it.projectRootDir, "Android.mk")).`when`(it.ndkBuild).path
             PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 assertThat(
-                    tryCreateCxxConfigurationModelImpl(
+                    tryCreateConfigurationParameters(
                             it.variantImpl
                     )
                 ).isNull()
@@ -82,7 +82,7 @@ class CreateCxxModuleModelTest {
                 doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val componentModel =
-                    tryCreateCxxConfigurationModel(
+                    tryCreateConfigurationParameters(
                             it.variantImpl
                     )!!
                 val module = createCxxModuleModel(

@@ -6,7 +6,7 @@ archivesBaseName = 'intellij-core'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile 'org.jetbrains.trove4j:trove4j:20160824'
+    implementation libs.trove4j
 }
 
 jar {

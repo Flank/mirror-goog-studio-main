@@ -17,6 +17,10 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.*
+import com.android.build.gradle.internal.cxx.configure.getProperty
+import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import org.gradle.api.file.FileCollection
@@ -51,16 +55,22 @@ data class CxxVariantModel(
     val variantName: String,
 
     /**
-     * Base folder for .o files
-     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
-     */
-    val objFolder: File,
-
-    /**
      * Base folder for .so files
      *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
      */
     val soFolder: File,
+
+    /**
+     * The .cxx build folder
+     *   ex, $moduleRootFolder/.cxx/ndkBuild/debug
+     */
+    val cxxBuildFolder: File,
+
+    /**
+     * The folder of intermediates.
+     *   ex, $moduleRootFolder/build/intermediates/cxx/debug
+     */
+    val intermediatesFolder: File,
 
     /**
      * Whether this variant build is debuggable
@@ -86,12 +96,14 @@ data class CxxVariantModel(
      */
     val implicitBuildTargetSet : Set<String>,
 
-    /**  The CMakeSettings.json configuration
+    /**
+     * The CMakeSettings.json configuration
      *      ex, android
      *          .defaultConfig
      *          .cmake
      *          .externalNativeBuild
-     *          .configuration 'my-configuration' */
+     *          .configuration 'my-configuration'
+     */
     val cmakeSettingsConfiguration : String,
 
     /**
@@ -112,59 +124,50 @@ data class CxxVariantModel(
     val prefabPackageDirectoryListFileCollection: FileCollection?,
 
     /**
-     * Path to the prefab output to be passed to the native build system.
-     *
-     * For example: app/.cxx/cmake/debug/prefab
+     * If present, the type of the STL.
      */
-    val prefabDirectory: File
+    val stlType: String,
+
+    /**
+     *  A word like Debug, Release, or MinSizeRel. It represents the optimization level common to
+     *  all ABIs in a variant.
+     */
+    val optimizationTag : String,
 )
 
-sealed class DetermineUsedStlResult {
-    data class Success(val stl: Stl) : DetermineUsedStlResult()
-    data class Failure(val error: String) : DetermineUsedStlResult()
-}
+/**
+ * The list of C flags as a single string.
+ */
+val CxxVariantModel.cFlags
+    get() = cFlagsList.joinToString(" ")
 
-fun CxxVariantModel.determineUsedStl(): DetermineUsedStlResult {
-    // Arguments passed on the command line take precedence.
-    val stlArgumentPrefix = when (module.buildSystem) {
-        NativeBuildSystem.NDK_BUILD -> "APP_STL="
-        NativeBuildSystem.CMAKE -> "-DANDROID_STL="
-    }
-    val stlFromArgument =
-        buildSystemArgumentList.findLast { it.startsWith(stlArgumentPrefix) }?.split("=", limit = 2)
-            ?.last()
-    if (stlFromArgument != null) {
-        val parsedStl =
-            Stl.fromArgumentName(stlFromArgument) ?: return DetermineUsedStlResult.Failure(
-                "Unable to parse STL from build.gradle arguments: $stlFromArgument"
-            )
-        return DetermineUsedStlResult.Success(parsedStl)
-    }
+/**
+ * The list of C++ flags as a single string.
+ */
+val CxxVariantModel.cppFlags
+    get() = cppFlagsList.joinToString(" ")
 
-    // For ndk-build, the STL may also be specified in the project's Application.mk.
-    if (module.buildSystem == NativeBuildSystem.NDK_BUILD) {
-        // Try parsing the user's STL from their Application.mk, and emit an error if we can't. If
-        // we can't parse it the user will need to take some action (alter their Application.mk such
-        // that APP_STL becomes trivially parsable, or define it in their build.gradle instead.
-        var appStl: String? = null
-        val applicationMk = module.makeFile.resolveSibling("Application.mk")
-        if (applicationMk.exists()) {
-            for (line in applicationMk.readText().lines()) {
-                val match = Regex("^APP_STL\\s*:?=\\s*(.*)$").find(line.trim()) ?: continue
-                val appStlMatch = match.groups[1]
-                require(appStlMatch != null) // Should be impossible.
-                appStl = appStlMatch.value.takeIf { it.isNotEmpty() }
-            }
+/**
+ * Return true if this is a CMake project.
+ */
+val CxxVariantModel.isCMake
+    get() = (module.buildSystem == NativeBuildSystem.CMAKE)
 
-            if (appStl != null) {
-                val stl = Stl.fromArgumentName(appStl) ?: return DetermineUsedStlResult.Failure(
-                    "Unable to parse APP_STL from $applicationMk: $appStl"
-                )
-                return DetermineUsedStlResult.Success(stl)
-            }
-        }
-    }
+/**
+ * Call [compute] if this is a CMake build.
+ */
+fun <T> CxxVariantModel.ifCMake(compute : () -> T?) =
+        if (isCMake) compute() else null
 
-    // Otherwise the default it used.
-    return DetermineUsedStlResult.Success(module.ndkDefaultStl)
-}
+/**
+ * Return true if this is a CMake project.
+ */
+val CxxVariantModel.isNdkBuild
+    get() = (module.buildSystem == NativeBuildSystem.NDK_BUILD)
+
+/**
+ * Call [compute] if this is an ndk-build build.
+ */
+fun <T> CxxVariantModel.ifNdkBuild(compute : () -> T?) =
+        if (isNdkBuild) compute() else null
+

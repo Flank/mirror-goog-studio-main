@@ -23,6 +23,7 @@ enum class CmakeProperty {
     ANDROID_ABI,
     ANDROID_NDK,
     ANDROID_PLATFORM,
+    ANDROID_STL,
     C_TEST_WAS_RUN,
     CMAKE_ANDROID_ARCH_ABI,
     CMAKE_ANDROID_NDK,

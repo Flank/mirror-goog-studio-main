@@ -20,19 +20,26 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.model.*
+import com.android.build.gradle.integration.common.fixture.model.dump
+import com.android.build.gradle.integration.common.fixture.model.findAbiSegment
+import com.android.build.gradle.integration.common.fixture.model.findConfigurationSegment
+import com.android.build.gradle.integration.common.fixture.model.findCxxSegment
+import com.android.build.gradle.integration.common.fixture.model.goldenBuildProducts
+import com.android.build.gradle.integration.common.fixture.model.goldenConfigurationFlags
+import com.android.build.gradle.integration.common.fixture.model.readAsFileIndex
+import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.BAKING_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
-import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
@@ -68,7 +75,7 @@ class CmakeBasicProjectTest(
         @JvmStatic
         fun data() = arrayOf(
           arrayOf("3.6.0"),
-          arrayOf(BAKING_CMAKE_VERSION),
+          arrayOf(OFF_STAGE_CMAKE_VERSION),
           arrayOf(DEFAULT_CMAKE_VERSION)
         )
     }
@@ -569,5 +576,17 @@ apply plugin: 'com.android.application'
         assertThat(abiSegment).named(abiSegment).isEqualTo("armeabi-v7a")
         assertThat(cxxSegment).named(cxxSegment).isEqualTo(".cxx")
         assertThat(configurationSegment).named(configurationSegment).isEqualTo(join("cmake/debug"))
+    }
+
+    @Test
+    fun `ensure compile_commands json bin is created for each native ABI in model`() {
+        val nativeModules = project.modelV2().fetchNativeModules(null, null)
+        val nativeModule = nativeModules.container.singleModel
+        for (variant in nativeModule.variants) {
+            for (abi in variant.abis) {
+                Truth.assertThat(abi.sourceFlagsFile.readCompileCommandsJsonBin(nativeModules.normalizer))
+                        .hasSize(1)
+            }
+        }
     }
 }

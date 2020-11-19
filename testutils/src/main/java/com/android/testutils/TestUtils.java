@@ -271,6 +271,11 @@ public class TestUtils {
         return System.getenv().containsKey("TEST_WORKSPACE");
     }
 
+    /** Checks if tests are running with Jdk 11 or above. */
+    public static boolean runningWithJdk11Plus(String version) {
+        return Integer.parseInt(version.split("\\.")[0]) >= 11;
+    }
+
     /**
      * Returns the SDK directory relative to the workspace.
      *

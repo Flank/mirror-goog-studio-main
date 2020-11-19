@@ -22,12 +22,20 @@ class ConnectionImpl extends Connection {
 
     private String mInspectorId;
 
-    public ConnectionImpl(String inspectorId) {
+    private final int mChunkSize;
+
+    public ConnectionImpl(String inspectorId, int chunkSize) {
         mInspectorId = inspectorId;
+        this.mChunkSize = chunkSize;
     }
 
     @Override
     public void sendEvent(byte[] data) {
-        NativeTransport.sendRawEvent(mInspectorId, data, data.length);
+        if (data.length <= mChunkSize) {
+            NativeTransport.sendRawEventData(mInspectorId, data, data.length);
+        } else {
+            long payloadId = NativeTransport.sendPayload(data, data.length, mChunkSize);
+            NativeTransport.sendRawEventPayload(mInspectorId, payloadId);
+        }
     }
 }

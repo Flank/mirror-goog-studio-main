@@ -23,12 +23,16 @@ package androidx.compose.runtime.internal;
 public final class LiveLiteralKt {
 
     public static final void updateLiveLiteralValue(String name, Object value) {
-        System.out.print("updateLiveLiteralValue(");
-        System.out.print(name);
-        System.out.print(", ");
-        System.out.print(value.getClass());
-        System.out.print(", ");
-        System.out.print(value);
-        System.out.println(")");
+        if (isLiveLiteralsEnabled) {
+            System.out.print("updateLiveLiteralValue(");
+            System.out.print(name);
+            System.out.print(", ");
+            System.out.print(value.getClass());
+            System.out.print(", ");
+            System.out.print(value);
+            System.out.println(")");
+        }
     }
+
+    public static boolean isLiveLiteralsEnabled = false;
 }

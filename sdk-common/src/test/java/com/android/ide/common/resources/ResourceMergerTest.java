@@ -56,6 +56,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -882,7 +883,8 @@ public class ResourceMergerTest extends BaseTestCase {
                         null /*publicFile*/,
                         mergeLogFolder,
                         mPreprocessor,
-                        mTemporaryFolder.getRoot());
+                        mTemporaryFolder.getRoot(),
+                        new HashMap<>());
         resourceMerger.mergeData(writer, false /*doCleanUp*/);
 
         // Check the content.
@@ -1018,7 +1020,8 @@ public class ResourceMergerTest extends BaseTestCase {
                         null /*publicFile*/,
                         mergeLogFolder,
                         mPreprocessor,
-                        mTemporaryFolder.getRoot());
+                        mTemporaryFolder.getRoot(),
+                        new HashMap<>());
         resourceMerger.mergeData(writer, false /*doCleanUp*/);
 
         // Check the content.
@@ -2125,7 +2128,8 @@ public class ResourceMergerTest extends BaseTestCase {
                 null /*publicFile*/,
                 null /*blameLogFolder*/,
                 mPreprocessor,
-                mTemporaryFolder.getRoot());
+                mTemporaryFolder.getRoot(),
+                new HashMap<>());
     }
 
 }

@@ -120,17 +120,13 @@ class TreeBuildingCanvas : public SkCanvas {
 
   void onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) override;
 
-  void onDrawVerticesObject(const SkVertices* vertices,
-                            const SkVertices::Bone* bones, int boneCount,
-                            SkBlendMode mode, const SkPaint& paint) override;
+  virtual void onDrawVerticesObject(const SkVertices* vertices,
+                                    SkBlendMode mode,
+                                    const SkPaint& paint) override;
 
   void onDrawImageRect(const SkImage* image, const SkRect* src,
                        const SkRect& dst, const SkPaint* paint,
                        SrcRectConstraint constraint) override;
-
-  void onDrawBitmapRect(const SkBitmap& bitmap, const SkRect* src,
-                        const SkRect& dst, const SkPaint* paint,
-                        SrcRectConstraint constraint) override;
 
   void onDrawPaint(const SkPaint& paint) override;
 
@@ -169,14 +165,7 @@ class TreeBuildingCanvas : public SkCanvas {
   void onDrawImageLattice(const SkImage* image, const Lattice& lattice,
                           const SkRect& dst, const SkPaint* paint) override;
 
-  void onDrawBitmap(const SkBitmap& bitmap, SkScalar dx, SkScalar dy,
-                    const SkPaint* paint) override;
-
-  void onDrawBitmapNine(const SkBitmap& bitmap, const SkIRect& center,
-                        const SkRect& dst, const SkPaint* paint) override;
-
-  void onDrawBitmapLattice(const SkBitmap& bitmap, const Lattice& lattice,
-                           const SkRect& dst, const SkPaint* paint) override;
+  void onClipShader(sk_sp<SkShader> shader, SkClipOp clipOp) override;
 
   void onDrawAtlas(const SkImage* atlas, const SkRSXform* xform,
                    const SkRect* rect, const SkColor* colors, int count,

@@ -22,7 +22,10 @@ import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.*
+import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.Anchor
+import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.Build
+import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.Configure
+import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.VariantBuild
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
@@ -32,7 +35,7 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
-import com.android.build.gradle.internal.cxx.settings.rewriteCxxAbiModelWithCMakeSettings
+import com.android.build.gradle.internal.cxx.settings.calculateConfigurationArguments
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -182,7 +185,7 @@ fun createInitialCxxModel(
         val variant = createCxxVariantModel(parameters, module)
         Abi.getDefaultValues().map { abi ->
             createCxxAbiModel(sdkComponents, parameters, variant, abi)
-                    .rewriteCxxAbiModelWithCMakeSettings()
+                    .calculateConfigurationArguments()
         }
     }
 }

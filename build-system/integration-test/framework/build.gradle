@@ -2,7 +2,6 @@ import com.android.tools.internal.testing.DevicePool;
 
 apply plugin: 'com.android.tools.java'
 apply plugin: 'com.android.tools.kotlin'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'com.google.protobuf'
 
 protobuf {
@@ -17,39 +16,44 @@ repositories {
 
 dependencies {
     compileOnly(project(':base:profile'))
-    compile project(':analytics-library:protos')
-    compile project(':apksig')
-    compile project(':base:builder')
-    compile project(':base:builder-model')
-    compile project(':base:build-system:gradle-core')
-    compile project(':base:sdk-common')
-    compile project(':base:testing-infrastructure:device-pool:device-provider')
-    compile project(':base:testutils')
-    compile testFixtures(project(":base:repository"))
+    implementation project(':analytics-library:protos')
+    implementation project(':apksig')
+    implementation project(':base:builder')
+    implementation project(':base:builder-model')
+    implementation project(':base:build-system:gradle-core')
+    implementation project(':base:sdk-common')
+    api project(':base:ddmlib')
+    implementation project(':base:sdklib')
+    implementation project(':base:testing-infrastructure:device-pool:device-provider')
+    implementation project(':base:testutils')
+    implementation project(':base:annotations')
+    implementation testFixtures(project(":base:repository"))
 
-    compile libs.kotlin_stdlib
+    implementation libs.kotlin_stdlib
 
-    compile gradleApi()
-    compile libs.apache_commons_io
-    compile libs.apache_commons_lang
-    compile libs.google_api_client
-    compile libs.google_storage_client
-    compile libs.groovy
-    compile libs.junit
-    compile libs.protobuf
-    compile libs.protobuf_util
-    compile libs.truth
-    compile libs.truth_java8_extension
+    implementation gradleApi()
+    implementation libs.apache_commons_io
+    implementation libs.apache_commons_lang
+    implementation libs.asm_tree
+    implementation libs.google_api_client
+    implementation libs.google_storage_client
+    implementation libs.groovy
+    implementation libs.smali_dexlib
+    implementation libs.junit
+    implementation libs.protobuf
+    implementation libs.protobuf_util
+    implementation libs.truth
+    implementation libs.truth_java8_extension
 
-    testCompile libs.mockito_core
+    testImplementation libs.mockito_core
 
     // Jacoco version should be the version bundled with Gradle.  Not the default version used by
     // the plugin.
-    compile 'org.jacoco:org.jacoco.agent:0.7.5.201505241946'
+    implementation 'org.jacoco:org.jacoco.agent:0.7.5.201505241946'
 
     // Add dependency on plugin code.  Exclude transitive dependencies to avoid conflict due to
     // Groovy versions.
-    compile(project(':base:build-system:gradle-core')) {
+    implementation(project(':base:build-system:gradle-core')) {
         transitive = false
     }
 }

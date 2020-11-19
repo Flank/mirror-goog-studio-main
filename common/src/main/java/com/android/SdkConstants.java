@@ -274,6 +274,10 @@ public final class SdkConstants {
     public static final String FN_ADB =
             "adb" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
+    /** sqlite3 executable (with extension for the current OS) */
+    public static final String FN_SQLITE3 =
+            "sqlite3" + ext(".exe", ""); // $NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
     /** emulator executable for the current OS */
     public static final String FN_EMULATOR =
             "emulator" + ext(".exe", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -543,6 +547,13 @@ public final class SdkConstants {
     public static final String FD_SOURCE_GEN = "source";
     /** Name of the generated R.class source folder */
     public static final String FD_RES_CLASS = "r";
+    /** Name of folder where merged XML files are placed before processing by resource compiler. */
+    public static final String FD_MERGED_DOT_DIR = "merged.dir";
+    /**
+     * Name of folder where data-binding stripped merged layout XML files are placed before
+     * processing by resource compiler.
+     */
+    public static final String FD_STRIPPED_DOT_DIR = "stripped.dir";
 
     /** Name of the cache folder in the $HOME/.android. */
     public static final String FD_CACHE = "cache"; //$NON-NLS-1$
@@ -930,6 +941,13 @@ public final class SdkConstants {
 
     /* Compose constants */
     public static final String CLASS_COMPOSE = "androidx.compose.Compose";
+    /** Name of the Compose interoperability view that can be injected in regular XML layouts. */
+    public static final String CLASS_COMPOSE_VIEW = "androidx.compose.ui.platform.ComposeView";
+
+    public static final String CLASS_COMPOSE_VIEW_ADAPTER =
+            "androidx.compose.ui.tooling.preview.ComposeViewAdapter";
+
+    public static final String ATTR_COMPOSABLE_NAME = "composableName";
 
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
@@ -2781,7 +2799,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "6.7";
+    public static final String GRADLE_LATEST_VERSION = "6.7.1";
 
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

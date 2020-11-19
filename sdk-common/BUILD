@@ -90,8 +90,8 @@ kotlin_library(
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
+        "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:xerces_xercesImpl",
     ],
 )
@@ -142,8 +142,8 @@ kotlin_test(
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.easymock_easymock",
+        "//tools/base/third_party:org.jetbrains.intellij.deps_trove4j",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jdk8",
-        "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )

@@ -28,11 +28,9 @@ import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.model.objFolder
-import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
-import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
@@ -75,37 +73,6 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
             val libraries: List<NativeLibraryValueMini>,
             val outputFolder: File
     )
-
-    private fun getStlSharedObjectFiles(): Map<Abi, File> {
-        if (variant.module.buildSystem != NativeBuildSystem.CMAKE) return mapOf()
-        // Search for ANDROID_STL build argument. Process in order / later flags take precedent.
-        var stl: Stl? = null
-        for (argument in variant.buildSystemArgumentList.map { it.replace(" ", "") }) {
-            if (argument.startsWith("-DANDROID_STL=")) {
-                val stlName = argument.split("=".toRegex(), 2).toTypedArray()[1]
-                stl = Stl.fromArgumentName(stlName)
-                if (stl == null) {
-                    errorln(CxxDiagnosticCode.NO_STL_FOUND, "Unrecognized STL in arguments: %s", stlName)
-                }
-            }
-        }
-
-        // TODO: Query the default from the NDK.
-        // We currently assume the default to not require packaging for the default STL. This is
-        // currently safe because the default for ndk-build has always been system (which doesn't
-        // require packaging because it's a system library) and gnustl_static or c++_static for
-        // CMake (which also doesn't require packaging).
-        //
-        // https://github.com/android-ndk/ndk/issues/744 wants to change the default for both to
-        // c++_shared, but that can't happen until we stop assuming the default does not need to be
-        // packaged.
-        return if (stl == null) {
-            mapOf()
-        } else {
-            variant.module.stlSharedObjectMap.getValue(stl)
-                    .filter { e -> abis.map { it.abi }.contains(e.key) }
-        }
-    }
 
     override fun build(ops: ExecOperations) {
         infoln("starting build")
@@ -210,7 +177,7 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                         "Unknown ABI seen ${library.abi}"
                 )
                 val expectedOutputFile = FileUtils.join(
-                        variant.objFolder,
+                        variant.soFolder,
                         abi.tag,
                         output.name
                 )
@@ -225,29 +192,22 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                 }
 
                 for (runtimeFile in library.runtimeFiles) {
-                    val dest = FileUtils.join(variant.objFolder, abi.tag, runtimeFile.name)
+                    val dest = FileUtils.join(variant.soFolder, abi.tag, runtimeFile.name)
                     hardLinkOrCopy(runtimeFile, dest)
                 }
             }
         }
 
-        val stlSharedObjectFiles = getStlSharedObjectFiles()
-        if (stlSharedObjectFiles.isNotEmpty()) {
-            infoln("copy STL shared object files")
-            for (abi in stlSharedObjectFiles.keys) {
-                val stlSharedObjectFile = stlSharedObjectFiles.getValue(abi)
-                val objAbi = FileUtils.join(
-                        variant.objFolder,
-                        abi.tag,
-                        stlSharedObjectFile.name
-                )
-                if (!objAbi.parentFile.isDirectory) {
-                    // A build failure can leave the obj/abi folder missing. Just note that case
-                    // and continue without copying STL.
-                    infoln("didn't copy STL file to ${objAbi.parentFile} because that folder wasn't created by the build ")
-                } else {
-                    hardLinkOrCopy(stlSharedObjectFile, objAbi)
-                }
+        for(abi in abis) {
+            if (abi.stlLibraryFile == null) continue
+            if (!abi.stlLibraryFile.isFile) continue
+            if (!abi.soFolder.isDirectory) {
+                // A build failure can leave the obj/abi folder missing. Just note that case
+                // and continue without copying STL.
+                infoln("didn't copy STL file to ${abi.soFolder} because that folder wasn't created by the build ")
+            } else {
+                val objAbi = abi.soFolder.resolve(abi.stlLibraryFile.name)
+                hardLinkOrCopy(abi.stlLibraryFile, objAbi)
             }
         }
 

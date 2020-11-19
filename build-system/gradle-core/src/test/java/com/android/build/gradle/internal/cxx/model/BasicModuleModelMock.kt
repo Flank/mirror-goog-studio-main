@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
-import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateCxxConfigurationModel
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.CmakeOptions
@@ -69,7 +68,7 @@ import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import java.io.File
-import java.util.Locale
+import java.util.*
 
 /**
  * Set up up a mock for constructing [CxxModuleModel]. It takes a lot of plumbing so this can
@@ -220,12 +219,6 @@ open class BasicModuleModelMock {
         VariantDslInfo::class.java,
         throwUnmocked
     )
-
-    val configurationModel by lazy {
-        tryCreateCxxConfigurationModel(
-                variantImpl
-        )!!
-    }
 
     val configurationParameters by lazy {
         tryCreateConfigurationParameters(
@@ -380,6 +373,8 @@ open class BasicModuleModelMock {
             doReturn(false).`when`(buildFeatures).prefab
             doReturn(true)
                 .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
+            doReturn(true)
+                .`when`(projectOptions).get(BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING)
             doReturn(null)
                 .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
             doReturn(false)

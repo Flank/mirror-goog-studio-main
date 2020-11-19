@@ -17,7 +17,8 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
-  config_options="--config=cloud_resultstore"
+  # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
+  config_options="--config=cloud_resultstore --noremote_accept_cached"
   target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
 
   current_time=$(date +"%s")
@@ -47,31 +48,15 @@ if [[ $lsb_release == "crostini" ]]; then
     -- \
     //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar
 
-  # Generate a UUID for use as the bazel invocation id
-  readonly build_invocation_id="$(uuidgen)"
-
-  #Build the project for crostini, 2 jobs at a time to address OOM issues
-  "${script_dir}/../bazel" \
-    --max_idle_secs=60 \
-    build \
-    ${config_options} \
-    --jobs=2 \
-    --invocation_id=${build_invocation_id} \
-    --define=meta_android_build_number=${build_number} \
-    --build_tag_filters=${target_filters} \
-    --tool_tag=${script_name} \
-    -- \
-    //tools/adt/idea/android-uitests/...
-
   readonly test_invocation_id="$(uuidgen)"
 
-  #Run the tests one at a time for crostini
+  # Run the tests one at a time after all dependencies get built
   "${script_dir}/../bazel" \
     --max_idle_secs=60 \
     test \
     --keep_going \
     ${config_options} \
-    --jobs=1 \
+    --test_strategy=exclusive \
     --invocation_id=${test_invocation_id} \
     --define=meta_android_build_number=${build_number} \
     --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \

@@ -1,40 +1,38 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
-
-import org.gradle.internal.jvm.Jvm
 
 group = 'com.android.tools.lint'
 archivesBaseName = 'lint-tests'
 version = rootProject.ext.baseVersion
 
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
 dependencies {
-    compile project(':base:lint')
-    compile project(':base:intellij-core')
-    compile project(':base:kotlin-compiler')
-    compile project(':base:uast')
-    compile project(':base:layoutlib-api')
-    compile project(':base:testutils')
-    compile libs.junit
-    compile libs.groovy
-    compile libs.mockito_core
+    implementation project(':base:lint')
+    implementation project(':base:intellij-core')
+    implementation project(':base:kotlin-compiler')
+    implementation project(':base:uast')
+    implementation project(':base:layoutlib-api')
+    implementation project(':base:sdk-common')
+    implementation project(':base:common')
+    implementation project(':base:sdklib')
+    implementation project(':base:testutils')
+    implementation project(':base:builder-model')
+    implementation libs.junit
+    implementation libs.asm
+    implementation libs.groovy
+    implementation libs.mockito_core
 
-    testCompile project(':analytics-library:shared')
-    testCompile project(':analytics-library:protos')
-    testCompile project(':analytics-library:tracker')
-    testCompile project(':analytics-library:testing')
-    testCompile project(':base:apkparser:binary-resources')
-    testCompile project(':base:apkparser:apkanalyzer')
-    testCompile libs.truth
-    testCompile files(Jvm.current().toolsJar)
-    testCompile testFixtures(project(":base:repository"))
+    testImplementation project(':analytics-library:shared')
+    testImplementation project(':analytics-library:protos')
+    testImplementation project(':analytics-library:tracker')
+    testImplementation project(':analytics-library:testing')
+    testImplementation project(':base:apkparser:binary-resources')
+    testImplementation project(':base:apkparser:apkanalyzer')
+    testImplementation libs.gson
+    testImplementation libs.truth
+    testImplementation libs.kxml
+    testImplementation files(toolsJarForJava8)
+    testImplementation testFixtures(project(":base:repository"))
 }
 
 sourceSets {
@@ -44,3 +42,7 @@ sourceSets {
 
 project.ext.pomName = 'Android Tools Lint Test API'
 project.ext.pomDesc = 'API to build lint check tests'
+
+test {
+    jvmArgs '-Djdk.attach.allowAttachSelf=true'
+}

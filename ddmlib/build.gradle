@@ -1,6 +1,5 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 apply plugin: 'com.google.protobuf'
 
@@ -9,14 +8,15 @@ archivesBaseName = 'ddmlib'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile project(':base:common')
-    compile libs.kxml
-    compile libs.protobuf
+    implementation project(':base:common')
+    implementation libs.kxml
+    implementation libs.protobuf
 
-    testCompile project(':base:fakeadbserver')
-    testCompile project(':base:testutils')
-    testCompile libs.easymock
-    testCompile libs.junit
+    testImplementation project(':base:fakeadbserver')
+    testImplementation project(':base:testutils')
+    testImplementation libs.easymock
+    testImplementation libs.mockito_core
+    testImplementation libs.junit
 }
 
 sourceSets {

@@ -52,7 +52,8 @@ class VariantDslInfoBuilder private constructor(
     private val signingConfigOverride: SigningConfig?,
     private val manifestDataProvider: ManifestDataProvider,
     private val dslServices: DslServices,
-    private val variantPropertiesApiServices: VariantPropertiesApiServices
+    private val variantPropertiesApiServices: VariantPropertiesApiServices,
+    private val dslPackageName: String?
 ) {
 
     companion object {
@@ -70,7 +71,8 @@ class VariantDslInfoBuilder private constructor(
             signingConfigOverride: SigningConfig? = null,
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
-            variantPropertiesApiServices: VariantPropertiesApiServices
+            variantPropertiesApiServices: VariantPropertiesApiServices,
+            dslPackageName: String? = null
         ): VariantDslInfoBuilder {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -82,7 +84,8 @@ class VariantDslInfoBuilder private constructor(
                 signingConfigOverride,
                 manifestDataProvider,
                 dslServices,
-                variantPropertiesApiServices
+                variantPropertiesApiServices,
+                dslPackageName
             )
         }
 
@@ -289,7 +292,8 @@ class VariantDslInfoBuilder private constructor(
             manifestDataProvider,
             dslServices,
             variantPropertiesApiServices,
-            buildDirectory
+            buildDirectory,
+            dslPackageName
         )
     }
 

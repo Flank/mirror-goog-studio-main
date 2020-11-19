@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.ProjectData;
 import com.android.build.gradle.internal.profile.TaskMetadata;
 import com.android.build.gradle.tasks.JavaCompileUtils;
+import com.android.builder.profile.NameAnonymizer;
+import com.android.builder.profile.NameAnonymizerSerializer;
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
@@ -141,6 +143,13 @@ public class JavaCompileTest {
                     public Property<String> getProfile() {
                         byte[] profile = GradleBuildProfile.newBuilder().build().toByteArray();
                         return new FakeGradleProperty(Base64.getEncoder().encodeToString(profile));
+                    }
+
+                    @NotNull
+                    @Override
+                    public Property<String> getAnonymizer() {
+                        return new FakeGradleProperty(
+                                new NameAnonymizerSerializer().toJson(new NameAnonymizer()));
                     }
 
                     @NotNull

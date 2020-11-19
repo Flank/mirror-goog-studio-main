@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.annotations.NonNull;
@@ -227,11 +226,10 @@ public class AidlTest {
 
     @Test
     public void testJapaneseCharacters() throws IOException, InterruptedException {
-        assumeNotWindows(); // b/145232750
         // First, add japanese characters
         TestFileUtils.searchAndReplace(
                 new File(aidlDir, "Packaged.aidl"),
-                "interface Packaged {\n",
+                "interface Packaged {" ,
                 "interface Packaged {\n" + "/**\n" + "     * テスト用コメント\n" + "     */");
 
         // Then, change encoding to Shift_JIS and compile

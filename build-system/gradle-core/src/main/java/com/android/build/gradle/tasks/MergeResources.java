@@ -25,6 +25,7 @@ import static com.google.common.base.Preconditions.checkState;
 import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.util.RelativizableFile;
 import android.databinding.tool.writer.JavaFileWriter;
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -56,8 +57,10 @@ import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.resources.FileValidity;
 import com.android.ide.common.resources.GeneratedResourceSet;
 import com.android.ide.common.resources.MergedResourceWriter;
+import com.android.ide.common.resources.MergedResourceWriterRequest;
 import com.android.ide.common.resources.MergingException;
 import com.android.ide.common.resources.NoOpResourcePreprocessor;
+import com.android.ide.common.resources.RelativeResourceUtils;
 import com.android.ide.common.resources.ResourceCompilationService;
 import com.android.ide.common.resources.ResourceMerger;
 import com.android.ide.common.resources.ResourcePreprocessor;
@@ -69,6 +72,7 @@ import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.File;
 import java.io.IOException;
@@ -98,6 +102,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
+import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public abstract class MergeResources extends ResourceAwareTask {
@@ -161,6 +166,9 @@ public abstract class MergeResources extends ResourceAwareTask {
      */
     @Input
     public abstract SetProperty<String> getResourceDirsOutsideRootProjectDir();
+
+    @Input
+    public abstract Property<Boolean> getRelativePathsEnabled();
 
     @Internal
     public abstract Property<Aapt2ThreadPoolBuildService> getAapt2ThreadPoolBuildService();
@@ -265,19 +273,25 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             File publicFile =
                     getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
+
+            Map<String, String> sourceSetPaths =
+                    getRelativeSourceSetMap(resourceSets, destinationDir);
+
             MergedResourceWriter writer =
                     new MergedResourceWriter(
-                            workerExecutorFacade,
-                            destinationDir,
-                            publicFile,
-                            mergingLog,
-                            preprocessor,
-                            resourceCompiler,
-                            getIncrementalFolder(),
-                            dataBindingLayoutProcessor,
-                            mergedNotCompiledResourcesOutputDirectory,
-                            pseudoLocalesEnabled,
-                            getCrunchPng());
+                            new MergedResourceWriterRequest(
+                                    workerExecutorFacade,
+                                    destinationDir,
+                                    publicFile,
+                                    mergingLog,
+                                    preprocessor,
+                                    resourceCompiler,
+                                    getIncrementalFolder(),
+                                    dataBindingLayoutProcessor,
+                                    mergedNotCompiledResourcesOutputDirectory,
+                                    pseudoLocalesEnabled,
+                                    getCrunchPng(),
+                                    sourceSetPaths));
 
             Blocks.recordSpan(
                     getPath(),
@@ -423,19 +437,25 @@ public abstract class MergeResources extends ResourceAwareTask {
 
                 File publicFile =
                         getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
+                File destinationDir = getOutputDir().get().getAsFile();
+                Map<String, String> sourceSetPaths =
+                        getRelativeSourceSetMap(resourceSets, destinationDir);
+
                 MergedResourceWriter writer =
                         new MergedResourceWriter(
-                                workerExecutorFacade,
-                                getOutputDir().get().getAsFile(),
-                                publicFile,
-                                mergingLog,
-                                preprocessor,
-                                resourceCompiler,
-                                getIncrementalFolder(),
-                                dataBindingLayoutProcessor,
-                                mergedNotCompiledResourcesOutputDirectory,
-                                pseudoLocalesEnabled,
-                                getCrunchPng());
+                                new MergedResourceWriterRequest(
+                                        workerExecutorFacade,
+                                        destinationDir,
+                                        publicFile,
+                                        mergingLog,
+                                        preprocessor,
+                                        resourceCompiler,
+                                        getIncrementalFolder(),
+                                        dataBindingLayoutProcessor,
+                                        mergedNotCompiledResourcesOutputDirectory,
+                                        pseudoLocalesEnabled,
+                                        getCrunchPng(),
+                                        sourceSetPaths));
 
                 merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -458,6 +478,27 @@ public abstract class MergeResources extends ResourceAwareTask {
         } finally {
             cleanup();
         }
+    }
+
+    @NotNull
+    private Map<String, String> getRelativeSourceSetMap(
+            List<ResourceSet> resourceSets, File destinationDir) {
+        if (!getRelativePathsEnabled().get()) {
+            return Collections.emptyMap();
+        }
+        List<File> sourceSets = Lists.newArrayList();
+        for (ResourceSet sourceSet : resourceSets) {
+            sourceSets.addAll(sourceSet.getSourceFiles());
+        }
+        sourceSets.add(getGeneratedPngsOutputDir());
+        sourceSets.add(destinationDir);
+        if (getIncremental()) {
+            sourceSets.add(FileUtils.join(getIncrementalFolder(), SdkConstants.FD_MERGED_DOT_DIR));
+            sourceSets.add(
+                    FileUtils.join(getIncrementalFolder(), SdkConstants.FD_STRIPPED_DOT_DIR));
+        }
+        return RelativeResourceUtils.getIdentifiedSourceSetMap(
+                sourceSets, getPackageName().get(), getProjectName());
     }
 
     @Nullable
@@ -834,6 +875,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             GlobalScope globalScope = creationConfig.getGlobalScope();
             VariantPathHelper paths = creationConfig.getPaths();
 
+            task.getPackageName().set(creationConfig.getPackageName());
             task.getMinSdk()
                     .set(
                             task.getProject()
@@ -878,7 +920,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 HasConfigurableValuesKt.setDisallowChanges(
-                        task.getPackageName(), creationConfig.getVariantDslInfo().getPackageName());
+                        task.getPackageName(), creationConfig.getPackageName());
                 HasConfigurableValuesKt.setDisallowChanges(
                         task.getUseAndroidX(),
                         creationConfig
@@ -937,6 +979,13 @@ public abstract class MergeResources extends ResourceAwareTask {
                                     .getGradleEnvironmentProvider()
                                     .getEnvVariable(ANDROID_AAPT_IGNORE));
             task.getProjectRootDir().set(task.getProject().getRootDir());
+
+            task.getRelativePathsEnabled()
+                    .set(
+                            creationConfig
+                                    .getServices()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP));
         }
 
         @NonNull

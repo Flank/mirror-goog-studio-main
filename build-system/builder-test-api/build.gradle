@@ -1,11 +1,13 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 
 dependencies {
-    compile project(':base:ddmlib')
+    implementation project(':base:ddmlib')
+    implementation project(':base:annotations')
+    implementation project(':base:common')
+    implementation libs.guava
 
-    testCompile libs.junit
+    testImplementation libs.junit
 }
 
 group = 'com.android.tools.build'

@@ -87,12 +87,12 @@ public final class SourceFile implements Serializable {
     }
 
     @Nullable
-    public Path getSourcePath() {
+    public String getSourcePath() {
         if (mSourcePath != null) {
-            return Paths.get(mSourcePath);
+            return mSourcePath;
         }
         if (mFilePath != null) {
-            return Paths.get(mFilePath);
+            return Paths.get(mFilePath).toAbsolutePath().toString();
         }
         return null;
     }
@@ -113,14 +113,12 @@ public final class SourceFile implements Serializable {
         SourceFile other = (SourceFile) obj;
 
         return Objects.equal(mDescription, other.mDescription)
-                && Objects.equal(mFilePath, other.mFilePath)
-                && Objects.equal(mSourcePath, other.mSourcePath);
+                && Objects.equal(getSourcePath(), other.getSourcePath());
     }
 
     @Override
     public int hashCode() {
-        String filePath = getSourcePath() != null ? getSourcePath().toString() : null;
-        return Objects.hashCode(filePath, mDescription);
+        return Objects.hashCode(getSourcePath(), mDescription);
     }
 
     @Override

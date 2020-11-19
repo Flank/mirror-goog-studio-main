@@ -11,6 +11,7 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:MlModelBindingConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MigratedConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:KotlinAppConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:JacocoConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavoredConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:DependenciesConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:DensitySplitConnectedTest",  # b/148626301

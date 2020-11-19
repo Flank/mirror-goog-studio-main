@@ -46,8 +46,8 @@ public class LintInstantiateTest {
     }
 
     @Test
-    public void checkFindErrors() {
-        project.execute("clean", ":app:lintDebug");
+    public void checkFindErrors() throws Exception {
+        project.executor().run(":app:cleanLintDebug", ":app:lintDebug");
         File lintReport = project.file("app/lint-results.txt");
         assertThat(lintReport).contains("No issues found.");
 

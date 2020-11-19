@@ -219,6 +219,7 @@ class SdkDirectLoadingStrategy(
 
     fun getEmulatorLibFolder() = components?.emulator?.emulatorDir
 
+    fun getCoreForSystemModulesJar() = components?.platform?.coreForSystemModulesJar
 
     fun reset() {
         clearCaches()
@@ -280,7 +281,9 @@ private class PlatformComponents(
     /** This is the additional libraries of this platform. **/
     internal val additionalLibraries: List<OptionalLibrary>,
     /** This is the optional libraries of this platform. **/
-    internal val optionalLibraries: List<OptionalLibrary>) {
+    internal val optionalLibraries: List<OptionalLibrary>,
+    /** This is the System Modules jar included in Sdk 30+, usually $PLATFORM/core-for-system-modules.jar **/
+    internal val coreForSystemModulesJar: File?) {
 
     // TODO: fix documentation.
     companion object {
@@ -317,7 +320,10 @@ private class PlatformComponents(
                 ),
                 parseOptionalLibraries(
                     platformPackage
-                )
+                ),
+                platformBase.resolve(SdkConstants.FN_CORE_FOR_SYSTEM_MODULES).let {
+                    if (it.exists()) it else null
+                }
             )
         }
     }

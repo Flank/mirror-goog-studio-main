@@ -16,10 +16,15 @@
  */
 #include "tools/base/deploy/agent/native/live_literal.h"
 
+#include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
+
+const char* kSupportClass =
+    "com/android/tools/deploy/instrument/LiveLiteralSupport";
 
 jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
   // TODO: This method needs some TLC in terms of error reporting.
@@ -130,6 +135,22 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
   } else {
     Log::V("LiveLiteralKt found. Starting JetPack Compose Live Literal Update");
   }
+
+  if (!InstrumentApplication(jvmti_, jni_, request.package_name(),
+                             /*overlay_swap*/ false)) {
+    response.set_status(
+        proto::AgentLiveLiteralUpdateResponse::INSTRUMENTATION_FAILED);
+    ErrEvent("Could not instrument application");
+    return response;
+  }
+
+  // Call Support the support class enable() first.
+  jvalue enable_args[1];
+  enable_args[0].l = klass;
+  JniClass support(jni_, kSupportClass);
+  support.CallStaticMethod<void>({"enable", "(Ljava/lang/Class;)V"},
+                                 enable_args);
+
   JniClass live_literal_kt(jni_, klass);
 
   for (auto update : request.updates()) {

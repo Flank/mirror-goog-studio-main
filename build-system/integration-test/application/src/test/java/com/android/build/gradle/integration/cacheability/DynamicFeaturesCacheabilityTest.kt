@@ -93,6 +93,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:processDebugMainManifest",
                     ":app:processDebugManifest",
                     ":app:processDebugManifestForPackage",
+                    ":app:processDebugResources", /* Bug 141301405 */
                     ":app:signingConfigWriterDebug",
                     ":app:validateSigningDebug",
                     ":app:writeDebugAppMetadata",
@@ -120,6 +121,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:processDebugMainManifest",
                     ":feature1:processDebugManifest",
                     ":feature1:processDebugManifestForPackage",
+                    ":feature1:processDebugResources",
                     ":feature1:processManifestDebugForFeature",
 
                     ":feature2:checkDebugAarMetadata",
@@ -144,7 +146,14 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:processDebugMainManifest",
                     ":feature2:processDebugManifest",
                     ":feature2:processDebugManifestForPackage",
-                    ":feature2:processManifestDebugForFeature"
+                    ":feature2:processManifestDebugForFeature",
+                ).plus(
+                        if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
+                            setOf(":feature1:processDebugResources",
+                                    ":feature2:processDebugResources")
+                        } else {
+                            emptySet()
+                        }
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
@@ -155,20 +164,17 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:packageDebug", /* Bug 74595859 */
-                    ":app:processDebugResources", /* Bug 141301405 */
                     ":app:writeDebugModuleMetadata",
 
                     ":feature1:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":feature1:featureDebugWriter",
                     ":feature1:mergeDebugResources",
                     ":feature1:packageDebug",
-                    ":feature1:processDebugResources",
 
                     ":feature2:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":feature2:featureDebugWriter",
                     ":feature2:mergeDebugResources",
                     ":feature2:packageDebug",
-                    ":feature2:processDebugResources"
                 ).plus(
                         if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
                             setOf(":app:mapDebugSourceSetPaths",
@@ -176,7 +182,10 @@ class DynamicFeaturesCacheabilityTest {
                                     ":feature2:mapDebugSourceSetPaths"
                             )
                         } else {
-                            emptySet()
+                            setOf(
+                                    ":app:processDebugResources",
+                                    ":feature1:processDebugResources",
+                                    ":feature2:processDebugResources")
                         }
                 ),
                 SKIPPED to setOf(

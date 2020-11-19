@@ -24,6 +24,7 @@ import android.view.inspector.WindowInspector;
 import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.android.tools.agent.layoutinspector.TreeBuilderWrapper.InspectorNodeWrapper;
 import com.android.tools.agent.layoutinspector.TreeBuilderWrapper.NodeParameterWrapper;
 import com.android.tools.agent.layoutinspector.common.Resource;
 import com.android.tools.agent.layoutinspector.common.StringTable;
@@ -41,15 +42,15 @@ import java.util.Set;
 /** Services for writing the properties of a View into a PropertyEvent protobuf. */
 class Properties {
     private final StringTable mStringTable = new StringTable();
-    private Map<Long, List<NodeParameterWrapper>> mComposeParameters;
+    private Map<Long, InspectorNodeWrapper> mComposeNodes;
 
     Properties() {
-        mComposeParameters = Collections.emptyMap();
+        mComposeNodes = Collections.emptyMap();
     }
 
     /** Keep track of the latest parameters found in the compose section. */
-    void setComposeParameters(@NonNull Map<Long, List<NodeParameterWrapper>> parameters) {
-        mComposeParameters = parameters;
+    void setComposeNodes(@NonNull Map<Long, InspectorNodeWrapper> nodes) {
+        mComposeNodes = nodes;
     }
 
     /**
@@ -58,10 +59,10 @@ class Properties {
      * @param viewId the id of the view or compose node to send the properties/parameters for.
      */
     void handleGetProperties(long viewId, int generation) {
-        Map<Long, List<NodeParameterWrapper>> tempThreadSafe = mComposeParameters;
-        List<NodeParameterWrapper> parameters = tempThreadSafe.get(viewId);
-        if (parameters != null) {
-            sendComposeParameters(viewId, parameters, generation);
+        Map<Long, InspectorNodeWrapper> tempThreadSafe = mComposeNodes;
+        InspectorNodeWrapper node = tempThreadSafe.get(viewId);
+        if (node != null) {
+            sendComposeParameters(viewId, node, generation);
             return;
         }
         View view = findViewById(viewId);
@@ -80,9 +81,9 @@ class Properties {
 
     /** Send the parameters of all compose nodes. */
     void saveAllComposeParameters(int generation) {
-        Map<Long, List<NodeParameterWrapper>> parameters = mComposeParameters;
-        mComposeParameters = Collections.emptyMap();
-        for (Map.Entry<Long, List<NodeParameterWrapper>> entry : parameters.entrySet()) {
+        Map<Long, InspectorNodeWrapper> nodes = mComposeNodes;
+        mComposeNodes = Collections.emptyMap();
+        for (Map.Entry<Long, InspectorNodeWrapper> entry : nodes.entrySet()) {
             sendComposeParameters(entry.getKey(), entry.getValue(), generation);
         }
     }
@@ -176,11 +177,11 @@ class Properties {
     }
 
     private void sendComposeParameters(
-            long viewId, @NonNull List<NodeParameterWrapper> parameters, int generation) {
+            long viewId, @NonNull InspectorNodeWrapper node, int generation) {
         mStringTable.clear();
         long event = allocatePropertyEvent();
         try {
-            writeParameters(parameters, event, 0);
+            writeParameters(node.getParameters(), event, 0);
             writeStringTable(event);
             sendPropertyEvent(event, viewId, generation);
         } catch (Throwable ex) {
@@ -276,6 +277,8 @@ class Properties {
                 return ValueType.DIMENSION_SP;
             case "DimensionEm":
                 return ValueType.DIMENSION_EM;
+            case "Lambda":
+                return ValueType.LAMBDA;
             default:
                 Log.w("Compose", "Could not map this type: " + type);
                 return ValueType.OBJECT;
@@ -395,9 +398,71 @@ class Properties {
             case INTERPOLATOR:
                 return addIntProperty(
                         event, property, name, isLayout, type, toInt(value.getClass().getName()));
+            case LAMBDA:
+                return addLambdaProperty(event, property, name, value);
             default:
                 return 0;
         }
+    }
+
+    private long addLambdaProperty(long event, long property, int name, Object value) {
+        Class<?> lambdaClass = value.getClass();
+        String lambdaClassName = lambdaClass.getName();
+        String enclosedClassName = substringBefore(lambdaClassName, '$', "");
+        String lambdaName = substringAfter(lambdaClassName, '$');
+        if (enclosedClassName.isEmpty()) {
+            return 0L;
+        }
+        return addLambdaProperty(
+                event,
+                property,
+                name,
+                toPackageName(enclosedClassName),
+                toClassName(enclosedClassName),
+                toInt(lambdaName),
+                lambdaClass);
+    }
+
+    private int toPackageName(@NonNull String fullyQualifiedClassName) {
+        return toInt(substringBeforeLast(fullyQualifiedClassName, '.', ""));
+    }
+
+    private int toClassName(@NonNull String fullyQualifiedClassName) {
+        return toInt(substringAfterLast(fullyQualifiedClassName, '.'));
+    }
+
+    // Similar to kotlins String.substringBefore(Char,String)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringBefore(
+            @NonNull String value, char delimiter, @NonNull String missingDelimiterValue) {
+        int index = value.indexOf(delimiter);
+        return index >= 0 ? value.substring(0, index) : missingDelimiterValue;
+    }
+
+    // Similar to kotlins String.substringAfter(Char)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringAfter(@NonNull String value, char delimiter) {
+        int index = value.indexOf(delimiter);
+        return index >= 0 ? value.substring(index + 1) : value;
+    }
+
+    // Similar to kotlins String.substringBeforeLast(Char,String)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringBeforeLast(
+            @NonNull String value, char delimiter, @NonNull String missingDelimiterValue) {
+        int index = value.lastIndexOf(delimiter);
+        return index >= 0 ? value.substring(0, index) : missingDelimiterValue;
+    }
+
+    // Similar to kotlins String.substringAfterLast(Char)
+    @SuppressWarnings("SameParameterValue")
+    @NonNull
+    private static String substringAfterLast(@NonNull String value, char delimiter) {
+        int index = value.lastIndexOf(delimiter);
+        return index >= 0 ? value.substring(index + 1) : value;
     }
 
     @Nullable
@@ -516,6 +581,16 @@ class Properties {
 
     /** Adds a flag property value into the flag property protobuf. */
     private native void addFlagPropertyValue(long property, int flag);
+
+    /** Adds a lambda property into the event or property protobuf. */
+    private native long addLambdaProperty(
+            long event,
+            long property,
+            int name,
+            int enclosedPackageName,
+            int enclosedSimpleName,
+            int lambdaName,
+            @NonNull Class<?> lambdaClass);
 
     /** Adds a resource property value into the property protobuf. */
     private native void addPropertySource(long propertyId, int namespace, int type, int name);

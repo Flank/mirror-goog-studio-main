@@ -18,28 +18,19 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.BaseTestRunner
-import com.android.build.gradle.internal.testing.CustomTestRunListener
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.build.gradle.internal.testing.utp.UtpDependency.LAUNCHER
 import com.android.builder.testing.api.DeviceConnector
-import com.android.ddmlib.testrunner.TestIdentifier
 import com.android.ide.common.process.JavaProcessExecutor
-import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessExecutor
-import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.common.io.Files
-import com.google.protobuf.TextFormat
 import com.google.testing.platform.proto.api.core.TestStatusProto
-import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStreamReader
 
 // Unified Test Platform outputs test results with this hardcoded name file.
 const val TEST_RESULT_OUTPUT_FILE_NAME = "test-result.textproto"
@@ -92,29 +83,14 @@ class UtpTestRunner @JvmOverloads constructor(
                             retentionConfig).writeTo(writer)
                 }
             }
-            val serverConfigProtoFile = File.createTempFile("serverConfig", ".pb").also { file ->
-                FileOutputStream(file).use { writer ->
-                    configFactory.createServerConfigProto().writeTo(writer)
-                }
-            }
-            val loggingPropertiesFile = File.createTempFile("logging", "properties").also { file ->
-                Files.asCharSink(file, Charsets.UTF_8).write("""
-                    .level=SEVERE
-                    .handlers=java.util.logging.ConsoleHandler
-                    java.util.logging.ConsoleHandler.level=SEVERE
-                """.trimIndent())
-            }
-            val javaProcessInfo = ProcessInfoBuilder().apply {
-                setClasspath(utpDependencies.launcher.singleFile.absolutePath)
-                setMain(LAUNCHER.mainClass)
-                addArgs(utpDependencies.core.singleFile.absolutePath)
-                addArgs("--proto_config=${runnerConfigProtoFile.absolutePath}")
-                addArgs("--proto_server_config=${serverConfigProtoFile.absolutePath}")
-                addJvmArg("-Djava.util.logging.config.file=${loggingPropertiesFile.absolutePath}")
-            }.createJavaProcess()
+            val resultsProto = runUtpTestSuite(
+                runnerConfigProtoFile,
+                utpOutputDir,
+                configFactory,
+                utpDependencies,
+                javaProcessExecutor,
+                logger)
 
-            javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger))
-            val resultsProto = getResultsProto(utpOutputDir)
             resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
             try {
@@ -138,64 +114,5 @@ class UtpTestRunner @JvmOverloads constructor(
                 }
             }
         }.toMutableList()
-    }
-
-    /**
-     * Creates JUnit test report XML file based on information in the results proto.
-     */
-    private fun createTestReportXml(resultsProto: TestSuiteResultProto.TestSuiteResult,
-                                    deviceName: String,
-                                    projectName: String,
-                                    flavorName: String,
-                                    logger: ILogger,
-                                    reportOutputDir: File) {
-        CustomTestRunListener(deviceName, projectName, flavorName, logger).apply {
-            setReportDir(reportOutputDir)
-            var numTestFails = 0
-            var totalElapsedTimeMillis = 0L
-            testRunStarted(deviceName, resultsProto.testResultCount)
-            resultsProto.testResultList.forEach { testResult ->
-                val testId = TestIdentifier(
-                        "${testResult.testCase.testPackage}.${testResult.testCase.testClass}",
-                        testResult.testCase.testMethod)
-                testStarted(testId)
-                when(testResult.testStatus) {
-                    TestStatusProto.TestStatus.FAILED, TestStatusProto.TestStatus.ERROR -> {
-                        testFailed(testId, testResult.error.stackTrace)
-                        ++numTestFails
-                    }
-                    TestStatusProto.TestStatus.IGNORED -> {
-                        testIgnored(testId)
-                    }
-                    else -> {}
-                }
-                testEnded(testId, mapOf())
-
-                val startTimeMillis =
-                        testResult.testCase.startTime.seconds * 1000L + testResult.testCase.startTime.nanos / 1000000L
-                val endTimeMillis =
-                        testResult.testCase.endTime.seconds * 1000L + testResult.testCase.endTime.nanos / 1000000L
-                runResult.testResults.getValue(testId).apply {
-                    startTime = startTimeMillis
-                    endTime = endTimeMillis
-                }
-                totalElapsedTimeMillis += endTimeMillis - startTimeMillis
-            }
-            if (numTestFails > 0) {
-                testRunFailed("There was ${numTestFails} failure(s).")
-            }
-            testRunEnded(totalElapsedTimeMillis, mapOf())
-        }
-    }
-
-    /**
-     * Retrieves a test suite result proto from the Unified Test Platform's output directory.
-     */
-    private fun getResultsProto(outputDir: File): TestSuiteResultProto.TestSuiteResult {
-        return TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
-            TextFormat.merge(
-                    InputStreamReader(FileInputStream(File(outputDir, TEST_RESULT_OUTPUT_FILE_NAME))),
-                    this)
-        }.build()
     }
 }

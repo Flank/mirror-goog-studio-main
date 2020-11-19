@@ -146,7 +146,8 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a");
+                        "Pixel 4a",
+                        "Pixel 5");
 
         assertThat(dm.getDevice("Nexus One", "Google").getDisplayName()).isEqualTo("Nexus One");
 
@@ -201,7 +202,8 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a");
+                        "Pixel 4a",
+                        "Pixel 5");
     }
 
     @Test
@@ -304,7 +306,8 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a");
+                        "Pixel 4a",
+                        "Pixel 5");
 
         assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES)))
                 .containsExactly(
@@ -358,7 +361,8 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a");
+                        "Pixel 4a",
+                        "Pixel 5");
     }
 
     @Test
@@ -450,7 +454,8 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a");
+                        "Pixel 4a",
+                        "Pixel 5");
 
         assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES)))
                 .containsExactly(
@@ -504,7 +509,8 @@ public class DeviceManagerTest {
                         "Pixel 3a XL",
                         "Pixel 4",
                         "Pixel 4 XL",
-                        "Pixel 4a");
+                        "Pixel 4a",
+                        "Pixel 5");
     }
 
     @Test

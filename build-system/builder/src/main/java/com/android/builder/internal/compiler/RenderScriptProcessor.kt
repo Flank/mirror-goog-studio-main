@@ -49,7 +49,6 @@ class RenderScriptProcessor(
     private val libOutputDir: File,
     private val buildToolInfo: BuildToolInfo,
     targetApi: Int,
-    buildToolsRevision: Revision,
     private val optimizationLevel: Int,
     private val ndkMode: Boolean,
     private val supportMode: Boolean,
@@ -73,23 +72,16 @@ class RenderScriptProcessor(
         get() = File(resOutputDir, SdkConstants.FD_RES_RAW)
 
     @VisibleForTesting
-    // ABI representation with device name, toolchain triple, the path to the old
-    // ABI-specific linker, the linker arguments and whether to use the new universal linker
+    // ABI representation with device name, toolchain triple and the linker arguments
     class Abi constructor(
         val device: String,
         val toolchain: String,
-        private val oldLinker: PathId,
-        private val linkerArgs: Array<String>,
-        private val useNewLinker: Boolean
+        private val linkerArgs: Array<String>
     ) {
-        val newLinker = PathId.LLD
+        val linker: PathId = PathId.LLD
 
-        val linker: PathId
-            get() = if (useNewLinker) newLinker else oldLinker
-
-        fun getLinkerArgs(): Array<String> =
-            if (useNewLinker) { arrayOf("-flavor", "ld") + linkerArgs }
-            else { linkerArgs }
+        // Add the required linker flavor to arguments
+        fun getLinkerArgs(): Array<String> = arrayOf("-flavor", "ld") + linkerArgs
     }
 
     private enum class AbiType {
@@ -99,8 +91,8 @@ class RenderScriptProcessor(
 
     init {
         // Set which linker to use for abis based on target build tools revision
-        abis32 = getAbis(AbiType.BIT_32, buildToolsRevision)
-        abis64 = getAbis(AbiType.BIT_64, buildToolsRevision)
+        abis32 = getAbis(AbiType.BIT_32)
+        abis64 = getAbis(AbiType.BIT_64)
 
         if (supportMode) {
             val rs = File(buildToolInfo.location, "renderscript")
@@ -492,11 +484,7 @@ class RenderScriptProcessor(
             return File(buildToolsFolder, "renderscript/lib")
         }
 
-        private fun getAbis(type: AbiType, buildToolsRevision: Revision): Array<Abi> {
-            // The revision in which the new universal linker (lld) was added
-            val newLinkerRevision = Revision(29, 0, 3)
-
-            val useNewLinker = buildToolsRevision >= newLinkerRevision
+        private fun getAbis(type: AbiType): Array<Abi> {
 
             return when (type) {
                 AbiType.BIT_32 ->
@@ -504,29 +492,23 @@ class RenderScriptProcessor(
                         Abi(
                             "armeabi-v7a",
                             "armv7-none-linux-gnueabi",
-                            PathId.LD_ARM,
                             arrayOf(
                                 "-dynamic-linker",
                                 "/system/bin/linker",
                                 "-X",
                                 "-m",
                                 "armelf_linux_eabi"
-                            ),
-                            useNewLinker
+                            )
                         ),
                         Abi(
                             "mips",
                             "mipsel-unknown-linux",
-                            PathId.LD_MIPS,
-                            arrayOf("-EL"),
-                            useNewLinker
+                            arrayOf("-EL")
                         ),
                         Abi(
                             "x86",
                             "i686-unknown-linux",
-                            PathId.LD_X86,
-                            arrayOf("-m", "elf_i386"),
-                            useNewLinker
+                            arrayOf("-m", "elf_i386")
                         )
                     )
                 AbiType.BIT_64 ->
@@ -534,16 +516,12 @@ class RenderScriptProcessor(
                         Abi(
                             "arm64-v8a",
                             "aarch64-linux-android",
-                            PathId.LD_ARM64,
-                            arrayOf("-X", "--fix-cortex-a53-843419"),
-                            useNewLinker
+                            arrayOf("-X", "--fix-cortex-a53-843419")
                         ),
                         Abi(
                             "x86_64",
                             "x86_64-unknown-linux",
-                            PathId.LD_X86_64,
-                            arrayOf("-m", "elf_x86_64"),
-                            useNewLinker
+                            arrayOf("-m", "elf_x86_64")
                         )
                     )
             }
@@ -551,10 +529,10 @@ class RenderScriptProcessor(
 
         @JvmStatic
         @VisibleForTesting
-        fun getAbis(abiType: String, buildToolsRevision: String): Array<Abi>? {
+        fun getAbis(abiType: String): Array<Abi>? {
             return when (abiType) {
-                "32" -> getAbis(AbiType.BIT_32, Revision.parseRevision(buildToolsRevision))
-                "64" -> getAbis(AbiType.BIT_64, Revision.parseRevision(buildToolsRevision))
+                "32" -> getAbis(AbiType.BIT_32)
+                "64" -> getAbis(AbiType.BIT_64)
                 else -> null
             }
         }

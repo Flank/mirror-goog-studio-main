@@ -16,13 +16,9 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.DetermineUsedStlResult
-import com.android.build.gradle.internal.cxx.model.determineUsedStl
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
-import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.ide.common.process.ProcessInfoBuilder
 import org.gradle.process.ExecOperations
@@ -46,14 +42,6 @@ fun generatePrefabPackages(
                 "CxxAbiModule.prefabClassPath cannot be null when Prefab is used"
         )
 
-    val selectedStl = when (val result = abiModel.variant.determineUsedStl()) {
-        is DetermineUsedStlResult.Success -> result.stl
-        is DetermineUsedStlResult.Failure -> {
-            errorln(result.error)
-            return
-        }
-    }
-
     // TODO: Get main class from manifest.
     val builder = ProcessInfoBuilder().setClasspath(prefabClassPath.toString())
         .setMain("com.google.prefab.cli.AppKt")
@@ -61,7 +49,7 @@ fun generatePrefabPackages(
         .addArgs("--platform", "android")
         .addArgs("--abi", abiModel.abi.tag)
         .addArgs("--os-version", osVersion.toString())
-        .addArgs("--stl", selectedStl.argumentName)
+        .addArgs("--stl", abiModel.variant.stlType)
         .addArgs("--ndk-version", abiModel.variant.module.ndkVersion.major.toString())
         .addArgs("--output", abiModel.prefabFolder.resolve("prefab").toString())
         .addArgs(packagePaths)

@@ -196,9 +196,7 @@ class CoreLibraryDesugarTest {
 
             android.lintOptions.abortOnError = true
         """.trimIndent())
-        // http://b/146208910
-        executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run("app:lintDebug")
+        executor().with(BooleanOption.USE_NEW_LINT_MODEL, true).run("app:lintDebug")
     }
 
     @Test
@@ -210,10 +208,12 @@ class CoreLibraryDesugarTest {
         """.trimIndent())
         val result =
             executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)  // http://b/146208910
+                .with(BooleanOption.USE_NEW_LINT_MODEL, true)
                 .expectFailure().run("app:lintDebug")
-        assertThat(result.failureMessage).contains(
-            "Call requires API level 24 (current min is 21): java.util.Collection#stream [NewApi]")
+        assertThat(result.failureMessage).contains("Lint found errors in the project")
+        val reportXml = app.file("build/reports/lint-results-debug.html").readText()
+        assertThat(reportXml).contains(
+            "Call requires API level 24 (current min is 21): <code>java.util.Collection#stream</code>")
     }
 
     @Test

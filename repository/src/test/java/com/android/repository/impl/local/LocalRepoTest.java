@@ -34,20 +34,16 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
-
 import org.w3c.dom.Document;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Tests for {@link LocalRepoLoaderImpl}.
@@ -88,8 +84,9 @@ public class LocalRepoTest extends TestCase {
         );
 
         RepoManager manager = RepoManager.create(mockFop);
-        LocalRepoLoader localLoader = new LocalRepoLoaderImpl(new File("/repo"), manager, null,
-                mockFop);
+        LocalRepoLoader localLoader =
+                new LocalRepoLoaderImpl(
+                        new File("/repo").getAbsoluteFile(), manager, null, mockFop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         progress.assertNoErrorsOrWarnings();
@@ -242,8 +239,9 @@ public class LocalRepoTest extends TestCase {
         );
 
         RepoManager manager = RepoManager.create(mockFop);
-        LocalRepoLoader localLoader = new LocalRepoLoaderImpl(new File("/repo"), manager, null,
-                mockFop);
+        LocalRepoLoader localLoader =
+                new LocalRepoLoaderImpl(
+                        new File("/repo").getAbsoluteFile(), manager, null, mockFop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         assertEquals(new Revision(3), p.getVersion());

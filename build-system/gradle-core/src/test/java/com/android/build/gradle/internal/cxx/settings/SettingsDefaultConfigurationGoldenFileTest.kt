@@ -53,7 +53,7 @@ class SettingsDefaultConfigurationGoldenFileTest {
                 result += ""
                 result += "```"
                 BasicCmakeMock().let {
-                    result += it.abi.getCmakeServerDefaultEnvironment().toJsonString().lines()
+                    result += getCmakeDefaultEnvironment(it.abi.shouldGeneratePrefabPackages()).toJsonString().lines()
                 }
                 result += "```"
                 result

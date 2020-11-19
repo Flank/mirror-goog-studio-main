@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.manifest
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ApkSubject.getManifestContent
+import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
 import org.junit.Assert.fail
 import org.junit.Rule
@@ -40,6 +41,9 @@ class ProcessTestManifestTest {
                     variant.minSdkVersion = new AndroidVersion(21, null)
                     variant.maxSdkVersion = 29
                     variant.targetSdkVersion = new AndroidVersion(22, null)
+                })
+                androidTest(selector().all(), { androidTest ->
+                    androidTest.packaging.jniLibs.useLegacyPackaging.set(false)
                 })
             }
         """.trimIndent())
@@ -123,6 +127,81 @@ class ProcessTestManifestTest {
         assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=21")
         assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=22")
         assertManifestContent(manifestContent, "A: http://schemas.android.com/apk/res/android:maxSdkVersion(0x01010271)=29")
+        assertManifestContent(
+            manifestContent,
+            "A: http://schemas.android.com/apk/res/android:extractNativeLibs(0x010104ea)=false"
+        )
+    }
+
+    @Test
+    fun testManifestOverlays() {
+        project.buildFile.appendText("""
+            android {
+                flavorDimensions "app", "recents"
+
+                productFlavors {
+                    flavor1 {
+                        dimension "app"
+                    }
+
+                    flavor2 {
+                        dimension "recents"
+                    }
+                }
+            }
+        """.trimIndent())
+        FileUtils.createFile(
+            project.file("src/androidTest/AndroidManifest.xml"),
+            """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld.test">
+                    <application>
+                        <receiver android:name="com.example.helloworld.TestReceiver" />
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+        FileUtils.createFile(
+            project.file("src/androidTestFlavor1/AndroidManifest.xml"),
+            """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld.test">
+                    <application
+                        android:allowBackup="true">
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+        FileUtils.createFile(
+            project.file("src/androidTestFlavor2/AndroidManifest.xml"),
+            """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld.test">
+                    <application
+                        android:supportsRtl="true">
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+        FileUtils.createFile(
+            project.file("src/androidTestDebug/AndroidManifest.xml"),
+            """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld.test">
+                    <application
+                        android:isGame="false">
+                    </application>
+                </manifest>
+            """.trimIndent()
+        )
+        project.executor().run("assembleFlavor1Flavor2DebugAndroidTest")
+        val manifestContent = project.file("build/intermediates/packaged_manifests/flavor1Flavor2DebugAndroidTest/AndroidManifest.xml")
+        // merged from androidTestDebug
+        FileSubject.assertThat(manifestContent).contains("android:isGame=\"false\"")
+        // merged from androidTestFlavor2
+        FileSubject.assertThat(manifestContent).contains("android:supportsRtl=\"true\"")
+        // merged from androidTestFlavor1
+        FileSubject.assertThat(manifestContent).contains("android:allowBackup=\"true\"")
     }
 
     fun assertManifestContent(manifestContent: Iterable<String>, stringToAssert: String) {

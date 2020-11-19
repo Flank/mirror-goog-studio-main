@@ -23,12 +23,14 @@ import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
@@ -57,6 +59,9 @@ abstract class BundleToApkTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
+    @get:Input
+    abstract val enableLocalTesting: Property<Boolean>
+
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(BundleToolRunnable::class.java) {
             it.initializeFromAndroidVariantTask(this)
@@ -70,6 +75,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
                 it.keyPassword.set(config.keyPassword)
 
             }
+            it.enableLocalTesting.set(enableLocalTesting)
         }
     }
 
@@ -81,6 +87,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
         abstract val keystorePassword: Property<String>
         abstract val keyAlias: Property<String>
         abstract val keyPassword: Property<String>
+        abstract val enableLocalTesting: Property<Boolean>
     }
 
     abstract class BundleToolRunnable : ProfileAwareWorkAction<Params>() {
@@ -103,6 +110,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
                     keyAlias = parameters.keyAlias.orNull,
                     keyPassword = parameters.keyPassword.orNull
                 )
+                .setLocalTestingMode(parameters.enableLocalTesting.get())
 
             command.build().execute()
         }
@@ -138,6 +146,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             )
             creationConfig.services.initializeAapt2Input(task.aapt2)
             task.signingConfigData = SigningConfigDataProvider.create(creationConfig)
+            task.enableLocalTesting.set(creationConfig.services.projectOptions[BooleanOption.ENABLE_LOCAL_TESTING])
         }
     }
 }

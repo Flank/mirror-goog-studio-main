@@ -55,50 +55,15 @@ The default CMake build root that gradle uses.
 - example: ${ndk.moduleDir}/.cxx/cmake/debug/x86_64
 - environment: android-gradle
 
-## ${ndk.cFlags}
-The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.
-- example: -DC_FLAG_DEFINED
-- environment: android-gradle
-
-## ${ndk.cmakeExecutable}
-Path to CMake executable.
-- example: ${ndk.sdkDir}/cmake/[Current CMake Version]/bin/cmake
-- environment: android-ndk
-
 ## ${ndk.cmakeToolchain}
 Path to the current Android NDK's CMake toolchain.
-- example: ${ndk.dir}/build/cmake/android.toolchain.cmake
+- example: ${ndk.moduleNdkDir}/build/cmake/android.toolchain.cmake
 - environment: android-ndk
 
 ## ${ndk.configurationHash}
 First eight characters of ${ndk.fullConfigurationHash}.
 - example: 1m6w461r
 - environment: android-gradle
-
-## ${ndk.cppFlags}
-The value of cppFlags from android.config.externalNativeBuild.cppFlags in build.gradle.
-- example: -DCPP_FLAG_DEFINED
-- environment: android-gradle
-
-## ${ndk.defaultBuildType}
-The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. May be Debug, Release, RelWithDebInfo, or MinSizeRel.
-- example: Debug
-- environment: android-gradle
-
-## ${ndk.defaultLibraryOutputDirectory}
-The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.
-- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
-- environment: android-gradle
-
-## ${ndk.defaultRuntimeOutputDirectory}
-The default CMake CMAKE_RUNTIME_OUTPUT_DIRECTORY that gradle uses.
-- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
-- environment: android-gradle
-
-## ${ndk.dir}
-Folder of the current Android NDK.
-- example: ${ndk.sdkDir}/ndk/21.3.6528147
-- environment: android-ndk
 
 ## ${ndk.fullConfigurationHash}
 Hash of this CMakeSettings configuration.
@@ -115,6 +80,26 @@ The minimum Android platform supported by the current Android NDK.
 - example: 16
 - environment: android-ndk
 
+## ${ndk.moduleBuildIntermediatesDir}
+The module level build intermediates folder.
+- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates
+- environment: android-gradle
+
+## ${ndk.moduleBuildRoot}
+The default module-level CMake build root that gradle uses.
+- example: ${ndk.moduleDir}/.cxx
+- environment: android-gradle
+
+## ${ndk.moduleCmakeExecutable}
+Path to CMake executable.
+- example: ${ndk.projectSdkDir}/cmake/[Current CMake Version]/bin/cmake
+- environment: android-gradle
+
+## ${ndk.moduleCmakeGenerator}
+Name of the generator used by CMake.
+- example: Ninja
+- environment: android-gradle
+
 ## ${ndk.moduleDir}
 Folder of the module level build.gradle.
 - example: $PROJECTS/MyProject/Source/Android/app1
@@ -125,58 +110,103 @@ Name of the gradle module.
 - example: app1
 - environment: android-gradle
 
-## ${ndk.ninjaExecutable}
+## ${ndk.moduleNdkDir}
+Folder of the current Android NDK.
+- example: ${ndk.projectSdkDir}/ndk/21.3.6528147
+- environment: android-gradle
+
+## ${ndk.moduleNdkVersion}
+Version of NDK.
+- example: 21.3.6528147
+- environment: android-gradle
+
+## ${ndk.moduleNdkVersionMajor}
+Version number major part.
+- example: 21
+- environment: android-gradle
+
+## ${ndk.moduleNdkVersionMinor}
+Version number minor part.
+- example: 3
+- environment: android-gradle
+
+## ${ndk.moduleNinjaExecutable}
 Path to Ninja executable if one was found by Gradle. Otherwise, it expands to empty string and it's up to CMake to find the ninja executable.
-- example: ${ndk.sdkDir}/cmake/[Current CMake Version]/bin/ninja
-- environment: android-ndk
+- example: ${ndk.projectSdkDir}/cmake/[Current CMake Version]/bin/ninja
+- environment: android-gradle
 
 ## ${ndk.platform}
 The currently targeted Android platform string, that can be passed to CMake in ANDROID_PLATFORM.
 - example: android-19
-- environment: android-ndk-platform-${ndk.systemVersion}
+- environment: android-ndk-platform-${ndk.platformSystemVersion}
 
 ## ${ndk.platformCode}
 The currently targeted Android platform code name.
 - example: K
-- environment: android-ndk-platform-${ndk.systemVersion}
+- environment: android-ndk-platform-${ndk.platformSystemVersion}
+
+## ${ndk.platformSystemVersion}
+The currently targeted Android system version, suitable for passing to CMake in CMAKE_SYSTEM_VERSION.
+- example: 19
+- environment: android-ndk-platform-${ndk.platformSystemVersion}
 
 ## ${ndk.prefabPath}
 The CMAKE_FIND_ROOT_PATH to be used by Prefab for the current configuration.
-- example: $PROJECTS/MyProject/Source/Android/app1/.cxx/cmake/debug/prefab/x86_64/prefab
+- example: $PROJECTS/MyProject/Source/Android/app1/.cxx/cmake/debug/prefab/x86_64
 - environment: android-gradle
 
-## ${ndk.projectDir}
-Folder of the gradle root project build.gradle.
-- example: $PROJECTS/MyProject/Source/Android
-- environment: android-gradle
-
-## ${ndk.sdkDir}
+## ${ndk.projectSdkDir}
 Folder of the current Android SDK.
 - example: $HOME/Library/Android/sdk
 - environment: android-gradle
 
-## ${ndk.systemVersion}
-The currently targeted Android system version, suitable for passing to CMake in CMAKE_SYSTEM_VERSION.
-- example: 19
-- environment: android-ndk-platform-${ndk.systemVersion}
+## ${ndk.soOutputDir}
+The ABI-level folder where .so files are written.
+- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
+- environment: android-gradle
+
+## ${ndk.stlLibraryFile}
+If present, the STL .so file that needs to be distributed with the libraries built.
+- example: ${ndk.moduleNdkDir}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so
+- environment: android-gradle
+
+## ${ndk.variantBuildIntermediatesDir}
+The variant level build intermediates folder.
+- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates/cmake/debug
+- environment: android-gradle
+
+## ${ndk.variantBuildRoot}
+The default variant-level CMake build root that gradle uses.
+- example: ${ndk.moduleDir}/.cxx/cmake/debug
+- environment: android-gradle
+
+## ${ndk.variantCFlags}
+The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.
+- example: -DC_FLAG_DEFINED
+- environment: android-gradle
+
+## ${ndk.variantCppFlags}
+The value of cppFlags from android.config.externalNativeBuild.cppFlags in build.gradle.
+- example: -DCPP_FLAG_DEFINED
+- environment: android-gradle
 
 ## ${ndk.variantName}
 Name of the gradle variant.
 - example: debug
 - environment: android-gradle
 
-## ${ndk.version}
-Version of NDK.
-- example: 21.3.6528147
-- environment: android-ndk
+## ${ndk.variantOptimizationTag}
+The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. May be Debug, Release, RelWithDebInfo, or MinSizeRel.
+- example: Debug
+- environment: android-gradle
 
-## ${ndk.versionMajor}
-Version number major part.
-- example: 21
-- environment: android-ndk
+## ${ndk.variantSoOutputDir}
+The variant-level folder where .so files are written.
+- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj
+- environment: android-gradle
 
-## ${ndk.versionMinor}
-Version number minor part.
-- example: 3
-- environment: android-ndk
+## ${ndk.variantStlType}
+The type of the runtime library type (if present).
+- example: c++_shared
+- environment: android-gradle
 

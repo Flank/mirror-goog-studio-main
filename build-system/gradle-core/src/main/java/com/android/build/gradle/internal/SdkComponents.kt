@@ -248,6 +248,10 @@ abstract class SdkComponentsBuildService @Inject constructor(
         return@provider objcopyExecutables
     }
 
+    val coreForSystemModulesProvider: Provider<File> = providerFactory.provider {
+        sdkLoadStrategy.getCoreForSystemModulesJar()
+    }
+
     // These old methods are expensive and require SDK Parsing or some kind of installation/download.
 
     fun installCmake(version: String) {

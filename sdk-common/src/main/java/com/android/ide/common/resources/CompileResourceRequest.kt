@@ -21,7 +21,7 @@ import com.android.ide.common.blame.SourcePosition
 import java.io.File
 import java.io.Serializable
 
-/** A request for Aapt2.  */
+/** A request for Aapt2 compile / ResourceCompiler.  */
 class CompileResourceRequest @JvmOverloads constructor(
     val inputFile: File,
     val outputDirectory: File,
@@ -44,5 +44,15 @@ class CompileResourceRequest @JvmOverloads constructor(
      * use [blameMap]
      */
     val mergeBlameFolder: File? = null,
-    val sourcePath : String = inputFile.absolutePath
-) : Serializable
+    /** Map of source set identifier to absolute path Used for determining relative sourcePath. */
+    var identifiedSourceSetMap: Map<String, String>? = null
+) : Serializable {
+    val sourcePath : String by lazy {
+        identifiedSourceSetMap?.let { getRelativeSourceSetPath(inputFile, it) }
+                ?: inputFile.absolutePath
+    }
+
+    fun useRelativeSourcePath(moduleIdentifiedSourceSets: Map<String, String>) {
+        identifiedSourceSetMap = moduleIdentifiedSourceSets
+    }
+}

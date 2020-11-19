@@ -1,7 +1,6 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'license-report'
@@ -11,33 +10,39 @@ archivesBaseName = 'sdk-common'
 version = rootProject.ext.baseVersion
 
 licenseReport {
-    ignored = ['org.jetbrains.trove4j:trove4j:20160824']
+    ignored = libs.trove4j
 }
 
 dependencies {
-    compile project(':base:sdklib')
-    compile project(':base:builder-test-api')
-    compile project(':base:builder-model')
-    compile project(':base:ddmlib')
-    compile project(':analytics-library:shared')
-    compile libs.bouncycastle_pkix
-    compile libs.bouncycastle_prov
-    compile libs.kotlin_stdlib
-    compile libs.kotlin_reflect
-    compile libs.protobuf
-    compile libs.javax_inject
-    compile libs.trove4j
-    compile libs.aapt2_proto
-    compile libs.xerces
+    implementation project(':base:sdklib')
+    implementation project(':base:builder-test-api')
+    implementation project(':base:builder-model')
+    implementation project(':base:ddmlib')
+    implementation project(':base:layoutlib-api')
+    implementation project(':base:common')
+    implementation project(':analytics-library:shared')
+    implementation libs.bouncycastle_pkix
+    implementation libs.bouncycastle_prov
+    implementation libs.kotlin_stdlib
+    implementation libs.guava
+    implementation libs.jaxb_runtime
+    implementation libs.gson
+    implementation libs.kotlin_reflect
+    implementation libs.protobuf
+    implementation libs.javax_inject
+    implementation libs.kxml
+    implementation libs.trove4j
+    implementation libs.aapt2_proto
+    implementation libs.xerces
 
-    testCompile libs.junit
-    testCompile project(':base:testutils')
-    testCompile 'org.easymock:easymock:3.3'
-    testCompile libs.jimfs
-    testCompile libs.mockito_core
-    testCompile libs.truth
-    testCompile libs.equalsverifier
-    testCompile testFixtures(project(":base:repository"))
+    testImplementation libs.junit
+    testImplementation project(':base:testutils')
+    testImplementation 'org.easymock:easymock:3.3'
+    testImplementation libs.jimfs
+    testImplementation libs.mockito_core
+    testImplementation libs.truth
+    testImplementation libs.equalsverifier
+    testImplementation testFixtures(project(":base:repository"))
 }
 
 protobuf {

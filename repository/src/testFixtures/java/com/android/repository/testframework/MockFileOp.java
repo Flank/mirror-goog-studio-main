@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.repository.testframework;
 
 import com.android.annotations.NonNull;
@@ -39,32 +38,33 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * Mock version of {@link FileOpImpl} that wraps some common {@link File}
  * operations on files and folders.
  * <p>
  * This version does not perform any file operation. Instead it records a textual
  * representation of all the file operations performed.
- * <p>
- * To avoid cross-platform path issues (e.g. Windows path), the methods here should
- * always use rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3".
- * When processing {@link File}, you can convert them using {@link #getAgnosticAbsPath(File)}.
+ *
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs} and
+ *     {@link com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
+@Deprecated
 public class MockFileOp extends FileSystemFileOp {
-    private FileSystem mFileSystem = createFileSystem();
+    private FileSystem mFileSystem;
 
     public MockFileOp() {
         mIsWindows = FileOpUtils.create().isWindows();
+        mFileSystem = createFileSystem();
     }
 
-    private static FileSystem createFileSystem() {
-        // TODO: use the current platform configuration and get rid of all the agnostic path stuff.
-        Configuration config = Configuration.unix();
-        config = config.toBuilder()
-                .setWorkingDirectory("/")
-                .setAttributeViews("posix")
-                .build();
+    private FileSystem createFileSystem() {
+        Configuration config = Configuration.forCurrentPlatform();
+        config =
+                config.toBuilder()
+                        .setRoots((new File("/")).getAbsolutePath())
+                        .setWorkingDirectory((new File("/")).getAbsolutePath())
+                        .setAttributeViews("posix")
+                        .build();
         return Jimfs.newFileSystem(config);
     }
 
@@ -83,19 +83,15 @@ public class MockFileOp extends FileSystemFileOp {
         // nothing
     }
 
-    public void setIsWindows(boolean isWindows) {
-        mIsWindows = isWindows;
-    }
-
     @Override
     public boolean canWrite(@NonNull File file) {
         try {
             return !Sets.intersection(
-                    Files.getPosixFilePermissions(toPath(new File(getAgnosticAbsPath(file)))),
-                    ImmutableSet.of(
-                            PosixFilePermission.OTHERS_WRITE,
-                            PosixFilePermission.GROUP_WRITE,
-                            PosixFilePermission.OWNER_WRITE))
+                            Files.getPosixFilePermissions(toPath(file)),
+                            ImmutableSet.of(
+                                    PosixFilePermission.OTHERS_WRITE,
+                                    PosixFilePermission.GROUP_WRITE,
+                                    PosixFilePermission.OWNER_WRITE))
                     .isEmpty();
         }
         catch (IOException e) {
@@ -104,16 +100,17 @@ public class MockFileOp extends FileSystemFileOp {
     }
 
     @NonNull
-    public String getAgnosticAbsPath(@NonNull File file) {
-        return getAgnosticAbsPath(file.getAbsolutePath());
+    public String getPlatformSpecificPath(@NonNull File file) {
+        return getPlatformSpecificPath(file.getAbsolutePath());
     }
 
     @NonNull
-    public String getAgnosticAbsPath(@NonNull String path) {
-        if (isWindows()) {
-            // Try to convert the windows-looking path to a unix-looking one
-            path = path.replace('\\', '/');
-            path = path.replaceAll("^[A-Za-z]:", "");
+    public String getPlatformSpecificPath(@NonNull String path) {
+        if (mIsWindows && (path.startsWith("/") || path.startsWith("\\"))) {
+            return (new File(path)).getAbsolutePath()
+                    + (path.length() > 1 && ((path.endsWith("/") || path.endsWith("\\")))
+                            ? File.separator
+                            : "");
         }
         return path;
     }
@@ -123,64 +120,53 @@ public class MockFileOp extends FileSystemFileOp {
      * Parent folders are automatically created.
      */
     public void recordExistingFile(@NonNull File file) {
-        recordExistingFile(getAgnosticAbsPath(file), 0, (byte[])null);
+        recordExistingFile(file.getAbsolutePath(), 0, (byte[]) null);
     }
 
     /**
      * Records a new absolute file path.
      * Parent folders are automatically created.
-     * <p>
-     * The syntax should always look "unix-like", e.g. "/dir/file".
-     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
-     * @param absFilePath A unix-like file path, e.g. "/dir/file"
      */
     public void recordExistingFile(@NonNull String absFilePath) {
         recordExistingFile(absFilePath, 0, (byte[])null);
     }
 
     /**
-     * Records a new absolute file path and its input stream content.
-     * Parent folders are automatically created.
-     * <p>
-     * The syntax should always look "unix-like", e.g. "/dir/file".
-     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
-     * @param absFilePath A unix-like file path, e.g. "/dir/file"
-     * @param inputStream A non-null byte array of content to return
-     *                    via {@link #newFileInputStream(File)}.
+     * Records a new absolute file path and its input stream content. Parent folders are
+     * automatically created.
+     *
+     * @param absFilePath The file path, e.g. "/dir/file" (any platform) or "c:\dir\file" (windows)
+     * @param inputStream A non-null byte array of content to return via {@link
+     *     #newFileInputStream(File)}.
      */
     public void recordExistingFile(@NonNull String absFilePath, @Nullable byte[] inputStream) {
         recordExistingFile(absFilePath, 0, inputStream);
     }
 
     /**
-     * Records a new absolute file path and its input stream content.
-     * Parent folders are automatically created.
-     * <p>
-     * The syntax should always look "unix-like", e.g. "/dir/file".
-     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
-     * @param absFilePath A unix-like file path, e.g. "/dir/file"
-     * @param content A non-null UTF-8 content string to return
-     *                    via {@link #newFileInputStream(File)}.
+     * Records a new absolute file path and its input stream content. Parent folders are
+     * automatically created.
+     *
+     * @param absFilePath The file path, e.g. "/dir/file" (any platform) or "c:\dir\file" (windows)
+     * @param content A non-null UTF-8 content string to return via {@link
+     *     #newFileInputStream(File)}.
      */
     public void recordExistingFile(@NonNull String absFilePath, @NonNull String content) {
         recordExistingFile(absFilePath, 0, content.getBytes(Charsets.UTF_8));
     }
 
     /**
-     * Records a new absolute file path and its input stream content.
-     * Parent folders are automatically created.
-     * <p>
-     * The syntax should always look "unix-like", e.g. "/dir/file".
-     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
-     * @param absFilePath A unix-like file path, e.g. "/dir/file"
-     * @param inputStream A non-null byte array of content to return
-     *                    via {@link #newFileInputStream(File)}.
+     * Records a new absolute file path and its input stream content. Parent folders are
+     * automatically created.
+     *
+     * @param absFilePath The file path, e.g. "/dir/file" (any platform) or "c:\dir\file" (windows)
+     * @param inputStream A non-null byte array of content to return via {@link
+     *     #newFileInputStream(File)}.
      */
-    public void recordExistingFile(@NonNull String absFilePath,
-      long lastModified,
-      @Nullable byte[] inputStream) {
+    public void recordExistingFile(
+            @NonNull String absFilePath, long lastModified, @Nullable byte[] inputStream) {
         try {
-            Path path = mFileSystem.getPath(getAgnosticAbsPath(absFilePath));
+            Path path = mFileSystem.getPath(getPlatformSpecificPath(absFilePath));
             Files.createDirectories(path.getParent());
             Files.write(path,
               inputStream == null ? new byte[0] : inputStream);
@@ -191,18 +177,15 @@ public class MockFileOp extends FileSystemFileOp {
     }
 
     /**
-     * Records a new absolute file path and its input stream content.
-     * Parent folders are automatically created.
-     * <p>
-     * The syntax should always look "unix-like", e.g. "/dir/file".
-     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
-     * @param absFilePath A unix-like file path, e.g. "/dir/file"
-     * @param content A non-null UTF-8 content string to return
-     *                    via {@link #newFileInputStream(File)}.
+     * Records a new absolute file path and its input stream content. Parent folders are
+     * automatically created.
+     *
+     * @param absFilePath The file path, e.g. "/dir/file" (any platform) or "c:\dir\file" (windows)
+     * @param content A non-null UTF-8 content string to return via {@link
+     *     #newFileInputStream(File)}.
      */
-    public void recordExistingFile(@NonNull String absFilePath,
-      long lastModified,
-      @NonNull String content) {
+    public void recordExistingFile(
+            @NonNull String absFilePath, long lastModified, @NonNull String content) {
         recordExistingFile(absFilePath, lastModified, content.getBytes(Charsets.UTF_8));
     }
 
@@ -211,20 +194,18 @@ public class MockFileOp extends FileSystemFileOp {
      * Parent folders are automatically created.
      */
     public void recordExistingFolder(File folder) {
-        recordExistingFolder(getAgnosticAbsPath(folder));
+        recordExistingFolder(folder.getAbsolutePath());
     }
 
     /**
-     * Records a new absolute folder path.
-     * Parent folders are automatically created.
-     * <p>
-     * The syntax should always look "unix-like", e.g. "/dir/file".
-     * On Windows that means you'll want to use {@link #getAgnosticAbsPath(File)}.
-     * @param absFolderPath A unix-like folder path, e.g. "/dir/file"
+     * Records a new absolute folder path. Parent folders are automatically created.
+     *
+     * @param absFolderPath The file path, e.g. "/dir/file" (any platform) or "c:\dir\file"
+     *     (windows)
      */
     public void recordExistingFolder(String absFolderPath) {
         try {
-            Files.createDirectories(mFileSystem.getPath(getAgnosticAbsPath(absFolderPath)));
+            Files.createDirectories(mFileSystem.getPath(getPlatformSpecificPath(absFolderPath)));
         } catch (IOException e) {
             assert false : e.getMessage();
         }
@@ -306,6 +287,6 @@ public class MockFileOp extends FileSystemFileOp {
     @NonNull
     @Override
     public Path toPath(@NonNull File file) {
-        return getFileSystem().getPath(getAgnosticAbsPath(file.getPath()));
+        return getFileSystem().getPath(getPlatformSpecificPath(file.getPath()));
     }
 }

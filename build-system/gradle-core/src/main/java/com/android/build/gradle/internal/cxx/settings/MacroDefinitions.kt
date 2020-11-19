@@ -17,11 +17,49 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_ABI
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_PLATFORM
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_ARCH_ABI
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_MAKE_PROGRAM
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_RUNTIME_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_VERSION
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
+import com.android.build.gradle.internal.cxx.model.CxxModuleModel
+import com.android.build.gradle.internal.cxx.model.CxxProjectModel
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.bitness
+import com.android.build.gradle.internal.cxx.model.cFlags
+import com.android.build.gradle.internal.cxx.model.cmakeGenerator
+import com.android.build.gradle.internal.cxx.model.cmakeSettingsFile
+import com.android.build.gradle.internal.cxx.model.configurationHash
+import com.android.build.gradle.internal.cxx.model.cppFlags
+import com.android.build.gradle.internal.cxx.model.is64Bits
+import com.android.build.gradle.internal.cxx.model.isDefault
+import com.android.build.gradle.internal.cxx.model.isDeprecated
+import com.android.build.gradle.internal.cxx.model.makeFileFolder
+import com.android.build.gradle.internal.cxx.model.moduleName
+import com.android.build.gradle.internal.cxx.model.ndkMajorVersion
+import com.android.build.gradle.internal.cxx.model.ndkMaxPlatform
+import com.android.build.gradle.internal.cxx.model.ndkMinPlatform
+import com.android.build.gradle.internal.cxx.model.ndkMinorVersion
+import com.android.build.gradle.internal.cxx.model.platform
+import com.android.build.gradle.internal.cxx.model.platformCode
+import com.android.build.gradle.internal.cxx.model.tag
 import com.android.build.gradle.internal.cxx.settings.Environment.GRADLE
 import com.android.build.gradle.internal.cxx.settings.Environment.MICROSOFT_BUILT_IN
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK_EXPOSED_BY_HOST
+import kotlin.reflect.KClassifier
+import kotlin.reflect.KProperty1
 
 /**
  * Define built-in macros for CMakeSettings.json. Built-in means they're defined by the host
@@ -42,193 +80,289 @@ enum class Macro(
     val tag: String,
     // An example value for this kind of macro. Suitable for including in error messages and
     // warnings about this macro.
-    val example: String) {
+    val example: String,
+    // A property field that provides this macro's value.
+    val bind: KProperty1<*, *>?,
+    // Set if this macro value maps to specific CMake properties.
+    val cmakeProperties: List<CmakeProperty> = listOf(),
+    // If ndk-build has a different value than CMake, then this holds the ndk-build example
+    val ndkBuildExample: String? = null) {
 
+    NDK_CONFIGURATION_HASH(
+        description = "First eight characters of \${ndk.fullConfigurationHash}.",
+        environment = GRADLE,
+        tag = "configurationHash",
+        example = "1m6w461r",
+        bind = CxxAbiModel::configurationHash),
+    NDK_FULL_CONFIGURATION_HASH(
+        description = "Hash of this CMakeSettings configuration.",
+        environment = GRADLE,
+        tag = "fullConfigurationHash",
+        example = "1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519",
+        bind = CxxAbiModel::fullConfigurationHash),
     NDK_MIN_PLATFORM(
         description = "The minimum Android platform supported by the current Android NDK.",
         environment = NDK,
         tag = "minPlatform",
-        example = "16"),
+        example = "16",
+        bind = CxxModuleModel::ndkMinPlatform),
     NDK_MAX_PLATFORM(
         description = "The maximum Android platform supported by the current Android NDK.",
         environment = NDK,
         tag = "maxPlatform",
-        example = "29"),
-    NDK_SYSTEM_VERSION(
+        example = "29",
+        bind = CxxModuleModel::ndkMaxPlatform),
+    NDK_PLATFORM_SYSTEM_VERSION(
         description = "The currently targeted Android system version, suitable for passing to " +
                 "CMake in CMAKE_SYSTEM_VERSION.",
         environment = Environment.NDK_PLATFORM,
-        tag = "systemVersion",
-        example = "19"),
+        tag = "platformSystemVersion",
+        example = "19",
+        cmakeProperties = listOf(CMAKE_SYSTEM_VERSION),
+        bind = CxxAbiModel::abiPlatformVersion),
     NDK_PLATFORM(
         description = "The currently targeted Android platform string, that can be passed to " +
                 "CMake in ANDROID_PLATFORM.",
         environment = Environment.NDK_PLATFORM,
         tag = "platform",
-        example = "android-19"),
+        example = "android-19",
+        cmakeProperties = listOf(ANDROID_PLATFORM),
+        bind = CxxAbiModel::platform),
     NDK_PLATFORM_CODE(
         description = "The currently targeted Android platform code name.",
         environment = Environment.NDK_PLATFORM,
         tag = "platformCode",
-        example = "K"),
+        example = "K",
+        bind = CxxAbiModel::platformCode),
     NDK_ABI_BITNESS(
         description = "The bitness of the targeted ABI.",
         environment = Environment.NDK_ABI,
         tag = "abiBitness",
-        example = "64"),
+        example = "64",
+        bind = CxxAbiModel::bitness),
     NDK_ABI_IS_64_BITS(
         description = "Whether the targeted ABI is 64-bits.",
         environment = Environment.NDK_ABI,
         tag = "abiIs64Bits",
-        example = "1"),
+        example = "1",
+        bind = CxxAbiModel::is64Bits),
     NDK_ABI_IS_DEFAULT(
         description = "Whether the targeted ABI is a default ABI in the current Android NDK.",
         environment = Environment.NDK_ABI,
         tag = "abiIsDefault",
-        example = "1"),
+        example = "1",
+        bind = CxxAbiModel::isDefault),
     NDK_ABI_IS_DEPRECATED(
         description = "True if the targeted ABI is deprecated in the current Android NDK.",
         environment = Environment.NDK_ABI,
         tag = "abiIsDeprecated",
-        example = "0"),
+        example = "0",
+        bind = CxxAbiModel::isDeprecated),
     NDK_ABI(
         description = "Currently targeted ABI.",
         environment = GRADLE,
         tag = "abi",
-        example = "x86_64"),
-    NDK_SDK_DIR(
+        example = "x86_64",
+        cmakeProperties = listOf(ANDROID_ABI, CMAKE_ANDROID_ARCH_ABI),
+        bind = CxxAbiModel::tag),
+    NDK_PROJECT_SDK_DIR(
         description = "Folder of the current Android SDK.",
         environment = GRADLE,
-        tag = "sdkDir",
-        example = "\$HOME/Library/Android/sdk"),
-    NDK_DIR(
+        tag = "projectSdkDir",
+        example = "\$HOME/Library/Android/sdk",
+        bind = CxxProjectModel::sdkFolder),
+    NDK_MODULE_NDK_DIR(
         description = "Folder of the current Android NDK.",
-        environment = NDK,
-        tag = "dir",
-        example = "${NDK_SDK_DIR.ref}/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION"),
+        environment = GRADLE,
+        tag = "moduleNdkDir",
+        example = "${NDK_PROJECT_SDK_DIR.ref}/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION",
+        cmakeProperties = listOf(ANDROID_NDK, CMAKE_ANDROID_NDK),
+        bind = CxxModuleModel::ndkFolder),
     NDK_CMAKE_TOOLCHAIN(
         description = "Path to the current Android NDK's CMake toolchain.",
         environment = NDK,
         tag = "cmakeToolchain",
-        example = "${NDK_DIR.ref}/build/cmake/android.toolchain.cmake"),
-    NDK_CMAKE_EXECUTABLE(
+        example = "${NDK_MODULE_NDK_DIR.ref}/build/cmake/android.toolchain.cmake",
+        cmakeProperties = listOf(CMAKE_TOOLCHAIN_FILE),
+        bind = CxxModuleModel::cmakeToolchainFile),
+    NDK_MODULE_CMAKE_EXECUTABLE(
         description = "Path to CMake executable.",
-        environment = NDK,
-        tag = "cmakeExecutable",
-        example = "${NDK_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/cmake"),
-    NDK_NINJA_EXECUTABLE(
+        environment = GRADLE,
+        tag = "moduleCmakeExecutable",
+        example = "${NDK_PROJECT_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/cmake",
+        ndkBuildExample = "",
+        bind = CxxCmakeModuleModel::cmakeExe),
+    NDK_MODULE_NINJA_EXECUTABLE(
         description = "Path to Ninja executable if one was found by Gradle. Otherwise, it expands" +
                 " to empty string and it's up to CMake to find the ninja executable.",
-        environment = NDK,
-        tag = "ninjaExecutable",
-        example = "${NDK_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/ninja"),
-    NDK_VERSION(
-        description = "Version of NDK.",
-        environment = NDK,
-        tag = "version",
-        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
-    NDK_VERSION_MAJOR(
-        description = "Version number major part.",
-        environment = NDK,
-        tag = "versionMajor",
-        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[0]),
-    NDK_VERSION_MINOR(
-        description = "Version number minor part.",
-        environment = NDK,
-        tag = "versionMinor",
-        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[1]),
-    NDK_PROJECT_DIR(
-        description = "Folder of the gradle root project build.gradle.",
         environment = GRADLE,
-        tag = "projectDir",
-        example = "\$PROJECTS/MyProject/Source/Android"),
+        tag = "moduleNinjaExecutable",
+        example = "${NDK_PROJECT_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/ninja",
+        ndkBuildExample = "",
+        cmakeProperties = listOf(CMAKE_MAKE_PROGRAM),
+        bind = CxxCmakeModuleModel::ninjaExe),
+    NDK_MODULE_CMAKE_GENERATOR(
+        description = "Name of the generator used by CMake.",
+        environment = GRADLE,
+        tag = "moduleCmakeGenerator",
+        example = "Ninja",
+        ndkBuildExample = "",
+        bind = CxxModuleModel::cmakeGenerator),
+    NDK_MODULE_NDK_VERSION(
+        description = "Version of NDK.",
+        environment = GRADLE,
+        tag = "moduleNdkVersion",
+        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION,
+        bind = CxxModuleModel::ndkVersion),
+    NDK_MODULE_NDK_VERSION_MAJOR(
+        description = "Version number major part.",
+        environment = GRADLE,
+        tag = "moduleNdkVersionMajor",
+        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[0],
+        bind = CxxModuleModel::ndkMajorVersion),
+    NDK_MODULE_NDK_VERSION_MINOR(
+        description = "Version number minor part.",
+        environment = GRADLE,
+        tag = "moduleNdkVersionMinor",
+        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[1],
+        bind = CxxModuleModel::ndkMinorVersion),
     NDK_MODULE_DIR(
         description = "Folder of the module level build.gradle.",
         environment = GRADLE,
         tag = "moduleDir",
-        example = "\$PROJECTS/MyProject/Source/Android/app1"),
+        example = "\$PROJECTS/MyProject/Source/Android/app1",
+        bind = CxxModuleModel::moduleRootFolder),
+    NDK_MODULE_BUILD_INTERMEDIATES_DIR(
+        description = "The module level build intermediates folder.",
+        environment = GRADLE,
+        tag = "moduleBuildIntermediatesDir",
+        example = "\$PROJECTS/MyProject/Source/Android/app1/build/intermediates",
+        bind = CxxModuleModel::intermediatesFolder),
+    NDK_VARIANT_BUILD_INTERMEDIATES_DIR(
+        description = "The variant level build intermediates folder.",
+        environment = GRADLE,
+        tag = "variantBuildIntermediatesDir",
+        example = "\$PROJECTS/MyProject/Source/Android/app1/build/intermediates/cmake/debug",
+        ndkBuildExample = "\$PROJECTS/MyProject/Source/Android/app1/build/intermediates/ndkBuild/debug",
+        bind = CxxVariantModel::intermediatesFolder),
     NDK_VARIANT_NAME(
         description = "Name of the gradle variant.",
         environment = GRADLE,
         tag = "variantName",
-        example = "debug"),
+        example = "debug",
+        bind = CxxVariantModel::variantName),
     NDK_MODULE_NAME(
         description = "Name of the gradle module.",
         environment = GRADLE,
         tag = "moduleName",
-        example = "app1"),
+        example = "app1",
+        bind = CxxModuleModel::moduleName),
+    NDK_MODULE_BUILD_ROOT(
+        description = "The default module-level CMake build root that gradle uses.",
+        environment = GRADLE,
+        tag = "moduleBuildRoot",
+        example = "${NDK_MODULE_DIR.ref}/.cxx",
+        bind = CxxModuleModel::cxxFolder),
+    NDK_VARIANT_BUILD_ROOT(
+        description = "The default variant-level CMake build root that gradle uses.",
+        environment = GRADLE,
+        tag = "variantBuildRoot",
+        example = "${NDK_MODULE_DIR.ref}/.cxx/cmake/debug",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/.cxx/ndkBuild/debug",
+        bind = CxxVariantModel::cxxBuildFolder),
     NDK_BUILD_ROOT(
         description = "The default CMake build root that gradle uses.",
         environment = GRADLE,
         tag = "buildRoot",
-        example = "${NDK_MODULE_DIR.ref}/.cxx/cmake/debug/x86_64"),
-    NDK_C_FLAGS(
+        example = "${NDK_MODULE_DIR.ref}/.cxx/cmake/debug/x86_64",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/.cxx/ndkBuild/debug/x86_64",
+        bind = CxxAbiModel::cxxBuildFolder),
+    NDK_VARIANT_C_FLAGS(
         description = "The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.",
         environment = GRADLE,
-        tag = "cFlags",
-        example = "-DC_FLAG_DEFINED"),
-    NDK_CPP_FLAGS(
+        tag = "variantCFlags",
+        example = "-DC_FLAG_DEFINED",
+        cmakeProperties = listOf(CMAKE_C_FLAGS),
+        bind = CxxVariantModel::cFlags),
+    NDK_VARIANT_CPP_FLAGS(
         description = "The value of cppFlags from android.config.externalNativeBuild.cppFlags in build.gradle.",
         environment = GRADLE,
-        tag = "cppFlags",
-        example = "-DCPP_FLAG_DEFINED"),
-    NDK_DEFAULT_LIBRARY_OUTPUT_DIRECTORY(
-        description = "The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.",
+        tag = "variantCppFlags",
+        example = "-DCPP_FLAG_DEFINED",
+        cmakeProperties = listOf(CMAKE_CXX_FLAGS),
+        bind = CxxVariantModel::cppFlags),
+    NDK_VARIANT_SO_OUTPUT_DIR(
+        description = "The variant-level folder where .so files are written.",
         environment = GRADLE,
-        tag = "defaultLibraryOutputDirectory",
-        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64"),
-    NDK_DEFAULT_RUNTIME_OUTPUT_DIRECTORY(
-        description = "The default CMake CMAKE_RUNTIME_OUTPUT_DIRECTORY that gradle uses.",
+        tag = "variantSoOutputDir",
+        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/ndkBuild/debug/obj/local",
+        bind = CxxVariantModel::soFolder),
+    NDK_SO_OUTPUT_DIR(
+        description = "The ABI-level folder where .so files are written.",
         environment = GRADLE,
-        tag = "defaultRuntimeOutputDirectory",
-        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64"),
-    NDK_DEFAULT_BUILD_TYPE(
+        tag = "soOutputDir",
+        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/ndkBuild/debug/obj/local/x86_64",
+        cmakeProperties = listOf(CMAKE_LIBRARY_OUTPUT_DIRECTORY, CMAKE_RUNTIME_OUTPUT_DIRECTORY),
+        bind = CxxAbiModel::soFolder),
+    NDK_VARIANT_OPTIMIZATION_TAG(
         description = "The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. " +
                 "May be Debug, Release, RelWithDebInfo, or MinSizeRel.",
         environment = GRADLE,
-        tag = "defaultBuildType",
-        example = "Debug"),
-    NDK_CONFIGURATION_HASH(
-        description = "First eight characters of \${ndk.fullConfigurationHash}.",
+        tag = "variantOptimizationTag",
+        example = "Debug",
+        cmakeProperties = listOf(CmakeProperty.CMAKE_BUILD_TYPE),
+        bind = CxxVariantModel::optimizationTag),
+    NDK_VARIANT_STL_TYPE(
+        description = "The type of the runtime library type (if present).",
         environment = GRADLE,
-        tag = "configurationHash",
-        example = "1m6w461r"),
-    NDK_FULL_CONFIGURATION_HASH(
-        description = "Hash of this CMakeSettings configuration.",
+        tag = "variantStlType",
+        example = "c++_shared",
+        bind = CxxVariantModel::stlType),
+    NDK_STL_LIBRARY_FILE(
+        description = "If present, the STL .so file that needs to be distributed with the libraries built.",
         environment = GRADLE,
-        tag = "fullConfigurationHash",
-        example = "1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519"),
+        tag = "stlLibraryFile",
+        example = "${NDK_MODULE_NDK_DIR.ref}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so",
+        bind = CxxAbiModel::stlLibraryFile),
     NDK_PREFAB_PATH(
         description = "The CMAKE_FIND_ROOT_PATH to be used by Prefab for the current configuration.",
         environment = GRADLE,
         tag = "prefabPath",
-        example = "\$PROJECTS/MyProject/Source/Android/app1/.cxx/cmake/debug/prefab/x86_64/prefab"
-    ),
+        example = "\$PROJECTS/MyProject/Source/Android/app1/.cxx/cmake/debug/prefab/x86_64",
+        ndkBuildExample = "\$PROJECTS/MyProject/Source/Android/app1/.cxx/ndkBuild/debug/prefab/x86_64",
+        bind = CxxAbiModel::prefabFolder),
     ENV_THIS_FILE(
         description = "Path to this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "thisFile",
-        example = "\$PROJECTS/MyProject/CMakeSettings.json"),
+        example = "\$PROJECTS/MyProject/CMakeSettings.json",
+        bind = CxxModuleModel::cmakeSettingsFile),
     ENV_THIS_FILE_DIR(
         description = "Folder of this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "thisFileDir",
-        example = "\$PROJECTS/MyProject"),
+        example = "\$PROJECTS/MyProject",
+        bind = CxxModuleModel::makeFileFolder),
     ENV_WORKSPACE_ROOT(
         description = "Folder of the project level build.gradle file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "workspaceRoot",
-        example = "\$PROJECTS/MyProject/Source/Android"),
+        example = "\$PROJECTS/MyProject/Source/Android",
+        bind = CxxProjectModel::rootBuildGradleFolder),
     ENV_PROJECT_DIR(
         description = "Folder of the module level build.gradle file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "projectDir",
-        example = "\$PROJECTS/MyProject/Source/Android/app1"),
+        example = "\$PROJECTS/MyProject/Source/Android/app1",
+        bind = CxxModuleModel::moduleRootFolder),
     NDK_ANDROID_GRADLE_IS_HOSTING(
         description = "True if Android Gradle Plugin is hosting this CMakeSettings.json.",
         environment = NDK_EXPOSED_BY_HOST,
         tag = "androidGradleIsHosting",
-        example = "1");
+        example = "1",
+        bind = Macro::one);
 
     /**
      * The literal value of this macro in CMakeSettings.json. For example, "${ndk.minPlatform}".
@@ -242,6 +376,25 @@ enum class Macro(
      * The namespace-qualified name of this macro.
      */
     val qualifiedName get() = "${environment.namespace}.$tag"
+
+    /**
+     * Try to look up a value for this [Macro] from [instance]
+     */
+    fun <T:Any> takeFrom(instance:T) : String? {
+        return MACRO_DEFINITIONS_BINDINGS_GETTERS[instance::class to this]?.let { property ->
+            (property as KProperty1<T, *>).get(instance)?.toString() ?: ""
+        }
+    }
+
+    /**
+     * In a property like MyClass::myProperty, return MyClass for this macro.
+     */
+    val bindingType : KClassifier? get() = MACRO_DEFINITIONS_BINDINGS_CLASS[this]
+
+    /**
+     * A built-in property that just returns "1".
+     */
+    private val one get() = "1"
 
     companion object {
         /**
@@ -257,6 +410,39 @@ enum class Macro(
                 }
             return values().singleOrNull { it.qualifiedName == qualifiedName }
         }
+
+        /**
+         * Return macro(s), if any, that correspond to the given [cmakeProperty].
+         */
+        fun withCMakeProperty(cmakeProperty : String) =
+            CMAKE_PROPERTY_STRING_TO_MACRO_MAP[cmakeProperty]?:listOf()
+
+        /**
+         * Return macro(s), if any, that are bound to the given property.
+         */
+        fun withBinding(property: KProperty1<*, *>) = BINDING_PROPERTY_TO_MACRO[property]?:listOf()
+
+        private val MACRO_DEFINITIONS_BINDINGS_GETTERS : Map<Pair<KClassifier?, Macro>, KProperty1<*, *>> = values()
+                .filter { macro -> macro.bind != null }
+                .map { macro ->
+                    val bind = macro.bind!!
+                    (bind.parameters[0].type.classifier to macro) to bind
+                }.toMap()
+
+        private val MACRO_DEFINITIONS_BINDINGS_CLASS : Map<Macro, KClassifier?> = values()
+                .filter { macro -> macro.bind != null }
+                .map { macro ->
+                    val bind = macro.bind!!
+                    macro to bind.parameters[0].type.classifier
+                }.toMap()
+
+        private val BINDING_PROPERTY_TO_MACRO = values()
+                .filter { macro -> macro.bind != null }
+                .groupBy { macro -> macro.bind!! }
+
+        private val CMAKE_PROPERTY_STRING_TO_MACRO_MAP = values()
+                .flatMap { macro -> macro.cmakeProperties.map { cmake -> cmake to macro} }
+                .groupBy({ (cmake, _) -> cmake.name }, { (_, macro) -> macro })
     }
 }
 
@@ -287,7 +473,7 @@ enum class Environment(
     /**
      * Environment produced by the NDK for an explicit platform ID.
      */
-    NDK_PLATFORM("android-ndk-platform-\${ndk.systemVersion}", "ndk"),
+    NDK_PLATFORM("android-ndk-platform-\${ndk.platformSystemVersion}", "ndk"),
     /**
      * Environment produced by the NDK for particular ABI.
      */

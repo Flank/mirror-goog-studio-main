@@ -35,7 +35,6 @@ import com.android.builder.internal.compiler.DirectoryWalker
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessOutputHandler
-import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions.checkNotNull
@@ -166,7 +165,6 @@ abstract class RenderscriptCompile : NdkTask() {
             objDestDir,
             libDestDir,
             targetApi.get(),
-            buildToolsInfo.revision,
             optimLevel,
             isNdkMode,
             isSupportMode,
@@ -192,7 +190,6 @@ abstract class RenderscriptCompile : NdkTask() {
      * @param sourceOutputDir the output dir in which to generate the source code
      * @param resOutputDir the output dir in which to generate the bitcode file
      * @param targetApi the target api
-     * @param buildToolsRevision the build tools version used
      * @param optimLevel the optimization level
      * @param ndkMode whether the renderscript code should be compiled to generate C/C++ bindings
      * @param supportMode support mode flag to generate .so files.
@@ -209,7 +206,6 @@ abstract class RenderscriptCompile : NdkTask() {
         objOutputDir: File,
         libOutputDir: File,
         targetApi: Int,
-        buildToolsRevision: Revision,
         optimLevel: Int,
         ndkMode: Boolean,
         supportMode: Boolean,
@@ -237,7 +233,6 @@ abstract class RenderscriptCompile : NdkTask() {
             libOutputDir,
             buildToolInfo,
             targetApi,
-            buildToolsRevision,
             optimLevel,
             ndkMode,
             supportMode,

@@ -52,9 +52,15 @@ class ComponentTree {
             throws LayoutInspectorService.LayoutModifiedException {
         // We shouldn't come in here more than once.
         assert !mStringTable.entries().iterator().hasNext();
+        if (mComposeTree != null) {
+            mComposeTree.resetGeneratedId();
+        }
         loadView(event, view, null, null);
         mConfiguration.writeConfiguration(event, view);
         loadStringTable(event);
+        if (mComposeTree != null) {
+            mComposeTree.saveNodeParameters(mProperties);
+        }
     }
 
     private void loadView(
@@ -133,7 +139,8 @@ class ComponentTree {
             try {
                 if (mComposeTree == null) {
                     ClassLoader classLoader = view.getClass().getClassLoader();
-                    mComposeTree = new ComposeTree(classLoader, mStringTable, mProperties);
+                    // TODO(b/172470469) Keep this mComposeTree instance around (optimization)
+                    mComposeTree = new ComposeTree(classLoader, mStringTable);
                 }
                 mComposeTree.loadComposeTree(view, viewBuffer);
             } catch (Throwable ex) {

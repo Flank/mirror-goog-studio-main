@@ -51,8 +51,8 @@ public class LintCustomRuleTest {
     @Test
     public void checkCustomLint() throws Exception {
         // Run twice to catch issues with configuration caching
-        project.executor().expectFailure().run("clean", ":app:lintDebug");
-        project.executor().expectFailure().run("clean", ":app:lintDebug");
+        project.executor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug");
+        project.executor().expectFailure().run(":app:cleanLintDebug", ":app:lintDebug");
         String expected =
                 "src"
                         + File.separator

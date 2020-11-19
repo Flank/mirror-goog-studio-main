@@ -29,6 +29,9 @@ import org.gradle.api.tasks.*
 
 /**
  * [org.gradle.api.Task] that produces the IDE listing file that will be passed through the model.
+ *
+ * This task is fast-running, so we should not make it `@Cacheable` as the cacheability overhead
+ * could outweigh its benefit.
  */
 abstract class BundleIdeModelProducerTask : NonIncrementalTask() {
     @get:InputFile
@@ -42,6 +45,8 @@ abstract class BundleIdeModelProducerTask : NonIncrementalTask() {
     abstract val applicationId: Property<String>
 
     override fun doTaskAction() {
+        // This task is fast-running, so we should not use a worker as the worker overhead could
+        // outweigh its benefit.
         BuiltArtifactsImpl(
                 artifactType = ArtifactType.BUNDLE,
                 applicationId = applicationId.get(),
@@ -86,6 +91,10 @@ abstract class BundleIdeModelProducerTask : NonIncrementalTask() {
                     ArtifactType.BUNDLE,
                     task.finalBundleFile)
             task.applicationId.setDisallowChanges(creationConfig.applicationId)
+
+            task.outputs.doNotCacheIf(
+                    "This task is fast-running, so the cacheability overhead could outweigh its benefit"
+            ) { true }
         }
     }
 }

@@ -18,18 +18,17 @@ package com.android.build.gradle.integration.connected.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
-import com.android.tools.bazel.avd.Emulator;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExternalResource;
 
 /** Connected test for migrated */
 public class MigratedConnectedTest {
 
-    @ClassRule
-    public static final Emulator EMULATOR = EmulatorUtils.getEmulator();
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
     @Rule
     public GradleTestProject project =

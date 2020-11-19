@@ -138,7 +138,7 @@ class ExternalLintModelArtifactHandler private constructor(
     ): LintModelLibrary {
         val artifactAddress = addressSupplier()
         val key = ProjectKey(buildId, projectPath, variantName)
-        val jar = projectJarsMap[key] ?: error("Could not find jar for project $key")
+        val jar = getProjectJar(key)
         return DefaultLintModelJavaLibrary(
             artifactAddress = artifactAddress,
             jarFiles = listOf(jar),
@@ -153,24 +153,34 @@ class ExternalLintModelArtifactHandler private constructor(
         version
     )
 
+    private fun getProjectJar(key: ProjectKey): File {
+        return projectJarsMap[key] ?: error("Could not find jar for project $key\n" +
+                "${projectJarsMap.keys.size} known projects: \n" +
+                projectJarsMap.entries.joinToString("\n") { "  ${it.key}=${it.value}\n" })
+    }
+
     companion object {
+
         internal fun create(
             dependencyCaches: DependencyCaches,
             projectExplodedAars: ArtifactCollection?,
             testedProjectExplodedAars: ArtifactCollection?,
-            projectJars: ArtifactCollection,
+            compileProjectJars: ArtifactCollection,
+            runtimeProjectJars: ArtifactCollection,
             buildMapping: BuildMapping
-        ) : ExternalLintModelArtifactHandler {
+        ): ExternalLintModelArtifactHandler {
             var projectExplodedAarsMap =
                 projectExplodedAars?.asProjectKeyedMap(buildMapping) ?: emptyMap()
             testedProjectExplodedAars?.let {
                 projectExplodedAarsMap = projectExplodedAarsMap + it.asProjectKeyedMap(buildMapping)
             }
+            val projectJarsMap =
+                compileProjectJars.asProjectKeyedMap(buildMapping) + runtimeProjectJars.asProjectKeyedMap(buildMapping)
             return ExternalLintModelArtifactHandler(
                 dependencyCaches.localJarCache,
                 dependencyCaches.mavenCoordinatesCache,
                 Collections.unmodifiableMap(projectExplodedAarsMap),
-                Collections.unmodifiableMap(projectJars.asProjectKeyedMap(buildMapping))
+                Collections.unmodifiableMap(projectJarsMap)
             )
 
         }

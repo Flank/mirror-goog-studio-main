@@ -92,6 +92,7 @@ class UtpConfigFactoryTest {
 
         override val launcher = FakeConfigurableFileCollection(File(""))
         override val core = FakeConfigurableFileCollection(File(""))
+        override val deviceProviderGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"))
         override val deviceProviderLocal = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"))
         override val deviceProviderVirtual = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_VIRTUAL.jar"))
         override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
@@ -417,10 +418,11 @@ class UtpConfigFactoryTest {
         val managedDevice = UtpManagedDevice(
             "deviceName",
             "avdName",
-            "uniqueIdentifier",
-            "path/to/logcat",
-            "path/for/emulator/metadata",
-            "path/to/emulator/script")
+            29,
+            "x86",
+            "path/to/gradle/avd",
+            ":app:deviceNameDebugAndroidTest",
+            "path/to/emulator")
         val runnerConfigProto = factory.createRunnerConfigProtoForManagedDevice(
             managedDevice,
             testData,
@@ -435,19 +437,19 @@ class UtpConfigFactoryTest {
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
               device_id {
-                id: "uniqueIdentifier"
+                id: ":app:deviceNameDebugAndroidTest"
               }
               provider {
                 label {
-                  label: "virtual_android_device_provider_config"
+                  label: "gradle_managed_android_device_provider_config"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.virtual.VirtualAndroidDeviceProvider"
+                class_name: "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_VIRTUAL.jar"
+                  path: "pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.VirtualAndroidDeviceProviderConfig"
-                  value: "\030\0018\001B\031\n\027path/to/emulator/scriptH\255\'P\002Z\r\n\vusr/bin/kvmb\005en_USx\350\a\200\001\a\220\001F\252\001\020\n\016path/to/logcat\330\001\001\352\001\034\n\032path/for/emulator/metadata"
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.GradleManagedAndroidDeviceProviderConfig"
+                  value: "\nT\n\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*\022\n\020path/to/emulator\020\255\'"
                 }
               }
             }
@@ -540,7 +542,7 @@ class UtpConfigFactoryTest {
             single_device_executor {
               device_execution {
                 device_id {
-                  id: "uniqueIdentifier"
+                  id: ":app:deviceNameDebugAndroidTest"
                 }
                 test_fixture_id {
                   id: "AGP_Test_Fixture"

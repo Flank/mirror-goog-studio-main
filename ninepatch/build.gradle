@@ -1,14 +1,13 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 
 group = 'com.android.tools'
 archivesBaseName = 'ninepatch'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    testCompile libs.junit
-    compile libs.guava
+    testImplementation libs.junit
+    implementation libs.guava
 }
 
 sourceSets {

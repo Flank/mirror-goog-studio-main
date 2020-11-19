@@ -1,13 +1,12 @@
 apply plugin: 'com.android.tools.java-library'
-apply plugin: 'jacoco-tools-base'
 
 dependencies {
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_metadata
-    compile project(':base:common')
+    implementation project(':base:common')
 
-    testCompile project(':base:testutils')
-    testCompile libs.junit
-    testCompile libs.apache_commons_io
-    testCompile libs.mockito_core
+    testImplementation project(':base:testutils')
+    testImplementation libs.junit
+    testImplementation libs.apache_commons_io
+    testImplementation libs.mockito_core
 }

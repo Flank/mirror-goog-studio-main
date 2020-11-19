@@ -52,7 +52,7 @@ public class LintBaselineTest {
 
     @Test
     public void checkMerging() throws Exception {
-        GradleBuildResult result = project.executor().expectFailure().run("clean", ":app:lint");
+        GradleBuildResult result = project.executor().expectFailure().run(":app:lint");
         ScannerSubject.assertThat(result.getStderr()).contains("Created baseline file");
 
         File baselineFile =

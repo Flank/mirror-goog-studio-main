@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.AssumeUtil;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -81,8 +82,10 @@ public class CheckAll {
         this.project =
                 GradleTestProject.builder()
                         .fromTestProject(projectName)
-                        // b/146208910
                         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .addGradleProperties(
+                                BooleanOption.USE_NEW_LINT_MODEL.getPropertyName()
+                                        + "=true") // b/146208910
                         .create();
     }
 
@@ -129,6 +132,12 @@ public class CheckAll {
                     "databindingAndJetifier",
                     "databindingMultiModule",
                     "databindingWithDynamicFeatures",
+
+                    // Requires ml models to be in place
+                    "mlModelBinding",
+
+                    // TODO(b/160392650): lint namespace support
+                    "namespacedApp",
 
                     // These are all right:
                     "genFolderApi", // Has a required injectable property

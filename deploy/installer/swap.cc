@@ -121,9 +121,7 @@ bool SwapCommand::Setup() noexcept {
   // Make sure the target dir exists.
   Phase p("Setup");
 
-  std::string code_cache =
-      "/data/data/" + request_.package_name() + "/code_cache/";
-  if (!CopyBinaries(workspace_.GetTmpFolder(), code_cache)) {
+  if (!CopyBinaries()) {
     ErrEvent("Could not copy binaries");
     return false;
   }
@@ -135,84 +133,30 @@ bool SwapCommand::Setup() noexcept {
   return true;
 }
 
-bool SwapCommand::CopyBinaries(const std::string& src_path,
-                               const std::string& dst_path) const noexcept {
+bool SwapCommand::CopyBinaries() const noexcept {
   Phase p("CopyBinaries");
-  std::string agent_src_path = src_path + kAgentFilename;
-  std::string agent_alt_src_path = src_path + kAgentAltFilename;
-  std::string server_src_path = src_path + kServerFilename;
 
-  bool need_agent = IO::access(agent_src_path, F_OK) == -1;
-  bool need_server = IO::access(server_src_path, F_OK) == -1;
-
+  // Extract binaries from matryoshka to the tmp folder.
+  const std::string tmp_dir = workspace_.GetTmpFolder();
+  std::vector<std::string> to_extract = {kAgentFilename, kServerFilename};
 #if defined(__aarch64__) || defined(__x86_64__)
-  bool need_agent_alt = IO::access(agent_alt_src_path, F_OK) == -1;
-#else
-  bool need_agent_alt = false;
+  to_extract.emplace_back(kAgentAltFilename);
 #endif
+  ExtractBinaries(workspace_.GetTmpFolder(), to_extract);
 
-  std::vector<std::unique_ptr<matryoshka::Doll>> dolls;
-  if (need_agent || need_agent_alt || need_server) {
-    if (!matryoshka::Open(dolls)) {
-      ErrEvent("Installer binary does not contain any agent binaries.");
-      return false;
-    }
-
-    for (auto& doll : dolls) {
-      LogEvent("Matryoshka binary found:" + doll->name);
-    }
-  }
-
-  if (need_agent) {
-    matryoshka::Doll* agent = matryoshka::FindByName(dolls, "agent.so");
-    if (!agent) {
-      ErrEvent("Installer binary does not contain agent.so");
-      return false;
-    }
-    if (!WriteArrayToDisk(agent->content, agent->content_len, agent_src_path)) {
-      ErrEvent("Failed to write agent.so");
-      return false;
-    }
-  }
-
-  if (need_agent_alt) {
-    matryoshka::Doll* agent_alt = matryoshka::FindByName(dolls, "agent-alt.so");
-    if (!agent_alt) {
-      ErrEvent("Installer binary does not contain agent-alt.so");
-      return false;
-    }
-    if (!WriteArrayToDisk(agent_alt->content, agent_alt->content_len,
-                          agent_alt_src_path)) {
-      ErrEvent("Failed to write agent-alt.so");
-      return false;
-    }
-  }
-
-  if (need_server) {
-    matryoshka::Doll* install_server =
-        matryoshka::FindByName(dolls, kServerFilename);
-    if (!install_server) {
-      ErrEvent("Installer binary does not contain install server");
-      return false;
-    }
-    if (!WriteArrayToDisk(install_server->content, install_server->content_len,
-                          server_src_path)) {
-      ErrEvent("Failed to write agent_server");
-      return false;
-    }
-  }
+  // Copy binaries from tmp folder to app world.
+  const std::string dst_dir =
+      "/data/data/" + request_.package_name() + "/code_cache/.studio/";
 
   std::string cp_output;
 
-  const std::string studio_dir = dst_path + ".studio/";
-  if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", src_path, studio_dir},
-              &cp_output)) {
+  if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", tmp_dir, dst_dir}, &cp_output)) {
     cp_output.clear();
     // We don't need to check the output of this. It will fail if the code_cache
     // already exists; if the code_cache doesn't exist and we can't create it,
     // that failure will be caught when we try to copy the binaries.
-    RunCmd("mkdir", User::APP_PACKAGE, {dst_path}, nullptr);
-    if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", src_path, studio_dir},
+    RunCmd("mkdir", User::APP_PACKAGE, {dst_dir}, nullptr);
+    if (!RunCmd("cp", User::APP_PACKAGE, {"-rF", tmp_dir, dst_dir},
                 &cp_output)) {
       ErrEvent("Could not copy agent binary: "_s + cp_output);
       return false;

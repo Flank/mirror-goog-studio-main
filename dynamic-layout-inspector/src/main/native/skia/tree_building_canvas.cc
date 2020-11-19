@@ -15,6 +15,7 @@
  */
 #include "tree_building_canvas.h"
 
+#include <SkClipOp.h>
 #include <SkImageInfo.h>
 #include <memory>
 #include <stack>
@@ -65,11 +66,11 @@ void TreeBuildingCanvas::didConcat(const SkMatrix& matrix) {
 }
 
 void TreeBuildingCanvas::didTranslate(SkScalar dx, SkScalar dy) {
-  this->didConcat(SkMatrix::MakeTrans(dx, dy));
+  this->didConcat(SkMatrix::Translate(dx, dy));
 }
 
 void TreeBuildingCanvas::didScale(SkScalar sx, SkScalar sy) {
-  this->didConcat(SkMatrix::MakeScale(sx, sy));
+  this->didConcat(SkMatrix::Scale(sx, sy));
 }
 
 void TreeBuildingCanvas::didSetMatrix(const SkMatrix& matrix) {
@@ -78,8 +79,8 @@ void TreeBuildingCanvas::didSetMatrix(const SkMatrix& matrix) {
   matrix.dump();
 #endif
 
-  SkMatrix scaled = SkMatrix::Concat(
-      SkMatrix::MakeScale(request_scale, request_scale), matrix);
+  SkMatrix scaled =
+      SkMatrix::Concat(SkMatrix::Scale(request_scale, request_scale), matrix);
   real_canvas->setMatrix(scaled);
 #ifdef TREEBUILDINGCANVAS_DEBUG
   printDebug("didSetMatrix\n");
@@ -135,11 +136,10 @@ void TreeBuildingCanvas::onDrawShadowRec(const SkPath& path,
 }
 
 void TreeBuildingCanvas::onDrawVerticesObject(const SkVertices* vertices,
-                                              const SkVertices::Bone* bones,
-                                              int boneCount, SkBlendMode mode,
+                                              SkBlendMode mode,
                                               const SkPaint& paint) {
   nonHeaderCommand();
-  real_canvas->drawVertices(vertices, bones, boneCount, mode, paint);
+  real_canvas->drawVertices(vertices, mode, paint);
 }
 
 void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
@@ -155,14 +155,6 @@ void TreeBuildingCanvas::onDrawImageRect(const SkImage* image,
 #endif
 
   real_canvas->drawImageRect(image, *src, dst, paint, constraint);
-}
-
-void TreeBuildingCanvas::onDrawBitmapRect(const SkBitmap& bitmap,
-                                          const SkRect* src, const SkRect& dst,
-                                          const SkPaint* paint,
-                                          SrcRectConstraint constraint) {
-  nonHeaderCommand();
-  real_canvas->drawBitmapRect(bitmap, *src, dst, paint, constraint);
 }
 
 void TreeBuildingCanvas::onDrawPaint(const SkPaint& paint) {
@@ -224,6 +216,14 @@ void TreeBuildingCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
 
 void TreeBuildingCanvas::onDrawImage(const SkImage* image, SkScalar left,
                                      SkScalar top, const SkPaint* paint) {
+#ifdef TREEBUILDINGCANVAS_DEBUG
+  std::cerr << "drawImage";
+  std::cerr.flush();
+  views.back().canvas->getTotalMatrix().dump();
+  std::cerr.flush();
+  std::cerr << "top: " << top << " left: " << left << std::endl;
+#endif
+
   nonHeaderCommand();
   real_canvas->drawImage(image, left, top, paint);
 }
@@ -258,26 +258,9 @@ void TreeBuildingCanvas::onDrawImageLattice(const SkImage* image,
   real_canvas->drawImageLattice(image, lattice, dst, paint);
 }
 
-void TreeBuildingCanvas::onDrawBitmap(const SkBitmap& bitmap, SkScalar dx,
-                                      SkScalar dy, const SkPaint* paint) {
+void TreeBuildingCanvas::onClipShader(sk_sp<SkShader> shader, SkClipOp clipOp) {
   nonHeaderCommand();
-  real_canvas->drawBitmap(bitmap, dx, dy, paint);
-}
-
-void TreeBuildingCanvas::onDrawBitmapNine(const SkBitmap& bitmap,
-                                          const SkIRect& center,
-                                          const SkRect& dst,
-                                          const SkPaint* paint) {
-  nonHeaderCommand();
-  real_canvas->drawBitmapNine(bitmap, center, dst, paint);
-}
-
-void TreeBuildingCanvas::onDrawBitmapLattice(const SkBitmap& bitmap,
-                                             const Lattice& lattice,
-                                             const SkRect& dst,
-                                             const SkPaint* paint) {
-  nonHeaderCommand();
-  real_canvas->drawBitmapLattice(bitmap, lattice, dst, paint);
+  real_canvas->clipShader(shader, clipOp);
 }
 
 void TreeBuildingCanvas::onDrawAtlas(const SkImage* atlas,
@@ -331,6 +314,9 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect&, const char* key,
 #endif
 
   if (!strstr(key, "RenderNode")) {
+#ifdef TREEBUILDINGCANVAS_DEBUG
+    std::cerr << "not known id, skip" << std::endl;
+#endif
     return;
   }
   long id = parseIdFromLabel(key);

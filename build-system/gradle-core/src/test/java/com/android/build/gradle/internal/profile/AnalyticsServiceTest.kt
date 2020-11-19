@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.profile
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
+import com.android.builder.profile.NameAnonymizer
+import com.android.builder.profile.NameAnonymizerSerializer
 import com.android.builder.profile.Recorder
 import com.google.common.truth.Truth
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
@@ -94,6 +96,8 @@ class AnalyticsServiceTest {
                 return object: Params {
                     override val profile: Property<String>
                         get() = getProfile()
+                    override val anonymizer: Property<String>
+                        get() = FakeGradleProperty(NameAnonymizerSerializer().toJson(NameAnonymizer()))
                     override val projects: MapProperty<String, ProjectData>
                         get() = getProjects()
                     override val enableProfileJson: Property<Boolean>

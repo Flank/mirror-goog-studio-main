@@ -64,14 +64,16 @@ public class AvdManagerTest extends TestCase {
         recordWearSysImgChina(mFileOp);
         recordChromeOsSysImg(mFileOp);
         mAndroidSdkHandler =
-                new AndroidSdkHandler(new File("/sdk"), ANDROID_PREFS_ROOT, mFileOp);
+                new AndroidSdkHandler(
+                        new File("/sdk").getAbsoluteFile(), ANDROID_PREFS_ROOT, mFileOp);
         mAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
-                        new File(ANDROID_PREFS_ROOT, AndroidLocation.FOLDER_AVD),
+                        new File(ANDROID_PREFS_ROOT, AndroidLocation.FOLDER_AVD).getAbsoluteFile(),
                         new NullLogger());
         mAvdFolder =
-                AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false);
+                AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false)
+                        .getAbsoluteFile();
 
         for (SystemImage si : mAndroidSdkHandler.getSystemImageManager(new FakeProgressIndicator()).getImages()) {
             final String tagId = si.getTag().getId();
@@ -109,7 +111,7 @@ public class AvdManagerTest extends TestCase {
         assertNotNull(mSystemImageChromeOs);
     }
 
-    public void testCreateAvdWithoutSnapshot() throws Exception {
+    public void testCreateAvdWithoutSnapshot() {
 
         MockLog log = new MockLog();
         mAvdManager.createAvd(
@@ -131,8 +133,9 @@ public class AvdManagerTest extends TestCase {
         Map<String, String> properties = AvdManager.parseIniFile(
                 new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
         assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
-        assertEquals("system-images/android-23/default/x86/",
-                mFileOp.getAgnosticAbsPath(properties.get("image.sysdir.1")));
+        assertEquals(
+                "system-images/android-23/default/x86/".replace('/', File.separatorChar),
+                properties.get("image.sysdir.1"));
         assertNull(properties.get("snapshot.present"));
         assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
@@ -142,7 +145,7 @@ public class AvdManagerTest extends TestCase {
                 mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
     }
 
-    public void testCreateAvdWithUserdata() throws Exception {
+    public void testCreateAvdWithUserdata() {
 
         MockLog log = new MockLog();
         mAvdManager.createAvd(
@@ -164,8 +167,9 @@ public class AvdManagerTest extends TestCase {
         Map<String, String> properties = AvdManager.parseIniFile(
           new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
         assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
-        assertEquals("system-images/android-21/default/x86/",
-                     mFileOp.getAgnosticAbsPath(properties.get("image.sysdir.1")));
+        assertEquals(
+                "system-images/android-21/default/x86/".replace('/', File.separatorChar),
+                properties.get("image.sysdir.1"));
         assertNull(properties.get("snapshot.present"));
         assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
@@ -175,7 +179,7 @@ public class AvdManagerTest extends TestCase {
                     mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
     }
 
-    public void testCreateAvdWithBootProps() throws Exception {
+    public void testCreateAvdWithBootProps() {
         MockLog log = new MockLog();
         Map<String, String> expected = Maps.newTreeMap();
         expected.put("ro.build.display.id", "sdk-eng 4.3 JB_MR2 774058 test-keys");
@@ -205,7 +209,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals(expected.toString(), new TreeMap<>(properties).toString());
     }
 
-    public void testCreateChromeOsAvd() throws Exception {
+    public void testCreateChromeOsAvd() {
         MockLog log = new MockLog();
 
         mAvdManager.createAvd(
@@ -279,8 +283,9 @@ public class AvdManagerTest extends TestCase {
         assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
         Map<String, String> properties = AvdManager.parseIniFile(
                 new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
-        assertEquals("system-images/android-23/default/x86/",
-                mFileOp.getAgnosticAbsPath(properties.get("image.sysdir.1")));
+        assertEquals(
+                "system-images/android-23/default/x86/".replace('/', File.separatorChar),
+                properties.get("image.sysdir.1"));
         assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
         assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
@@ -310,15 +315,15 @@ public class AvdManagerTest extends TestCase {
                 mFileOp.exists(newAvdConfigFile));
         Map<String, String> newProperties = AvdManager.parseIniFile(
                 new FileOpFileWrapper(newAvdConfigFile, mFileOp, false), null);
-        assertEquals(mFileOp.getAgnosticAbsPath(mAvdFolder.getPath()),
-                mFileOp.getAgnosticAbsPath(newProperties.get("path")));
+        assertEquals(mAvdFolder.getPath(), newProperties.get("path"));
 
         assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
         avdConfigFile = new File(mAvdFolder, "config.ini");
         Map<String, String> baseProperties = AvdManager.parseIniFile(
                 new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
-        assertEquals("system-images/android-23/default/x86/",
-                mFileOp.getAgnosticAbsPath(baseProperties.get("image.sysdir.1")));
+        assertEquals(
+                "system-images/android-23/default/x86/".replace('/', File.separatorChar),
+                baseProperties.get("image.sysdir.1"));
         assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
         assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
@@ -375,24 +380,24 @@ public class AvdManagerTest extends TestCase {
         // Verify that the duplicated AVD is correct
         assertNotNull("Could not duplicate AVD", duplicatedAvd);
         String parentFolder = mAvdFolder.getParent();
-        String newFolder = parentFolder + "/" + newName + ".avd";
+        String newFolder = parentFolder + File.separator + newName + ".avd";
         String newNameIni = newName + ".ini";
         File newIniFile = new File(parentFolder, newNameIni);
         assertTrue("Expected " + newNameIni + " in " + parentFolder,
                    mFileOp.exists(newIniFile));
         Map<String, String> iniProperties = AvdManager.parseIniFile(
           new FileOpFileWrapper(newIniFile, mFileOp, false), null);
-        assertEquals(mFileOp.getAgnosticAbsPath(newFolder),
-                     mFileOp.getAgnosticAbsPath(iniProperties.get("path")));
+        assertEquals(newFolder, iniProperties.get("path"));
 
         assertTrue(mFileOp.exists(new File(newFolder, "foo.bar")));
         assertFalse(mFileOp.exists(new File(newFolder, "boot.prop")));
         // Check the config.ini file
         Map<String, String> configProperties = AvdManager.parseIniFile(new FileOpFileWrapper(
           new File(newFolder, "config.ini"), mFileOp, false), null);
-        assertEquals(mFileOp.getAgnosticAbsPath(
-          "system-images/android-24/google_apis_playstore/x86_64/"),
-                     mFileOp.getAgnosticAbsPath(configProperties.get("image.sysdir.1")));
+        assertEquals(
+                "system-images/android-24/google_apis_playstore/x86_64/"
+                        .replace('/', File.separatorChar),
+                configProperties.get("image.sysdir.1"));
         assertEquals(newName, configProperties.get("AvdId"));
         assertEquals(newName, configProperties.get("avd.ini.displayname"));
         assertEquals("222M", configProperties.get("sdcard.size"));
@@ -420,7 +425,7 @@ public class AvdManagerTest extends TestCase {
         assertThat(baseConfigProperties.get("AvdId")).isNotEqualTo(newName); // Different or null
     }
 
-    public void testPlayStoreProperty() throws Exception {
+    public void testPlayStoreProperty() {
         MockLog log = new MockLog();
         Map<String, String> expected = Maps.newTreeMap();
         expected.put("ro.build.display.id", "sdk-eng 4.3 JB_MR2 774058 test-keys");
@@ -606,7 +611,7 @@ public class AvdManagerTest extends TestCase {
         // Check a valid AVD .ini file
         String parentFolder = mAvdFolder.getParent();
         String avdIniName = this.getName() + ".ini";
-        File avdIniFile = new File(parentFolder, avdIniName);
+        File avdIniFile = new File(parentFolder, avdIniName).getAbsoluteFile();
         assertTrue("Expected AVD .ini in " + parentFolder, mFileOp.exists(avdIniFile));
         AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
         assertThat(avdInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.OK);

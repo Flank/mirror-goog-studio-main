@@ -25,6 +25,7 @@ import com.android.tools.build.apkzlib.sign.SigningOptions
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode.COMPRESSED
 import com.android.utils.FileUtils
+import com.android.zipflinger.ZipArchive
 import com.google.common.base.Optional
 import com.google.common.base.Predicate
 import com.google.common.collect.ImmutableList
@@ -153,6 +154,16 @@ class ApkFlingerTest {
 
         // check that the compressed file is smaller than the uncompressed file
         assertThat(compressedSize).isLessThan(uncompressedSize)
+    }
+
+    @Test
+    fun writeLargeFile() {
+        val largeFile = tmp.root.resolve("largeFile.txt")
+        largeFile.writeText("a".repeat(LARGE_FILE_SIZE))
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use {
+            it.writeFile(largeFile, "largeFile.txt")
+        }
+        assertThat(ZipArchive.listEntries(apkFile).keys).containsExactly("largeFile.txt")
     }
 
     @Test

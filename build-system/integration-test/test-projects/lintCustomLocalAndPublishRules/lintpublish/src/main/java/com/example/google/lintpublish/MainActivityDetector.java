@@ -16,8 +16,6 @@
 
 package com.example.google.lintpublish;
 
-import static com.android.SdkConstants.TAG_ACTIVITY;
-
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -50,7 +48,7 @@ public class MainActivityDetector extends ResourceXmlDetector implements XmlScan
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Collections.singleton(TAG_ACTIVITY);
+        return Collections.singleton("activity");
     }
 
     @Override

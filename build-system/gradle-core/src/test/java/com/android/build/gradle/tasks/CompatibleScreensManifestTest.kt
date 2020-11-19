@@ -40,6 +40,8 @@ import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.profile.NameAnonymizer
+import com.android.builder.profile.NameAnonymizerSerializer
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -87,6 +89,7 @@ class CompatibleScreensManifestTest {
         ) {
             val profile = GradleBuildProfile.newBuilder().build().toByteArray()
             it.parameters.profile.set(Base64.getEncoder().encodeToString(profile))
+            it.parameters.anonymizer.set(NameAnonymizerSerializer().toJson(NameAnonymizer()))
             it.parameters.projects.set(mutableMapOf())
             it.parameters.enableProfileJson.set(true)
             it.parameters.taskMetadata.set(mutableMapOf())

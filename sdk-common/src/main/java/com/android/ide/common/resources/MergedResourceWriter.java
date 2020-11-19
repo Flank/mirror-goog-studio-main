@@ -22,6 +22,7 @@ import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.MergingLog;
@@ -69,21 +70,11 @@ import org.w3c.dom.Node;
  */
 public class MergedResourceWriter
         extends MergeWriter<ResourceMergerItem, MergedResourceWriter.FileGenerationParameters> {
-    @NonNull
-    private final ResourcePreprocessor mPreprocessor;
-
-    /**
-     * If non-null, points to a File that we should write public.txt to
-     */
-    private final File mPublicFile;
 
     @Nullable
     private MergingLog mMergingLog;
 
     private DocumentBuilderFactory mFactory;
-
-    /** Compiler for resources */
-    @NonNull private final ResourceCompilationService mResourceCompiler;
 
     /** Map of XML values files to write after parsing all the files. the key is the qualifier. */
     private ListMultimap<String, ResourceMergerItem> mValuesResMap;
@@ -102,30 +93,18 @@ public class MergedResourceWriter
     private final ConcurrentLinkedDeque<Future<File>> mCompiling;
 
     /**
-     * Temporary directory to use while writing merged resources.
-     */
-    @NonNull
-    private final File mTemporaryDirectory;
-
-    /**
      * File where {@link #mCompiledFileMap} is read from and where its contents are written.
      */
     @NonNull
     private final File mCompiledFileMapFile;
-
-    @Nullable private final SingleFileProcessor dataBindingExpressionRemover;
-
-    @Nullable private final File notCompiledOutputDirectory;
-
-    private final boolean pseudoLocalesEnabled;
-
-    private final boolean crunchPng;
 
     /**
      * Maps resource files to their compiled files. Used to compiled resources that no longer
      * exist.
      */
     private final Properties mCompiledFileMap;
+
+    private final MergedResourceWriterRequest mergeWriterRequest;
 
     @NonNull
     private final ConcurrentLinkedQueue<CompileResourceRequest> mCompileResourceRequests =
@@ -135,45 +114,15 @@ public class MergedResourceWriter
      * A {@link MergeWriter} for resources, using {@link ResourceMergerItem}. Also takes care of
      * compiling resources and stripping data binding from layout files.
      *
-     * @param rootFolder merged resources directory to write to (e.g. {@code
-     *     intermediates/res/merged/debug})
-     * @param publicFile File that we should write public.txt to
-     * @param blameLog merging log for rewriting error messages
-     * @param preprocessor preprocessor for merged resources, such as vector drawable rendering
-     * @param resourceCompilationService such as AAPT. The service is responsible for ensuring all
-     *     compilation is complete before the task execution ends.
-     * @param temporaryDirectory temporary directory for intermediate merged files
-     * @param dataBindingExpressionRemover removes data binding expressions from layout files
-     * @param notCompiledOutputDirectory for saved uncompiled resources for the resource shrinking
-     *     transform and for unit testing with resources.
-     * @param pseudoLocalesEnabled generate resources for pseudo-locales (en-XA and ar-XB)
-     * @param crunchPng should we crunch PNG files
+     * @param request a MergedResourceWriterRequest containing constants required for merge logging.
      */
-    public MergedResourceWriter(
-            @NonNull WorkerExecutorFacade workerExecutor,
-            @NonNull File rootFolder,
-            @Nullable File publicFile,
-            @Nullable MergingLog blameLog,
-            @NonNull ResourcePreprocessor preprocessor,
-            @NonNull ResourceCompilationService resourceCompilationService,
-            @NonNull File temporaryDirectory,
-            @Nullable SingleFileProcessor dataBindingExpressionRemover,
-            @Nullable File notCompiledOutputDirectory,
-            boolean pseudoLocalesEnabled,
-            boolean crunchPng) {
-        super(rootFolder, workerExecutor);
-        mResourceCompiler = resourceCompilationService;
-        mPublicFile = publicFile;
-        mMergingLog = blameLog;
-        mPreprocessor = preprocessor;
+    public MergedResourceWriter(MergedResourceWriterRequest request) {
+        super(request.getRootFolder(), request.getWorkerExecutor());
+        mergeWriterRequest = request;
+        mMergingLog = request.getBlameLog();
         mCompiling = new ConcurrentLinkedDeque<>();
-        mTemporaryDirectory = temporaryDirectory;
-        this.dataBindingExpressionRemover = dataBindingExpressionRemover;
-        this.notCompiledOutputDirectory = notCompiledOutputDirectory;
-        this.pseudoLocalesEnabled = pseudoLocalesEnabled;
-        this.crunchPng = crunchPng;
-
-        mCompiledFileMapFile = new File(temporaryDirectory, "compile-file-map.properties");
+        mCompiledFileMapFile =
+                new File(mergeWriterRequest.getTemporaryDirectory(), "compile-file-map.properties");
         mCompiledFileMap = new Properties();
         if (mCompiledFileMapFile.exists()) {
             try (FileReader fr = new FileReader(mCompiledFileMapFile)) {
@@ -195,9 +144,17 @@ public class MergedResourceWriter
             @Nullable File publicFile,
             @Nullable File blameLogFolder,
             @NonNull ResourcePreprocessor preprocessor,
-            @NonNull File temporaryDirectory) {
+            @NonNull File temporaryDirectory,
+            @NonNull Map<String, String> moduleSourceSet,
+            @NonNull String packageName) {
         return createWriterWithoutPngCruncher(
-                null, rootFolder, publicFile, blameLogFolder, preprocessor, temporaryDirectory);
+                null,
+                rootFolder,
+                publicFile,
+                blameLogFolder,
+                preprocessor,
+                temporaryDirectory,
+                moduleSourceSet);
     }
 
     /** Used in tests */
@@ -207,20 +164,23 @@ public class MergedResourceWriter
             @Nullable File publicFile,
             @Nullable File blameLogFolder,
             @NonNull ResourcePreprocessor preprocessor,
-            @NonNull File temporaryDirectory) {
+            @NonNull File temporaryDirectory,
+            @NonNull Map<String, String> moduleSourceSet) {
         return new MergedResourceWriter(
-                // no need for multi-threading in tests.
-                new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService()),
-                rootFolder,
-                publicFile,
-                blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
-                preprocessor,
-                CopyToOutputDirectoryResourceCompilationService.INSTANCE,
-                temporaryDirectory,
-                null,
-                null,
-                false,
-                false);
+                new MergedResourceWriterRequest(
+                        // no need for multi-threading in tests.
+                        new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService()),
+                        rootFolder,
+                        publicFile,
+                        blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
+                        preprocessor,
+                        CopyToOutputDirectoryResourceCompilationService.INSTANCE,
+                        temporaryDirectory,
+                        null,
+                        null,
+                        false,
+                        false,
+                        moduleSourceSet));
     }
 
     @Override
@@ -237,7 +197,7 @@ public class MergedResourceWriter
         super.end();
         // now perform all the databinding, PNG crunching (AAPT1) and resources compilation (AAPT2).
         try {
-            File tmpDir = new File(mTemporaryDirectory, "stripped.dir");
+            File tmpDir = new File(mergeWriterRequest.getTemporaryDirectory(), "stripped.dir");
             try {
                 FileUtils.cleanOutputDir(tmpDir);
             } catch (IOException e) {
@@ -250,12 +210,18 @@ public class MergedResourceWriter
                     File fileToCompile = request.getInputFile();
 
                     if (mMergingLog != null) {
+                        File destination =
+                                mergeWriterRequest
+                                        .getResourceCompilationService()
+                                        .compileOutputFor(request);
                         mMergingLog.logCopy(
-                                request.getInputFile(),
-                                mResourceCompiler.compileOutputFor(request));
+                                fileToCompile,
+                                getSourceFilePath(fileToCompile),
+                                destination,
+                                getSourceFilePath(destination));
                     }
 
-                    if (dataBindingExpressionRemover != null
+                    if (mergeWriterRequest.getDataBindingExpressionRemover() != null
                             && request.getInputDirectoryName().startsWith("layout")
                             && request.getInputFile().getName().endsWith(".xml")) {
 
@@ -269,48 +235,66 @@ public class MergedResourceWriter
                                 new File(strippedLayoutFolder, request.getInputFile().getName());
 
                         boolean removedDataBinding =
-                                dataBindingExpressionRemover.processSingleFile(
-                                        request.getInputFile(),
-                                        strippedLayout,
-                                        request.getInputFileIsFromDependency());
+                                mergeWriterRequest
+                                        .getDataBindingExpressionRemover()
+                                        .processSingleFile(
+                                                request.getInputFile(),
+                                                strippedLayout,
+                                                request.getInputFileIsFromDependency());
 
                         if (removedDataBinding) {
                             // Remember in case AAPT compile or link fails.
                             if (mMergingLog != null) {
-                                mMergingLog.logCopy(request.getInputFile(), strippedLayout);
+                                mMergingLog.logCopy(
+                                        request.getInputFile(),
+                                        getSourceFilePath(request.getInputFile()),
+                                        strippedLayout,
+                                        getSourcePath(strippedLayout));
                             }
                             fileToCompile = strippedLayout;
                         } else {
-                            dataBindingExpressionRemover.processFileWithNoDataBinding(
-                                    request.getInputFile());
+                            mergeWriterRequest
+                                    .getDataBindingExpressionRemover()
+                                    .processFileWithNoDataBinding(request.getInputFile());
                         }
                     }
 
                     // Currently the resource shrinker and unit tests that use resources need
                     // the final merged, but uncompiled file.
-                    if (notCompiledOutputDirectory != null) {
+                    if (mergeWriterRequest.getNotCompiledOutputDirectory() != null) {
                         File typeDir =
                                 new File(
-                                        notCompiledOutputDirectory,
+                                        mergeWriterRequest.getNotCompiledOutputDirectory(),
                                         request.getInputDirectoryName());
                         FileUtils.mkdirs(typeDir);
                         FileUtils.copyFileToDirectory(fileToCompile, typeDir);
                     }
 
-                    mResourceCompiler.submitCompile(
+                    CompileResourceRequest compileResourceRequest =
                             new CompileResourceRequest(
                                     fileToCompile,
                                     request.getOutputDirectory(),
                                     request.getInputDirectoryName(),
                                     request.getInputFileIsFromDependency(),
-                                    pseudoLocalesEnabled,
-                                    crunchPng,
+                                    mergeWriterRequest.getPseudoLocalesEnabled(),
+                                    mergeWriterRequest.getCrunchPng(),
                                     ImmutableMap.of(),
-                                    request.getInputFile()));
-                    mCompiledFileMap.put(
-                            fileToCompile.getAbsolutePath(),
-                            mResourceCompiler.compileOutputFor(request).getAbsolutePath());
+                                    request.getInputFile());
+                    if (!mergeWriterRequest.getModuleSourceSets().isEmpty()) {
+                        compileResourceRequest.useRelativeSourcePath(
+                                mergeWriterRequest.getModuleSourceSets());
+                    }
 
+                    mergeWriterRequest
+                            .getResourceCompilationService()
+                            .submitCompile(compileResourceRequest);
+
+                    mCompiledFileMap.put(
+                            compileResourceRequest.getSourcePath(),
+                            mergeWriterRequest
+                                    .getResourceCompilationService()
+                                    .compileOutputFor(request)
+                                    .getPath());
                 } catch (Exception e) {
                     throw MergingException.wrapException(e)
                             .withFile(request.getInputFile())
@@ -341,11 +325,18 @@ public class MergedResourceWriter
         }
     }
 
+    private String getSourceFilePath(File inputFile) {
+        return mergeWriterRequest.getModuleSourceSets().isEmpty()
+                ? inputFile.getAbsolutePath()
+                : RelativeResourceUtils.getRelativeSourceSetPath(
+                        inputFile, mergeWriterRequest.getModuleSourceSets());
+    }
+
     @Override
     public boolean ignoreItemInMerge(ResourceMergerItem item) {
         return item.getIgnoredFromDiskMerge();
     }
-    
+
     @Override
     public void addItem(@NonNull final ResourceMergerItem item) throws ConsumerException {
         final ResourceFile.FileType type = item.getSourceType();
@@ -368,7 +359,8 @@ public class MergedResourceWriter
                 if (type == DataFile.FileType.GENERATED_FILES) {
                     try {
                         FileGenerationParameters workItem =
-                                new FileGenerationParameters(item, mPreprocessor);
+                                new FileGenerationParameters(
+                                        item, mergeWriterRequest.getPreprocessor());
                         if (workItem.resourceItem.getSourceFile() != null) {
                             getExecutor().submit(new FileGenerationWorkAction(workItem));
                         }
@@ -378,9 +370,13 @@ public class MergedResourceWriter
                 }
 
                 // enlist a new crunching request.
-                mCompileResourceRequests.add(
+                CompileResourceRequest crunchRequest =
                         new CompileResourceRequest(
-                                file, getRootFolder(), folderName, item.mIsFromDependency));
+                                file, getRootFolder(), folderName, item.mIsFromDependency);
+                if (!mergeWriterRequest.getModuleSourceSets().isEmpty()) {
+                    crunchRequest.useRelativeSourcePath(mergeWriterRequest.getModuleSourceSets());
+                }
+                mCompileResourceRequests.add(crunchRequest);
             }
         }
     }
@@ -424,8 +420,7 @@ public class MergedResourceWriter
 
     @Override
     public void removeItem(
-            @NonNull ResourceMergerItem removedItem, @Nullable ResourceMergerItem replacedBy)
-            throws ConsumerException {
+            @NonNull ResourceMergerItem removedItem, @Nullable ResourceMergerItem replacedBy) {
         ResourceFile.FileType removedType = removedItem.getSourceType();
         ResourceFile.FileType replacedType = replacedBy != null
                 ? replacedBy.getSourceType()
@@ -465,7 +460,9 @@ public class MergedResourceWriter
          * Create a temporary directory where merged XML files are placed before being processed
          * by the resource compiler.
          */
-        File tmpDir = new File(mTemporaryDirectory, "merged.dir");
+        File tmpDir =
+                new File(
+                        mergeWriterRequest.getTemporaryDirectory(), SdkConstants.FD_MERGED_DOT_DIR);
         try {
             FileUtils.cleanOutputDir(tmpDir);
         } catch (IOException e) {
@@ -570,28 +567,39 @@ public class MergedResourceWriter
                                     getRootFolder(),
                                     folderName,
                                     null,
-                                    pseudoLocalesEnabled,
-                                    crunchPng,
-                                    blame != null ? blame : ImmutableMap.of());
+                                    mergeWriterRequest.getPseudoLocalesEnabled(),
+                                    mergeWriterRequest.getCrunchPng(),
+                                    blame != null ? blame : ImmutableMap.of(),
+                                    outFile);
+                    if (!mergeWriterRequest.getModuleSourceSets().isEmpty()) {
+                        request.useRelativeSourcePath(mergeWriterRequest.getModuleSourceSets());
+                    }
 
                     // If we are going to shrink resources, the resource shrinker needs to have the
                     // final merged uncompiled file.
-                    if (notCompiledOutputDirectory != null) {
-                        File typeDir = new File(notCompiledOutputDirectory, folderName);
+                    if (mergeWriterRequest.getNotCompiledOutputDirectory() != null) {
+                        File typeDir =
+                                new File(
+                                        mergeWriterRequest.getNotCompiledOutputDirectory(),
+                                        folderName);
                         FileUtils.mkdirs(typeDir);
                         FileUtils.copyFileToDirectory(outFile, typeDir);
                     }
 
                     if (blame != null) {
-                        mMergingLog.logSource(
-                                new SourceFile(mResourceCompiler.compileOutputFor(request)), blame);
+                        File file =
+                                mergeWriterRequest
+                                        .getResourceCompilationService()
+                                        .compileOutputFor(request);
+                        mMergingLog.logSource(new SourceFile(file), getSourcePath(file), blame);
 
-                        mMergingLog.logSource(new SourceFile(outFile), blame);
+                        String sourcePath = getSourceFilePath(outFile);
+                        mMergingLog.logSource(new SourceFile(outFile), sourcePath, blame);
                     }
 
-                    mResourceCompiler.submitCompile(request);
+                    mergeWriterRequest.getResourceCompilationService().submitCompile(request);
 
-                    if (publicNodes != null && mPublicFile != null) {
+                    if (publicNodes != null && mergeWriterRequest.getPublicFile() != null) {
                         // Generate public.txt:
                         int size = publicNodes.size();
                         StringBuilder sb = new StringBuilder(size * 80);
@@ -606,7 +614,7 @@ public class MergedResourceWriter
                                 }
                             }
                         }
-                        File parentFile = mPublicFile.getParentFile();
+                        File parentFile = mergeWriterRequest.getPublicFile().getParentFile();
                         if (!parentFile.exists()) {
                             boolean mkdirs = parentFile.mkdirs();
                             if (!mkdirs) {
@@ -614,7 +622,8 @@ public class MergedResourceWriter
                             }
                         }
                         String text = sb.toString();
-                        Files.asCharSink(mPublicFile, Charsets.UTF_8).write(text);
+                        Files.asCharSink(mergeWriterRequest.getPublicFile(), Charsets.UTF_8)
+                                .write(text);
                     }
                 } catch (Exception e) {
                     throw new ConsumerException(e);
@@ -628,21 +637,36 @@ public class MergedResourceWriter
                     ResourceFolderType.VALUES.getName() + RES_QUALIFIER_SEP + key :
                     ResourceFolderType.VALUES.getName();
 
-            if (notCompiledOutputDirectory != null) {
+            if (mergeWriterRequest.getNotCompiledOutputDirectory() != null) {
                 removeOutFile(
                         FileUtils.join(
-                                notCompiledOutputDirectory, folderName, folderName + DOT_XML));
+                                mergeWriterRequest.getNotCompiledOutputDirectory(),
+                                folderName,
+                                folderName + DOT_XML));
             }
 
             // Remove the intermediate (compiled) values file.
+            CompileResourceRequest compileResourceRequest =
+                    new CompileResourceRequest(
+                            FileUtils.join(getRootFolder(), folderName, folderName + DOT_XML),
+                            getRootFolder(),
+                            folderName);
+            if (!mergeWriterRequest.getModuleSourceSets().isEmpty()) {
+                compileResourceRequest.useRelativeSourcePath(
+                        mergeWriterRequest.getModuleSourceSets());
+            }
             removeOutFile(
-                    mResourceCompiler.compileOutputFor(
-                            new CompileResourceRequest(
-                                    FileUtils.join(
-                                            getRootFolder(), folderName, folderName + DOT_XML),
-                                    getRootFolder(),
-                                    folderName)));
+                    mergeWriterRequest
+                            .getResourceCompilationService()
+                            .compileOutputFor(compileResourceRequest));
         }
+    }
+
+    private String getSourcePath(File file) {
+        return mergeWriterRequest.getModuleSourceSets().isEmpty()
+                ? file.getAbsolutePath()
+                : RelativeResourceUtils.getRelativeSourceSetPath(
+                        file, mergeWriterRequest.getModuleSourceSets());
     }
 
     /**
@@ -658,12 +682,14 @@ public class MergedResourceWriter
         if (compiledFilePath != null) {
             return new File(compiledFilePath);
         } else {
-            return mResourceCompiler.compileOutputFor(
-                    new CompileResourceRequest(
-                            file,
-                            getRootFolder(),
-                            getFolderName(resourceItem),
-                            resourceItem.mIsFromDependency));
+            return mergeWriterRequest
+                    .getResourceCompilationService()
+                    .compileOutputFor(
+                            new CompileResourceRequest(
+                                    file,
+                                    getRootFolder(),
+                                    getFolderName(resourceItem),
+                                    resourceItem.mIsFromDependency));
         }
     }
 
@@ -682,13 +708,15 @@ public class MergedResourceWriter
                 || !originalFile.getName().endsWith(".xml")) {
             return;
         }
-        dataBindingExpressionRemover.processRemovedFile(originalFile);
+        mergeWriterRequest.getDataBindingExpressionRemover().processRemovedFile(originalFile);
     }
 
     private void removeFileFromNotCompiledOutputDir(@NonNull ResourceMergerItem resourceItem) {
         File originalFile = resourceItem.getFile();
         File resTypeDir =
-                new File(notCompiledOutputDirectory, originalFile.getParentFile().getName());
+                new File(
+                        mergeWriterRequest.getNotCompiledOutputDirectory(),
+                        originalFile.getParentFile().getName());
         File toRemove = new File(resTypeDir, originalFile.getName());
         removeOutFile(toRemove);
     }
@@ -702,11 +730,11 @@ public class MergedResourceWriter
      */
     private boolean removeOutFile(ResourceMergerItem resourceItem) {
         File fileToRemove = getResourceOutputFile(resourceItem);
-        if (dataBindingExpressionRemover != null) {
+        if (mergeWriterRequest.getDataBindingExpressionRemover() != null) {
             // The file could have possibly been a layout file with data binding.
             removeLayoutFileFromDataBindingOutputFolder(resourceItem);
         }
-        if (notCompiledOutputDirectory != null) {
+        if (mergeWriterRequest.getNotCompiledOutputDirectory() != null) {
             // The file was copied for the resource shrinking and needs to be removed from there.
             removeFileFromNotCompiledOutputDir(resourceItem);
         }
@@ -721,7 +749,10 @@ public class MergedResourceWriter
      */
     private boolean removeOutFile(@NonNull File fileToRemove) {
         if (mMergingLog != null) {
-            mMergingLog.logRemove(new SourceFile(fileToRemove));
+            SourceFile removeSourceFile = new SourceFile(fileToRemove);
+            String sourcePath = getSourceFilePath(fileToRemove);
+            removeSourceFile.setOverrideSourcePath(sourcePath);
+            mMergingLog.logRemove(removeSourceFile);
         }
 
         return fileToRemove.delete();

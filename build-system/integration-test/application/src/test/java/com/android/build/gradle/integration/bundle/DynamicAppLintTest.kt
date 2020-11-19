@@ -18,17 +18,20 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
+/** TODO(b/146208910) Support the unused resource detector better with dynamic features. */
 class DynamicAppLintTest {
     @get:Rule
     val project: GradleTestProject = GradleTestProject.builder()
         .fromTestProject("dynamicApp")
         // b/146208910
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .addGradleProperties(BooleanOption.USE_NEW_LINT_MODEL.propertyName + "=false")
         .create()
 
     @Test

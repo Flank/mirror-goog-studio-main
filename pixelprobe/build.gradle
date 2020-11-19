@@ -16,12 +16,11 @@
 
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 
 dependencies {
-    compile project(':base:chunkio')
+    implementation project(':base:chunkio')
 
-    testCompile libs.junit
+    testImplementation libs.junit
 }
 
 sourceSets {

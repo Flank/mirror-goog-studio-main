@@ -19,21 +19,18 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.cmake.readCmakeFileApiReply
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
-import com.android.build.gradle.internal.cxx.configure.convertCmakeCommandLineArgumentsToStringList
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.clientQueryFolder
 import com.android.build.gradle.internal.cxx.model.clientReplyFolder
+import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStderrFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationStdoutFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
-import com.android.build.gradle.internal.cxx.settings.getFinalCmakeCommandLineArguments
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils.join
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -56,14 +53,12 @@ internal class CmakeQueryMetadataGenerator(
         cmakeMakefileChecks(variant)
     }
     override fun executeProcess(ops: ExecOperations, abi: CxxAbiModel) {
-        val cmakeAbi = abi.cmake!!
-
         // Request File API responses from CMake by creating placeholder files
         // with specific query type names and versions
-        cmakeAbi.clientQueryFolder.mkdirs()
-        join(cmakeAbi.clientQueryFolder, "codemodel-v2").writeText("")
-        join(cmakeAbi.clientQueryFolder, "cache-v2").writeText("")
-        join(cmakeAbi.clientQueryFolder, "cmakeFiles-v1").writeText("")
+        abi.clientQueryFolder.mkdirs()
+        join(abi.clientQueryFolder, "codemodel-v2").writeText("")
+        join(abi.clientQueryFolder, "cache-v2").writeText("")
+        join(abi.clientQueryFolder, "cmakeFiles-v1").writeText("")
 
         // Execute CMake
         createProcessOutputJunction(
@@ -77,7 +72,7 @@ internal class CmakeQueryMetadataGenerator(
           .execute(ops::exec)
 
         val config = abi.additionalProjectFilesIndexFile.bufferedWriter(StandardCharsets.UTF_8).use { additionalProjectFileWriter ->
-            readCmakeFileApiReply(cmakeAbi.clientReplyFolder) {
+            readCmakeFileApiReply(abi.clientReplyFolder) {
                 when (it.sourceGroup) {
                     "Source Files" -> {
                         // TODO(152223150) populate compile_commands.json.bin and stop generating compile_commands.json
@@ -97,14 +92,10 @@ internal class CmakeQueryMetadataGenerator(
         writeNativeBuildConfigValueToJsonFile(abi.jsonFile, config)
     }
 
-
     override fun getProcessBuilder(abi: CxxAbiModel): ProcessInfoBuilder {
         val builder = ProcessInfoBuilder()
-
         builder.setExecutable(variant.module.cmake!!.cmakeExe!!)
-        val arguments = mutableListOf<CommandLineArgument>()
-        arguments.addAll(abi.getFinalCmakeCommandLineArguments())
-        builder.addArgs(arguments.convertCmakeCommandLineArgumentsToStringList())
+        builder.addArgs(abi.configurationArguments)
         return builder
     }
 

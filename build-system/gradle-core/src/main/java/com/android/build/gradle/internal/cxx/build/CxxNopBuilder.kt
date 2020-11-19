@@ -24,7 +24,9 @@ import java.io.File
  * A CxxBuilder that does nothing except for exposing [objFolder] and [soFolder]
  */
 class CxxNopBuilder(val referencedModel: CxxConfigurationModel) : CxxBuilder {
-    override val objFolder: File get() = referencedModel.variant.objFolder
+    // objFolder must be here for legacy reasons but its value was never correct for CMake.
+    // There is no folder that has .o files for the entire variant.
+    override val objFolder: File get() = referencedModel.variant.soFolder
     override val soFolder: File get() = referencedModel.variant.soFolder
     override fun build(ops: ExecOperations) { }
 }

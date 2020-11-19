@@ -775,6 +775,7 @@ abstract class ArtifactInput {
                     projectDependencyExplodedAars,
                     null,
                     artifactCollectionsInputs.compileClasspath.projectJars,
+                    artifactCollectionsInputs.runtimeClasspath!!.projectJars,
                     buildMapping = artifactCollectionsInputs.buildMapping
                 )
             }

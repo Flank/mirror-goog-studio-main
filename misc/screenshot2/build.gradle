@@ -6,7 +6,8 @@ archivesBaseName = 'screenshot2'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile project(':base:ddmlib')
+    implementation project(':base:ddmlib')
+    implementation project(':base:common')
 }
 
 task Screenshot2StartScripts(type: CreateStartScripts) {

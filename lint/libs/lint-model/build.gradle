@@ -1,7 +1,6 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 
 group = 'com.android.tools.lint'
 archivesBaseName = 'lint-model'
@@ -14,11 +13,11 @@ compileKotlin {
 }
 
 dependencies {
-    compile project(':base:common')
-    compile project(':base:sdk-common')
-    compile project(':base:builder-model')
-    compile libs.kotlin_stdlib
-    compile libs.kxml
+    implementation project(':base:common')
+    implementation project(':base:sdk-common')
+    implementation project(':base:builder-model')
+    implementation libs.kotlin_stdlib
+    implementation libs.kxml
 }
 
 project.ext.pomName = 'Android Tools Lint Build System Model'

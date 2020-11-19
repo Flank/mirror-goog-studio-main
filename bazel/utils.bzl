@@ -180,13 +180,16 @@ flat_archive = rule(
 )
 
 def _dir_archive_impl(ctx):
-    zipper_args = ["c", ctx.outputs.out.path]
+    zipper_args = ctx.actions.args()
+    zipper_args.use_param_file("@%s", use_always = True)
+    zipper_args.set_param_file_format("multiline")
+
     prefix = ctx.attr.dir
     for file in ctx.files.files:
         if not file.short_path.startswith(prefix):
             fail(file.short_path + "is not in " + prefix)
         else:
-            zipper_args.append("{}={}".format(file.short_path[len(prefix) + 1:], file.path))
+            zipper_args.add("{}={}".format(file.short_path[len(prefix) + 1:], file.path))
     files = []
     files += ctx.files.files
     if ctx.attr.stamp:
@@ -199,14 +202,14 @@ def _dir_archive_impl(ctx):
             progress_message = "Extracting label...",
             mnemonic = "status",
         )
-        zipper_args.append("%s=%s" % (ctx.attr.stamp, stamp.path))
+        zipper_args.add("%s=%s" % (ctx.attr.stamp, stamp.path))
         files.append(stamp)
 
     ctx.actions.run(
         inputs = files,
         outputs = [ctx.outputs.out],
         executable = ctx.executable._zipper,
-        arguments = zipper_args,
+        arguments = ["c", ctx.outputs.out.path, zipper_args],
         progress_message = "Creating archive...",
         mnemonic = "archiver",
     )

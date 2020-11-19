@@ -70,7 +70,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         ) {
             return Severity.IGNORE
         }
-        if (isWarningsAsErrors() && severity === Severity.WARNING) {
+        if (isWarningsAsErrors() && (severity === Severity.WARNING || severity == null)) {
             if (issue === IssueRegistry.BASELINE) {
                 // Don't promote the baseline informational issue
                 // (number of issues promoted) to error
@@ -78,7 +78,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
             }
             severity = Severity.ERROR
         }
-        if (isIgnoreWarnings() && severity === Severity.WARNING) {
+        if (isIgnoreWarnings() && (severity === Severity.WARNING || severity == null)) {
             severity = Severity.IGNORE
         }
         return severity
@@ -108,14 +108,18 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
 
     override fun getDefaultSeverity(issue: Issue): Severity {
         return if (isCheckAllWarnings()) {
-            // Exclude the inter-procedural check from the "enable all warnings" flag;
-            // it's much slower and still triggers various bugs in UAST that can affect
-            // other checks.
-            @Suppress("SpellCheckingInspection")
-            if (issue.id == "WrongThreadInterprocedural") {
+            if (neverEnabledImplicitly(issue)) {
                 super.getDefaultSeverity(issue)
             } else issue.defaultSeverity
         } else super.getDefaultSeverity(issue)
+    }
+
+    private fun neverEnabledImplicitly(issue: Issue): Boolean {
+        // Exclude the inter-procedural check from the "enable all warnings" flag;
+        // it's much slower and still triggers various bugs in UAST that can affect
+        // other checks.
+        @Suppress("SpellCheckingInspection")
+        return issue.id == "WrongThreadInterprocedural"
     }
 
     private fun computeSeverity(issue: Issue, source: Configuration): Severity? {
@@ -170,14 +174,17 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
                 return Severity.IGNORE
             }
         }
-        return if (enabled.contains(id) ||
+        if (enabled.contains(id) ||
             enabledCategories != null && (
                 enabledCategories.contains(category) ||
                     category.parent != null && enabledCategories.contains(category.parent)
-                )
+                ) ||
+            isCheckAllWarnings() && !neverEnabledImplicitly(issue)
         ) {
-            getVisibleSeverity(issue, severity, source)
-        } else severity
+            return getVisibleSeverity(issue, severity, source)
+        }
+
+        return severity
     }
 
     /**
@@ -193,6 +200,9 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
     ): Severity {
         val configuredSeverity = client.configurations.getDefinedSeverityWithoutOverride(source, issue)
         if (configuredSeverity != null && configuredSeverity != Severity.IGNORE) {
+            if (configuredSeverity == Severity.WARNING && isWarningsAsErrors()) {
+                return Severity.ERROR
+            }
             return configuredSeverity
         }
 
@@ -204,7 +214,11 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         if (visibleSeverity == null || visibleSeverity === Severity.IGNORE) {
             visibleSeverity = issue.defaultSeverity
             if (visibleSeverity === Severity.IGNORE) {
-                visibleSeverity = Severity.WARNING
+                if (isWarningsAsErrors()) {
+                    visibleSeverity = Severity.ERROR
+                } else {
+                    visibleSeverity = Severity.WARNING
+                }
             }
         }
         return visibleSeverity

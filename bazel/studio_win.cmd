@@ -24,7 +24,8 @@ IF "%DETECT_FLAKES%"=="--detect_flakes" (
   set CONDITIONAL_FLAGS=!RUNS! !DETECT_FLAKES! !NOCACHE!
 ) ELSE IF %IS_POST_SUBMIT% EQU 1 (
   SET NOCACHE=--nocache_test_results
-  SET CONDITIONAL_FLAGS=!NOCACHE!
+  SET FLAKY_ATTEMPTS=--flaky_test_attempts=2
+  SET CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS!
 )
 
 set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate

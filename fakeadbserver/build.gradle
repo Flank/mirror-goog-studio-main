@@ -16,7 +16,6 @@
 apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools.fakeadbserver'
@@ -24,14 +23,14 @@ archivesBaseName = 'fakeadbserver'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile project(':base:common')
-    compile libs.kxml
-    compile libs.kotlin_stdlib
-    compile libs.kotlin_reflect
+    implementation project(':base:common')
+    implementation libs.kxml
+    implementation libs.kotlin_stdlib
+    implementation libs.kotlin_reflect
 
-    testCompile project(':base:testutils')
-    testCompile libs.easymock
-    testCompile libs.junit
+    testImplementation project(':base:testutils')
+    testImplementation libs.easymock
+    testImplementation libs.junit
 }
 
 sourceSets {

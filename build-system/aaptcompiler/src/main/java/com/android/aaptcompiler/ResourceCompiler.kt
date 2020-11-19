@@ -169,7 +169,7 @@ private fun compileTable(
   logger?.info("Compiling XML table ${pathData.file.absolutePath} to $outputFile")
 
   val table = ResourceTable(logger = logger)
-  
+
   val extractorOptions = TableExtractorOptions(
     translatable = !pathData.name.contains("donottranslate"),
     errorOnPositionalArgs = !options.legacyMode,

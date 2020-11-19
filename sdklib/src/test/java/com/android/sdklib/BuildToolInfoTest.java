@@ -29,7 +29,7 @@ public class BuildToolInfoTest extends TestCase {
         MockFileOp fop = new MockFileOp();
         recordBuildTool23(fop);
         AndroidSdkHandler sdkHandler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop);
+                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo bt = sdkHandler.getBuildToolInfo(new Revision(23, 0, 2), progress);
         progress.assertNoErrorsOrWarnings();
@@ -82,7 +82,8 @@ public class BuildToolInfoTest extends TestCase {
     }
 
     private static void recordBuildTool23(MockFileOp fop) {
-        fop.recordExistingFile("/sdk/build-tools/23.0.2/package.xml",
+        fop.recordExistingFile(
+                "/sdk/build-tools/23.0.2/package.xml",
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                         + "<ns2:sdk-repository "
                         + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
@@ -98,5 +99,4 @@ public class BuildToolInfoTest extends TestCase {
                         + "<uses-license ref=\"license-19E6313A\"/></localPackage>"
                         + "</ns2:sdk-repository>\n");
     }
-
 }

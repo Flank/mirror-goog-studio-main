@@ -2,7 +2,6 @@ apply plugin: 'com.android.tools.java-library'
 apply plugin: 'java-test-fixtures'
 apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
-apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools'
@@ -10,16 +9,20 @@ archivesBaseName = 'repository'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compile project(':base:common')
-    compile libs.activation
-    compile libs.apache_compress
-    compile libs.jaxb_runtime
-    compile libs.jimfs
-    compile libs.kotlin_stdlib
+    implementation project(':base:common')
+    implementation libs.activation
+    implementation libs.apache_compress
+    implementation libs.jaxb_runtime
+    implementation libs.jimfs
+    implementation libs.kotlin_stdlib
 
-    testCompile libs.junit
-    testCompile libs.truth
-    testCompile libs.mockito_core
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.mockito_core
+
+    testFixturesImplementation project(':base:annotations')
+    testFixturesImplementation libs.guava
+    testFixturesImplementation libs.jimfs
 }
 
 test {
