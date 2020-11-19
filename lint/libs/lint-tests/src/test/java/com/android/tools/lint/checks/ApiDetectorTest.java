@@ -3201,10 +3201,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "src/test/pkg/.java).kt:3: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
+                                + "src/test/pkg/test.kt:3: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
                                 + "inline fun <reified T> Context.systemService1() = getSystemService(T::class.java)\n"
                                 + "                                                  ~~~~~~~~~~~~~~~~\n"
-                                + "src/test/pkg/.java).kt:4: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
+                                + "src/test/pkg/test.kt:4: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
                                 + "inline fun Context.systemService2() = getSystemService(String::class.java)\n"
                                 + "                                      ~~~~~~~~~~~~~~~~\n"
                                 + "2 errors, 0 warnings");
@@ -5821,7 +5821,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expect(
-                        "src/test/pkg/}.kt:6: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n"
+                        ""
+                                + "src/test/pkg/test.kt:6: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n"
                                 + "    val clz = DOMErrorHandler::class // API 8\n"
                                 + "              ~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");

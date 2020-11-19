@@ -235,7 +235,7 @@ public class TestFile {
                 cls = "test";
             }
 
-            String to = pkg.replace('.', '/') + '/' + cls + DOT_KT;
+            String to = pkg.isEmpty() ? cls + DOT_KT : pkg.replace('.', '/') + '/' + cls + DOT_KT;
 
             return new KotlinTestFile().to(to).within("src").withSource(source);
         }
@@ -499,6 +499,12 @@ public class TestFile {
 
         public ManifestTestFile() {
             to(FN_ANDROID_MANIFEST_XML);
+        }
+
+        @Override
+        public ManifestTestFile to(@NonNull String to) {
+            super.to(to);
+            return this;
         }
 
         public ManifestTestFile minSdk(int min) {
