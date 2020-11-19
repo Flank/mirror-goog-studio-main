@@ -109,7 +109,7 @@ bool BaseSwapCommand::Swap(
     return false;
   }
 
-  if (!AttachAgents()) {
+  if (!Attach(process_ids_, agent_path_)) {
     swap_response->set_status(proto::SwapResponse::AGENT_ATTACH_FAILED);
     return false;
   }
@@ -235,22 +235,6 @@ proto::SwapResponse::Status BaseSwapCommand::ListenForAgents() const {
   }
 
   return proto::SwapResponse::OK;
-}
-
-bool BaseSwapCommand::AttachAgents() const {
-  Phase p("AttachAgents");
-  CmdCommand cmd(workspace_);
-  for (int pid : process_ids_) {
-    std::string output;
-    LogEvent("Attaching agent: '"_s + agent_path_ + "'");
-    output = "";
-    if (!cmd.AttachAgent(pid, agent_path_, {Socket::kDefaultAddress},
-                         &output)) {
-      ErrEvent("Could not attach agent to process: "_s + output);
-      return false;
-    }
-  }
-  return true;
 }
 
 bool BaseSwapCommand::CheckFilesExist(

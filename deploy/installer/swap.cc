@@ -188,7 +188,14 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
 
   proto::InstallServerResponse server_response;
 
-  if (!AttachAgents()) {
+  // Attach agents to pids.
+  std::string agent_path = target_dir_ + kAgentFilename;
+#if defined(__aarch64__) || defined(__x86_64__)
+  if (request_.arch() == proto::ARCH_32_BIT) {
+    agent_path = target_dir_ + kAgentAltFilename;
+  }
+#endif
+  if (!Attach(request_.process_ids(), agent_path)) {
     ErrEvent("Could not attach agents");
     client_->KillServerAndWait(&server_response);
     return proto::SwapResponse::AGENT_ATTACH_FAILED;
@@ -280,29 +287,6 @@ bool SwapCommand::WaitForServer() const {
     ErrEvent(
         "SwapCommand::WaitForServer: Unexpected response from install-server");
     return false;
-  }
-
-  return true;
-}
-
-bool SwapCommand::AttachAgents() const {
-  Phase p("AttachAgents");
-  CmdCommand cmd(workspace_);
-  for (int pid : request_.process_ids()) {
-    std::string output;
-    std::string agent = kAgentFilename;
-#if defined(__aarch64__) || defined(__x86_64__)
-    if (request_.arch() == proto::ARCH_32_BIT) {
-      agent = kAgentAltFilename;
-    }
-#endif
-    LogEvent("Attaching agent: '"_s + agent + "'");
-    output = "";
-    if (!cmd.AttachAgent(pid, target_dir_ + agent, {Socket::kDefaultAddress},
-                         &output)) {
-      ErrEvent("Could not attach agent to process: "_s + output);
-      return false;
-    }
   }
 
   return true;

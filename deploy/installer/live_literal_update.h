@@ -17,15 +17,16 @@
 #ifndef LIVE_LITERAL_H_
 #define LIVE_LITERAL_H_
 
-#include "tools/base/deploy/installer/command.h"
+#include "tools/base/deploy/installer/agent_interaction.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/workspace.h"
 
 namespace deploy {
 
-class LiveLiteralUpdateCommand : public Command {
+class LiveLiteralUpdateCommand : public AgentInteractionCommand {
  public:
-  LiveLiteralUpdateCommand(Workspace& workspace) : Command(workspace) {}
+  LiveLiteralUpdateCommand(Workspace& workspace)
+      : AgentInteractionCommand(workspace) {}
   virtual ~LiveLiteralUpdateCommand() {}
 
   // From Command
@@ -56,7 +57,6 @@ class LiveLiteralUpdateCommand : public Command {
     process_ids_ = process_ids;
     extra_agents_count_ = extra_agents_count;
   }
-  bool AttachAgents() const;
   bool CheckFilesExist(const std::vector<std::string>& files,
                        std::unordered_set<std::string>* missing_files);
 };

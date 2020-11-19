@@ -266,22 +266,6 @@ LiveLiteralUpdateCommand::ListenForAgents() const {
   return proto::LiveLiteralUpdateResponse::OK;
 }
 
-bool LiveLiteralUpdateCommand::AttachAgents() const {
-  Phase p("AttachLiveLiteralAgents");
-  CmdCommand cmd(workspace_);
-  for (int pid : process_ids_) {
-    std::string output;
-    LogEvent("Attaching agent: '"_s + agent_path_ + "'");
-    output = "";
-    if (!cmd.AttachAgent(pid, agent_path_, {Socket::kDefaultAddress},
-                         &output)) {
-      ErrEvent("Could not attach agent to process: "_s + output);
-      return false;
-    }
-  }
-  return true;
-}
-
 // TODO: Refactor this which is mostly identical to BaseSwapCommand::Swap()
 void LiveLiteralUpdateCommand::Update(
     const proto::LiveLiteralUpdateRequest& request,
@@ -309,7 +293,7 @@ void LiveLiteralUpdateCommand::Update(
     return;
   }
 
-  if (!AttachAgents()) {
+  if (!Attach(process_ids_, agent_path_)) {
     response->set_status(proto::LiveLiteralUpdateResponse::AGENT_ATTACH_FAILED);
     return;
   }

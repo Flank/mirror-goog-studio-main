@@ -23,16 +23,17 @@
 #include <vector>
 
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
-#include "tools/base/deploy/installer/command.h"
+#include "tools/base/deploy/installer/agent_interaction.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/server/install_server.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
-class SwapCommand : public Command {
+class SwapCommand : public AgentInteractionCommand {
  public:
-  SwapCommand(Workspace& workspace) : Command(workspace), response_(nullptr) {}
+  SwapCommand(Workspace& workspace)
+      : AgentInteractionCommand(workspace), response_(nullptr) {}
   ~SwapCommand() {}
 
   void ParseParameters(const proto::InstallerRequest& request) override;
@@ -61,10 +62,6 @@ class SwapCommand : public Command {
   // Request for the install-server to open a socket and begin listening for
   // agents to connect. Agents connect shortly after they are attached.
   bool WaitForServer() const;
-
-  // Tries to attach an agent to each process in the request; if any agent fails
-  // to attach, returns false.
-  bool AttachAgents() const;
 
   // Runs a command with the provided arguments. If run_as_package is true,
   // the command is invoked with 'run-as'. If the command fails, prints the
