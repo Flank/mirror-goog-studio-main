@@ -53,6 +53,7 @@ import java.util.Set;
  */
 public class JdwpProxyServer implements Runnable {
     private static final long THROTTLE_TIMEOUT_MS = 1000;
+    private static final long JOIN_TIMEOUT_MS = 5000;
     /**
      * Callback for when a server drops and a new server has taken its place.
      */
@@ -160,16 +161,8 @@ public class JdwpProxyServer implements Runnable {
                 }
             }
         }
-        // Wait until our run thread exits. This guarantees we can cleanup all data used by this
-        // this thread without risk of threading issues.
-        if (myRunThread != null) {
-            try {
-                myRunThread.join();
-            }
-            catch (InterruptedException ex) {
-                // Failed to wait for thread to stop.
-            }
-        }
+        // Shutdown the sockets first, so that they will stop reading packets, potentially
+        // causing the join to hang (which will freeze the UI).
         try {
             // Close any open child sockets.
             if (mSelector != null) {
@@ -187,6 +180,18 @@ public class JdwpProxyServer implements Runnable {
         }
         catch (IOException ex) {
             // Failed to close selector
+        }
+        // Wait until our run thread exits. This guarantees we can cleanup all data used by this
+        // this thread without risk of threading issues.
+        if (myRunThread != null) {
+            try {
+                myRunThread.join(JOIN_TIMEOUT_MS);
+                if (myRunThread.isAlive()) {
+                    Log.e("ddms", "Run thread still alive after " + JOIN_TIMEOUT_MS + "ms");
+                }
+            } catch (InterruptedException ex) {
+                // Failed to wait for thread to stop.
+            }
         }
         synchronized (myChannelLock) {
             if (mListenChannel != null) {
