@@ -40,7 +40,7 @@ import org.junit.rules.Timeout;
 public class AndroidTestUtilTest {
 
     /** This test caused timeouts in the past. */
-    @Rule public Timeout timeout = Timeout.seconds(90);
+    @Rule public Timeout timeout = Timeout.seconds(180);
 
     @Rule
     public GradleTestProject project =
