@@ -17,6 +17,7 @@ package com.android.utils;
 
 import static com.android.SdkConstants.UTF_8;
 
+import com.android.ProgressManagerAdapter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
@@ -270,6 +271,7 @@ public class PositionXmlParser {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];
         while (true) {
+            ProgressManagerAdapter.checkCanceled();
             int r = input.read(buf);
             if (r == -1) {
                 break;
