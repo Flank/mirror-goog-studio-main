@@ -90,12 +90,8 @@ class ApplicationTaskManager(
             createAssetPackTasks(variant)
         }
 
-        // only run art profile generation for non debuggable builds.
-        if (variant.services.projectOptions[BooleanOption.ENABLE_ART_PROFILES]
-                && !variant.debuggable) {
-            taskFactory.register(MergeArtProfileTask.CreationAction(variant))
-            taskFactory.register(CompileArtProfileTask.CreationAction(variant))
-        }
+        taskFactory.register(MergeArtProfileTask.CreationAction(variant))
+        taskFactory.register(CompileArtProfileTask.CreationAction(variant))
 
         if (variant.buildFeatures.dataBinding
                 && variant.globalScope.hasDynamicFeatures()) {

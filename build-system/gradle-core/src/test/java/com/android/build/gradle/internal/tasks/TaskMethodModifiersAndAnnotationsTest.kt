@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.tasks.PackageAndroidArtifact
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
 import com.google.common.reflect.TypeToken
@@ -42,6 +43,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.work.Incremental
 import org.junit.Test
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Field
@@ -197,6 +199,49 @@ class TaskMethodModifiersAndAnnotationsTest {
     fun checkSupplierIsNotAField() {
         assertThat(findTaskFieldsOfType(Supplier::class.java)).isEmpty()
     }
+
+    /**
+     * Test that the workaround for https://github.com/gradle/gradle/issues/16976 in
+     * [PackageAndroidArtifact] is kept up to date.
+     *
+     * Adding new incremental inputs to [PackageAndroidArtifact] without updating this test will
+     * cause this test to fail. Please add any new incremental inputs to the appropriate
+     * non-incremental input (e.g., [PackageAndroidArtifact.getAllClasspathInputFiles]) before
+     * updating this test.
+     */
+    @Test
+    fun checkIncrementalPackagingInputs() {
+        val incrementalInputs =
+            ClassPath.from(this.javaClass.classLoader)
+                .getTopLevelClasses("com.android.build.gradle.tasks")
+                .filter { it.simpleName == "PackageAndroidArtifact" }
+                .map { classInfo -> classInfo.load() as Class<*> }
+                .flatMap { it.declaredMethods.asIterable() }
+                .filter { it.getAnnotation(Incremental::class.java) != null }
+                .map {
+                    val annotation = when {
+                        it.getAnnotation(Classpath::class.java) != null ->
+                            it.getAnnotation(Classpath::class.java).toString()
+                        it.getAnnotation(PathSensitive::class.java) != null ->
+                            it.getAnnotation(PathSensitive::class.java).toString()
+                        else -> "OTHER"
+                    }
+                    return@map "${it.name}  $annotation"
+                }
+        assertThat(incrementalInputs).containsExactly(
+            "getAppMetadata  @org.gradle.api.tasks.PathSensitive(value=NAME_ONLY)",
+            "getAssets  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
+            "getDexFolders  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
+            "getFeatureDexFolder  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
+            "getFeatureJavaResourceFiles  @org.gradle.api.tasks.Classpath()",
+            "getJavaResourceFiles  @org.gradle.api.tasks.Classpath()",
+            "getJniFolders  @org.gradle.api.tasks.Classpath()",
+            "getManifests  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
+            "getMergedArtProfile  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
+            "getResourceFiles  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)"
+        )
+    }
+
 
     private fun getMatchingGetter(setter: Method) : Method? {
         val name = setter.name.removePrefix("set")

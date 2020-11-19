@@ -568,9 +568,14 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 task.appMetadata
             )
 
-            creationConfig.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.BINARY_ART_PROFILE,
-                task.binaryArtProfile)
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_ART_PROFILES]
+                && !creationConfig.debuggable) {
+                creationConfig.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.BINARY_ART_PROFILE,
+                    task.binaryArtProfile
+                )
+            }
+            task.binaryArtProfile.disallowChanges()
         }
     }
 }
