@@ -248,11 +248,7 @@ class UastEnvironment private constructor(
             kotlinCompilerEnv::createPackagePartProvider
         )
 
-        perfManager?.notifyAnalysisFinished(
-            files = ktPsiFiles.size,
-            lines = ktPsiFiles.sumBy { StringUtil.getLineBreakCount(it.text) },
-            additionalDescription = "UastEnvironment.analyzeFiles"
-        )
+        perfManager?.notifyAnalysisFinished()
     }
 
     private fun addKtFilesFromSrcJars(out: MutableList<KtFile>) {

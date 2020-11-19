@@ -862,7 +862,7 @@ open class LintCliClient : LintClient {
 
         val env = UastEnvironment.create(config)
         uastEnvironment = env
-        kotlinPerformanceManager?.notifyCompilerInitialized()
+        kotlinPerformanceManager?.notifyCompilerInitialized(-1, -1, "Android Lint")
 
         for (project in allProjects) {
             project.ideaProject = env.ideaProject
