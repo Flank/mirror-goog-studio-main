@@ -130,6 +130,11 @@ bool SwapCommand::Setup() noexcept {
       Executor::Get(), workspace_.GetTmpFolder() + kServerFilename,
       request_.package_name(), kServerFilename + "-" + workspace_.GetVersion());
 
+  if (client_ == nullptr) {
+    ErrEvent("SwapCommand: Unable to get InstallServer client");
+    return false;
+  }
+
   return true;
 }
 
