@@ -558,7 +558,8 @@ class UtpConfigFactoryTest {
             "x86",
             "path/to/gradle/avd",
             ":app:deviceNameDebugAndroidTest",
-            "path/to/emulator")
+            "path/to/emulator",
+            false)
         val runnerConfigProto = factory.createRunnerConfigProtoForManagedDevice(
             managedDevice,
             testData,
@@ -700,7 +701,8 @@ class UtpConfigFactoryTest {
                 "x86",
                 "path/to/gradle/avd",
                 ":app:deviceNameDebugAndroidTest",
-                "path/to/emulator")
+                "path/to/emulator",
+                false)
         val runnerConfigProto = factory.createRunnerConfigProtoForManagedDevice(
                 managedDevice,
                 testData,

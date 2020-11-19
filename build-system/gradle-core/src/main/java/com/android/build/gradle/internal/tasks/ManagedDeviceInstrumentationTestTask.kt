@@ -68,6 +68,7 @@ import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.options.Option
 import org.gradle.internal.logging.ConsoleRenderer
 import org.gradle.process.ExecOperations
 import org.gradle.process.JavaExecSpec
@@ -164,6 +165,15 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         return hasFailures
     }
 
+    @get: Input
+    abstract val enableEmulatorDisplay: Property<Boolean>
+
+    @Option(
+        option="enable-display",
+        description = "Adding this option will display the emulator while testing, instead" +
+                "of running the tests on a headless emulator.")
+    fun setDisplayEmulatorOption(value: Boolean) = enableEmulatorDisplay.set(value)
+
     override fun getIgnoreFailures(): Boolean {
         return shouldIgnore
     }
@@ -187,7 +197,8 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 getAvdComponents().get().avdFolder.get().asFile.absolutePath,
                 path,
                 getAvdComponents().get()
-                        .emulatorDirectory.get().asFile.resolve(FN_EMULATOR).absolutePath)
+                    .emulatorDirectory.get().asFile.resolve(FN_EMULATOR).absolutePath,
+                enableEmulatorDisplay.get())
 
         DeviceProviderInstrumentTestTask.checkForNonApks(getBuddyApks().files)
             { message: String ->
@@ -268,6 +279,8 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
         override fun configure(task: ManagedDeviceInstrumentationTestTask) {
             super.configure(task)
+
+            task.enableEmulatorDisplay.convention(false)
 
             val extension = creationConfig.globalScope.extension
             val projectOptions = creationConfig.services.projectOptions
