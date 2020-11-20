@@ -493,7 +493,7 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             res/xml/actions.xml:6: Error: <action> contains two <parameter> elements with the same name, name1 [ValidActionsXml]
                     <parameter name="name1" type="mytype" />
                                ~~~~~~~~~~~~
-                res/xml/actions.xml:3: <No location-specific message
+                res/xml/actions.xml:3: <No location-specific message>
             1 errors, 0 warnings
             """
         )

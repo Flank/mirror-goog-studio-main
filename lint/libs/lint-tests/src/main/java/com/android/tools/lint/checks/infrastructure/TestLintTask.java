@@ -132,6 +132,7 @@ public class TestLintTask {
     boolean useTestProject;
     boolean allowExceptions;
     public String testName = null;
+    boolean stripRoot = true;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -677,6 +678,18 @@ public class TestLintTask {
         return this;
     }
 
+    /**
+     * Normally, lint reports will show absolute paths in output by removing the local details of
+     * the paths down to the project directories and showing this as a "/TESTROOT/" prefix.
+     *
+     * <p>By default it will also strip off the /TESTROOT/ prefix to show everything as relative,
+     * but with this method you can turn this off.
+     */
+    public TestLintTask stripRoot(boolean stripRoot) {
+        this.stripRoot = stripRoot;
+        return this;
+    }
+
     private void ensureConfigured() {
         getCheckedIssues(); // ensures that you've used one of the many DSL options to set issues
 
@@ -690,6 +703,29 @@ public class TestLintTask {
         if (alreadyRun) {
             throw new RuntimeException("This method should only be called before run()");
         }
+    }
+
+    /**
+     * Given a result string possibly containing absolute paths to the given directory, replaces the
+     * directory prefixes with {@code TESTROOT}, and optionally (if configured via {@link
+     * #stripRoot}) makes the path relative to the test root.
+     */
+    public String stripRoot(File rootDir, String s) {
+        String path = rootDir.getPath();
+        if (s.contains(path)) {
+            s = s.replace(path, "TESTROOT");
+        }
+        path = path.replace(File.separatorChar, '/');
+        if (s.contains(path)) {
+            s = s.replace(path, "/TESTROOT");
+        }
+        if (stripRoot && s.contains("TESTROOT")) {
+            s = s.replace("/TESTROOT/", "").replace("/TESTROOT\\", "").replace("\nTESTROOT/", "\n");
+            if (s.startsWith("TESTROOT/")) {
+                s = s.substring("TESTROOT/".length());
+            }
+        }
+        return s;
     }
 
     private static void addProjects(

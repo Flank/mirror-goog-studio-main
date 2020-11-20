@@ -641,14 +641,7 @@ public class TestLintClient extends LintCliClient {
                 });
 
         for (File dir : sorted) {
-            String path = dir.getPath();
-            if (result.contains(path)) {
-                result = result.replace(path, "/TESTROOT");
-            }
-            path = path.replace(File.separatorChar, '/');
-            if (result.contains(path)) {
-                result = result.replace(path, "/TESTROOT");
-            }
+            result = task.stripRoot(dir, result);
         }
 
         return result;
@@ -832,7 +825,7 @@ public class TestLintClient extends LintCliClient {
             }
             while (l != null) {
                 if (l.getMessage() == null) {
-                    l.setMessage("<No location-specific message");
+                    l.setMessage("<No location-specific message>");
                 }
                 if (l == l.getSecondary()) {
                     fail("Location link cycle");

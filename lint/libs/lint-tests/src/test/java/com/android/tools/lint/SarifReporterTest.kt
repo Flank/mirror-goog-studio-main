@@ -88,6 +88,7 @@ class SarifReporterTest {
                 // sure our rules section only included encountered issues
                 MotionLayoutDetector.INVALID_SCENE_FILE_REFERENCE
             )
+            .stripRoot(false)
             .run()
             .expectSarif(
                 """
@@ -398,7 +399,7 @@ class SarifReporterTest {
                 </resources>
                 """
             ).indented()
-        ).issues(AutofillDetector.ISSUE, PxUsageDetector.DP_ISSUE).run().expectSarif(
+        ).stripRoot(false).issues(AutofillDetector.ISSUE, PxUsageDetector.DP_ISSUE).run().expectSarif(
             """
             {
                 "＄schema" : "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
@@ -651,7 +652,7 @@ class SarifReporterTest {
                 </menu>
                 """
             ).indented()
-        ).issues(AppCompatResourceDetector.ISSUE).run().expectSarif(
+        ).stripRoot(false).issues(AppCompatResourceDetector.ISSUE).run().expectSarif(
             """
             {
                 "＄schema" : "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",

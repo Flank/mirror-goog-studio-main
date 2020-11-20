@@ -97,8 +97,7 @@ class TestLintResult internal constructor(
         }
 
         val actual = transformer.transform(describeOutput(expectedException))
-        val expected = expectedText.replace('$', '＄')
-
+        val expected = normalizeOutput(expectedText)
         if (actual.trim() != expected.trimIndent().trim()) {
             // See if it's a Windows path issue
             if (actual == expected.replace(File.separatorChar, '/')) {
@@ -119,15 +118,15 @@ class TestLintResult internal constructor(
         return this
     }
 
-    private fun describeOutput(expectedException: Class<out Throwable>? = null): String {
-        return formatOutput(this.output, expectedException)
-    }
-
-    private fun formatOutput(outputOrNull: String?, expectedThrowable: Class<out Throwable>?): String {
-        var output = outputOrNull
-        if (output == null) {
-            output = ""
-        } else if (maxLineLength > TRUNCATION_MARKER.length) {
+    /**
+     * The test output is already formatted by the text reporter in the states passed
+     * in to this result, but we do some extra post processing here to truncate output,
+     * clean up whitespace only diffs, etc.
+     */
+    private fun describeOutput(expectedThrowable: Class<out Throwable>? = null): String {
+        val originalOutput = this.output ?: ""
+        var output = originalOutput
+        if (maxLineLength > TRUNCATION_MARKER.length) {
             val sb = StringBuilder()
             for (line in Splitter.on('\n').split(output)) {
                 val truncated =
@@ -140,7 +139,7 @@ class TestLintResult internal constructor(
                 sb.append(truncated).append('\n')
             }
             output = sb.toString()
-            if (output.endsWith("\n\n") && !this.output!!.endsWith("\n\n")) {
+            if (output.endsWith("\n\n") && !originalOutput.endsWith("\n\n")) {
                 output = output.substring(0, output.length - 1)
             }
         }
@@ -154,13 +153,22 @@ class TestLintResult internal constructor(
             }
 
             if (output.isNotEmpty()) {
-                writer.write(output)
+                writer.write(normalizeOutput(output))
             }
 
             writer.toString()
         } else {
-            output.replace('$', '＄')
+            normalizeOutput(output)
         }
+    }
+
+    private fun normalizeOutput(output: String): String {
+        if (output.contains(OLD_ERROR_MESSAGE) || output.contains("$")) {
+            val first = output.replace('$', '＄')
+            return MATCH_OLD_ERROR_MESSAGE.replace(first) { "$OLD_ERROR_MESSAGE>${output[it.range.last]}" }
+        }
+
+        return output
     }
 
     /**
@@ -469,10 +477,10 @@ class TestLintResult internal constructor(
         @Language("HTML") expected: String,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
-        val trimmed = expected.trimIndent().replace('$', '＄')
+        val trimmed = normalizeOutput(expected.trimIndent())
         return checkHtmlReport(
             TestResultChecker { actual ->
-                val s = actual.trimIndent().replace('$', '＄')
+                val s = normalizeOutput(actual.trimIndent())
                 if (s != trimmed && s.replace('\\', '/') == trimmed) {
                     // Allow Windows file separators to differ
                 } else {
@@ -563,11 +571,11 @@ class TestLintResult internal constructor(
         intendedForBaseline: Boolean = false,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
-        val trimmed = expected.trimIndent().replace('$', '＄')
+        val trimmed = normalizeOutput(expected.trimIndent())
         return checkXmlReport(
             checkers = *arrayOf(
                 TestResultChecker { actual ->
-                    val s = actual.trimIndent().replace('$', '＄')
+                    val s = normalizeOutput(actual.trimIndent())
                     if (s != trimmed && s.replace('\\', '/') == trimmed) {
                         // Allow Windows file separators to differ
                     } else {
@@ -594,11 +602,11 @@ class TestLintResult internal constructor(
         @Language("JSON") expected: String,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
-        val trimmed = expected.trimIndent().replace('$', '＄')
+        val trimmed = normalizeOutput(expected.trimIndent())
         return checkSarifReport(
             checkers = *arrayOf(
                 TestResultChecker { actual ->
-                    val s = actual.trimIndent().replace('$', '＄')
+                    val s = normalizeOutput(actual.trimIndent())
                     if (s != trimmed && s.replace('\\', '/') == trimmed) {
                         // Allow Windows file separators to differ
                     } else {
@@ -690,10 +698,8 @@ class TestLintResult internal constructor(
             }
             val stats = LintStats.create(incidents, null as LintBaseline?)
             reporter.write(stats, incidents)
-            val actual = Files.asCharSource(file, Charsets.UTF_8).read()
-            val transformed = transformer.transform(actual)
-                .replace(rootDir.path, "TESTROOT")
-                .replace(rootDir.path.replace("\\", "/"), "TESTROOT")
+            val actual = normalizeOutput(Files.asCharSource(file, Charsets.UTF_8).read())
+            val transformed = task.stripRoot(rootDir, transformer.transform(actual))
             for (checker in checkers) {
                 checker.check(transformed)
             }
@@ -792,5 +798,16 @@ class TestLintResult internal constructor(
     companion object {
         private const val TRUNCATION_MARKER = "\u2026"
         val comparator: Comparator<Incident> = Comparator { o1, o2 -> o2.startOffset - o1.startOffset }
+
+        // TestLintClient used to have a typo (it would emit the message
+        // "<No location-specific message", without the closing >.)
+        // We don't want to just change the error message to the new spelling,
+        // since that would break a lot of existing golden files. Instead,
+        // we normalize both the expected and actual test output to use
+        // the correct format, and only if they differ does the test fail.
+        // This means that going forward, new tests will use the correct
+        // format but old tests continue to pass.
+        private const val OLD_ERROR_MESSAGE = "No location-specific message"
+        private val MATCH_OLD_ERROR_MESSAGE = Regex("$OLD_ERROR_MESSAGE[^>]")
     }
 }
