@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.res.shrinker.LinkedResourcesForm
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.NO_MATCH;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.convertFormatStringToRegexp;
+import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separatorChar;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.res.shrinker.DummyContent;
+import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
@@ -234,6 +236,57 @@ public class ResourceUsageAnalyzerTest {
                         + "@xml/android_wear_micro_apk : reachable=true\n"
                         + "    @raw/android_wear_micro_apk\n",
                 analyzer.getModel().dumpResourceModel());
+
+        String serialized = analyzer.getModel().serialize(true);
+        assertEquals(
+                ""
+                        + "attr[\n"
+                        + "myAttr1(D,7f010000),\n"
+                        + "myAttr2(D,7f010001)],\n"
+                        + "dimen[\n"
+                        + "activity_vertical_margin(U,7f040001),\n"
+                        + "activity_horizontal_margin(U,7f040000)],\n"
+                        + "drawable[\n"
+                        + "avd_heart_fill_1(R),\n"
+                        + "avd_heart_fill_2(E),\n"
+                        + "avd_heart_fill(D),\n"
+                        + "unused(D,7f020001),\n"
+                        + "ic_launcher(U,7f020000)],\n"
+                        + "id[\n"
+                        + "action_settings(U,7f080000),\n"
+                        + "action_settings2(D,7f080001)],\n"
+                        + "layout[\n"
+                        + "activity_main(U,7f030000)],\n"
+                        + "menu[\n"
+                        + "main(D,7f070000),\n"
+                        + "menu2(D)],\n"
+                        + "raw[\n"
+                        + "my_js(D,7f090003),\n"
+                        + "styles2(D,7f090002),\n"
+                        + "android_wear_micro_apk(U,7f090000),\n"
+                        + "index1(D,7f090001),\n"
+                        + "keep(D),\n"
+                        + "my_used_raw_drawable(E,7f090004)],\n"
+                        + "string[\n"
+                        + "action_settings(D,7f050000),\n"
+                        + "app_name(U,7f050002),\n"
+                        + "hello_world(U,7f050003),\n"
+                        + "alias(D,7f050001),\n"
+                        + "action_settings2(D,7f050004)],\n"
+                        + "style[\n"
+                        + "MyStyle(U,7f060001),\n"
+                        + "MyStyle_Child(U,7f060002),\n"
+                        + "AppTheme(D,7f060000)],\n"
+                        + "xml[\n"
+                        + "android_wear_micro_apk(U,7f0a0000)];\n"
+                        + "6^4^5,b^2^3^16^1a,c^14,d^18,11^13,17^15,1a^19,1c^10;\n"
+                        + "@drawable/avd_heart_fill_1;\n"
+                        + "@menu/main;\n",
+                prettyPrintSerializedModel(serialized));
+
+        // Deserialize and serialize again to make sure the two models again
+        ResourceUsageModel deserialized = ResourceUsageModel.deserialize(serialized);
+        assertEquals(serialized, deserialized.serialize(true));
     }
 
     private void check(CodeInput codeInput, boolean inPlace) throws Exception {
@@ -272,48 +325,95 @@ public class ResourceUsageAnalyzerTest {
                         null);
         analyzer.analyze();
         checkState(analyzer);
-        assertEquals(""
-                + "@attr/myAttr1 : reachable=false\n"
-                + "@attr/myAttr2 : reachable=false\n"
-                + "@dimen/activity_horizontal_margin : reachable=true\n"
-                + "@dimen/activity_vertical_margin : reachable=true\n"
-                + "@drawable/avd_heart_fill : reachable=false\n"
-                + "    @drawable/avd_heart_fill_1\n"
-                + "    @drawable/avd_heart_fill_2\n"
-                + "@drawable/avd_heart_fill_1 : reachable=false\n"
-                + "@drawable/avd_heart_fill_2 : reachable=false\n"
-                + "@drawable/ic_launcher : reachable=true\n"
-                + "@drawable/unused : reachable=false\n"
-                + "@id/action_settings : reachable=true\n"
-                + "@id/action_settings2 : reachable=false\n"
-                + "@layout/activity_main : reachable=true\n"
-                + "    @dimen/activity_vertical_margin\n"
-                + "    @dimen/activity_horizontal_margin\n"
-                + "    @string/hello_world\n"
-                + "    @style/MyStyle_Child\n"
-                + "@menu/main : reachable=true\n"
-                + "    @string/action_settings\n"
-                + "@menu/menu2 : reachable=false\n"
-                + "    @string/action_settings2\n"
-                + "@raw/android_wear_micro_apk : reachable=true\n"
-                + "@raw/index1 : reachable=false\n"
-                + "    @raw/my_used_raw_drawable\n"
-                + "@raw/my_js : reachable=false\n"
-                + "@raw/my_used_raw_drawable : reachable=false\n"
-                + "@raw/styles2 : reachable=false\n"
-                + "@string/action_settings : reachable=true\n"
-                + "@string/action_settings2 : reachable=false\n"
-                + "@string/alias : reachable=false\n"
-                + "    @string/app_name\n"
-                + "@string/app_name : reachable=true\n"
-                + "@string/hello_world : reachable=true\n"
-                + "@style/AppTheme : reachable=false\n"
-                + "@style/MyStyle : reachable=true\n"
-                + "@style/MyStyle_Child : reachable=true\n"
-                + "    @style/MyStyle\n"
-                + "@xml/android_wear_micro_apk : reachable=true\n"
-                + "    @raw/android_wear_micro_apk\n",
+        assertEquals(
+                ""
+                        + "@attr/myAttr1 : reachable=false\n"
+                        + "@attr/myAttr2 : reachable=false\n"
+                        + "@dimen/activity_horizontal_margin : reachable=true\n"
+                        + "@dimen/activity_vertical_margin : reachable=true\n"
+                        + "@drawable/avd_heart_fill : reachable=false\n"
+                        + "    @drawable/avd_heart_fill_1\n"
+                        + "    @drawable/avd_heart_fill_2\n"
+                        + "@drawable/avd_heart_fill_1 : reachable=false\n"
+                        + "@drawable/avd_heart_fill_2 : reachable=false\n"
+                        + "@drawable/ic_launcher : reachable=true\n"
+                        + "@drawable/unused : reachable=false\n"
+                        + "@id/action_settings : reachable=true\n"
+                        + "@id/action_settings2 : reachable=false\n"
+                        + "@layout/activity_main : reachable=true\n"
+                        + "    @dimen/activity_vertical_margin\n"
+                        + "    @dimen/activity_horizontal_margin\n"
+                        + "    @string/hello_world\n"
+                        + "    @style/MyStyle_Child\n"
+                        + "@menu/main : reachable=true\n"
+                        + "    @string/action_settings\n"
+                        + "@menu/menu2 : reachable=false\n"
+                        + "    @string/action_settings2\n"
+                        + "@raw/android_wear_micro_apk : reachable=true\n"
+                        + "@raw/index1 : reachable=false\n"
+                        + "    @raw/my_used_raw_drawable\n"
+                        + "@raw/my_js : reachable=false\n"
+                        + "@raw/my_used_raw_drawable : reachable=false\n"
+                        + "@raw/styles2 : reachable=false\n"
+                        + "@string/action_settings : reachable=true\n"
+                        + "@string/action_settings2 : reachable=false\n"
+                        + "@string/alias : reachable=false\n"
+                        + "    @string/app_name\n"
+                        + "@string/app_name : reachable=true\n"
+                        + "@string/hello_world : reachable=true\n"
+                        + "@style/AppTheme : reachable=false\n"
+                        + "@style/MyStyle : reachable=true\n"
+                        + "@style/MyStyle_Child : reachable=true\n"
+                        + "    @style/MyStyle\n"
+                        + "@xml/android_wear_micro_apk : reachable=true\n"
+                        + "    @raw/android_wear_micro_apk\n",
                 analyzer.getModel().dumpResourceModel());
+
+        String serialized = checkSerialization(analyzer);
+        assertEquals(
+                ""
+                        + "attr[\n"
+                        + "myAttr1(D,7f010000),\n"
+                        + "myAttr2(D,7f010001)],\n"
+                        + "dimen[\n"
+                        + "activity_vertical_margin(U,7f040001),\n"
+                        + "activity_horizontal_margin(U,7f040000)],\n"
+                        + "drawable[\n"
+                        + "avd_heart_fill_1(E),\n"
+                        + "avd_heart_fill_2(E),\n"
+                        + "avd_heart_fill(D),\n"
+                        + "unused(D,7f020001),\n"
+                        + "ic_launcher(U,7f020000)],\n"
+                        + "id[\n"
+                        + "action_settings(U,7f080000),\n"
+                        + "action_settings2(D,7f080001)],\n"
+                        + "layout[\n"
+                        + "activity_main(U,7f030000)],\n"
+                        + "menu[\n"
+                        + "main(U,7f070000),\n"
+                        + "menu2(D)],\n"
+                        + "raw[\n"
+                        + "my_js(D,7f090003),\n"
+                        + "styles2(D,7f090002),\n"
+                        + "android_wear_micro_apk(U,7f090000),\n"
+                        + "index1(D,7f090001),\n"
+                        + "my_used_raw_drawable(E,7f090004)],\n"
+                        + "string[\n"
+                        + "action_settings(U,7f050000),\n"
+                        + "app_name(U,7f050002),\n"
+                        + "hello_world(U,7f050003),\n"
+                        + "alias(D,7f050001),\n"
+                        + "action_settings2(D,7f050004)],\n"
+                        + "style[\n"
+                        + "MyStyle(U,7f060001),\n"
+                        + "MyStyle_Child(U,7f060002),\n"
+                        + "AppTheme(D,7f060000)],\n"
+                        + "xml[\n"
+                        + "android_wear_micro_apk(U,7f0a0000)];\n"
+                        + "6^4^5,b^2^3^15^19,c^13,d^17,11^12,16^14,19^18,1b^10;\n"
+                        + ";\n"
+                        + ";\n",
+                prettyPrintSerializedModel(serialized));
 
         File unusedBitmap = new File(resources, "drawable-xxhdpi" + separatorChar + "unused.png");
         assertTrue(unusedBitmap.exists());
@@ -462,6 +562,14 @@ public class ResourceUsageAnalyzerTest {
         }
 
         deleteDir(dir);
+    }
+
+    private static String prettyPrintSerializedModel(String serialized) {
+        return serialized
+                .replace("),", "),\n")
+                .replace("[", "[\n")
+                .replace("],", "],\n")
+                .replace(";", ";\n");
     }
 
     private static String dumpZipContents(File zipFile) throws IOException {
@@ -1347,14 +1455,12 @@ public class ResourceUsageAnalyzerTest {
         return file;
     }
 
-
     @NonNull
     private static File createFile(File dir, String relative, String contents) throws IOException {
         File file = createFile(dir, relative);
         Files.asCharSink(file, Charsets.UTF_8).write(contents);
         return file;
     }
-
 
     @NonNull
     private static File createFile(File dir, String relative, byte[] contents) throws IOException {
@@ -1384,6 +1490,22 @@ public class ResourceUsageAnalyzerTest {
                     || !resource.name.equals(prev.name));
             prev = resource;
         }
+
+        checkSerialization(analyzer);
+    }
+
+    private static String checkSerialization(ResourceUsageAnalyzer analyzer) {
+        // Deserialize and serialize again to make sure the two models again
+        ResourceUsageModel model = analyzer.getModel();
+        String serialized = model.serialize(true);
+        ResourceUsageModel deserialized = ResourceUsageModel.deserialize(serialized);
+
+        assertEquals(serialized, deserialized.serialize(true));
+        assertThat(deserialized.dumpConfig()).isEqualTo(model.dumpConfig());
+        assertThat(deserialized.dumpKeepResources()).isEqualTo(model.dumpKeepResources());
+        assertThat(deserialized.dumpReferences()).isEqualTo(model.dumpReferences());
+        assertThat(deserialized.dumpResourceModel()).isEqualTo(model.dumpResourceModel());
+        return serialized;
     }
 
     @Test
@@ -1414,5 +1536,6 @@ public class ResourceUsageAnalyzerTest {
         assertEquals(ResourceType.LAYOUT, resource.type);
         assertNull(analyzer.getResourceFromCode("android/support/annotation/FloatRange",
                 "fromInclusive"));
+        checkState(analyzer);
     }
 }

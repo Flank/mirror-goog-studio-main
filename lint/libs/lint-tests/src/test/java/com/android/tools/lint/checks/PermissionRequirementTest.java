@@ -68,6 +68,7 @@ public class PermissionRequirementTest extends TestCase {
         Set<String> fineSet = Collections.singleton("android.permission.ACCESS_FINE_LOCATION");
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
+        req = serialize(req);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
 
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
@@ -101,6 +102,7 @@ public class PermissionRequirementTest extends TestCase {
 
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
+        req = serialize(req);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
@@ -132,6 +134,7 @@ public class PermissionRequirementTest extends TestCase {
 
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
+        req = serialize(req);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
@@ -158,7 +161,9 @@ public class PermissionRequirementTest extends TestCase {
         // Annotations let you supply a single string to an array method
         MockValue values = new MockValue("allOf", "android.permission.ACCESS_FINE_LOCATION");
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
-        assertTrue(PermissionRequirement.create(annotation).isSingle());
+        PermissionRequirement req = PermissionRequirement.create(annotation);
+        req = serialize(req);
+        assertTrue(req.isSingle());
     }
 
     public void testRevocable() {
@@ -176,6 +181,21 @@ public class PermissionRequirementTest extends TestCase {
                         .isRevocable("my.permission2"));
     }
 
+    public void testConditional() {
+        UAnnotation annotation;
+        PermissionRequirement req;
+
+        annotation =
+                createUAnnotation(
+                        PERMISSION_ANNOTATION.defaultName(),
+                        new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
+                        new MockValue("apis", "..22"),
+                        new MockValue("conditional", true));
+        req = PermissionRequirement.create(annotation);
+        req = serialize(req);
+        assertTrue(req.isConditional());
+    }
+
     public void testAppliesTo() {
         UAnnotation annotation;
         PermissionRequirement req;
@@ -186,6 +206,7 @@ public class PermissionRequirementTest extends TestCase {
                         PERMISSION_ANNOTATION.defaultName(),
                         new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"));
         req = PermissionRequirement.create(annotation);
+        req = serialize(req);
         assertTrue(req.appliesTo(getHolder(15, 1)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
         assertTrue(req.appliesTo(getHolder(15, 23)));
@@ -199,6 +220,7 @@ public class PermissionRequirementTest extends TestCase {
                         new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
                         new MockValue("apis", "..22"));
         req = PermissionRequirement.create(annotation);
+        req = serialize(req);
         assertTrue(req.appliesTo(getHolder(15, 1)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
         assertTrue(req.appliesTo(getHolder(15, 23)));
@@ -212,6 +234,7 @@ public class PermissionRequirementTest extends TestCase {
                         new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
                         new MockValue("apis", "23.."));
         req = PermissionRequirement.create(annotation);
+        req = serialize(req);
         assertFalse(req.appliesTo(getHolder(15, 1)));
         assertFalse(req.appliesTo(getHolder(1, 19)));
         assertFalse(req.appliesTo(getHolder(15, 22)));
@@ -225,8 +248,22 @@ public class PermissionRequirementTest extends TestCase {
                         new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
                         new MockValue("apis", "14..18"));
         req = PermissionRequirement.create(annotation);
+        req = serialize(req);
         assertFalse(req.appliesTo(getHolder(1, 5)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
+    }
+
+    public void testSerializeNone() {
+        // The other serialization behaviors are tested individually in all the various
+        // PermissionRequirement.create() scenarios in other tests.
+        assertEquals("", PermissionRequirement.NONE.serialize());
+        assertEquals(PermissionRequirement.NONE, PermissionRequirement.deserialize(""));
+    }
+
+    private PermissionRequirement serialize(PermissionRequirement req) {
+        PermissionRequirement deserialized = PermissionRequirement.deserialize(req.serialize());
+        assertEquals(req.serialize(), deserialized.serialize());
+        return deserialized;
     }
 
     private static PermissionHolder getHolder(int min, int target) {

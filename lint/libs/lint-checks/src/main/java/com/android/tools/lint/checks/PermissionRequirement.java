@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaTokenType;
 import com.intellij.psi.tree.IElementType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -45,13 +46,12 @@ public abstract class PermissionRequirement {
     public static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
     public static final String VALUE_DANGEROUS = "dangerous";
 
-    protected final UAnnotation annotation;
-    private int firstApi;
-    private int lastApi;
+    private final int firstApi;
+    private final int lastApi;
+    private final boolean conditional;
 
-    @SuppressWarnings("ConstantConditions")
     public static final PermissionRequirement NONE =
-            new PermissionRequirement(null) {
+            new PermissionRequirement(false, 1, Integer.MAX_VALUE) {
                 @Override
                 public boolean isSatisfied(@NonNull PermissionHolder available) {
                     return true;
@@ -59,11 +59,6 @@ public abstract class PermissionRequirement {
 
                 @Override
                 public boolean appliesTo(@NonNull PermissionHolder available) {
-                    return false;
-                }
-
-                @Override
-                public boolean isConditional() {
                     return false;
                 }
 
@@ -98,32 +93,57 @@ public abstract class PermissionRequirement {
                 }
             };
 
-    private PermissionRequirement(@NonNull UAnnotation annotation) {
-        this.annotation = annotation;
+    private PermissionRequirement(boolean conditional, int firstApi, int lastApi) {
+        this.conditional = conditional;
+        this.firstApi = firstApi;
+        this.lastApi = lastApi;
     }
 
     @NonNull
     public static PermissionRequirement create(@NonNull UAnnotation annotation) {
+        boolean conditional = getAnnotationBooleanValue(annotation, ATTR_CONDITIONAL, false);
+
+        int firstApi = 1;
+        int lastApi = Integer.MAX_VALUE;
+
+        String range = getAnnotationStringValue(annotation, "apis");
+        if (range != null) {
+            // Currently only support the syntax "a..b" where a and b are inclusive end points
+            // and where "a" and "b" are optional
+            int index = range.indexOf("..");
+            if (index != -1) {
+                try {
+                    if (index > 0) {
+                        firstApi = Integer.parseInt(range.substring(0, index));
+                    }
+                    if (index + 2 < range.length()) {
+                        lastApi = Integer.parseInt(range.substring(index + 2));
+                    }
+                } catch (NumberFormatException ignore) {
+                }
+            }
+        }
+
         String value = getAnnotationStringValue(annotation, ATTR_VALUE);
         if (value != null && !value.isEmpty()) {
-            return new Single(annotation, value);
+            return new Single(value, conditional, firstApi, lastApi);
         }
 
         String[] anyOf = getAnnotationStringValues(annotation, ATTR_ANY_OF);
         if (anyOf != null) {
             if (anyOf.length > 1) {
-                return new Many(annotation, JavaTokenType.OROR, anyOf);
+                return new Many(JavaTokenType.OROR, anyOf, conditional, firstApi, lastApi);
             } else if (anyOf.length == 1) {
-                return new Single(annotation, anyOf[0]);
+                return new Single(anyOf[0], conditional, firstApi, lastApi);
             }
         }
 
         String[] allOf = getAnnotationStringValues(annotation, ATTR_ALL_OF);
         if (allOf != null) {
             if (allOf.length > 1) {
-                return new Many(annotation, JavaTokenType.ANDAND, allOf);
+                return new Many(JavaTokenType.ANDAND, allOf, conditional, firstApi, lastApi);
             } else if (allOf.length == 1) {
-                return new Single(annotation, allOf[0]);
+                return new Single(allOf[0], conditional, firstApi, lastApi);
             }
         }
 
@@ -138,20 +158,13 @@ public abstract class PermissionRequirement {
      * @return true if this permission requirement applies for the given versions
      */
     protected boolean appliesTo(@NonNull PermissionHolder available) {
-        initializeRange();
-
-        if (firstApi != -1) {
-            AndroidVersion minSdkVersion = available.getMinSdkVersion();
-            if (minSdkVersion.getFeatureLevel() > lastApi) {
-                return false;
-            }
-
-            AndroidVersion targetSdkVersion = available.getTargetSdkVersion();
-            if (targetSdkVersion.getFeatureLevel() < firstApi) {
-                return false;
-            }
+        AndroidVersion minSdkVersion = available.getMinSdkVersion();
+        if (minSdkVersion.getFeatureLevel() > lastApi) {
+            return false;
         }
-        return true;
+
+        AndroidVersion targetSdkVersion = available.getTargetSdkVersion();
+        return targetSdkVersion.getFeatureLevel() >= firstApi;
     }
 
     /**
@@ -162,7 +175,6 @@ public abstract class PermissionRequirement {
      * @return the last applicable API level, or {@link Integer#MAX_VALUE} if applies anywhere.
      */
     public int getLastApplicableApi() {
-        initializeRange();
         return lastApi;
     }
 
@@ -173,39 +185,7 @@ public abstract class PermissionRequirement {
      * @return the first applicable API level
      */
     public int getFirstApplicableApi() {
-        initializeRange();
-
-        return firstApi >= 1 ? firstApi : 1;
-    }
-
-    private void initializeRange() {
-        if (firstApi == 0) { // not initialized?
-            firstApi = -1; // initialized, not specified
-            lastApi = Integer.MAX_VALUE;
-
-            // Not initialized
-            String range = getAnnotationStringValue(annotation, "apis");
-            if (range != null) {
-                // Currently only support the syntax "a..b" where a and b are inclusive end points
-                // and where "a" and "b" are optional
-                int index = range.indexOf("..");
-                if (index != -1) {
-                    try {
-                        if (index > 0) {
-                            firstApi = Integer.parseInt(range.substring(0, index));
-                        } else {
-                            firstApi = 1;
-                        }
-                        if (index + 2 < range.length()) {
-                            lastApi = Integer.parseInt(range.substring(index + 2));
-                        } else {
-                            lastApi = Integer.MAX_VALUE;
-                        }
-                    } catch (NumberFormatException ignore) {
-                    }
-                }
-            }
-        }
+        return firstApi;
     }
 
     /**
@@ -223,11 +203,7 @@ public abstract class PermissionRequirement {
      * @return true if this requirement is conditional
      */
     public boolean isConditional() {
-        Boolean o = getAnnotationBooleanValue(annotation, ATTR_CONDITIONAL);
-        if (o != null) {
-            return o;
-        }
-        return false;
+        return conditional;
     }
 
     /**
@@ -247,6 +223,15 @@ public abstract class PermissionRequirement {
      * @return true if all permissions specified by this requirement are available
      */
     public abstract boolean isSatisfied(@NonNull PermissionHolder available);
+
+    /**
+     * Generates a String representation of this permission requirement which can be used to
+     * recreate the permission requirement via {@link #deserialize}
+     */
+    @NonNull
+    public String serialize() {
+        return serialize(this);
+    }
 
     /** Describes the missing permissions (e.g. "P1, P2 and P3") */
     public String describeMissingPermissions(@NonNull PermissionHolder available) {
@@ -296,8 +281,8 @@ public abstract class PermissionRequirement {
     private static class Single extends PermissionRequirement {
         public final String name;
 
-        public Single(@NonNull UAnnotation annotation, @NonNull String name) {
-            super(annotation);
+        public Single(@NonNull String name, boolean conditional, int firstApi, int lastApi) {
+            super(conditional, firstApi, lastApi);
             this.name = name;
         }
 
@@ -373,14 +358,19 @@ public abstract class PermissionRequirement {
         public final IElementType operator;
         public final List<PermissionRequirement> permissions;
 
-        public Many(@NonNull UAnnotation annotation, IElementType operator, String[] names) {
-            super(annotation);
+        public Many(
+                @NonNull IElementType operator,
+                String[] names,
+                boolean conditional,
+                int firstApi,
+                int lastApi) {
+            super(conditional, firstApi, lastApi);
             assert operator == JavaTokenType.OROR || operator == JavaTokenType.ANDAND : operator;
             assert names.length >= 2;
             this.operator = operator;
             this.permissions = Lists.newArrayListWithExpectedSize(names.length);
             for (String name : names) {
-                permissions.add(new Single(annotation, name));
+                permissions.add(new Single(name, conditional, firstApi, lastApi));
             }
         }
 
@@ -484,6 +474,136 @@ public abstract class PermissionRequirement {
         public Iterable<PermissionRequirement> getChildren() {
             return permissions;
         }
+    }
+
+    @Nullable
+    private static String getSerializationPrefix(@NonNull PermissionRequirement requirement) {
+        boolean conditional = requirement.conditional;
+        int firstApi = requirement.getFirstApplicableApi();
+        int lastApi = requirement.getLastApplicableApi();
+        if (firstApi != 1 || lastApi != Integer.MAX_VALUE) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(firstApi);
+            sb.append("..");
+            if (lastApi != Integer.MAX_VALUE) {
+                sb.append(lastApi);
+            }
+            sb.append(';');
+            if (conditional) {
+                sb.append('?');
+            }
+            return sb.toString();
+        } else if (conditional) {
+            return "?";
+        }
+        return null;
+    }
+    /**
+     * Generates a String representation of this permission requirement which can be used to
+     * recreate the permission requirement via {@link #deserialize}
+     */
+    @NonNull
+    public static String serialize(@NonNull PermissionRequirement requirement) {
+        String prefix = getSerializationPrefix(requirement);
+        if (requirement instanceof Single) {
+            String name = ((Single) requirement).name;
+            if (prefix != null) {
+                return prefix + name;
+            } else {
+                return name;
+            }
+        } else if (requirement instanceof Many) {
+            Many r = (Many) requirement;
+            StringBuilder sb = new StringBuilder(100);
+            if (prefix != null) {
+                sb.append(prefix);
+            }
+            IElementType operator = r.operator;
+            if (operator == JavaTokenType.ANDAND) {
+                sb.append('&');
+            } else if (operator == JavaTokenType.OROR) {
+                sb.append('|');
+            } else {
+                assert operator == JavaTokenType.XOR : operator;
+                sb.append('^');
+            }
+            boolean first = true;
+            for (PermissionRequirement single : r.permissions) {
+                // We don't support arbitrary nesting yet (limitation of the
+                // @PermissionRequirement annotation which can't nest).
+                assert single instanceof Single;
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(',');
+                }
+                sb.append(single.serialize());
+            }
+            return sb.toString();
+        } else {
+            assert requirement == NONE;
+            return "";
+        }
+    }
+
+    /** Reconstitutes a permission requirement from a previously {@link #serialize()} string */
+    @NonNull
+    public static PermissionRequirement deserialize(@NonNull String s) {
+        if (s.isEmpty()) {
+            return NONE;
+        }
+        int firstApi = 1;
+        int lastApi = Integer.MAX_VALUE;
+        boolean conditional = false;
+        int start = 0;
+        char operatorChar = s.charAt(start++);
+        if (Character.isDigit(operatorChar)) {
+            // Range
+            int firstEnd = s.indexOf('.');
+            int lastStart = firstEnd + 2;
+            int lastEnd = s.indexOf(';', lastStart);
+            firstApi = Integer.parseInt(s.substring(0, firstEnd));
+            if (lastStart != lastEnd) {
+                lastApi = Integer.parseInt(s.substring(lastStart, lastEnd));
+            }
+            start = lastEnd + 1;
+            operatorChar = s.charAt(start++);
+        }
+        if (operatorChar == '?') {
+            conditional = true;
+            operatorChar = s.charAt(start++);
+        }
+        IElementType operator;
+        if (operatorChar == '&') {
+            operator = JavaTokenType.ANDAND;
+        } else if (operatorChar == '|') {
+            operator = JavaTokenType.OROR;
+        } else if (operatorChar == '^') {
+            operator = JavaTokenType.XOR;
+        } else {
+            start--;
+            String name;
+            if (start > 0) {
+                name = s.substring(start);
+            } else {
+                name = s;
+            }
+            return new PermissionRequirement.Single(name, conditional, firstApi, lastApi);
+        }
+
+        List<String> names = new ArrayList<>();
+        while (true) {
+            int end = s.indexOf(',', start);
+            if (end == -1) {
+                names.add(s.substring(start));
+                break;
+            } else {
+                names.add(s.substring(start, end));
+                start = end + 1;
+            }
+        }
+        return new PermissionRequirement.Many(
+                operator, names.toArray(new String[0]), conditional, firstApi, lastApi);
     }
 
     /**

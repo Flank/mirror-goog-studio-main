@@ -80,7 +80,15 @@ import org.w3c.dom.NodeList;
  */
 public class ResourceUsageModel {
     /** All known resources store. */
-    protected ResourceStore mResourceStore = new ResourceStore();
+    protected ResourceStore mResourceStore;
+
+    public ResourceUsageModel() {
+        mResourceStore = new ResourceStore();
+    }
+
+    ResourceUsageModel(ResourceStore resourceStore) {
+        mResourceStore = resourceStore;
+    }
 
     /**
      * Next id suffix to be appended for the {@code <aapt:attr>} inlined resources created by
@@ -200,7 +208,6 @@ public class ResourceUsageModel {
         }
     }
 
-
     public void recordManifestUsages(Node node) {
         short nodeType = node.getNodeType();
         if (nodeType == Node.ELEMENT_NODE) {
@@ -231,7 +238,78 @@ public class ResourceUsageModel {
 
     public static class Resource implements Comparable<Resource> {
 
-        private int mFlags;
+        // Semi-visible for serialization in ResourceStore.Companion.serialize */
+        int mFlags;
+
+        /**
+         * Describes the resource flags in a mnenonic way: "E" means empty, "D" declared, "R"
+         * reachable, "K" keep, "P" public and "X" discard. Also "U" means declared and reachable
+         * (since this is a very common combination). A combination of these are possible.
+         */
+        @NonNull
+        public String flagString() {
+            switch (mFlags) {
+                case 0:
+                    return "E";
+                case RESOURCE_DECLARED:
+                    return "D";
+                case RESOURCE_DECLARED | RESOURCE_REACHABLE:
+                    return "U";
+                default:
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        if (isDeclared()) {
+                            sb.append('D');
+                        }
+                        if (isReachable()) {
+                            sb.append('R');
+                        }
+                        if (isPublic()) {
+                            sb.append('P');
+                        }
+                        if (isKeep()) {
+                            sb.append('K');
+                        }
+                        if (isDiscard()) {
+                            sb.append('X');
+                        }
+                        return sb.toString();
+                    }
+            }
+        }
+
+        /** Reverses the {@link #flagString()} method */
+        public static int stringToFlag(@NonNull String s) {
+            int flags = 0;
+            for (int i = 0; i < s.length(); i++) {
+                switch (s.charAt(i)) {
+                    case 'E':
+                        return 0;
+                    case 'U':
+                        flags = flags | RESOURCE_DECLARED | RESOURCE_REACHABLE;
+                        break;
+                    case 'D':
+                        flags = flags | RESOURCE_DECLARED;
+                        break;
+                    case 'R':
+                        flags = flags | RESOURCE_REACHABLE;
+                        break;
+                    case 'P':
+                        flags = flags | RESOURCE_PUBLIC;
+                        break;
+                    case 'K':
+                        flags = flags | RESOURCE_KEEP;
+                        break;
+                    case 'X':
+                        flags = flags | RESOURCE_DISCARD;
+                        break;
+                    default:
+                        assert false : s;
+                }
+            }
+
+            return flags;
+        }
 
         /** Type of resource */
         public final ResourceType type;
@@ -402,9 +480,24 @@ public class ResourceUsageModel {
         return mResourceStore.dumpReferences();
     }
 
-
     public String dumpResourceModel() {
         return mResourceStore.dumpResourceModel();
+    }
+
+    /** Writes out this model into a string */
+    public String serialize(boolean includeValues) {
+        return ResourceStore.Companion.serialize(mResourceStore, includeValues);
+    }
+
+    /** Recreates a model from a previously created string via {@link #serialize(boolean)} */
+    public static ResourceUsageModel deserialize(String s) {
+        ResourceStore store = ResourceStore.Companion.deserialize(s);
+        return new ResourceUsageModel(store);
+    }
+
+    /** Merges the other {@linkplain ResourceUsageModel} into this one */
+    public void merge(@NonNull ResourceUsageModel other) {
+        mResourceStore.merge(other.mResourceStore);
     }
 
     public List<Resource> findUnused(List<Resource> resources) {
