@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 
 public class AvdManagerTest extends TestCase {
 
-    private static final File ANDROID_PREFS_ROOT = new File("/android-home");
+    private static final String ANDROID_PREFS_ROOT = "/android-home";
 
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
@@ -65,7 +65,7 @@ public class AvdManagerTest extends TestCase {
         recordChromeOsSysImg(mFileOp);
         mAndroidSdkHandler =
                 new AndroidSdkHandler(
-                        new File("/sdk").getAbsoluteFile(), ANDROID_PREFS_ROOT, mFileOp);
+                        mFileOp.toPath("/sdk"), mFileOp.toPath(ANDROID_PREFS_ROOT), mFileOp);
         mAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
@@ -234,7 +234,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals("x86_64", properties.get("hw.cpu.arch"));
     }
 
-    public void testCreateNonChromeOsAvd() throws Exception {
+    public void testCreateNonChromeOsAvd() {
         MockLog log = new MockLog();
 
         mAvdManager.createAvd(
@@ -259,7 +259,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals("x86", properties.get("hw.cpu.arch"));
     }
 
-    public void testRenameAvd() throws Exception {
+    public void testRenameAvd() {
 
         MockLog log = new MockLog();
         // Create an AVD

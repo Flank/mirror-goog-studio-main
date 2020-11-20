@@ -24,49 +24,46 @@ import com.android.sdklib.repository.AndroidSdkHandler
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assume.assumeTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
 @RunWith(JUnit4::class)
 class AvdManagerTest {
 
-    @get:Rule
-    val testFolder = TemporaryFolder()
+    val fileOp = MockFileOp()
     private lateinit var manager: AvdManager
-    private lateinit var sdkFolder: File
-    private lateinit var systemImageFolder: File
-    private lateinit var emulatorFolder: File
-    private lateinit var androidPrefsFolder: File
-    private lateinit var avdFolder: File
+    private lateinit var sdkFolder: Path
+    private lateinit var systemImageFolder: Path
+    private lateinit var emulatorFolder: Path
+    private lateinit var androidPrefsFolder: Path
+    private lateinit var avdFolder: Path
 
     @Before
     fun setup() {
-        sdkFolder = testFolder.newFolder("sdk")
+        sdkFolder = Files.createDirectories(fileOp.toPath("/sdk"))
         systemImageFolder = sdkFolder.resolve("system-images/android-29/default/x86")
-        systemImageFolder.mkdirs()
+        Files.createDirectories(systemImageFolder)
         val vendorImage = systemImageFolder.resolve("system.img")
-        vendorImage.createNewFile()
-        vendorImage.writeText("""""")
+        fileOp.recordExistingFile(vendorImage)
         val userImg =
             systemImageFolder.resolve(com.android.sdklib.internal.avd.AvdManager.USERDATA_IMG)
-        userImg.createNewFile()
-        userImg.writeText("""""")
+        fileOp.recordExistingFile(userImg)
         emulatorFolder = sdkFolder.resolve("tools/lib/emulator")
-        emulatorFolder.mkdirs()
-        androidPrefsFolder = testFolder.newFolder("android-home")
-        avdFolder = testFolder.newFolder()
+        Files.createDirectories(emulatorFolder)
+        androidPrefsFolder = fileOp.toPath("/android-home")
+        avdFolder = fileOp.toPath("/avd")
+        Files.createDirectories(avdFolder)
 
         val sdkComponents = setupSdkComponents()
         val sdkHandler = setupSdkHandler()
 
-        manager = AvdManager(avdFolder, sdkComponents, sdkHandler)
+        manager = AvdManager(fileOp.toFile(avdFolder), sdkComponents, sdkHandler)
     }
 
     @Test
@@ -159,40 +156,34 @@ class AvdManagerTest {
 
         val sdkComponents = mock(SdkComponentsBuildService::class.java)
         `when`(sdkComponents.sdkDirectoryProvider)
-            .thenReturn(FakeGradleProvider(FakeGradleDirectory(sdkFolder)))
+            .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(sdkFolder))))
         `when`(sdkComponents.sdkImageDirectoryProvider(anyString()))
-            .thenReturn(FakeGradleProvider(FakeGradleDirectory(systemImageFolder)))
+            .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))))
         `when`(sdkComponents.emulatorDirectoryProvider)
-            .thenReturn(FakeGradleProvider(FakeGradleDirectory(emulatorFolder)))
+            .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(emulatorFolder))))
 
         return sdkComponents
     }
 
     private fun setupSdkHandler(): AndroidSdkHandler {
-        val fileOp = MockFileOp()
+        fileOp.recordExistingFile(emulatorFolder.resolve("snapshots.img"))
         fileOp.recordExistingFile(
-            emulatorFolder.absolutePath + "/snapshots.img")
-        fileOp.recordExistingFile(
-            emulatorFolder.absolutePath +
-                    "/" + SdkConstants.FD_LIB +
-                    "/" + SdkConstants.FN_HARDWARE_INI,
-            """""".trimIndent())
-        recordSysImg(fileOp)
+            emulatorFolder.resolve(SdkConstants.FD_LIB).resolve(SdkConstants.FN_HARDWARE_INI))
+        recordSysImg()
 
         return AndroidSdkHandler(sdkFolder, androidPrefsFolder, fileOp)
     }
 
-    private fun recordSysImg(fileOp: MockFileOp) {
-        fileOp.recordExistingFile(systemImageFolder.absolutePath + "/system.img")
+    private fun recordSysImg() {
+        fileOp.recordExistingFile(systemImageFolder.resolve("system.img"))
         fileOp.recordExistingFile(
-            systemImageFolder.absolutePath +
-                    "/" +
-                    com.android.sdklib.internal.avd.AvdManager.USERDATA_IMG)
-        fileOp.recordExistingFile(systemImageFolder.absolutePath + "/skins/res1/layout")
-        fileOp.recordExistingFile(systemImageFolder.absolutePath + "/skins/sample")
-        fileOp.recordExistingFile(systemImageFolder.absolutePath + "/skins/res2/layout")
+            systemImageFolder.resolve(com.android.sdklib.internal.avd.AvdManager.USERDATA_IMG))
+        fileOp.recordExistingFile(systemImageFolder.resolve("skins/res1/layout"))
+        fileOp.recordExistingFile(systemImageFolder.resolve("skins/sample"))
+        fileOp.recordExistingFile(systemImageFolder.resolve("skins/res2/layout"))
         fileOp.recordExistingFile(
-            systemImageFolder.absolutePath + "/package.xml",
+            systemImageFolder.resolve("package.xml"),
+            0,
             """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
                     <ns3:sdk-sys-img
                     xmlns:ns2="http://schemas.android.com/sdk/android/repo/repository2/01"
@@ -209,6 +200,6 @@ class AvdManagerTest {
                     <display-name>Intel x86 Atom System Image</display-name>
                     <uses-license ref="license"/></localPackage>
                     </ns3:sdk-sys-img>
-                    """.trimIndent())
+                    """.trimIndent().toByteArray())
     }
 }

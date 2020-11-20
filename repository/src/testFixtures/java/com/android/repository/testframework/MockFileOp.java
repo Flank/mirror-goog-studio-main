@@ -54,7 +54,7 @@ import java.util.List;
  */
 @Deprecated
 public class MockFileOp extends FileOp {
-    private FileSystem mFileSystem = createFileSystem();
+    private FileSystem mFileSystem;
 
     public MockFileOp() {
         mIsWindows = FileOpUtils.create().isWindows();

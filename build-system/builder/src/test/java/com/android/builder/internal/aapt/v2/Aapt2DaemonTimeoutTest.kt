@@ -162,7 +162,7 @@ class Aapt2DaemonTimeoutTest {
 
     companion object {
         private val target: IAndroidTarget by lazy(LazyThreadSafetyMode.NONE) {
-            AndroidSdkHandler.getInstance(TestUtils.getSdk())
+            AndroidSdkHandler.getInstance(TestUtils.getSdk().toPath())
                     .getAndroidTargetManager(FakeProgressIndicator())
                     .getTargets(FakeProgressIndicator())
                     .maxBy { it.version }!!

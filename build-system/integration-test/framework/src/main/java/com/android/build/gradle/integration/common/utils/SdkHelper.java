@@ -81,8 +81,9 @@ public class SdkHelper {
             @NonNull Revision revision,
             @NonNull BuildToolInfo.PathId pathId) {
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        BuildToolInfo buildToolInfo = AndroidSdkHandler.getInstance(findSdkDir())
-                .getBuildToolInfo(revision, progress);
+        BuildToolInfo buildToolInfo =
+                AndroidSdkHandler.getInstance(findSdkDir().toPath())
+                        .getBuildToolInfo(revision, progress);
         if (buildToolInfo == null) {
             throw new RuntimeException("Test requires build-tools " + revision.toString());
         }
@@ -97,9 +98,10 @@ public class SdkHelper {
     @Nullable
     public static IAndroidTarget getTarget(int minimumApiLevel) {
         FakeProgressIndicator progressIndicator = new FakeProgressIndicator();
-        IAndroidTarget target = AndroidSdkHandler.getInstance(findSdkDir())
-                .getAndroidTargetManager(progressIndicator)
-                .getTargetOfAtLeastApiLevel(minimumApiLevel, progressIndicator);
+        IAndroidTarget target =
+                AndroidSdkHandler.getInstance(findSdkDir().toPath())
+                        .getAndroidTargetManager(progressIndicator)
+                        .getTargetOfAtLeastApiLevel(minimumApiLevel, progressIndicator);
         return target;
     }
 }

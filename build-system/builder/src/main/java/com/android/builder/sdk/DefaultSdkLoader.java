@@ -391,7 +391,7 @@ public class DefaultSdkLoader implements SdkLoader {
 
     private synchronized void init(@NonNull ILogger logger) {
         if (mSdkHandler == null) {
-            mSdkHandler = AndroidSdkHandler.getInstance(mSdkLocation);
+            mSdkHandler = AndroidSdkHandler.getInstance(mSdkLocation.toPath());
             ProgressIndicator progress = new LoggerProgressIndicatorWrapper(logger);
             mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
 

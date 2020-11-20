@@ -946,7 +946,7 @@ abstract class LintClient {
 
     open fun getSdk(): AndroidSdkHandler? {
         if (sdk == null) {
-            sdk = AndroidSdkHandler.getInstance(getSdkHome())
+            sdk = AndroidSdkHandler.getInstance(getSdkHome()?.toPath())
         }
 
         return sdk

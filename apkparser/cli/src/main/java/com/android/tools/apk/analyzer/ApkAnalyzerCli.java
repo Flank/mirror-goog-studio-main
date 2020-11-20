@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -269,7 +270,7 @@ public class ApkAnalyzerCli {
                                 cmdName, toolsDirProp));
             }
         }
-        AndroidSdkHandler sdkHandler = AndroidSdkHandler.getInstance(new File(osSdkFolder));
+        AndroidSdkHandler sdkHandler = AndroidSdkHandler.getInstance(Paths.get(osSdkFolder));
         return new AaptInvoker(sdkHandler, new NullLogger());
     }
 

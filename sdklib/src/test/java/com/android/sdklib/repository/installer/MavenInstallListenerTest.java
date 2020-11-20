@@ -126,7 +126,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Installer installer = factory.createInstaller(p, mgr, downloader, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
@@ -244,7 +244,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Installer installer = factory.createInstaller(remotePackage, mgr, downloader, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
@@ -383,7 +383,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
@@ -398,7 +398,7 @@ public class MavenInstallListenerTest extends TestCase {
         assertEquals("1.0.0", metadata.versioning.release);
     }
 
-    public void testRemoveAll() throws Exception {
+    public void testRemoveAll() {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile(
                 "/repo/m2repository/com/android/group1/artifact1/1.2.3/package.xml",
@@ -467,7 +467,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);

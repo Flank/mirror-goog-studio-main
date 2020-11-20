@@ -37,7 +37,6 @@ import com.android.utils.PathUtils;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -234,8 +233,7 @@ public final class RemoteSdkUpdater {
                     }
                 };
 
-        RepoManager repoManager =
-                AndroidSdkHandler.getInstance((File) null).getSdkManager(progress);
+        RepoManager repoManager = AndroidSdkHandler.getInstance(null).getSdkManager(progress);
         repoManager.loadSynchronously(0, progress, new LegacyDownloader(fop, settings), settings);
 
         RepositoryPackages packages = repoManager.getPackages();

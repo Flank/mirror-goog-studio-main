@@ -30,7 +30,6 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.net.URL;
 import java.util.Map;
 import junit.framework.TestCase;
@@ -40,12 +39,12 @@ import junit.framework.TestCase;
  */
 public class LegacyRemoteTest extends TestCase {
 
-    public static final File ANDROID_FOLDER = new File("/android-home");
+    public static final String ANDROID_FOLDER = "/android-home";
 
     public void testLegacyRemoteSdk() throws Exception {
         MockFileOp fop = new MockFileOp();
         final AndroidSdkHandler handler =
-                new AndroidSdkHandler(null, ANDROID_FOLDER, fop);
+                new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER), fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepoManager mgr = handler.getSdkManager(progress);
         progress.assertNoErrorsOrWarnings();

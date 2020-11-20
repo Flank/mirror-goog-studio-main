@@ -52,7 +52,7 @@ public class SdkManagerCli {
     }
 
     private static void main(@NonNull List<String> args) throws CommandFailedException {
-        FileOp fop = (FileOp) FileOpUtils.create();
+        FileOp fop = FileOpUtils.create();
         SdkManagerCliSettings settings;
         try {
             settings = SdkManagerCliSettings.createSettings(args, fop.getFileSystem());
@@ -76,7 +76,7 @@ public class SdkManagerCli {
                 throw new CommandFailedException();
             }
         }
-        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(localPath.toFile());
+        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(localPath);
         new SdkManagerCli(
                         settings,
                         System.out,

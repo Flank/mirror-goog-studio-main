@@ -49,7 +49,7 @@ public class SdkMavenRepositoryTest extends TestCase {
         mFileOp = new MockFileOp();
         mSdkHandler =
                 new AndroidSdkHandler(
-                        SDK_HOME,
+                        mFileOp.toPath(SDK_HOME),
                         null,
                         mFileOp,
                         new FakeRepoManager(mFileOp.toPath(SDK_HOME), mRepositoryPackages));

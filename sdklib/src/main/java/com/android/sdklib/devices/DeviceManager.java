@@ -42,7 +42,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Closeables;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,11 +122,7 @@ public class DeviceManager {
      * @see #createInstance(AndroidSdkHandler, ILogger)
      */
     public static DeviceManager createInstance(@Nullable Path sdkLocation, @NonNull ILogger log) {
-        // Path won't work here in tests until AndroidSdkHandler is more completely migrated
-        return createInstance(
-                AndroidSdkHandler.getInstance(
-                        sdkLocation == null ? null : new File(sdkLocation.toString())),
-                log);
+        return createInstance(AndroidSdkHandler.getInstance(sdkLocation), log);
     }
 
     public static DeviceManager createInstance(
@@ -148,11 +143,11 @@ public class DeviceManager {
             @NonNull AndroidSdkHandler sdkHandler,
             @NonNull ILogger log) {
         mSdkHandler = sdkHandler;
-        mOsSdkPath = sdkHandler.getLocation() == null ? null : sdkHandler.getLocation().toPath();
+        mOsSdkPath = sdkHandler.getLocation() == null ? null : sdkHandler.getLocation();
         mAndroidFolder =
                 sdkHandler.getAndroidFolder() == null
                         ? Paths.get("")
-                        : sdkHandler.getAndroidFolder().toPath();
+                        : sdkHandler.getAndroidFolder();
         mLog = log;
     }
 
@@ -219,18 +214,6 @@ public class DeviceManager {
         }
         d = mVendorDevices.get(id, manufacturer);
         return d;
-    }
-
-    @Nullable
-    private Device getDeviceImpl(@NonNull Iterable<Device> devicesList,
-                                 @NonNull String id,
-                                 @NonNull String manufacturer) {
-        for (Device d : devicesList) {
-            if (d.getId().equals(id) && d.getManufacturer().equals(manufacturer)) {
-                return d;
-            }
-        }
-        return null;
     }
 
     /**

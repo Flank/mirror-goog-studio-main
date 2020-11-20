@@ -48,7 +48,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
             parameters.avdLocation.get().asFile,
             parameters.sdkService.get(),
             AndroidSdkHandler.getInstance(
-                parameters.sdkService.get().sdkDirectoryProvider.get().asFile
+                parameters.sdkService.get().sdkDirectoryProvider.get().asFile.toPath()
             ))
     }
 

@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 public class SystemImageManagerTest extends TestCase {
     // TODO: break up tests into separate cases
 
-    public void testSystemImageManager() throws Exception {
+    public void testSystemImageManager() {
         MockFileOp fop = new MockFileOp();
         recordPlatform13(fop);
         recordGoogleTvAddon13(fop);
@@ -40,8 +40,7 @@ public class SystemImageManagerTest extends TestCase {
         recordSysImg23(fop);
         recordGoogleApis13(fop);
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         SystemImageManager mgr = new SystemImageManager(handler.getSdkManager(progress),

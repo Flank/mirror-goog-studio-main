@@ -36,7 +36,6 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.google.common.collect.Lists;
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -67,7 +66,7 @@ public class OfflineRepoCreator {
 
     @Slow
     public void run() throws IOException {
-        File tempDir = FileOpUtils.getNewTempDir("OfflineRepoCreator", mConfig.mFop);
+        Path tempDir = FileOpUtils.getNewTempDir("OfflineRepoCreator", mConfig.mFop);
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(tempDir);
         ProgressIndicator progress = new ConsoleProgressIndicator();
         RepoManager mgr = handler.getSdkManager(progress);

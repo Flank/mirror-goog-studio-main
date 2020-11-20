@@ -39,7 +39,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -50,7 +49,7 @@ import junit.framework.TestCase;
  */
 public class SourceInstallListenerTest extends TestCase {
 
-    private static final File ROOT = new File("/sdk").getAbsoluteFile();
+    private static final String ROOT = "/sdk";
 
     public void testSourcePathUpdatedWithInstall() throws Exception {
         MockFileOp fop = new MockFileOp();
@@ -90,7 +89,7 @@ public class SourceInstallListenerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         // Assert that before installation, source path is not set thus deprecated value is returned
-        AndroidSdkHandler mockHandler = new AndroidSdkHandler(ROOT, null, fop, mgr);
+        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, fop, mgr);
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);
@@ -127,7 +126,7 @@ public class SourceInstallListenerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         // Assert that before un-installation, source path is set to correct value
-        AndroidSdkHandler mockHandler = new AndroidSdkHandler(ROOT, null, fop, mgr);
+        AndroidSdkHandler mockHandler = new AndroidSdkHandler(fop.toPath(ROOT), null, fop, mgr);
         IAndroidTarget target = mockHandler.getAndroidTargetManager(progress)
                 .getTargetFromHashString("android-23", progress);
         assertNotNull(target);

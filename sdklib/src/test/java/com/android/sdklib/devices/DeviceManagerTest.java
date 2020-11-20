@@ -32,6 +32,7 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.NoErrorsOrWarningsLogger;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -365,7 +366,9 @@ public class DeviceManagerTest {
     @Test
     public final void testGetDevices_SysImgDevice() throws Exception {
 
-        File location = sdkManager.getSdkHandler().getLocation();
+        AndroidSdkHandler handler = sdkManager.getSdkHandler();
+        Path sdkPath = handler.getLocation();
+        File location = sdkPath == null ? null : handler.getFileOp().toFile(sdkPath);
         FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
 
         // Create a system image directory with one device
@@ -587,7 +590,9 @@ public class DeviceManagerTest {
 
     @Test
     public final void testDeviceOverrides() throws Exception {
-        File location = sdkManager.getSdkHandler().getLocation();
+        AndroidSdkHandler handler = sdkManager.getSdkHandler();
+        Path sdkPath = handler.getLocation();
+        File location = sdkPath == null ? null : handler.getFileOp().toFile(sdkPath);
         FakePackage.FakeLocalPackage p =
                 new FakePackage.FakeLocalPackage("sample", sdkManager.getSdkHandler().getFileOp());
 

@@ -75,7 +75,8 @@ public class OptionalLibraryTest {
         File sdkLocation = project.getAndroidSdkDir();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
-                AndroidSdkHandler.getInstance(sdkLocation).getAndroidTargetManager(progress);
+                AndroidSdkHandler.getInstance(sdkLocation.toPath())
+                        .getAndroidTargetManager(progress);
         IAndroidTarget target =
                 targetMgr.getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress);
 
@@ -113,7 +114,8 @@ public class OptionalLibraryTest {
         File sdkLocation = project.getAndroidSdkDir();
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
-                AndroidSdkHandler.getInstance(sdkLocation).getAndroidTargetManager(progress);
+                AndroidSdkHandler.getInstance(sdkLocation.toPath())
+                        .getAndroidTargetManager(progress);
         IAndroidTarget target =
                 targetMgr.getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress);
 

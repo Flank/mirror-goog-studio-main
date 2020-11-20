@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -190,7 +191,7 @@ class AvdManagerCli extends CommandLineParser {
         init();
         parseArgs(args);
         if (mSdkHandler == null) {
-            mSdkHandler = AndroidSdkHandler.getInstance(new File(mOsSdkFolder));
+            mSdkHandler = AndroidSdkHandler.getInstance(Paths.get(mOsSdkFolder));
         }
         doAction();
     }

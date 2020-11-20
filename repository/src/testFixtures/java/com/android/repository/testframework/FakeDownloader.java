@@ -75,10 +75,13 @@ public class FakeDownloader implements Downloader {
     @Override
     public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
             throws IOException {
-        File file = new File(FileOpUtils.getNewTempDir("FakeDownloader", mFileOp),
-                url.getFile());
-        mFileOp.recordExistingFile(file.getPath(), mRegisteredFiles.get(url));
-        return mFileOp.toPath(file);
+        String fileName = url.getFile();
+        if (fileName.startsWith("/")) {
+            fileName = fileName.substring(1);
+        }
+        Path file = FileOpUtils.getNewTempDir("FakeDownloader", mFileOp).resolve(fileName);
+        mFileOp.recordExistingFile(file, 0, mRegisteredFiles.get(url));
+        return file;
     }
 
     @Override

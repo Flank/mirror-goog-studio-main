@@ -57,8 +57,8 @@ import org.junit.Test;
  */
 public class AvdManagerCliTest {
     private static final String EMU_LIB_LOCATION = "/sdk/emulator/lib";
-    private static final File SDK_LOCATION = new File("/sdk").getAbsoluteFile();
-    private static final File AVD_LOCATION = new File("/avd").getAbsoluteFile();
+    private static final String SDK_LOCATION = "/sdk";
+    private static final String AVD_LOCATION = "/avd";
 
     private MockFileOp mFileOp;
     private AndroidSdkHandler mSdkHandler;
@@ -105,12 +105,12 @@ public class AvdManagerCliTest {
 
         RepoManager mgr = new FakeRepoManager(mFileOp.toPath(SDK_LOCATION), packages);
 
-        mSdkHandler = new AndroidSdkHandler(SDK_LOCATION, AVD_LOCATION, mFileOp, mgr);
+        mSdkHandler =
+                new AndroidSdkHandler(
+                        mFileOp.toPath(SDK_LOCATION), mFileOp.toPath(AVD_LOCATION), mFileOp, mgr);
         mLogger = new MockLog();
-        mCli =
-                new AvdManagerCli(
-                        mLogger, mSdkHandler, SDK_LOCATION.getPath(), AVD_LOCATION.getPath(), null);
-        mAvdManager = AvdManager.getInstance(mSdkHandler, AVD_LOCATION, mLogger);
+        mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
+        mAvdManager = AvdManager.getInstance(mSdkHandler, new File(AVD_LOCATION), mLogger);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);
@@ -342,9 +342,7 @@ public class AvdManagerCliTest {
         assertTrue(mLogger.getMessages().contains("P Nexus 6P\n"));
         assertTrue(mLogger.getMessages().contains("P tv_1080p\n"));
         mLogger.clear();
-        mCli =
-                new AvdManagerCli(
-                        mLogger, mSdkHandler, SDK_LOCATION.getPath(), AVD_LOCATION.getPath(), null);
+        mCli = new AvdManagerCli(mLogger, mSdkHandler, SDK_LOCATION, AVD_LOCATION, null);
         mCli.run(new String[] {"list", "devices"});
         assertTrue(
                 Joiner.on("")

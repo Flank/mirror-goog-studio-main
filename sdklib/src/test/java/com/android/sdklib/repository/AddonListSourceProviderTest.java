@@ -34,12 +34,12 @@ import junit.framework.TestCase;
  */
 public class AddonListSourceProviderTest extends TestCase {
 
-    public static final File ANDROID_FOLDER = new File("/android-home");
+    public static final String ANDROID_FOLDER = "/android-home";
 
     public void testRemoteSource() throws Exception {
         MockFileOp fop = new MockFileOp();
         FakeDownloader downloader = new FakeDownloader(fop);
-        AndroidSdkHandler handler = new AndroidSdkHandler(null, ANDROID_FOLDER, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER), fop);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepositorySourceProvider provider = handler.getRemoteListSourceProvider(progress);
@@ -86,12 +86,12 @@ public class AddonListSourceProviderTest extends TestCase {
     public void testLocalSource() throws Exception {
         AndroidLocation.resetFolder();
         MockFileOp fop = new MockFileOp();
-        fop.mkdirs(ANDROID_FOLDER);
+        fop.mkdirs(new File(ANDROID_FOLDER));
         File testFile = TestResources.getFile(getClass(), "/repositories.xml");
         fop.recordExistingFile(
                 new File(ANDROID_FOLDER, AndroidSdkHandler.LOCAL_ADDONS_FILENAME).getAbsolutePath(),
                 FileUtils.loadFileWithUnixLineSeparators(testFile));
-        AndroidSdkHandler handler = new AndroidSdkHandler(null, ANDROID_FOLDER, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER), fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         handler.getSdkManager(progress);
         RepositorySourceProvider provider = handler.getUserSourceProvider(progress);

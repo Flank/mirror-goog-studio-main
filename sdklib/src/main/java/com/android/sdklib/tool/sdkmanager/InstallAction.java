@@ -21,7 +21,6 @@ import com.android.repository.api.Installer;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
-import com.android.repository.io.FileOp;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.google.common.collect.HashMultimap;
@@ -123,11 +122,10 @@ class InstallAction extends SdkPackagesAction {
     private List<RemotePackage> checkLicenses(
             @NonNull List<RemotePackage> remotes, @NonNull ProgressIndicator progress) {
         Multimap<License, RemotePackage> unacceptedLicenses = HashMultimap.create();
-        FileOp fop = getSdkHandler().getFileOp();
         remotes.forEach(
                 remote -> {
                     License l = remote.getLicense();
-                    if (l != null && !l.checkAccepted(fop.toPath(getSdkHandler().getLocation()))) {
+                    if (l != null && !l.checkAccepted(getSdkHandler().getLocation())) {
                         unacceptedLicenses.put(l, remote);
                     }
                 });

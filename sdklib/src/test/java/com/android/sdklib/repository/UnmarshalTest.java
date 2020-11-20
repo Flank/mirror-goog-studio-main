@@ -32,7 +32,6 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -203,6 +202,6 @@ public class UnmarshalTest extends TestCase {
     @NonNull
     private static AndroidSdkHandler getAndroidSdkHandler() {
         MockFileOp fileOp = new MockFileOp();
-        return new AndroidSdkHandler(new File("/sdk"), null, fileOp);
+        return new AndroidSdkHandler(fileOp.toPath("/sdk"), null, fileOp);
     }
 }
