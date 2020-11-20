@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_XML
-import com.android.tools.lint.Incident
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.UastEnvironment

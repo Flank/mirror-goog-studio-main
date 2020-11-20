@@ -20,6 +20,7 @@ import com.android.tools.lint.MultiProjectHtmlReporter.ProjectEntry
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project

@@ -78,6 +78,7 @@ import com.android.tools.lint.checks.WakelockDetector
 import com.android.tools.lint.checks.WearStandaloneAppDetector
 import com.android.tools.lint.checks.WrongCallDetector
 import com.android.tools.lint.checks.WrongCaseDetector
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.utils.SdkUtils
 import com.google.common.annotations.Beta

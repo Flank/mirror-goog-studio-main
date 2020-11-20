@@ -17,7 +17,7 @@ package com.android.tools.lint.gradle
 
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.android.repository.Revision
-import com.android.tools.lint.Incident
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE

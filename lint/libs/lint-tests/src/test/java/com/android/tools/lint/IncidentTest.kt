@@ -21,6 +21,7 @@ import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintRequest
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location.Companion.create
 import java.io.File

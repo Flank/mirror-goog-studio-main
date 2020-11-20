@@ -17,6 +17,7 @@
 package com.android.tools.lint
 
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintFix.GroupType.ALTERNATIVES
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint
+package com.android.tools.lint.detector.api
 
-import com.android.tools.lint.LintFixPerformer.Companion.canAutoFix
 import com.android.tools.lint.client.api.Configuration
-import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.TextFormat
 import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Sets
 import java.io.File
@@ -96,15 +89,6 @@ class Incident(
      * found in
      */
     var applicableVariants: ApplicableVariants? = null
-
-    /**
-     * Whether this incident has a fix that can be automatically performed without
-     * user intervention
-     */
-    fun hasAutoFix(): Boolean {
-        val fixData = fix ?: return false
-        return canAutoFix(fixData)
-    }
 
     override fun compareTo(other: Incident): Int {
         val fileName1 = file.name

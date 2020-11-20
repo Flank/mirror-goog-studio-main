@@ -48,6 +48,7 @@ import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.client.api.XmlParser
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
