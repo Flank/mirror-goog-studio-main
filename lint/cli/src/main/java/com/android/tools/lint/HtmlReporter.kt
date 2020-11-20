@@ -221,7 +221,7 @@ class HtmlReporter(
                     append("\" style=\"display: none\">\n")
                 }
                 count++
-                val url = writeLocation(incident.file, incident.displayPath, incident.line)
+                val url = writeLocation(incident.file, incident.getDisplayPath(), incident.line)
                 append(':')
                 append(' ')
 

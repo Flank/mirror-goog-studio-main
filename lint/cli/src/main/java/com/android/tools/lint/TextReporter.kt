@@ -99,7 +99,7 @@ class TextReporter(
                     lastIssue = issue
                 }
                 val startLength = output.length
-                val p = incident.displayPath
+                val p = incident.getDisplayPath()
                 appendPath(output, p)
                 output.append(':')
                 if (incident.line >= 0) {
