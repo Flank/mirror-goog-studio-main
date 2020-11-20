@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.2.0-dev">
+<issues format="5" by="lint 7.0.0-dev">
 
     <issue
         id="DefaultLocale"
@@ -86,7 +86,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toUpperCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/sdklib/tool/OfflineRepoCreator.java"
-            line="134"/>
+            line="136"/>
     </issue>
 
     <issue
@@ -198,7 +198,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/LegacyLocalRepoLoader.java"
-            line="82"/>
+            line="84"/>
     </issue>
 
     <issue
@@ -206,7 +206,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/tool/AvdManagerCli.java"
-            line="937"/>
+            line="938"/>
     </issue>
 
     <issue
@@ -214,7 +214,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/tool/AvdManagerCli.java"
-            line="962"/>
+            line="963"/>
     </issue>
 
     <issue
@@ -222,7 +222,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/tool/AvdManagerCli.java"
-            line="984"/>
+            line="985"/>
     </issue>
 
     <issue
@@ -263,54 +263,6 @@
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/local/LocalPkgInfo.java"
             line="156"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/sdklib/devices/Meta.java"
-            line="98"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/sdklib/devices/Meta.java"
-            line="100"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/sdklib/devices/Meta.java"
-            line="104"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/sdklib/devices/Meta.java"
-            line="106"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/sdklib/devices/Meta.java"
-            line="110"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/sdklib/devices/Meta.java"
-            line="112"/>
     </issue>
 
 </issues>

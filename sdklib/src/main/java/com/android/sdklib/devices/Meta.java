@@ -17,53 +17,53 @@
 package com.android.sdklib.devices;
 
 import com.android.annotations.Nullable;
-
-import java.awt.*;
-import java.io.File;
+import java.awt.Point;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class Meta {
-    private File mIconSixtyFour;
-    private File mIconSixteen;
-    private File mFrame;
+    private Path mIconSixtyFour;
+    private Path mIconSixteen;
+    private Path mFrame;
     private Point mFrameOffsetLandscape;
     private Point mFrameOffsetPortrait;
 
-    public File getIconSixtyFour() {
+    public Path getIconSixtyFour() {
         return mIconSixtyFour;
     }
 
-    public void setIconSixtyFour(@Nullable File iconSixtyFour) {
+    public void setIconSixtyFour(@Nullable Path iconSixtyFour) {
         mIconSixtyFour = iconSixtyFour;
     }
 
     public boolean hasIconSixtyFour() {
-        return mIconSixtyFour != null && mIconSixtyFour.isFile();
+        return mIconSixtyFour != null && Files.isRegularFile(mIconSixtyFour);
     }
 
     @Nullable
-    public File getIconSixteen() {
+    public Path getIconSixteen() {
         return mIconSixteen;
     }
 
-    public void setIconSixteen(@Nullable File iconSixteen) {
+    public void setIconSixteen(@Nullable Path iconSixteen) {
         mIconSixteen = iconSixteen;
     }
 
     public boolean hasIconSixteen() {
-        return mIconSixteen != null && mIconSixteen.isFile();
+        return mIconSixteen != null && Files.isRegularFile(mIconSixteen);
     }
 
     @Nullable
-    public File getFrame() {
+    public Path getFrame() {
         return mFrame;
     }
 
-    public void setFrame(@Nullable File frame) {
+    public void setFrame(@Nullable Path frame) {
         mFrame = frame;
     }
 
     public boolean hasFrame() {
-        return mFrame != null && mFrame.isFile();
+        return mFrame != null && Files.isRegularFile(mFrame);
     }
 
     @Nullable
@@ -136,15 +136,15 @@ public class Meta {
     public int hashCode() {
         int hash = 17;
         if (mIconSixteen != null) {
-            String path = mIconSixteen.getAbsolutePath();
+            Path path = mIconSixteen.toAbsolutePath();
             hash = 31 * hash + path.hashCode();
         }
         if (mIconSixtyFour != null) {
-            String path = mIconSixtyFour.getAbsolutePath();
+            Path path = mIconSixtyFour.toAbsolutePath();
             hash = 31 * hash + path.hashCode();
         }
         if (mFrame != null) {
-            String path = mFrame.getAbsolutePath();
+            Path path = mFrame.toAbsolutePath();
             hash = 31 * hash + path.hashCode();
         }
         if (mFrameOffsetLandscape != null) {

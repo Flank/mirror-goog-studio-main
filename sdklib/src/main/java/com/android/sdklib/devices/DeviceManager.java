@@ -24,7 +24,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
 import com.android.io.CancellableFileIo;
 import com.android.repository.api.RepoManager;
-import com.android.repository.io.FileOp;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.sdklib.internal.avd.AvdManager;
@@ -36,6 +35,7 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -44,11 +44,14 @@ import com.google.common.io.Closeables;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -73,18 +76,15 @@ public class DeviceManager {
     private static final String  DEVICE_PROFILES_PROP = "DeviceProfiles";
     private static final Pattern PATH_PROPERTY_PATTERN =
         Pattern.compile('^' + PkgProps.EXTRA_PATH + '=' + DEVICE_PROFILES_PROP + '$');
-    @Nullable
-    private final File mAndroidFolder;
-    private ILogger mLog;
-    @NonNull
-    private final FileOp mFop;
+    @Nullable private final Path mAndroidFolder;
+    private final ILogger mLog;
     private Table<String, String, Device> mVendorDevices;
     private Table<String, String, Device> mSysImgDevices;
     private Table<String, String, Device> mUserDevices;
     private Table<String, String, Device> mDefaultDevices;
     private final Object mLock = new Object();
-    private final List<DevicesChangedListener> sListeners = new ArrayList<DevicesChangedListener>();
-    private final File mOsSdkPath;
+    private final List<DevicesChangedListener> sListeners = new ArrayList<>();
+    private final Path mOsSdkPath;
     private final AndroidSdkHandler mSdkHandler;
 
     public enum DeviceFilter {
@@ -122,18 +122,14 @@ public class DeviceManager {
      *
      * @see #createInstance(AndroidSdkHandler, ILogger)
      */
-    public static DeviceManager createInstance(@Nullable File sdkLocation, @NonNull ILogger log) {
-        return createInstance(AndroidSdkHandler.getInstance(sdkLocation), log);
+    public static DeviceManager createInstance(@Nullable Path sdkLocation, @NonNull ILogger log) {
+        // Path won't work here in tests until AndroidSdkHandler is more completely migrated
+        return createInstance(
+                AndroidSdkHandler.getInstance(
+                        sdkLocation == null ? null : new File(sdkLocation.toString())),
+                log);
     }
 
-    /**
-     * Creates a new instance of DeviceManager.
-     *
-     * @param sdkLocation Path to the current SDK. If null or invalid, vendor and system images
-     *                    devices are ignored.
-     * @param androidFolder Path to the users' Android folder. If null or invalid, user devices are ignored.
-     * @param log SDK logger instance. Should be non-null.
-     */
     public static DeviceManager createInstance(
             @NonNull AndroidSdkHandler sdkHandler,
             @NonNull ILogger log) {
@@ -152,10 +148,12 @@ public class DeviceManager {
             @NonNull AndroidSdkHandler sdkHandler,
             @NonNull ILogger log) {
         mSdkHandler = sdkHandler;
-        mOsSdkPath = sdkHandler.getLocation();
-        mAndroidFolder = sdkHandler.getAndroidFolder();
+        mOsSdkPath = sdkHandler.getLocation() == null ? null : sdkHandler.getLocation().toPath();
+        mAndroidFolder =
+                sdkHandler.getAndroidFolder() == null
+                        ? Paths.get("")
+                        : sdkHandler.getAndroidFolder().toPath();
         mLog = log;
-        mFop = sdkHandler.getFileOp();
     }
 
     /**
@@ -344,11 +342,11 @@ public class DeviceManager {
 
             if (mOsSdkPath != null) {
                 // Load devices from vendor extras
-                File extrasFolder = new File(mOsSdkPath, SdkConstants.FD_EXTRAS);
-                List<File> deviceDirs = getExtraDirs(extrasFolder);
-                for (File deviceDir : deviceDirs) {
-                    File deviceXml = new File(deviceDir, SdkConstants.FN_DEVICES_XML);
-                    if (deviceXml.isFile()) {
+                Path extrasFolder = mOsSdkPath.resolve(SdkConstants.FD_EXTRAS);
+                List<Path> deviceDirs = getExtraDirs(extrasFolder);
+                for (Path deviceDir : deviceDirs) {
+                    Path deviceXml = deviceDir.resolve(SdkConstants.FN_DEVICES_XML);
+                    if (Files.isRegularFile(deviceXml)) {
                         mVendorDevices.putAll(loadDevices(deviceXml));
                     }
                 }
@@ -394,7 +392,7 @@ public class DeviceManager {
                                 Path deviceXml =
                                         pkg.getLocation().resolve(SdkConstants.FN_DEVICES_XML);
                                 if (CancellableFileIo.isRegularFile(deviceXml)) {
-                                    mSysImgDevices.putAll(loadDevices(mFop.toFile(deviceXml)));
+                                    mSysImgDevices.putAll(loadDevices(deviceXml));
                                 }
                             });
             return true;
@@ -413,35 +411,37 @@ public class DeviceManager {
             // User devices should be saved out to
             // $HOME/.android/devices.xml
             mUserDevices = HashBasedTable.create();
-            File userDevicesFile = null;
+            Path userDevicesFile = null;
             try {
-                userDevicesFile = new File(
-                        mAndroidFolder,
-                        SdkConstants.FN_DEVICES_XML);
-                if (mFop.exists(userDevicesFile)) {
-                    mUserDevices.putAll(DeviceParser.parse(userDevicesFile));
-                    return true;
-                }
-            } catch (SAXException e) {
-                // Probably an old config file which we don't want to overwrite.
-                if (userDevicesFile != null) {
-                    String base = userDevicesFile.getAbsoluteFile() + ".old";
-                    File renamedConfig = new File(base);
-                    int i = 0;
-                    while (mFop.exists(renamedConfig)) {
-                        renamedConfig = new File(base + '.' + (i++));
+                try {
+                    userDevicesFile = mAndroidFolder.resolve(SdkConstants.FN_DEVICES_XML);
+                    if (userDevicesFile != null && Files.exists(userDevicesFile)) {
+                        mUserDevices.putAll(DeviceParser.parse(userDevicesFile));
+                        return true;
                     }
-                    mLog.error(e, "Error parsing %1$s, backing up to %2$s",
-                            userDevicesFile.getAbsolutePath(),
-                            renamedConfig.getAbsolutePath());
-                    userDevicesFile.renameTo(renamedConfig);
+                } catch (SAXException e) {
+                    // Probably an old config file which we don't want to overwrite.
+                    if (userDevicesFile != null) {
+                        Path parent = userDevicesFile.toAbsolutePath().getParent();
+                        String base = userDevicesFile.getFileName().toString() + ".old";
+                        Path renamedConfig = parent.resolve(base);
+                        int i = 0;
+                        while (CancellableFileIo.exists(renamedConfig)) {
+                            renamedConfig = parent.resolve(base + '.' + (i++));
+                        }
+                        mLog.error(
+                                e,
+                                "Error parsing %1$s, backing up to %2$s",
+                                userDevicesFile.toAbsolutePath(),
+                                renamedConfig.toAbsolutePath());
+                        Files.move(userDevicesFile, renamedConfig);
+                    }
                 }
-            } catch (ParserConfigurationException e) {
-                mLog.error(e, "Error parsing %1$s",
-                        userDevicesFile == null ? "(null)" : userDevicesFile.getAbsolutePath());
-            } catch (IOException e) {
-                mLog.error(e, "Error parsing %1$s",
-                        userDevicesFile == null ? "(null)" : userDevicesFile.getAbsolutePath());
+            } catch (ParserConfigurationException | IOException e) {
+                mLog.error(
+                        e,
+                        "Error parsing %1$s",
+                        userDevicesFile == null ? "(null)" : userDevicesFile.toAbsolutePath());
             }
         }
         return false;
@@ -500,24 +500,28 @@ public class DeviceManager {
             return;
         }
 
-        File userDevicesFile = new File(mAndroidFolder, SdkConstants.FN_DEVICES_XML);
+        Path userDevicesFile = mAndroidFolder.resolve(SdkConstants.FN_DEVICES_XML);
 
         if (mUserDevices.isEmpty()) {
-            userDevicesFile.delete();
+            try {
+                Files.deleteIfExists(userDevicesFile);
+            } catch (IOException ignore) {
+                // nothing
+            }
             return;
         }
 
         synchronized (mLock) {
             if (!mUserDevices.isEmpty()) {
                 try {
-                    DeviceWriter.writeToXml(new FileOutputStream(userDevicesFile), mUserDevices.values());
+                    DeviceWriter.writeToXml(
+                            Files.newOutputStream(userDevicesFile), mUserDevices.values());
                 } catch (FileNotFoundException e) {
                     mLog.warning("Couldn't open file: %1$s", e.getMessage());
-                } catch (ParserConfigurationException e) {
-                    mLog.warning("Error writing file: %1$s", e.getMessage());
-                } catch (TransformerFactoryConfigurationError e) {
-                    mLog.warning("Error writing file: %1$s", e.getMessage());
-                } catch (TransformerException e) {
+                } catch (ParserConfigurationException
+                        | IOException
+                        | TransformerException
+                        | TransformerFactoryConfigurationError e) {
                     mLog.warning("Error writing file: %1$s", e.getMessage());
                 }
             }
@@ -533,7 +537,7 @@ public class DeviceManager {
     @NonNull
     public static Map<String, String> getHardwareProperties(@NonNull State s) {
         Hardware hw = s.getHardware();
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put(HardwareProperties.HW_MAINKEYS,
                 getBooleanVal(hw.getButtonType().equals(ButtonType.HARD)));
         props.put(HardwareProperties.HW_TRACKBALL,
@@ -627,7 +631,7 @@ public class DeviceManager {
         HashFunction md5 = Hashing.md5();
         Hasher hasher = md5.newHasher();
 
-        ArrayList<String> keys = new ArrayList<String>(props.keySet());
+        ArrayList<String> keys = new ArrayList<>(props.keySet());
         Collections.sort(keys);
         for (String key : keys) {
             if (key != null) {
@@ -692,17 +696,13 @@ public class DeviceManager {
     }
 
     @NonNull
-    private Table<String, String, Device> loadDevices(@NonNull File deviceXml) {
+    private Table<String, String, Device> loadDevices(@NonNull Path deviceXml) {
         try {
             return DeviceParser.parse(deviceXml);
-        } catch (SAXException e) {
-            mLog.error(e, "Error parsing %1$s", deviceXml.getAbsolutePath());
-        } catch (ParserConfigurationException e) {
-            mLog.error(e, "Error parsing %1$s", deviceXml.getAbsolutePath());
+        } catch (SAXException | ParserConfigurationException | AssertionError e) {
+            mLog.error(e, "Error parsing %1$s", deviceXml.toAbsolutePath());
         } catch (IOException e) {
-            mLog.error(e, "Error reading %1$s", deviceXml.getAbsolutePath());
-        } catch (AssertionError e) {
-            mLog.error(e, "Error parsing %1$s", deviceXml.getAbsolutePath());
+            mLog.error(e, "Error reading %1$s", deviceXml.toAbsolutePath());
         } catch (IllegalStateException e) {
             // The device builders can throw IllegalStateExceptions if
             // build gets called before everything is properly setup
@@ -721,22 +721,28 @@ public class DeviceManager {
 
     /* Returns all of DeviceProfiles in the extras/ folder */
     @NonNull
-    private List<File> getExtraDirs(@NonNull File extrasFolder) {
-        List<File> extraDirs = new ArrayList<File>();
+    private List<Path> getExtraDirs(@NonNull Path extrasFolder) {
+        List<Path> extraDirs = new ArrayList<>();
         // All OEM provided device profiles are in
         // $SDK/extras/$VENDOR/$ITEM/devices.xml
-        if (extrasFolder != null && extrasFolder.isDirectory()) {
-            for (File vendor : extrasFolder.listFiles()) {
-                if (vendor.isDirectory()) {
-                    for (File item : vendor.listFiles()) {
-                        if (item.isDirectory() && isDevicesExtra(item)) {
-                            extraDirs.add(item);
-                        }
-                    }
-                }
+        if (CancellableFileIo.isDirectory(extrasFolder)) {
+            try {
+                Files.walkFileTree(
+                        extrasFolder,
+                        ImmutableSet.of(),
+                        2,
+                        new SimpleFileVisitor<Path>() {
+                            @Override
+                            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                                if (attrs.isDirectory() && isDevicesExtra(file)) {
+                                    extraDirs.add(file);
+                                }
+                                return FileVisitResult.CONTINUE;
+                            }
+                        });
+            } catch (IOException ignore) {
             }
         }
-
         return extraDirs;
     }
 
@@ -744,20 +750,15 @@ public class DeviceManager {
      * Returns whether a specific folder for a specific vendor is a
      * DeviceProfiles folder
      */
-    private boolean isDevicesExtra(@NonNull File item) {
-        File properties = new File(item, SdkConstants.FN_SOURCE_PROP);
-        try {
-            BufferedReader propertiesReader = new BufferedReader(new FileReader(properties));
-            try {
-                String line;
-                while ((line = propertiesReader.readLine()) != null) {
-                    Matcher m = PATH_PROPERTY_PATTERN.matcher(line);
-                    if (m.matches()) {
-                        return true;
-                    }
+    private static boolean isDevicesExtra(@NonNull Path item) {
+        Path properties = item.resolve(SdkConstants.FN_SOURCE_PROP);
+        try (BufferedReader propertiesReader = Files.newBufferedReader(properties)) {
+            String line;
+            while ((line = propertiesReader.readLine()) != null) {
+                Matcher m = PATH_PROPERTY_PATTERN.matcher(line);
+                if (m.matches()) {
+                    return true;
                 }
-            } finally {
-                propertiesReader.close();
             }
         } catch (IOException ignore) {
         }

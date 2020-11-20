@@ -59,6 +59,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -240,6 +241,17 @@ public final class AndroidSdkHandler {
         }
     }
 
+    /** Temporary during migration to Paths */
+    @NonNull
+    public static AndroidSdkHandler getInstance(@Nullable Path localPath) {
+        for (Map.Entry<File, AndroidSdkHandler> candidate : sInstances.entrySet()) {
+            if (candidate.getValue().getFileOp().toPath(candidate.getKey()).equals(localPath)) {
+                return candidate.getValue();
+            }
+        }
+        return getInstance(localPath == null ? null : localPath.toFile());
+    }
+
     /**
      * Force removal of a cached {@code AndroidSdkHandler} instance. This will force a reparsing of
      * the SDK next time a component is looked up.
@@ -331,7 +343,7 @@ public final class AndroidSdkHandler {
     public AndroidTargetManager getAndroidTargetManager(@NonNull ProgressIndicator progress) {
         if (mAndroidTargetManager == null) {
             getSdkManager(progress);
-            mAndroidTargetManager = new AndroidTargetManager(this, mFop);
+            mAndroidTargetManager = new AndroidTargetManager(this);
         }
         return mAndroidTargetManager;
     }

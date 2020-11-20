@@ -72,9 +72,7 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     /** OS path to the "core-for-system-modules.jar" file */
     int CORE_FOR_SYSTEM_MODULES_JAR = 28;
 
-    /**
-     * Returns the target location.
-     */
+    /** Returns the target location, including a trailing file separator. */
     @NonNull
     String getLocation();
 

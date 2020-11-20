@@ -22,6 +22,7 @@ import static com.android.SdkConstants.VALUE_TRUE;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.dvlib.DeviceSchema;
+import com.android.io.CancellableFileIo;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
@@ -40,9 +41,9 @@ import com.google.common.collect.Table;
 import java.awt.Point;
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
@@ -63,7 +64,7 @@ public class DeviceParser {
 
         private final Table<String, String, Device> mDevices = HashBasedTable.create();
         private final StringBuilder mStringAccumulator = new StringBuilder();
-        private final File mParentFolder;
+        private final Path mParentFolder;
         private Meta mMeta;
         private Hardware mHardware;
         private Software mSoftware;
@@ -73,7 +74,7 @@ public class DeviceParser {
         private Storage.Unit mUnit;
         private String[] mBootProp;
 
-        public DeviceHandler(@Nullable File parentFolder) {
+        public DeviceHandler(@Nullable Path parentFolder) {
             mParentFolder = parentFolder;
         }
 
@@ -152,11 +153,11 @@ public class DeviceParser {
                 mState.setHardware(mHardware);
                 mBuilder.addState(mState);
             } else if (DeviceSchema.NODE_SIXTY_FOUR.equals(localName)) {
-                mMeta.setIconSixtyFour(new File(mParentFolder, getString(mStringAccumulator)));
+                mMeta.setIconSixtyFour(mParentFolder.resolve(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_SIXTEEN.equals(localName)) {
-                mMeta.setIconSixteen(new File(mParentFolder, getString(mStringAccumulator)));
+                mMeta.setIconSixteen(mParentFolder.resolve(getString(mStringAccumulator)));
             } else if (DeviceSchema.NODE_PATH.equals(localName)) {
-                mMeta.setFrame(new File(mParentFolder, mStringAccumulator.toString().trim()));
+                mMeta.setFrame(mParentFolder.resolve(mStringAccumulator.toString().trim()));
             } else if (DeviceSchema.NODE_PORTRAIT_X_OFFSET.equals(localName)) {
                 mMeta.getFrameOffsetPortrait().x = getInteger(mStringAccumulator);
             } else if (DeviceSchema.NODE_PORTRAIT_Y_OFFSET.equals(localName)) {
@@ -474,18 +475,21 @@ public class DeviceParser {
     }
 
     @NonNull
-    public static Table<String, String, Device> parse(@NonNull File devicesFile)
+    public static Table<String, String, Device> parse(@NonNull Path devicesFile)
             throws SAXException, ParserConfigurationException, IOException {
-        if (devicesFile.length() > MAX_FILE_LENGTH) {
-            throw new IOException(String.format(
-              "%s (%d B) is longer than limit (%d B)",
-              devicesFile.getAbsolutePath(), devicesFile.length(), MAX_FILE_LENGTH));
+        if (CancellableFileIo.size(devicesFile) > MAX_FILE_LENGTH) {
+            throw new IOException(
+                    String.format(
+                            "%s (%d B) is longer than limit (%d B)",
+                            devicesFile.toAbsolutePath(),
+                            CancellableFileIo.size(devicesFile),
+                            MAX_FILE_LENGTH));
         }
 
         // stream closed by parseImpl.
         @SuppressWarnings("IOResourceOpenedButNotSafelyClosed")
-        InputStream stream = new FileInputStream(devicesFile);
-        return parseImpl(stream, devicesFile.getAbsoluteFile().getParentFile());
+        InputStream stream = CancellableFileIo.newInputStream(devicesFile);
+        return parseImpl(stream, devicesFile.toAbsolutePath().getParent());
     }
 
     /**
@@ -497,11 +501,10 @@ public class DeviceParser {
         return parseImpl(devices, null);
     }
 
-    /**
-     * After parsing, this method closes the stream.
-     */
+    /** After parsing, this method closes the stream. */
     @NonNull
-    private static Table<String, String, Device> parseImpl(@NonNull InputStream devices, @Nullable File parentDir)
+    private static Table<String, String, Device> parseImpl(
+            @NonNull InputStream devices, @Nullable Path parentDir)
             throws SAXException, IOException, ParserConfigurationException {
         try {
             if (!devices.markSupported()) {
