@@ -52,6 +52,8 @@ public class KotlinAppConnectedTest {
 
     @Test
     public void connectedAndroidTest() throws Exception {
-        project.executor().run("connectedAndroidTest");
+        project.executor()
+                .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=10000")
+                .run("connectedAndroidTest");
     }
 }

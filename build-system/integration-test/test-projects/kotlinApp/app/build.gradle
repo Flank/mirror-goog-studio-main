@@ -28,6 +28,7 @@ android {
         minSdkVersion 15
         //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
         targetSdkVersion rootProject.latestCompileSdk
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     sourceSets {
@@ -38,4 +39,6 @@ android {
 dependencies {
 	implementation project(':library')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion"
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
 }
