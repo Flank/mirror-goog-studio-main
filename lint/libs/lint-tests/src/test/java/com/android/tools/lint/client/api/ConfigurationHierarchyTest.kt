@@ -206,7 +206,7 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 """
                 <lint>
                     <issue id="ManifestOrder">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                 </lint>
                 """
@@ -222,7 +222,7 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 <lint>
                     <!-- This will turn it off in lib and in indirect lib. It will not affect app. -->
                     <issue id="WrongManifestParent">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                 </lint>
                 """
@@ -236,9 +236,12 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 "../lint.xml",
                 """
                 <lint>
+                    <issue id="OldTargetApi" severity="hide" />
+                    <issue id="AllowBackup" severity="hide" />
+                    <issue id="MissingApplicationIcon" severity="hide" />
                     <!-- This is in a parent of all; will work everywhere -->
                     <issue id="DuplicateUsesFeature">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                     <issue id="IllegalResourceRef">
                         <ignore regexp="must be a literal integer" />
@@ -250,9 +253,9 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 "lint.xml",
                 """
                 <lint>
-                    <!-- This will turn it off both in app, lib and indirectlib -->
+                    <!-- This will turn it off in all of app, lib and indirectlib -->
                     <issue id="MultipleUsesSdk">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                 </lint>
                 """
