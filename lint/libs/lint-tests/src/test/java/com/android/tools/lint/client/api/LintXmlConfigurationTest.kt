@@ -772,10 +772,19 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     private fun getConfiguration(
         xml: String,
         projectLevel: Boolean = false,
-        create: (File) -> Unit = {}
+        create: (File) -> Unit = {},
+        dir: File? = null
     ): LintXmlConfiguration {
         val client: LintClient = createClient()
-        val lintFile = File.createTempFile("lintconfig", ".xml")
+        val lintFile =
+            if (dir != null) {
+                val file = File(dir, "lintconfig.xml")
+                dir.mkdirs()
+                file.deleteOnExit()
+                file
+            } else {
+                File.createTempFile("lintconfig", ".xml")
+            }
         lintFile.writeText(xml)
         create(lintFile)
         val configuration = client.configurations.getConfigurationForFile(lintFile)
@@ -975,6 +984,11 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     }
 
     fun testSeverityImpliesIgnore() {
+        val projectDir = getProjectDir(
+            null,
+            image("src/main/res/drawable/abc.png", 48, 48),
+            source("build/generated/R.java", "class R { };")
+        )
         // Let's say you ignore a specific path for "all". If you also
         // deliberately enable a check in the same lint.xml file, that
         // should act as an "unignore", so you'll have to specifically
@@ -990,12 +1004,10 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                     <ignore path="src/" />
                 </issue>
             </lint>
-            """.trimIndent()
-        )
-        val projectDir = getProjectDir(
-            null,
-            image("src/main/res/drawable/abc.png", 48, 48),
-            source("build/generated/R.java", "class R { };")
+            """.trimIndent(),
+            // Place the configuration file in the project directory to make sure that
+            // relative paths are resolved relative to the config file
+            dir = projectDir
         )
         val client: LintClient = TestLintClient()
         val project = Project.create(client, projectDir, projectDir)
@@ -1036,6 +1048,56 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                 drawableContext,
                 UnusedResourceDetector.ISSUE,
                 create(drawable),
+                ""
+            )
+        )
+    }
+
+    fun testIgnoreRelativePath() {
+        val projectDir = getProjectDir(
+            null,
+            image("src/main/res/drawable/abc.png", 48, 48),
+            source("build/generated/R.java", "class R { };")
+        )
+        // Let's say you ignore a specific path for "all". If you also
+        // deliberately enable a check in the same lint.xml file, that
+        // should act as an "unignore", so you'll have to specifically
+        // repeat the ignore for that path
+        val configuration = getConfiguration(
+            """
+            <lint>
+                <issue id="ObsoleteLayoutParam" severity="error">
+                    <ignore path="drawable/" />
+                </issue>
+            </lint>
+            """.trimIndent(),
+            // Place the configuration file in somewhere in the project to make sure
+            // relative paths are resolved relative to the config file
+            dir = File(projectDir, "src/main/res")
+        )
+        val client: LintClient = TestLintClient()
+        val project = Project.create(client, projectDir, projectDir)
+        val request = LintRequest(client, emptyList())
+        val driver = LintDriver(TestIssueRegistry(), client, request)
+        val drawable = File(projectDir, "src/main/res/drawable/abc.png")
+        assertTrue(drawable.exists())
+        val generatedR = File(projectDir, "build/generated/R.java")
+        assertTrue(generatedR.exists())
+        val drawableContext = Context(driver, project, project, drawable, null)
+        val generatedRContext = Context(driver, project, project, generatedR, null)
+        assertTrue(
+            configuration.isIgnored(
+                drawableContext,
+                ObsoleteLayoutParamsDetector.ISSUE,
+                create(drawable),
+                ""
+            )
+        )
+        assertFalse(
+            configuration.isIgnored(
+                generatedRContext,
+                ObsoleteLayoutParamsDetector.ISSUE,
+                create(generatedR),
                 ""
             )
         )
