@@ -727,7 +727,6 @@ class TestLintResult internal constructor(
     }
 
     private fun cleanup() {
-        task.client?.disposeProjects(emptyList())
         UastEnvironment.disposeApplicationEnvironment()
     }
 

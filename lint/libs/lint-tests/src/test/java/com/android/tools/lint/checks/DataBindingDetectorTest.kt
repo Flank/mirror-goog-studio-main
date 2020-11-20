@@ -63,11 +63,13 @@ class DataBindingDetectorTest : AbstractCheckTest() {
         // that offsets are identical.
         // (This means that this lint check won't work from Gradle/on the command line,
         // but that's okay; this check is intended primarily for in-IDE usage.)
-        val client = object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-            override val xmlParser: XmlParser = object : LintCliXmlParser(this) {
-                override fun parseXml(xml: CharSequence, file: File): Document? {
-                    val fixedXml = xml.toString().replace("  <  ", "&lt; ")
-                    return super.parseXml(fixedXml, file)
+        val factory: () -> com.android.tools.lint.checks.infrastructure.TestLintClient = {
+            object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                override val xmlParser: XmlParser = object : LintCliXmlParser(this) {
+                    override fun parseXml(xml: CharSequence, file: File): Document? {
+                        val fixedXml = xml.toString().replace("  <  ", "&lt; ")
+                        return super.parseXml(fixedXml, file)
+                    }
                 }
             }
         }
@@ -106,7 +108,7 @@ class DataBindingDetectorTest : AbstractCheckTest() {
                     "</layout>\n" +
                     "\n"
             )
-        ).allowCompilationErrors().client(client).run().expect(expected).expectFixDiffs(
+        ).allowCompilationErrors().clientFactory(factory).run().expect(expected).expectFixDiffs(
             "Fix for res/layout/layout1.xml line 8: Change '<' to '&lt;':\n" +
                 "@@ -8 +8\n" +
                 "-         type=\"test.langdb.calc.Calculator  <  String>\" />\n" +

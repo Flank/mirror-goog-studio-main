@@ -1102,14 +1102,16 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             // Trigger src/main/java source sets
             gradle("")
         )
-            .client(object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                override fun getConfiguration(
-                    project: Project,
-                    driver: LintDriver?
-                ): Configuration {
-                    // Make sure we don't pick up the special TestConfiguration; we want the
-                    // real configuration lint would create in production
-                    return configurations.getConfigurationForProject(project)
+            .clientFactory({
+                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    override fun getConfiguration(
+                        project: Project,
+                        driver: LintDriver?
+                    ): Configuration {
+                        // Make sure we don't pick up the special TestConfiguration; we want the
+                        // real configuration lint would create in production
+                        return configurations.getConfigurationForProject(project)
+                    }
                 }
             })
             .checkProjects(object : TestLintTask.ProjectInspector {

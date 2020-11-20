@@ -414,11 +414,13 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                 """
             ).indented()
         )
-            .client(object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                // Set fake library name on resources in this test to pretend the
-                // attr comes from appcompat
-                override fun getProjectResourceLibraryName(): String? {
-                    return "appcompat-v7"
+            .clientFactory({
+                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    // Set fake library name on resources in this test to pretend the
+                    // attr comes from appcompat
+                    override fun getProjectResourceLibraryName(): String? {
+                        return "appcompat-v7"
+                    }
                 }
             })
             .sdkHome(TestUtils.getSdk())
@@ -460,12 +462,14 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                 """
             ).indented()
         )
-            .client(object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                // testMaterialDesign2
-                // Set fake library name on resources in this test to pretend the
-                // attr comes from appcompat
-                override fun getProjectResourceLibraryName(): String? {
-                    return SdkConstants.ANDROIDX_MATERIAL_ARTIFACT + ":1.0.0"
+            .clientFactory({
+                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    // testMaterialDesign2
+                    // Set fake library name on resources in this test to pretend the
+                    // attr comes from appcompat
+                    override fun getProjectResourceLibraryName(): String? {
+                        return SdkConstants.ANDROIDX_MATERIAL_ARTIFACT + ":1.0.0"
+                    }
                 }
             })
             .sdkHome(TestUtils.getSdk())

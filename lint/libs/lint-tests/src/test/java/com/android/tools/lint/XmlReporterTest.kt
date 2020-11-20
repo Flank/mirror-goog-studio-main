@@ -104,15 +104,21 @@ class XmlReporterTest {
 
     @Test
     fun testFullPaths() {
-        val client = com.android.tools.lint.checks.infrastructure.TestLintClient()
-        client.flags.isFullPath = true
+        var currentClient: com.android.tools.lint.checks.infrastructure.TestLintClient? = null
+        val factory: () -> com.android.tools.lint.checks.infrastructure.TestLintClient =
+            {
+                val client = com.android.tools.lint.checks.infrastructure.TestLintClient()
+                client.flags.isFullPath = true
+                currentClient = client
+                client
+            }
         lint().files(sampleManifest, sampleLayout)
             .issues(ManifestDetector.USES_SDK, HardcodedValuesDetector.ISSUE)
-            .client(client)
+            .clientFactory(factory)
             .run()
             .checkXmlReport(
                 TestResultChecker { xml ->
-                    val testRoot = client.knownProjects
+                    val testRoot = currentClient!!.knownProjects
                         .iterator()
                         .next()
                         .dir

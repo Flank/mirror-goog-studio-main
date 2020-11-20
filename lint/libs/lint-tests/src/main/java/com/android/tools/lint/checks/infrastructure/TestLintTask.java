@@ -22,6 +22,7 @@ import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_KTS;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -111,7 +112,7 @@ public class TestLintTask {
     String variantName;
     EnumSet<Scope> customScope;
     public boolean forceSymbolResolutionErrors;
-    TestLintClient client;
+    ClientFactory clientFactory;
     Detector detector;
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
@@ -544,16 +545,53 @@ public class TestLintTask {
         this.projectInspector = inspector;
         return this;
     }
-
     /**
      * Configures lint to run with a custom lint client instead of the default one.
      *
      * @param client the custom client to use
      * @return this, for constructor chaining
+     * @deprecated Use {@link #clientFactory} instead
      */
-    public TestLintTask client(@Nullable TestLintClient client) {
+    @Deprecated
+    public TestLintTask client(@NonNull TestLintClient client) {
         ensurePreRun();
-        this.client = client;
+        assertNull("Only specify clientFactory", clientFactory);
+        this.clientFactory =
+                new ClientFactory() {
+                    int count = 0;
+
+                    @NonNull
+                    @Override
+                    public TestLintClient create() {
+                        count++;
+                        if (count > 1) {
+                            client.log(
+                                    null,
+                                    ""
+                                            + "Warning: Using the same client more than once; make sure you call\n"
+                                            + "clientFactory() instead of the deprecated client() from your lint()\n"
+                                            + "task. This normally just means passing in your creation code as a\n"
+                                            + "lambda; e.g. client(object : TestLintClient()...) should be converted\n"
+                                            + "to clientFactory({object: TestLintClient()...}).\n");
+                        }
+                        return client;
+                    }
+                };
+        return this;
+    }
+
+    /**
+     * Configures lint to run with a custom lint client instead of the default one. This is a
+     * factory method instead of a method which takes an instance because during testing, lint may
+     * need to run multiple times, and we want to make sure there's no leaking of instance state
+     * between these separate runs.
+     *
+     * @param factory the factor which creates custom clients to use
+     * @return this, for constructor chaining
+     */
+    public TestLintTask clientFactory(@Nullable ClientFactory factory) {
+        ensurePreRun();
+        this.clientFactory = factory;
         return this;
     }
 
@@ -1007,12 +1045,22 @@ public class TestLintTask {
     }
 
     @NonNull
-    private TestLintClient createClient() {
-        TestLintClient lintClient = client;
-        if (lintClient == null) {
-            lintClient = new TestLintClient();
+    TestLintClient createClient() {
+        TestLintClient client;
+        if (clientFactory != null) {
+            client = clientFactory.create();
+        } else {
+            LintClient.Companion.ensureClientNameInitialized();
+            String clientName = LintClient.getClientName();
+            try {
+                client = new TestLintClient();
+            } finally {
+                LintClient.setClientName(clientName);
+            }
         }
-        return lintClient;
+
+        client.task = this;
+        return client;
     }
 
     public void populateProjectDirectory(
@@ -1349,6 +1397,16 @@ public class TestLintTask {
                 @NonNull Location location,
                 @NonNull String message,
                 @Nullable LintFix fixData);
+    }
+
+    /**
+     * Interface to implement to have the test use a custom {@link TestLintClient}, typically
+     * because you want to override one or more methods in the client.
+     */
+    @FunctionalInterface
+    public interface ClientFactory {
+        @NonNull
+        TestLintClient create();
     }
 
     /**
