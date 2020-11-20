@@ -15,26 +15,10 @@
  */
 package com.android.utils;
 
-import static com.android.SdkConstants.UTF_8;
-
 import com.android.ProgressManagerAdapter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
@@ -50,6 +34,23 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.DefaultHandler2;
 import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.android.SdkConstants.UTF_8;
 
 /**
  * A simple DOM XML parser which can retrieve exact beginning and end offsets
@@ -79,7 +80,7 @@ public class PositionXmlParser {
     }
 
     /**
-     * Parses the XML content from the given input stream.
+     * Parses the XML content from the given input stream and closes the stream.
      *
      * @param input the input stream containing the XML to be parsed
      * @param namespaceAware whether the parser should be namespace aware
@@ -96,7 +97,7 @@ public class PositionXmlParser {
     }
 
     /**
-     * Parses the XML content from the given input stream.
+     * Parses the XML content from the given input stream and closes the stream.
      *
      * <p>If a non-recoverable parser error is encountered, parsing stops, an error message is
      * added to the {@code parseErrors} list, and the returned document contains the elements up
@@ -267,18 +268,25 @@ public class PositionXmlParser {
         parser.parse(createSource(xml), handler);
     }
 
+    /**
+     * Reads all bytes from the given stream and closes it.
+     *
+     * @param input the stream to read from
+     * @return the contents of the stream as a byte array
+     */
     private static byte[] readAllBytes(@NonNull InputStream input) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];
-        while (true) {
-            ProgressManagerAdapter.checkCanceled();
-            int r = input.read(buf);
-            if (r == -1) {
-                break;
+        try (InputStream stream = input) {
+            while (true) {
+                ProgressManagerAdapter.checkCanceled();
+                int r = stream.read(buf);
+                if (r == -1) {
+                    break;
+                }
+                out.write(buf, 0, r);
             }
-            out.write(buf, 0, r);
         }
-        input.close();
         return out.toByteArray();
     }
 
