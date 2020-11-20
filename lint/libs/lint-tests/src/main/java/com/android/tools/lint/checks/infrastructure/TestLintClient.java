@@ -174,6 +174,11 @@ public class TestLintClient extends LintCliClient {
         flags.getReporters().add(reporter);
     }
 
+    @Override
+    public String getClientDisplayName() {
+        return "Lint Unit Tests";
+    }
+
     protected void setLintTask(@Nullable TestLintTask task) {
         if (task != null && task.optionSetter != null) {
             task.optionSetter.set(getFlags());

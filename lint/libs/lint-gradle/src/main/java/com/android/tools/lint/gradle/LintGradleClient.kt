@@ -77,6 +77,10 @@ class LintGradleClient(
 
     override fun getClientRevision(): String? = version
 
+    override fun getClientDisplayName(): String {
+        return "Gradle"
+    }
+
     override fun getConfiguration(
         project: Project,
         driver: LintDriver?

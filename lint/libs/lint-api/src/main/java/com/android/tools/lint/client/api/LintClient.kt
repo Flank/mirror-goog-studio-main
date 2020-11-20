@@ -1663,6 +1663,9 @@ abstract class LintClient {
     /** Returns the version number of this lint client, if known */
     open fun getClientRevision(): String? = null
 
+    /** Returns the display name of this lint client, if known */
+    open fun getClientDisplayName(): String = clientName
+
     /** Returns the version number of this lint client, if known. This is the one
      * meant to be displayed to users; e.g. for Studio, client revision may be
      * "3.4.0.0" and display revision might be "3.4 Canary 1".

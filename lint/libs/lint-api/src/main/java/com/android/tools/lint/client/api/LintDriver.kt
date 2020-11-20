@@ -2197,6 +2197,10 @@ class LintDriver(
 
         // Everything else just delegates to the embedding lint client
 
+        override fun getClientDisplayName(): String {
+            return delegate.getClientDisplayName()
+        }
+
         override fun getConfiguration(
             project: Project,
             driver: LintDriver?
@@ -3124,24 +3128,18 @@ class LintDriver(
          * Given a stack trace from a detector crash, returns the issues associated with
          * the most likely crashing detector
          */
-        private fun getAssociatedDetector(
+        fun getAssociatedDetector(
             throwable: Throwable,
             driver: LintDriver
         ): kotlin.Pair<String, List<Issue>>? {
-            val issues = mutableListOf<Issue>()
-
             for (frame in throwable.stackTrace) {
                 val className = frame.className
+                if (className.startsWith("com.android.tools.lint.detector.api.")) {
+                    // Called inherited Detector method; not interested in this one
+                    continue
+                }
                 if (className.endsWith("Detector") || className.contains("Detector$")) {
-                    for (issue in driver.registry.issues) {
-                        val detectorClass = issue.implementation.detectorClass.name
-                        if (className == detectorClass || className.startsWith(detectorClass) &&
-                            className[detectorClass.length] == '$'
-                        ) {
-                            issues.add(issue)
-                        }
-                    }
-
+                    val issues = getDetectorIssues(className, driver)
                     val detector = if (issues.isNotEmpty()) {
                         issues.first().implementation.detectorClass.name
                     } else {
@@ -3154,10 +3152,33 @@ class LintDriver(
             return null
         }
 
-        fun appendStackTraceSummary(throwable: Throwable, sb: StringBuilder) {
+        /** Returns the issues associated with the given detector class */
+        fun getDetectorIssues(className: String, driver: LintDriver): List<Issue> {
+            val issues = mutableListOf<Issue>()
+            for (issue in driver.registry.issues) {
+                val detectorClass = issue.implementation.detectorClass.name
+                if (className == detectorClass || className.startsWith(detectorClass) &&
+                    className[detectorClass.length] == '$'
+                ) {
+                    issues.add(issue)
+                }
+            }
+            return issues
+        }
+
+        fun appendStackTraceSummary(
+            throwable: Throwable,
+            sb: StringBuilder,
+            skipFrames: Int = 0,
+            maxFrames: Int = 8
+        ) {
             val stackTrace = throwable.stackTrace
             var count = 0
+            var remainingSkipFrames = skipFrames
             for (frame in stackTrace) {
+                if (remainingSkipFrames-- > 0) {
+                    continue
+                }
                 if (count > 0) {
                     sb.append('\u2190') // Left arrow
                 }
@@ -3170,7 +3191,7 @@ class LintDriver(
                 sb.append(')')
                 count++
                 // Only print the top N frames such that we can identify the bug
-                if (count == 8) {
+                if (count == maxFrames) {
                     break
                 }
             }
