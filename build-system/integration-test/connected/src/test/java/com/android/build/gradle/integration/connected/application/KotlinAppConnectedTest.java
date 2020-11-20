@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.connected.application;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.tools.bazel.avd.Emulator;
 import java.io.IOException;
 import org.junit.Before;
@@ -39,6 +40,7 @@ public class KotlinAppConnectedTest {
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
                     // b/158092419
                     .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=45")
+                    .addGradleProperties(BooleanOption.USE_ANDROID_X.getPropertyName() + "=true")
                     .create();
 
     @Before
@@ -53,6 +55,8 @@ public class KotlinAppConnectedTest {
 
     @Test
     public void connectedAndroidTest() throws Exception {
-        project.executor().run("connectedAndroidTest");
+        project.executor()
+                .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=10000")
+                .run("connectedAndroidTest");
     }
 }
