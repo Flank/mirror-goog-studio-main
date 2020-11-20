@@ -550,14 +550,6 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testAllowBackupOk2() {
-        // Requires build api >= 4
-        lint().files(manifest().minSdk(1), mStrings)
-                .issues(ManifestDetector.ALLOW_BACKUP)
-                .run()
-                .expectClean();
-    }
-
     public void testAllowBackupOk3() {
         // Not flagged in library projects
         lint().files(
@@ -1456,6 +1448,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    <uses-sdk android:targetSdkVersion=\"23\" />"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
                                         + "        android:fullBackupContent=\"no\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
                                         + "        android:theme=\"@style/AppTheme\" >\n"
@@ -1467,10 +1460,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMissingBackupInTarget23() {
+    public void testMissingFullContentBackupInTarget23() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
+                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
                         + "    <application\n"
                         + "     ~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
@@ -1485,6 +1478,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    <uses-sdk android:targetSdkVersion=\"23\" />"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
                                         + "        android:theme=\"@style/AppTheme\" >\n"
                                         + "    </application>\n"
@@ -1495,7 +1489,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingBackupInPreTarget23() {
+    public void testMissingFullContentBackupInPreTarget23() {
         //noinspection all // Sample code
         lint().files(
                         manifest(
@@ -1506,6 +1500,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    <uses-sdk android:targetSdkVersion=\"21\" />"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
                                         + "        android:theme=\"@style/AppTheme\" >\n"
                                         + "    </application>\n"
@@ -1516,7 +1511,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMissingBackupWithoutGcmPreTarget23() {
+    public void testMissingFullContentBackupWithoutGcmPreTarget23() {
         //noinspection all // Sample code
         lint().files(
                         manifest(
@@ -1527,6 +1522,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    <uses-sdk android:targetSdkVersion=\"21\" />"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
                                         + "        android:theme=\"@style/AppTheme\" >\n"
                                         + "    </application>\n"
@@ -1537,10 +1533,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMissingBackupWithoutGcmPostTarget23() {
+    public void testMissingFullContentBackupWithoutGcmPostTarget23() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
+                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup, or just set android:fullBackupOnly=true. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
                         + "    <application\n"
                         + "     ~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
@@ -1555,6 +1551,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    <uses-sdk android:targetSdkVersion=\"23\" />"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
                                         + "        android:theme=\"@style/AppTheme\" >\n"
                                         + "    </application>\n"
@@ -1565,7 +1562,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingBackupWithGcmPreTarget23() {
+    public void testMissingFullContentBackupWithGcmPreTarget23() {
         //noinspection all // Sample code
         lint().files(
                         manifest(
@@ -1576,6 +1573,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    <uses-sdk android:targetSdkVersion=\"21\" />"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
                                         + "        android:theme=\"@style/AppTheme\" >"
                                         + "        <receiver\n"
@@ -1594,10 +1592,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMissingBackupWithGcmPostTarget23() {
+    public void testMissingFullContentBackupWithGcmPostTarget23() {
         String expected =
                 ""
-                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
+                        + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/guide/topics/data/autobackup [AllowBackup]\n"
                         + "    <application\n"
                         + "     ~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings";
@@ -1611,6 +1609,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                         + "    <uses-sdk android:targetSdkVersion=\"23\" />"
                                         + "\n"
                                         + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
                                         + "        android:label=\"@string/app_name\"\n"
                                         + "        android:theme=\"@style/AppTheme\" >"
                                         + "        <receiver\n"

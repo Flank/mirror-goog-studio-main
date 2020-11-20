@@ -123,15 +123,17 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testApi1() {
+    public void testApi15() {
         lint().files(
-                        // manifest file which specifies uses sdk = 2
-                        manifest().minSdk(2),
+                        manifest().minSdk(15),
                         image("res/drawable/ic_launcher.png", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF))
                 .issues(ALL_ISSUES)
                 .run()
-                .expectClean();
+                .expect(
+                        ""
+                                + "res/drawable/ic_launcher.png: Warning: Found bitmap drawable res/drawable/ic_launcher.png in densityless folder [IconLocation]\n"
+                                + "0 errors, 1 warnings");
     }
 
     public void test2() {

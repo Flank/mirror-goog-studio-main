@@ -55,8 +55,7 @@ class LintBaselineTest {
 
     @Test
     fun testBaseline() {
-        val baselineFile = File.createTempFile("baseline", ".xml")
-        baselineFile.deleteOnExit()
+        val baselineFile = temporaryFolder.newFile("baseline.xml")
 
         @Language("XML")
         val baselineContents =
@@ -117,7 +116,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
 
 </issues>
 """
-        Files.asCharSink(baselineFile, Charsets.UTF_8).write(baselineContents)
+        baselineFile.writeText(baselineContents)
 
         val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
 
@@ -254,8 +253,16 @@ There are quickfixes to automatically extract this hardcoded string into a resou
     }
 
     @Test
+    fun tolerateUrlChanges() {
+        assertTrue(stringsEquivalent("abcd http://some.url1", "abcd http://other.url2"))
+        assertTrue(stringsEquivalent("abcd http://some.url1, ok", "abcd http://other.url2"))
+        assertTrue(stringsEquivalent("abcd http://some.url1", "abcd http://other.url2, ok"))
+        assertFalse(stringsEquivalent("abcd http://some.url1 different", "abcd http://other.url2, words"))
+    }
+
+    @Test
     fun testFormat() {
-        val baselineFile = File.createTempFile("lint-baseline", ".xml")
+        val baselineFile = temporaryFolder.newFile("lint-baseline.xml")
         val client = ToolsBaseTestLintClient()
         var baseline = LintBaseline(client, baselineFile)
         assertThat(baseline.writeOnClose).isFalse()
@@ -398,5 +405,43 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                 "\n" +
                 "</issues>\n"
         )
+    }
+
+    @Test
+    fun testChangedUrl() {
+        val baselineFile = temporaryFolder.newFile("baseline.xml")
+
+        @Language("XML")
+        val baselineContents =
+            """<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint unittest">
+
+    <issue
+        id="AllowBackup"
+        message="On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute `android:fullBackupContent` to specify an `@xml` resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html"
+        errorLine1="    &lt;application"
+        errorLine2="    ^">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="5"
+            column="5"/>
+    </issue>
+
+</issues>
+"""
+        baselineFile.writeText(baselineContents)
+        val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
+
+        assertTrue(
+            baseline.findAndMark(
+                ManifestDetector.ALLOW_BACKUP,
+                Location.create(File("src/main/AndroidManifest.xml")),
+                "On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute `android:fullBackupContent` to specify an `@xml` resource which configures which files to backup. More info: https://developer.android.com/guide/topics/data/autobackup",
+                Severity.WARNING,
+                null
+            )
+        )
+
+        baseline.close()
     }
 }

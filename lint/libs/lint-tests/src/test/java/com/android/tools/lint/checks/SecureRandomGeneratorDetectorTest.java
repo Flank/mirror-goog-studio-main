@@ -179,7 +179,7 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n";
         lint().files(
                         classpath(),
-                        manifest().minSdk(10),
+                        manifest().minSdk(16),
                         java(
                                 ""
                                         + "package test.pkg;\n"

@@ -761,12 +761,6 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testDependenciesMinSdkVersion() {
-        val expected = "" +
-            "build.gradle:13: Warning: Using the appcompat library when minSdkVersion >= 14 and compileSdkVersion < 21 is not necessary [GradleDependency]\n" +
-            "    compile 'com.android.support:appcompat-v7:+'\n" +
-            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 1 warnings\n"
-
         lint().files(
             gradle(
                 "" +
@@ -785,7 +779,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    compile 'com.android.support:appcompat-v7:+'\n" +
                     "}\n"
             )
-        ).issues(DEPENDENCY).run().expect(expected)
+        ).issues(DEPENDENCY).run().expectClean()
     }
 
     fun testNoWarningFromUnknownSupportLibrary() {

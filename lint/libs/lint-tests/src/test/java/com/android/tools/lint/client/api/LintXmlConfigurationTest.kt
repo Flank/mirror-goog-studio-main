@@ -21,12 +21,12 @@ import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ActionsXmlDetector
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.ChromeOsDetector
-import com.android.tools.lint.checks.FieldGetterDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector
 import com.android.tools.lint.checks.SdCardDetector
+import com.android.tools.lint.checks.SecureRandomGeneratorDetector
 import com.android.tools.lint.checks.TooManyViewsDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
@@ -74,7 +74,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
          can be a comma separated list -->
     <issue in="studio" id="NewerVersionAvailable" severity="error" />
     <!-- You can also use ! to specify that it does not apply in a tool  -->
-    <issue in="!gradle" id="FieldGetter" severity="error" />
+    <issue in="!gradle" id="TrulyRandom" severity="error" />
     <issue id="UnknownNullness">
         <!-- For detectors that support it, you can also specify option values -->
         <option name="ignore-deprecated" value="true" />
@@ -94,7 +94,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                     <ignore path="res/layout-xlarge/activation.xml" />
                 </issue>
                 <issue id="ValidActionsXml" severity="ignore" />
-                <issue id="FieldGetter" severity="error" />
+                <issue id="TrulyRandom" severity="error" />
                 <issue id="SdCardPath,ContentDescription" severity="ignore" />
                 <issue id="NewApi">
                     <ignore path="res/layout-xlarge" />
@@ -108,8 +108,8 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         assertFalse(configuration.isEnabled(AccessibilityDetector.ISSUE))
         assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE))
         assertEquals(Severity.WARNING, AccessibilityDetector.ISSUE.defaultSeverity)
-        assertEquals(Severity.WARNING, FieldGetterDetector.ISSUE.defaultSeverity)
-        assertEquals(Severity.ERROR, configuration.getSeverity(FieldGetterDetector.ISSUE))
+        assertEquals(Severity.WARNING, SecureRandomGeneratorDetector.ISSUE.defaultSeverity)
+        assertEquals(Severity.ERROR, configuration.getSeverity(SecureRandomGeneratorDetector.ISSUE))
         assertEquals(Severity.IGNORE, configuration.getSeverity(ActionsXmlDetector.ISSUE))
     }
 
@@ -300,7 +300,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             """.trimIndent()
         )
         assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE))
-        assertEquals(Severity.IGNORE, configuration.getSeverity(FieldGetterDetector.ISSUE))
+        assertEquals(Severity.IGNORE, configuration.getSeverity(SecureRandomGeneratorDetector.ISSUE))
         assertEquals(Severity.IGNORE, configuration.getSeverity(HardcodedValuesDetector.ISSUE))
         assertEquals(Severity.ERROR, configuration.getSeverity(ActionsXmlDetector.ISSUE))
     }

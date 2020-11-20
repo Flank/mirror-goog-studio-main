@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.SUPPORT_LIB_ARTIFACT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN_WRAPPER;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BYTE_WRAPPER;
@@ -146,7 +145,6 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
     static final String ON_DRAW = "onDraw";
     static final String ON_LAYOUT = "onLayout";
     private static final String LAYOUT = "layout";
-    private static final String HASH_MAP = "java.util.HashMap";
     private static final String SPARSE_ARRAY = "android.util.SparseArray";
     public static final String CLASS_CANVAS = "android.graphics.Canvas";
 
@@ -479,69 +477,6 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                 @NonNull JavaEvaluator evaluator, @NonNull PsiMethod node) {
             return LAYOUT.equals(node.getName())
                     && evaluator.parametersMatch(node, TYPE_INT, TYPE_INT, TYPE_INT, TYPE_INT);
-        }
-
-        /**
-         * Checks whether the given constructor call and type reference refers to a HashMap
-         * constructor call that is eligible for replacement by a SparseArray call instead
-         *
-         * <p>Deprecated because, while SparseArray is more memory efficient and cache friendly than
-         * HashMap, it is also generally slower than a HashMap because lookups require a binary
-         * search. It is also not intended to be appropriate for maps containing a large number of
-         * items. Thus it does not make sense to unconditionally recommend SparseArray.
-         */
-        @Deprecated
-        private void checkHashMap(@NonNull UCallExpression node) {
-            if (!mContext.getProject().isAndroidProject()) {
-                return;
-            }
-            List<PsiType> types = node.getTypeArguments();
-            if (types.size() == 2) {
-                PsiType first = types.get(0);
-                String typeName = first.getCanonicalText();
-                int minSdk = mContext.getMainProject().getMinSdk();
-                if (TYPE_INTEGER_WRAPPER.equals(typeName) || TYPE_BYTE_WRAPPER.equals(typeName)) {
-                    String valueType = types.get(1).getCanonicalText();
-                    if (valueType.equals(TYPE_INTEGER_WRAPPER)) {
-                        mContext.report(
-                                USE_SPARSE_ARRAY,
-                                node,
-                                mContext.getLocation(node),
-                                "Use new `SparseIntArray(...)` instead for better performance");
-                    } else if (valueType.equals(TYPE_LONG_WRAPPER) && minSdk >= 18) {
-                        mContext.report(
-                                USE_SPARSE_ARRAY,
-                                node,
-                                mContext.getLocation(node),
-                                "Use `new SparseLongArray(...)` instead for better performance");
-                    } else if (valueType.equals(TYPE_BOOLEAN_WRAPPER)) {
-                        mContext.report(
-                                USE_SPARSE_ARRAY,
-                                node,
-                                mContext.getLocation(node),
-                                "Use `new SparseBooleanArray(...)` instead for better performance");
-                    } else {
-                        mContext.report(
-                                USE_SPARSE_ARRAY,
-                                node,
-                                mContext.getLocation(node),
-                                String.format(
-                                        "Use `new SparseArray<%1$s>(...)` instead for better performance",
-                                        valueType.substring(valueType.lastIndexOf('.') + 1)));
-                    }
-                } else if (TYPE_LONG_WRAPPER.equals(typeName)
-                        && (minSdk >= 16
-                                || Boolean.TRUE
-                                        == mContext.getMainProject()
-                                                .dependsOn(SUPPORT_LIB_ARTIFACT))) {
-                    boolean useBuiltin = minSdk >= 16;
-                    String message =
-                            useBuiltin
-                                    ? "Use `new LongSparseArray(...)` instead for better performance"
-                                    : "Use `new android.support.v4.util.LongSparseArray(...)` instead for better performance";
-                    mContext.report(USE_SPARSE_ARRAY, node, mContext.getLocation(node), message);
-                }
-            }
         }
 
         private void checkSparseArray(@NonNull UCallExpression node) {

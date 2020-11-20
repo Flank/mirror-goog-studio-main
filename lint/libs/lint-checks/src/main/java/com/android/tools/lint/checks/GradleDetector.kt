@@ -1252,15 +1252,6 @@ open class GradleDetector : Detector(), GradleScanner {
                         "or higher (was $version)"
                 )
             }
-
-            if (minSdkVersion >= 14 && compileSdkVersion >= 1 && compileSdkVersion < 21) {
-                report(
-                    context,
-                    cookie,
-                    DEPENDENCY,
-                    "Using the appcompat library when minSdkVersion >= 14 and compileSdkVersion < 21 is not necessary"
-                )
-            }
         }
     }
 

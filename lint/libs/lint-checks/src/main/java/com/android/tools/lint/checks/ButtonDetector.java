@@ -39,7 +39,6 @@ import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.SdkConstants.VALUE_VERTICAL;
 import static com.android.tools.lint.checks.RequiredAttributeDetector.PERCENT_RELATIVE_LAYOUT;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
@@ -54,7 +53,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -310,8 +308,6 @@ public class ButtonDetector extends ResourceXmlDetector {
                         && !element.hasAttribute(ATTR_STYLE)
                         && !VALUE_SELECTABLE_ITEM_BACKGROUND.equals(
                                 element.getAttributeNS(ANDROID_URI, ATTR_BACKGROUND))
-                        && (context.getProject().getMinSdk() >= 11
-                                || context.getFolderVersion() >= 11)
                         && context.isEnabled(STYLE)
                         && !parentDefinesSelectableItem(element)) {
                     context.report(
@@ -461,45 +457,6 @@ public class ButtonDetector extends ResourceXmlDetector {
             return;
         }
 
-        int target = context.getProject().getTargetSdk();
-        if (target < 14) {
-            // If you're only targeting pre-ICS UI's, this is not an issue
-            return;
-        }
-
-        boolean mustCreateIcsLayout = false;
-        if (context.getProject().getMinSdk() < 14) {
-            // If you're *also* targeting pre-ICS UIs, then this reverse button
-            // order is correct for layouts intended for pre-ICS and incorrect for
-            // ICS layouts.
-            //
-            // Therefore, we need to know if this layout is an ICS layout or
-            // a pre-ICS layout.
-            boolean isIcsLayout = context.getFolderVersion() >= 14;
-            if (!isIcsLayout) {
-                // This layout is not an ICS layout. However, there *must* also be
-                // an ICS layout here, or this button order will be wrong:
-                File res = context.file.getParentFile().getParentFile();
-                File[] resFolders = res.listFiles();
-                String fileName = context.file.getName();
-                if (resFolders != null) {
-                    for (File folder : resFolders) {
-                        String folderName = folder.getName();
-                        if (folderName.startsWith(SdkConstants.FD_RES_LAYOUT)
-                                && folderName.contains("-v14")) {
-                            File layout = new File(folder, fileName);
-                            if (layout.exists()) {
-                                // Yes, a v14 specific layout is available so this pre-ICS
-                                // layout order is not a problem
-                                return;
-                            }
-                        }
-                    }
-                }
-                mustCreateIcsLayout = true;
-            }
-        }
-
         List<Element> buttons = Lint.getChildren(element.getParentNode());
 
         if (mIgnore == null) {
@@ -514,14 +471,6 @@ public class ButtonDetector extends ResourceXmlDetector {
             message = "Cancel button should be on the left";
         } else {
             message = "OK button should be on the right";
-        }
-
-        if (mustCreateIcsLayout) {
-            message =
-                    String.format(
-                            "Layout uses the wrong button order for API >= 14: Create a "
-                                    + "`layout-v14/%1$s` file with opposite order: %2$s",
-                            context.file.getName(), message);
         }
 
         // Show existing button order? We can only do that for LinearLayouts

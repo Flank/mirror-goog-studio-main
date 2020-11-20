@@ -689,51 +689,49 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         node: UCallExpression
     ) {
-        if (context.project.minSdkVersion.apiLevel >= 9) {
-            // See if the return value is read: can only replace commit with
-            // apply if the return value is not considered
+        // See if the return value is read: can only replace commit with
+        // apply if the return value is not considered
 
-            var qualifiedNode: UElement = node
-            var parent = skipParentheses(node.uastParent)
-            while (parent is UReferenceExpression) {
-                qualifiedNode = parent
-                parent = skipParentheses(parent.uastParent)
-            }
-            var returnValueIgnored = true
+        var qualifiedNode: UElement = node
+        var parent = skipParentheses(node.uastParent)
+        while (parent is UReferenceExpression) {
+            qualifiedNode = parent
+            parent = skipParentheses(parent.uastParent)
+        }
+        var returnValueIgnored = true
 
-            if (parent is UCallExpression ||
-                parent is UVariable ||
-                parent is UPolyadicExpression ||
-                parent is UUnaryExpression ||
-                parent is UReturnExpression
-            ) {
-                returnValueIgnored = false
-            } else if (parent is UIfExpression) {
-                val condition = parent.condition
-                returnValueIgnored = condition != qualifiedNode
-            } else if (parent is UWhileExpression) {
-                val condition = parent.condition
-                returnValueIgnored = condition != qualifiedNode
-            } else if (parent is UDoWhileExpression) {
-                val condition = parent.condition
-                returnValueIgnored = condition != qualifiedNode
-            }
+        if (parent is UCallExpression ||
+            parent is UVariable ||
+            parent is UPolyadicExpression ||
+            parent is UUnaryExpression ||
+            parent is UReturnExpression
+        ) {
+            returnValueIgnored = false
+        } else if (parent is UIfExpression) {
+            val condition = parent.condition
+            returnValueIgnored = condition != qualifiedNode
+        } else if (parent is UWhileExpression) {
+            val condition = parent.condition
+            returnValueIgnored = condition != qualifiedNode
+        } else if (parent is UDoWhileExpression) {
+            val condition = parent.condition
+            returnValueIgnored = condition != qualifiedNode
+        }
 
-            if (returnValueIgnored) {
-                val message = (
-                    "Consider using `apply()` instead; `commit` writes " +
-                        "its data to persistent storage immediately, whereas " +
-                        "`apply` will handle it in the background"
-                    )
-                val location = context.getLocation(node)
-                val fix = LintFix.create()
-                    .name("Replace commit() with apply()")
-                    .replace()
-                    .pattern("(commit)\\s*\\(")
-                    .with("apply")
-                    .build()
-                context.report(APPLY_SHARED_PREF, node, location, message, fix)
-            }
+        if (returnValueIgnored) {
+            val message = (
+                "Consider using `apply()` instead; `commit` writes " +
+                    "its data to persistent storage immediately, whereas " +
+                    "`apply` will handle it in the background"
+                )
+            val location = context.getLocation(node)
+            val fix = LintFix.create()
+                .name("Replace commit() with apply()")
+                .replace()
+                .pattern("(commit)\\s*\\(")
+                .with("apply")
+                .build()
+            context.report(APPLY_SHARED_PREF, node, location, message, fix)
         }
     }
 
