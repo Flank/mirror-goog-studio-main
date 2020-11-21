@@ -64,7 +64,7 @@ class MotionLayoutDetectorTest : AbstractCheckTest() {
                     app:layoutDescription="@xml/motion_scene"
                                            ~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
-            """
+                """
             )
     }
 
@@ -141,6 +141,6 @@ class MotionLayoutDetectorTest : AbstractCheckTest() {
 
     private fun checkData(expected: String, fixData: LintFix?) {
         val map = fixData as? LintFix.DataMap ?: error("Expected a DataMap")
-        assertEquals(expected, map.get(String::class.java))
+        assertEquals(expected, map.getString(MotionLayoutDetector.KEY_URL, null))
     }
 }

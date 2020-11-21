@@ -649,7 +649,7 @@ public class LintFixVerifier {
         diffs.append("\n");
     }
 
-    private static void appendDataMap(
+    private void appendDataMap(
             @NonNull Incident incident, @NonNull DataMap map, @NonNull StringBuilder diffs) {
         String targetPath = incident.getDisplayPath();
         diffs.append("Data for ")
@@ -661,22 +661,13 @@ public class LintFixVerifier {
         if (fixDescription != null) {
             diffs.append(fixDescription).append(":\n");
         }
-        List<Object> keys = Lists.newArrayList(map.keys());
+        List<String> keys = Lists.newArrayList(map.keys());
         keys.sort(Comparator.comparing(Object::toString));
-        for (Object key : keys) {
+        for (String key : keys) {
             diffs.append("  ");
-            if (key instanceof Class<?>) {
-                diffs.append(((Class<?>) key).getSimpleName());
-            } else {
-                assert key instanceof String;
-                diffs.append(key.toString());
-            }
+            diffs.append(key);
             diffs.append(" : ");
-            if (key instanceof Class<?>) {
-                diffs.append(map.get((Class<?>) key));
-            } else {
-                diffs.append(map.get(key.toString()));
-            }
+            diffs.append(map.get(key));
         }
     }
 }

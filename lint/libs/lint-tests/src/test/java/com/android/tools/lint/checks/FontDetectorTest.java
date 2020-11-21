@@ -130,7 +130,7 @@ public class FontDetectorTest extends AbstractCheckTest {
             @Nullable LintFix fixData) {
         assertTrue(fixData instanceof LintFix.DataMap);
         LintFix.DataMap map = (LintFix.DataMap) fixData;
-        assertEquals(map.get(String.class), APPCOMPAT_LIB_ARTIFACT_ID);
+        assertEquals(map.get(FontDetector.KEY_ARTIFACT_ID), APPCOMPAT_LIB_ARTIFACT_ID);
     }
 
     public void testAppAttributesPresentOnLaterApi() {

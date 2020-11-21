@@ -21,63 +21,24 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.LintFix.ReplaceString
 import com.android.tools.lint.detector.api.LintFix.SetAttribute
-import com.google.common.collect.Maps
 import com.google.common.truth.Truth.assertThat
 import com.intellij.psi.PsiMethod
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import org.jetbrains.uast.UCallExpression
-import java.math.BigDecimal
-import java.util.ArrayList
-import java.util.HashMap
 import java.util.regex.Pattern
 
 class LintFixTest : TestCase() {
     fun testBasic() {
-        val builder = LintFix.create().map("foo", 3, BigDecimal(50))
+        val builder = LintFix.create().map()
         builder.put("name1", "Name1")
         builder.put("name2", "Name2")
-        builder.put(Maps.newHashMap<Any, Any>())
-        builder.put(ArrayList<Any>())
-        builder.put<Any>(null) // no-op
+        builder.put("truth", true)
+        builder.put("meaning", 42)
         val quickfixData = builder.build() as LintFix.DataMap
-        assertThat(quickfixData.get(Float::class.java)).isNull()
-        assertThat(quickfixData.get(String::class.java)).isEqualTo("foo")
-        assertThat(quickfixData.get(Int::class.java)).isEqualTo(3)
-        assertThat(quickfixData.get(BigDecimal::class.java)).isEqualTo(BigDecimal(50))
-        assertThat(quickfixData.get("name1")).isEqualTo("Name1")
-        assertThat(quickfixData.get("name2")).isEqualTo("Name2")
 
-        var foundString = false
-        var foundInteger = false
-        var foundBigDecimal = false
-        for (data in quickfixData) { // no order guarantee
-            when (data) {
-                "foo" -> foundString = true
-                3 -> foundInteger = true
-                is BigDecimal -> foundBigDecimal = true
-            }
-        }
-        assertThat(foundString).isTrue()
-        assertThat(foundInteger).isTrue()
-        assertThat(foundBigDecimal).isTrue()
-
-        assertNotNull(LintFix.getData(quickfixData, BigDecimal::class.java))
-
-        // Check key conversion to general interface
-        assertNull(LintFix.getData(quickfixData, ArrayList::class.java))
-        assertNotNull(LintFix.getData(quickfixData, List::class.java))
-        assertNull(LintFix.getData(quickfixData, HashMap::class.java))
-        assertNotNull(LintFix.getData(quickfixData, Map::class.java))
-    }
-
-    fun testClassInheritance() {
-
-        val builder = LintFix.create().map(Integer.valueOf(5))
-        val quickfixData = builder.build() as LintFix.DataMap
-        assertThat(quickfixData.get(Int::class.java)).isEqualTo(5)
-        // Looking up with a more general class:
-        assertThat(quickfixData.get(Number::class.java)).isEqualTo(5)
+        assertEquals(true, LintFix.getBoolean(quickfixData, "truth", false))
+        assertEquals(42, LintFix.getInt(quickfixData, "meaning", -1))
     }
 
     fun testSetAttribute() {
@@ -178,7 +139,7 @@ class LintFixTest : TestCase() {
                 ) + "; // Was: \\k<1>"
                 replacement = replacement.replace("\"TAG\", ", "")
 
-                val fix = LintFix.create()
+                val fix = fix()
                     .name("Fix Description")
                     .replace().pattern(oldPattern).with(replacement)
                     .range(context.getLocation(node))

@@ -86,7 +86,7 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
 
     // Quickfix extras to identify the kind of error within the WEAR_STANDALONE_APP_ISSUE issue
     // from the Studio side.
-    public static final int QFX_EXTRA_MISSING_META_DATA = 2;
+    public static final String KEY_QFX_EXTRA_MISSING_META_DATA = "metadata";
 
     /** Constructs a new {@link WearStandaloneAppDetector} check */
     public WearStandaloneAppDetector() {}
@@ -183,7 +183,7 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
                         xmlContext.getNameLocation(application),
                         "Missing `<meta-data android:name="
                                 + "\"com.google.android.wearable.standalone\" ../>` element",
-                        fix().data(QFX_EXTRA_MISSING_META_DATA));
+                        fix().data(KEY_QFX_EXTRA_MISSING_META_DATA, true));
             }
         }
     }

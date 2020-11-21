@@ -56,7 +56,6 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LayoutDetector
-import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -344,7 +343,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
         val message =
             "Use '$' instead of '.' for inner classes; replace \"$className\" with \"$fixed\""
         val location = getRefLocation(context, nameNode)
-        val fix = LintFix.create().replace().text(className).with(fixed).autoFix().build()
+        val fix = fix().replace().text(className).with(fixed).autoFix().build()
         context.report(INNERCLASS, element, location, message, fix)
     }
 

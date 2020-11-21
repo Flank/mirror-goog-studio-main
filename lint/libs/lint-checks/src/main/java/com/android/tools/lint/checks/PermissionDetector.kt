@@ -207,7 +207,9 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     context, MISSING_PERMISSION, node, location, message,
                     // Pass data to IDE quickfix: names to add, and max applicable API version
                     fix().data(
-                        missingPermissions,
+                        KEY_MISSING_PERMISSIONS,
+                        missingPermissions.toList(),
+                        KEY_LAST_API,
                         requirement.lastApplicableApi
                     )
                 )
@@ -254,8 +256,10 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     context, MISSING_PERMISSION, node, location, message,
                     // Pass data to IDE quickfix: revocable names, and permission requirement
                     fix().data(
-                        requirement.getRevocablePermissions(permissions),
-                        requirement
+                        KEY_MISSING_PERMISSIONS,
+                        requirement.getRevocablePermissions(permissions).toList(),
+                        KEY_REQUIREMENT,
+                        requirement.serialize()
                     )
                 )
             }
@@ -268,7 +272,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         // (or some wider exception than that). Check for nested try/catches too.
         var parent = node
         while (true) {
-            val tryCatch = parent.getParentOfType<UTryExpression>(UTryExpression::class.java, true)
+            val tryCatch = parent.getParentOfType(UTryExpression::class.java, true)
             if (tryCatch == null) {
                 break
             } else {
@@ -416,7 +420,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         TAG_USES_PERMISSION_SDK_M == nodeName
                     ) {
                         val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                        if (!name.isEmpty()) {
+                        if (name.isNotEmpty()) {
                             permissions.add(name)
                         }
                     } else if (nodeName == TAG_PERMISSION) {
@@ -426,7 +430,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         )
                         if (VALUE_DANGEROUS == protectionLevel) {
                             val name = element.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                            if (!name.isEmpty()) {
+                            if (name.isNotEmpty()) {
                                 revocable.add(name)
                             }
                         }
@@ -486,6 +490,10 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             PermissionDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
+
+        const val KEY_MISSING_PERMISSIONS = "missing"
+        const val KEY_LAST_API = "lastApi"
+        const val KEY_REQUIREMENT = "requirement"
 
         private const val THINGS_LIBRARY = "com.google.android.things"
 

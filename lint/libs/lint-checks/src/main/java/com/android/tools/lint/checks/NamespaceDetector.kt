@@ -81,7 +81,7 @@ class NamespaceDetector : ResourceXmlDetector() {
                         ) {
                             var fix: LintFix? = null
                             if (value.startsWith("https://")) {
-                                fix = LintFix.create()
+                                fix = fix()
                                     .replace()
                                     .text("https")
                                     .with("http")

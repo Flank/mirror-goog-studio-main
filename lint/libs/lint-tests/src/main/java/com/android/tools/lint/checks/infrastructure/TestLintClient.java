@@ -780,7 +780,7 @@ public class TestLintClient extends LintCliClient {
         assertNotNull(location);
 
         if (fix != null && !task.allowExceptions) {
-            Throwable throwable = LintFix.getData(fix, Throwable.class);
+            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
             if (throwable != null && this.firstThrowable == null) {
                 this.firstThrowable = throwable;
             }

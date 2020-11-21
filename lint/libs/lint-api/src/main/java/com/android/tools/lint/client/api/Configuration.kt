@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.ATTR_ID
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
@@ -337,7 +338,7 @@ abstract class Configuration(
                     driver = driver,
                     project = project,
                     location = location,
-                    fix = LintFix.create().data(id)
+                    fix = LintFix.create().data(ATTR_ID, id)
                 )
             } else {
                 client.log(

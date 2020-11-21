@@ -481,7 +481,7 @@ open class GradleDetector : Detector(), GradleScanner {
                                 "to unpredictable and unrepeatable builds (" +
                                 dependency +
                                 ")"
-                            val fix = fix().data(gc)
+                            val fix = fix().data(KEY_COORDINATE, gc.toString())
                             report(context, valueCookie, PLUS, message, fix)
                         }
 
@@ -1674,7 +1674,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
                 """.trimIndent()
             }
-            val fix = LintFix.create().replace()
+            val fix = fix().replace()
                 .name(fixDisplayName)
                 .range(Location.create(context.file, contents, 0, contents.length))
                 .end()
@@ -1966,7 +1966,7 @@ open class GradleDetector : Detector(), GradleScanner {
         suggestedVersionIsSafe: Boolean = false,
         safeReplacement: GradleVersion? = null
     ): LintFix {
-        val fix = LintFix.create()
+        val fix = fix()
             .name("Change to $suggestedVersion")
             .sharedName("Update versions")
             .replace()
@@ -1976,7 +1976,7 @@ open class GradleDetector : Detector(), GradleScanner {
             .build()
         return if (safeReplacement != null) {
             val stableVersion = safeReplacement.toString()
-            val stableFix = LintFix.create()
+            val stableFix = fix()
                 .name("Change to $stableVersion")
                 .sharedName("Update versions")
                 .replace()
@@ -1984,7 +1984,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 .with(stableVersion)
                 .autoFix()
                 .build()
-            LintFix.create().alternatives(fix, stableFix)
+            fix().alternatives(fix, stableFix)
         } else {
             fix
         }
@@ -2161,6 +2161,8 @@ open class GradleDetector : Detector(), GradleScanner {
     companion object {
         /** Calendar to use to look up the current time (used by tests to set specific time */
         var calendar: Calendar? = null
+
+        const val KEY_COORDINATE = "coordinate"
 
         private val IMPLEMENTATION = Implementation(GradleDetector::class.java, Scope.GRADLE_SCOPE)
 

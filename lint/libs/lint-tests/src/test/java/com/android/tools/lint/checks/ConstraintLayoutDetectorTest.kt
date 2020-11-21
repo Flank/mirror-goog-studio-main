@@ -21,7 +21,8 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Severity
-import junit.framework.TestCase
+import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertTrue
 
 class ConstraintLayoutDetectorTest : AbstractCheckTest() {
     fun testMissingConstraints() {
@@ -566,9 +567,9 @@ class ConstraintLayoutDetectorTest : AbstractCheckTest() {
     ) {
         if (issue === GradleDetector.DEPENDENCY) {
             // Check for AndroidLintGradleDependencyInspection
-            TestCase.assertTrue(fixData is LintFix.DataMap)
-            val map = fixData as LintFix.DataMap?
-            TestCase.assertNotNull(map!![ConstraintLayoutDetector::class.java])
+            assertTrue(fixData is LintFix.DataMap)
+            val map = fixData as LintFix.DataMap
+            assertNotNull(map[ConstraintLayoutDetector.KEY_UPGRADE_CONSTRAINT_LAYOUT])
         }
     }
 

@@ -197,7 +197,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "@@ -29 +29\n" +
                     "-     androidTestCompile 'com.android.support.test:runner:0.3'\n" +
                     "+     androidTestCompile 'com.android.support.test:runner:0.5'\n" +
-                    "Data for build.gradle line 23:   GradleCoordinate : com.android.support:appcompat-v7:+"
+                    "Data for build.gradle line 23:   coordinate : com.android.support:appcompat-v7:+"
             )
     }
 

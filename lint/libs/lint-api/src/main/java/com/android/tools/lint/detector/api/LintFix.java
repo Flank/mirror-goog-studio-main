@@ -17,15 +17,18 @@
 package com.android.tools.lint.detector.api;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMethod;
+import java.io.File;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +37,6 @@ import org.intellij.lang.annotations.Language;
 import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
-import org.jetbrains.uast.UElement;
 
 /**
  * A <b>description</b> of a quickfix for a lint warning, which provides structured data for use by
@@ -93,9 +95,69 @@ public class LintFix {
      * stored by its key
      */
     @Nullable
-    public static <T> T getData(@Nullable LintFix fix, @NonNull Class<T> key) {
+    public static String getString(
+            @Nullable LintFix fix, @NonNull String key, @Nullable String defaultValue) {
         if (fix instanceof DataMap) {
-            return ((DataMap) fix).get(key);
+            return ((DataMap) fix).getString(key, defaultValue);
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Convenience wrapper which checks whether the given fix is a map, and if so returns the value
+     * stored by its key
+     */
+    @Nullable
+    public static List<String> getStringList(@Nullable LintFix fix, @NonNull String key) {
+        if (fix instanceof DataMap) {
+            return ((DataMap) fix).getStringList(key);
+        }
+
+        return null;
+    }
+
+    public static Throwable getThrowable(@Nullable LintFix fix, @NonNull String key) {
+        if (fix instanceof DataMap) {
+            return ((DataMap) fix).getThrowable(key);
+        }
+
+        return null;
+    }
+
+    /**
+     * Convenience wrapper which checks whether the given fix is a map, and if so returns the value
+     * stored by its key
+     */
+    public static int getInt(@Nullable LintFix fix, @NonNull String key, int defaultValue) {
+        if (fix instanceof DataMap) {
+            return ((DataMap) fix).getInt(key, defaultValue);
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Convenience wrapper which checks whether the given fix is a map, and if so returns the value
+     * stored by its key
+     */
+    public static boolean getBoolean(
+            @Nullable LintFix fix, @NonNull String key, boolean defaultValue) {
+        if (fix instanceof DataMap) {
+            return ((DataMap) fix).getBoolean(key, defaultValue);
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Convenience wrapper which checks whether the given fix is a map, and if so returns the value
+     * stored by its key
+     */
+    @Nullable
+    public static PsiMethod getMethod(@Nullable LintFix fix, @NonNull String key) {
+        if (fix instanceof DataMap) {
+            return ((DataMap) fix).getMethod(key);
         }
 
         return null;
@@ -184,7 +246,7 @@ public class LintFix {
          * @param displayName the display name
          * @return this
          */
-        public Builder name(@NonNull String displayName) {
+        public Builder name(@Nullable String displayName) {
             this.displayName = displayName;
             return this;
         }
@@ -215,7 +277,10 @@ public class LintFix {
          * @return this
          */
         public Builder name(@NonNull String displayName, boolean useAsFamilyNameToo) {
-            name(displayName, useAsFamilyNameToo ? displayName : null);
+            this.displayName = displayName;
+            if (useAsFamilyNameToo) {
+                this.familyName = displayName;
+            }
             return this;
         }
 
@@ -226,7 +291,7 @@ public class LintFix {
          *     same family name in a single go.
          * @return this
          */
-        public Builder sharedName(@NonNull String familyName) {
+        public Builder sharedName(@Nullable String familyName) {
             this.familyName = familyName;
             return this;
         }
@@ -250,13 +315,11 @@ public class LintFix {
         }
 
         /** Creates a group of fixes */
-        @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder group() {
             return new GroupBuilder(displayName, familyName).type(GroupType.ALTERNATIVES);
         }
 
         /** Creates a number of alternatives fixes; alias for {@link #group()} */
-        @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder alternatives() {
             return group();
         }
@@ -270,7 +333,6 @@ public class LintFix {
          * <p>The test infrastructure may not apply these correctly. This is primarily intended for
          * fixes that are clearly separate, such as setting multiple attributes.
          */
-        @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder composite() {
             return new GroupBuilder(displayName, familyName).type(GroupType.COMPOSITE);
         }
@@ -284,7 +346,6 @@ public class LintFix {
          * <p>The test infrastructure may not apply these correctly. This is primarily intended for
          * fixes that are clearly separate, such as setting multiple attributes.
          */
-        @SuppressWarnings("MethodMayBeStatic")
         public LintFix composite(LintFix... fixes) {
             return new GroupBuilder(displayName, familyName)
                     .type(GroupType.COMPOSITE)
@@ -299,7 +360,6 @@ public class LintFix {
          * @param fixes fixes to combine
          * @return a fix representing the list
          */
-        @SuppressWarnings("MethodMayBeStatic")
         public LintFix group(LintFix... fixes) {
             return new GroupBuilder(displayName, familyName).join(fixes).build();
         }
@@ -379,11 +439,16 @@ public class LintFix {
          * given objects
          */
         @NonNull
-        public FixMapBuilder map(@NonNull Object... args) {
+        private FixMapBuilder map(@NonNull Object... args) {
             FixMapBuilder builder = map();
 
-            for (Object arg : args) {
-                builder.put(arg);
+            Map<String, Object> map = builder.map;
+            assert args.length % 2 == 0; // keys and values
+            for (int i = 0; i < args.length; i += 2) {
+                String key = args[i].toString();
+                Object value = args[i + 1];
+                Object previous = map.put(key, value);
+                assert previous == null; // Clashing keys
             }
 
             return builder;
@@ -468,7 +533,7 @@ public class LintFix {
          *     same family name in a single go.
          * @return this
          */
-        public GroupBuilder sharedName(@NonNull String familyName) {
+        public GroupBuilder sharedName(@Nullable String familyName) {
             this.familyName = familyName;
             return this;
         }
@@ -528,7 +593,7 @@ public class LintFix {
          * @param displayName the display name
          * @return this
          */
-        public ReplaceStringBuilder name(String displayName) {
+        public ReplaceStringBuilder name(@Nullable String displayName) {
             this.displayName = displayName;
             return this;
         }
@@ -555,13 +620,17 @@ public class LintFix {
          *     same family name in a single go.
          * @return this
          */
-        public ReplaceStringBuilder sharedName(@NonNull String familyName) {
+        public ReplaceStringBuilder sharedName(@Nullable String familyName) {
             this.familyName = familyName;
             return this;
         }
 
         /** Replaces the given pattern match (or the first group within it, if any) */
-        public ReplaceStringBuilder pattern(@Language("RegExp") String oldPattern) {
+        public ReplaceStringBuilder pattern(@Nullable @Language("RegExp") String oldPattern) {
+            if (oldPattern == null) {
+                this.oldPattern = null;
+                return this;
+            }
             assert this.oldText == null;
             assert this.oldPattern == null;
 
@@ -573,7 +642,11 @@ public class LintFix {
         }
 
         /** Replaces the given literal text */
-        public ReplaceStringBuilder text(String oldText) {
+        public ReplaceStringBuilder text(@Nullable String oldText) {
+            if (oldText == null) {
+                this.oldText = null;
+                return this;
+            }
             assert this.oldText == null : "Should not call text, beginning or end more than once";
             assert this.oldPattern == null;
             this.oldText = oldText;
@@ -620,7 +693,7 @@ public class LintFix {
          * \k&lt;n&gt; can be used to reference the n'th group, if and only if this replacement is
          * using {@link #pattern(String)}}.
          */
-        public ReplaceStringBuilder with(String newText) {
+        public ReplaceStringBuilder with(@Nullable String newText) {
             assert this.newText == null;
             this.newText = newText;
             return this;
@@ -632,6 +705,15 @@ public class LintFix {
          */
         public ReplaceStringBuilder shortenNames() {
             this.shortenNames = true;
+            return this;
+        }
+
+        /**
+         * Sets whether the IDE should simplify fully qualified names in the element after this fix
+         * has been run (off by default)
+         */
+        public ReplaceStringBuilder shortenNames(boolean shorten) {
+            this.shortenNames = shorten;
             return this;
         }
 
@@ -812,7 +894,7 @@ public class LintFix {
          *     same family name in a single go.
          * @return this
          */
-        public SetAttributeBuilder sharedName(@NonNull String familyName) {
+        public SetAttributeBuilder sharedName(@Nullable String familyName) {
             this.familyName = familyName;
             return this;
         }
@@ -848,7 +930,7 @@ public class LintFix {
 
         /** Sets the attribute name. Should not include the prefix. */
         public SetAttributeBuilder attribute(@NonNull String attribute) {
-            assert attribute.indexOf(':') == -1 : attribute;
+            assert attribute.indexOf(':') == -1 || attribute.startsWith(XMLNS_PREFIX) : attribute;
             assert this.attribute == null;
             this.attribute = attribute;
             return this;
@@ -904,8 +986,8 @@ public class LintFix {
          * Sets a location range to use for searching for the element. Useful if you want to work on
          * elements outside the element marked as the problem range.
          */
-        public SetAttributeBuilder range(@NonNull Location range) {
-            this.range = extractOffsets(range);
+        public SetAttributeBuilder range(@Nullable Location range) {
+            this.range = range != null ? extractOffsets(range) : null;
             return this;
         }
 
@@ -914,9 +996,8 @@ public class LintFix {
             return todo(namespace, attribute, null, null);
         }
 
-        /** Selects the value in the offset range (relative to value start */
+        /** Selects the value in the offset range (relative to value start) */
         public SetAttributeBuilder select(int start, int end) {
-            assert value != null; // must be set first
             this.mark = Math.min(start, end);
             this.dot = Math.max(start, end);
             return this;
@@ -1048,33 +1129,14 @@ public class LintFix {
             this.familyName = familyName;
         }
 
-        private final Map<Object, Object> map = Maps.newHashMapWithExpectedSize(4);
+        /**
+         * Values are limited to strings, files, list of strings, list of files, ints and booleans.
+         * Throwables can also be in there, but those are only allowed within lint unit tests.
+         */
+        private final Map<String, Object> map = Maps.newHashMapWithExpectedSize(4);
 
-        /** Puts the given value into the map using its class as the key */
-        public <T> FixMapBuilder put(@Nullable T value) {
-            if (value == null) {
-                return this;
-            }
-            Class<?> key = value.getClass();
-            // Simplify keys such that you don't end up with ArrayList, HashMap etc
-            // when you passed in something just typed List, Map, Set, etc
-            if (value instanceof List) {
-                key = List.class;
-            } else if (value instanceof Map) {
-                key = Map.class;
-            } else if (value instanceof Set) {
-                key = Set.class;
-            } else if (value instanceof UElement) {
-                key = UElement.class;
-            } else if (value instanceof PsiElement) {
-                key = PsiElement.class;
-            }
-            assert !map.containsKey(key);
-            map.put(key, value);
-            return this;
-        }
-
-        public <T> FixMapBuilder put(@NonNull Class<? extends T> key, @Nullable T value) {
+        /** Puts the given value into the map using the given key */
+        public FixMapBuilder put(@NonNull String key, @Nullable String value) {
             if (value == null) {
                 return this;
             }
@@ -1084,10 +1146,44 @@ public class LintFix {
         }
 
         /** Puts the given value into the map using the given key */
-        public FixMapBuilder put(@NonNull String key, @Nullable Object value) {
+        public FixMapBuilder put(@NonNull String key, @Nullable PsiMethod value) {
             if (value == null) {
                 return this;
             }
+            assert !map.containsKey(key);
+            map.put(key, value);
+            return this;
+        }
+
+        /**
+         * Puts the given value into the map using the given key. This is only intended for the lint
+         * test infrastructure; exceptions cannot be persisted.
+         */
+        public FixMapBuilder put(@NonNull String key, @Nullable Throwable throwable) {
+            if (throwable == null) {
+                return this;
+            }
+            assert !map.containsKey(key);
+            map.put(key, throwable);
+            return this;
+        }
+
+        /** Puts the given value into the map using the given key */
+        public FixMapBuilder put(@NonNull String key, int value) {
+            assert !map.containsKey(key);
+            map.put(key, value);
+            return this;
+        }
+
+        /** Puts the given value into the map using the given key */
+        public FixMapBuilder put(@NonNull String key, boolean value) {
+            assert !map.containsKey(key);
+            map.put(key, value);
+            return this;
+        }
+
+        /** Puts the given value into the map using the given key */
+        public FixMapBuilder put(@NonNull String key, List<String> value) {
             assert !map.containsKey(key);
             map.put(key, value);
             return this;
@@ -1106,89 +1202,121 @@ public class LintFix {
      * <p>This class/API is <b>only</b> intended for IDE use. Lint checks should be accessing the
      * builder class instead - {@link #create()}.
      */
-    public static class DataMap extends LintFix implements Iterable {
-        private final Map<Object, Object> map;
+    public static class DataMap extends LintFix {
+        private final Map<String, Object> map;
 
-        private DataMap(
+        /**
+         * Only intended to be used by lint; detectors should construct via the {@link
+         * FixMapBuilder}
+         */
+        public DataMap(
                 @Nullable String displayName,
                 @Nullable String familyName,
-                Map<Object, Object> map) {
+                Map<String, Object> map) {
             super(displayName, familyName);
             this.map = map;
         }
 
-        /** Returns the value for the given class key */
-        @Nullable
-        public <T> T get(@NonNull Class<T> key) {
-            //noinspection unchecked
-            T t = (T) map.get(key);
-            if (t != null) {
-                return t;
-            }
-
-            // See if there are other matches for this class.
-            for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                Object k = entry.getKey();
-                if (k instanceof Class && key.isAssignableFrom((Class<?>) k)) {
-                    //noinspection unchecked
-                    return (T) entry.getValue();
-                }
-            }
-
-            // Auto boxing?
-            Class<?> wrapperClass = getWrapperClass(key);
-            if (wrapperClass != null) {
-                //noinspection unchecked
-                return (T) map.get(wrapperClass);
-            }
-
-            return null;
-        }
-
-        @Nullable
-        private static Class<?> getWrapperClass(@NonNull Class<?> primitiveClass) {
-            if (primitiveClass == Integer.TYPE) {
-                return Integer.class;
-            } else if (primitiveClass == Long.TYPE) {
-                return Long.class;
-            } else if (primitiveClass == Boolean.TYPE) {
-                return Boolean.class;
-            } else if (primitiveClass == Float.TYPE) {
-                return Float.class;
-            } else if (primitiveClass == Double.TYPE) {
-                return Double.class;
-            } else if (primitiveClass == Short.TYPE) {
-                return Short.class;
-            } else if (primitiveClass == Character.TYPE) {
-                return Character.class;
-            } else if (primitiveClass == Byte.TYPE) {
-                return Byte.class;
-            }
-
-            return null;
+        /** Returns true if this map contains a fix with the given key */
+        public boolean hasKey(@NonNull String key) {
+            return map.containsKey(key);
         }
 
         /** Returns the value for the given String key */
         @Nullable
         public Object get(@NonNull String key) {
-            //noinspection unchecked
             return map.get(key);
         }
 
-        @NonNull
-        @Override
-        public Iterator iterator() {
-            return map.values().iterator();
-        }
-
         /** Returns the keys */
-        public Set<Object> keys() {
+        public Set<String> keys() {
             return map.keySet();
         }
 
         @Override
         public String toString() {
             return map.toString();
+        }
+
+        @Nullable
+        public String getString(@NonNull String key, @Nullable String defaultValue) {
+            Object value = map.get(key);
+            if (value != null) {
+                return value.toString();
+            }
+            return defaultValue;
+        }
+
+        @Nullable
+        public List<String> getStringList(@NonNull String key) {
+            Object value = map.get(key);
+            if (value instanceof List<?>) {
+                //noinspection unchecked
+                return (List<String>) value;
+            } else if (value instanceof String) {
+                // from XML persistence
+                return Splitter.on(",").splitToList((CharSequence) value);
+            }
+            return null;
+        }
+
+        @Nullable
+        public File getFile(@NonNull String key, @Nullable File defaultValue) {
+            Object value = map.get(key);
+            if (value != null) {
+                if (value instanceof File) {
+                    return (File) value;
+                } else if (value instanceof String) {
+                    return new File((String) value);
+                }
+            }
+            return defaultValue;
+        }
+
+        public int getInt(@NonNull String key, int defaultValue) {
+            Object value = map.get(key);
+            if (value != null) {
+                if (value instanceof Number) {
+                    return ((Number) value).intValue();
+                } else if (value instanceof String) {
+                    try {
+                        return Integer.parseInt((String) value);
+                    } catch (NumberFormatException ignore) {
+                        // fall through
+                    }
+                }
+            }
+            return defaultValue;
+        }
+
+        public boolean getBoolean(@NonNull String key, boolean defaultValue) {
+            Object value = map.get(key);
+            if (value != null) {
+                if (value instanceof Boolean) {
+                    return (Boolean) value;
+                } else if (value instanceof String) {
+                    return VALUE_TRUE.equals(value);
+                }
+            }
+            return defaultValue;
+        }
+
+        @Nullable
+        public PsiMethod getMethod(@NonNull String key) {
+            Object value = map.get(key);
+            if (value instanceof PsiMethod) {
+                return (PsiMethod) value;
+            }
+            return null;
+        }
+
+        @Nullable
+        public Throwable getThrowable(@NonNull String key) {
+            Object value = map.get(key);
+            if (value instanceof Throwable) {
+                return (Throwable) value;
+            }
+            return null;
         }
     }
 
@@ -1205,7 +1333,7 @@ public class LintFix {
     public static class ShowUrl extends LintFix {
         @NonNull public final String url;
 
-        protected ShowUrl(
+        private ShowUrl(
                 @Nullable String displayName, @Nullable String familyName, @NonNull String url) {
             super(displayName, familyName);
             this.url = url;
@@ -1282,7 +1410,7 @@ public class LintFix {
          * A location range for the source region where the fix will operate. Useful when the fix is
          * applying in a wider range than the highlighted problem range.
          */
-        @Nullable public final Location range;
+        @Nullable public Location range;
 
         /**
          * The caret location to show, OR {@link Integer#MIN_VALUE} if not set. If {@link #mark} is
@@ -1311,7 +1439,7 @@ public class LintFix {
          * @param independent whether it is <b>not</b> the case that applying other fixes
          *     simultaneously can invalidate this fix
          */
-        private SetAttribute(
+        public SetAttribute(
                 @Nullable String displayName,
                 @Nullable String familyName,
                 @Nullable String namespace,
@@ -1392,7 +1520,7 @@ public class LintFix {
          * A location range to use for searching for the text or pattern. Useful if you want to make
          * a replacement that is larger than the error range highlighted as the problem range.
          */
-        @Nullable public final Location range;
+        @Nullable public Location range;
         /** Whether symbols should be shortened after replacement */
         public final boolean shortenNames;
         /** Whether the modified text range should be reformatted */
@@ -1420,11 +1548,11 @@ public class LintFix {
          * @param independent whether it is <b>not</b> the case that applying other fixes
          *     simultaneously can invalidate this fix
          */
-        private ReplaceString(
-                @NonNull String displayName,
+        public ReplaceString(
+                @Nullable String displayName,
                 @Nullable String familyName,
                 @Nullable String oldString,
-                @Nullable String oldPattern,
+                @Nullable @Language("RegExp") String oldPattern,
                 @Nullable String selectPattern,
                 @NonNull String replacement,
                 boolean shortenNames,

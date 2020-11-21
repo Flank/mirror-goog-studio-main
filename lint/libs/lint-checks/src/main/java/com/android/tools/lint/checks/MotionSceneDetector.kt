@@ -42,7 +42,6 @@ import com.android.resources.ResourceFolderType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -122,7 +121,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
                 element,
                 context.getNameLocation(element),
                 "`$ATTR_CUSTOM_ATTRIBUTE_NAME` should be defined",
-                LintFix.create().set().todo(AUTO_URI, ATTR_CUSTOM_ATTRIBUTE_NAME).build()
+                fix().set().todo(AUTO_URI, ATTR_CUSTOM_ATTRIBUTE_NAME).build()
             )
         } else if (!customAttributeNames.add(name)) {
             context.report(
@@ -130,7 +129,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
                 element,
                 context.getNameLocation(element),
                 "The custom attribute `$name` was specified multiple times",
-                LintFix.create()
+                fix()
                     .name("Delete this custom attribute")
                     .replace()
                     .with("")
@@ -159,7 +158,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
                     onClickElement,
                     context.getNameLocation(onClickElement),
                     "Can only have one `$ON_CLICK` per `$TRANSITION`",
-                    LintFix.create()
+                    fix()
                         .name("Delete additional $ON_CLICK")
                         .replace()
                         .with("")
@@ -251,7 +250,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
                 subTag,
                 context.getNameLocation(subTag),
                 "`${element.tagName}` can not have any child tags",
-                LintFix.create()
+                fix()
                     .name("Delete ${subTag.tagName}")
                     .replace()
                     .with("")

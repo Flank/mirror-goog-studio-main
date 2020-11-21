@@ -61,6 +61,8 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     private static final Implementation XML_IMPLEMENTATION =
             new Implementation(ChromeOsDetector.class, Scope.MANIFEST_SCOPE);
 
+    public static final String KEY_FEATURE_NAME = "featureName";
+
     /** Using hardware unsupported by Chrome OS devices */
     public static final Issue UNSUPPORTED_CHROME_OS_HARDWARE =
             Issue.create(
@@ -314,7 +316,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                                             "Permission exists without corresponding hardware `<uses-feature "
                                                     + "android:name=\"%1$s\" required=\"false\">` tag",
                                             unsupportedHardwareName);
-                            LintFix fix = fix().data(unsupportedHardwareName);
+                            LintFix fix = fix().data(KEY_FEATURE_NAME, unsupportedHardwareName);
                             xmlContext.report(
                                     PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
                                     permissionElement,

@@ -40,6 +40,8 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
  */
 class CallSuperDetector : Detector(), SourceCodeScanner {
     companion object Issues {
+        const val KEY_METHOD = "method"
+
         private val IMPLEMENTATION = Implementation(
             CallSuperDetector::class.java,
             Scope.JAVA_FILE_SCOPE
@@ -79,7 +81,7 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 if (count == 0) {
                     val message = "Overriding method should call `super.${node.name}`"
                     val location = context.getNameLocation(node)
-                    val fix = fix().map().put(PsiMethod::class.java, superMethod).build()
+                    val fix = fix().data(KEY_METHOD, superMethod)
                     context.report(ISSUE, node, location, message, fix)
                 } else if (count > 1 && node.name == "onCreate") {
                     val overlap = visitor.findFirstOverlap(node) ?: return

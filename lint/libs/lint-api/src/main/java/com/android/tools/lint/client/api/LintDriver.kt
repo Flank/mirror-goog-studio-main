@@ -2979,6 +2979,8 @@ class LintDriver(
 
         private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
 
+        const val KEY_THROWABLE = "throwable"
+
         /**
          * For testing only: returns the number of exceptions thrown during Java AST analysis
          *
@@ -3100,7 +3102,7 @@ class LintDriver(
                     IssueRegistry.LINT_ERROR,
                     Location.create(context.file),
                     message,
-                    LintFix.create().map().put(Throwable::class.java, throwable).build()
+                    LintFix.create().map().put(KEY_THROWABLE, throwable).build()
                 )
                 project != null -> {
                     val projectDir = project.dir
@@ -3109,7 +3111,7 @@ class LintDriver(
                         IssueRegistry.LINT_ERROR,
                         Location.create(project.dir),
                         message,
-                        LintFix.create().map().put(Throwable::class.java, throwable).build()
+                        LintFix.create().map().put(KEY_THROWABLE, throwable).build()
                     )
                 }
                 else -> driver.client.log(throwable, message)
