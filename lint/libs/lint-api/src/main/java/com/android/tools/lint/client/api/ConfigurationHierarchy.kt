@@ -254,6 +254,7 @@ open class ConfigurationHierarchy(
         default: Configuration?,
         configFactory: (() -> LintOptionsConfiguration) = {
             LintOptionsConfiguration(this, lintOptions, fatalOnly)
+                .also { it.associatedLocation = Location.create(project.dir) }
         }
     ): Configuration {
         return createChainedConfigurations(
@@ -501,7 +502,6 @@ open class ConfigurationHierarchy(
             override fun ignore(issue: Issue, file: File) {}
             override fun ignore(issueId: String, file: File) {}
             override fun setSeverity(issue: Issue, severity: Severity?) {}
-            override fun getOption(issue: Issue, name: String, default: String?): String? = default
             override fun getOptionAsFile(issue: Issue, name: String, default: File?): File? =
                 default
 
@@ -563,10 +563,18 @@ open class ConfigurationHierarchy(
         override fun validateIssueIds(
             client: LintClient,
             driver: LintDriver,
-            project: Project,
+            project: Project?,
             registry: IssueRegistry
         ) {
             parent?.validateIssueIds(client, driver, project, registry)
+        }
+
+        override fun getIssueConfigLocation(
+            issue: String,
+            specificOnly: Boolean,
+            severityOnly: Boolean
+        ): Location? {
+            return parent?.getIssueConfigLocation(issue, specificOnly, severityOnly)
         }
 
         override var fileLevel = false

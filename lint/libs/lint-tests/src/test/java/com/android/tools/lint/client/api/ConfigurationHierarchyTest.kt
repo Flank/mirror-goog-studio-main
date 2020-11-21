@@ -263,20 +263,25 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
             gradle("apply plugin: 'com.android.application'")
         ).dependsOn(lib).name("app")
 
-        lint().issues(*manifestIssues).projects(main).run().expect(
-            """
-            app/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
-               <uses-library android:name="android.test.runner" android:required="false" />
-                ~~~~~~~~~~~~
-            app/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
-               <uses-sdk android:targetSdkVersion="24" />
-                ~~~~~~~~
-            lib/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
-               <uses-sdk android:targetSdkVersion="24" />
-                ~~~~~~~~
-            1 errors, 2 warnings
-            """
-        )
+        lint()
+            .issues(*manifestIssues)
+            .useTestConfiguration(false)
+            .projects(main)
+            .run()
+            .expect(
+                """
+                app/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
+                   <uses-library android:name="android.test.runner" android:required="false" />
+                    ~~~~~~~~~~~~
+                app/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
+                   <uses-sdk android:targetSdkVersion="24" />
+                    ~~~~~~~~
+                lib/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
+                   <uses-sdk android:targetSdkVersion="24" />
+                    ~~~~~~~~
+                1 errors, 2 warnings
+                """
+            )
     }
 
     fun testFlagsAndLintXmlInteraction() {

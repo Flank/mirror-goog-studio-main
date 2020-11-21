@@ -59,7 +59,8 @@ public class LintCustomLocalAndPublishTest {
         project.executor().withFailOnWarning(false).expectFailure().run(":library:lintDebug");
 
         String libexpected =
-                "build.gradle:16: Warning: Unknown issue id \"UnitTestLintCheck\". Did you mean 'UnitTestLintCheck2' (Custom Lint Check) ? [UnknownIssueId]\n"
+                        ""
+                        + "build.gradle:16: Warning: Unknown issue id \"UnitTestLintCheck\". Did you mean 'UnitTestLintCheck2' (Custom Lint Check) ? [UnknownIssueId]\n"
                         + "        checkOnly 'UnitTestLintCheck'\n"
                         + "                   ~~~~~~~~~~~~~~~~~\n"
                         + "\n"
@@ -100,7 +101,8 @@ public class LintCustomLocalAndPublishTest {
         project.executor().withFailOnWarning(false).expectFailure().run(":app:lintDebug");
 
         String appExpected =
-                "build.gradle:15: Warning: Unknown issue id \"UnitTestLintCheck2\". Did you mean:\n"
+                ""
+                        + "build.gradle:15: Warning: Unknown issue id \"UnitTestLintCheck2\". Did you mean:\n"
                         + "'UnitTestLintCheck' (Custom Lint Check)\n"
                         + "'UnitTestLintCheck3' (Custom Lint Check)\n"
                         + "? [UnknownIssueId]\n"

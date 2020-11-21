@@ -354,7 +354,7 @@ class LintBaseline(
                 )
             ).use { reader ->
                 val parser = KXmlParser()
-                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
+                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
                 parser.setInput(reader)
 
                 var issue: String? = null

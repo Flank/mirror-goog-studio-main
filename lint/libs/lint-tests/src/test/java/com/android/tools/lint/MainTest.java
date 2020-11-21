@@ -783,7 +783,9 @@ public class MainTest extends AbstractCheckTest {
         checkDriver(
                 ""
                         + "Scanning MainTest_testInvalidLintXmlId: \n"
-                        + "lint.xml: Error: Unknown issue id \"SomeUnknownId\". Did you mean 'UnknownId' (Reference to an unknown id) ? [UnknownIssueId]\n"
+                        + "lint.xml:4: Error: Unknown issue id \"SomeUnknownId\". Did you mean 'UnknownId' (Reference to an unknown id) ? [UnknownIssueId]\n"
+                        + "    <issue id=\"SomeUnknownId\" severity=\"fatal\" />\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings",
                 "",
 

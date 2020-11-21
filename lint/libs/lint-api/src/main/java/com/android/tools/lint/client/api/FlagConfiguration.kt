@@ -16,11 +16,14 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import java.io.File
 
 /**
@@ -28,6 +31,7 @@ import java.io.File
  * command line (as well as any other applicable flags)
  */
 open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configuration(configurations) {
+    var associatedLocation: Location? = null
 
     open fun fatalOnly(): Boolean = false
     open fun isWarningsAsErrors(): Boolean = false
@@ -41,6 +45,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
     open fun enabledCategories(): Set<Category>? = null
     open fun exactCategories(): Set<Category>? = null
     open fun severityOverride(issue: Issue): Severity? = null
+    open fun severityOverrides(): Set<String> = emptySet()
 
     override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
         if (issue.suppressNames != null) {
@@ -222,5 +227,73 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
             }
         }
         return visibleSeverity
+    }
+
+    /**
+     * Already validated this issue? We can encounter the same configuration multiple times
+     * when searching up the parent tree. (We can't skip calling the parent because the
+     * parent references can change over time.)
+     */
+    private var validated = false
+
+    override fun validateIssueIds(
+        client: LintClient,
+        driver: LintDriver,
+        project: Project?,
+        registry: IssueRegistry
+    ) {
+        parent?.validateIssueIds(client, driver, project, registry)
+        if (validated) {
+            return
+        }
+        validated = true
+
+        validateIssueIds(client, driver, project, registry, disabledIds())
+        validateIssueIds(client, driver, project, registry, enabledIds())
+        validateIssueIds(client, driver, project, registry, severityOverrides())
+        exactCheckedIds()?.let { validateIssueIds(client, driver, project, registry, it) }
+    }
+
+    protected fun validateIssueIds(
+        client: LintClient,
+        driver: LintDriver,
+        project: Project?,
+        registry: IssueRegistry,
+        ids: Collection<String>
+    ) {
+        for (id in ids) {
+            if (id == SdkConstants.SUPPRESS_ALL) {
+                // builtin special "id" which means all id's
+                continue
+            }
+            if (registry.getIssue(id) == null) {
+                // You can also configure issues by categories; don't flag these
+                if (registry.isCategoryName(id)) {
+                    continue
+                }
+                reportNonExistingIssueId(client, driver, registry, project, id)
+            }
+        }
+        parent?.validateIssueIds(client, driver, project, registry)
+    }
+
+    override fun getIssueConfigLocation(
+        issue: String,
+        specificOnly: Boolean,
+        severityOnly: Boolean
+    ): Location? {
+        overrides?.getIssueConfigLocation(issue, specificOnly, severityOnly)?.let {
+            return it
+        }
+
+        if (associatedLocation != null) {
+            val file = associatedLocation?.file
+            if (file != null) {
+                return guessGradleLocationForFile(configurations.client, file, issue)
+            }
+        }
+
+        return parent?.getIssueConfigLocation(issue, specificOnly, severityOnly)
+            ?: associatedLocation
     }
 }

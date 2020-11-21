@@ -1507,6 +1507,15 @@ fun guessGradleLocation(
     string: String?
 ): Location {
     val gradle = findGradleBuildFile(projectDir)
+    return guessGradleLocationForFile(client, gradle, string)
+}
+
+/** Like [guessGradleLocation] but where the specific build.gradle file is known */
+fun guessGradleLocationForFile(
+    client: LintClient,
+    gradle: File,
+    string: String?
+): Location {
     if (gradle.isFile) {
         if (string == null) {
             return Location.create(gradle)
@@ -1550,11 +1559,11 @@ fun guessGradleLocation(
                 offset++
             }
         }
-
-        return Location.create(gradle)
+    } else if (gradle.isDirectory) {
+        return guessGradleLocation(client, gradle, string)
     }
 
-    return Location.create(projectDir)
+    return Location.create(gradle)
 }
 
 /**

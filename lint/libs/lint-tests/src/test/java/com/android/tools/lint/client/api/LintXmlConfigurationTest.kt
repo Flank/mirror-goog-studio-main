@@ -1113,8 +1113,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                 _, project, configuration ->
                 assertNull(configuration.parent)
                 assertFalse(configuration.fileLevel)
-
-                assertTrue(configuration.javaClass.simpleName.equals("ProjectPlaceholderConfiguration"))
+                assertEquals("ProjectPlaceholderConfiguration", configuration.javaClass.simpleName)
                 val dir = configuration.dir
                 println(dir)
                 assertNull(configuration.getDefinedSeverity(ApiDetector.UNSUPPORTED))
@@ -1150,7 +1149,6 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         expected: String = "No warnings.",
         vararg testFiles: com.android.tools.lint.checks.infrastructure.TestFile
     ) {
-
         lint().files(
             *testFiles,
             // To make sure we have at least one project

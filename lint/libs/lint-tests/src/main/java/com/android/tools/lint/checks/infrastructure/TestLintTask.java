@@ -35,12 +35,14 @@ import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
+import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JarFileIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
+import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.Detector;
@@ -127,12 +129,15 @@ public class TestLintTask {
     File tempDir = Files.createTempDir();
     private TestFile baseline;
     File baselineFile;
+    TestFile overrideConfig;
+    File overrideConfigFile;
     Set<Desugaring> desugaring;
     EnumSet<Platform> platforms;
     boolean checkUInjectionHost = true;
     boolean useTestProject;
     boolean allowExceptions;
     public String testName = null;
+    boolean useTestConfiguration = true;
     boolean stripRoot = true;
 
     /** Creates a new lint test task */
@@ -324,6 +329,38 @@ public class TestLintTask {
     public TestLintTask baseline(@NonNull TestFile baseline) {
         ensurePreRun();
         this.baseline = baseline;
+        return this;
+    }
+
+    /**
+     * Configures the test task to run with the given override configuration.
+     *
+     * @param overrideConfig the override config XML contents
+     * @return this, for constructor chaining
+     */
+    public TestLintTask overrideConfig(@NonNull TestFile overrideConfig) {
+        ensurePreRun();
+        this.overrideConfig = overrideConfig;
+        return this;
+    }
+
+    /**
+     * Whether the lint test infrastructure should insert a special test configuration which exactly
+     * enables the specific issues analyzed by this test task ({@see #issues}), and disables all
+     * others. This makes it easier to write tests: you don't start picking up warnings from
+     * unrelated other checks, and if it's a check that's disabled by default, you don't have to
+     * provide a test configuration to override it.
+     *
+     * <p>However, lint itself need to test the behavior of lint.xml inheritance, and the test
+     * configurations interfere with this. This flag (which is on by default) can be turned off to
+     * use only the configurations present in the project.
+     *
+     * @param useTestConfiguration the override config XML contents
+     * @return this, for constructor chaining
+     */
+    public TestLintTask useTestConfiguration(boolean useTestConfiguration) {
+        ensurePreRun();
+        this.useTestConfiguration = useTestConfiguration;
         return this;
     }
 
@@ -849,6 +886,9 @@ public class TestLintTask {
                 if (baseline != null) {
                     baselineFile = baseline.createFile(projectDir);
                 }
+                if (overrideConfig != null) {
+                    overrideConfigFile = overrideConfig.createFile(projectDir);
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
@@ -1059,6 +1099,15 @@ public class TestLintTask {
             }
         }
 
+        if (!useTestConfiguration && overrideConfigFile != null) {
+            ConfigurationHierarchy configurations = client.getConfigurations();
+            if (configurations.getOverrides() == null) {
+                Configuration config =
+                        LintXmlConfiguration.create(configurations, overrideConfigFile);
+                configurations.addGlobalConfigurations(null, config);
+            }
+        }
+
         client.task = this;
         return client;
     }
@@ -1109,6 +1158,13 @@ public class TestLintTask {
             }
 
             fp.createFile(projectDir);
+
+            // Note -- lint-override.xml is only a convention in the test suite; it's
+            // not something lint automatically picks up!
+            if ("lint-override.xml".equals(fp.targetRelativePath)) {
+                overrideConfig = fp;
+                continue;
+            }
 
             if (fp instanceof GradleTestFile) {
                 // Record mocking relationship used by createProject lint callback

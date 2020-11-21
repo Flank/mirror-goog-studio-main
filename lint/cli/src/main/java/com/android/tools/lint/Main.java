@@ -232,7 +232,7 @@ public class Main {
         if (exitCode != ERRNO_INTERNAL_CONTINUE) {
             return exitCode;
         }
-        initializeConfigurations(client);
+        initializeConfigurations(client, argumentState);
         exitCode = initializeReporters(client, argumentState);
         if (exitCode != ERRNO_INTERNAL_CONTINUE) {
             return exitCode;
@@ -1228,7 +1228,7 @@ public class Main {
         return ERRNO_INTERNAL_CONTINUE;
     }
 
-    private void initializeConfigurations(LintCliClient client) {
+    private void initializeConfigurations(LintCliClient client, ArgumentState argumentState) {
         ConfigurationHierarchy configurations = client.getConfigurations();
 
         File overrideConfig = flags.getOverrideLintConfig();
@@ -1242,6 +1242,11 @@ public class Main {
         File defaultConfiguration = flags.getLintConfig();
         configurations.addGlobalConfigurationFromFile(defaultConfiguration, override);
         client.syncConfigOptions();
+
+        if (!argumentState.modules.isEmpty()) {
+            File dir = argumentState.modules.get(0).getDir();
+            override.setAssociatedLocation(Location.create(dir));
+        }
     }
 
     private int initializeReporters(LintCliClient client, ArgumentState argumentState) {

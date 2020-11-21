@@ -406,6 +406,9 @@ public class TestLintClient extends LintCliClient {
         if (task.baselineFile != null) {
             flags.setBaselineFile(task.baselineFile);
         }
+        if (task.overrideConfigFile != null) {
+            flags.setOverrideLintConfig(task.overrideConfigFile);
+        }
         if (mocker != null && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
             description.type(ProjectDescription.Type.JAVA);
         }
@@ -936,6 +939,10 @@ public class TestLintClient extends LintCliClient {
     public Configuration getConfiguration(
             @NonNull com.android.tools.lint.detector.api.Project project,
             @Nullable final LintDriver driver) {
+        if (!task.useTestConfiguration) {
+            return super.getConfiguration(project, driver);
+        }
+
         return getConfigurations()
                 .getConfigurationForProject(
                         project,
@@ -948,6 +955,16 @@ public class TestLintClient extends LintCliClient {
             @NonNull Configuration defaultConfiguration) {
         // Ensure that we have a fallback configuration which disables everything
         // except the relevant issues
+
+        if (task.overrideConfigFile != null) {
+            ConfigurationHierarchy configurations = getConfigurations();
+            if (configurations.getOverrides() == null) {
+                Configuration config =
+                        LintXmlConfiguration.create(configurations, task.overrideConfigFile);
+                configurations.addGlobalConfigurations(null, config);
+            }
+        }
+
         LintModelModule model = project.getBuildModule();
         final ConfigurationHierarchy configurations = getConfigurations();
         if (model != null) {

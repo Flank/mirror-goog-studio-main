@@ -114,6 +114,9 @@ open class LintOptionsConfiguration(
             else -> null
         }
     }
+    override fun severityOverrides(): Set<String> =
+        lintOptions.severityOverrides?.keys ?: emptySet()
+
     // Not currently settable via LintOptions
     override fun allowSuppress(): Boolean = false
 }
