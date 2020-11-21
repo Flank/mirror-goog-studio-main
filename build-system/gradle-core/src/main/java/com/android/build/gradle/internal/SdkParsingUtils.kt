@@ -22,7 +22,6 @@ import com.android.repository.api.ConsoleProgressIndicator
 import com.android.repository.api.LocalPackage
 import com.android.repository.api.Repository
 import com.android.repository.impl.meta.SchemaModuleUtil
-import com.android.repository.io.FileOpUtils
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -41,7 +40,7 @@ fun buildBuildTools(sdkDirectory: File, revision: Revision): BuildToolInfo? {
     val buildToolsXml = sdkDirectory.resolve(buildToolsPath).resolve("package.xml")
     val buildToolsPackage = parsePackage(buildToolsXml) ?: return null
     // BuildToolInfo is cheap to build and verify, so we can keep using it.
-    val buildToolInfo = BuildToolInfo.fromLocalPackage(buildToolsPackage, FileOpUtils.create())
+    val buildToolInfo = BuildToolInfo.fromLocalPackage(buildToolsPackage)
     if (!buildToolInfo.isValid(null)) {
         // The build tools we loaded is missing some expected components.
         return null

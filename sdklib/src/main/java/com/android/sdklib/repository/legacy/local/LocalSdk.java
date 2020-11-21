@@ -48,6 +48,7 @@ import com.google.common.collect.TreeMultimap;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -670,20 +671,20 @@ public class LocalSdk {
 
     @NonNull
     private BuildToolInfo createLegacyBuildTools(@NonNull LocalPlatformToolPkgInfo ptInfo) {
-        File platformTools = new File(getLocation(), SdkConstants.FD_PLATFORM_TOOLS);
-        File platformToolsLib = ptInfo.getLocalDir();
-        File platformToolsRs = new File(platformTools, SdkConstants.FN_FRAMEWORK_RENDERSCRIPT);
+        Path platformTools = mFileOp.toPath(getLocation()).resolve(SdkConstants.FD_PLATFORM_TOOLS);
+        Path platformToolsLib = mFileOp.toPath(ptInfo.getLocalDir());
+        Path platformToolsRs = platformTools.resolve(SdkConstants.FN_FRAMEWORK_RENDERSCRIPT);
 
         return BuildToolInfo.modifiedLayout(
                 ptInfo.getDesc().getRevision(),
                 platformTools,
-                new File(platformTools, SdkConstants.FN_AAPT),
-                new File(platformTools, SdkConstants.FN_AIDL),
-                new File(platformTools, SdkConstants.FN_DX),
-                new File(platformToolsLib, SdkConstants.FN_DX_JAR),
-                new File(platformTools, SdkConstants.FN_RENDERSCRIPT),
-                new File(platformToolsRs, SdkConstants.FN_FRAMEWORK_INCLUDE),
-                new File(platformToolsRs, SdkConstants.FN_FRAMEWORK_INCLUDE_CLANG),
+                platformTools.resolve(SdkConstants.FN_AAPT),
+                platformTools.resolve(SdkConstants.FN_AIDL),
+                platformTools.resolve(SdkConstants.FN_DX),
+                platformToolsLib.resolve(SdkConstants.FN_DX_JAR),
+                platformTools.resolve(SdkConstants.FN_RENDERSCRIPT),
+                platformToolsRs.resolve(SdkConstants.FN_FRAMEWORK_INCLUDE),
+                platformToolsRs.resolve(SdkConstants.FN_FRAMEWORK_INCLUDE_CLANG),
                 null,
                 null,
                 null,
@@ -691,7 +692,7 @@ public class LocalSdk {
                 null,
                 null,
                 null,
-                new File(platformTools, SdkConstants.FN_ZIPALIGN),
+                platformTools.resolve(SdkConstants.FN_ZIPALIGN),
                 null);
     }
 
@@ -897,7 +898,8 @@ public class LocalSdk {
             // Since we used to require a complete revision
             rev = fullySpecifyRevision(rev);
 
-            BuildToolInfo btInfo = BuildToolInfo.fromStandardDirectoryLayout(rev, buildToolDir);
+            Path buildToolsPath = mFileOp.toPath(buildToolDir);
+            BuildToolInfo btInfo = BuildToolInfo.fromStandardDirectoryLayout(rev, buildToolsPath);
             LocalBuildToolPkgInfo pkgInfo =
                     new LocalBuildToolPkgInfo(this, buildToolDir, props, rev, btInfo);
             outCollection.add(pkgInfo);

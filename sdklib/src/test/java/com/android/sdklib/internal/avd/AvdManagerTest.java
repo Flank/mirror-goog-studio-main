@@ -36,6 +36,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -383,7 +384,7 @@ public class AvdManagerTest extends TestCase {
                 "avd.name="
                         + this.getName()
                         + "\nhw.sdCard.path="
-                        + mAvdFolder.toAbsolutePath().toString()
+                        + mAvdFolder.toAbsolutePath()
                         + "/sdcard.img");
 
         // Copy this AVD to an AVD with a different name and a slightly different configuration
@@ -650,36 +651,40 @@ public class AvdManagerTest extends TestCase {
           log);
 
         // Check a valid AVD .ini file
-        String parentFolder = mAvdFolder.getParent().toString();
+        Path parentFolder = mAvdFolder.getParent();
         String avdIniName = this.getName() + ".ini";
-        File avdIniFile = new File(parentFolder, avdIniName).getAbsoluteFile();
-        assertTrue("Expected AVD .ini in " + parentFolder, mFileOp.exists(avdIniFile));
-        AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
+        Path avdIniFile = parentFolder.resolve(avdIniName).toAbsolutePath();
+        assertTrue("Expected AVD .ini in " + parentFolder, Files.exists(avdIniFile));
+        AvdInfo avdInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(avdIniFile), log);
         assertThat(avdInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.OK);
         assertThat(avdInfo.getDataFolderPath()).isEqualTo(mAvdFolder.toAbsolutePath().toString());
 
         // Check a bad AVD .ini file.
         // Append garbage to make the file invalid.
-        try (OutputStream corruptedStream = mFileOp.newFileOutputStream(avdIniFile, true);
-             BufferedWriter corruptedWriter = new BufferedWriter(new OutputStreamWriter(corruptedStream))) {
+        try (OutputStream corruptedStream =
+                        Files.newOutputStream(avdIniFile, StandardOpenOption.APPEND);
+                BufferedWriter corruptedWriter =
+                        new BufferedWriter(new OutputStreamWriter(corruptedStream))) {
             corruptedWriter.write("[invalid syntax]\n");
         }
-        AvdInfo corruptedInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
+        AvdInfo corruptedInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(avdIniFile), log);
         assertThat(corruptedInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check a non-existent AVD .ini file
         String noSuchIniName = "noSuch.ini";
-        File noSuchIniFile = new File(parentFolder, noSuchIniName);
-        assertFalse("Found unexpected noSuch.ini in " + parentFolder, mFileOp.exists(noSuchIniFile));
-        AvdInfo noSuchInfo = mAvdManager.parseAvdInfo(noSuchIniFile, log);
+        Path noSuchIniFile = parentFolder.resolve(noSuchIniName);
+        assertFalse("Found unexpected noSuch.ini in " + parentFolder, Files.exists(noSuchIniFile));
+        AvdInfo noSuchInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(noSuchIniFile), log);
         assertThat(noSuchInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check an empty AVD .ini file
-        File emptyIniFile = new File(parentFolder, "empty.ini");
-        assertTrue("Empty .ini file already exists in " + parentFolder, mFileOp.createNewFile(emptyIniFile));
-        assertTrue("Expected empty AVD .ini in " + parentFolder, mFileOp.exists(emptyIniFile));
-        assertThat(emptyIniFile.length()).isEqualTo(0);
-        AvdInfo emptyInfo = mAvdManager.parseAvdInfo(emptyIniFile, log);
+        Path emptyIniFile = parentFolder.resolve("empty.ini");
+        assertNotNull(
+                "Empty .ini file already exists in " + parentFolder,
+                Files.createFile(emptyIniFile));
+        assertTrue("Expected empty AVD .ini in " + parentFolder, Files.exists(emptyIniFile));
+        assertThat(Files.size(emptyIniFile)).isEqualTo(0);
+        AvdInfo emptyInfo = mAvdManager.parseAvdInfo(mFileOp.toFile(emptyIniFile), log);
         assertThat(emptyInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
     }
 

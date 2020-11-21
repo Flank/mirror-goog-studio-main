@@ -33,7 +33,6 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -156,8 +155,7 @@ public class AndroidTargetManagerTest extends TestCase {
                         fop.getPlatformSpecificPath("/sdk/platforms/android-13/android.jar")),
                 target.getBootClasspath());
         assertEquals(
-                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
-                target.getBuildToolInfo().getLocation());
+                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(fop.toPath("/sdk/platforms/android-13/skins/WXGA"), target.getDefaultSkin());
     }
 
@@ -179,8 +177,7 @@ public class AndroidTargetManagerTest extends TestCase {
                         fop.getPlatformSpecificPath("/sdk/platforms/android-23/android.jar")),
                 target.getBootClasspath());
         assertEquals(
-                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
-                target.getBuildToolInfo().getLocation());
+                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(
                 fop.toPath("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
     }
@@ -206,8 +203,7 @@ public class AndroidTargetManagerTest extends TestCase {
                         fop.getPlatformSpecificPath("/sdk/platforms/android-13/android.jar")),
                 target.getBootClasspath());
         assertEquals(
-                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
-                target.getBuildToolInfo().getLocation());
+                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(
                 fop.toPath("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p"),
                 target.getDefaultSkin());
@@ -231,8 +227,7 @@ public class AndroidTargetManagerTest extends TestCase {
                         fop.getPlatformSpecificPath("/sdk/platforms/android-23/android.jar")),
                 target.getBootClasspath());
         assertEquals(
-                new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
-                target.getBuildToolInfo().getLocation());
+                fop.toPath("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(
                 fop.toPath("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
 
