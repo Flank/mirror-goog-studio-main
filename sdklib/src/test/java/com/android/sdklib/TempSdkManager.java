@@ -147,7 +147,7 @@ public class TempSdkManager extends ExternalResource {
      * @param systemImage A system image with a valid location inside this sdk.
      */
     public void makeSystemImageFolder(ISystemImage systemImage, String deviceId) throws Exception {
-        Path sysImgDir = mFileOp.toPath(systemImage.getLocation());
+        Path sysImgDir = systemImage.getLocation();
         String vendor = systemImage.getAddonVendor() == null ? null
                 : systemImage.getAddonVendor().getId();
         // Path should like SDK/system-images/platform-N/tag/abi/userdata.img+source.properties

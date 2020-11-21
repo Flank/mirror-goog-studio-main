@@ -31,7 +31,6 @@ import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.NoErrorsOrWarningsLogger;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -54,15 +53,13 @@ public class DeviceManagerTest {
 
     private DeviceManager dm;
 
-    private NoErrorsOrWarningsLogger log;
-
     @Before
     public void setUp() {
         dm = createDeviceManager();
     }
 
     private DeviceManager createDeviceManager() {
-        log = new NoErrorsOrWarningsLogger();
+        NoErrorsOrWarningsLogger log = new NoErrorsOrWarningsLogger();
         AndroidSdkHandler sdkHandler = sdkManager.getSdkHandler();
         return DeviceManager.createInstance(
                 sdkHandler,
@@ -368,7 +365,6 @@ public class DeviceManagerTest {
 
         AndroidSdkHandler handler = sdkManager.getSdkHandler();
         Path sdkPath = handler.getLocation();
-        File location = sdkPath == null ? null : handler.getFileOp().toFile(sdkPath);
         FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
 
         // Create a system image directory with one device
@@ -377,11 +373,14 @@ public class DeviceManagerTest {
         details.setApiLevel(22);
         details.setVendor(SystemImage.DEFAULT_TAG);
         p.setTypeDetails((TypeDetails) details);
-        SystemImage imageWithDevice = new SystemImage(
-                new File(location, "system-images/android-22/tag-1/x86"),
-                IdDisplay.create("tag-1", "tag-1"),
-                IdDisplay.create("OEM", "Tag 1 OEM"),
-                "x86", new File[]{}, p);
+        SystemImage imageWithDevice =
+                new SystemImage(
+                        sdkPath.resolve("system-images/android-22/tag-1/x86"),
+                        IdDisplay.create("tag-1", "tag-1"),
+                        IdDisplay.create("OEM", "Tag 1 OEM"),
+                        "x86",
+                        new Path[] {},
+                        p);
 
         sdkManager.makeSystemImageFolder(imageWithDevice, "tag-1");
 
@@ -592,7 +591,6 @@ public class DeviceManagerTest {
     public final void testDeviceOverrides() throws Exception {
         AndroidSdkHandler handler = sdkManager.getSdkHandler();
         Path sdkPath = handler.getLocation();
-        File location = sdkPath == null ? null : handler.getFileOp().toFile(sdkPath);
         FakePackage.FakeLocalPackage p =
                 new FakePackage.FakeLocalPackage("sample", sdkManager.getSdkHandler().getFileOp());
 
@@ -610,11 +608,14 @@ public class DeviceManagerTest {
         details22.setApiLevel(22);
         details22.setVendor(SystemImage.DEFAULT_TAG);
         p.setTypeDetails((TypeDetails) details22);
-        SystemImage imageWithDevice22 = new SystemImage(
-                new File(location, "system-images/android-22/android-wear/x86"),
-                IdDisplay.create("android-wear", "android-wear"),
-                IdDisplay.create("Google", "Google"),
-                "x86", new File[]{}, p);
+        SystemImage imageWithDevice22 =
+                new SystemImage(
+                        sdkPath.resolve("system-images/android-22/android-wear/x86"),
+                        IdDisplay.create("android-wear", "android-wear"),
+                        IdDisplay.create("Google", "Google"),
+                        "x86",
+                        new Path[] {},
+                        p);
         sdkManager.makeSystemImageFolder(imageWithDevice22, "wear_round");
 
         DetailsTypes.AddonDetailsType details25 = AndroidSdkHandler.getAddonModule()
@@ -622,11 +623,14 @@ public class DeviceManagerTest {
         details25.setApiLevel(25);
         details25.setVendor(SystemImage.DEFAULT_TAG);
         p.setTypeDetails((TypeDetails) details25);
-        SystemImage imageWithDevice25 = new SystemImage(
-                new File(location, "system-images/android-25/android-wear/x86"),
-                IdDisplay.create("android-wear", "android-wear"),
-                IdDisplay.create("Google", "Google"),
-                "arm", new File[]{}, p);
+        SystemImage imageWithDevice25 =
+                new SystemImage(
+                        sdkPath.resolve("system-images/android-25/android-wear/x86"),
+                        IdDisplay.create("android-wear", "android-wear"),
+                        IdDisplay.create("Google", "Google"),
+                        "arm",
+                        new Path[] {},
+                        p);
         sdkManager.makeSystemImageFolder(imageWithDevice25, "wear_round");
 
         // Re-create the local DeviceManager using the new directory,

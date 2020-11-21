@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -572,7 +573,7 @@ class AvdManagerCli extends CommandLineParser {
                 }
             }
             // get the target tags & ABIs
-            File targetLocation = new File(target.getLocation());
+            Path targetLocation = mSdkHandler.getFileOp().toPath(target.getLocation());
             ISystemImage image =
                     mSdkHandler.getSystemImageManager(progress).getImageAt(targetLocation);
             if (image != null) {
@@ -698,13 +699,19 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             String paramFolderPath = getParamLocationPath();
-            File avdFolder;
+            Path avdFolder;
             if (paramFolderPath != null) {
-                avdFolder = new File(paramFolderPath);
+                avdFolder = mSdkHandler.getFileOp().toPath(paramFolderPath);
             } else {
                 avdFolder =
-                        AvdInfo.getDefaultAvdFolder(
-                                avdManager, avdName, mSdkHandler.getFileOp(), false);
+                        mSdkHandler
+                                .getFileOp()
+                                .toPath(
+                                        AvdInfo.getDefaultAvdFolder(
+                                                avdManager,
+                                                avdName,
+                                                mSdkHandler.getFileOp(),
+                                                false));
             }
 
             IdDisplay tag = SystemImage.DEFAULT_TAG;

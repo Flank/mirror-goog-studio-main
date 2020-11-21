@@ -116,8 +116,7 @@ public class AvdManagerCliTest {
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);
         mGapiImage =
                 systemImageManager.getImageAt(
-                        mFileOp.toFile(
-                                mSdkHandler.getLocalPackage(gApiPath, progress).getLocation()));
+                        mSdkHandler.getLocalPackage(gApiPath, progress).getLocation());
     }
 
     @Test

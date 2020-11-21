@@ -316,8 +316,8 @@ public final class AndroidSdkHandler {
     public SystemImageManager getSystemImageManager(@NonNull ProgressIndicator progress) {
         if (mSystemImageManager == null) {
             getSdkManager(progress);
-            mSystemImageManager = new SystemImageManager(mRepoManager,
-                    getSysImgModule().createLatestFactory(), mFop);
+            mSystemImageManager =
+                    new SystemImageManager(mRepoManager, getSysImgModule().createLatestFactory());
         }
         return mSystemImageManager;
     }

@@ -63,6 +63,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +73,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Android Virtual Device Manager to manage AVDs.
@@ -787,35 +789,35 @@ public class AvdManager {
     /**
      * Creates a new AVD. It is expected that there is no existing AVD with this name already.
      *
-     * @param avdFolder the data folder for the AVD. It will be created as needed.
-     *   Unless you want to locate it in a specific directory, the ideal default is
-     *   {@code AvdManager.AvdInfo.getAvdFolder}.
+     * @param avdFolder the data folder for the AVD. It will be created as needed. Unless you want
+     *     to locate it in a specific directory, the ideal default is {@code
+     *     AvdManager.AvdInfo.getAvdFolder}.
      * @param avdName the name of the AVD
      * @param systemImage the system image of the AVD
      * @param skinFolder the skin folder path to use, if specified. Can be null.
-     * @param skinName the name of the skin. Can be null. Must have been verified by caller.
-     *          Can be a size in the form "NNNxMMM" or a directory name matching skinFolder.
-     * @param sdcard the parameter value for the sdCard. Can be null. This is either a path to
-     *        an existing sdcard image or a sdcard size (\d+, \d+K, \dM).
+     * @param skinName the name of the skin. Can be null. Must have been verified by caller. Can be
+     *     a size in the form "NNNxMMM" or a directory name matching skinFolder.
+     * @param sdcard the parameter value for the sdCard. Can be null. This is either a path to an
+     *     existing sdcard image or a sdcard size (\d+, \d+K, \dM).
      * @param hardwareConfig the hardware setup for the AVD. Can be null to use defaults.
      * @param bootProps the optional boot properties for the AVD. Can be null.
      * @param removePrevious If true remove any previous files.
-     * @param editExisting If true, edit an existing AVD, changing only the minimum required.
-     *          This won't remove files unless required or unless {@code removePrevious} is set.
+     * @param editExisting If true, edit an existing AVD, changing only the minimum required. This
+     *     won't remove files unless required or unless {@code removePrevious} is set.
      * @param log the log object to receive action logs. Cannot be null.
-     * @return The new {@link AvdInfo} in case of success (which has just been added to the
-     *         internal list) or null in case of failure.
+     * @return The new {@link AvdInfo} in case of success (which has just been added to the internal
+     *     list) or null in case of failure.
      */
     @Nullable
     public AvdInfo createAvd(
-            @NonNull  File avdFolder,
-            @NonNull  String avdName,
-            @NonNull  ISystemImage systemImage,
-            @Nullable File skinFolder,
+            @NonNull Path avdFolder,
+            @NonNull String avdName,
+            @NonNull ISystemImage systemImage,
+            @Nullable Path skinFolder,
             @Nullable String skinName,
             @Nullable String sdcard,
-            @Nullable Map<String,String> hardwareConfig,
-            @Nullable Map<String,String> bootProps,
+            @Nullable Map<String, String> hardwareConfig,
+            @Nullable Map<String, String> bootProps,
             boolean deviceHasPlayStore,
             boolean removePrevious,
             boolean editExisting,
@@ -829,10 +831,10 @@ public class AvdManager {
         try {
             AvdInfo newAvdInfo = null;
             HashMap<String, String> configValues = new HashMap<>();
-            if (!mFop.exists(avdFolder)) {
+            if (!CancellableFileIo.exists(avdFolder)) {
                 // create the AVD folder.
-                mFop.mkdirs(avdFolder);
-                inhibitCopyOnWrite(avdFolder, log);
+                Files.createDirectories(avdFolder);
+                inhibitCopyOnWrite(mFop.toFile(avdFolder), log);
                 // We're not editing an existing AVD.
                 editExisting = false;
             }
@@ -840,22 +842,22 @@ public class AvdManager {
                 // AVD already exists and removePrevious is set, try to remove the
                 // directory's content first (but not the directory itself).
                 try {
-                    deleteContentOf(avdFolder);
-                    inhibitCopyOnWrite(avdFolder, log);
+                    deleteContentOf(mFop.toFile(avdFolder));
+                    inhibitCopyOnWrite(mFop.toFile(avdFolder), log);
                 }
                 catch (SecurityException e) {
-                    log.warning("Failed to delete %1$s: %2$s", avdFolder.getAbsolutePath(), e);
+                    log.warning("Failed to delete %1$s: %2$s", avdFolder.toAbsolutePath(), e);
                 }
             }
             else if (!editExisting) {
                 // The AVD already exists, we want to keep it, and we're not
                 // editing it. We must be making a copy. Duplicate the folder.
-                String oldAvdFolderPath = avdFolder.getAbsolutePath();
-                newAvdInfo = duplicateAvd(avdFolder, avdName, systemImage, log);
+                String oldAvdFolderPath = avdFolder.toAbsolutePath().toString();
+                newAvdInfo = duplicateAvd(mFop.toFile(avdFolder), avdName, systemImage, log);
                 if (newAvdInfo == null) {
                     return null;
                 }
-                avdFolder = new File(newAvdInfo.getDataFolderPath());
+                avdFolder = mFop.toPath(newAvdInfo.getDataFolderPath());
                 configValues.putAll(newAvdInfo.getProperties());
                 // If the hardware config includes an SD Card path in the old directory,
                 // update the path to the new directory
@@ -869,8 +871,12 @@ public class AvdManager {
             }
 
             // Write the AVD ini file
-            iniFile = createAvdIniFile(avdName, avdFolder, removePrevious,
-              systemImage.getAndroidVersion());
+            iniFile =
+                    createAvdIniFile(
+                            avdName,
+                            mFop.toFile(avdFolder),
+                            removePrevious,
+                            systemImage.getAndroidVersion());
 
             needCleanup = true;
 
@@ -885,8 +891,12 @@ public class AvdManager {
             configValues.put(AVD_INI_PLAYSTORE_ENABLED, Boolean.toString(deviceHasPlayStore && systemImage.hasPlayStore()));
             configValues.put(AVD_INI_ARC, Boolean.toString(SystemImage.CHROMEOS_TAG.equals(tag)));
 
-            createAvdSkin(skinFolder, skinName, configValues, log);
-            createAvdSdCard(sdcard, editExisting, configValues, avdFolder, log);
+            createAvdSkin(
+                    skinFolder == null ? null : mFop.toFile(skinFolder),
+                    skinName,
+                    configValues,
+                    log);
+            createAvdSdCard(sdcard, editExisting, configValues, mFop.toFile(avdFolder), log);
 
             if (hardwareConfig == null) {
                 hardwareConfig = new HashMap<>();
@@ -896,16 +906,23 @@ public class AvdManager {
             addHardwareConfig(systemImage, skinFolder, avdFolder, hardwareConfig, configValues, log);
 
             if (bootProps != null && !bootProps.isEmpty()) {
-                File bootPropsFile = new File(avdFolder, BOOT_PROP);
-                writeIniFile(bootPropsFile, bootProps, false);
+                Path bootPropsFile = avdFolder.resolve(BOOT_PROP);
+                writeIniFile(mFop.toFile(bootPropsFile), bootProps, false);
             }
 
             AvdInfo oldAvdInfo = getAvd(avdName, false /*validAvdOnly*/);
 
             if (newAvdInfo == null) {
-                newAvdInfo = createAvdInfoObject(systemImage, avdName,
-                                                 removePrevious, editExisting,
-                                                 iniFile, avdFolder, oldAvdInfo, configValues);
+                newAvdInfo =
+                        createAvdInfoObject(
+                                systemImage,
+                                avdName,
+                                removePrevious,
+                                editExisting,
+                                iniFile,
+                                mFop.toFile(avdFolder),
+                                oldAvdInfo,
+                                configValues);
             }
 
             if ((removePrevious || editExisting) &&
@@ -936,10 +953,9 @@ public class AvdManager {
                 }
 
                 try {
-                    deleteContentOf(avdFolder);
-                    mFop.delete(avdFolder);
+                    mFop.deleteFileOrFolder(avdFolder);
                 } catch (SecurityException e) {
-                    log.warning("Failed to delete %1$s: %2$s", avdFolder.getAbsolutePath(), e);
+                    log.warning("Failed to delete %1$s: %2$s", avdFolder.toAbsolutePath(), e);
                 }
             }
         }
@@ -1050,8 +1066,8 @@ public class AvdManager {
     private String getImageRelativePath(@NonNull ISystemImage systemImage)
             throws InvalidTargetPathException {
 
-        File folder = systemImage.getLocation();
-        String imageFullPath = folder.getAbsolutePath();
+        Path folder = systemImage.getLocation();
+        String imageFullPath = folder.toAbsolutePath().toString();
 
         // make this path relative to the SDK location
         String sdkLocation = mSdkHandler.getLocation().toAbsolutePath().toString();
@@ -1061,25 +1077,29 @@ public class AvdManager {
             throw new InvalidTargetPathException("Target location is not inside the SDK.");
         }
 
-        if (mFop.isDirectory(folder)) {
-            String[] list = mFop.list(folder,
-                    (dir, name) -> IMAGE_NAME_PATTERN.matcher(name).matches());
-
-            if (list.length > 0) {
-                // Remove the SDK root path, e.g. /sdk/dir1/dir2 ⇒ /dir1/dir2
-                imageFullPath = imageFullPath.substring(sdkLocation.length());
-                // The path is relative, so it must not start with a file separator
-                if (imageFullPath.charAt(0) == File.separatorChar) {
-                    imageFullPath = imageFullPath.substring(1);
-                }
-                // For compatibility with previous versions, we denote folders
-                // by ending the path with file separator
-                if (!imageFullPath.endsWith(File.separator)) {
-                    imageFullPath += File.separator;
-                }
-
-                return imageFullPath;
+        String[] list;
+        try (Stream<Path> contents = CancellableFileIo.list(folder)) {
+            list =
+                    contents.map(path -> path.getFileName().toString())
+                            .filter(path -> IMAGE_NAME_PATTERN.matcher(path).matches())
+                            .toArray(String[]::new);
+        } catch (IOException e) {
+            return null;
+        }
+        if (list.length > 0) {
+            // Remove the SDK root path, e.g. /sdk/dir1/dir2 -> /dir1/dir2
+            imageFullPath = imageFullPath.substring(sdkLocation.length());
+            // The path is relative, so it must not start with a file separator
+            if (imageFullPath.charAt(0) == File.separatorChar) {
+                imageFullPath = imageFullPath.substring(1);
             }
+            // For compatibility with previous versions, we denote folders
+            // by ending the path with file separator
+            if (!imageFullPath.endsWith(File.separator)) {
+                imageFullPath += File.separator;
+            }
+
+            return imageFullPath;
         }
 
         return null;
@@ -1451,10 +1471,7 @@ public class AvdManager {
                         sdkLocation == null
                                 ? mFop.toPath(imageSysDir)
                                 : sdkLocation.resolve(imageSysDir);
-                sysImage =
-                        mSdkHandler
-                                .getSystemImageManager(progress)
-                                .getImageAt(mFop.toFile(imageDir));
+                sysImage = mSdkHandler.getSystemImageManager(progress).getImageAt(imageDir);
             }
         }
 
@@ -1864,23 +1881,22 @@ public class AvdManager {
 
     /**
      * Create the user data file for an AVD
+     *
      * @param systemImage the system image of the AVD
      * @param avdFolder where the AVDs live
      * @param log receives error messages
      */
     private void createAvdUserdata(
-            @NonNull ISystemImage systemImage,
-            @NonNull File         avdFolder,
-            @NonNull ILogger      log)
+            @NonNull ISystemImage systemImage, @NonNull Path avdFolder, @NonNull ILogger log)
             throws IOException, AvdMgrException {
         // Copy userdata.img from system-images to the *.avd directory
-        File imageFolder = systemImage.getLocation();
-        File userdataSrc = new File(imageFolder, USERDATA_IMG);
+        Path imageFolder = systemImage.getLocation();
+        Path userdataSrc = imageFolder.resolve(USERDATA_IMG);
 
         String abiType = systemImage.getAbiType();
 
-        if (!mFop.exists(userdataSrc)) {
-            if (mFop.isDirectory(new File(imageFolder, DATA_FOLDER))) {
+        if (CancellableFileIo.notExists(userdataSrc)) {
+            if (CancellableFileIo.isDirectory(imageFolder.resolve(DATA_FOLDER))) {
                 // Because this image includes a data folder, a
                 // userdata.img file is not needed. Don't signal
                 // an error.
@@ -1894,12 +1910,12 @@ public class AvdManager {
             throw new AvdMgrException();
         }
 
-        File userdataDest = new File(avdFolder, USERDATA_IMG);
+        Path userdataDest = avdFolder.resolve(USERDATA_IMG);
 
-        if (!mFop.exists(userdataDest)) {
-            mFop.copyFile(userdataSrc, userdataDest);
+        if (CancellableFileIo.notExists(userdataDest)) {
+            Files.copy(userdataSrc, userdataDest);
 
-            if (!mFop.exists(userdataDest)) {
+            if (CancellableFileIo.notExists(userdataDest)) {
                 log.warning("Unable to create '%1$s' file in the AVD folder.",
                             userdataDest);
                 throw new AvdMgrException();
@@ -2115,6 +2131,7 @@ public class AvdManager {
 
     /**
      * Add the hardware configuration to an AVD
+     *
      * @param systemImage the system image of the AVD
      * @param skinFolder where the skin is
      * @param avdFolder where the AVDs live
@@ -2123,12 +2140,12 @@ public class AvdManager {
      * @param log receives error messages
      */
     private void addHardwareConfig(
-            @NonNull  ISystemImage       systemImage,
-            @Nullable File               skinFolder,
-            @NonNull  File               avdFolder,
-            @Nullable Map<String,String> hardwareConfig,
-            @Nullable Map<String,String> values,
-            @NonNull  ILogger            log)
+            @NonNull ISystemImage systemImage,
+            @Nullable Path skinFolder,
+            @NonNull Path avdFolder,
+            @Nullable Map<String, String> hardwareConfig,
+            @Nullable Map<String, String> values,
+            @NonNull ILogger log)
             throws IOException {
 
         // add the hardware config to the config file.
@@ -2144,8 +2161,8 @@ public class AvdManager {
         HashMap<String, String> finalHardwareValues = new HashMap<>();
 
         FileOpFileWrapper sysImgHardwareFile =
-          new FileOpFileWrapper(new File(systemImage.getLocation(), HARDWARE_INI),
-            mFop, false);
+                new FileOpFileWrapper(
+                        mFop.toFile(systemImage.getLocation().resolve(HARDWARE_INI)), mFop, false);
         if (sysImgHardwareFile.exists()) {
             Map<String, String> imageHardwardConfig = ProjectProperties.parsePropertyFile(
                     sysImgHardwareFile, log);
@@ -2157,8 +2174,9 @@ public class AvdManager {
 
         // get the hardware properties for this skin
         if (skinFolder != null) {
-            FileOpFileWrapper skinHardwareFile = new FileOpFileWrapper(
-              new File(skinFolder, HARDWARE_INI), mFop, false);
+            FileOpFileWrapper skinHardwareFile =
+                    new FileOpFileWrapper(
+                            mFop.toFile(skinFolder.resolve(HARDWARE_INI)), mFop, false);
             if (skinHardwareFile.exists()) {
                 Map<String, String> skinHardwareConfig =
                     ProjectProperties.parsePropertyFile(skinHardwareFile, log);
@@ -2180,8 +2198,8 @@ public class AvdManager {
         }
         values.putAll(finalHardwareValues);
 
-        File configIniFile = new File(avdFolder, CONFIG_INI);
-        writeIniFile(configIniFile, values, true);
+        Path configIniFile = avdFolder.resolve(CONFIG_INI);
+        writeIniFile(mFop.toFile(configIniFile), values, true);
 
         return;
     }

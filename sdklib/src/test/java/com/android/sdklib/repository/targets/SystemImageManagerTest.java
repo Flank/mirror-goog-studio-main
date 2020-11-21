@@ -15,13 +15,16 @@
  */
 package com.android.sdklib.repository.targets;
 
+import static org.junit.Assert.assertArrayEquals;
+
+import com.android.annotations.NonNull;
+import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.collect.Sets;
-import java.io.File;
-import java.util.Arrays;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Set;
 import junit.framework.TestCase;
@@ -31,6 +34,7 @@ import junit.framework.TestCase;
  */
 public class SystemImageManagerTest extends TestCase {
     // TODO: break up tests into separate cases
+
 
     public void testSystemImageManager() {
         MockFileOp fop = new MockFileOp();
@@ -43,28 +47,30 @@ public class SystemImageManagerTest extends TestCase {
         AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
-        SystemImageManager mgr = new SystemImageManager(handler.getSdkManager(progress),
-                AndroidSdkHandler.getSysImgModule().createLatestFactory(), fop);
+        SystemImageManager mgr =
+                new SystemImageManager(
+                        handler.getSdkManager(progress),
+                        AndroidSdkHandler.getSysImgModule().createLatestFactory());
         Set<SystemImage> images = Sets.newTreeSet(mgr.getImages());
         progress.assertNoErrorsOrWarnings();
         assertEquals(5, images.size());
         Iterator<SystemImage> resultIter = images.iterator();
 
         ISystemImage platform13 = resultIter.next();
-        verifyPlatform13(platform13);
+        verifyPlatform13(platform13, fop);
         assertEquals(2, platform13.getSkins().length);
 
-        verifySysImg23(resultIter.next());
+        verifySysImg23(resultIter.next(), fop);
 
         ISystemImage google13 = resultIter.next();
         verifyGoogleAddon13(google13);
         assertEquals(2, google13.getSkins().length);
 
         ISystemImage google23 = resultIter.next();
-        verifyGoogleApisSysImg23(google23);
+        verifyGoogleApisSysImg23(google23, fop);
 
         ISystemImage addon13 = resultIter.next();
-        verifyTvAddon13(addon13);
+        verifyTvAddon13(addon13, fop);
         assertEquals("google_tv_addon", addon13.getTag().getId());
     }
 
@@ -73,48 +79,40 @@ public class SystemImageManagerTest extends TestCase {
         // the platform.
     }
 
-    private static void verifyPlatform13(ISystemImage img) {
+    private void verifyPlatform13(@NonNull ISystemImage img, @NonNull FileOp fop) {
         assertEquals("armeabi", img.getAbiType());
         assertNull(img.getAddonVendor());
-        assertEquals(
-                new File("/sdk/platforms/android-13/images/").getAbsoluteFile(), img.getLocation());
+        assertEquals(fop.toPath("/sdk/platforms/android-13/images/"), img.getLocation());
         assertEquals("default", img.getTag().getId());
     }
 
-    private static void verifyTvAddon13(ISystemImage img) {
+    private void verifyTvAddon13(@NonNull ISystemImage img, @NonNull FileOp fop) {
         assertEquals("x86", img.getAbiType());
         assertEquals("google", img.getAddonVendor().getId());
         assertEquals(
-                new File("/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/")
-                        .getAbsoluteFile(),
+                fop.toPath("/sdk/add-ons/addon-google_tv_addon-google-13/images/x86/"),
                 img.getLocation());
     }
 
-    private static void verifyGoogleApisSysImg23(ISystemImage img) {
+    private void verifyGoogleApisSysImg23(@NonNull ISystemImage img, @NonNull FileOp fop) {
         assertEquals("x86_64", img.getAbiType());
         assertEquals("google", img.getAddonVendor().getId());
         assertEquals(
-                new File("/sdk/system-images/android-23/google_apis/x86_64/").getAbsoluteFile(),
-                img.getLocation());
+                fop.toPath("/sdk/system-images/android-23/google_apis/x86_64/"), img.getLocation());
         assertEquals("google_apis", img.getTag().getId());
     }
 
-    private static void verifySysImg23(ISystemImage img) {
+    private void verifySysImg23(@NonNull ISystemImage img, @NonNull FileOp fop) {
         assertEquals("x86", img.getAbiType());
         assertNull(img.getAddonVendor());
-        assertEquals(
-                new File("/sdk/system-images/android-23/default/x86/").getAbsoluteFile(),
-                img.getLocation());
+        assertEquals(fop.toPath("/sdk/system-images/android-23/default/x86/"), img.getLocation());
         assertEquals(2, img.getSkins().length);
-        assertTrue(
-                Arrays.equals(
-                        new File[] {
-                            new File("/sdk/system-images/android-23/default/x86/skins/res1/")
-                                    .getAbsoluteFile(),
-                            new File("/sdk/system-images/android-23/default/x86/skins/res2/")
-                                    .getAbsoluteFile()
-                        },
-                        img.getSkins()));
+        assertArrayEquals(
+                new Path[] {
+                    fop.toPath("/sdk/system-images/android-23/default/x86/skins/res1/"),
+                    fop.toPath("/sdk/system-images/android-23/default/x86/skins/res2/")
+                },
+                img.getSkins());
         assertEquals("default", img.getTag().getId());
     }
 

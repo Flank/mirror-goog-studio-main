@@ -74,7 +74,8 @@ class AvdManager(
             throw RuntimeException("Failed to find system image for hash: $imageHash")
         }
 
-        val imageLocation = imageProvider.get().asFile
+        val fileOp = sdkHandler.fileOp
+        val imageLocation = fileOp.toPath(imageProvider.get().asFile)
         val systemImage = sdkHandler.getSystemImageManager(
             LoggerProgressIndicatorWrapper(StdLogger(StdLogger.Level.VERBOSE))
         ).getImageAt(imageLocation)
@@ -90,10 +91,10 @@ class AvdManager(
         EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
 
         val deviceFolder = AvdInfo.getDefaultAvdFolder(
-            avdManager, deviceName, sdkHandler.fileOp, false)
+            avdManager, deviceName, fileOp, false)
 
         val newInfo = avdManager.createAvd(
-            deviceFolder,
+            fileOp.toPath(deviceFolder),
             deviceName,
             systemImage,
             null,

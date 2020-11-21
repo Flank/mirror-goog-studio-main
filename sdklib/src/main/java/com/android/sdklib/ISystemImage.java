@@ -22,9 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.sdklib.devices.Abi;
 import com.android.sdklib.repository.IdDisplay;
-
-import java.io.File;
-
+import java.nio.file.Path;
 
 /**
  * Describes a system image as used by an {@link IAndroidTarget}.
@@ -66,7 +64,7 @@ public interface ISystemImage extends Comparable<ISystemImage> {
 
     /** Returns the actual location of an installed system image. */
     @NonNull
-    File getLocation();
+    Path getLocation();
 
     /** Returns the tag of the system image. */
     @NonNull
@@ -88,10 +86,11 @@ public interface ISystemImage extends Comparable<ISystemImage> {
      * Returns the skins embedded in the system image. <br>
      * Only supported by system images using {@link LocationType#IN_SYSTEM_IMAGE}. <br>
      * The skins listed here are merged in the {@link IAndroidTarget#getSkins()} list.
+     *
      * @return A non-null skin list, possibly empty.
      */
     @NonNull
-    File[] getSkins();
+    Path[] getSkins();
 
     /**
      * Returns the revision of this system image.
