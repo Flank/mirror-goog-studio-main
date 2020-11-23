@@ -25,13 +25,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Overlay {
+    // TODO: USE_SITESLIB
+    private static final String LL_OVERLAY_PATH_FORMAT = "/data/data/%s/code_cache/.overlay/ll";
     private static final String OVERLAY_PATH_FORMAT = "/data/data/%s/code_cache/.overlay/";
 
     private final Path overlayPath;
+    private final Path liveLiteralOverlayPath;
 
     public Overlay(String packageName) {
         String pathString = String.format(OVERLAY_PATH_FORMAT, packageName);
         overlayPath = Paths.get(pathString);
+        String llPathString = String.format(LL_OVERLAY_PATH_FORMAT, packageName);
+        liveLiteralOverlayPath = Paths.get(llPathString);
     }
 
     public Path getOverlayRoot() {
@@ -61,6 +66,14 @@ class Overlay {
         ArrayList<File> dexFiles = new ArrayList<>();
         if (!overlayPathExists()) {
             return dexFiles;
+        }
+
+        // Ensure that ll instrumented swapped dex take precedence over swapped dex.
+        try (DirectoryStream<Path> dir =
+                Files.newDirectoryStream(liveLiteralOverlayPath, "*.dex")) {
+            for (Path dex : dir) {
+                dexFiles.add(dex.toFile());
+            }
         }
 
         // Ensure that swapped dex take precedence over installed dex by adding them to the class

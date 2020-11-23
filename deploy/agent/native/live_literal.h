@@ -27,19 +27,29 @@ namespace deploy {
 
 class LiveLiteral {
  public:
-  LiveLiteral(jvmtiEnv* jvmti, JNIEnv* jni)
-      : jvmti_(jvmti), jni_(jni), class_finder_(jvmti, jni) {}
+  LiveLiteral(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& package_name)
+      : jvmti_(jvmti),
+        jni_(jni),
+        package_name_(package_name),
+        class_finder_(jvmti, jni) {}
   proto::AgentLiveLiteralUpdateResponse Update(
       const proto::LiveLiteralUpdateRequest& request);
+  static const char* kSupportClass;
 
  private:
   // Look up key name from the parse tree offset. The helper is a Compose
   // generated class able to work with information about the initial parse tree.
   jstring LookUpKeyByOffSet(const std::string& helper, int offset);
 
-  ClassFinder class_finder_;
+  // Instrument the LiveLiteral$FooBarKt helper class where the literals'
+  // value resides. What we do is change the <clinit> of that class so
+  // it reads a mapped value for some of the updated static fields.
+  void InstrumentHelper(const std::string& helper);
+
   jvmtiEnv* jvmti_;
   JNIEnv* jni_;
+  const std::string package_name_;
+  ClassFinder class_finder_;
 };
 
 }  // namespace deploy

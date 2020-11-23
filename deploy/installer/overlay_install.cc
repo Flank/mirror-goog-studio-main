@@ -181,6 +181,13 @@ void OverlayInstallCommand::UpdateOverlay(
     overlay_request->add_files_to_delete(deleted_file);
   }
 
+  // Live Literal instrumentation, while persistent across restarts, are not
+  // considered part of the APK's install. We want all installs to nuke
+  // all live literals information and the source of truth of all literal
+  // updates will be based on this last install.
+  // TODO: USE_SITESLIB
+  overlay_request->add_files_to_delete("ll");
+
   if (!client_->Write(install_request)) {
     ErrEvent("Could not write overlay update to install server");
     overlay_response->set_status(
