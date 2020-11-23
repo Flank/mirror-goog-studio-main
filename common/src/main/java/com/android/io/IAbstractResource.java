@@ -25,32 +25,12 @@ package com.android.io;
 public interface IAbstractResource {
 
     /**
-     * Returns the name of the resource.
-     */
-    String getName();
-
-    /**
      * Returns the OS path of the folder location (may be absolute).
      */
     String getOsLocation();
 
     /**
-     * Returns the path of the resource.
-     */
-    String getPath();
-
-    /**
      * Returns whether the resource actually exists.
      */
     boolean exists();
-
-    /**
-     * Returns the parent folder or null if there is no parent.
-     */
-    IAbstractFolder getParentFolder();
-
-    /**
-     * Deletes the resource.
-     */
-    boolean delete();
 }

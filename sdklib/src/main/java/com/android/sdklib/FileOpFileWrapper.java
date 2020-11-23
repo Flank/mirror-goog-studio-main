@@ -17,12 +17,9 @@ package com.android.sdklib;
 
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
-import com.android.io.IAbstractResource;
 import com.android.io.StreamException;
 import com.android.repository.io.FileOp;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -59,7 +56,7 @@ public class FileOpFileWrapper implements IAbstractFile, IAbstractFolder {
             fos = mFileOp.newFileOutputStream(mFile);
 
             byte[] buffer = new byte[1024];
-            int count = 0;
+            int count;
             while ((count = source.read(buffer)) != -1) {
                 fos.write(buffer, 0, count);
             }
@@ -86,27 +83,9 @@ public class FileOpFileWrapper implements IAbstractFile, IAbstractFolder {
     }
 
     @Override
-    public PreferredWriteMode getPreferredWriteMode() {
-        return PreferredWriteMode.OUTPUTSTREAM;
-    }
-
-    @Override
-    public long getModificationStamp() {
-        return mFile.lastModified();
-    }
-
-    @Override
-    public String getName() {
-        return mFile.getName();
-    }
-
-    @Override
     public String getOsLocation() {
         return mFile.getAbsolutePath();
     }
-
-    @Override
-    public String getPath() { return mFile.getPath(); }
 
     @Override
     public boolean exists() {
@@ -114,51 +93,7 @@ public class FileOpFileWrapper implements IAbstractFile, IAbstractFolder {
     }
 
     @Override
-    public IAbstractFolder getParentFolder() {
-        return new FileOpFileWrapper(mFile.getParentFile(), mFileOp, true);
-    }
-
-    @Override
-    public boolean delete() {
-        return mFileOp.delete(mFile);
-    }
-
-    @Override
-    public boolean hasFile(String name) {
-        return false;
-    }
-
-    @Override
     public IAbstractFile getFile(String name) {
         return new FileOpFileWrapper(new File(mFile, name), mFileOp, false);
-    }
-
-    @Override
-    public IAbstractFolder getFolder(String name) {
-        return new FileOpFileWrapper(new File(mFile, name), mFileOp, true);
-    }
-
-    @Override
-    public IAbstractResource[] listMembers() {
-        File[] files = mFileOp.listFiles(mFile);
-        final int count = files.length;
-        IAbstractResource[] afiles = new IAbstractResource[count];
-
-        for (int i = 0 ; i < count ; i++) {
-            File f = files[i];
-            afiles[i] = new FileOpFileWrapper(f, mFileOp, f.isDirectory());
-        }
-
-        return afiles;
-    }
-
-    @Override
-    public String[] list(final FilenameFilter filter) {
-        return mFileOp.list(mFile, new java.io.FilenameFilter() {
-            @Override
-            public boolean accept(File file, String s) {
-                return filter.accept(new FileOpFileWrapper(file, mFileOp, true), s);
-            }
-        });
     }
 }

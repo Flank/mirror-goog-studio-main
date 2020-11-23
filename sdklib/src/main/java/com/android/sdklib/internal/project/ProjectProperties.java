@@ -68,7 +68,7 @@ public class ProjectProperties implements IPropertySource {
     public static final String PROPERTY_NDK = "ndk.dir";
     public static final String PROPERTY_NDK_SYMLINKDIR = "ndk.symlinkdir";
     public static final String PROPERTY_CMAKE = "cmake.dir";
-    
+
     // LEGACY - Kept so that we can actually remove it from local.properties.
     private static final String PROPERTY_SDK_LEGACY = "sdk-location";
 
@@ -189,36 +189,6 @@ public class ProjectProperties implements IPropertySource {
             }
         }
         return null;
-    }
-
-    /**
-     * Deletes a project properties file.
-     *
-     * @param projectFolder the project folder.
-     * @param type One the possible {@link PropertyType}s.
-     * @return true if success.
-     */
-    public static boolean delete(IAbstractFolder projectFolder, PropertyType type) {
-        if (projectFolder.exists()) {
-            IAbstractFile propFile = projectFolder.getFile(type.mFilename);
-            if (propFile.exists()) {
-                return propFile.delete();
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Deletes a project properties file.
-     *
-     * @param projectFolderOsPath the project folder.
-     * @param type One the possible {@link PropertyType}s.
-     * @return true if success.
-     */
-    public static boolean delete(String projectFolderOsPath, PropertyType type) {
-        IAbstractFolder wrapper = new FolderWrapper(projectFolderOsPath);
-        return delete(wrapper, type);
     }
 
 
