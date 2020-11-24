@@ -64,7 +64,7 @@ class DexUsageRecorderTest {
     }
 
     @Test
-    fun `detect web content via references to WebView_load* methods`() {
+    fun `detect web content via references to WebView_load methods`() {
         val model = createModelWithResources()
         DexUsageRecorder(extractResourceAsDex("resourceShrinker/webcontent.dex"))
             .recordUsages(model)
