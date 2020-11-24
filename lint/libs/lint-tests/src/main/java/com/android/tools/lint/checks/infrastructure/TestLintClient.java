@@ -26,11 +26,10 @@ import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
+import static java.io.File.separatorChar;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -93,6 +92,7 @@ import com.android.tools.lint.model.LintModelLibrary;
 import com.android.tools.lint.model.LintModelLintOptions;
 import com.android.tools.lint.model.LintModelMavenName;
 import com.android.tools.lint.model.LintModelModule;
+import com.android.tools.lint.model.LintModelModuleType;
 import com.android.tools.lint.model.LintModelSourceProvider;
 import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.ILogger;
@@ -121,6 +121,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -152,6 +153,8 @@ public class TestLintClient extends LintCliClient {
     /** Used to test PSI read lock issues. */
     private boolean insideReadAction = false;
 
+    private TextReporter reporter;
+
     /** Records the first throwable reported as an error during this test */
     @Nullable Throwable firstThrowable;
 
@@ -169,7 +172,7 @@ public class TestLintClient extends LintCliClient {
 
     public TestLintClient(LintCliFlags flags, String clientName) {
         super(flags, clientName);
-        TextReporter reporter = new TextReporter(this, flags, writer, false);
+        reporter = new TextReporter(this, flags, writer, false);
         reporter.setForwardSlashPaths(true); // stable tests
         flags.getReporters().add(reporter);
     }
@@ -182,6 +185,10 @@ public class TestLintClient extends LintCliClient {
     protected void setLintTask(@Nullable TestLintTask task) {
         if (task != null && task.optionSetter != null) {
             task.optionSetter.set(getFlags());
+        }
+
+        if (task != null) {
+            reporter.setFormat(task.textFormat);
         }
 
         // Client should not be used outside of the check process
@@ -231,7 +238,8 @@ public class TestLintClient extends LintCliClient {
     private File findIncrementalProject(@NonNull List<File> files) {
         // Multiple projects: assume the project names were included in the incremental
         // task names
-        if (task.incrementalFileName == null) {
+        String incrementalFileName = task.incrementalFileName;
+        if (incrementalFileName == null) {
             if (files.size() == 1) {
                 assert false : "Need to specify incremental file name if more than one project";
             } else {
@@ -241,16 +249,30 @@ public class TestLintClient extends LintCliClient {
         if (files.size() > 1) {
             for (File dir : files) {
                 File root = dir.getParentFile(); // Allow the project name to be part of the name
-                File current =
-                        new File(root, task.incrementalFileName.replace('/', File.separatorChar));
+                File current = new File(root, incrementalFileName.replace('/', separatorChar));
                 if (current.exists()) {
+                    // Try to match project directory exactly
+                    int index = incrementalFileName.indexOf('/');
+                    if (index != -1) {
+                        File path = new File(root, task.incrementalFileName.substring(0, index));
+                        if (path.exists()) {
+                            return path;
+                        }
+                    }
                     return dir;
                 }
             }
         }
 
         for (File dir : files) {
-            File current = new File(dir, task.incrementalFileName.replace('/', File.separatorChar));
+            File current = new File(dir, incrementalFileName.replace('/', separatorChar));
+            if (current.exists()) {
+                return dir;
+            }
+        }
+
+        for (File dir : files) {
+            File current = new File(dir, "../" + incrementalFileName.replace('/', separatorChar));
             if (current.exists()) {
                 return dir;
             }
@@ -259,7 +281,7 @@ public class TestLintClient extends LintCliClient {
         // Just using basename? Search among all files
         for (File root : files) {
             for (File relative : getFilesRecursively(root)) {
-                if (relative.getName().equals(task.incrementalFileName)) {
+                if (relative.getName().equals(incrementalFileName)) {
                     // Turn the basename into a full relative name
                     task.incrementalFileName = relative.getPath();
                     return root;
@@ -270,26 +292,24 @@ public class TestLintClient extends LintCliClient {
         return null;
     }
 
-    protected TestLintTask.ResultState checkLint(
-            @NonNull File rootDir,
-            @NonNull List<File> files,
-            @NonNull List<Issue> issues,
-            boolean writeOutput,
-            @NonNull TestMode mode)
+    protected TestResultState checkLint(
+            @NonNull File rootDir, @NonNull List<File> files, @NonNull List<Issue> issues)
             throws Exception {
-        if (task.incrementalFileName != null) {
+        String incrementalFileName = task.incrementalFileName;
+        if (incrementalFileName != null) {
             boolean found = false;
 
             File dir = findIncrementalProject(files);
             if (dir != null) {
-                File current =
-                        new File(dir, task.incrementalFileName.replace('/', File.separatorChar));
+                // may be reassigned by findIncrementalProject if using just a basename
+                incrementalFileName = task.incrementalFileName;
+                File current = new File(dir, incrementalFileName.replace('/', separatorChar));
                 if (!current.exists()) {
                     // Specified the project name as part of the name to disambiguate
                     current =
                             new File(
                                     dir.getParentFile(),
-                                    task.incrementalFileName.replace('/', File.separatorChar));
+                                    incrementalFileName.replace('/', separatorChar));
                 }
                 if (current.exists()) {
                     setIncremental(current);
@@ -305,7 +325,7 @@ public class TestLintClient extends LintCliClient {
                 String all = allFiles.toString();
                 fail(
                         "Could not find incremental file "
-                                + task.incrementalFileName
+                                + incrementalFileName
                                 + " in the test project folders; did you mean one of "
                                 + all);
             }
@@ -318,8 +338,8 @@ public class TestLintClient extends LintCliClient {
                             + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
         }
 
-        String result = analyze(files, issues, writeOutput);
-        return new TestLintTask.ResultState(this, rootDir, result, getIncidents(), firstThrowable);
+        String result = analyze(rootDir, files, issues);
+        return new TestResultState(this, rootDir, result, getIncidents(), firstThrowable);
     }
 
     private static List<File> getFilesRecursively(File root) {
@@ -333,7 +353,7 @@ public class TestLintClient extends LintCliClient {
             String path = file.getPath();
             if (path.startsWith(skipPrefix)) {
                 int length = skipPrefix.length();
-                if (path.length() > length && path.charAt(length) == File.separatorChar) {
+                if (path.length() > length && path.charAt(length) == separatorChar) {
                     length++;
                 }
                 path = path.substring(length);
@@ -384,10 +404,21 @@ public class TestLintClient extends LintCliClient {
         }
         LintCliFlags flags = getFlags();
         if (mocker != null && mocker.getProject() != null) {
-            mocker.syncFlagsTo(flags);
-            flags.setFatalOnly(task.vital);
-            if (task.variantName != null) {
-                mocker.setVariantName(task.variantName);
+            if (mocker.primary) {
+                mocker.syncFlagsTo(flags);
+                flags.setFatalOnly(task.vital);
+
+                String variantName = null;
+                if (description != null && description.getVariantName() != null) {
+                    variantName = description.getVariantName();
+                } else if (task.variantName != null) {
+                    variantName = task.variantName;
+                }
+                if (variantName != null) {
+                    mocker.setVariantName(variantName);
+                }
+            } else if (description != null && description.getVariantName() != null) {
+                mocker.setVariantName(description.getVariantName());
             }
             if (task.mockModifier != null) {
                 task.mockModifier.modify(mocker.getProject(), mocker.getVariant());
@@ -399,8 +430,23 @@ public class TestLintClient extends LintCliClient {
         if (task.overrideConfigFile != null) {
             flags.setOverrideLintConfig(task.overrideConfigFile);
         }
-        if (mocker != null && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
+        if (mocker != null
+                && description != null
+                && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
             description.type(ProjectDescription.Type.JAVA);
+        }
+
+        if (description != null
+                && task.reportFrom != null
+                && !(task.reportFrom.isUnder(description)
+                        || description.isUnder(task.reportFrom))) {
+            if (task.reportFrom != description) {
+                referenceDir =
+                        ProjectDescription.Companion.getProjectDirectory(
+                                task.reportFrom, referenceDir);
+            } else {
+                referenceDir = dir;
+            }
         }
 
         Project project = new TestProject(this, dir, referenceDir, description, mocker);
@@ -483,7 +529,7 @@ public class TestLintClient extends LintCliClient {
     public String getDisplayPath(
             @NonNull File file, @Nullable Project project, @NonNull TextFormat format) {
         String path = super.getDisplayPath(file, project, format);
-        return path.replace(File.separatorChar, '/'); // stable tests
+        return path.replace(separatorChar, '/'); // stable tests
     }
 
     @Override
@@ -494,13 +540,12 @@ public class TestLintClient extends LintCliClient {
     @SuppressWarnings("StringBufferField")
     private final StringBuilder output = new StringBuilder();
 
-    public String analyze(List<File> files, List<Issue> issues, boolean writeOutput)
-            throws Exception {
+    public String analyze(File rootDir, List<File> files, List<Issue> issues) throws Exception {
         // We'll sync lint options to flags later when the project is created, but try
         // to do it early before the driver is initialized
         if (!files.isEmpty()) {
             GradleModelMocker mocker = task.projectMocks.get(files.get(0));
-            if (mocker != null) {
+            if (mocker != null && mocker.primary) {
                 mocker.syncFlagsTo(getFlags());
             }
         }
@@ -512,6 +557,9 @@ public class TestLintClient extends LintCliClient {
         if (task.platforms != null) {
             request.setPlatform(task.platforms);
         }
+        if (files.size() > 1) {
+            request.setSrcRoot(rootDir);
+        }
 
         if (incrementalCheck != null) {
             File projectDir = findIncrementalProject(files);
@@ -521,6 +569,7 @@ public class TestLintClient extends LintCliClient {
             project.addFile(incrementalCheck);
             List<Project> projects = singletonList(project);
             request.setProjects(projects);
+            project.setReportIssues(true);
         }
 
         driver = createDriver(new TestIssueRegistry(issues), request);
@@ -552,6 +601,11 @@ public class TestLintClient extends LintCliClient {
         }
 
         Collections.sort(incidents);
+        if (task.reportFrom != null) {
+            useProjectRelativePaths(task.reportFrom);
+        } else {
+            useRootRelativePaths();
+        }
 
         // Check compare contract and transitivity
         Incident prev2 = prev;
@@ -570,13 +624,44 @@ public class TestLintClient extends LintCliClient {
             prev = incident;
         }
 
-        String result = writeOutput ? writeOutput(incidents) : "";
+        String result = writeOutput(incidents);
 
         for (LintListener listener : task.listeners) {
             driver.removeLintListener(listener);
         }
 
         return result;
+    }
+
+    @NonNull
+    @Override
+    protected LintRequest createLintRequest(@NonNull List<? extends File> files) {
+        TestLintRequest request = new TestLintRequest(this, files);
+        configureLintRequest(request);
+        return request;
+    }
+
+    public static class TestLintRequest extends LintRequest {
+        Project mainProject = null;
+
+        public TestLintRequest(@NonNull LintClient client, @NonNull List<? extends File> files) {
+            super(client, files);
+        }
+
+        @NonNull
+        @Override
+        public Project getMainProject(@NonNull Project project) {
+            if (mainProject != null) {
+                return mainProject;
+            }
+            for (Project main : project.getClient().getKnownProjects()) {
+                if (main.getType() == LintModelModuleType.APP
+                        && project.getAllLibraries().contains(project)) {
+                    return main;
+                }
+            }
+            return super.getMainProject(project);
+        }
     }
 
     public String writeOutput(List<Incident> incidents) throws IOException {
@@ -849,24 +934,41 @@ public class TestLintClient extends LintCliClient {
         super.report(context, issue, severity, location, message, format, fix);
 
         // Make sure errors are unique! See documentation for #allowDuplicates.
-        if (!task.allowDuplicates) {
-            Incident prev = null;
-            for (Incident incident : getIncidents()) {
-                assertNotSame(incident, prev);
-                assertNotEquals(
-                        ""
-                                + "Warning (message, location) reported more than once; this "
-                                + "typically means that your detector is incorrectly reaching "
-                                + "the same element twice (for example, visiting each call of a method "
-                                + "and reporting the error on the method itself), or that you should "
-                                + "incorporate more details in your error message such as specific names "
-                                + "of methods or variables to make each message unique if overlapping "
-                                + "errors are expected. Identical error encountered at the same location "
-                                + "more  than once: "
-                                + incident,
-                        incident,
-                        prev);
-                prev = incident;
+        List<Incident> incidents = getIncidents();
+        int incidentCount = incidents.size();
+        if (incidentCount > 1) {
+            Incident prev = incidents.get(incidentCount - 2);
+            // Just added by the super.report() call above
+            Incident incident = incidents.get(incidentCount - 1);
+            if (incident.equals(prev)) {
+                if (task.allowDuplicates) {
+                    // If we allow duplicates, don't list them multiple times.
+                    incidents.remove(incidentCount - 1);
+                    if (severity.isError()) {
+                        setErrorCount(getErrorCount() - 1);
+                    } else if (severity
+                            == Severity.WARNING) { // Don't count informational as a warning
+                        setWarningCount(getWarningCount() - 1);
+                    }
+                } else {
+                    String error =
+                            ""
+                                    + "Incident (message, location) reported more\n"
+                                    + "than once; this typically means that your detector is incorrectly\n"
+                                    + "reaching the same element twice (for example, visiting each call of a\n"
+                                    + "method and reporting the error on the method itself), or that you\n"
+                                    + "should incorporate more details in your error message such as specific\n"
+                                    + "names of methods or variables to make each message unique if\n"
+                                    + "overlapping errors are expected.\n"
+                                    + "\n"
+                                    + "If you *really* want to allow this, add .allowDuplicates() to the test\n"
+                                    + "task.\n"
+                                    + "\n"
+                                    + "Identical incident encountered at the same location more than once\n"
+                                    + incident;
+
+                    fail(error);
+                }
             }
         }
 
@@ -912,6 +1014,89 @@ public class TestLintClient extends LintCliClient {
                 }
             }
         }
+    }
+
+    /**
+     * If the test results are spread across more than one project, use root relative rather than
+     * project relative paths
+     */
+    private void useRootRelativePaths() {
+        boolean multipleProjects = false;
+        Iterator<Incident> iterator = getIncidents().iterator();
+        if (iterator.hasNext()) {
+            Incident prev = iterator.next();
+            Project firstProject = prev.getProject();
+            while (iterator.hasNext()) {
+                Incident incident = iterator.next();
+                if (firstProject != incident.getProject()) {
+                    multipleProjects = true;
+                    break;
+                }
+            }
+        }
+        if (multipleProjects) {
+            // Null out projects on incidents such that it won't print project
+            // local paths
+            for (Incident incident : getIncidents()) {
+                incident.setProject(null);
+            }
+        }
+    }
+
+    /**
+     * If the tests are configured to provide reporting from a specific project, set things up such
+     * that all the paths are relative to that project's directory.
+     */
+    private void useProjectRelativePaths(ProjectDescription from) {
+        Project project = findProject(from);
+        if (project != null) {
+            for (Incident incident : getIncidents()) {
+                Project incidentProject = incident.getProject();
+                if (incidentProject != null && incidentProject != project) {
+                    Location location =
+                            ensureAbsolutePaths(incidentProject.getDir(), incident.getLocation());
+                    incident.setLocation(location);
+                    incident.setProject(project);
+                }
+            }
+        }
+    }
+
+    /** Returns the project instance for the given project description */
+    @Nullable
+    private Project findProject(ProjectDescription description) {
+        for (Map.Entry<File, ProjectDescription> entry : task.dirToProjectDescription.entrySet()) {
+            if (entry.getValue() == description) {
+                return getDirToProject().get(entry.getKey());
+            }
+        }
+
+        return null;
+    }
+
+    private static Location ensureAbsolutePaths(@NonNull File base, @NonNull Location location) {
+        // Recurse to normalize all paths in the secondary linked list too
+        Location secondary =
+                location.getSecondary() != null
+                        ? ensureAbsolutePaths(base, location.getSecondary())
+                        : null;
+
+        File file = location.getFile();
+        if (!file.isAbsolute() || file.getPath().startsWith("../")) {
+            String relative = file.getPath();
+            File absolute = new File(base, relative);
+            Position start = location.getStart();
+            Position end = location.getEnd();
+            location =
+                    start != null && end != null
+                            ? Location.create(absolute, start, end)
+                            : Location.create(absolute);
+        }
+        if (secondary != null) {
+            location.setSecondary(secondary);
+        }
+
+        return location;
     }
 
     @Override

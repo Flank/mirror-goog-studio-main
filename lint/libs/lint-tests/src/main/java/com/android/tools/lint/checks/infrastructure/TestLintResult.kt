@@ -21,7 +21,6 @@ import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.checks.BuiltinIssueRegistry
-import com.android.tools.lint.checks.infrastructure.TestLintTask.ResultState
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Severity
@@ -61,7 +60,7 @@ import javax.swing.text.PlainDocument
 
 class TestLintResult internal constructor(
     private val task: TestLintTask,
-    private val states: MutableMap<TestMode?, ResultState>,
+    private val states: MutableMap<TestMode, TestResultState>,
     /** The mode to use for result tasks that do not pass in a specific mode to check */
     private val defaultMode: TestMode
 ) {

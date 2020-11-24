@@ -54,6 +54,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.endsWith
+import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getLanguageLevel
 import com.android.tools.lint.detector.api.isManifestFolder
 import com.android.tools.lint.model.LintModelAndroidLibrary
@@ -1575,11 +1576,12 @@ abstract class LintClient {
         project: Project? = null,
         format: TextFormat = TextFormat.RAW
     ): String {
-        if (project != null) {
+        val base = project?.referenceDir ?: getRootDir()
+        if (base != null) {
+            val basePath = base.path
             val path = file.path
-            val referencePath: String = project.referenceDir.path
-            if (path.startsWith(referencePath)) {
-                var length = referencePath.length
+            if (path.startsWith(basePath)) {
+                var length = basePath.length
                 if (path.length > length && path[length] == separatorChar) {
                     length++
                 }
@@ -1792,6 +1794,38 @@ abstract class LintClient {
         }
         relativePath.append(filePath.substring(lastSeparatorIndex + 1))
         return relativePath.toString()
+    }
+
+    /**
+     * Returns the root directory for analysis, if known. The actual source projects
+     * can be below this directory, not necessarily directly.
+     */
+    open fun getRootDir(): File? {
+        var root: File? = null
+        for (project in knownProjects) {
+            if (!project.reportIssues) {
+                continue
+            }
+            root = if (root == null) {
+                project.dir
+            } else {
+                getCommonParent(root, project.dir)
+            }
+        }
+
+        // Workaround: we need the root project; it's not yet part of the model,
+        // and adding it now would clash with simultaneous edits to decouple Gradle
+        // and lint
+        val parent = root?.parentFile
+        if (parent != null) {
+            if (File(parent, SdkConstants.FN_BUILD_GRADLE).exists() ||
+                File(parent, SdkConstants.FN_BUILD_GRADLE_KTS).exists()
+            ) {
+                return parent
+            }
+        }
+
+        return root
     }
 
     private class RepoLogger : ProgressIndicatorAdapter() {
@@ -2028,7 +2062,27 @@ abstract class LintClient {
                     val dir = if (realFile.isDirectory)
                         realFile
                     else realFile.parentFile ?: File("").absoluteFile
-                    Project.create(client, dir, dir)
+                    var curr = dir
+                    var projectDir: File? = null
+                    // Look through existing projects containing this path
+                    while (curr != null) {
+                        if (client.dirToProject.containsKey(curr)) {
+                            projectDir = curr
+                            break
+                        }
+                        curr = curr.parentFile
+                    }
+                    // If no existing project, at least pick the most reasonable guess
+                    // for a project location (primarily used to make relative paths
+                    // in error report)
+                    while (projectDir == null && curr != null) {
+                        if (client.isProjectDirectory(curr)) {
+                            projectDir = curr
+                            break
+                        }
+                        curr = curr.parentFile
+                    }
+                    client.getProject(projectDir ?: dir, projectDir ?: dir)
                 }
             }
 

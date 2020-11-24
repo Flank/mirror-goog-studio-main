@@ -44,6 +44,8 @@ class TextReporter(
     private val writer: Writer,
     private val close: Boolean
 ) : Reporter(client, file) {
+    var format = TextFormat.TEXT
+
     /**
      * Whether the reporter should convert paths to forward slashes
      */
@@ -99,8 +101,8 @@ class TextReporter(
                     lastIssue = issue
                 }
                 val startLength = output.length
-                val p = incident.getDisplayPath()
-                appendPath(output, p)
+                val displayPath = incident.getDisplayPath()
+                appendPath(output, displayPath)
                 output.append(':')
                 if (incident.line >= 0) {
                     output.append((incident.line + 1).toString())
@@ -121,7 +123,7 @@ class TextReporter(
                 output.append(
                     TextFormat.RAW.convertTo(
                         incident.message,
-                        TextFormat.TEXT
+                        format
                     )
                 )
                 output.append(' ').append('[')
@@ -131,7 +133,7 @@ class TextReporter(
                 from?.identifier?.let { identifier ->
                     if (from != IssueRegistry.AOSP_VENDOR && identifier.isNotBlank()) {
                         output.append(" from ")
-                        output.append(TextFormat.RAW.convertTo(identifier, TextFormat.TEXT))
+                        output.append(TextFormat.RAW.convertTo(identifier, format))
                     }
                 }
                 output.append(']')
@@ -167,7 +169,7 @@ class TextReporter(
                             output.append(
                                 TextFormat.RAW.convertTo(
                                     locationMessage,
-                                    TextFormat.TEXT
+                                    format
                                 )
                             )
                             output.append('\n')
@@ -273,7 +275,7 @@ class TextReporter(
         ) {
             return
         }
-        val explanation = issue.getExplanation(TextFormat.TEXT)
+        val explanation = issue.getExplanation(format)
         if (explanation.trim { it <= ' ' }.isEmpty()) {
             return
         }
@@ -305,7 +307,7 @@ class TextReporter(
         val issueVendor = issue.vendor ?: issue.registry?.vendor
         issueVendor?.let { vendor ->
             if (vendor != IssueRegistry.AOSP_VENDOR) {
-                vendor.describeInto(output, TextFormat.TEXT, indent)
+                vendor.describeInto(output, format, indent)
                 output.append('\n')
             }
         }

@@ -258,10 +258,10 @@ class RestrictToDetectorTest : AbstractCheckTest() {
 
         lint().projects(library, app).run().expect(
             """
-            project1/src/com/example/myapplication/test.kt:7: Error: LibraryCode.method2 can only be called from within the same library (lib) [RestrictedApi]
+            app/src/com/example/myapplication/test.kt:7: Error: LibraryCode.method2 can only be called from within the same library (lib) [RestrictedApi]
                 LibraryCode.method2()
                             ~~~~~~~
-            project1/src/com/example/myapplication/test.kt:10: Error: LibraryCode.FIELD2 can only be accessed from within the same library (lib) [RestrictedApi]
+            app/src/com/example/myapplication/test.kt:10: Error: LibraryCode.FIELD2 can only be accessed from within the same library (lib) [RestrictedApi]
                 val f2 = LibraryCode.FIELD2
                                      ~~~~~~
             2 errors, 0 warnings

@@ -30,10 +30,6 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
             Test#uiThread -> Test#unannotated -> Test#workerThread [WrongThreadInterprocedural]
               @UiThread void uiThread() { unannotated(); }
                                           ~~~~~~~~~~~~~
-            src/test/pkg/Runnable.java:18: Error: Interprocedural thread annotation violation (UiThread to WorkerThread):
-            Test#uiThread -> Test#unannotated -> Test#workerThread [WrongThreadInterprocedural]
-              @UiThread void uiThread() { unannotated(); }
-                                          ~~~~~~~~~~~~~
             src/test/pkg/Runnable.java:25: Error: Interprocedural thread annotation violation (WorkerThread to UiThread):
             Test#callRunIt -> Test#runIt -> Test#callRunIt#lambda -> Test#runUi [WrongThreadInterprocedural]
                 runIt(() -> runUi());
@@ -54,7 +50,7 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
             Test#callInvokeInBackground#lambda -> Test#d [WrongThreadInterprocedural]
                 invokeInBackground(() -> d());
                                          ~~~
-            8 errors, 0 warnings
+            7 errors, 0 warnings
             """
 
         lint().files(

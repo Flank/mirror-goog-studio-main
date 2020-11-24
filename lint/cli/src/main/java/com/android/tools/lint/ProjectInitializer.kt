@@ -464,6 +464,36 @@ private class ProjectInitializer(
         }
     }
 
+    private val moduleDirectories: MutableSet<File> = HashSet()
+
+    private fun pickDirectory(moduleName: String): File {
+        // Special case: if the module is a path (with an optional :suffix),
+        // use this as the module directory, otherwise fall back to the default root
+        val separatorIndex = moduleName.lastIndexOf(separator)
+        val index = moduleName.indexOf(':', separatorIndex + 1)
+        val dir =
+            if (separatorIndex != -1 && index != -1) {
+                File(moduleName.substring(0, moduleName.indexOf(':', separatorIndex)))
+            } else if (index != -1 && index < moduleName.length - 1) {
+                File(root, moduleName.substring(index + 1))
+            } else {
+                File(root, moduleName)
+            }
+
+        // Make sure it's unique to this module
+        if (moduleDirectories.add(dir)) {
+            return dir
+        }
+        var count = 2
+        while (true) {
+            val unique = File(dir.path + count)
+            if (moduleDirectories.add(unique)) {
+                return unique
+            }
+            count++
+        }
+    }
+
     private fun parseModule(moduleElement: Element) {
         val name: String = moduleElement.getAttribute(ATTR_NAME)
         val library = moduleElement.getAttribute(ATTR_LIBRARY) == VALUE_TRUE
@@ -506,15 +536,7 @@ private class ProjectInitializer(
             }
         }
 
-        // Special case: if the module is a path (with an optional :suffix),
-        // use this as the module directory, otherwise fall back to the default root
-        name.indexOf(':', name.lastIndexOf(separatorChar))
-        val dir =
-            if (name.contains(separator) && name.indexOf(':', name.lastIndexOf(separator)) != -1) {
-                File(name.substring(0, name.indexOf(':', name.lastIndexOf(separator))))
-            } else {
-                root
-            }
+        val dir = pickDirectory(name)
         val module = ManualProject(client, dir, name, library, android)
         modules[name] = module
 
@@ -1043,6 +1065,10 @@ constructor(
         // We don't have this info yet; add support to the XML to specify it
         this.buildSdk = SdkVersionInfo.HIGHEST_KNOWN_STABLE_API
         this.mergeManifests = true
+    }
+
+    override fun initialize() {
+        // Deliberately not calling super; that code is for ADT compatibility
     }
 
     /** Adds the given project as a dependency from this project */

@@ -72,7 +72,7 @@ public class LintFixVerifier {
     private Boolean reformat;
     private boolean robot = false;
 
-    public LintFixVerifier(@NonNull TestLintTask task, @NonNull TestLintTask.ResultState state) {
+    public LintFixVerifier(@NonNull TestLintTask task, @NonNull TestResultState state) {
         this.task = task;
         this.incidents = state.incidents;
     }
@@ -174,12 +174,21 @@ public class LintFixVerifier {
         path = path.replace(File.separatorChar, '/');
         for (ProjectDescription project : task.projects) {
             for (TestFile file : project.getFiles()) {
-                if (file.getTargetPath().equals(path)) {
+                String targetPath = file.getTargetPath();
+                if (targetPath.equals(path)) {
                     return file;
                 }
             }
         }
 
+        for (ProjectDescription project : task.projects) {
+            for (TestFile file : project.getFiles()) {
+                String targetPath = file.getTargetPath();
+                if (path.endsWith(targetPath)) {
+                    return file;
+                }
+            }
+        }
         return null;
     }
 

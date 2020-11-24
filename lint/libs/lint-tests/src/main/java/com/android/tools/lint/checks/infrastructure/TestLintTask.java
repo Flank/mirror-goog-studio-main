@@ -16,14 +16,11 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.DOT_GRADLE;
+import static com.android.tools.lint.checks.infrastructure.TestFile.createTempDirectory;
 import static com.android.tools.lint.checks.infrastructure.TestMode.UI_INJECTION_HOST;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
@@ -32,20 +29,14 @@ import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
-import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
-import com.android.tools.lint.client.api.Configuration;
-import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JarFileIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
-import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintModelModuleProject;
@@ -54,38 +45,25 @@ import com.android.tools.lint.detector.api.Platform;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.utils.NullLogger;
+import com.android.tools.lint.detector.api.TextFormat;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.ObjectArrays;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function2;
 
 @SuppressWarnings({"SameParameterValue", "ComplexBooleanConstant"})
 public class TestLintTask {
@@ -93,6 +71,9 @@ public class TestLintTask {
     final Map<File, GradleModelMocker> projectMocks = Maps.newHashMap();
     /** Map from project directory to corresponding Gradle model mocker */
     final Map<File, ProjectDescription> dirToProjectDescription = Maps.newHashMap();
+    /** The test execution */
+    final TestLintRunner runner = new TestLintRunner(this);
+
     /** Cache for {@link #getCheckedIssues()} */
     private List<Issue> checkedIssues;
     /** Whether the {@link #run} method has already been invoked */
@@ -100,8 +81,10 @@ public class TestLintTask {
 
     // Configuration options
 
-    protected ProjectDescription[] projects;
-    private boolean impliedProject;
+    protected ProjectDescriptionList projects = new ProjectDescriptionList();
+    /** True if the project in the task was only constructed from {@link #files(TestFile...)} */
+    boolean impliedProject;
+
     boolean allowCompilationErrors;
     boolean allowObsoleteLintChecks = true;
     boolean allowSystemErrors = true;
@@ -127,12 +110,13 @@ public class TestLintTask {
     boolean allowMissingSdk;
     boolean requireCompileSdk;
     boolean vital;
+    TextFormat textFormat = TextFormat.TEXT;
     Map<String, byte[]> mockNetworkData;
     boolean allowNetworkAccess;
     boolean allowDuplicates;
     File rootDirectory;
     File tempDir;
-    private TestFile baseline;
+    TestFile baseline;
     File baselineFile;
     TestFile overrideConfig;
     File overrideConfigFile;
@@ -144,6 +128,7 @@ public class TestLintTask {
     boolean allowExceptions;
     public String testName = null;
     boolean useTestConfiguration = true;
+    @Nullable ProjectDescription reportFrom = null;
     boolean stripRoot = true;
 
     /** Creates a new lint test task */
@@ -151,15 +136,6 @@ public class TestLintTask {
         LintClient.setClientName(CLIENT_UNIT_TESTS);
         BuiltinIssueRegistry.reset();
         tempDir = createTempDirectory();
-    }
-
-    @NonNull
-    private static File createTempDirectory() {
-        try {
-            return Files.createTempDirectory("").toFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /** Creates a new lint test task */
@@ -171,7 +147,7 @@ public class TestLintTask {
 
     /** Creates a new lint test task */
     public TestLintTask(@NonNull ProjectDescription[] projects) {
-        this.projects = projects;
+        this.projects = new ProjectDescriptionList(Arrays.asList(projects), null);
     }
 
     /**
@@ -181,7 +157,7 @@ public class TestLintTask {
      */
     public TestLintTask projects(@NonNull ProjectDescription... projects) {
         ensurePreRun();
-        this.projects = projects;
+        this.projects.addProjects(Arrays.asList(projects));
         return this;
     }
 
@@ -192,7 +168,8 @@ public class TestLintTask {
      */
     public TestLintTask files(@NonNull TestFile... files) {
         ensurePreRun();
-        this.projects = new ProjectDescription[] {new ProjectDescription(files)};
+        ProjectDescription project = new ProjectDescription(files);
+        this.projects.addProject(project);
         this.impliedProject = true;
         return this;
     }
@@ -529,12 +506,9 @@ public class TestLintTask {
      */
     public TestLintTask incremental() {
         ensurePreRun();
-        if (projects != null
-                && projects.length == 1
-                && projects[0].getFiles() != null
-                && projects[0].getFiles().length == 1) {
-            this.incrementalFileName = projects[0].getFiles()[0].getTargetPath();
-        } else if (projects == null || projects.length == 0) {
+        if (projects.getSize() == 1 && projects.get(0).getFiles().length == 1) {
+            this.incrementalFileName = projects.get(0).getFiles()[0].getTargetPath();
+        } else if (projects.isEmpty()) {
             fail("Can't use incremental mode without any projects!");
         } else {
             StringBuilder sb = new StringBuilder();
@@ -765,6 +739,18 @@ public class TestLintTask {
     }
 
     /**
+     * Sets the output format to use in generated lint output that is checked by the result expect
+     * method.
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask textFormat(TextFormat textFormat) {
+        ensurePreRun();
+        this.textFormat = textFormat;
+        return this;
+    }
+
+    /**
      * Tells the lint infrastructure to simulate symbol resolution errors. This is used in some rare
      * occurrences where you have a lint check which AST results and falls back to bytecode analysis
      * if symbol resolution fails; this lets you test both behaviors on all the same test files
@@ -867,10 +853,10 @@ public class TestLintTask {
         return this;
     }
 
-    private void ensureConfigured() {
+    void ensureConfigured() {
         getCheckedIssues(); // ensures that you've used one of the many DSL options to set issues
 
-        if (projects == null) {
+        if (projects.isEmpty()) {
             throw new RuntimeException(
                     "No test files to check lint in: call files() or projects()");
         }
@@ -888,134 +874,7 @@ public class TestLintTask {
      * #stripRoot}) makes the path relative to the test root.
      */
     public String stripRoot(File rootDir, String s) {
-        String path = rootDir.getPath();
-        if (s.contains(path)) {
-            s = s.replace(path, "TESTROOT");
-        }
-        path = path.replace(File.separatorChar, '/');
-        if (s.contains(path)) {
-            s = s.replace(path, "/TESTROOT");
-        }
-        if (stripRoot && s.contains("TESTROOT")) {
-            s = s.replace("/TESTROOT/", "").replace("/TESTROOT\\", "").replace("\nTESTROOT/", "\n");
-            if (s.startsWith("TESTROOT/")) {
-                s = s.substring("TESTROOT/".length());
-            }
-        }
-        return s;
-    }
-
-    private static void addProjects(
-            @NonNull List<ProjectDescription> target, @NonNull ProjectDescription... projects) {
-        for (ProjectDescription project : projects) {
-            if (!target.contains(project)) {
-                target.add(project);
-            }
-
-            for (ProjectDescription dependency : project.getDependsOn()) {
-                addProjects(target, dependency);
-            }
-        }
-    }
-
-    /** Constructs the actual lint projects on disk */
-    @NonNull
-    public List<File> createProjects(File rootDir) {
-        dirToProjectDescription.clear();
-        projectMocks.clear();
-
-        List<ProjectDescription> allProjects = Lists.newArrayListWithCapacity(2 * projects.length);
-        addProjects(allProjects, projects);
-
-        // Assign names if necessary
-        for (int i = 0; i < allProjects.size(); i++) {
-            ProjectDescription project = allProjects.get(i);
-            if (project.getName().isEmpty()) {
-                project.setName("project" + i);
-            }
-        }
-
-        // First create project directories (before populating them) since
-        // the directories need to exist to make relative path computations
-        // between the projects (used for example for dependencies) work
-        // properly.
-        List<File> projectDirs = Lists.newArrayList();
-        for (ProjectDescription project : allProjects) {
-            try {
-                project.ensureUnique();
-                File projectDir = getProjectDirectory(project, rootDir);
-                dirToProjectDescription.put(projectDir, project);
-                if (!projectDir.isDirectory()) {
-                    boolean ok = projectDir.mkdirs();
-                    assertTrue("Couldn't create projectDir " + projectDir, ok);
-                }
-                projectDirs.add(projectDir);
-
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-        }
-
-        // Populate project directories with source files
-        for (ProjectDescription project : allProjects) {
-            try {
-                TestFile[] files = project.getFiles();
-                File projectDir = getProjectDirectory(project, rootDir);
-
-                // Also create dependency files
-                if (!project.getDependsOn().isEmpty()) {
-                    TestFile.PropertyTestFile propertyFile = null;
-                    for (TestFile file : files) {
-                        if (file instanceof TestFile.PropertyTestFile) {
-                            propertyFile = (TestFile.PropertyTestFile) file;
-                            break;
-                        }
-                    }
-                    if (propertyFile == null) {
-                        propertyFile = TestFiles.projectProperties();
-                        files = ObjectArrays.concat(files, propertyFile);
-                    }
-
-                    int index = 1;
-                    for (ProjectDescription dependency : project.getDependsOn()) {
-                        File dependencyDir = getProjectDirectory(dependency, rootDir);
-                        TestLintClient client = new TestLintClient(LintClient.clientName);
-                        String relative = client.getRelativePath(projectDir, dependencyDir);
-                        String referenceKey = "android.library.reference." + (index++);
-                        propertyFile.property(referenceKey, relative);
-                    }
-                }
-
-                populateProjectDirectory(project, projectDir, files);
-
-                if (baseline != null) {
-                    baselineFile = baseline.createFile(projectDir);
-                }
-                if (overrideConfig != null) {
-                    overrideConfigFile = overrideConfig.createFile(projectDir);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-        }
-
-        return projectDirs;
-    }
-
-    @NonNull
-    private static File getProjectDirectory(
-            @NonNull ProjectDescription project, @NonNull File rootDir) {
-        if (project.getUnder() == null) {
-            return new File(rootDir, project.getName());
-        }
-        List<String> segments = new ArrayList<>();
-        do {
-            segments.add(project.getName());
-            project = project.getUnder();
-        } while (project != null);
-        Collections.reverse(segments);
-        String relativePath = Joiner.on(File.separator).join(segments);
-        return new File(rootDir, relativePath);
+        return runner.stripRoot(rootDir, s);
     }
 
     /**
@@ -1026,193 +885,7 @@ public class TestLintTask {
     @CheckReturnValue
     @NonNull
     public TestLintResult run() {
-        alreadyRun = true;
-        ensureConfigured();
-
-        File rootDir;
-        if (rootDirectory != null) {
-            rootDir = rootDirectory;
-        } else if (testName != null) {
-            rootDir = new File(tempDir, testName);
-        } else {
-            rootDir = tempDir;
-        }
-
-        try {
-            // Use canonical path to make sure we don't end up failing
-            // to chop off the prefix from Project#getDisplayPath
-            rootDir = rootDir.getCanonicalFile();
-        } catch (IOException ignore) {
-        }
-
-        // Make sure tests don't pick up random things outside the test directory.
-        // I had accidentally placed a file named lint.xml in /tmp, and this caused
-        // a number of confusing failures!
-        ConfigurationHierarchy.Companion.setDefaultRootDir(rootDir);
-
-        if (platforms == null) {
-            platforms = computePlatforms(getCheckedIssues());
-        }
-
-        if (impliedProject
-                && platforms.contains(Platform.JDK)
-                && !platforms.contains(Platform.ANDROID)) {
-            for (ProjectDescription project : projects) {
-                project.setType(ProjectDescription.Type.JAVA);
-            }
-        }
-
-        Map<String, List<File>> projectMap = new HashMap<>();
-        Map<TestMode, ResultState> results = new HashMap<>();
-
-        try {
-            // Note that the test types are taken care of in enum order.
-            // This allows a test type to decide if it applies based on
-            // an earlier test type (for example, resource repository
-            // tests may only apply if we discovered in the default test
-            // mode that the test actually consults the resource repository.)
-            for (TestMode mode : testModes()) {
-                // Run lint with a specific test type?
-                // For example, the UInjectionHost tests are only relevant
-                // if the project contains Kotlin source files.
-                if (!mode.applies(this, Arrays.asList(projects))) {
-                    continue;
-                }
-
-                // Look up output folder for projects; this allows
-                // multiple test types to share a single project tree
-                // (for example, UInjectionHost mode does not modify
-                // the project structure in any way)
-                String folderName = mode.getFolderName();
-                File root = new File(rootDir, folderName);
-                List<File> files = projectMap.get(folderName);
-                if (files == null) {
-                    files = createProjects(root);
-                    projectMap.put(folderName, files);
-                }
-
-                Object clientState = mode.before(this, files);
-                LintListener listener = null;
-                try {
-                    TestLintClient lintClient = createClient();
-
-                    Function2<LintListener.EventType, Object, Unit> event = mode.getEventListener();
-                    if (event != null) {
-                        listener =
-                                (driver, type1, project, context) ->
-                                        event.invoke(type1, clientState);
-                        listeners.add(listener);
-                    }
-
-                    ResultState result = checkLint(lintClient, root, files, true, mode);
-                    results.put(mode, result);
-
-                    if (projectInspector != null) {
-                        Collection<Project> knownProjects = lintClient.getKnownProjects();
-                        List<Project> projects = new ArrayList<>(knownProjects);
-                        LintDriver driver = lintClient.getDriver();
-                        projects.sort(Comparator.comparing(Project::getName));
-                        projectInspector.inspect(driver, projects);
-                    }
-                } finally {
-                    mode.after(this, clientState);
-                    if (listener != null) {
-                        listeners.remove(listener);
-                    }
-                }
-            }
-
-            checkConsistentOutput(results);
-            TestMode defaultMode = pickDefaultMode(results);
-            return new TestLintResult(this, results, defaultMode);
-        } catch (Throwable e) {
-            ResultState state =
-                    new ResultState(
-                            createClient(), rootDir, e.getMessage(), Collections.emptyList(), e);
-            TestMode defaultType = testModes.iterator().next();
-            results.put(defaultType, state);
-            return new TestLintResult(this, results, defaultType);
-        } finally {
-            deleteFilesRecursively(tempDir.toPath());
-        }
-    }
-
-    /** Deletes all files in a directory tree but preserves all directories. */
-    public static void deleteFilesRecursively(@NonNull Path dir) {
-        try {
-            Files.walkFileTree(
-                    dir,
-                    new SimpleFileVisitor<Path>() {
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                                throws IOException {
-                            Files.delete(file);
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @NonNull
-    private TestMode pickDefaultMode(Map<TestMode, ResultState> results) {
-        for (TestMode mode : TestMode.Companion.values()) {
-            if (results.containsKey(mode)) {
-                return mode;
-            }
-        }
-
-        throw new RuntimeException(
-                "Invalid testModes configuration: " + testModes + " and " + results);
-    }
-
-    private void checkConsistentOutput(Map<TestMode, ResultState> results) {
-        if (!testModesIdenticalOutput) {
-            return;
-        }
-
-        // Make sure the output matches
-        TestMode prev = null;
-        for (TestMode mode : testModes) {
-            if (prev == null) {
-                prev = mode;
-                continue;
-            }
-
-            ResultState resultState = results.get(mode);
-            if (resultState == null) {
-                // Skip -- this is a configured test type which we skipped during analysis
-                continue;
-            }
-            String actual = resultState.output;
-            String expected = results.get(prev).output;
-            if (!expected.equals(actual)) {
-                String expectedLabel = prev.getDescription();
-                String actualLabel = mode.getDescription();
-                String message = mode.getDiffExplanation();
-                if (message == null) {
-                    message =
-                            ""
-                                    + "The lint output was different between the test types\n"
-                                    + prev
-                                    + " and "
-                                    + mode
-                                    + ".\n"
-                                    + "\n"
-                                    + "If this difference is expected, you can set the\n"
-                                    + "eventType() set to include only one of these two.";
-                }
-                // We've already checked that the output does not match. Now include
-                // the mode labels in the assertion (which will fail) to clearly label
-                // the junit diff explaining which output is which.
-                assertEquals(
-                        message,
-                        expectedLabel + ":\n\n" + expected,
-                        actualLabel + ":\n\n" + actual);
-            }
-            prev = mode;
-        }
+        return runner.run();
     }
 
     /**
@@ -1222,15 +895,6 @@ public class TestLintTask {
     static void setForceUiInjection(boolean on) {
         //noinspection KotlinInternalInJava
         org.jetbrains.uast.kotlin.KotlinConverter.INSTANCE.setForceUInjectionHost(on);
-    }
-
-    /** Returns all the platforms encountered by the given issues */
-    private static EnumSet<Platform> computePlatforms(List<Issue> issues) {
-        EnumSet<Platform> platforms = EnumSet.noneOf(Platform.class);
-        for (Issue issue : issues) {
-            platforms.addAll(issue.getPlatforms());
-        }
-        return platforms;
     }
 
     /**
@@ -1243,216 +907,20 @@ public class TestLintTask {
      */
     @NonNull
     public List<Project> createProjects(boolean keepFiles) {
-        File rootDir = createTempDirectory();
-        try {
-            // Use canonical path to make sure we don't end up failing
-            // to chop off the prefix from Project#getDisplayPath
-            rootDir = rootDir.getCanonicalFile();
-        } catch (IOException ignore) {
-        }
-
-        List<File> projectDirs = createProjects(rootDir);
-
-        TestLintClient lintClient = createClient();
-        lintClient.setLintTask(this);
-        try {
-            List<Project> projects = Lists.newArrayList();
-            for (File dir : projectDirs) {
-                projects.add(lintClient.getProject(dir, rootDir));
-            }
-            return projects;
-        } finally {
-            lintClient.setLintTask(null);
-
-            if (!keepFiles) {
-                deleteFilesRecursively(rootDir.toPath());
-            }
-        }
-    }
-
-    static class ResultState {
-        ResultState(
-                @NonNull TestLintClient client,
-                @NonNull File rootDir,
-                @NonNull String output,
-                @NonNull List<Incident> incidents,
-                @Nullable Throwable firstThrowable) {
-            this.client = client;
-            this.rootDir = rootDir;
-            this.output = output;
-            this.incidents = incidents;
-            this.firstThrowable = firstThrowable;
-        }
-
-        @NonNull File rootDir;
-        @NonNull TestLintClient client;
-        @NonNull String output;
-        @NonNull List<Incident> incidents;
-        @Nullable Throwable firstThrowable;
-    }
-
-    @NonNull
-    private ResultState checkLint(
-            @NonNull TestLintClient client,
-            @NonNull File rootDir,
-            @NonNull List<File> files,
-            boolean writeOutput,
-            @NonNull TestMode mode)
-            throws Exception {
-        client.addCleanupDir(rootDir);
-        client.setLintTask(this);
-        try {
-            if (optionSetter != null) {
-                optionSetter.set(client.getFlags());
-            }
-
-            return client.checkLint(rootDir, files, getCheckedIssues(), writeOutput, mode);
-        } finally {
-            client.setLintTask(null);
-        }
-    }
-
-    @NonNull
-    TestLintClient createClient() {
-        TestLintClient client;
-        if (clientFactory != null) {
-            client = clientFactory.create();
-        } else {
-            LintClient.Companion.ensureClientNameInitialized();
-            String clientName = LintClient.getClientName();
-            try {
-                client = new TestLintClient();
-            } finally {
-                LintClient.setClientName(clientName);
-            }
-        }
-
-        if (!useTestConfiguration && overrideConfigFile != null) {
-            ConfigurationHierarchy configurations = client.getConfigurations();
-            if (configurations.getOverrides() == null) {
-                Configuration config =
-                        LintXmlConfiguration.create(configurations, overrideConfigFile);
-                configurations.addGlobalConfigurations(null, config);
-            }
-        }
-
-        client.task = this;
-        return client;
-    }
-
-    public void populateProjectDirectory(
-            @NonNull ProjectDescription project,
-            @NonNull File projectDir,
-            @NonNull TestFile... testFiles)
-            throws IOException {
-        if (!projectDir.exists()) {
-            boolean ok = projectDir.mkdirs();
-            if (!ok) {
-                throw new RuntimeException("Couldn't create " + projectDir);
-            }
-        }
-
-        boolean haveGradle = false;
-        for (TestFile fp : testFiles) {
-            if (fp instanceof GradleTestFile || fp.targetRelativePath.endsWith(DOT_GRADLE)) {
-                haveGradle = true;
-                break;
-            }
-        }
-
-        List<String> jars = new ArrayList<>();
-
-        for (TestFile fp : testFiles) {
-            if (haveGradle) {
-                if (ANDROID_MANIFEST_XML.equals(fp.targetRelativePath)) {
-                    // The default should be src/main/AndroidManifest.xml, not just
-                    // AndroidManifest.xml
-                    // fp.to("src/main/AndroidManifest.xml");
-                    fp.within("src/main");
-                } else if (fp instanceof JavaTestFile
-                        && fp.targetRootFolder != null
-                        && fp.targetRootFolder.equals("src")) {
-                    fp.within("src/main/java");
-                } else if (fp instanceof TestFile.KotlinTestFile
-                        && fp.targetRootFolder != null
-                        && fp.targetRootFolder.equals("src")) {
-                    fp.within("src/main/kotlin");
-                }
-            }
-
-            if (fp instanceof TestFiles.LibraryReferenceTestFile) {
-                jars.add(((TestFiles.LibraryReferenceTestFile) fp).file.getPath());
-                continue;
-            }
-
-            fp.createFile(projectDir);
-
-            // Note -- lint-override.xml is only a convention in the test suite; it's
-            // not something lint automatically picks up!
-            if ("lint-override.xml".equals(fp.targetRelativePath)) {
-                overrideConfig = fp;
-                continue;
-            }
-
-            if (fp instanceof GradleTestFile) {
-                // Record mocking relationship used by createProject lint callback
-                GradleModelMocker mocker = ((GradleTestFile) fp).getMocker(projectDir);
-                if (ignoreUnknownGradleConstructs) {
-                    mocker = mocker.withLogger(new NullLogger());
-                }
-                if (project.getDependencyGraph() != null) {
-                    mocker = mocker.withDependencyGraph(project.getDependencyGraph());
-                }
-                projectMocks.put(projectDir, mocker);
-
-                try {
-                    projectMocks.put(projectDir.getCanonicalFile(), mocker);
-                } catch (IOException ignore) {
-                }
-            }
-        }
-
-        if (!jars.isEmpty()) {
-            // TODO: Make sure there's no existing class path file!
-            TestFile classpath = TestFiles.classpath(jars.toArray(new String[0]));
-            classpath.createFile(projectDir);
-        }
-
-        File manifest;
-        if (haveGradle) {
-            manifest = new File(projectDir, "src/main/AndroidManifest.xml");
-        } else {
-            manifest = new File(projectDir, ANDROID_MANIFEST_XML);
-        }
-
-        if (project.getType() != ProjectDescription.Type.JAVA) {
-            addManifestFileIfNecessary(manifest);
-        }
+        return runner.createProjects(keepFiles);
     }
 
     /**
-     * All Android projects must have a manifest file; this one creates it if the test file didn't
-     * add an explicit one.
+     * Creates lint test projects according to the configured project descriptions. Note that these
+     * are not the same projects that will be used if the {@link #run()} method is called. This
+     * method is intended mainly for testing the lint infrastructure itself. Most detector tests
+     * will just want to use {@link #run()}.
+     *
+     * @param dir the root directory to create the projects under
      */
-    private static void addManifestFileIfNecessary(@NonNull File manifest) throws IOException {
-        // Ensure that there is at least a manifest file there to make it a valid project
-        // as far as Lint is concerned:
-        if (!manifest.exists()) {
-            File parentFile = manifest.getParentFile();
-            if (parentFile != null && !parentFile.isDirectory()) {
-                boolean ok = parentFile.mkdirs();
-                assertTrue("Couldn't create directory " + parentFile, ok);
-            }
-            try (FileWriter fw = new FileWriter(manifest)) {
-                fw.write(
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    package=\"lint.test.pkg\"\n"
-                                + "    android:versionCode=\"1\"\n"
-                                + "    android:versionName=\"1.0\" >\n"
-                                + "</manifest>\n");
-            }
-        }
+    @NonNull
+    public List<File> createProjects(File dir) {
+        return runner.createProjects(dir);
     }
 
     /**
@@ -1471,7 +939,7 @@ public class TestLintTask {
             }
 
             if (customRules != null) {
-                TestLintClient client = createClient();
+                TestLintClient client = runner.createClient();
                 client.task = this;
                 List<JarFileIssueRegistry> registries =
                         JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules), null);
@@ -1639,6 +1107,21 @@ public class TestLintTask {
     }
 
     /**
+     * Sets the project which the merged report should be based on. In a multi-project setup, we
+     * don't want to just list everything project-relative, since that's ambiguous (which project is
+     * src/main/AndroidManifest.xml referring to?). This test DSL method lets you configure a
+     * specific project to make the output relative to.
+     *
+     * @param project The project to base the report on; incidents in other projects will use a
+     *     relative path from the [project]
+     * @return this, for constructor chaining
+     */
+    public TestLintTask reportFrom(@Nullable ProjectDescription project) {
+        this.reportFrom = project;
+        return this;
+    }
+
+    /**
      * Interface to implement to modify the Gradle builder model that is mocked from a {@link
      * TestFiles#gradle(String)} test file.
      *
@@ -1646,6 +1129,7 @@ public class TestLintTask {
      *
      * @deprecated Builder-model is going away
      */
+    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     public interface GradleMockModifier {
         void modify(@NonNull IdeAndroidProject project, @NonNull IdeVariant variant);

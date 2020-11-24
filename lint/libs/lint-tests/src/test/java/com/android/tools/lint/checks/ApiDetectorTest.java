@@ -3720,7 +3720,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // 97006: Gradle lint does not recognize Context.getDrawable() as API 21+
         String expected =
                 ""
-                        + "src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.content.Context#getDrawable [NewApi]\n"
+                        + "app/src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.content.Context#getDrawable [NewApi]\n"
                         + "        getActivity().getDrawable(R.color.my_color);\n"
                         + "                      ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";

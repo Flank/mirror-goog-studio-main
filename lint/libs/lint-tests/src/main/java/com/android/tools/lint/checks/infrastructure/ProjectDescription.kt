@@ -16,19 +16,34 @@
 
 package com.android.tools.lint.checks.infrastructure
 
+import com.android.SdkConstants
+import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile
+import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile
+import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile
+import com.android.tools.lint.checks.infrastructure.TestFiles.LibraryReferenceTestFile
+import com.android.utils.NullLogger
+import com.google.common.base.Joiner
+import org.junit.Assert
 import org.junit.Assert.fail
+import java.io.File
+import java.io.FileWriter
+import java.io.IOException
+import java.util.ArrayList
 
 /**
  * A description of a lint test project
  */
-class ProjectDescription {
+class ProjectDescription : Comparable<ProjectDescription> {
     var files: Array<out TestFile> = emptyArray()
     val dependsOn: MutableList<ProjectDescription> = mutableListOf()
+    val dependsOnNames: MutableList<String> = mutableListOf()
     var dependencyGraph: String? = null
     var name: String = ""
     var type = Type.APP
-    var report = true
+    var report: Boolean = true
+    var primary: Boolean = true
     var under: ProjectDescription? = null
+    var variantName: String? = null
 
     /**
      * Creates a new project description
@@ -75,7 +90,27 @@ class ProjectDescription {
      * @return this for constructor chaining
      */
     fun dependsOn(library: ProjectDescription): ProjectDescription {
-        dependsOn.add(library)
+        if (!dependsOn.contains(library)) {
+            dependsOn.add(library)
+        }
+        return this
+    }
+
+    /**
+     * Adds a dependency on the given named project
+     */
+    fun dependsOn(name: String): ProjectDescription {
+        if (!dependsOnNames.contains(name)) {
+            dependsOnNames.add(name)
+        }
+        return this
+    }
+
+    /** Adds the given test file into this project */
+    fun addFile(file: TestFile): ProjectDescription {
+        if (!files.contains(file)) {
+            files = (files.asSequence() + file).toList().toTypedArray()
+        }
         return this
     }
 
@@ -120,6 +155,18 @@ class ProjectDescription {
     }
 
     /**
+     * Tells lint to select a particular Gradle variant.
+     * This only applies when using Gradle mocks.
+     *
+     * @param variantName the name of the variant to use
+     * @return this, for constructor chaining
+     */
+    fun variant(variantName: String?): ProjectDescription {
+        this.variantName = variantName
+        return this
+    }
+
+    /**
      * Marks this project as reportable (the default) or non-reportable.
      * Lint projects are usually reportable, but if they depend on libraries
      * (such as appcompat) those dependencies are marked as non-reportable.
@@ -154,6 +201,160 @@ class ProjectDescription {
 
     override fun toString(): String =
         "$type:${if (name.isNotBlank()) name else ProjectDescription::class.java.simpleName}"
+
+    /** Returns true if this project is nested under (see [under]) the given project */
+    fun isUnder(desc: ProjectDescription): Boolean {
+        val under = under ?: return false
+        return under == desc || under.isUnder(desc)
+    }
+
+    /**
+     * Compare by dependency order such that dependencies are always listed before
+     * their dependents, and order unrelated projects alphabetically.
+     */
+    override fun compareTo(other: ProjectDescription): Int {
+        return if (this.dependsOn.contains(other)) {
+            1
+        } else if (other.dependsOn.contains(this)) {
+            -1
+        } else {
+            val t1: Type = this.type
+            val t2: Type = other.type
+            val delta = t1.compareTo(t2)
+            if (delta != 0) {
+                -delta
+            } else {
+                this.name.compareTo(other.name)
+            }
+        }
+    }
+
+    companion object {
+        /** Returns the path to use for the given project description under a given root */
+        fun getProjectDirectory(project: ProjectDescription, rootDir: File): File {
+            var curr = project
+            if (curr.under == null) {
+                return File(rootDir, curr.name)
+            }
+            val segments: MutableList<String> = ArrayList()
+            with(segments) {
+                while (true) {
+                    add(curr.name)
+                    curr = curr.under ?: break
+                }
+                reverse()
+            }
+            val relativePath = Joiner.on(File.separator).join(segments)
+            return File(rootDir, relativePath)
+        }
+
+        fun TestLintTask.populateProjectDirectory(
+            project: ProjectDescription,
+            projectDir: File,
+            vararg testFiles: TestFile
+        ) {
+            if (!projectDir.exists()) {
+                val ok = projectDir.mkdirs()
+                if (!ok) {
+                    throw RuntimeException("Couldn't create $projectDir")
+                }
+            }
+            var haveGradle = false
+            for (fp in testFiles) {
+                if (fp is GradleTestFile || fp.targetRelativePath.endsWith(SdkConstants.DOT_GRADLE)) {
+                    haveGradle = true
+                    break
+                }
+            }
+            val jars: MutableList<String> = ArrayList()
+            for (fp in testFiles) {
+                if (haveGradle) {
+                    if (SdkConstants.ANDROID_MANIFEST_XML == fp.targetRelativePath) {
+                        // The default should be src/main/AndroidManifest.xml, not just
+                        // AndroidManifest.xml
+                        // fp.to("src/main/AndroidManifest.xml");
+                        fp.within("src/main")
+                    } else if (fp is JavaTestFile &&
+                        fp.targetRootFolder != null && fp.targetRootFolder == "src"
+                    ) {
+                        fp.within("src/main/java")
+                    } else if (fp is KotlinTestFile &&
+                        fp.targetRootFolder != null && fp.targetRootFolder == "src"
+                    ) {
+                        fp.within("src/main/kotlin")
+                    }
+                }
+                if (fp is LibraryReferenceTestFile) {
+                    jars.add(fp.file.path)
+                    continue
+                }
+                fp.createFile(projectDir)
+
+                // Note -- lint-override.xml is only a convention in the test suite; it's
+                // not something lint automatically picks up!
+                if ("lint-override.xml" == fp.targetRelativePath) {
+                    overrideConfig = fp
+                    continue
+                }
+                if (fp is GradleTestFile) {
+                    // Record mocking relationship used by createProject lint callback
+                    var mocker = fp.getMocker(projectDir)
+                    if (ignoreUnknownGradleConstructs) {
+                        mocker = mocker.withLogger(NullLogger())
+                    }
+                    project.dependencyGraph?.let { dependencyGraph ->
+                        mocker = mocker.withDependencyGraph(dependencyGraph)
+                    }
+                    projectMocks[projectDir] = mocker
+                    mocker.primary = project.primary
+                    try {
+                        projectMocks[projectDir.canonicalFile] = mocker
+                    } catch (ignore: IOException) {
+                    }
+                }
+            }
+            if (jars.isNotEmpty()) {
+                val classpath: TestFile = TestFiles.classpath(*jars.toTypedArray())
+                classpath.createFile(projectDir)
+            }
+            val manifest: File = if (haveGradle) {
+                File(projectDir, "src/main/AndroidManifest.xml")
+            } else {
+                File(projectDir, SdkConstants.ANDROID_MANIFEST_XML)
+            }
+            if (project.type !== Type.JAVA) {
+                addManifestFileIfNecessary(manifest)
+            }
+        }
+
+        /**
+         * All Android projects must have a manifest file; this one creates it if the test file
+         * didn't add an explicit one.
+         */
+        private fun addManifestFileIfNecessary(manifest: File) {
+            // Ensure that there is at least a manifest file there to make it a valid project
+            // as far as Lint is concerned:
+            if (!manifest.exists()) {
+                val parentFile = manifest.parentFile
+                if (parentFile != null && !parentFile.isDirectory) {
+                    val ok = parentFile.mkdirs()
+                    Assert.assertTrue("Couldn't create directory $parentFile", ok)
+                }
+                FileWriter(manifest).use { fw ->
+                    fw.write(
+                        """
+                        <?xml version="1.0" encoding="utf-8"?>
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            package="lint.test.pkg"
+                            android:versionCode="1"
+                            android:versionName="1.0" >
+                        </manifest>
+                        """.trimIndent()
+                    )
+                }
+            }
+        }
+    }
 
     /** Describes different types of lint test projects  */
     enum class Type {

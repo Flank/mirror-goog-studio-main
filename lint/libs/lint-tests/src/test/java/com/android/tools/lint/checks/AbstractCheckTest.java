@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
@@ -81,6 +82,11 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     @NonNull
     public static File getSdk() {
         return sdk;
+    }
+
+    @NonNull
+    protected ProjectDescription project() {
+        return new ProjectDescription();
     }
 
     @Override

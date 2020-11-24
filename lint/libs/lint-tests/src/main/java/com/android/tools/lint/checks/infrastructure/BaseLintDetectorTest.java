@@ -273,7 +273,7 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
     }
 
     protected static void deleteFile(File dir) {
-        TestLintTask.deleteFilesRecursively(dir.toPath());
+        TestFile.deleteFilesRecursively(dir);
     }
 
     protected static File makeTestFile(

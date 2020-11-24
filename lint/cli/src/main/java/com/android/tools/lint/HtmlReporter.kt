@@ -1030,7 +1030,8 @@ ${action.title}</button>"""
         /**
          * Whether we should try to use browser support for wavy underlines. Underlines are not working
          * well; see https://bugs.chromium.org/p/chromium/issues/detail?id=165462 for when to re-enable.
-         * If false we're using a CSS trick with repeated images instead. (Only applies if [ ][.USE_WAVY_UNDERLINES_FOR_ERRORS] is true.)
+         * If false we're using a CSS trick with repeated images instead. (Only applies if
+         * [.USE_WAVY_UNDERLINES_FOR_ERRORS] is true.)
          */
         private const val USE_CSS_DECORATION_FOR_WAVY_UNDERLINES = false
         private var preferredThemeName = "light"

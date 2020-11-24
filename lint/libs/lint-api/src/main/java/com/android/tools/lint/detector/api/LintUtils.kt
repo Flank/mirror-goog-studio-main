@@ -743,11 +743,12 @@ private const val UTF_16LE = "UTF_16LE"
  * String(data)`, but if there's a UTF byte order mark (for UTF8, UTF_16 or UTF_16LE), use that
  * instead.
  *
- *
- * NOTE: For XML files, there is the additional complication that there could be a `encoding=` attribute in the prologue. For those files, use [ ][PositionXmlParser.getXmlString] instead.
+ * NOTE: For XML files, there is the additional complication that there could be a
+ * `encoding=` attribute in the prologue. For those files, use
+ * [PositionXmlParser.getXmlString] instead.
  *
  * @param data the byte array to construct the string from
- * @param createString If true, create a [String] instead of a general [     ]
+ * @param createString If true, create a [String] instead
  * @return the string
  */
 fun getEncodedString(data: ByteArray?, createString: Boolean): CharSequence {

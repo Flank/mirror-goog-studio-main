@@ -2408,6 +2408,10 @@ class LintDriver(
         override fun getKotlinLanguageLevel(project: Project): LanguageVersionSettings {
             return delegate.getKotlinLanguageLevel(project)
         }
+
+        override fun getRootDir(): File? {
+            return delegate.getRootDir()
+        }
     }
 
     private val runLaterOutsideReadActionList = mutableListOf<Runnable>()

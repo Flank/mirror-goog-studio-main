@@ -19,8 +19,6 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
-import com.android.SdkConstants.FN_BUILD_GRADLE
-import com.android.SdkConstants.FN_BUILD_GRADLE_KTS
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.SdkConstants.currentPlatform
@@ -58,7 +56,6 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
-import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getEncodedString
 import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.guessGradleLocationForFile
@@ -764,10 +761,46 @@ open class LintCliClient : LintClient {
             }
         } else if (fullPath) {
             path = getCleanPath(file.absoluteFile)
-        } else if (file.isAbsolute && file.exists()) {
+        } else if (file.isAbsolute) {
             path = getRelativePath(referenceDir, file) ?: file.path
+            if (containsEmbeddedParentRef(path)) {
+                path = getRelativePath(referenceDir.canonicalFile, file.canonicalFile) ?: file.path
+            }
         }
         return path
+    }
+
+    /**
+     * Is there an embedded parent path in the given path? Should return
+     * true for "foo/bar/../baz" and "..\\foo\\bar" but not "../../foo/bar".
+     */
+    private fun containsEmbeddedParentRef(path: String): Boolean {
+        var index = 0
+        while (index < path.length) {
+            if (isParentRef(path, index)) {
+                index += 3
+            } else {
+                while (index < path.length) {
+                    val next = path.indexOf("..", index)
+                    if (isParentRef(path, next)) {
+                        return true
+                    } else {
+                        index += 2
+                    }
+                }
+            }
+        }
+
+        return false
+    }
+
+    /**
+     * Is the string at the given [index] in the given [path] a parent reference,
+     * e.g. "../" or "..\" ?
+     */
+    private fun isParentRef(path: String, index: Int): Boolean {
+        return path.startsWith("..", index) &&
+            (index == path.length - 2 || path[index + 2] == '/' || path[index + 2] == '\\')
     }
 
     /** Returns whether all warnings are enabled, including those disabled by default  */
@@ -1146,38 +1179,14 @@ open class LintCliClient : LintClient {
         return super.getMergedManifest(project)
     }
 
-    fun getRootDir(): File? {
+    override fun getRootDir(): File? {
         if (::driver.isInitialized) {
             driver.request.srcRoot?.let {
                 return it
             }
         }
 
-        var root: File? = null
-        for (project in knownProjects) {
-            if (!project.reportIssues) {
-                continue
-            }
-            root = if (root == null) {
-                project.dir
-            } else {
-                getCommonParent(root, project.dir)
-            }
-        }
-
-        // Workaround: we need the root project; it's not yet part of the model,
-        // and adding it now would clash with simultaneous edits to decouple Gradle
-        // and lint
-        val parent = root?.parentFile
-        if (parent != null) {
-            if (File(parent, FN_BUILD_GRADLE).exists() ||
-                File(parent, FN_BUILD_GRADLE_KTS).exists()
-            ) {
-                return parent
-            }
-        }
-
-        return root
+        return super.getRootDir()
     }
 
     protected open inner class LintCliUastParser(project: Project?) :
