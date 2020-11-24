@@ -342,17 +342,6 @@ public final class GradleTestProjectBuilder {
         return fromTestApp(app);
     }
 
-    /** Create GradleTestProject from an existing test project. */
-    public GradleTestProjectBuilder fromExternalProject(@NonNull String project) {
-        name = project;
-        File parentDir = TestUtils.resolveWorkspacePath("external").toFile();
-        File projectDir = new File(parentDir, project);
-        if (!projectDir.exists()) {
-            projectDir = new File(parentDir, project.replace('-', '_'));
-        }
-        return fromDir(projectDir);
-    }
-
     /** Create GradleTestProject from a data binding integration test. */
     public GradleTestProjectBuilder fromDataBindingIntegrationTest(
             @NonNull String project, boolean useAndroidX) {
