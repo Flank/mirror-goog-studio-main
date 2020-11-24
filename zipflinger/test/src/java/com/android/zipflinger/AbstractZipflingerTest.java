@@ -47,7 +47,7 @@ public abstract class AbstractZipflingerTest {
         if (prospect.exists()) {
             return prospect;
         }
-        return TestUtils.getWorkspaceFile(fullPath);
+        return TestUtils.resolveWorkspacePath(fullPath).toFile();
     }
 
     protected static Path getPath(String filename) {

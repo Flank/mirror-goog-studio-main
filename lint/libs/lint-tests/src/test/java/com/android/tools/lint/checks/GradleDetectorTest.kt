@@ -3814,7 +3814,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             if (sdkRootDir == null) {
                 // Make fake SDK "installation" such that we can predict the set
                 // of Maven repositories discovered by this test
-                sdkRootDir = TestUtils.createTempDirDeletedOnExit()
+                sdkRootDir = TestUtils.createTempDirDeletedOnExit().toFile()
 
                 fullSdkDir = File(sdkRootDir, "full")
                 createRelativePaths(

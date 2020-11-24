@@ -30,7 +30,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeVariant;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
@@ -62,7 +61,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -71,6 +69,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -126,7 +129,7 @@ public class TestLintTask {
     boolean allowNetworkAccess;
     boolean allowDuplicates;
     File rootDirectory;
-    File tempDir = Files.createTempDir();
+    File tempDir;
     private TestFile baseline;
     File baselineFile;
     TestFile overrideConfig;
@@ -144,6 +147,16 @@ public class TestLintTask {
     public TestLintTask() {
         LintClient.setClientName(CLIENT_UNIT_TESTS);
         BuiltinIssueRegistry.reset();
+        tempDir = createTempDirectory();
+    }
+
+    @NonNull
+    private static File createTempDirectory() {
+        try {
+            return Files.createTempDirectory("").toFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /** Creates a new lint test task */
@@ -1012,7 +1025,25 @@ public class TestLintTask {
         } catch (Throwable e) {
             return new TestLintResult(this, rootDir, null, e, Collections.emptyList());
         } finally {
-            TestUtils.deleteFile(tempDir);
+            deleteFilesRecursively(tempDir.toPath());
+        }
+    }
+
+    /** Deletes all files in a directory tree but preserves all directories. */
+    public static void deleteFilesRecursively(@NonNull Path dir) {
+        try {
+            Files.walkFileTree(
+                    dir,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                                throws IOException {
+                            Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -1040,7 +1071,7 @@ public class TestLintTask {
      */
     @NonNull
     public List<Project> createProjects(boolean keepFiles) {
-        File rootDir = Files.createTempDir();
+        File rootDir = createTempDirectory();
         try {
             // Use canonical path to make sure we don't end up failing
             // to chop off the prefix from Project#getDisplayPath
@@ -1062,7 +1093,7 @@ public class TestLintTask {
             lintClient.setLintTask(null);
 
             if (!keepFiles) {
-                TestUtils.deleteFile(rootDir);
+                deleteFilesRecursively(rootDir.toPath());
             }
         }
     }

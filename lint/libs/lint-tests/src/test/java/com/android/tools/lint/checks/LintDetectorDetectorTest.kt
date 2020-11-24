@@ -479,7 +479,7 @@ class LintDetectorDetectorTest {
         // Attempt to run lint on its own source code, if we can find it. It will already
         // be run on the lint source code as part of our continuous build with the bazel
         // wrappers, so this is just for convenience when developing the rules
-        val root = TestUtils.getWorkspaceRoot()
+        val root = TestUtils.getWorkspaceRoot().toFile()
         val srcFiles =
             getTestSources(root, "tools/base/lint/libs/lint-checks/src/main/java") +
                 getTestSources(root, "tools/base/lint/studio-checks/src/main/java")

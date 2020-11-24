@@ -163,7 +163,7 @@ class GradleTestProject @JvmOverloads internal constructor(
 
         /** Crawls the tools/external/gradle dir, and gets the latest gradle binary.  */
         private fun computeLatestGradleCheckedIn(): String? {
-            val gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle")
+            val gradleDir = TestUtils.resolveWorkspacePath("tools/external/gradle").toFile()
 
             // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
             val gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-.+)?-bin\\.zip$")

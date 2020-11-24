@@ -17,7 +17,6 @@
 package com.android.tools.lint.annotations;
 
 import static com.android.testutils.AssumeUtil.assumeNotWindows;
-import static com.android.testutils.TestUtils.deleteFile;
 import static com.android.tools.lint.checks.infrastructure.LintDetectorTest.base64gzip;
 import static com.android.utils.SdkUtils.fileToUrlString;
 import static java.io.File.pathSeparator;
@@ -32,6 +31,7 @@ import com.android.tools.lint.checks.infrastructure.KotlinClasspathKt;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
+import com.android.utils.PathUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
@@ -100,7 +100,7 @@ public class ExtractAnnotationsDriverTest {
                         + "}\n"
                         + "\n",
                 Files.toString(output, Charsets.UTF_8));
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
@@ -211,7 +211,7 @@ public class ExtractAnnotationsDriverTest {
                         + "\n",
                 Files.toString(proguard, Charsets.UTF_8));
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
@@ -271,7 +271,7 @@ public class ExtractAnnotationsDriverTest {
                         + "  </item>\n"
                         + "</root>\n\n");
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
@@ -341,7 +341,7 @@ public class ExtractAnnotationsDriverTest {
                         + "  </item>\n"
                         + "</root>\n\n");
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
@@ -379,7 +379,7 @@ public class ExtractAnnotationsDriverTest {
                 "D test/pkg/IntDefTest$DialogFlags\nD test/pkg/IntDefTest$DialogStyle\n",
                 Files.toString(typedefFile, Charsets.UTF_8));
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     private File createProject(@NonNull TestFile... files) throws IOException {

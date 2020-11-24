@@ -170,7 +170,7 @@ public class BazelIntegrationTestsSuite {
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {
-        File offlineRepoZip = TestUtils.getWorkspaceFile(zipName);
+        File offlineRepoZip = TestUtils.resolveWorkspacePath(zipName).toFile();
 
         Files.createDirectory(repoPath);
 

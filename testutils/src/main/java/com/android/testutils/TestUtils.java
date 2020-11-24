@@ -16,7 +16,6 @@
 
 package com.android.testutils;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
 import com.android.SdkConstants;
@@ -24,13 +23,13 @@ import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -51,7 +50,7 @@ public class TestUtils {
     private static final long EVENTUALLY_CHECK_CYCLE_TIME_MS = 10;
 
     @GuardedBy("TestUtils.class")
-    private static File workspaceRoot = null;
+    private static Path workspaceRoot = null;
 
     /**
      * Returns Kotlin version that is used in new project templates and integration tests.
@@ -72,22 +71,19 @@ public class TestUtils {
     @NonNull
     public static String getKotlinVersionForTests() {
         try {
-            return Files.readLines(getKotlinVersionFile(), Charsets.UTF_8).get(0);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Could not determine Kotlin plugin version", ex);
+            Path versionFile =
+                    resolveWorkspacePath(
+                            "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt");
+            return Files.readAllLines(versionFile).get(0);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not determine Kotlin plugin version", e);
         }
-    }
-
-    @NonNull
-    private static File getKotlinVersionFile() {
-        return getWorkspaceFile(
-                "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt");
     }
 
     /**
      * Returns a File for the subfolder of the test resource data.
      *
-     * @deprecated Use {@link #getWorkspaceRoot()} or {@link #getWorkspaceFile(String)} instead.
+     * @deprecated Use {@link #getWorkspaceRoot()} or {@link #resolveWorkspacePath(String)} instead.
      */
     @Deprecated
     @NonNull
@@ -110,28 +106,16 @@ public class TestUtils {
             TestCase.assertTrue("Test folder '" + name + "' does not exist! "
                     + "(Tip: Check unit test launch config pwd)",
                     root.isDirectory());
-
         }
 
         return root;
     }
 
-    public static void deleteFile(File dir) {
-        if (dir.isDirectory()) {
-            File[] files = dir.listFiles();
-            if (files != null) {
-                for (File f : files) {
-                    deleteFile(f);
-                }
-            }
-        } else if (dir.isFile()) {
-            assertTrue(dir.getPath(), dir.delete());
-        }
-    }
-
-    public static File createTempDirDeletedOnExit() {
-        final File tempDir = Files.createTempDir();
-        PathUtils.addRemovePathHook(tempDir.toPath());
+    /** @deprecated Temporary directories and files should be deleted after each test. */
+    @Deprecated
+    public static Path createTempDirDeletedOnExit() throws IOException {
+        Path tempDir = Files.createTempDirectory("");
+        PathUtils.addRemovePathHook(tempDir);
         return tempDir;
     }
 
@@ -141,16 +125,17 @@ public class TestUtils {
      * <p>From this path, you should be able to access any file in the workspace via its full path,
      * e.g.
      *
-     * <p>new File(TestUtils.getWorkspaceRoot(), "tools/adt/idea/android/testSrc"); new
-     * File(TestUtils.getWorkspaceRoot(), "prebuilts/studio/jdk");
+     * <p>TestUtils.getWorkspaceRoot().resolve("tools/adt/idea/android/testSrc");
+     *
+     * <p>TestUtils.getWorkspaceRoot().resolve("prebuilts/studio/jdk");
      *
      * <p>If this method is called by code run via IntelliJ / Gradle, it will simply walk its
      * ancestor tree looking for the WORKSPACE file at its root; if called from Bazel, it will
      * simply return the runfiles directory (which should be a mirror of the WORKSPACE root except
      * only populated with explicitly declared dependencies).
      *
-     * <p>Instead of calling this directly, prefer calling {@link #getWorkspaceFile(String)} as it
-     * is more resilient to cross-platform testing.
+     * <p>Instead of calling this directly, prefer calling {@link #resolveWorkspacePath(String)} as
+     * it is more resilient to cross-platform testing.
      *
      * @throws IllegalStateException if the current directory of the test is not a subdirectory of
      *     the workspace directory when this method is called. This shouldn't happen if the test is
@@ -158,32 +143,31 @@ public class TestUtils {
      *     directory is initialized to the module root).
      */
     @NonNull
-    public static synchronized File getWorkspaceRoot() {
-        // The logic below depends on the current working directory, so we save the results and hope the first call
-        // is early enough for the user.dir property to be unchanged.
+    public static synchronized Path getWorkspaceRoot() {
+        // The logic below depends on the current working directory, so we save the results and hope
+        // the first call is early enough for the user.dir property to be unchanged.
         if (workspaceRoot == null) {
-            // If we are using Bazel (which defines the following env vars), simply use the sandboxed
-            // root they provide us.
+            // If we are using Bazel (which defines the following env vars), simply use
+            // the sandboxed root they provide us.
             String workspace = System.getenv("TEST_WORKSPACE");
             String workspaceParent = System.getenv("TEST_SRCDIR");
             if (workspace != null && workspaceParent != null) {
-                workspaceRoot = new File(workspaceParent, workspace);
+                workspaceRoot = Paths.get(workspaceParent, workspace);
                 return workspaceRoot;
             }
 
-            File currDir = new File("");
-            File initialDir = currDir;
+            Path currDir = Paths.get("").toAbsolutePath();
+            Path initialDir = currDir;
 
-            // If we're using a non-Bazel build system. At this point, assume our working
-            // directory is located underneath our codebase's root folder, so keep navigating up until
-            // we find it. If we're using Bazel, we should still look to see if there's a larger
-            // outermost workspace since we might be within a nested workspace.
+            // If we're using a non-Bazel build system. At this point, assume our working directory
+            // is located underneath our codebase's root folder, so keep navigating up until we find
+            // it. If we're using Bazel, we should still look to see if there's a larger outermost
+            // workspace since we might be within a nested workspace.
             while (currDir != null) {
-                currDir = currDir.getAbsoluteFile();
-                if (new File(currDir, "WORKSPACE").exists()) {
+                if (Files.exists(currDir.resolve("WORKSPACE"))) {
                     workspaceRoot = currDir;
                 }
-                currDir = currDir.getParentFile();
+                currDir = currDir.getParent();
             }
 
             if (workspaceRoot == null) {
@@ -191,7 +175,7 @@ public class TestUtils {
                         "Could not find WORKSPACE root. Is the original working directory a "
                                 + "subdirectory of the Android Studio codebase?\n\n"
                                 + "pwd = "
-                                + initialDir.getAbsolutePath());
+                                + initialDir);
             }
         }
 
@@ -199,53 +183,59 @@ public class TestUtils {
     }
 
     /**
-     * Given a full path to a file from the base of the current workspace, return the file.
+     * Given a relative path to a file or directory from the base of the current workspace, returns
+     * the absolute path.
      *
-     * e.g.
-     * TestUtils.getWorkspaceFile("tools/adt/idea/android/testSrc");
-     * TestUtils.getWorkspaceFile("prebuilts/studio/jdk");
+     * <p>For example:
      *
-     * This method guarantees the file exists, throwing an exception if not found, so tests can
-     * safely use the file immediately after receiving it.
+     * <p>TestUtils.resolveWorkspacePath("tools/adt/idea/android/testSrc");
      *
-     * In order to have the same method call work on both Windows and non-Windows machines, if the
-     * current OS is Windows and the target path is found with a common windows extension on it,
+     * <p>TestUtils.resolveWorkspacePath("prebuilts/studio/jdk");
+     *
+     * <p>This method guarantees the file or directory exists, throwing an exception if not found,
+     * so tests can safely use the file immediately after receiving it.
+     *
+     * <p>In order to have the same method call work on both Windows and non-Windows machines, if
+     * the current OS is Windows and the target path is found with a common windows extension on it,
      * then it will automatically be returned, e.g. "/path/to/binary" -> "/path/to/binary.exe".
      *
      * @throws IllegalArgumentException if the path results in a file that's not found.
      */
     @NonNull
-    public static File getWorkspaceFile(@NonNull String path) {
-        File f = new File(getWorkspaceRoot(), path);
-
-        if (!f.exists() && OsType.getHostOs() == OsType.WINDOWS) {
-            // This file may be a binary with a .exe extension
-            f = new File(f.getPath() + ".exe");
+    public static Path resolveWorkspacePath(@NonNull String relativePath) {
+        Path f = getWorkspaceRoot().resolve(relativePath);
+        if (Files.exists(f)) {
+            return f;
         }
 
-        if (!f.exists()) {
-            throw new IllegalArgumentException("File \"" + path + "\" not found at \"" + getWorkspaceRoot() + "\"");
+        if (OsType.getHostOs() == OsType.WINDOWS) {
+            // This file may be a binary with a .exe extension.
+            f = f.resolveSibling(f.getFileName().toString() + ".exe");
+            if (Files.exists(f)) {
+                return f;
+            }
         }
 
-        return f;
+        throw new IllegalArgumentException(
+                "File \"" + relativePath + "\" not found at \"" + getWorkspaceRoot() + "\"");
     }
 
     /**
-     * @return a directory which tests can output data to. If running through Bazel's test runner,
-     *     this returns the directory as specified by the TEST_UNDECLARED_OUTPUTS_DIR environment
-     *     variable. Data written to this directory will be zipped and made available under the
-     *     WORKSPACE_ROOT/bazel-testlogs/ after the test completes. For non-Bazel runs, this
-     *     currently returns a tmp directory that is deleted on exit.
+     * Returns a directory which tests can output data to. If running through Bazel's test runner,
+     * this returns the directory as specified by the TEST_UNDECLARED_OUTPUTS_DIR environment
+     * variable. Data written to this directory will be zipped and made available under the
+     * WORKSPACE_ROOT/bazel-testlogs/ after the test completes. For non-Bazel runs, this currently
+     * returns a tmp directory that is deleted on exit.
      */
     @NonNull
-    public static File getTestOutputDir() {
+    public static File getTestOutputDir() throws IOException {
         // If running via bazel, returns the sandboxed test output dir.
         String testOutputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
         if (testOutputDir != null) {
             return new File(testOutputDir);
         }
 
-        return createTempDirDeletedOnExit();
+        return createTempDirDeletedOnExit().toFile();
     }
 
     /**
@@ -304,12 +294,12 @@ public class TestUtils {
      */
     @NonNull
     public static File getSdk() {
-        return getWorkspaceFile(getRelativeSdk());
+        return resolveWorkspacePath(getRelativeSdk()).toFile();
     }
 
     @NonNull
     public static File getMockJdk() {
-        return getWorkspaceFile("prebuilts/studio/jdk/mock-jdk17");
+        return resolveWorkspacePath("prebuilts/studio/jdk/mock-jdk17").toFile();
     }
 
     /**
@@ -336,7 +326,7 @@ public class TestUtils {
             }
             return dir;
         } else {
-            return getWorkspaceFile("prebuilts/tools/common/m2/repository");
+            return resolveWorkspacePath("prebuilts/tools/common/m2/repository").toFile();
         }
     }
 
@@ -348,8 +338,7 @@ public class TestUtils {
      */
     @NonNull
     public static Path getRemoteSdk() {
-        return getWorkspaceFile("prebuilts/studio/sdk/remote/dl.google.com/android/repository")
-                .toPath();
+        return resolveWorkspacePath("prebuilts/studio/sdk/remote/dl.google.com/android/repository");
     }
 
     /** Returns the checked in AAPT2 binary that is shipped with the gradle plugin. */
@@ -361,9 +350,8 @@ public class TestUtils {
                     "AAPT2 not supported on unknown platform: " + OsType.getOsName());
         }
         String hostDir = osType.getFolderName();
-        return getWorkspaceFile(
-                        "prebuilts/tools/common/aapt/" + hostDir + "/" + SdkConstants.FN_AAPT2)
-                .toPath();
+        return resolveWorkspacePath(
+                "prebuilts/tools/common/aapt/" + hostDir + "/" + SdkConstants.FN_AAPT2);
     }
 
     @NonNull
@@ -374,24 +362,22 @@ public class TestUtils {
 
     @NonNull
     private static Path getDesugarLibJarWithVersion(String version) {
-        return getWorkspaceFile(
-                        "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/"
-                                + version
-                                + "/desugar_jdk_libs-"
-                                + version
-                                + ".jar")
-                .toPath();
+        return resolveWorkspacePath(
+                "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/"
+                        + version
+                        + "/desugar_jdk_libs-"
+                        + version
+                        + ".jar");
     }
 
     @NonNull
     private static Path getDesugarLibConfigJarWithVersion(String version) {
-        return getWorkspaceFile(
-                        "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/"
-                                + version
-                                + "/desugar_jdk_libs_configuration-"
-                                + version
-                                + ".jar")
-                .toPath();
+        return resolveWorkspacePath(
+                "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/"
+                        + version
+                        + "/desugar_jdk_libs_configuration-"
+                        + version
+                        + ".jar");
     }
 
     @NonNull
@@ -436,7 +422,7 @@ public class TestUtils {
                 throw new IllegalStateException(
                         "Java11 JDK not found for platform: " + OsType.getOsName());
         }
-        return getWorkspaceFile("prebuilts/studio/jdk/jdk11/" + hostDir);
+        return resolveWorkspacePath("prebuilts/studio/jdk/jdk11/" + hostDir).toFile();
     }
 
     @NonNull

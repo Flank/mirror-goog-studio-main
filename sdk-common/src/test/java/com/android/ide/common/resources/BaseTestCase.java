@@ -133,7 +133,7 @@ public abstract class BaseTestCase {
                 "\\$TOP\\$", Matcher.quoteReplacement(folder.getAbsolutePath())).
                 replaceAll("\\$SEP\\$", Matcher.quoteReplacement(File.separator));
 
-        File tempFolder = TestUtils.createTempDirDeletedOnExit();
+        File tempFolder = TestUtils.createTempDirDeletedOnExit().toFile();
         Files.asCharSink(new File(tempFolder, DataMerger.FN_MERGER_XML), Charsets.UTF_8)
                 .write(content);
 

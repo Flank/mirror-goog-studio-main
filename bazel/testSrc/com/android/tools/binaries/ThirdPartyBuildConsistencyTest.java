@@ -52,9 +52,8 @@ public class ThirdPartyBuildConsistencyTest {
      */
     @Test
     public void ensureThirdPartyGeneratorRun() throws IOException {
-        Path buildFile = TestUtils.getWorkspaceFile("tools/base/third_party/BUILD").toPath();
-        Path localRepo =
-                TestUtils.getWorkspaceFile("prebuilts/tools/common/m2/repository").toPath();
+        Path buildFile = TestUtils.resolveWorkspacePath("tools/base/third_party/BUILD");
+        Path localRepo = TestUtils.resolveWorkspacePath("prebuilts/tools/common/m2/repository");
         ThirdPartyBuildGenerator thirdPartyBuildGenerator =
                 new ThirdPartyBuildGenerator(buildFile, localRepo);
         String buildContents = Joiner.on("\n").join(Files.readAllLines(buildFile));
@@ -83,7 +82,7 @@ public class ThirdPartyBuildConsistencyTest {
 
     private static Stream<String> readDependenciesProperties() throws IOException {
         Path dependenciesProperties =
-                TestUtils.getWorkspaceFile("tools/buildSrc/base/dependencies.properties").toPath();
+                TestUtils.resolveWorkspacePath("tools/buildSrc/base/dependencies.properties");
         Properties dependencies = new Properties();
         try (InputStream inputStream = Files.newInputStream(dependenciesProperties)) {
             dependencies.load(inputStream);
@@ -93,7 +92,7 @@ public class ThirdPartyBuildConsistencyTest {
 
     @Test
     public void checkThirdPartyIsSelfConsistent() throws IOException {
-        Path buildFile = TestUtils.getWorkspaceFile("tools/base/third_party/BUILD").toPath();
+        Path buildFile = TestUtils.resolveWorkspacePath("tools/base/third_party/BUILD");
 
         Pattern pattern =
                 Pattern.compile(

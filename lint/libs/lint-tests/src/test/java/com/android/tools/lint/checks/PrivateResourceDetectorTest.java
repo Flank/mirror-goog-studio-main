@@ -43,9 +43,9 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                 IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
                 IdeLibrary library = dependencies.getAndroidLibraries().iterator().next();
 
-                final File tempDir = TestUtils.createTempDirDeletedOnExit();
-
                 try {
+                    File tempDir = TestUtils.createTempDirDeletedOnExit().toFile();
+
                     String allResources =
                             ""
                                     + "int string my_private_string 0x7f040000\n"

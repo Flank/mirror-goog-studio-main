@@ -1332,7 +1332,7 @@ public class XmlPrettyPrinterTest {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     public void testDriver4() throws Exception {
-        File root = TestUtils.createTempDirDeletedOnExit();
+        File root = TestUtils.createTempDirDeletedOnExit().toFile();
         String xml = ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\""

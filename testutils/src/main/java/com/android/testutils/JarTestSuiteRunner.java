@@ -134,7 +134,7 @@ public class JarTestSuiteRunner extends Suite {
             String classPath = (String) javaClassPath;
             String[] paths = classPath.split(File.pathSeparator);
 
-            Path workspace = TestUtils.getWorkspaceRoot().toPath();
+            Path workspace = TestUtils.getWorkspaceRoot();
             String absolutePaths =
                     Arrays.stream(paths)
                             .map(workspace::resolve)

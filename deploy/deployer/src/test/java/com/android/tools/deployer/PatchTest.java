@@ -39,7 +39,7 @@ public class PatchTest {
     private static void createSimpleZip(File file, byte[] bytes, String entryName)
             throws IOException {
         Files.deleteIfExists(file.toPath());
-        File manifestFile = TestUtils.getWorkspaceFile(BASE + "AndroidManifest.xml");
+        File manifestFile = TestUtils.resolveWorkspacePath(BASE + "AndroidManifest.xml").toFile();
         BytesSource manifestSource =
                 new BytesSource(manifestFile, "AndroidManifest.xml", Deflater.NO_COMPRESSION);
         try (ZipArchive archive = new ZipArchive(file)) {

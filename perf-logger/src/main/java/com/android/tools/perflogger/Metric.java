@@ -97,7 +97,11 @@ public class Metric {
                             metricName));
         }
         myMetricName = metricName;
-        myOutputDirectory = TestUtils.getTestOutputDir();
+        try {
+            myOutputDirectory = TestUtils.getTestOutputDir();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // Preserve insertion order - mostly for test purposes.
         mySamples = new LinkedHashMap<>();

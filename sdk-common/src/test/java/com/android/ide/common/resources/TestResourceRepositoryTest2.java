@@ -54,7 +54,7 @@ public class TestResourceRepositoryTest2 extends TestCase {
         super.setUp();
 
         resourceFixture.setUp();
-        mTempDir = TestUtils.createTempDirDeletedOnExit();
+        mTempDir = TestUtils.createTempDirDeletedOnExit().toFile();
         mRes = new File(mTempDir, FD_RES);
         mRes.mkdirs();
         File layout = new File(mRes, FD_RES_LAYOUT);

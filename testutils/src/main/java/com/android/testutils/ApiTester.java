@@ -126,7 +126,7 @@ public final class ApiTester {
     }
 
     public void updateFile(String dirPath) throws IOException {
-        Path dir = TestUtils.getWorkspaceFile(dirPath).toPath();
+        Path dir = TestUtils.resolveWorkspacePath(dirPath);
         Path file = dir.resolve(StringsKt.substringAfterLast(expectedFileUrl.getFile(), '/', "?"));
         List<String> content = getApiElements();
         List<String> previous = Files.readAllLines(file);

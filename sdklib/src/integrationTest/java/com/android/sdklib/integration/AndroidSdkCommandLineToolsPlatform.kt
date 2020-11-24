@@ -29,8 +29,7 @@ enum class AndroidSdkCommandLineToolsPlatform(
 
     val zipFile: Path by lazy {
         @Suppress("SpellCheckingInspection")
-        TestUtils.getWorkspaceFile("tools/base/sdklib/commandlinetools_$zipSuffix.zip")
-            .toPath()
+        TestUtils.resolveWorkspacePath("tools/base/sdklib/commandlinetools_$zipSuffix.zip")
     }
 
     fun getBinaryName(fileNamePrefix: String): String  = "cmdline-tools/bin/$fileNamePrefix$binarySuffix"

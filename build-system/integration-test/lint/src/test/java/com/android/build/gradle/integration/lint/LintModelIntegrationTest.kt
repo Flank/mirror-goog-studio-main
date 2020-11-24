@@ -85,8 +85,8 @@ class LintModelIntegrationTest {
                                 "Run with env var GENERATE_MODEL_GOLDEN_FILES=true to regenerate\n" +
                                 diff
                 } else {
-                    val fileToUpdate = TestUtils.getWorkspaceFile("tools/base/build-system/integration-test/lint/src/test/resources/com/android/build/gradle/integration/lint/kotlinmodel/lintDebug/${model.fileName}")
-                    fileToUpdate.writeText(actual.joinToString("\n"))
+                    val fileToUpdate = TestUtils.resolveWorkspacePath("tools/base/build-system/integration-test/lint/src/test/resources/com/android/build/gradle/integration/lint/kotlinmodel/lintDebug/${model.fileName}")
+                    Files.write(fileToUpdate, actual)
                     errors += "Updated ${model.fileName} with \n$diff"
                 }
             }

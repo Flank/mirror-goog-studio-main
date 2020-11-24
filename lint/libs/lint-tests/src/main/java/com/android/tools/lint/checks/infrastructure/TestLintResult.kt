@@ -677,6 +677,7 @@ class TestLintResult internal constructor(
                     getClientRevision() // force registry initialization
                 }
 
+            file.parentFile.mkdirs()
             val reporter = when {
                 html -> Reporter.createHtmlReporter(client, file, client.flags)
                 xml -> {

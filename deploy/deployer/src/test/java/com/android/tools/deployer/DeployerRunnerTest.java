@@ -45,6 +45,7 @@ import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -164,9 +165,9 @@ public class DeployerRunnerTest {
     public void testFullInstallSuccessful() throws Exception {
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
         String[] args = {
-            "install", "com.example.helloworld", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.helloworld", file.toString(), "--force-full-install"
         };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -187,13 +188,13 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
         String[] args = {
             "install",
             "com.example.helloworld",
-            file.getAbsolutePath(),
-            "--installers-path=" + installersPath.getAbsolutePath()
+            file.toString(),
+            "--installers-path=" + installersPath.toString()
         };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -258,11 +259,11 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -279,8 +280,8 @@ public class DeployerRunnerTest {
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -320,11 +321,11 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -337,13 +338,13 @@ public class DeployerRunnerTest {
                 "DDMLIB_INSTALL");
         device.getShell().clearHistory();
 
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
         args =
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -390,12 +391,10 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File v2 = TestUtils.getWorkspaceFile(BASE + "apks/simple+ver.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path v2 = TestUtils.resolveWorkspacePath(BASE + "apks/simple+ver.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
-        String[] args = {
-            "install", "com.example.simpleapp", v2.getAbsolutePath(), "--force-full-install"
-        };
+        String[] args = {"install", "com.example.simpleapp", v2.toString(), "--force-full-install"};
 
         assertEquals(0, runner.run(args, logger));
         assertInstalled("com.example.simpleapp", v2);
@@ -408,13 +407,13 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        File v1 = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        Path v1 = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
         args =
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    v1.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    v1.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         Mockito.when(service.prompt(ArgumentMatchers.anyString())).thenReturn(false);
@@ -479,14 +478,14 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split = TestUtils.resolveWorkspacePath(BASE + "apks/split.apk");
 
         String[] args = {
             "install",
             "com.example.simpleapp",
-            base.getAbsolutePath(),
-            split.getAbsolutePath(),
+            base.toString(),
+            split.toString(),
             "--force-full-install"
         };
 
@@ -514,14 +513,14 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split = TestUtils.getWorkspaceFile(BASE + "apks/split+ver.apk");
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split = TestUtils.resolveWorkspacePath(BASE + "apks/split+ver.apk");
 
         String[] args = {
             "install",
             "com.example.simpleapp",
-            base.getAbsolutePath(),
-            split.getAbsolutePath(),
+            base.toString(),
+            split.toString(),
             "--force-full-install"
         };
 
@@ -546,15 +545,15 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split = TestUtils.resolveWorkspacePath(BASE + "apks/split.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
             "install",
             "com.example.simpleapp",
-            base.getAbsolutePath(),
-            split.getAbsolutePath(),
+            base.toString(),
+            split.toString(),
             "--force-full-install"
         };
 
@@ -577,14 +576,14 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        File update = TestUtils.getWorkspaceFile(BASE + "apks/split+ver.apk");
+        Path update = TestUtils.resolveWorkspacePath(BASE + "apks/split+ver.apk");
         args =
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    base.getAbsolutePath(),
-                    update.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    base.toString(),
+                    update.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         code = runner.run(args, logger);
@@ -648,15 +647,15 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split = TestUtils.resolveWorkspacePath(BASE + "apks/split.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
             "install",
             "com.example.simpleapp",
-            base.getAbsolutePath(),
-            split.getAbsolutePath(),
+            base.toString(),
+            split.toString(),
             "--force-full-install"
         };
 
@@ -679,14 +678,14 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        File update = TestUtils.getWorkspaceFile(BASE + "apks/split+code.apk");
+        Path update = TestUtils.resolveWorkspacePath(BASE + "apks/split+code.apk");
         args =
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    base.getAbsolutePath(),
-                    update.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    base.toString(),
+                    update.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         code = runner.run(args, logger);
@@ -751,15 +750,15 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split = TestUtils.resolveWorkspacePath(BASE + "apks/split.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
             "install",
             "com.example.simpleapp",
-            base.getAbsolutePath(),
-            split.getAbsolutePath(),
+            base.toString(),
+            split.toString(),
             "--force-full-install"
         };
 
@@ -782,15 +781,15 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        File added = TestUtils.getWorkspaceFile(BASE + "apks/split2.apk");
+        Path added = TestUtils.resolveWorkspacePath(BASE + "apks/split2.apk");
         args =
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    base.getAbsolutePath(),
-                    split.getAbsolutePath(),
-                    added.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    base.toString(),
+                    split.toString(),
+                    added.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         code = runner.run(args, logger);
@@ -858,17 +857,17 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split1 = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
-        File split2 = TestUtils.getWorkspaceFile(BASE + "apks/split2.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split1 = TestUtils.resolveWorkspacePath(BASE + "apks/split.apk");
+        Path split2 = TestUtils.resolveWorkspacePath(BASE + "apks/split2.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
             "install",
             "com.example.simpleapp",
-            base.getAbsolutePath(),
-            split1.getAbsolutePath(),
-            split2.getAbsolutePath(),
+            base.toString(),
+            split1.toString(),
+            split2.toString(),
             "--force-full-install"
         };
 
@@ -895,9 +894,9 @@ public class DeployerRunnerTest {
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    base.getAbsolutePath(),
-                    split1.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    base.toString(),
+                    split1.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         code = runner.run(args, logger);
@@ -963,11 +962,11 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -980,13 +979,13 @@ public class DeployerRunnerTest {
                 "DDMLIB_INSTALL");
         device.getShell().clearHistory();
 
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+new_asset.apk");
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+new_asset.apk");
         args =
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -1033,15 +1032,15 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split = TestUtils.resolveWorkspacePath(BASE + "apks/split.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
             "install",
             "com.example.simpleapp",
-            base.getAbsolutePath(),
-            split.getAbsolutePath(),
+            base.toString(),
+            split.toString(),
             "--force-full-install"
         };
 
@@ -1064,14 +1063,14 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        File newBase = TestUtils.getWorkspaceFile(BASE + "apks/simple+new_asset.apk");
+        Path newBase = TestUtils.resolveWorkspacePath(BASE + "apks/simple+new_asset.apk");
         args =
                 new String[] {
                     "install",
                     "com.example.simpleapp",
-                    newBase.getAbsolutePath(),
-                    split.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    newBase.toString(),
+                    split.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         code = runner.run(args, logger);
@@ -1134,16 +1133,16 @@ public class DeployerRunnerTest {
     public void testStartApp() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
         assertTrue(device.getApps().isEmpty());
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         // Install the base apk:
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
         String[] args = {
             "install",
             "com.example.simpleapp",
-            file.getAbsolutePath(),
-            "--installers-path=" + installersPath.getAbsolutePath()
+            file.toString(),
+            "--installers-path=" + installersPath.toString()
         };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -1187,14 +1186,14 @@ public class DeployerRunnerTest {
 
         // Install the base apk:
         assertTrue(device.getApps().isEmpty());
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
         String[] args = {
             "install",
             "com.example.simpleapp",
-            file.getAbsolutePath(),
-            "--installers-path=" + installersPath.getAbsolutePath()
+            file.toString(),
+            "--installers-path=" + installersPath.toString()
         };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
@@ -1217,13 +1216,13 @@ public class DeployerRunnerTest {
                     "DDMLIB_INSTALL");
         }
 
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
         args =
                 new String[] {
                     "codeswap",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         // We create a empty database. This simulate an installed APK not found in the database.
@@ -1278,7 +1277,7 @@ public class DeployerRunnerTest {
 
         String packageName = "com.example.simpleapp";
         assertTrue(device.getApps().isEmpty());
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
 
         AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
@@ -1289,8 +1288,7 @@ public class DeployerRunnerTest {
         IDevice iDevice = bridge.getDevices()[0];
         AdbClient adb = new AdbClient(iDevice, logger);
         ArrayList<DeployMetric> metrics = new ArrayList<>();
-        Installer installer =
-                new AdbInstaller(installersPath.getAbsolutePath(), adb, metrics, logger);
+        Installer installer = new AdbInstaller(installersPath.toString(), adb, metrics, logger);
 
         // Make sure we have true negative.
         Deploy.DumpResponse response = installer.dump(Collections.singletonList(packageName));
@@ -1299,12 +1297,12 @@ public class DeployerRunnerTest {
 
         // Install our target APK.
         {
-            File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+            Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
             String[] args = {
                 "install",
                 packageName,
-                file.getAbsolutePath(),
-                "--installers-path=" + installersPath.getAbsolutePath()
+                file.toString(),
+                "--installers-path=" + installersPath.toString()
             };
             int retcode = runner.run(args, logger);
             assertEquals(0, retcode);
@@ -1337,11 +1335,11 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1354,13 +1352,13 @@ public class DeployerRunnerTest {
                 "DDMLIB_INSTALL");
         device.getShell().clearHistory();
 
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
         args =
                 new String[] {
                     "codeswap",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
 
@@ -1411,11 +1409,11 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1433,13 +1431,13 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
         args =
                 new String[] {
                     "codeswap",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
         String logcat = getLogcatContent(device);
@@ -1522,16 +1520,16 @@ public class DeployerRunnerTest {
     public void testAgentTransformCache() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
 
-        final File oldApk = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        final File newApk = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        Path oldApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path newApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
 
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", oldApk.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", oldApk.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1548,8 +1546,8 @@ public class DeployerRunnerTest {
                 new String[] {
                     "codeswap",
                     "com.example.simpleapp",
-                    newApk.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    newApk.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
 
         assertEquals(0, runner.run(args, logger));
@@ -1598,11 +1596,11 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1620,13 +1618,13 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code+res.apk");
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code+res.apk");
         args =
                 new String[] {
                     "codeswap",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
 
@@ -1675,11 +1673,11 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File installersPath = DeployerTestUtils.prepareInstaller();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
 
         String[] args = {
-            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+            "install", "com.example.simpleapp", file.toString(), "--force-full-install"
         };
 
         assertEquals(0, runner.run(args, logger));
@@ -1697,13 +1695,13 @@ public class DeployerRunnerTest {
 
         device.getShell().clearHistory();
 
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code+res.apk");
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code+res.apk");
         args =
                 new String[] {
                     "fullswap",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
         String logcat = getLogcatContent(device);
@@ -1773,8 +1771,8 @@ public class DeployerRunnerTest {
 
         assertTrue(device.getApps().isEmpty());
         DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
-        File installersPath = DeployerTestUtils.prepareInstaller();
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
 
         // Set device to fail on any attempt to mkdir
         device.getShell().addCommand(new FailingMkdir());
@@ -1782,8 +1780,8 @@ public class DeployerRunnerTest {
                 new String[] {
                     "codeswap",
                     "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
+                    file.toString(),
+                    "--installers-path=" + installersPath.toString()
                 };
         int retcode = runner.run(args, logger);
 
@@ -1834,12 +1832,12 @@ public class DeployerRunnerTest {
         assertEquals(expected, actual);
     }
 
-    public void assertInstalled(String packageName, File... files) throws IOException {
+    public void assertInstalled(String packageName, Path... files) throws IOException {
         assertArrayEquals(new String[] {packageName}, device.getApps().toArray());
         List<String> paths = device.getAppPaths(packageName);
         assertEquals(files.length, paths.size());
         for (int i = 0; i < paths.size(); i++) {
-            byte[] expected = Files.readAllBytes(files[i].toPath());
+            byte[] expected = Files.readAllBytes(files[i]);
             assertArrayEquals(expected, device.readFile(paths.get(i)));
         }
     }

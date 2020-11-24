@@ -30,6 +30,7 @@ import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.After;
@@ -97,13 +98,13 @@ public class OptimisticInstallTest {
     @ApiLevel.InRange(max = 29)
     public void noOptimisticInstallBeforeApi30() throws Exception {
         assertTrue(device.getApps().isEmpty());
-        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
         assertEquals(
                 0,
                 runDeployCommand(
                         "install",
                         "com.example.helloworld",
-                        file.getAbsolutePath(),
+                        file.toString(),
                         "--force-full-install",
                         "--optimistic-install"));
         assertEquals(1, device.getApps().size());
@@ -120,13 +121,13 @@ public class OptimisticInstallTest {
     @ApiLevel.InRange(min = 30)
     public void fallBackIfNotInstalled() throws Exception {
         assertTrue(device.getApps().isEmpty());
-        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
         assertEquals(
                 0,
                 runDeployCommand(
                         "install",
                         "com.example.helloworld",
-                        file.getAbsolutePath(),
+                        file.toString(),
                         "--optimistic-install"));
         assertEquals(1, device.getApps().size());
         assertInstalled("com.example.helloworld", file);
@@ -148,15 +149,15 @@ public class OptimisticInstallTest {
     @ApiLevel.InRange(min = 30)
     public void fallBackOnAddedSplit() throws Exception {
         assertTrue(device.getApps().isEmpty());
-        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
+        Path base = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path split = TestUtils.resolveWorkspacePath(BASE + "apks/split.apk");
 
         assertEquals(
                 0,
                 runDeployCommand(
                         "install",
                         "com.example.simpleapp",
-                        base.getAbsolutePath(),
+                        base.toString(),
                         "--force-full-install"));
         assertInstalled("com.example.simpleapp", base);
         assertMetrics(
@@ -171,8 +172,8 @@ public class OptimisticInstallTest {
                 runDeployCommand(
                         "install",
                         "com.example.simpleapp",
-                        base.getAbsolutePath(),
-                        split.getAbsolutePath(),
+                        base.toString(),
+                        split.toString(),
                         "--optimistic-install"));
         assertInstalled("com.example.simpleapp", base, split);
         assertMetrics(
@@ -196,12 +197,12 @@ public class OptimisticInstallTest {
         return runner.run(args, logger);
     }
 
-    public void assertInstalled(String packageName, File... files) throws IOException {
+    public void assertInstalled(String packageName, Path... files) throws IOException {
         assertArrayEquals(new String[] {packageName}, device.getApps().toArray());
         List<String> paths = device.getAppPaths(packageName);
         assertEquals(files.length, paths.size());
         for (int i = 0; i < paths.size(); i++) {
-            byte[] expected = Files.readAllBytes(files[i].toPath());
+            byte[] expected = Files.readAllBytes(files[i]);
             assertArrayEquals(expected, device.readFile(paths.get(i)));
         }
     }

@@ -26,8 +26,8 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.idea.protobuf.ByteString;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -39,13 +39,13 @@ public class ApplicationDumperTest {
 
     @Test
     public void testWithSignature() throws Exception {
-        File cd = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk.remotecd");
-        File sig = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk.remoteblock");
+        Path cd = TestUtils.resolveWorkspacePath(BASE + "signed_app/base.apk.remotecd");
+        Path sig = TestUtils.resolveWorkspacePath(BASE + "signed_app/base.apk.remoteblock");
 
         Deploy.ApkDump.Builder dump =
                 Deploy.ApkDump.newBuilder()
-                        .setCd(ByteString.copyFrom(Files.readAllBytes(cd.toPath())))
-                        .setSignature(ByteString.copyFrom(Files.readAllBytes(sig.toPath())));
+                        .setCd(ByteString.copyFrom(Files.readAllBytes(cd)))
+                        .setSignature(ByteString.copyFrom(Files.readAllBytes(sig)));
 
         Deploy.DumpResponse response =
                 Deploy.DumpResponse.newBuilder()
@@ -82,11 +82,10 @@ public class ApplicationDumperTest {
 
     @Test
     public void testApkArchiveApkNonV2SignedDumpdMatchDigest() throws Exception {
-        File cd = TestUtils.getWorkspaceFile(BASE + "nonsigned_app/base.apk.remotecd");
+        Path cd = TestUtils.resolveWorkspacePath(BASE + "nonsigned_app/base.apk.remotecd");
 
         Deploy.ApkDump.Builder dump =
-                Deploy.ApkDump.newBuilder()
-                        .setCd(ByteString.copyFrom(Files.readAllBytes(cd.toPath())));
+                Deploy.ApkDump.newBuilder().setCd(ByteString.copyFrom(Files.readAllBytes(cd)));
         Deploy.DumpResponse response =
                 Deploy.DumpResponse.newBuilder()
                         .addPackages(

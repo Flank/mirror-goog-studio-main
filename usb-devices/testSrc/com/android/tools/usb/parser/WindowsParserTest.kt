@@ -16,10 +16,11 @@
 
 package com.android.tools.usb.parser
 
-import com.android.testutils.TestUtils
+import com.android.testutils.TestUtils.resolveWorkspacePath
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.nio.file.Files
 
 class WindowsParserTest {
     private lateinit var parser: OutputParser
@@ -31,8 +32,8 @@ class WindowsParserTest {
 
     @Test
     fun parseOutput() {
-        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/windows.txt")
-        val devices = parser.parse(file.inputStream())
+        val file = resolveWorkspacePath("tools/base/usb-devices/testData/windows.txt")
+        val devices = parser.parse(Files.newInputStream(file))
 
         // There are 7 entries in the file, but 2 of them are actually duplicates
         // of the same physical device.
@@ -46,8 +47,8 @@ class WindowsParserTest {
 
     @Test
     fun parseOutputWithDuplicateNames() {
-        val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/windowswithdupes.txt")
-        val devices = parser.parse(file.inputStream())
+        val file = resolveWorkspacePath("tools/base/usb-devices/testData/windowswithdupes.txt")
+        val devices = parser.parse(Files.newInputStream(file))
 
         // There are 42 entries in the file, but only 28 distinct
         assertEquals(28, devices.size)

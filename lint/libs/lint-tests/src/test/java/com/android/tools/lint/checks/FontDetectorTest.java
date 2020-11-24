@@ -619,7 +619,7 @@ public class FontDetectorTest extends AbstractCheckTest {
     }
 
     private static File createMockSdkWithFontProviders() throws IOException {
-        File sdkRootDir = TestUtils.createTempDirDeletedOnExit();
+        File sdkRootDir = TestUtils.createTempDirDeletedOnExit().toFile();
 
         File fontDir = new File(sdkRootDir, "fonts");
         File providersDir = new File(fontDir, "providers");

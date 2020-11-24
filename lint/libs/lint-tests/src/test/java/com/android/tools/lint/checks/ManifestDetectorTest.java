@@ -1998,7 +1998,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
         if (mSdkDir == null) {
             // Make fake SDK "installation" such that we can predict the set
             // of Maven repositories discovered by this test
-            mSdkDir = TestUtils.createTempDirDeletedOnExit();
+            try {
+                mSdkDir = TestUtils.createTempDirDeletedOnExit().toFile();
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
 
             String[] paths =
                     new String[] {

@@ -1599,8 +1599,7 @@ public class JarContentsTest {
             return Paths.get(
                     Splitter.on(File.pathSeparatorChar).split(customRepo).iterator().next());
         }
-        return FileSystems.newFileSystem(TestUtils.getWorkspaceFile(zip).toPath(), null)
-                .getPath("/");
+        return FileSystems.newFileSystem(TestUtils.resolveWorkspacePath(zip), null).getPath("/");
     }
 
     private static class NonClosingInputStream extends FilterInputStream {

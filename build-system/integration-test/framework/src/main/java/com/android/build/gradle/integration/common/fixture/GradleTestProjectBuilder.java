@@ -135,7 +135,8 @@ public final class GradleTestProjectBuilder {
         }
 
         if (gradleDistributionDirectory == null) {
-            gradleDistributionDirectory = TestUtils.getWorkspaceFile("tools/external/gradle");
+            gradleDistributionDirectory =
+                    TestUtils.resolveWorkspacePath("tools/external/gradle").toFile();
         }
 
         if (kotlinVersion == null) {
@@ -344,7 +345,7 @@ public final class GradleTestProjectBuilder {
     /** Create GradleTestProject from an existing test project. */
     public GradleTestProjectBuilder fromExternalProject(@NonNull String project) {
         name = project;
-        File parentDir = TestUtils.getWorkspaceFile("external");
+        File parentDir = TestUtils.resolveWorkspacePath("external").toFile();
         File projectDir = new File(parentDir, project);
         if (!projectDir.exists()) {
             projectDir = new File(parentDir, project.replace('-', '_'));
@@ -360,7 +361,8 @@ public final class GradleTestProjectBuilder {
         // compute the root folder of the checkout, based on test-projects.
         String suffix = useAndroidX ? "" : "-support";
         File parentDir =
-                TestUtils.getWorkspaceFile("tools/data-binding/integration-tests" + suffix);
+                TestUtils.resolveWorkspacePath("tools/data-binding/integration-tests" + suffix)
+                        .toFile();
 
         File projectDir = new File(parentDir, project);
         if (!projectDir.exists()) {

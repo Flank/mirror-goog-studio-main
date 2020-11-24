@@ -17,6 +17,7 @@ package com.android.tools.deployer;
 
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +25,7 @@ import org.junit.Assert;
 
 public class DeployerTestUtils {
     public static File prepareInstaller() throws IOException {
-        File root = TestUtils.getWorkspaceRoot();
+        File root = TestUtils.getWorkspaceRoot().toFile();
         String testInstaller = "tools/base/deploy/installer/android-installer/test-installer";
         File installer = new File(root, testInstaller);
         if (!installer.exists()) {
@@ -40,7 +41,7 @@ public class DeployerTestUtils {
     }
 
     public static void prepareStudioInstaller() throws IOException {
-        File root = TestUtils.getWorkspaceRoot();
+        File root = TestUtils.getWorkspaceRoot().toFile();
         String base = "tools/base/deploy/installer/android-installer";
         String testInstaller = "test-installer";
         File baseLocation = new File(root, base);
@@ -59,7 +60,7 @@ public class DeployerTestUtils {
     }
 
     public static void removeStudioInstaller() throws IOException {
-        FileUtils.deleteRecursivelyIfExists(
-                new File(TestUtils.getWorkspaceRoot(), "tools/idea/plugins/android"));
+        PathUtils.deleteRecursivelyIfExists(
+                TestUtils.getWorkspaceRoot().resolve("tools/idea/plugins/android"));
     }
 }

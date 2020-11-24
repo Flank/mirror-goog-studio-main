@@ -1044,7 +1044,7 @@ public class TestLintClient extends LintCliClient {
     public File findResource(@NonNull String relativePath) {
         if (relativePath.equals(LintExternalAnnotationsManager.SDK_ANNOTATIONS_PATH)) {
             try {
-                File rootDir = TestUtils.getWorkspaceRoot();
+                File rootDir = TestUtils.getWorkspaceRoot().toFile();
                 File file = new File(rootDir, "tools/adt/idea/android/annotations");
                 if (!file.exists()) {
                     throw new RuntimeException("File " + file + " not found");
@@ -1057,7 +1057,7 @@ public class TestLintClient extends LintCliClient {
             }
         } else if (relativePath.startsWith("tools/support/")) {
             try {
-                File rootDir = TestUtils.getWorkspaceRoot();
+                File rootDir = TestUtils.getWorkspaceRoot().toFile();
                 String base = relativePath.substring("tools/support/".length());
                 File file = new File(rootDir, "tools/base/files/typos/" + base);
                 if (!file.exists()) {

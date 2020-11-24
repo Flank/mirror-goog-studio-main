@@ -6,9 +6,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.testutils.TestUtils;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
 import org.junit.Test;
@@ -156,8 +156,9 @@ public class RulesFileTest {
     private static RulesFile parserRulesFile(String rulesFileName)
             throws FileNotFoundException, RulesFileException {
         String testDataPath = "tools/base/aspects_agent/testData/rules/";
-        File rules = TestUtils.getWorkspaceFile(String.format("%s%s", testDataPath, rulesFileName));
-        RulesFile rulesFile = new RulesFile(rules.getAbsolutePath());
+        Path rules =
+                TestUtils.resolveWorkspacePath(String.format("%s%s", testDataPath, rulesFileName));
+        RulesFile rulesFile = new RulesFile(rules.toString());
         rulesFile.parseRulesFile(Function.identity(), Function.identity());
         return rulesFile;
     }

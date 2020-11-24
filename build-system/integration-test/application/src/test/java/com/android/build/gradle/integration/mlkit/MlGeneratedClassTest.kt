@@ -346,9 +346,9 @@ class MlGeneratedClassTest {
         // Add model file to ml folder
         val modelFile = project.file(dstModelFilePath)
         FileUtils.copyFile(
-            TestUtils.getWorkspaceFile(
+            TestUtils.resolveWorkspacePath(
                 "prebuilts/tools/common/mlkit/testData/models/$modelFileName"
-            ),
+            ).toFile(),
             modelFile
         )
         project.executor().run(":assembleDebug")

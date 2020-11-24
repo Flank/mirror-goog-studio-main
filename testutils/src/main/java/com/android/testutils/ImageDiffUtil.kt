@@ -15,7 +15,6 @@
  */
 package com.android.testutils
 
-import com.google.common.io.Files
 import org.junit.Assert
 import java.awt.Color
 import java.awt.Image
@@ -23,13 +22,14 @@ import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_ARGB
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
 import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
 
 object ImageDiffUtil {
-
     /**
      * Converts a BufferedImage type to [TYPE_INT_ARGB],
      * which is the only type accepted by [ImageDiffUtil.assertImageSimilar].
@@ -53,24 +53,30 @@ object ImageDiffUtil {
      */
     @Throws(IOException::class)
     @JvmStatic
-    fun assertImageSimilar(
-        goldenFile: File,
-        actual: BufferedImage,
-        maxPercentDifferent: Double
-    ) {
-        if (!goldenFile.exists()) {
+    fun assertImageSimilar(goldenFile: Path, actual: BufferedImage, maxPercentDifferent: Double) {
+        if (Files.notExists(goldenFile)) {
             val converted = convertToARGB(actual)
-            Files.createParentDirs(goldenFile)
-            val outFile = File(TestUtils.getTestOutputDir(), goldenFile.name)
+            Files.createDirectories(goldenFile.parent)
+            val outFile = TestUtils.getTestOutputDir().toPath().resolve(goldenFile.fileName.toString())
             // This will show up in undeclared outputs when running on a test server
-            ImageIO.write(converted, "PNG", outFile)
+            ImageIO.write(converted, "PNG", outFile.toFile())
             // This will copy the file to its designated location. Useful when running locally.
-            ImageIO.write(converted, "PNG", goldenFile)
+            ImageIO.write(converted, "PNG", goldenFile.toFile())
             Assert.fail("File did not exist, created here: $goldenFile and in undeclared outputs")
         }
-        val goldenImage = ImageIO.read(goldenFile)
-        assert(goldenImage != null) { "Failed to read image from " + goldenFile.absolutePath }
-        assertImageSimilar(goldenFile.name, goldenImage, actual, maxPercentDifferent)
+        val goldenImage = ImageIO.read(goldenFile.toFile())
+        assert(goldenImage != null) { "Failed to read image from " + goldenFile.toAbsolutePath() }
+        assertImageSimilar(goldenFile.fileName.toString(), goldenImage, actual, maxPercentDifferent)
+    }
+
+    /**
+     * Asserts that the given image is similar to the golden one contained in the given file.
+     * If the golden image file does not exist, it is created and the test fails.
+     */
+    @Throws(IOException::class)
+    @JvmStatic
+    fun assertImageSimilar(goldenFile: File, actual: BufferedImage, maxPercentDifferent: Double) {
+        return assertImageSimilar(goldenFile.toPath(), actual, maxPercentDifferent)
     }
 
     @Throws(IOException::class)

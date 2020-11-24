@@ -123,8 +123,7 @@ public class AgentTestUtils {
         if (rulesFile != null) {
             String testData = "tools/base/aspects_agent/testData/conflicts/";
             RulesFile rules =
-                    new RulesFile(
-                            TestUtils.getWorkspaceFile(testData + rulesFile).getAbsolutePath());
+                    new RulesFile(TestUtils.resolveWorkspacePath(testData + rulesFile).toString());
             rules.parseRulesFile(Function.identity(), Function.identity());
             aspects = rules.getAspects();
             annotationGroups = rules.getAnnotationGroups();
