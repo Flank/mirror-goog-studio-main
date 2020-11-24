@@ -47,11 +47,7 @@ import java.util.stream.Stream;
  * CancellableFileIo} to check for cancellation before read I/O operations.
  */
 public abstract class FileOp {
-    protected boolean mIsWindows;
-
-    public FileOp() {
-        mIsWindows = System.getProperty("os.name").startsWith("Windows");
-    }
+    private static boolean mIsWindows = System.getProperty("os.name").startsWith("Windows");
 
     /** Returns the {@link FileSystem} this is based on. */
     public abstract FileSystem getFileSystem();
@@ -302,7 +298,7 @@ public abstract class FileOp {
         }
     }
 
-    public final boolean isWindows() {
+    public static boolean isWindows() {
         return mIsWindows;
     }
 

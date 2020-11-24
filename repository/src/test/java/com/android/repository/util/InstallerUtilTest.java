@@ -469,7 +469,7 @@ public class InstallerUtilTest extends TestCase {
     }
 
     public void testUnzip() throws Exception {
-        if (new MockFileOp().isWindows()) {
+        if (FileOp.isWindows()) {
             // can't run on windows.
             return;
         }

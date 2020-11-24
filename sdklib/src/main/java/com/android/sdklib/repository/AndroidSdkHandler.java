@@ -640,9 +640,8 @@ public final class AndroidSdkHandler {
         public static LocalSourceProvider createUserSourceProvider(
                 @NonNull FileOp fileOp, @NonNull Path androidFolder) {
             return new LocalSourceProvider(
-                    fileOp.toFile(androidFolder.resolve(LOCAL_ADDONS_FILENAME)),
-                    ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE),
-                    fileOp);
+                    androidFolder.resolve(LOCAL_ADDONS_FILENAME),
+                    ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE));
         }
 
         @NonNull
@@ -828,6 +827,8 @@ public final class AndroidSdkHandler {
     /**
      * Gets our {@link FileOp}. Useful so both the sdk handler and file op don't both have to be
      * injected everywhere.
+     *
+     * @deprecated
      */
     @NonNull
     public FileOp getFileOp() {

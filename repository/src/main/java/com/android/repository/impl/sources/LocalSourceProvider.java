@@ -18,6 +18,7 @@ package com.android.repository.impl.sources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
@@ -25,14 +26,13 @@ import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SchemaModule;
 import com.android.repository.api.SimpleRepositorySource;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.impl.FileOpImpl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -52,7 +52,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
 
     private static final String KEY_ENABLED = "enabled";
 
-    private final File mLocation;
+    private final Path mLocation;
 
     private List<RepositorySource> mSources;
 
@@ -60,24 +60,19 @@ public class LocalSourceProvider implements RepositorySourceProvider {
 
     private final Collection<SchemaModule<?>> mAllowedModules;
 
-    private final FileOp mFop;
-
     private RepoManager mRepoManager;
 
     /**
      * Create a new {@code LocalSourceProvider}.
      *
-     * @param location       The file to load from and save to.
+     * @param location The file to load from and save to.
      * @param allowedModules The {@link SchemaModule}s that are allowed to be used by sources
-     *                       provided by this provider.
-     * @param fop            The {@link FileOp} to use for local file operations. For normal use
-     *                       should probably be {@link FileOpImpl}.
+     *     provided by this provider.
      */
-    public LocalSourceProvider(@NonNull File location,
-            @NonNull Collection<SchemaModule<?>> allowedModules, @NonNull FileOp fop) {
+    public LocalSourceProvider(
+            @NonNull Path location, @NonNull Collection<SchemaModule<?>> allowedModules) {
         mAllowedModules = allowedModules;
         mLocation = location;
-        mFop = fop;
     }
 
     /**
@@ -107,11 +102,8 @@ public class LocalSourceProvider implements RepositorySourceProvider {
             List<RepositorySource> result = Lists.newArrayList();
 
             // Load new user sources from property file
-            InputStream fis = null;
-            try {
-                if (mFop.exists(mLocation)) {
-                    fis = mFop.newFileInputStream(mLocation);
-
+            try (InputStream fis = CancellableFileIo.newInputStream(mLocation)) {
+                if (CancellableFileIo.exists(mLocation)) {
                     Properties props = new Properties();
                     props.load(fis);
 
@@ -140,19 +132,10 @@ public class LocalSourceProvider implements RepositorySourceProvider {
                     }
                 } else {
                     progress.logInfo(
-                            "File " + mLocation.getAbsolutePath() + " could not be loaded.");
+                            "File " + mLocation.toAbsolutePath() + " could not be loaded.");
                 }
             } catch (NumberFormatException | IOException e) {
                 progress.logWarning("Failed to parse user addon file at " + mLocation, e);
-            }
-            finally {
-                if (fis != null) {
-                    try {
-                        fis.close();
-                    } catch (IOException e) {
-                        // nothing
-                    }
-                }
             }
             if (mSources == null) {
                 mSources = Lists.newArrayList(result);
@@ -215,7 +198,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
     @Override
     public void save(@NonNull ProgressIndicator progress) {
         synchronized (LOCK) {
-            try (OutputStream fos = mFop.newFileOutputStream(mLocation)) {
+            try (OutputStream fos = Files.newOutputStream(mLocation)) {
 
                 Properties props = new Properties();
 

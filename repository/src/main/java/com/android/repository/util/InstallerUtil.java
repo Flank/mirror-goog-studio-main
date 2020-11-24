@@ -153,7 +153,7 @@ public class InstallerUtil {
                     if (!indeterminate) {
                         progress.setFraction(progressMax);
                     }
-                    if (!fop.isWindows()) {
+                    if (!FileOp.isWindows()) {
                         // get the mode and test if it contains the executable bit
                         int mode = entry.getUnixMode();
                         //noinspection OctalInteger

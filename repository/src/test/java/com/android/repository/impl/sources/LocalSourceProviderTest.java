@@ -38,7 +38,8 @@ import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -62,9 +63,7 @@ public class LocalSourceProviderTest {
                         + "count=2");
         LocalSourceProvider provider =
                 new LocalSourceProvider(
-                        new File("/sources"),
-                        ImmutableList.of(RepoManager.getGenericModule()),
-                        fop);
+                        fop.toPath("/sources"), ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         Iterator<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false).iterator();
@@ -87,9 +86,7 @@ public class LocalSourceProviderTest {
                 "/sources", "enabled00=true\n" + "src00=http\\://example.com/foo\n" + "count=1");
         LocalSourceProvider provider =
                 new LocalSourceProvider(
-                        new File("/sources"),
-                        ImmutableList.of(RepoManager.getGenericModule()),
-                        fop);
+                        fop.toPath("/sources"), ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         List<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false);
@@ -110,11 +107,9 @@ public class LocalSourceProviderTest {
 
     @Test
     public void modifySources() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        File file = new File("/sources");
+        Path file = new MockFileOp().toPath("/sources");
         LocalSourceProvider provider =
-                new LocalSourceProvider(
-                        file, ImmutableList.of(RepoManager.getGenericModule()), fop);
+                new LocalSourceProvider(file, ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         provider.getSources(null, progress, false);
@@ -125,7 +120,7 @@ public class LocalSourceProviderTest {
                         true,
                         ImmutableList.of(RepoManager.getGenericModule()),
                         provider));
-        assertFalse(fop.exists(file));
+        assertFalse(Files.exists(file));
         provider.save(progress);
         Properties expected = new Properties();
         expected.setProperty("enabled00", "true");
@@ -134,7 +129,7 @@ public class LocalSourceProviderTest {
         expected.setProperty("count", "1");
 
         Properties actual = new Properties();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected, actual);
         SimpleRepositorySource source2 =
                 new SimpleRepositorySource(
@@ -145,7 +140,7 @@ public class LocalSourceProviderTest {
                         provider);
         provider.addSource(source2);
         actual.clear();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected, actual);
         provider.save(progress);
         Properties expected2 = new Properties();
@@ -155,19 +150,19 @@ public class LocalSourceProviderTest {
         expected2.setProperty("src01", "http://example.com/foo2");
         expected2.setProperty("count", "2");
         actual.clear();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected2, actual);
 
         assertTrue(provider.removeSource(source2));
         assertFalse(provider.removeSource(source2));
         provider.save(progress);
         actual.clear();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected, actual);
     }
 
     @Test
-    public void allowedModules() throws Exception {
+    public void allowedModules() {
         @SuppressWarnings("unchecked")
         SchemaModule<Object> dummy = mock(SchemaModule.class);
 
@@ -182,7 +177,7 @@ public class LocalSourceProviderTest {
                         + "src01=http\\://example.com/foo2\n"
                         + "count=2");
         ImmutableList<SchemaModule<?>> modules = ImmutableList.of(dummy);
-        LocalSourceProvider provider = new LocalSourceProvider(new File("/sources"), modules, fop);
+        LocalSourceProvider provider = new LocalSourceProvider(fop.toPath("/sources"), modules);
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         List<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false);
@@ -214,7 +209,7 @@ public class LocalSourceProviderTest {
                 };
         RepositorySource source2 = mock(RepositorySource.class);
         LocalSourceProvider provider =
-                new LocalSourceProvider(new File("/sources"), ImmutableList.of(), new MockFileOp());
+                new LocalSourceProvider(new MockFileOp().toPath("/sources"), ImmutableList.of());
         provider.setRepoManager(mock(RepoManager.class));
         provider.getSources(null, new FakeProgressIndicator(), false);
         provider.addSource(source);

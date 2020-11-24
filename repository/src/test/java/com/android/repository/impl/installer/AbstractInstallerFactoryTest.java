@@ -53,14 +53,14 @@ public class AbstractInstallerFactoryTest {
 
     @Test
     public void fallbackFactory() {
-        InstallerFactory testFactory = new TestInstallerFactory() {
-            @Override
-            protected boolean canHandlePackage(@NonNull RepoPackage pack,
-                    @NonNull RepoManager manager,
-                    @NonNull FileOp fop) {
-                return false;
-            }
-        };
+        InstallerFactory testFactory =
+                new TestInstallerFactory() {
+                    @Override
+                    protected boolean canHandlePackage(
+                            @NonNull RepoPackage pack, @NonNull RepoManager manager) {
+                        return false;
+                    }
+                };
         testFactory.setFallbackFactory(new TestInstallerFactory() {
             @NonNull
             @Override

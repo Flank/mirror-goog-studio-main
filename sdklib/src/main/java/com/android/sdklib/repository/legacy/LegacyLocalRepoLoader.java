@@ -226,8 +226,9 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
 
             String relativePath = null;
             try {
-                relativePath = FileOpUtils.makeRelative(mWrapped.getLocalSdk().getLocation(),
-                        mWrapped.getLocalDir(), mFop);
+                relativePath =
+                        FileOpUtils.makeRelative(
+                                mWrapped.getLocalSdk().getLocation(), mWrapped.getLocalDir());
             } catch (IOException e) {
                 // nothing, we'll just not have a default path.
             }

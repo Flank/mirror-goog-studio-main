@@ -60,7 +60,7 @@ public abstract class AbstractInstallerFactory implements InstallerFactory {
     @Override
     public final Installer createInstaller(@NonNull RemotePackage remote, @NonNull RepoManager mgr,
             @NonNull Downloader downloader, @NonNull FileOp fop) {
-        if (!canHandlePackage(remote, mgr, fop) && mFallbackFactory != null) {
+        if (!canHandlePackage(remote, mgr) && mFallbackFactory != null) {
             return mFallbackFactory.createInstaller(remote, mgr, downloader, fop);
         }
         Installer installer = doCreateInstaller(remote, mgr, downloader, fop);
@@ -92,7 +92,7 @@ public abstract class AbstractInstallerFactory implements InstallerFactory {
     @Override
     public final Uninstaller createUninstaller(@NonNull LocalPackage local,
             @NonNull RepoManager mgr, @NonNull FileOp fop) {
-        if (!canHandlePackage(local, mgr, fop) && mFallbackFactory != null) {
+        if (!canHandlePackage(local, mgr) && mFallbackFactory != null) {
             return mFallbackFactory.createUninstaller(local, mgr, fop);
         }
         Uninstaller uninstaller = doCreateUninstaller(local, mgr, fop);
@@ -114,8 +114,7 @@ public abstract class AbstractInstallerFactory implements InstallerFactory {
      * Subclasses should override this to indicate whether they can generate installers/uninstallers
      * for the given package.
      */
-    protected boolean canHandlePackage(@NonNull RepoPackage pack,
-            @NonNull RepoManager manager, @NonNull FileOp fop) {
+    protected boolean canHandlePackage(@NonNull RepoPackage pack, @NonNull RepoManager manager) {
         return true;
     }
 }

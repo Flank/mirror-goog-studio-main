@@ -296,7 +296,7 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             if (mOsSdkFolder == null) {
-                String cmdName = "avdmanager" + (mSdkHandler.getFileOp().isWindows() ? ".bat" : "");
+                String cmdName = "avdmanager" + (FileOp.isWindows() ? ".bat" : "");
 
                 errorAndExit(
                         "The tools directory property is not set, please make sure you are "
