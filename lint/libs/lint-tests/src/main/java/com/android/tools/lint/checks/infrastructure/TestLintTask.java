@@ -18,10 +18,10 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.DOT_GRADLE;
-import static com.android.SdkConstants.DOT_KT;
-import static com.android.SdkConstants.DOT_KTS;
+import static com.android.tools.lint.checks.infrastructure.TestMode.UI_INJECTION_HOST;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -55,7 +55,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.NullLogger;
-import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -80,12 +79,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function2;
 
-@SuppressWarnings("SameParameterValue")
+@SuppressWarnings({"SameParameterValue", "ComplexBooleanConstant"})
 public class TestLintTask {
     /** Map from project directory to corresponding Gradle model mocker */
     final Map<File, GradleModelMocker> projectMocks = Maps.newHashMap();
@@ -108,7 +110,7 @@ public class TestLintTask {
     String[] issueIds;
     boolean allowDelayedIssueRegistration;
     public File sdkHome;
-    LintListener listener;
+    List<LintListener> listeners = new ArrayList<>();
     GradleMockModifier mockModifier;
     LintDriverConfigurator driverConfigurator;
     OptionSetter optionSetter;
@@ -136,7 +138,8 @@ public class TestLintTask {
     File overrideConfigFile;
     Set<Desugaring> desugaring;
     EnumSet<Platform> platforms;
-    boolean checkUInjectionHost = true;
+    Collection<TestMode> testModes = new ArrayList<>(TestMode.Companion.values());
+    boolean testModesIdenticalOutput = true;
     boolean useTestProject;
     boolean allowExceptions;
     public String testName = null;
@@ -358,6 +361,85 @@ public class TestLintTask {
     }
 
     /**
+     * Normally lint will run tests through different modes (provisional on, provisional off,
+     * ui_injection_host=on, etc). This flag lets you customize this, if there's a legitimate reason
+     * why a given type of check shouldn't be run (for example, if you have not added provisional
+     * support for your lint check yet but want the tests to keep passing.)
+     *
+     * @param testModes the types of lint execution to run the tests with
+     * @return this, for constructor chaining
+     */
+    public TestLintTask testModes(Collection<TestMode> testModes) {
+        assertFalse(testModes.isEmpty());
+        this.testModes = testModes;
+        return this;
+    }
+
+    /**
+     * Like {@link #testModes(Collection)}, but with a varargs construction parameter list.
+     *
+     * @param testModes the test types to use
+     * @return this, for constructor chaining
+     */
+    public TestLintTask testModes(TestMode... testModes) {
+        this.testModes = new ArrayList<>(Arrays.asList(testModes));
+        return this;
+    }
+
+    /**
+     * Returns the test types set which you can mutate instead of having to create a new set and
+     * pass it to {@link #testModes(Collection)}.
+     *
+     * <p>Should not be called if you have instead called {@link #testModes(Collection)} with an
+     * immutable set.
+     */
+    public Collection<TestMode> testModes() {
+        return testModes;
+    }
+
+    /**
+     * Removes the given set of test types from the set of test types to be checked
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask skipTestModes(TestMode... modes) {
+        for (TestMode mode : modes) {
+            testModes.remove(mode);
+        }
+        return this;
+    }
+
+    /**
+     * Adds the given set of test types to the set of test types to be checked
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask addTestModes(TestMode... modes) {
+        for (TestMode mode : modes) {
+            if (!testModes.contains(mode)) {
+                testModes.add(mode);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Normally, when lint runs the test through each {@link TestMode}, it will also assert that the
+     * output is identical. There are some scenarios where the output is expected to be difficult.
+     * In this case, instead of just limiting your check to a specific set of types via {@link
+     * #testModes}, you can turn off this enforcement here, and then call {@link
+     * TestLintResult#expect(String, Class, TestResultTransformer, TestMode)} repeatedly with each
+     * test type you can to check.)
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask expectIdenticalTestModeOutput(boolean identical) {
+        ensurePreRun();
+        testModesIdenticalOutput = identical;
+        return this;
+    }
+
+    /**
      * Whether the lint test infrastructure should insert a special test configuration which exactly
      * enables the specific issues analyzed by this test task ({@see #issues}), and disables all
      * others. This makes it easier to write tests: you don't start picking up warnings from
@@ -483,7 +565,7 @@ public class TestLintTask {
      */
     public TestLintTask listener(@NonNull LintListener listener) {
         ensurePreRun();
-        this.listener = listener;
+        listeners.add(listener);
         return this;
     }
 
@@ -595,6 +677,7 @@ public class TestLintTask {
         this.projectInspector = inspector;
         return this;
     }
+
     /**
      * Configures lint to run with a custom lint client instead of the default one.
      *
@@ -633,8 +716,8 @@ public class TestLintTask {
     /**
      * Configures lint to run with a custom lint client instead of the default one. This is a
      * factory method instead of a method which takes an instance because during testing, lint may
-     * need to run multiple times, and we want to make sure there's no leaking of instance state
-     * between these separate runs.
+     * need to run multiple times (see for example {@link #testModes()}), and we want to make sure
+     * there's no leaking of instance state between these separate runs.
      *
      * @param factory the factor which creates custom clients to use
      * @return this, for constructor chaining
@@ -736,9 +819,15 @@ public class TestLintTask {
     /**
      * Whether lint should check that the lint checks correctly handles the UInjectionHost string
      * literals. This will run lint checks that contain Kotlin files twice and diff the results.
+     *
+     * <p>This is just an alias for {@code testModes().remove(LintTestMode.UI_INJECTION_HOSE)}.
      */
     public TestLintTask checkUInjectionHost(boolean check) {
-        this.checkUInjectionHost = check;
+        if (check) {
+            testModes().add(UI_INJECTION_HOST);
+        } else {
+            testModes().remove(UI_INJECTION_HOST);
+        }
         return this;
     }
 
@@ -832,6 +921,9 @@ public class TestLintTask {
     /** Constructs the actual lint projects on disk */
     @NonNull
     public List<File> createProjects(File rootDir) {
+        dirToProjectDescription.clear();
+        projectMocks.clear();
+
         List<ProjectDescription> allProjects = Lists.newArrayListWithCapacity(2 * projects.length);
         addProjects(allProjects, projects);
 
@@ -926,19 +1018,6 @@ public class TestLintTask {
         return new File(rootDir, relativePath);
     }
 
-    private boolean haveKotlinTestFiles() {
-        for (ProjectDescription project : projects) {
-            for (TestFile file : project.getFiles()) {
-                if (file.targetRelativePath.endsWith(DOT_KT)
-                        || file.targetRelativePath.endsWith(DOT_KTS)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     /**
      * Performs the lint check, returning the results of the lint check.
      *
@@ -969,7 +1048,7 @@ public class TestLintTask {
         // Make sure tests don't pick up random things outside the test directory.
         // I had accidentally placed a file named lint.xml in /tmp, and this caused
         // a number of confusing failures!
-        ConfigurationHierarchy.Companion.setDefaultRootDir(tempDir);
+        ConfigurationHierarchy.Companion.setDefaultRootDir(rootDir);
 
         if (platforms == null) {
             platforms = computePlatforms(getCheckedIssues());
@@ -983,47 +1062,76 @@ public class TestLintTask {
             }
         }
 
-        List<File> projectDirs = createProjects(rootDir);
+        Map<String, List<File>> projectMap = new HashMap<>();
+        Map<TestMode, ResultState> results = new HashMap<>();
+
         try {
-            if (checkUInjectionHost) {
-                setForceUiInjection(false);
+            // Note that the test types are taken care of in enum order.
+            // This allows a test type to decide if it applies based on
+            // an earlier test type (for example, resource repository
+            // tests may only apply if we discovered in the default test
+            // mode that the test actually consults the resource repository.)
+            for (TestMode mode : testModes()) {
+                // Run lint with a specific test type?
+                // For example, the UInjectionHost tests are only relevant
+                // if the project contains Kotlin source files.
+                if (!mode.applies(this, Arrays.asList(projects))) {
+                    continue;
+                }
+
+                // Look up output folder for projects; this allows
+                // multiple test types to share a single project tree
+                // (for example, UInjectionHost mode does not modify
+                // the project structure in any way)
+                String folderName = mode.getFolderName();
+                File root = new File(rootDir, folderName);
+                List<File> files = projectMap.get(folderName);
+                if (files == null) {
+                    files = createProjects(root);
+                    projectMap.put(folderName, files);
+                }
+
+                Object clientState = mode.before(this, files);
+                LintListener listener = null;
+                try {
+                    TestLintClient lintClient = createClient();
+
+                    Function2<LintListener.EventType, Object, Unit> event = mode.getEventListener();
+                    if (event != null) {
+                        listener =
+                                (driver, type1, project, context) ->
+                                        event.invoke(type1, clientState);
+                        listeners.add(listener);
+                    }
+
+                    ResultState result = checkLint(lintClient, root, files, true, mode);
+                    results.put(mode, result);
+
+                    if (projectInspector != null) {
+                        Collection<Project> knownProjects = lintClient.getKnownProjects();
+                        List<Project> projects = new ArrayList<>(knownProjects);
+                        LintDriver driver = lintClient.getDriver();
+                        projects.sort(Comparator.comparing(Project::getName));
+                        projectInspector.inspect(driver, projects);
+                    }
+                } finally {
+                    mode.after(this, clientState);
+                    if (listener != null) {
+                        listeners.remove(listener);
+                    }
+                }
             }
 
-            TestLintClient lintClient = createClient();
-            Pair<String, List<Incident>> result = checkLint(lintClient, rootDir, projectDirs);
-            String output = result.getFirst();
-            List<Incident> incidents = result.getSecond();
-
-            if (projectInspector != null) {
-                Collection<Project> knownProjects = lintClient.getKnownProjects();
-                List<Project> projects = new ArrayList<>(knownProjects);
-                LintDriver driver = lintClient.getDriver();
-                projects.sort(Comparator.comparing(Project::getName));
-                projectInspector.inspect(driver, projects);
-            }
-
-            // Test both with and without UInjectionHost
-            if (checkUInjectionHost && haveKotlinTestFiles()) {
-                setForceUiInjection(true);
-                Pair<String, List<Incident>> result2 =
-                        checkLint(createClient(), rootDir, projectDirs);
-                String output2 = result2.getFirst();
-                setForceUiInjection(false);
-
-                assertEquals(
-                        "The unit test results differ based on whether\n"
-                                + "`kotlin.uast.force.uinjectionhost` is on or off. Make sure your\n"
-                                + "detector correctly handles strings in Kotlin; soon all String\n"
-                                + "`ULiteralExpression` elements will be wrapped in a `UPolyadicExpression`.\n"
-                                + "Lint now runs the tests twice, in both modes, and checks that\n"
-                                + "the results are identical.",
-                        output,
-                        output2);
-            }
-
-            return new TestLintResult(this, rootDir, output, lintClient.firstThrowable, incidents);
+            checkConsistentOutput(results);
+            TestMode defaultMode = pickDefaultMode(results);
+            return new TestLintResult(this, results, defaultMode);
         } catch (Throwable e) {
-            return new TestLintResult(this, rootDir, null, e, Collections.emptyList());
+            ResultState state =
+                    new ResultState(
+                            createClient(), rootDir, e.getMessage(), Collections.emptyList(), e);
+            TestMode defaultType = testModes.iterator().next();
+            results.put(defaultType, state);
+            return new TestLintResult(this, results, defaultType);
         } finally {
             deleteFilesRecursively(tempDir.toPath());
         }
@@ -1047,7 +1155,71 @@ public class TestLintTask {
         }
     }
 
-    private static void setForceUiInjection(boolean on) {
+    @NonNull
+    private TestMode pickDefaultMode(Map<TestMode, ResultState> results) {
+        for (TestMode mode : TestMode.Companion.values()) {
+            if (results.containsKey(mode)) {
+                return mode;
+            }
+        }
+
+        throw new RuntimeException(
+                "Invalid testModes configuration: " + testModes + " and " + results);
+    }
+
+    private void checkConsistentOutput(Map<TestMode, ResultState> results) {
+        if (!testModesIdenticalOutput) {
+            return;
+        }
+
+        // Make sure the output matches
+        TestMode prev = null;
+        for (TestMode mode : testModes) {
+            if (prev == null) {
+                prev = mode;
+                continue;
+            }
+
+            ResultState resultState = results.get(mode);
+            if (resultState == null) {
+                // Skip -- this is a configured test type which we skipped during analysis
+                continue;
+            }
+            String actual = resultState.output;
+            String expected = results.get(prev).output;
+            if (!expected.equals(actual)) {
+                String expectedLabel = prev.getDescription();
+                String actualLabel = mode.getDescription();
+                String message = mode.getDiffExplanation();
+                if (message == null) {
+                    message =
+                            ""
+                                    + "The lint output was different between the test types\n"
+                                    + prev
+                                    + " and "
+                                    + mode
+                                    + ".\n"
+                                    + "\n"
+                                    + "If this difference is expected, you can set the\n"
+                                    + "eventType() set to include only one of these two.";
+                }
+                // We've already checked that the output does not match. Now include
+                // the mode labels in the assertion (which will fail) to clearly label
+                // the junit diff explaining which output is which.
+                assertEquals(
+                        message,
+                        expectedLabel + ":\n\n" + expected,
+                        actualLabel + ":\n\n" + actual);
+            }
+            prev = mode;
+        }
+    }
+
+    /**
+     * Utility method to enable UAST injection host handling (where all literal strings are wrapped
+     * in an UInjectionHost.
+     */
+    static void setForceUiInjection(boolean on) {
         //noinspection KotlinInternalInJava
         org.jetbrains.uast.kotlin.KotlinConverter.INSTANCE.setForceUInjectionHost(on);
     }
@@ -1098,20 +1270,45 @@ public class TestLintTask {
         }
     }
 
+    static class ResultState {
+        ResultState(
+                @NonNull TestLintClient client,
+                @NonNull File rootDir,
+                @NonNull String output,
+                @NonNull List<Incident> incidents,
+                @Nullable Throwable firstThrowable) {
+            this.client = client;
+            this.rootDir = rootDir;
+            this.output = output;
+            this.incidents = incidents;
+            this.firstThrowable = firstThrowable;
+        }
+
+        @NonNull File rootDir;
+        @NonNull TestLintClient client;
+        @NonNull String output;
+        @NonNull List<Incident> incidents;
+        @Nullable Throwable firstThrowable;
+    }
+
     @NonNull
-    private Pair<String, List<Incident>> checkLint(
-            @NonNull TestLintClient lintClient, @NonNull File rootDir, @NonNull List<File> files)
+    private ResultState checkLint(
+            @NonNull TestLintClient client,
+            @NonNull File rootDir,
+            @NonNull List<File> files,
+            boolean writeOutput,
+            @NonNull TestMode mode)
             throws Exception {
-        lintClient.addCleanupDir(rootDir);
-        lintClient.setLintTask(this);
+        client.addCleanupDir(rootDir);
+        client.setLintTask(this);
         try {
             if (optionSetter != null) {
-                optionSetter.set(lintClient.getFlags());
+                optionSetter.set(client.getFlags());
             }
 
-            return lintClient.checkLint(files, getCheckedIssues());
+            return client.checkLint(rootDir, files, getCheckedIssues(), writeOutput, mode);
         } finally {
-            lintClient.setLintTask(null);
+            client.setLintTask(null);
         }
     }
 

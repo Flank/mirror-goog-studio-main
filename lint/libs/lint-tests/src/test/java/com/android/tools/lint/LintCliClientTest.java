@@ -16,10 +16,13 @@
 
 package com.android.tools.lint;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.SdCardDetector;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
 import com.intellij.codeInsight.CustomExceptionHandler;
 import com.intellij.openapi.extensions.Extensions;
@@ -102,15 +105,23 @@ public class LintCliClientTest extends AbstractCheckTest {
         LintCliFlags flags = new LintCliFlags();
         flags.setClassesOverride(Arrays.asList(new File(mGetterTest2.targetRelativePath)));
 
-        com.android.tools.lint.checks.infrastructure.TestLintClient client =
-                new com.android.tools.lint.checks.infrastructure.TestLintClient(flags);
+        TestLintTask.ClientFactory factory =
+                new TestLintTask.ClientFactory() {
+                    @NonNull
+                    @Override
+                    public com.android.tools.lint.checks.infrastructure.TestLintClient create() {
+                        return new com.android.tools.lint.checks.infrastructure.TestLintClient(
+                                flags);
+                    }
+                };
 
         ProjectDescription project = new ProjectDescription(mGetterTest);
         project.setType(ProjectDescription.Type.LIBRARY);
 
         lint().projects(project)
                 .rootDirectory(projectDir)
-                .client(client)
+                .clientFactory(factory)
+                .testModes(TestMode.DEFAULT)
                 .run()
                 .expect(
                         "Relative Path found: bin/classes.jar. All paths should be absolute.",

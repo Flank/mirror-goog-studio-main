@@ -65,7 +65,6 @@ import org.objectweb.asm.Opcodes;
  * string literal, and copy into a target directory
  */
 public class TestFile {
-    // TODO: Make this a top level class
     public String sourceRelativePath;
     public String targetRelativePath;
     public String contents;

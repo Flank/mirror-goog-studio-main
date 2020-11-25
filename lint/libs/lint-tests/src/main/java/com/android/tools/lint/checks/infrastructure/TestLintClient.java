@@ -68,6 +68,7 @@ import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.client.api.UastParser;
@@ -95,7 +96,6 @@ import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelSourceProvider;
 import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.ILogger;
-import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
@@ -270,7 +270,12 @@ public class TestLintClient extends LintCliClient {
         return null;
     }
 
-    protected Pair<String, List<Incident>> checkLint(List<File> files, List<Issue> issues)
+    protected TestLintTask.ResultState checkLint(
+            @NonNull File rootDir,
+            @NonNull List<File> files,
+            @NonNull List<Issue> issues,
+            boolean writeOutput,
+            @NonNull TestMode mode)
             throws Exception {
         if (task.incrementalFileName != null) {
             boolean found = false;
@@ -313,17 +318,8 @@ public class TestLintClient extends LintCliClient {
                             + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
         }
 
-        // Reset state here in case a client is reused for multiple runs
-        output = new StringBuilder();
-        writer.getBuffer().setLength(0);
-        List<Incident> incidents = getIncidents();
-        incidents.clear();
-        setErrorCount(0);
-        setWarningCount(0);
-
-        String result = analyze(files, issues);
-
-        return Pair.of(result, incidents);
+        String result = analyze(files, issues, writeOutput);
+        return new TestLintTask.ResultState(this, rootDir, result, getIncidents(), firstThrowable);
     }
 
     private static List<File> getFilesRecursively(File root) {
@@ -352,12 +348,6 @@ public class TestLintClient extends LintCliClient {
                 }
             }
         }
-    }
-
-    @Override
-    public void reset() {
-        super.reset();
-        writer.getBuffer().setLength(0);
     }
 
     @Nullable
@@ -502,9 +492,10 @@ public class TestLintClient extends LintCliClient {
     }
 
     @SuppressWarnings("StringBufferField")
-    private StringBuilder output = null;
+    private final StringBuilder output = new StringBuilder();
 
-    public String analyze(List<File> files, List<Issue> issues) throws Exception {
+    public String analyze(List<File> files, List<Issue> issues, boolean writeOutput)
+            throws Exception {
         // We'll sync lint options to flags later when the project is created, but try
         // to do it early before the driver is initialized
         if (!files.isEmpty()) {
@@ -538,8 +529,8 @@ public class TestLintClient extends LintCliClient {
             task.driverConfigurator.configure(driver);
         }
 
-        if (task.listener != null) {
-            driver.addLintListener(task.listener);
+        for (LintListener listener : task.listeners) {
+            driver.addLintListener(listener);
         }
 
         validateIssueIds();
@@ -579,6 +570,16 @@ public class TestLintClient extends LintCliClient {
             prev = incident;
         }
 
+        String result = writeOutput ? writeOutput(incidents) : "";
+
+        for (LintListener listener : task.listeners) {
+            driver.removeLintListener(listener);
+        }
+
+        return result;
+    }
+
+    public String writeOutput(List<Incident> incidents) throws IOException {
         LintStats stats = LintStats.Companion.create(getErrorCount(), getWarningCount());
         for (Reporter reporter : getFlags().getReporters()) {
             reporter.write(stats, incidents);
@@ -596,11 +597,6 @@ public class TestLintClient extends LintCliClient {
         }
 
         result = cleanup(result);
-
-        if (task.listener != null) {
-            driver.removeLintListener(task.listener);
-        }
-
         return result;
     }
 
@@ -809,7 +805,15 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
-        if (task.messageChecker != null) {
+        if (task.messageChecker != null
+                // Don't run this if there's an internal failure instead; this is just going
+                // to be confusing and we want to reach the final report comparison instead which
+                // will show the lint error
+                && !(!task.allowExceptions
+                        && issue == IssueRegistry.LINT_ERROR
+                        && fix instanceof LintFix.DataMap
+                        && ((LintFix.DataMap) fix).getThrowable(LintDriver.KEY_THROWABLE)
+                                != null)) {
             task.messageChecker.checkReportedError(
                     context,
                     issue,
@@ -911,7 +915,7 @@ public class TestLintClient extends LintCliClient {
     }
 
     @Override
-    public void log(Throwable exception, String format, Object... args) {
+    public void log(Throwable exception, String format, @NonNull Object... args) {
         if (exception != null) {
             if (firstThrowable == null) {
                 firstThrowable = exception;

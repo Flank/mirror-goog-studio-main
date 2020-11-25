@@ -17,12 +17,13 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.SdkConstants.DOT_XML
-import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.checks.BuiltinIssueRegistry
+import com.android.tools.lint.checks.infrastructure.TestLintTask.ResultState
 import com.android.tools.lint.client.api.LintBaseline
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.utils.PositionXmlParser
@@ -60,10 +61,9 @@ import javax.swing.text.PlainDocument
 
 class TestLintResult internal constructor(
     private val task: TestLintTask,
-    private val rootDir: File,
-    private val output: String?,
-    private val throwable: Throwable?,
-    private val incidents: List<Incident>
+    private val states: MutableMap<TestMode?, ResultState>,
+    /** The mode to use for result tasks that do not pass in a specific mode to check */
+    private val defaultMode: TestMode
 ) {
     private var maxLineLength: Int = 0
 
@@ -82,22 +82,35 @@ class TestLintResult internal constructor(
 
     /**
      * Checks that the lint result had the expected report format.
+     * The [expectedText] is the output of the text report generated
+     * from the text (which you can customize with [textFormat].)
+     * If the lint check is expected to throw an exception, you can
+     * pass in its class with [expectedException]. The
+     * [transformer] lets you modify the test results; the default
+     * one will unify paths and remove absolute paths to just be
+     * relative to the test roots. Finally, the [testMode] lets you
+     * check a particular test type output.
      *
      * @param expectedText the text to expect
+     * @param expectedException class, if any
+     * @param
      * @return this
      */
     @JvmOverloads
     fun expect(
         expectedText: String,
         expectedException: Class<out Exception>? = null,
-        transformer: TestResultTransformer = TestResultTransformer { it }
+        transformer: TestResultTransformer = TestResultTransformer { it },
+        testMode: TestMode = defaultMode
     ): TestLintResult {
+        val throwable = states[testMode]?.firstThrowable
         if (expectedException == null && !task.allowExceptions && throwable != null) {
             throw throwable
         }
 
-        val actual = transformer.transform(describeOutput(expectedException))
+        val actual = transformer.transform(describeOutput(expectedException, testMode))
         val expected = normalizeOutput(expectedText)
+
         if (actual.trim() != expected.trimIndent().trim()) {
             // See if it's a Windows path issue
             if (actual == expected.replace(File.separatorChar, '/')) {
@@ -118,13 +131,24 @@ class TestLintResult internal constructor(
         return this
     }
 
+    private fun describeOutput(
+        expectedException: Class<out Throwable>? = null,
+        testMode: TestMode = defaultMode
+    ): String {
+        val state = states[testMode]!!
+        return formatOutput(state.output, state.firstThrowable, expectedException)
+    }
+
     /**
      * The test output is already formatted by the text reporter in the states passed
      * in to this result, but we do some extra post processing here to truncate output,
      * clean up whitespace only diffs, etc.
      */
-    private fun describeOutput(expectedThrowable: Class<out Throwable>? = null): String {
-        val originalOutput = this.output ?: ""
+    private fun formatOutput(
+        originalOutput: String,
+        throwable: Throwable?,
+        expectedThrowable: Class<out Throwable>?
+    ): String {
         var output = originalOutput
         if (maxLineLength > TRUNCATION_MARKER.length) {
             val sb = StringBuilder()
@@ -147,7 +171,10 @@ class TestLintResult internal constructor(
         return if (throwable != null) {
             val writer = StringWriter()
             if (expectedThrowable != null && expectedThrowable.isInstance(throwable)) {
-                writer.write("${throwable.message}\n")
+                val throwableMessage = throwable.message
+                if (throwableMessage != null && !output.contains(throwableMessage)) {
+                    writer.write("$throwableMessage\n")
+                }
             } else {
                 throwable.printStackTrace(PrintWriter(writer))
             }
@@ -225,7 +252,7 @@ class TestLintResult internal constructor(
                     val positionMap = Maps.newHashMap<Int, javax.swing.text.Position>()
 
                     // Find any errors reported in this document
-                    val matches = findIncidents(targetPath)
+                    val matches = findIncidents(targetPath, defaultMode)
 
                     for (incident in matches) {
                         val location = incident.location
@@ -296,7 +323,10 @@ class TestLintResult internal constructor(
         return this
     }
 
-    private fun findIncidents(targetFile: String): List<Incident> {
+    private fun findIncidents(targetFile: String, mode: TestMode): List<Incident> {
+        val state = states[mode]!!
+        val incidents = state.incidents
+
         // The target file should be platform neutral (/, not \ as separator)
         assertTrue(targetFile, !targetFile.contains("\\"))
 
@@ -328,6 +358,10 @@ class TestLintResult internal constructor(
         @Language("RegExp") regexp: String,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
+        val throwable = states[defaultMode]?.firstThrowable
+        if (!task.allowExceptions && throwable != null) {
+            throw throwable
+        }
         val output = transformer.transform(describeOutput())
         val pattern = Pattern.compile(regexp, MULTILINE)
         val found = pattern.matcher(output).find()
@@ -395,6 +429,13 @@ class TestLintResult internal constructor(
      * @return this
      */
     fun expectCount(expectedCount: Int, vararg severities: Severity): TestLintResult {
+        val state = states[defaultMode]!!
+        val throwable = state.firstThrowable
+        val incidents = state.incidents
+
+        if (!task.allowExceptions && throwable != null) {
+            throw throwable
+        }
         var count = 0
         for (incident in incidents) {
             if (ArrayUtil.contains(incident.severity, *severities)) {
@@ -418,9 +459,18 @@ class TestLintResult internal constructor(
         return this
     }
 
-    /** Verify quick fixes  */
+    /** Verify quick fixes */
     fun verifyFixes(): LintFixVerifier {
-        return LintFixVerifier(task, incidents)
+        return LintFixVerifier(task, states[defaultMode]!!)
+    }
+
+    /**
+     * Verify quick fixes for a particular test type. Most checks have
+     * identical output and quickfixes across test types, but not all,
+     * so this lets you test individual fixes for each type.
+     */
+    fun verifyFixes(testMode: TestMode): LintFixVerifier {
+        return LintFixVerifier(task, states[testMode]!!)
     }
 
     /**
@@ -648,6 +698,12 @@ class TestLintResult internal constructor(
         vararg checkers: TestResultChecker
     ): TestLintResult {
         assertTrue(xml || html || sarif)
+        val state = states[defaultMode]!!
+        val throwable = state.firstThrowable
+        val incidents = state.incidents
+        if (!task.allowExceptions && throwable != null) {
+            throw throwable
+        }
         try {
             // Place the report file near the project sources if possible to make absolute
             // paths (in HTML Reports etc, which are relative to the report) as close as
@@ -700,7 +756,8 @@ class TestLintResult internal constructor(
             val stats = LintStats.create(incidents, null as LintBaseline?)
             reporter.write(stats, incidents)
             val actual = normalizeOutput(Files.asCharSource(file, Charsets.UTF_8).read())
-            val transformed = task.stripRoot(rootDir, transformer.transform(actual))
+            val defaultState = states[defaultMode]!!
+            val transformed = task.stripRoot(defaultState.rootDir, transformer.transform(actual))
             for (checker in checkers) {
                 checker.check(transformed)
             }
@@ -728,6 +785,9 @@ class TestLintResult internal constructor(
     }
 
     private fun cleanup() {
+        for (state in states.values) {
+            state.client.disposeProjects(emptyList())
+        }
         UastEnvironment.disposeApplicationEnvironment()
     }
 

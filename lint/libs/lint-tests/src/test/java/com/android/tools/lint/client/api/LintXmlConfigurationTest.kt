@@ -30,6 +30,7 @@ import com.android.tools.lint.checks.SecureRandomGeneratorDetector
 import com.android.tools.lint.checks.TooManyViewsDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Context
@@ -1191,6 +1192,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                     check(driver, project, configuration)
                 }
             })
+            .testModes(TestMode.DEFAULT)
             .run()
             .expect(expected)
     }

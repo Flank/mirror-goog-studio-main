@@ -19,7 +19,9 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_GRADLE;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
 import org.intellij.lang.annotations.Language;
 
@@ -1526,9 +1528,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "package androidx.viewbinding;\n"
                                         + "public interface ViewBinding {\n"
                                         + "}"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .run()
                 .expect(
                         "src/main/res/layout/activity_ignored.xml:2: Warning: The resource R.layout.activity_ignored appears to be unused [UnusedResources]\n"
@@ -1624,9 +1624,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "package androidx.viewbinding;\n"
                                         + "public interface ViewBinding {\n"
                                         + "}"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .run()
                 .expectClean();
     }
@@ -1740,9 +1738,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
                                         + "    <string name=\"hello\">Hello</string>\n"
                                         + "</resources>\n"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();
@@ -1786,9 +1782,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    <item name=\"fab4\" type=\"id\"/>\n"
                                         + "    <item name=\"fab5\" type=\"id\"/>\n"
                                         + "</resources>\n"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .issues(UnusedResourceDetector.ISSUE_IDS)
                 .run()
                 .expectClean();
@@ -2158,4 +2152,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                             + "    <string name=\"hello\">Hello</string>\n"
                             + "</resources>\n"
                             + "\n");
+
+    private static final TestLintTask.ClientFactory gradleClientFactory =
+            new TestLintTask.ClientFactory() {
+                @NonNull
+                @Override
+                public com.android.tools.lint.checks.infrastructure.TestLintClient create() {
+                    return new com.android.tools.lint.checks.infrastructure.TestLintClient(
+                            CLIENT_GRADLE);
+                }
+            };
 }

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;
 import java.io.File;
@@ -462,19 +463,27 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
 
         // Set up a mock project model for the resource configuration test(s)
         // where we provide a subset of densities to be included
-        com.android.tools.lint.checks.infrastructure.TestLintClient client =
-                new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+
+        TestLintTask.ClientFactory factory =
+                new TestLintTask.ClientFactory() {
                     @NonNull
                     @Override
-                    protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                        return new Project(this, dir, referenceDir) {
+                    public com.android.tools.lint.checks.infrastructure.TestLintClient create() {
+                        return new com.android.tools.lint.checks.infrastructure.TestLintClient() {
                             @NonNull
                             @Override
-                            public List<File> getJavaLibraries(boolean includeProvided) {
-                                if (!includeProvided) {
-                                    return Collections.emptyList();
-                                }
-                                return super.getJavaLibraries(true);
+                            protected Project createProject(
+                                    @NonNull File dir, @NonNull File referenceDir) {
+                                return new Project(this, dir, referenceDir) {
+                                    @NonNull
+                                    @Override
+                                    public List<File> getJavaLibraries(boolean includeProvided) {
+                                        if (!includeProvided) {
+                                            return Collections.emptyList();
+                                        }
+                                        return super.getJavaLibraries(true);
+                                    }
+                                };
                             }
                         };
                     }
@@ -482,7 +491,7 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
 
         // Regression test for https://code.google.com/p/android/issues/detail?id=187191
         lint().files(manifest().minSdk(14), mLayout, mThemes, mThemes2, mUnsupported)
-                .client(client)
+                .clientFactory(factory)
                 .sdkHome(TestUtils.getSdk())
                 .run()
                 .expectClean();

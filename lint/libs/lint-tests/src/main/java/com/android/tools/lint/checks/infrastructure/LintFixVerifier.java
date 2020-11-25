@@ -72,9 +72,9 @@ public class LintFixVerifier {
     private Boolean reformat;
     private boolean robot = false;
 
-    LintFixVerifier(TestLintTask task, List<Incident> incidents) {
+    public LintFixVerifier(@NonNull TestLintTask task, @NonNull TestLintTask.ResultState state) {
         this.task = task;
-        this.incidents = incidents;
+        this.incidents = state.incidents;
     }
 
     /** Sets up 2 lines of context in the diffs */
@@ -191,7 +191,7 @@ public class LintFixVerifier {
         List<String> names = Lists.newArrayList();
         for (Incident incident : incidents) {
             LintFix data = incident.getFix();
-            if (robot && !data.robot) {
+            if (data != null && robot && !data.robot) {
                 // Fix requires human intervention
                 continue;
             }
@@ -279,7 +279,7 @@ public class LintFixVerifier {
     }
 
     @Nullable
-    private static String applyFix(
+    private String applyFix(
             @NonNull Incident incident, @NonNull LintFix lintFix, @NonNull String before) {
         if (lintFix instanceof ReplaceString) {
             ReplaceString replaceFix = (ReplaceString) lintFix;
@@ -315,7 +315,7 @@ public class LintFixVerifier {
         return false;
     }
 
-    private static String checkSetAttribute(
+    private String checkSetAttribute(
             @NonNull SetAttribute setFix, @NonNull String contents, @NonNull Incident incident) {
         Location location = setFix.range != null ? setFix.range : incident.getLocation();
         Position start = location.getStart();
@@ -633,7 +633,7 @@ public class LintFixVerifier {
         }
     }
 
-    private static void appendShowUrl(
+    private void appendShowUrl(
             @NonNull Incident incident, @NonNull ShowUrl fix, @NonNull StringBuilder diffs) {
         String targetPath = incident.getDisplayPath();
         diffs.append("Show URL for ")
