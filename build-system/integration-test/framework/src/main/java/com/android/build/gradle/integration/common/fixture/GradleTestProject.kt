@@ -1339,8 +1339,8 @@ allprojects { proj ->
     }
 
     private fun createLocalProp(destDir: File): File {
-        val localProp = ProjectProperties.create(
-            destDir.absolutePath, ProjectProperties.PropertyType.LOCAL
+        val localProp = ProjectPropertiesWorkingCopy.create(
+            destDir.absolutePath, ProjectPropertiesWorkingCopy.PropertyType.LOCAL
         )
         if (withSdk) {
             val androidSdkDir = this.androidSdkDir
