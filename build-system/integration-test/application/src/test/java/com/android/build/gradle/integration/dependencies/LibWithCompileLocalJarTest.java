@@ -41,17 +41,21 @@ public class LibWithCompileLocalJarTest {
     public static void setUp() throws Exception {
         appendToFile(
                 project.getBuildFile(),
-                "\n" +
-                        "apply plugin: \"com.android.library\"\n" +
-                        "\n" +
-                        "android {\n" +
-                        "    compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                        "    buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                        "}\n" +
-                        "\n" +
-                        "dependencies {\n" +
-                        "    compile files(\"libs/util-1.0.jar\")\n" +
-                        "}\n");
+                "\n"
+                        + "apply plugin: \"com.android.library\"\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    api files(\"libs/util-1.0.jar\")\n"
+                        + "}\n");
 
         project.execute("clean", "assembleDebug");
     }

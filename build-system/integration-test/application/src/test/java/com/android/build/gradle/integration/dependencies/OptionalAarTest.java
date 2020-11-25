@@ -41,9 +41,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for optional aar (using the provided scope)
- */
+/** test for optional aar (using the compileOnly scope) */
 public class OptionalAarTest {
 
     @ClassRule

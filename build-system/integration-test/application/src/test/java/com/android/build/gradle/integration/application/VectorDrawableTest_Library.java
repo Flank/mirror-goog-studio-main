@@ -80,7 +80,7 @@ public class VectorDrawableTest_Library {
     @Before
     public void setUpApp() throws IOException {
         GradleTestProject app = project.getSubproject(":app");
-        TestFileUtils.appendToFile(app.getBuildFile(), "dependencies { compile project(':lib') }");
+        TestFileUtils.appendToFile(app.getBuildFile(), "dependencies { api project(':lib') }");
 
         Files.createParentDirs(app.file("src/main/res/drawable/app_vector.xml"));
         TestFileUtils.appendToFile(

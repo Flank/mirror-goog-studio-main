@@ -73,13 +73,17 @@ public class VariantDependencyTest {
                         + "apply plugin: \"com.android.application\"\n"
                         + "\n"
                         + "configurations {\n"
-                        + "    freeLollipopDebugCompile\n"
-                        + "    paidIcsCompile\n"
+                        + "    freeLollipopDebugImplementation\n"
+                        + "    paidIcsImplementation\n"
                         + "}\n"
                         + "\n"
                         + "android {\n"
-                        + "    compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "    buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                        + "    compileSdkVersion "
+                        + DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
                         + "\n"
                         + "    flavorDimensions \"model\", \"api\"\n"
                         + "    productFlavors {\n"
@@ -101,10 +105,10 @@ public class VariantDependencyTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    freeLollipopDebugCompile \"com.android.support:leanback-v17:"
+                        + "    freeLollipopDebugImplementation \"com.android.support:leanback-v17:"
                         + SUPPORT_LIB_VERSION
                         + "\"\n"
-                        + "    paidIcsCompile \"com.android.support:appcompat-v7:"
+                        + "    paidIcsImplementation \"com.android.support:appcompat-v7:"
                         + SUPPORT_LIB_VERSION
                         + "\"\n"
                         + "}\n");

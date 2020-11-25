@@ -66,16 +66,20 @@ public class MultiDexCacheTest {
                         + "    productFlavors {\n"
                         + "        f1 {"
                         + "            minSdkVersion 21\n"
-                        + "            multiDexEnabled " + Boolean.toString(isF1Multidex) +"\n"
+                        + "            multiDexEnabled "
+                        + Boolean.toString(isF1Multidex)
+                        + "\n"
                         + "        }\n"
                         + "        f2 {\n"
                         + "            minSdkVersion 21\n"
-                        + "            multiDexEnabled " + Boolean.toString(isF2Multidex) +"\n"
+                        + "            multiDexEnabled "
+                        + Boolean.toString(isF2Multidex)
+                        + "\n"
                         + "        }\n"
                         + "    }\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "    compile 'com.google.guava:guava:18.0'\n"
+                        + "    api 'com.google.guava:guava:18.0'\n"
                         + "}");
     }
 }

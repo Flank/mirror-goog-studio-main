@@ -485,7 +485,7 @@ public class SdkAutoDownloadTest {
                         + BUILD_TOOLS_VERSION
                         + "\""
                         + System.lineSeparator()
-                        + "dependencies { compile 'foo:bar:baz' }");
+                        + "dependencies { api 'foo:bar:baz' }");
 
         GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
         assertNotNull(result.getException());

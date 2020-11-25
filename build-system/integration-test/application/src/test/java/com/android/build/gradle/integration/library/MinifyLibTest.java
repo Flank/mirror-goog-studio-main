@@ -150,7 +150,8 @@ public class MinifyLibTest {
     public void androidTestWithShrinkedLibrary() throws Exception {
         enableLibShrinking();
 
-        // Test with only androidTestCompile.  Replacing the compile dependency is fine because the
+        // Test with only androidTestImplementation.  Replacing the compile dependency is fine
+        // because the
         // app in the test project don't actually reference the library class directly during
         // compile time.
         TestFileUtils.searchAndReplace(

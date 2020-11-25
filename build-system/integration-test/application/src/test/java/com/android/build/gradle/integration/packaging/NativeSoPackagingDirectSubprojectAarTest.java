@@ -74,7 +74,7 @@ public class NativeSoPackagingDirectSubprojectAarTest {
                 ("apply plugin: 'com.android.application'\n"
                                 + "\n"
                                 + "dependencies {\n"
-                                + "    compile project(':directLib')\n"
+                                + "    api project(':directLib')\n"
                                 + "}\n"
                                 + "\n"
                                 + "android {\n"

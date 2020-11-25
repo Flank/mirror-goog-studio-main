@@ -74,19 +74,19 @@ public class ResPackagingTest {
                                 + "include 'test'\n");
 
         // setup dependencies.
-        TestFileUtils.appendToFile(appProject.getBuildFile(),
+        TestFileUtils.appendToFile(
+                appProject.getBuildFile(),
                 "android {\n"
-                + "    publishNonDefault true\n"
-                + "}\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile project(':library')\n"
-                + "}\n");
+                        + "    publishNonDefault true\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    api project(':library')\n"
+                        + "}\n");
 
-        TestFileUtils.appendToFile(libProject.getBuildFile(),
-                "dependencies {\n"
-                + "    compile project(':library2')\n"
-                + "}\n");
+        TestFileUtils.appendToFile(
+                libProject.getBuildFile(),
+                "dependencies {\n" + "    api project(':library2')\n" + "}\n");
 
         TestFileUtils.appendToFile(testProject.getBuildFile(),
                 "android {\n"

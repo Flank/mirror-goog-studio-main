@@ -92,7 +92,7 @@ public class ProguardAarPackagingTest {
                 "apply plugin: 'com.android.library'\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile fileTree(dir: 'libs', include: '*.jar')\n"
+                        + "    api fileTree(dir: 'libs', include: '*.jar')\n"
                         + "}\n"
                         + "\n"
                         + "android {\n"

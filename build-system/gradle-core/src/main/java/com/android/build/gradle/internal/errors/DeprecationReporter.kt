@@ -55,12 +55,6 @@ interface DeprecationReporter {
         VERSION_4_2(Version.VERSION_4_2),
         VERSION_7_0(Version.VERSION_7_0),
 
-        // deprecation of compile in favor of api/implementation
-        CONFIG_NAME(
-            Version.VERSION_7_0,
-            "For more information, see http://d.android.com/r/tools/update-dependency-configurations.html."
-        ),
-
         // Obsolete dx Dex Options
         DEX_OPTIONS(Version.VERSION_8_0),
 

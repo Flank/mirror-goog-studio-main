@@ -43,7 +43,7 @@ class AutoServiceTest(private val pluginName: String) {
             project.buildFile,
             """
                     |dependencies {
-                    |    provided 'com.google.auto.service:auto-service:1.0-rc2'
+                    |    compileOnly 'com.google.auto.service:auto-service:1.0-rc2'
                     |    annotationProcessor 'com.google.auto.service:auto-service:1.0-rc2'
                     |}
                     |""".trimMargin("|")

@@ -222,7 +222,7 @@ public class MultiDexTest {
                 project.getBuildFile(),
                 "\n"
                         + "dependencies {\n"
-                        + "    androidTestCompile 'com.android.support:appcompat-v7:"
+                        + "    androidTestImplementation 'com.android.support:appcompat-v7:"
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}");

@@ -52,11 +52,14 @@ public class TestWithRemoteAndroidLibDepTest {
         appendToFile(
                 project.getSubproject("app").getBuildFile(),
                 "\n"
-                        + "android.defaultConfig.minSdkVersion " + SUPPORT_LIB_MIN_SDK + "\n"
+                        + "android.defaultConfig.minSdkVersion "
+                        + SUPPORT_LIB_MIN_SDK
+                        + "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:support-v4:"
+                        + SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    androidTestCompile 'com.android.support:appcompat-v7:"
+                        + "    androidTestImplementation 'com.android.support:appcompat-v7:"
                         + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
@@ -65,10 +68,10 @@ public class TestWithRemoteAndroidLibDepTest {
                 project.getSubproject("library").getBuildFile(),
                 "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:support-v4:"
+                        + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
-
     }
 
     @AfterClass

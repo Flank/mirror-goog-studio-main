@@ -26,7 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/** Assemble tests for minifyLib with provided dependency */
+/** Assemble tests for minifyLib with compileOnly dependency */
 public class MinifyLibProvidedDepTest {
     @ClassRule
     public static GradleTestProject project =
@@ -38,7 +38,7 @@ public class MinifyLibProvidedDepTest {
                 project.getBuildFile(),
                 ""
                         + "dependencies {\n"
-                        + "    provided 'com.android.support:appcompat-v7:"
+                        + "    compileOnly 'com.android.support:appcompat-v7:"
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");

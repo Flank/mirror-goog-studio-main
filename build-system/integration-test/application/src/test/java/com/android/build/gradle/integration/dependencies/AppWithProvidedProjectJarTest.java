@@ -36,9 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for provided java submodule in app
- */
+/** test for compileOnly java submodule in app */
 public class AppWithProvidedProjectJarTest {
 
     @ClassRule

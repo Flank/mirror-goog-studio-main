@@ -35,9 +35,7 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
-/**
- * test for provided library in app
- */
+/** test for compileOnly library in app */
 public class AppWithProvidedLibTest {
 
     @ClassRule
@@ -74,11 +72,9 @@ public class AppWithProvidedLibTest {
                                 + "</manifest>\n");
 
         TestFileUtils.appendToFile(project.getSettingsFile(), "\ninclude 'library'");
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    provided project(\":library\")\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    compileOnly project(\":library\")\n" + "}\n");
         modelContainer =
                 project.model().withFullDependencies().ignoreSyncIssues().fetchAndroidProjects();
     }
@@ -95,7 +91,7 @@ public class AppWithProvidedLibTest {
 
         assertThat(result.getFailureMessage())
                 .isEqualTo(
-                        "The following Android dependencies are set to compileOnly/provided which is not supported:\n"
+                        "The following Android dependencies are set to compileOnly which is not supported:\n"
                                 + "-> :library");
     }
 

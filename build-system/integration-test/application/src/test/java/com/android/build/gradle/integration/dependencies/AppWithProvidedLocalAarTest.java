@@ -26,9 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for provided (apk) local aar in app
- */
+/** test for compileOnly (apk) local aar in app */
 public class AppWithProvidedLocalAarTest {
 
     @ClassRule
@@ -39,18 +37,23 @@ public class AppWithProvidedLocalAarTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.application\"\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    provided files(\"libs/baseLib-1.0.aar\")\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.application\"\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compileOnly files(\"libs/baseLib-1.0.aar\")\n"
+                        + "}\n");
 
         model = project.model().ignoreSyncIssues().fetchAndroidProjects();
     }

@@ -133,10 +133,10 @@ public class TestWithSameDepAsAppConnectedTest {
                 project.getBuildFile(),
                 "\n"
                         + "dependencies {\n"
-                        + "    compile \""
+                        + "    api \""
                         + this.appDependency
                         + "\"\n"
-                        + "    androidTestCompile \""
+                        + "    androidTestImplementation \""
                         + this.testDependency
                         + "\"\n"
                         + "}\n"

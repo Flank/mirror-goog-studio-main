@@ -162,9 +162,9 @@ public class VariantDependenciesBuilder {
             runtimeClasspaths.add(implementationConfig);
             implementationConfigurations.add(implementationConfig);
 
-            String apiConfigName = sourceSet.getApiConfigurationName();
-            if (apiConfigName != null) {
-                apiClasspaths.add(configs.getByName(apiConfigName));
+            Configuration apiConfig = configs.findByName(sourceSet.getApiConfigurationName());
+            if (apiConfig != null) {
+                apiClasspaths.add(apiConfig);
             }
 
             annotationConfigs.add(

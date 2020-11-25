@@ -67,8 +67,8 @@ public class TestWithSameDepAsAppWithProguard {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "  compile 'com.android.tools:annotations:+'\n"
-                        + "  androidTestCompile 'com.android.tools:annotations:+'\n"
+                        + "  api 'com.android.tools:annotations:+'\n"
+                        + "  androidTestImplementation 'com.android.tools:annotations:+'\n"
                         + "  androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
                         + "  androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
                         + "}\n");

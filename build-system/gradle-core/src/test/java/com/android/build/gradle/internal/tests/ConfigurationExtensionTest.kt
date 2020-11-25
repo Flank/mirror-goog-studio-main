@@ -59,23 +59,14 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
     private lateinit var configExtensionMap: Multimap<String, String>
 
     // basic relationship
-    private val appBasics = multimapOf(
-            "implementation" to "api",
-            "api" to "compile",
-            "runtimeOnly" to "apk",
-            "compileOnly" to "provided")
+    private val appBasics = multimapOf("implementation" to "api")
 
-    private val libBasics = multimapOf(
-            "implementation" to "api",
-            "api" to "compile",
-            "runtimeOnly" to "publish",
-            "compileOnly" to "provided")
+    private val libBasics = multimapOf("implementation" to "api")
 
     // variant to basic relationship
     private val compileToRaw = multimapWithSingleKeyOf(
             "lollipopDemoDebugCompileClasspath",
             "api",
-            "compile",
             "implementation",
             "compileOnly",
             "lollipopImplementation",
@@ -87,7 +78,6 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
     private val runtimeToRaw = multimapWithSingleKeyOf(
             "lollipopDemoDebugRuntimeClasspath",
             "api",
-            "compile",
             "implementation",
             "runtimeOnly",
             "lollipopImplementation",
@@ -100,59 +90,29 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
     private val testCompileToRaw = multimapWithSingleKeyOf(
             "lollipopDemoDebugUnitTestCompileClasspath",
             "api",
-            "compile",
             "debugApi",
-            "debugCompile",
             "debugImplementation",
             "demoApi",
-            "demoCompile",
             "demoImplementation",
             "implementation",
             "lollipopApi",
-            "lollipopCompile",
             "lollipopDemoApi",
-            "lollipopDemoCompile",
             "lollipopDemoDebugApi",
-            "lollipopDemoDebugCompile",
             "lollipopDemoDebugImplementation",
             "lollipopDemoImplementation",
             "lollipopImplementation",
-            "testApi",
-            "testCompile",
             "testCompileOnly",
-            "testDebugApi",
-            "testDebugCompile",
             "testDebugCompileOnly",
             "testDebugImplementation",
-            "testDebugProvided",
-            "testDemoApi",
-            "testDemoCompile",
             "testDemoCompileOnly",
             "testDemoImplementation",
-            "testDemoProvided",
             "testImplementation",
-            "testLollipopApi",
-            "testLollipopCompile",
             "testLollipopCompileOnly",
-            "testLollipopDemoApi",
-            "testLollipopDemoCompile",
             "testLollipopDemoCompileOnly",
-            "testLollipopDemoDebugApi",
-            "testLollipopDemoDebugCompile",
             "testLollipopDemoDebugCompileOnly",
             "testLollipopDemoDebugImplementation",
-            "testLollipopDemoDebugProvided",
             "testLollipopDemoImplementation",
-            "testLollipopDemoProvided",
-            "testLollipopImplementation",
-            "testLollipopProvided",
-            "testProvided")
-
-    private val publish = when (pluginType) {
-        TestProjects.Plugin.APP -> "Apk"
-        TestProjects.Plugin.LIBRARY -> "Publish"
-        else -> throw IllegalStateException()
-    }
+            "testLollipopImplementation")
 
     /**
      * Runtime Test to prod relationship, exhaustively listed.
@@ -164,29 +124,11 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
      */
     private val testRuntimeToRaw = multimapWithSingleKeyOf(
             "lollipopDemoDebugUnitTestRuntimeClasspath",
-            "test$publish",
-            "testApi",
-            "testCompile",
-            "testDebug$publish",
-            "testDebugApi",
-            "testDebugCompile",
             "testDebugImplementation",
             "testDebugRuntimeOnly",
-            "testDemo$publish",
-            "testDemoApi",
-            "testDemoCompile",
             "testDemoImplementation",
             "testDemoRuntimeOnly",
             "testImplementation",
-            "testLollipop$publish",
-            "testLollipopApi",
-            "testLollipopCompile",
-            "testLollipopDemo$publish",
-            "testLollipopDemoApi",
-            "testLollipopDemoCompile",
-            "testLollipopDemoDebug$publish",
-            "testLollipopDemoDebugApi",
-            "testLollipopDemoDebugCompile",
             "testLollipopDemoDebugImplementation",
             "testLollipopDemoDebugRuntimeOnly",
             "testLollipopDemoImplementation",
@@ -198,9 +140,6 @@ class ConfigurationExtensionTest(private val pluginType: TestProjects.Plugin) {
     // forbidden relationship
     private val forbiddenVariantToRaw = multimapOf(
             "lollipopDemoDebugCompileClasspath" to "runtimeOnly",
-            "lollipopDemoDebugCompileClasspath" to "apk",
-            "lollipopDemoDebugCompileClasspath" to "publish",
-            "lollipopDemoDebugRuntimeClasspath" to "provided",
             "lollipopDemoDebugRuntimeClasspath" to "compileOnly")
 
     @Before

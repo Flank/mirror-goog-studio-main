@@ -50,7 +50,7 @@ class DataBindingDesugarAppTest {
                 |android.buildFeatures.dataBinding true
                 |android.defaultConfig.minSdkVersion $SUPPORT_LIB_MIN_SDK
                 |dependencies {
-                |    compile 'com.android.support:support-v4:$SUPPORT_LIB_VERSION'
+                |    implementation 'com.android.support:support-v4:$SUPPORT_LIB_VERSION'
                 |}
                 """.trimMargin("|")
         )

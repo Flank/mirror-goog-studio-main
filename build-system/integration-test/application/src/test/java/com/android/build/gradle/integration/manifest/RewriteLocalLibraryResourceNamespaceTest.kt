@@ -46,7 +46,7 @@ class RewriteLocalLibraryResourceNamespaceTest {
             appProject.buildFile,
             """
              dependencies {
-                compile project(':library')
+                api project(':library')
             }
             android.aaptOptions.namespaced = true
             """.trimIndent()

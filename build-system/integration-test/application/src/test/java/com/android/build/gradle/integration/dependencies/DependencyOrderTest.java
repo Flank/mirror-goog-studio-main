@@ -48,20 +48,19 @@ public class DependencyOrderTest {
 
         // add the library2 to make sure that whether it's before or after library, it'll still be
         // ordered after (since library depends on library2.)
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(\":library2\")\n" +
-                "    compile project(\":library\")\n" +
-                "    compile project(\":library2\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    api project(\":library2\")\n"
+                        + "    api project(\":library\")\n"
+                        + "    api project(\":library2\")\n"
+                        + "}\n");
 
         final GradleTestProject libraryProject = project.getSubproject("library");
-        appendToFile(libraryProject.getBuildFile(),
-                "\n" +
-                        "dependencies {\n" +
-                        "    compile project(\":library2\")\n" +
-                        "}\n");
+        appendToFile(
+                libraryProject.getBuildFile(),
+                "\n" + "dependencies {\n" + "    api project(\":library2\")\n" + "}\n");
 
         File mainDir = libraryProject.getMainSrcDir().getParentFile();
         File assetFile = FileUtils.join(mainDir, "assets", "foo.txt");

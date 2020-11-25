@@ -50,9 +50,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for compile jar in app through an aar dependency
- */
+/** test for api jar in app through an aar dependency */
 public class AppWithCompileIndirectJavaProjectTest {
 
     @ClassRule

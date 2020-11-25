@@ -124,13 +124,13 @@ public class TestingSupportLibraryConnectedTest {
                         + "        minSdkVersion 18\n"
                         + "    }\n"
                         + "    dependencies {\n"
-                        + "        androidTestCompile 'com.android.support:support-annotations:"
+                        + "        androidTestImplementation 'com.android.support:support-annotations:"
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "        androidTestCompile 'com.android.support.test:runner:"
+                        + "        androidTestImplementation 'com.android.support.test:runner:"
                         + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "        androidTestCompile 'com.android.support.test:rules:"
+                        + "        androidTestImplementation 'com.android.support.test:rules:"
                         + TestVersions.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
                         + "    }\n"
