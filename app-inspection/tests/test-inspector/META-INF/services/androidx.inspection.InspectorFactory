@@ -7,3 +7,4 @@ test.inspector.TestExecutorsInspectorFactory
 test.inspector.TestNoReplyInspectorFactory
 test.inspector.PayloadInspectorFactory
 test.inspector.TestProguardCheckInspectorFactory
+test.inspector.TestNativeInspectorFactory

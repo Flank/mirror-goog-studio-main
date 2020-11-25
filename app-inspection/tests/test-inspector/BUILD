@@ -1,4 +1,4 @@
-load("//tools/base/bazel:android.bzl", "dex_library")
+load("//tools/base/bazel:android.bzl", "dex_library", "jni_library", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
 
 java_library(
@@ -28,7 +28,12 @@ dex_library(
 java_library(
     name = "test-inspector-resources",
     resource_strip_prefix = "tools/base/app-inspection/tests/test-inspector",
-    resources = glob(["META-INF/**"]),
+    resources = glob(["META-INF/**"]) +
+                ## this need only to run tests on the linux host
+                select({
+                    "//tools/base/bazel:windows": [],
+                    "//conditions:default": [":hostlib"],
+                }),
 )
 
 merge_jars(
@@ -37,11 +42,43 @@ merge_jars(
     jars = [
         ":test-inspector-sources_dexed",
         ":test-inspector-resources",
-    ],
+    ] + select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [":inspectorjni"],
+    }),
 )
 
 java_import(
     name = "test-inspector",
     jars = [":test-inspector_merged.jar"],
     visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "hostlib",
+    srcs = [
+        ":libtest_jni.so",  # a filegroup with multiple files in it ==> $(locations)
+    ],
+    outs = ["lib/host/libtest_jni.so"],
+    cmd = "cp $(locations :libtest_jni.so) $@",
+)
+
+cc_binary(
+    name = "libtest_jni.so",
+    srcs = ["native/test_jni.cpp"],
+    copts = ANDROID_COPTS,
+    linkopts = ANDROID_LINKOPTS,
+    linkshared = True,
+    visibility = ["//visibility:public"],
+    deps = ["//prebuilts/studio/jdk:jni_headers"],
+)
+
+jni_library(
+    name = "inspectorjni",
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [":libtest_jni.so.stripped"],
+    }),
 )
