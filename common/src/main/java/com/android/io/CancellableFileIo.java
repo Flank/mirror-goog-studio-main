@@ -157,7 +157,12 @@ public class CancellableFileIo {
         return Files.readAttributes(file, type, options);
     }
 
-    /** @see Files#list(Path) */
+    /**
+     * @see Files#list(Path)
+     *
+     * <p>The {@code try}-with-resources construct should be used to ensure that the stream is
+     * closed after the stream operations are completed.
+     */
     @Slow
     @NonNull
     public static Stream<Path> list(@NonNull Path dir) throws IOException {
@@ -165,7 +170,12 @@ public class CancellableFileIo {
         return Files.list(dir);
     }
 
-    /** @see Files#walk(Path, FileVisitOption...) */
+    /**
+     * @see Files#walk(Path, FileVisitOption...)
+     *
+     * <p>The {@code try}-with-resources construct should be used to ensure that the stream is
+     * closed after the stream operations are completed.
+     */
     @Slow
     @NonNull
     public static Stream<Path> walk(@NonNull Path start, @NonNull FileVisitOption... options)
@@ -173,7 +183,12 @@ public class CancellableFileIo {
         return walk(start, Integer.MAX_VALUE, options);
     }
 
-    /** @see Files#walk(Path, int, FileVisitOption...) */
+    /**
+     * @see Files#walk(Path, int, FileVisitOption...)
+     *
+     * <p>The {@code try}-with-resources construct should be used to ensure that the stream is
+     * closed after the stream operations are completed.
+     */
     @Slow
     @NonNull
     public static Stream<Path> walk(
