@@ -44,6 +44,9 @@ import java.util.stream.Stream;
  * Write operations (such as delete, etc) are not exposed by this class because cancelling them is
  * potentially unsafe. Please invoke write operations through the {@link Files} class directly.
  *
+ * <p>Please don't add convenience methods to this class. All methods except {@link #readText} have
+ * to closely match {@link Files}.
+ *
  * @see Files
  * @see ProgressManagerAdapter
  */
