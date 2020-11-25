@@ -15,23 +15,23 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.io.Images.readImage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.util.GeneratorTester;
 import com.android.testutils.TestResources;
-import com.google.common.io.Files;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.regex.Pattern;
-import javax.imageio.ImageIO;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
@@ -80,15 +80,15 @@ public class VectorDrawableGeneratorTest extends TestCase {
         }
         String imageName = testFileName + ".png";
 
-        String parentDir =  "vectordrawable" + File.separator;
-        File parentDirFile = TestResources.getDirectory(getClass(), "/testData/vectordrawable");
-
-        File incomingFile = new File(parentDirFile, incomingFileName);
+        String parentDirName =  "vectordrawable" + File.separator;
+        Path parentDir =
+                TestResources.getDirectory(getClass(), "/testData/vectordrawable").toPath();
+        Path incomingFile = parentDir.resolve(incomingFileName);
         String xmlContent;
         String errorLog = null;
         if (type == FileType.SVG) {
             OutputStream outStream = new ByteArrayOutputStream();
-            errorLog = Svg2Vector.parseSvgToXml(incomingFile, outStream);
+            errorLog = Svg2Vector.parseSvgToXml(incomingFile.toFile(), outStream);
             if (expectedError != null) {
                 assertNotNull(errorLog);
                 assertFalse(errorLog.isEmpty());
@@ -102,8 +102,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
                 return errorLog;
             }
             if (dumpXml) {
-                File tempXmlFile = new File(parentDirFile, imageName + ".xml");
-                try (PrintWriter writer = new PrintWriter(tempXmlFile, UTF_8.name())) {
+                Path tempXmlFile = parentDir.resolve(imageName + ".xml");
+                try (PrintWriter writer = new PrintWriter(tempXmlFile.toFile(), UTF_8.name())) {
                     writer.println(xmlContent);
                 }
             }
@@ -111,7 +111,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
                 fail("Invalid VectorDrawable produced");
             }
         } else {
-            xmlContent = Files.asCharSource(incomingFile, UTF_8).read();
+            xmlContent = new String(Files.readAllBytes(incomingFile), StandardCharsets.UTF_8);
         }
 
         VdPreview.TargetSize imageTargetSize =
@@ -120,11 +120,11 @@ public class VectorDrawableGeneratorTest extends TestCase {
         BufferedImage image =
                 VdPreview.getPreviewFromVectorXml(imageTargetSize, xmlContent, builder);
 
-        String imageNameWithParent = parentDir + imageName;
-        File pngFile = new File(parentDirFile, imageName);
-        if (!pngFile.exists()) {
+        String imageNameWithParent = parentDirName + imageName;
+        Path pngFile = parentDir.resolve(imageName);
+        if (Files.notExists(pngFile)) {
             String golden = imageNameWithParent;
-            String path = parentDirFile.getPath();
+            String path = parentDir.toString();
             int pos = path.replace('\\', '/').indexOf("/tools/base/");
             if (pos > 0) {
                 golden = path.substring(0, pos) + File.separator
@@ -133,8 +133,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
             GENERATOR_TESTER.generateGoldenImage(image, golden, imageName);
             fail("Golden file " + golden + " didn't exist, created by the test.");
         } else {
-            InputStream is = new FileInputStream(pngFile);
-            BufferedImage goldenImage = ImageIO.read(is);
+            BufferedImage goldenImage = readImage(pngFile);
             GeneratorTester.assertImageSimilar(
                     imageNameWithParent, goldenImage, image, DIFF_THRESHOLD_PERCENT);
         }

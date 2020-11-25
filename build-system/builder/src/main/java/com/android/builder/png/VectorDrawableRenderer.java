@@ -15,8 +15,9 @@
  */
 package com.android.builder.png;
 
-import static com.android.SdkConstants.NS_RESOURCES;
+import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.TAG_VECTOR;
+import static com.android.io.Images.writeImage;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -27,7 +28,6 @@ import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.ide.common.resources.configuration.VersionQualifier;
-import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.vectordrawable.IllegalVectorDrawableResourceRefException;
 import com.android.ide.common.vectordrawable.VdPreview;
 import com.android.resources.Density;
@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Supplier;
-import javax.imageio.ImageIO;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -222,7 +221,7 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                         int n = xmlReader.getAttributeCount();
                         for (int i = 0; i < n; i++) {
                             if ("fillType".equals(xmlReader.getAttributeLocalName(i))
-                                    && NS_RESOURCES.equals(xmlReader.getAttributeNamespace(i))) {
+                                    && ANDROID_URI.equals(xmlReader.getAttributeNamespace(i))) {
                                 return PreprocessingReason.FILLTYPE_SUPPORT;
                             }
                         }
@@ -291,7 +290,7 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                         e.getValue(), e.getSourcePosition(), message);
             }
             checkState(image != null, "Generating the image failed.");
-            ImageIO.write(image, "png", toBeGenerated);
+            writeImage(image, "png", toBeGenerated.toPath());
         }
     }
 

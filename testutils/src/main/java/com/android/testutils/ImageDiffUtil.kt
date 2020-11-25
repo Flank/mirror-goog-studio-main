@@ -15,6 +15,8 @@
  */
 package com.android.testutils
 
+import com.android.io.readImage
+import com.android.io.writeImage
 import org.junit.Assert
 import java.awt.Color
 import java.awt.Image
@@ -24,7 +26,6 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -59,13 +60,12 @@ object ImageDiffUtil {
             Files.createDirectories(goldenFile.parent)
             val outFile = TestUtils.getTestOutputDir().toPath().resolve(goldenFile.fileName.toString())
             // This will show up in undeclared outputs when running on a test server
-            ImageIO.write(converted, "PNG", outFile.toFile())
+            converted.writeImage("PNG", outFile)
             // This will copy the file to its designated location. Useful when running locally.
-            ImageIO.write(converted, "PNG", goldenFile.toFile())
-            Assert.fail("File did not exist, created here: $goldenFile and in undeclared outputs")
+            converted.writeImage("PNG", goldenFile)
+            throw AssertionError("File did not exist, created here: $goldenFile and in undeclared outputs")
         }
-        val goldenImage = ImageIO.read(goldenFile.toFile())
-        assert(goldenImage != null) { "Failed to read image from " + goldenFile.toAbsolutePath() }
+        val goldenImage = goldenFile.readImage()
         assertImageSimilar(goldenFile.fileName.toString(), goldenImage, actual, maxPercentDifferent)
     }
 
@@ -95,13 +95,7 @@ object ImageDiffUtil {
         val imageWidth = min(goldenImage.width, bufferedImage.width)
         val imageHeight = min(goldenImage.height, bufferedImage.height)
 
-        // Blur the images to account for the scenarios where there are pixel
-        // differences
-        // in where a sharp edge occurs
-        // bufferedGoldenImage = blur(bufferedGoldenImage, 6);
-        // bufferedimage = blur(image, 6);
         val width = 3 * imageWidth
-
         @Suppress("UnnecessaryVariable")
         val height = imageHeight // makes code more readable
         val deltaImage = BufferedImage(width, height, TYPE_INT_ARGB)
@@ -118,7 +112,7 @@ object ImageDiffUtil {
                     continue
                 }
 
-                // If the pixels have no opacity, don't delta colors at all
+                // If the pixels have no opacity, don't delta colors at all.
                 if (goldenRgb and -0x1000000 == 0 && rgb and -0x1000000 == 0) {
                     deltaImage.setRGB(imageWidth + x, y, 0x00808080)
                     continue
@@ -177,17 +171,11 @@ object ImageDiffUtil {
 
             // Write image diff to undeclared outputs dir so ResultStore archives.
             val output =
-                File(
-                    TestUtils.getTestOutputDir(),
-                    "delta-" + imageName.replace(File.separatorChar, '_')
-                )
-            if (output.exists()) {
-                val deleted = output.delete()
-                Assert.assertTrue(deleted)
-            }
-            output.mkdirs()
-            ImageIO.write(deltaImage, "PNG", output)
-            error += " - see details in archived file " + output.path
+                    TestUtils.getTestOutputDir().toPath().resolve(
+                    "delta-" + imageName.replace(File.separatorChar, '_'))
+            Files.createDirectories(output.parent)
+            deltaImage.writeImage("PNG", output)
+            error += " - see details in archived file $output"
             println(error)
             Assert.fail(error)
         }
