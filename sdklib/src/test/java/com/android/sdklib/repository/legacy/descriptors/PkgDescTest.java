@@ -17,18 +17,16 @@
 package com.android.sdklib.repository.legacy.descriptors;
 
 import com.android.repository.Revision;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.IdDisplay;
-
-import junit.framework.TestCase;
-
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import junit.framework.TestCase;
 
 public class PkgDescTest extends TestCase {
 
-    public final File mRoot = new File("/sdk");
+    public final Path mRoot = Paths.get("/sdk");
 
     public final void testPkgDescTool_NotPreview() {
         IPkgDesc p = PkgDesc.Builder.newTool(
@@ -53,8 +51,7 @@ public class PkgDescTest extends TestCase {
         assertEquals(new Revision(5, 6, 7, 8), p.getMinPlatformToolsRev());
 
         assertEquals("tools", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "tools"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("tools"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=tools Rev=1.2.3 MinPlatToolsRev=5.6.7 rc8>", p.toString());
         assertEquals("Android SDK Tools 1.2.3", p.getListDescription());
@@ -83,8 +80,7 @@ public class PkgDescTest extends TestCase {
         assertEquals(new Revision(5, 6, 7, 8), p.getMinPlatformToolsRev());
 
         assertEquals("tools-preview", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "tools"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("tools"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=tools Rev=1.2.3 rc4 MinPlatToolsRev=5.6.7 rc8>", p.toString());
         assertEquals("Android SDK Tools 1.2.3 rc4", p.getListDescription());
@@ -169,8 +165,7 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("platform-tools", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "platform-tools"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("platform-tools"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=platform_tools Rev=1.2.3>", p.toString());
         assertEquals("Android SDK Platform-Tools 1.2.3", p.getListDescription());
@@ -197,8 +192,7 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("platform-tools-preview", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "platform-tools"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("platform-tools"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=platform_tools Rev=1.2.3 rc4>", p.toString());
         assertEquals("Android SDK Platform-Tools 1.2.3 rc4", p.getListDescription());
@@ -268,8 +262,7 @@ public class PkgDescTest extends TestCase {
         assertNull(p.getMinPlatformToolsRev());
 
         assertEquals("doc", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "docs"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("docs"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=doc Android=API 19 Rev=1>", p.toString());
         assertEquals("Documentation for Android SDK", p.getListDescription());
@@ -320,8 +313,8 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("build-tools-1.2.3", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "build-tools", "build-tools-1.2.3"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(
+                mRoot.resolve("build-tools/build-tools-1.2.3"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=build_tools Rev=1.2.3>", p.toString());
         assertEquals("Android SDK Build-Tools 1.2.3", p.getListDescription());
@@ -348,7 +341,8 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("build-tools-1.2.3-preview", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "build-tools", "build-tools-1.2.3-preview"),
+        assertEquals(
+                mRoot.resolve("build-tools/build-tools-1.2.3-preview"),
                 p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=build_tools Rev=1.2.3 rc4>", p.toString());
@@ -426,8 +420,7 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("extra-vendor-extra_path", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "extras", "vendor", "extra_path"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("extras/vendor/extra_path"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=extra Vendor=vendor [The Vendor] Path=extra_path Rev=1.2.3>", p.toString());
         assertEquals("My Extra, rev 1.2.3", p.getListDescription());
@@ -507,8 +500,7 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("source-19", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "sources", "android-19"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("sources/android-19"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals("<PkgDesc Type=source Android=API 19 Rev=1>", p.toString());
         assertEquals("Sources for Android 19", p.getListDescription());
@@ -562,8 +554,7 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("sample-19", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "samples", "android-19"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("samples/android-19"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals(
                 "<PkgDesc Type=sample Android=API 19 Rev=1 MinToolsRev=5.6.7 rc8>",
@@ -629,8 +620,7 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("android-19", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "platforms", "android-19"),
-                p.getCanonicalInstallFolder(mRoot));
+        assertEquals(mRoot.resolve("platforms/android-19"), p.getCanonicalInstallFolder(mRoot));
 
         assertEquals(
                 "<PkgDesc Type=platform Android=API 19 Path=android-19 Rev=1 MinToolsRev=5.6.7 rc8>",
@@ -704,7 +694,8 @@ public class PkgDescTest extends TestCase {
         assertEquals(IdDisplay.create("addon_name", "ignored"), p1.getName());
 
         assertEquals("addon-addon_name-vendor-19", p1.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "add-ons", "addon-addon_name-vendor-19"),
+        assertEquals(
+                mRoot.resolve("add-ons/addon-addon_name-vendor-19"),
                 p1.getCanonicalInstallFolder(mRoot));
 
         assertEquals(
@@ -786,7 +777,8 @@ public class PkgDescTest extends TestCase {
         assertNull (p.getMinPlatformToolsRev());
 
         assertEquals("sys-img-eabi-tag-19", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "system-images", "android-19", "tag", "eabi"),
+        assertEquals(
+                mRoot.resolve("system-images/android-19/tag/eabi"),
                 p.getCanonicalInstallFolder(mRoot));
 
         assertEquals(
@@ -868,7 +860,8 @@ public class PkgDescTest extends TestCase {
         assertEquals(IdDisplay.create("addon_name", "ignored"), p.getTag());
 
         assertEquals("sys-img-eabi-addon-addon_name-vendor-19", p.getInstallId());
-        assertEquals(FileOpUtils.append(mRoot, "system-images", "addon-addon_name-vendor-19", "eabi"),
+        assertEquals(
+                mRoot.resolve("system-images/addon-addon_name-vendor-19/eabi"),
                 p.getCanonicalInstallFolder(mRoot));
 
         assertEquals(

@@ -31,6 +31,8 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +57,7 @@ public class SdkMavenRepositoryTest extends TestCase {
                         new FakeRepoManager(mFileOp.toPath(SDK_HOME), mRepositoryPackages));
     }
 
-    private void registerRepo(@NonNull String vendor) {
+    private void registerRepo(@NonNull String vendor) throws IOException {
         String path = String.format("extras;%s;m2repository", vendor);
         // Create and add the package
         Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
@@ -64,19 +66,20 @@ public class SdkMavenRepositoryTest extends TestCase {
         mRepositoryPackages.setLocalPkgInfos(existing.values());
         // SdkMavenRepo requires that the path exists.
         ProgressIndicator progress = new FakeProgressIndicator();
-        mFileOp.mkdirs(
+        Files.createDirectories(
                 new FakePackage.FakeRemotePackage(path)
-                        .getInstallDir(mSdkHandler.getSdkManager(progress), progress, mFileOp));
+                        .getInstallDir(mSdkHandler.getSdkManager(progress), progress));
     }
 
-    private void registerAndroidRepo() {
+    private void registerAndroidRepo() throws IOException {
         registerRepo("android");
     }
-    private void registerGoogleRepo() {
+
+    private void registerGoogleRepo() throws IOException {
         registerRepo("google");
     }
 
-    public void testGetLocation() {
+    public void testGetLocation() throws IOException {
         registerGoogleRepo();
         registerAndroidRepo();
         assertNull(SdkMavenRepository.ANDROID.getRepositoryLocation(null, false, mFileOp));
@@ -88,7 +91,7 @@ public class SdkMavenRepositoryTest extends TestCase {
         assertNotNull(google);
     }
 
-    public void testIsInstalled() {
+    public void testIsInstalled() throws IOException {
         assertFalse(SdkMavenRepository.ANDROID.isInstalled(null, mFileOp));
         assertFalse(SdkMavenRepository.ANDROID.isInstalled(null));
         assertFalse(SdkMavenRepository.ANDROID.isInstalled(mSdkHandler));

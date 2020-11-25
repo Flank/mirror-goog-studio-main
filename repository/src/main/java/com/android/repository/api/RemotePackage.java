@@ -19,9 +19,8 @@ package com.android.repository.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.impl.meta.Archive;
-import com.android.repository.io.FileOp;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * An package available for download. In addition to what's provided by {@link RepoPackage},
@@ -61,6 +60,5 @@ public interface RemotePackage extends RepoPackage {
      *     local repository.
      */
     @NonNull
-    File getInstallDir(
-            @NonNull RepoManager manager, @NonNull ProgressIndicator progress, @NonNull FileOp fop);
+    Path getInstallDir(@NonNull RepoManager manager, @NonNull ProgressIndicator progress);
 }

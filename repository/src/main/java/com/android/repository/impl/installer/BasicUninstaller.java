@@ -25,7 +25,6 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import java.io.File;
 import java.nio.file.Path;
 
 /**
@@ -39,17 +38,17 @@ class BasicUninstaller extends AbstractUninstaller {
     }
 
     @Override
-    protected boolean doPrepare(@NonNull File tempPath, @NonNull ProgressIndicator progress) {
+    protected boolean doPrepare(@NonNull Path tempPath, @NonNull ProgressIndicator progress) {
         return true;
     }
 
     /**
      * Just deletes the package.
      *
-     * {@inheritDoc}
+     * <p>{@inheritDoc}
      */
     @Override
-    protected boolean doComplete(@Nullable File tempPath, @NonNull ProgressIndicator progress) {
+    protected boolean doComplete(@Nullable Path tempPath, @NonNull ProgressIndicator progress) {
         Path location = getPackage().getLocation();
 
         FileOpUtils.deleteFileOrFolder(location);

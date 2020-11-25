@@ -24,8 +24,7 @@ import com.android.repository.api.RepoManager;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
-
-import java.io.File;
+import java.nio.file.Path;
 
 /**
  * {@link IPkgDesc} keeps information on individual SDK packages
@@ -165,11 +164,12 @@ public interface IPkgDesc extends Comparable<IPkgDesc> {
 
     /**
      * Returns the canonical location where such a package would be installed.
+     *
      * @param sdkLocation The root of the SDK.
      * @return the canonical location where such a package would be installed.
      */
     @NonNull
-    File getCanonicalInstallFolder(@NonNull File sdkLocation);
+    Path getCanonicalInstallFolder(@NonNull Path sdkLocation);
 
     /**
      * @return True if the revision of this package is a preview.

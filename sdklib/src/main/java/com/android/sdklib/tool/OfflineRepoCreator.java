@@ -29,7 +29,6 @@ import com.android.repository.api.Repository;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.RemotePackageImpl;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -66,7 +65,7 @@ public class OfflineRepoCreator {
 
     @Slow
     public void run() throws IOException {
-        Path tempDir = FileOpUtils.getNewTempDir("OfflineRepoCreator", mConfig.mFop);
+        Path tempDir = FileOpUtils.getNewTempDir("OfflineRepoCreator", FileOpUtils.create());
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(tempDir);
         ProgressIndicator progress = new ConsoleProgressIndicator();
         RepoManager mgr = handler.getSdkManager(progress);
@@ -95,7 +94,8 @@ public class OfflineRepoCreator {
                 return null;
             }
         };
-        mgr.loadSynchronously(0, progress, new LegacyDownloader(mConfig.mFop, settings), settings);
+        mgr.loadSynchronously(
+                0, progress, new LegacyDownloader(FileOpUtils.create(), settings), settings);
 
         Map<String, RemotePackage> remotes = mgr.getPackages().getRemotePackages();
         List<RemotePackageImpl> toWrite = new ArrayList<>();
@@ -162,7 +162,7 @@ public class OfflineRepoCreator {
         }
         Path outFile = mConfig.mDest.resolve("offline-repo.xml");
         System.out.println("Writing repo xml to " + outFile);
-        InstallerUtil.writeRepoXml(mgr, repo, outFile.toFile(), mConfig.mFop, progress);
+        InstallerUtil.writeRepoXml(mgr, repo, outFile, progress);
     }
 
     public static void main(String[] args) throws IOException {
@@ -178,7 +178,6 @@ public class OfflineRepoCreator {
 
         private Path mDest;
         private List<String> mPackages = Lists.newArrayList();
-        private FileOp mFop = FileOpUtils.create();
 
         private static final String DEST = "--dest";
         private static final String PKG_LIST = "--package_file";

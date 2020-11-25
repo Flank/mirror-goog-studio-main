@@ -18,7 +18,7 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import java.io.File;
+import java.nio.file.Path;
 
 /**
  * An install or uninstall operation that affects the current SDK state.
@@ -50,10 +50,8 @@ public interface PackageOperation {
          * The operation has ended unsuccessfully.
          */
         FAILED,
-        /**
-         * The operation has ended unsuccessfully.
-         */
-        COMPLETE;
+        /** The operation has ended unsuccessfully. */
+        COMPLETE
     }
 
     /**
@@ -62,11 +60,9 @@ public interface PackageOperation {
     @NonNull
     RepoPackage getPackage();
 
-    /**
-     * The filesystem path affected by this operation.
-     */
+    /** The filesystem path affected by this operation. */
     @NonNull
-    File getLocation(@NonNull ProgressIndicator progress);
+    Path getLocation(@NonNull ProgressIndicator progress);
 
     /**
      * Perform any preparatory work that can be done in the background prior to (un)installing a
@@ -83,7 +79,7 @@ public interface PackageOperation {
      * @return {@code true} if the install/uninstall was successful, {@code false} otherwise.
      */
     boolean complete(@NonNull ProgressIndicator progress);
-    
+
     /**
      * Gets the {@link RepoManager} for which we're installing/uninstalling a package.
      */

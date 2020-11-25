@@ -18,6 +18,7 @@ package com.android.repository.impl.installer;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
 import com.android.repository.api.LocalPackage;
@@ -26,8 +27,12 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.io.FileOp;
 import com.android.repository.util.InstallerUtil;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Framework for an installer that creates a temporary directory, writes package.xml when it's
@@ -46,25 +51,28 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
      */
     private final Downloader mDownloader;
 
-    private File mInstallLocation = null;
+    private Path mInstallLocation = null;
 
     public AbstractInstaller(@NonNull RemotePackage p, @NonNull RepoManager manager,
       @NonNull Downloader downloader, @NonNull FileOp fop) {
         super(manager, fop);
         mPackage = p;
         mDownloader = downloader;
-        registerStateChangeListener((op, progress) -> {
-            if (getInstallStatus() == InstallStatus.COMPLETE) {
-                try {
-                    InstallerUtil
-                            .writePackageXml(getPackage(), getLocation(progress), getRepoManager(),
-                                    mFop, progress);
-                } catch (IOException e) {
-                    progress.logWarning("Failed to update package.xml", e);
-                    throw new StatusChangeListenerException(e);
-                }
-            }
-        });
+        registerStateChangeListener(
+                (op, progress) -> {
+                    if (getInstallStatus() == InstallStatus.COMPLETE) {
+                        try {
+                            InstallerUtil.writePackageXml(
+                                    getPackage(),
+                                    getLocation(progress),
+                                    getRepoManager(),
+                                    progress);
+                        } catch (IOException e) {
+                            progress.logWarning("Failed to update package.xml", e);
+                            throw new StatusChangeListenerException(e);
+                        }
+                    }
+                });
     }
 
     @Override
@@ -75,7 +83,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
 
     @Override
     @NonNull
-    public final File getLocation(@NonNull ProgressIndicator progress) {
+    public final Path getLocation(@NonNull ProgressIndicator progress) {
         if (mInstallLocation == null) {
             mInstallLocation = computeInstallLocation(progress);
         }
@@ -83,30 +91,38 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
     }
 
     @NonNull
-    private File computeInstallLocation(@NonNull ProgressIndicator progress) {
+    private Path computeInstallLocation(@NonNull ProgressIndicator progress) {
         LocalPackage existing =
                 getRepoManager().getPackages().getLocalPackages().get(mPackage.getPath());
         if (existing != null) {
             // We're updating an existing package, overwrite it.
-            return mFop.toFile(existing.getLocation());
+            return existing.getLocation();
         }
         // Get a new directory, without overwriting anything.
         return getNonConflictingPath(progress);
     }
 
     @NonNull
-    private File getNonConflictingPath(@NonNull ProgressIndicator progress) {
-        File dir = mPackage.getInstallDir(getRepoManager(), progress, mFop);
-        if (!mFop.exists(dir)) {
+    private Path getNonConflictingPath(@NonNull ProgressIndicator progress) {
+        Path dir = mPackage.getInstallDir(getRepoManager(), progress);
+        if (!CancellableFileIo.exists(dir)) {
             return dir;
         }
-        if (mFop.isDirectory(dir)) {
-            File[] files = mFop.listFiles(dir);
-            if (files.length == 0) {
-                return dir;
-            }
-            if (files.length == 1 && files[0].getName().equals(InstallerUtil.INSTALLER_DIR_FN)) {
-                return dir;
+        if (CancellableFileIo.isDirectory(dir)) {
+            try (Stream<Path> fileStream = Files.list(dir)) {
+                List<Path> files = fileStream.limit(2).collect(Collectors.toList());
+                if (files.isEmpty()) {
+                    return dir;
+                }
+                if (files.size() == 1
+                        && files.get(0)
+                                .getFileName()
+                                .toString()
+                                .equals(InstallerUtil.INSTALLER_DIR_FN)) {
+                    return dir;
+                }
+            } catch (IOException ignore) {
+                // fall through to the logic below
             }
         }
         // We're going to need a new path. Check to see if some other package is installed in
@@ -130,7 +146,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
                             + conflicting.getPath()
                             + ") "
                             + "is already installed ";
-            if (conflicting.getLocation().equals(mFop.toPath(dir))) {
+            if (conflicting.getLocation().equals(dir)) {
                 warning += "there.";
             } else {
                 warning += "in \n\"" + conflicting.getLocation() + "\".";
@@ -138,11 +154,11 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
         } else {
             warning += "it already exists.";
         }
-        File parent = dir.getParentFile();
-        String leaf = dir.getName();
+        Path parent = dir.getParent();
+        String leaf = dir.getFileName().toString();
         for (int n = 2; ; n++) {
-            dir = new File(parent, leaf + "-" + n);
-            if (!mFop.exists(dir)) {
+            dir = parent.resolve(leaf + "-" + n);
+            if (!CancellableFileIo.exists(dir)) {
                 break;
             }
         }
@@ -153,18 +169,12 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
 
     @Nullable
     private LocalPackage findConflictingPackage(
-            @NonNull File dir, @NonNull ProgressIndicator progress) {
+            @NonNull Path dir, @NonNull ProgressIndicator progress) {
         for (LocalPackage existing : getRepoManager().getPackages().getLocalPackages().values()) {
-            try {
-                String existingLocation = existing.getLocation().normalize().toString();
-                String newLocation = dir.getCanonicalPath();
-                if (existingLocation.startsWith(newLocation)
-                        || newLocation.startsWith(existingLocation)) {
-                    return existing;
-                }
-            } catch (IOException e) {
-                progress.logWarning("Error while trying to check install path", e);
-                // We couldn't verify that the path is ok, so assume it's not.
+            String existingLocation = existing.getLocation().normalize().toString();
+            String newLocation = dir.toString();
+            if (existingLocation.startsWith(newLocation)
+                    || newLocation.startsWith(existingLocation)) {
                 return existing;
             }
         }

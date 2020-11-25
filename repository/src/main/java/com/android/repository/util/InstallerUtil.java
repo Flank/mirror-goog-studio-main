@@ -18,6 +18,7 @@ package com.android.repository.util;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.Revision;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.License;
@@ -103,11 +104,11 @@ public class InstallerUtil {
             indeterminate = true;
         }
         try {
-            Enumeration entries = zipFile.getEntries();
+            Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
             progress.setFraction(0);
             double progressMax = 0;
             while (entries.hasMoreElements()) {
-                ZipArchiveEntry entry = (ZipArchiveEntry) entries.nextElement();
+                ZipArchiveEntry entry = entries.nextElement();
                 String name = entry.getName();
                 File entryFile = new File(out, name);
                 progress.setSecondaryText(name);
@@ -205,10 +206,13 @@ public class InstallerUtil {
         return false;
     }
 
-    public static void writePendingPackageXml(@NonNull RepoPackage p, @NonNull File packageRoot,
-            @NonNull RepoManager manager, @NonNull FileOp fop, @NonNull ProgressIndicator progress)
+    public static void writePendingPackageXml(
+            @NonNull RepoPackage p,
+            @NonNull Path packageRoot,
+            @NonNull RepoManager manager,
+            @NonNull ProgressIndicator progress)
             throws IOException {
-        if (!fop.exists(packageRoot) || !fop.isDirectory(packageRoot)) {
+        if (!CancellableFileIo.isDirectory(packageRoot)) {
             throw new IllegalArgumentException("packageRoot must exist and be a directory.");
         }
         CommonFactory factory = p.createFactory();
@@ -221,24 +225,26 @@ public class InstallerUtil {
 
         p.asMarshallable().addTo(repo);
 
-        File packageXml = new File(packageRoot, PENDING_PACKAGE_XML_FN);
-        writeRepoXml(manager, repo, packageXml, fop, progress);
+        Path packageXml = packageRoot.resolve(PENDING_PACKAGE_XML_FN);
+        writeRepoXml(manager, repo, packageXml, progress);
     }
 
     @Nullable
-    public static Repository readPendingPackageXml(@NonNull File containingDir,
-            @NonNull RepoManager manager, @NonNull FileOp fop,
-            @NonNull ProgressIndicator progress) throws IOException {
+    public static Repository readPendingPackageXml(
+            @NonNull Path containingDir,
+            @NonNull RepoManager manager,
+            @NonNull ProgressIndicator progress)
+            throws IOException {
         Repository repo;
         try {
-            File xmlFile = new File(containingDir, PENDING_PACKAGE_XML_FN);
-            if (!fop.exists(xmlFile)) {
+            Path xmlFile = containingDir.resolve(PENDING_PACKAGE_XML_FN);
+            if (CancellableFileIo.notExists(xmlFile)) {
                 return null;
             }
             repo =
                     (Repository)
                             SchemaModuleUtil.unmarshal(
-                                    fop.newFileInputStream(xmlFile),
+                                    CancellableFileIo.newInputStream(xmlFile),
                                     manager.getSchemaModules(),
                                     false,
                                     progress);
@@ -252,17 +258,19 @@ public class InstallerUtil {
      * Writes out the XML for a {@link LocalPackageImpl} corresponding to the given {@link
      * RemotePackage} to a {@code package.xml} file in {@code packageRoot}.
      *
-     * @param p           The package to convert to a local package and write out.
+     * @param p The package to convert to a local package and write out.
      * @param packageRoot The location to write to. Must exist and be a directory.
-     * @param manager     A {@link RepoManager} instance.
-     * @param fop         The {@link FileOp} to use for file operations.
-     * @param progress    Currently only used for logging.
+     * @param manager A {@link RepoManager} instance.
+     * @param progress Currently only used for logging.
      * @throws IOException If we fail to write the output file.
      */
-    public static void writePackageXml(@NonNull RemotePackage p, @NonNull File packageRoot,
-            @NonNull RepoManager manager, @NonNull FileOp fop, @NonNull ProgressIndicator progress)
+    public static void writePackageXml(
+            @NonNull RemotePackage p,
+            @NonNull Path packageRoot,
+            @NonNull RepoManager manager,
+            @NonNull ProgressIndicator progress)
             throws IOException {
-        if (!fop.exists(packageRoot) || !fop.isDirectory(packageRoot)) {
+        if (!CancellableFileIo.isDirectory(packageRoot)) {
             throw new IllegalArgumentException("packageRoot must exist and be a directory.");
         }
         CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
@@ -274,16 +282,19 @@ public class InstallerUtil {
         }
         LocalPackageImpl impl = LocalPackageImpl.create(p);
         repo.setLocalPackage(impl);
-        File packageXml = new File(packageRoot, LocalRepoLoaderImpl.PACKAGE_XML_FN);
-        writeRepoXml(manager, repo, packageXml, fop, progress);
+        Path packageXml = packageRoot.resolve(LocalRepoLoaderImpl.PACKAGE_XML_FN);
+        writeRepoXml(manager, repo, packageXml, progress);
     }
 
-    public static void writeRepoXml(@NonNull RepoManager manager,
-            @NonNull Repository repo, @NonNull File packageXml, @NonNull FileOp fop,
-            @NonNull ProgressIndicator progress) throws IOException {
+    public static void writeRepoXml(
+            @NonNull RepoManager manager,
+            @NonNull Repository repo,
+            @NonNull Path packageXml,
+            @NonNull ProgressIndicator progress)
+            throws IOException {
         JAXBElement<Repository> element = RepoManager.getCommonModule().createLatestFactory().
                 generateRepository(repo);
-        try (OutputStream fos = fop.newFileOutputStream(packageXml)) {
+        try (OutputStream fos = Files.newOutputStream(packageXml)) {
             SchemaModuleUtil.marshal(element, manager.getSchemaModules(), fos,
                     manager.getResourceResolver(progress), progress);
         }
@@ -454,37 +465,31 @@ public class InstallerUtil {
      * there are any existing packages installed in parents or children of {@code path}. Returns
      * {@code true} if the path is valid. Otherwise returns {@code false} and logs a warning.
      */
-    public static boolean checkValidPath(@NonNull File path, @NonNull RepoManager manager,
-            @NonNull ProgressIndicator progress) {
-        try {
-            String check = path.getCanonicalPath() + File.separator;
+    public static boolean checkValidPath(
+            @NonNull Path path, @NonNull RepoManager manager, @NonNull ProgressIndicator progress) {
+        String check = path.normalize().toString() + File.separator;
 
-            for (LocalPackage p : manager.getPackages().getLocalPackages().values()) {
-                String existing = p.getLocation().normalize() + File.separator;
-                if (!existing.equals(check)) {
-                    boolean childExists = existing.startsWith(check);
-                    boolean parentExists = check.startsWith(existing);
-                    if (childExists || parentExists) {
-                        StringBuilder message = new StringBuilder();
-                        message.append("Trying to install into ")
-                                .append(check)
-                                .append(" but package \"")
-                                .append(p.getDisplayName())
-                                .append("\" already exists at ")
-                                .append(existing)
-                                .append(". It must be deleted or moved away before installing into a ")
-                                .append(childExists ? "parent" : "child")
-                                .append(" directory.");
-                        progress.logWarning(message.toString());
-                        return false;
-                    }
+        for (LocalPackage p : manager.getPackages().getLocalPackages().values()) {
+            String existing = p.getLocation().normalize() + File.separator;
+            if (!existing.equals(check)) {
+                boolean childExists = existing.startsWith(check);
+                boolean parentExists = check.startsWith(existing);
+                if (childExists || parentExists) {
+                    String message =
+                            "Trying to install into "
+                                    + check
+                                    + " but package \""
+                                    + p.getDisplayName()
+                                    + "\" already exists at "
+                                    + existing
+                                    + ". It must be deleted or moved away before installing into a "
+                                    + (childExists ? "parent" : "child")
+                                    + " directory.";
+                    progress.logWarning(message);
+                    return false;
                 }
             }
-        } catch (IOException e) {
-            progress.logWarning("Error while trying to check install path validity", e);
-            return false;
         }
-
         return true;
     }
 }

@@ -34,7 +34,7 @@ import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.MockFileOp;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
@@ -119,8 +119,8 @@ public class AbstractPackageOperationTest {
         }
 
         @Override
-        protected boolean doPrepare(@NonNull File installTempPath,
-                @NonNull ProgressIndicator progress) {
+        protected boolean doPrepare(
+                @NonNull Path installTempPath, @NonNull ProgressIndicator progress) {
             try {
                 // Allow time for the other thread to invoke prepare()
                 Thread.sleep(500);
@@ -133,8 +133,8 @@ public class AbstractPackageOperationTest {
         }
 
         @Override
-        protected boolean doComplete(@Nullable File installTemp,
-                @NonNull ProgressIndicator progress) {
+        protected boolean doComplete(
+                @Nullable Path installTemp, @NonNull ProgressIndicator progress) {
             try {
                 // Allow time for the other thread to invoke complete()
                 Thread.sleep(500);

@@ -22,14 +22,13 @@ import com.android.repository.Revision;
 import com.android.repository.Revision.PreviewComparison;
 import com.android.repository.api.License;
 import com.android.repository.api.RepoManager;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Locale;
 
 /**
@@ -340,9 +339,10 @@ public class PkgDesc implements IPkgDesc {
         return sanitize(sb.toString());
     }
 
+    @NonNull
     @Override
-    public File getCanonicalInstallFolder(@NonNull File sdkLocation) {
-        File f = FileOpUtils.append(sdkLocation, mType.getFolderName());
+    public Path getCanonicalInstallFolder(@NonNull Path sdkLocation) {
+        Path f = sdkLocation.resolve(mType.getFolderName());
 
         /* folder patterns:
         tools, platform-tools, doc => FOLDER
@@ -362,23 +362,29 @@ public class PkgDesc implements IPkgDesc {
 
         case PKG_BUILD_TOOLS:
         case PKG_ADDON:
-            f = FileOpUtils.append(f, getInstallId());
+                f = f.resolve(getInstallId());
             break;
 
         case PKG_PLATFORM:
         case PKG_SAMPLE:
         case PKG_SOURCE:
-            f = FileOpUtils.append(f, AndroidTargetHash.PLATFORM_HASH_PREFIX + sanitize(
-                    getAndroidVersion().getApiString()));
+                f =
+                        f.resolve(
+                                AndroidTargetHash.PLATFORM_HASH_PREFIX
+                                        + sanitize(getAndroidVersion().getApiString()));
             break;
 
         case PKG_SYS_IMAGE:
-            f = FileOpUtils.append(f,
-                    AndroidTargetHash.PLATFORM_HASH_PREFIX + sanitize(
-                            getAndroidVersion().getApiString()),
-                    sanitize(SystemImage.DEFAULT_TAG.equals(getTag()) ? "android"
-                                                                      : getTag().getId()),
-                    sanitize(getPath()));   // path==abi
+                f =
+                        f.resolve(
+                                        AndroidTargetHash.PLATFORM_HASH_PREFIX
+                                                + sanitize(getAndroidVersion().getApiString()))
+                                .resolve(
+                                        sanitize(
+                                                SystemImage.DEFAULT_TAG.equals(getTag())
+                                                        ? "android"
+                                                        : getTag().getId()))
+                                .resolve(sanitize(getPath())); // path==abi
             break;
 
         case PKG_ADDON_SYS_IMAGE:
@@ -388,15 +394,11 @@ public class PkgDesc implements IPkgDesc {
                         + getVendor().getId()
                         + '-'
                         + getAndroidVersion().getApiString();
-            f = FileOpUtils.append(f,
-                    sanitize(name),
-                    sanitize(getPath()));   // path==abi
+                f = f.resolve(sanitize(name)).resolve(sanitize(getPath())); // path==abi
           break;
 
         case PKG_EXTRA:
-            f = FileOpUtils.append(f,
-                    sanitize(getVendor().getId()),
-                    sanitize(getPath()));
+                f = f.resolve(sanitize(getVendor().getId())).resolve(sanitize(getPath()));
             break;
 
         default:

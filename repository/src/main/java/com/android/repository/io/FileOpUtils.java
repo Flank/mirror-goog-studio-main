@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * Some convenience methods for working with {@link File}s/{@link FileOp}s.
  */
 public final class FileOpUtils {
-    private static boolean mIsWindows = System.getProperty("os.name").startsWith("Windows");
+    private static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
 
     /**
      * The standard way to create a {@link FileOp} that interacts with the real filesystem.
@@ -305,10 +305,8 @@ public final class FileOpUtils {
             throws IOException {
         if (isWindows()) {
             // Check whether both path are on the same drive letter, if any.
-            String p1 = path1;
-            String p2 = path2;
-            char drive1 = (p1.length() >= 2 && p1.charAt(1) == ':') ? p1.charAt(0) : 0;
-            char drive2 = (p2.length() >= 2 && p2.charAt(1) == ':') ? p2.charAt(0) : 0;
+            char drive1 = (path1.length() >= 2 && path1.charAt(1) == ':') ? path1.charAt(0) : 0;
+            char drive2 = (path2.length() >= 2 && path2.charAt(1) == ':') ? path2.charAt(0) : 0;
             if (drive1 != drive2) {
                 // Either a mix of UNC vs drive or not the same drives.
                 throw new IOException("makeRelative: incompatible drive letters");
@@ -360,7 +358,7 @@ public final class FileOpUtils {
     }
 
     public static boolean isWindows() {
-        return mIsWindows;
+        return IS_WINDOWS;
     }
 
     /**

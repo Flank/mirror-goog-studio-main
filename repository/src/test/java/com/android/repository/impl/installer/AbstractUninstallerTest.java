@@ -28,7 +28,7 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.io.FileOp;
 import com.android.repository.testframework.MockFileOp;
-import java.io.File;
+import java.nio.file.Path;
 import org.junit.Test;
 
 /**
@@ -58,14 +58,14 @@ public class AbstractUninstallerTest {
         }
 
         @Override
-        protected boolean doComplete(@Nullable File installTemp,
-                @NonNull ProgressIndicator progress) {
+        protected boolean doComplete(
+                @Nullable Path installTemp, @NonNull ProgressIndicator progress) {
             return true;
         }
 
         @Override
-        protected boolean doPrepare(@NonNull File installTempPath,
-                @NonNull ProgressIndicator progress) {
+        protected boolean doPrepare(
+                @NonNull Path installTempPath, @NonNull ProgressIndicator progress) {
             return true;
         }
     }
