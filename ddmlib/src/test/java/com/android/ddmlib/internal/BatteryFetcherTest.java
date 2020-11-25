@@ -31,6 +31,7 @@ public class BatteryFetcherTest extends TestCase {
      */
     public void testGetBattery() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
+        EasyMock.expect(mockDevice.getProperty("ro.product.model")).andReturn("Pixel 3").times(1);
         DeviceTest.injectShellResponse(mockDevice, "20\r\n");
         DeviceTest.injectShellResponse(mockDevice, "20\r\n");
         EasyMock.replay(mockDevice);
@@ -54,7 +55,9 @@ public class BatteryFetcherTest extends TestCase {
      */
     public void testGetBattery_badResponse() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
-        DeviceTest.injectShellResponse(mockDevice, "blargh");
+        EasyMock.expect(mockDevice.getProperty("ro.product.model"))
+                .andReturn("Pixel 3 XL")
+                .times(1);
         DeviceTest.injectShellResponse(mockDevice, "blargh");
         DeviceTest.injectShellResponse(mockDevice, "blargh");
         EasyMock.replay(mockDevice);
@@ -69,17 +72,10 @@ public class BatteryFetcherTest extends TestCase {
         }
     }
 
-    /**
-     * Test that getBattery propagates executeShell exceptions.
-     */
+    /** Test that getBattery propagates executeShell exceptions. */
     public void testGetBattery_shellException() throws Exception {
         IDevice mockDevice = DeviceTest.createMockDevice();
-        mockDevice.executeShellCommand(
-                EasyMock.anyObject(),
-                EasyMock.anyObject(),
-                EasyMock.anyLong(),
-                EasyMock.anyObject());
-        EasyMock.expectLastCall().andThrow(new ShellCommandUnresponsiveException());
+        EasyMock.expect(mockDevice.getProperty("ro.product.model")).andReturn("fakeValue").times(1);
         mockDevice.executeShellCommand(
                 EasyMock.anyObject(),
                 EasyMock.anyObject(),
