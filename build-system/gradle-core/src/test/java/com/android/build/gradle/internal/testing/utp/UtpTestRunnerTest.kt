@@ -42,6 +42,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyIterable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
@@ -103,7 +104,8 @@ class UtpTestRunnerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),
-                any(RetentionConfig::class.java))).then {
+                any(RetentionConfig::class.java),
+                anyBoolean())).then {
             utpOutputDir = it.getArgument<File>(5)
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
@@ -154,6 +156,7 @@ class UtpTestRunnerTest {
                 utpDependencies,
                 mockSdkComponents,
                 mockRetentionConfig,
+                useOrchestrator = false,
                 mockUtpConfigFactory)
 
         runner.runTests(

@@ -104,20 +104,27 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         fun createTestRunner(): ManagedDeviceTestRunner {
             val javaProcessExecutor =
                 GradleJavaProcessExecutor(
-                    Function { action: Action<in JavaExecSpec?>? ->
-                        getExecOperations().javaexec(action)
-                    }
+                        Function { action: Action<in JavaExecSpec?>? ->
+                            getExecOperations().javaexec(action)
+                        }
                 )
 
             Preconditions.checkArgument(
-                getUnifiedTestPlatform().get(),
-                "android.experimental.androidTest.useUnifiedTestPlatform must be enabled.")
+                    getUnifiedTestPlatform().get(),
+                    "android.experimental.androidTest.useUnifiedTestPlatform must be enabled.")
+
+            val useOrchestrator = when(getExecutionEnum().get()) {
+                TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR,
+                TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR -> true
+                else -> false
+            }
 
             return ManagedDeviceTestRunner(
-                javaProcessExecutor,
-                getUtpDependencies(),
-                getSdkBuildService().get(),
-                getRetentionConfig().get())
+                    javaProcessExecutor,
+                    getUtpDependencies(),
+                    getSdkBuildService().get(),
+                    getRetentionConfig().get(),
+                    useOrchestrator)
         }
     }
 
@@ -173,14 +180,14 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
     override fun doTaskAction() {
         val managedDevice = UtpManagedDevice(
-            getDeviceName().get(),
-            getAvdName().get(),
-            getApiLevel().get(),
-            getAbi().get(),
-            getAvdComponents().get().avdFolder.get().asFile.absolutePath,
-            path,
-            getAvdComponents().get()
-                .emulatorDirectory.get().asFile.resolve(FN_EMULATOR).absolutePath)
+                getDeviceName().get(),
+                getAvdName().get(),
+                getApiLevel().get(),
+                getAbi().get(),
+                getAvdComponents().get().avdFolder.get().asFile.absolutePath,
+                path,
+                getAvdComponents().get()
+                        .emulatorDirectory.get().asFile.resolve(FN_EMULATOR).absolutePath)
 
         DeviceProviderInstrumentTestTask.checkForNonApks(getBuddyApks().files)
             { message: String ->
@@ -198,20 +205,20 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
                 val runner = getTestRunnerFactory()
                     .createTestRunner()
                 runner.runTests(
-                    managedDevice,
-                    resultsOutDir,
-                    projectName,
-                    getTestData().get().flavorName.get(),
-                    getTestData().get().getAsStaticData(),
-                    getBuddyApks().files,
-                    LoggerWrapper(logger)
+                        managedDevice,
+                        resultsOutDir,
+                        projectName,
+                        getTestData().get().flavorName.get(),
+                        getTestData().get().getAsStaticData(),
+                        getBuddyApks().files,
+                        LoggerWrapper(logger)
                 )
             } catch (e: Exception) {
                 recordCrashedTestRun(
-                    dependencies,
-                    getTestRunnerFactory().getExecutionEnum().get(),
-                    false,
-                    analyticsService.get())
+                        dependencies,
+                        getTestRunnerFactory().getExecutionEnum().get(),
+                        false,
+                        analyticsService.get())
                 throw e
             }
         }
@@ -223,16 +230,16 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         val results = report.generateReport()
 
         recordOkTestRun(
-            dependencies,
-            getTestRunnerFactory().getExecutionEnum().get(),
-            false,
-            results.testCount,
-            analyticsService.get())
+                dependencies,
+                getTestRunnerFactory().getExecutionEnum().get(),
+                false,
+                results.testCount,
+                analyticsService.get())
 
         if (!success) {
             hasFailures = true
             val reportUrl = ConsoleRenderer().asClickableFileUrl(
-                File(reportOutDir, "index.html"))
+                    File(reportOutDir, "index.html"))
             val message = "There were failing tests. See the report at: $reportUrl"
             if (ignoreFailures) {
                 logger.warn(message)
@@ -247,11 +254,11 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
     private fun testsFound() = !getTestData().get().testDirectories.asFileTree.isEmpty
 
-    class CreationAction (
-        creationConfig: VariantCreationConfig,
-        private val avdComponents: Provider<AvdComponentsBuildService>,
-        private val device: ManagedVirtualDevice,
-        private val testData: AbstractTestDataImpl
+    class CreationAction(
+            creationConfig: VariantCreationConfig,
+            private val avdComponents: Provider<AvdComponentsBuildService>,
+            private val device: ManagedVirtualDevice,
+            private val testData: AbstractTestDataImpl
     ): VariantTaskCreationAction<
             ManagedDeviceInstrumentationTestTask, VariantCreationConfig>(creationConfig) {
 
@@ -284,9 +291,9 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
             task.getTestData().setDisallowChanges(testData)
             task.getTestRunnerFactory().getSdkBuildService().setDisallowChanges(
-                getBuildService(
-                    creationConfig.services.buildServiceRegistry,
-                    SdkComponentsBuildService::class.java))
+                    getBuildService(
+                            creationConfig.services.buildServiceRegistry,
+                            SdkComponentsBuildService::class.java))
 
             val executionEnum = extension.testOptions.getExecutionEnum()
             task.getTestRunnerFactory().getExecutionEnum().setDisallowChanges(executionEnum)
@@ -294,13 +301,6 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.getTestRunnerFactory().getUnifiedTestPlatform().setDisallowChanges(useUtp)
 
             if (useUtp) {
-                Preconditions.checkArgument(
-                    executionEnum == TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR,
-                    "Unified Test Platform only supports Android Test " +
-                            "Orchestrator. Please either add android.testOptions.execution " +
-                            "\"ANDROIDX_TEST_ORCHESTRATOR\"\n to your build file or unset " +
-                            BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM.propertyName)
-
                 maybeCreateUtpConfigurations(task.project)
                 task.getTestRunnerFactory().getUtpDependencies()
                         .resolveDependencies(task.project.configurations)
@@ -309,17 +309,17 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.getTestRunnerFactory()
                 .getRetentionConfig()
                 .setDisallowChanges(
-                    createRetentionConfig(
-                        projectOptions,
-                        extension.testOptions.failureRetention as FailureRetention))
+                        createRetentionConfig(
+                                projectOptions,
+                                extension.testOptions.failureRetention as FailureRetention))
 
             task.dependencies =
                 creationConfig
                     .variantDependencies
                     .getArtifactCollection(
-                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.EXTERNAL,
-                        AndroidArtifacts.ArtifactType.CLASSES_JAR)
+                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.EXTERNAL,
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR)
 
             val flavor = testData.flavorName.get()
             val flavorFolder = if (flavor.isNotEmpty()) {

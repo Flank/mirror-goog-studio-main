@@ -25,6 +25,7 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR;
+import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -154,6 +155,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     new GradleJavaProcessExecutor(getExecOperations()::javaexec);
 
             if (getUnifiedTestPlatform().get()) {
+                boolean useOrchestrator =
+                        (getExecutionEnum().get() == ANDROID_TEST_ORCHESTRATOR
+                                || getExecutionEnum().get() == ANDROIDX_TEST_ORCHESTRATOR);
                 return new UtpTestRunner(
                         getSplitSelectExec().getOrNull(),
                         gradleProcessExecutor,
@@ -161,7 +165,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         executorServiceAdapter,
                         getUtpDependencies(),
                         getSdkBuildService().get(),
-                        getRetentionConfig().get());
+                        getRetentionConfig().get(),
+                        useOrchestrator);
             } else {
                 switch (getExecutionEnum().get()) {
                     case ANDROID_TEST_ORCHESTRATOR:
@@ -612,13 +617,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM);
             task.getTestRunnerFactory().getUnifiedTestPlatform().set(useUtp);
             if (useUtp) {
-                Preconditions.checkArgument(
-                        executionEnum == ANDROIDX_TEST_ORCHESTRATOR,
-                        "Unified Test Platform only supports Android Test Orchestrator. "
-                                + "Please either add android.testOptions.execution \"ANDROIDX_TEST_ORCHESTRATOR\"\n"
-                                + "to your build file or unset "
-                                + BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM
-                                        .getPropertyName());
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
                 UtpDependencyUtilsKt.resolveDependencies(
                         task.getTestRunnerFactory().getUtpDependencies(),
