@@ -27,6 +27,7 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
 import com.android.repository.io.FileOp;
+import com.android.repository.io.FileOpUtils;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
 import com.android.sdklib.IAndroidTarget;
@@ -296,7 +297,7 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             if (mOsSdkFolder == null) {
-                String cmdName = "avdmanager" + (FileOp.isWindows() ? ".bat" : "");
+                String cmdName = "avdmanager" + (FileOpUtils.isWindows() ? ".bat" : "");
 
                 errorAndExit(
                         "The tools directory property is not set, please make sure you are "

@@ -38,6 +38,7 @@ import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.RevisionType;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.io.FileOp;
+import com.android.repository.io.FileOpUtils;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -153,7 +154,7 @@ public class InstallerUtil {
                     if (!indeterminate) {
                         progress.setFraction(progressMax);
                     }
-                    if (!FileOp.isWindows()) {
+                    if (!FileOpUtils.isWindows()) {
                         // get the mode and test if it contains the executable bit
                         int mode = entry.getUnixMode();
                         //noinspection OctalInteger

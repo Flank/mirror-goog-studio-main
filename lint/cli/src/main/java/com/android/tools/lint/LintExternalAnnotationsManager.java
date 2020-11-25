@@ -21,7 +21,7 @@ import static com.android.tools.lint.checks.ApiLookup.SDK_DATABASE_MIN_VERSION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.io.FileOp;
+import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.LintClient;
@@ -102,7 +102,7 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             Path file = target.getPath(IAndroidTarget.DATA).resolve(SDK_ANNOTATIONS_PATH);
             if (Files.isRegularFile(file)) {
                 AndroidSdkHandler sdk = client.getSdk();
-                return sdk == null ? FileOp.toFileUnsafe(file) : sdk.getFileOp().toFile(file);
+                return sdk == null ? FileOpUtils.toFileUnsafe(file) : sdk.getFileOp().toFile(file);
             }
         }
 

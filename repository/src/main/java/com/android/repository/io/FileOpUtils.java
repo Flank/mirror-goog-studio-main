@@ -24,8 +24,11 @@ import com.android.repository.io.impl.FileOpImpl;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -33,6 +36,7 @@ import java.util.regex.Pattern;
  * Some convenience methods for working with {@link File}s/{@link FileOp}s.
  */
 public final class FileOpUtils {
+    private static boolean mIsWindows = System.getProperty("os.name").startsWith("Windows");
 
     /**
      * The standard way to create a {@link FileOp} that interacts with the real filesystem.
@@ -104,7 +108,7 @@ public final class FileOpUtils {
             }
         } else if (fop.isFile(src) && !fop.exists(dest)) {
             fop.copyFile(src, dest);
-            if (!FileOp.isWindows() && fop.canExecute(src)) {
+            if (!isWindows() && fop.canExecute(src)) {
                 fop.setExecutablePermission(dest);
             }
         }
@@ -278,7 +282,6 @@ public final class FileOpUtils {
      *
      * @param baseDir The base directory to be relative to.
      * @param toBeRelative The file or directory to make relative to the base.
-     * @param fop FileOp, in this case just to determine the platform.
      * @return A path that makes toBeRelative relative to baseDir.
      * @throws IOException If drive letters don't match on Windows or path canonicalization fails.
      */
@@ -300,7 +303,7 @@ public final class FileOpUtils {
             @NonNull String path2,
             @NonNull String dirSeparator)
             throws IOException {
-        if (FileOp.isWindows()) {
+        if (isWindows()) {
             // Check whether both path are on the same drive letter, if any.
             String p1 = path1;
             String p2 = path2;
@@ -323,8 +326,8 @@ public final class FileOpUtils {
             // On Windows should compare in case-insensitive.
             // Mac and Linux file systems can be both type, although their default
             // is generally to have a case-sensitive file system.
-            if ((FileOp.isWindows() && !segments1[start].equalsIgnoreCase(segments2[start]))
-                    || (!FileOp.isWindows() && !segments1[start].equals(segments2[start]))) {
+            if ((isWindows() && !segments1[start].equalsIgnoreCase(segments2[start]))
+                    || (!isWindows() && !segments1[start].equals(segments2[start]))) {
                 break;
             }
         }
@@ -354,5 +357,59 @@ public final class FileOpUtils {
     }
 
     private FileOpUtils() {
+    }
+
+    public static boolean isWindows() {
+        return mIsWindows;
+    }
+
+    /**
+     * Helper to delete a file or a directory. For a directory, recursively deletes all of its
+     * content. It's ok for the file or folder to not exist at all.
+     *
+     * @return true if the delete was successful
+     */
+    public static boolean deleteFileOrFolder(@NonNull Path fileOrFolder) {
+        boolean[] sawException = new boolean[1];
+        try {
+            CancellableFileIo.walkFileTree(
+                    fileOrFolder,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                                throws IOException {
+                            Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                            sawException[0] = true;
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                                throws IOException {
+                            Files.delete(dir);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException e) {
+            return false;
+        }
+        return !sawException[0];
+    }
+
+    /**
+     * Temporary functionality to help with File-to-Path migration. Should only be called when a
+     * FileOp is not available and with a Path that is backed by the default FileSystem (notably not
+     * in the context of any tests that use MockFileOp or jimfs).
+     *
+     * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
+     */
+    @NonNull
+    public static File toFileUnsafe(@NonNull Path path) {
+        return path.toFile();
     }
 }

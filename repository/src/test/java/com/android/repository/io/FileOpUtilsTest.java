@@ -36,7 +36,7 @@ public class FileOpUtilsTest {
 
     @Test
     public void makeRelativeNonWindows() throws Exception {
-        Assume.assumeFalse(FileOp.isWindows());
+        Assume.assumeFalse(FileOpUtils.isWindows());
         assertEquals("dir3", FileOpUtils.makeRelativeImpl("/dir1/dir2", "/dir1/dir2/dir3", "/"));
 
         assertEquals(
@@ -58,7 +58,7 @@ public class FileOpUtilsTest {
 
     @Test
     public void makeRelativeWindows() throws Exception {
-        Assume.assumeTrue(FileOp.isWindows());
+        Assume.assumeTrue(FileOpUtils.isWindows());
         assertEquals(
                 "..\\..\\..\\dir3",
                 FileOpUtils.makeRelativeImpl(

@@ -953,7 +953,7 @@ public class AvdManager {
                 }
 
                 try {
-                    mFop.deleteFileOrFolder(avdFolder);
+                    FileOpUtils.deleteFileOrFolder(avdFolder);
                 } catch (SecurityException e) {
                     log.warning("Failed to delete %1$s: %2$s", avdFolder.toAbsolutePath(), e);
                 }

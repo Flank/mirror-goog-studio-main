@@ -18,6 +18,7 @@ package com.android.repository.testframework;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
+import com.android.repository.io.FileOpUtils;
 import com.android.repository.io.impl.FileOpImpl;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
@@ -108,7 +109,7 @@ public class MockFileOp extends FileOp {
 
     @NonNull
     public String getPlatformSpecificPath(@NonNull String path) {
-        if (isWindows() && (path.startsWith("/") || path.startsWith("\\"))) {
+        if (FileOpUtils.isWindows() && (path.startsWith("/") || path.startsWith("\\"))) {
             return (new File(path)).getAbsolutePath()
                     + (path.length() > 1 && ((path.endsWith("/") || path.endsWith("\\")))
                             ? File.separator
