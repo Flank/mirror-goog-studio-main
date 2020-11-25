@@ -22,7 +22,7 @@ import com.android.io.CancellableFileIo;
 import com.android.prefs.AndroidLocation;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
-import com.android.sdklib.FileOpFileWrapper;
+import com.android.sdklib.PathFileWrapper;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -139,8 +139,7 @@ public class AvdManagerTest extends TestCase {
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, CancellableFileIo.exists(avdConfigFile));
         Map<String, String> properties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(avdConfigFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertFalse(CancellableFileIo.exists(mAvdFolder.resolve("boot.prop")));
         assertEquals(
                 "system-images/android-23/default/x86/".replace('/', File.separatorChar),
@@ -177,8 +176,7 @@ public class AvdManagerTest extends TestCase {
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, Files.exists(avdConfigFile));
         Map<String, String> properties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(avdConfigFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertFalse(Files.exists(mAvdFolder.resolve("boot.prop")));
         assertEquals(
                 "system-images/android-21/default/x86/".replace('/', File.separatorChar),
@@ -219,8 +217,7 @@ public class AvdManagerTest extends TestCase {
         Path bootPropFile = mAvdFolder.resolve("boot.prop");
         assertTrue(Files.exists(bootPropFile));
         Map<String, String> properties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(bootPropFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(bootPropFile), null);
 
         // use a tree map to make sure test order is consistent
         assertEquals(expected.toString(), new TreeMap<>(properties).toString());
@@ -246,8 +243,7 @@ public class AvdManagerTest extends TestCase {
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, Files.exists(avdConfigFile));
         Map<String, String> properties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(avdConfigFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertEquals("true", properties.get("hw.arc"));
         assertEquals("x86_64", properties.get("hw.cpu.arch"));
     }
@@ -272,8 +268,7 @@ public class AvdManagerTest extends TestCase {
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, Files.exists(avdConfigFile));
         Map<String, String> properties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(avdConfigFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertEquals("false", properties.get("hw.arc"));
         assertEquals("x86", properties.get("hw.cpu.arch"));
     }
@@ -301,8 +296,7 @@ public class AvdManagerTest extends TestCase {
         assertTrue("Expected config.ini in " + mAvdFolder, Files.exists(avdConfigFile));
         assertFalse(Files.exists(mAvdFolder.resolve("boot.prop")));
         Map<String, String> properties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(avdConfigFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertEquals(
                 "system-images/android-23/default/x86/".replace('/', File.separatorChar),
                 properties.get("image.sysdir.1"));
@@ -330,20 +324,20 @@ public class AvdManagerTest extends TestCase {
                 log);
 
         assertNotNull("Could not rename AVD", renamedAvd);
-        String parentFolder = mAvdFolder.getParent().toString();
+        Path parentFolder = mAvdFolder.getParent();
         String newNameIni = newName + ".ini";
-        File newAvdConfigFile = new File(parentFolder, newNameIni);
-        assertTrue("Expected renamed " + newNameIni + " in " + parentFolder,
-                mFileOp.exists(newAvdConfigFile));
-        Map<String, String> newProperties = AvdManager.parseIniFile(
-                new FileOpFileWrapper(newAvdConfigFile, mFileOp, false), null);
+        Path newAvdConfigFile = parentFolder.resolve(newNameIni);
+        assertTrue(
+                "Expected renamed " + newNameIni + " in " + parentFolder,
+                Files.exists(newAvdConfigFile));
+        Map<String, String> newProperties =
+                AvdManager.parseIniFile(new PathFileWrapper(newAvdConfigFile), null);
         assertEquals(mAvdFolder.toString(), newProperties.get("path"));
 
         assertFalse(Files.exists(mAvdFolder.resolve("boot.prop")));
         avdConfigFile = mAvdFolder.resolve("config.ini");
         Map<String, String> baseProperties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(avdConfigFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertEquals(
                 "system-images/android-23/default/x86/".replace('/', File.separatorChar),
                 baseProperties.get("image.sysdir.1"));
@@ -408,21 +402,21 @@ public class AvdManagerTest extends TestCase {
 
         // Verify that the duplicated AVD is correct
         assertNotNull("Could not duplicate AVD", duplicatedAvd);
-        String parentFolder = mAvdFolder.getParent().toString();
-        String newFolder = parentFolder + File.separator + newName + ".avd";
+        Path parentFolder = mAvdFolder.getParent();
+        String newFolderPath = parentFolder + File.separator + newName + ".avd";
+        Path newFolder = mFileOp.toPath(newFolderPath);
         String newNameIni = newName + ".ini";
-        File newIniFile = new File(parentFolder, newNameIni);
-        assertTrue("Expected " + newNameIni + " in " + parentFolder,
-                   mFileOp.exists(newIniFile));
-        Map<String, String> iniProperties = AvdManager.parseIniFile(
-          new FileOpFileWrapper(newIniFile, mFileOp, false), null);
-        assertEquals(newFolder, iniProperties.get("path"));
+        Path newIniFile = parentFolder.resolve(newNameIni);
+        assertTrue("Expected " + newNameIni + " in " + parentFolder, Files.exists(newIniFile));
+        Map<String, String> iniProperties =
+                AvdManager.parseIniFile(new PathFileWrapper(newIniFile), null);
+        assertEquals(newFolder.toString(), iniProperties.get("path"));
 
-        assertTrue(mFileOp.exists(new File(newFolder, "foo.bar")));
-        assertFalse(mFileOp.exists(new File(newFolder, "boot.prop")));
+        assertTrue(Files.exists(newFolder.resolve("foo.bar")));
+        assertFalse(Files.exists(newFolder.resolve("boot.prop")));
         // Check the config.ini file
-        Map<String, String> configProperties = AvdManager.parseIniFile(new FileOpFileWrapper(
-          new File(newFolder, "config.ini"), mFileOp, false), null);
+        Map<String, String> configProperties =
+                AvdManager.parseIniFile(new PathFileWrapper(newFolder.resolve("config.ini")), null);
         assertEquals(
                 "system-images/android-24/google_apis_playstore/x86_64/"
                         .replace('/', File.separatorChar),
@@ -432,15 +426,17 @@ public class AvdManagerTest extends TestCase {
         assertEquals("222M", configProperties.get("sdcard.size"));
         assertEquals("originalValue1", configProperties.get("testKey1"));
         assertEquals("newValue2", configProperties.get("testKey2"));
-        assertFalse("Expected NO " + AvdManager.USERDATA_IMG + " in " + newFolder,
-                   mFileOp.exists(new File(newFolder, AvdManager.USERDATA_IMG)));
+        assertFalse(
+                "Expected NO " + AvdManager.USERDATA_IMG + " in " + newFolder,
+                Files.exists(newFolder.resolve(AvdManager.USERDATA_IMG)));
         assertFalse(
                 "Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                 Files.exists(mAvdFolder.resolve(AvdManager.USERDATA_QEMU_IMG)));
 
         // Check the hardware-qemu.ini file
-        Map<String, String> hardwareProperties = AvdManager.parseIniFile(new FileOpFileWrapper(
-          new File(newFolder, "hardware-qemu.ini"), mFileOp, false), null);
+        Map<String, String> hardwareProperties =
+                AvdManager.parseIniFile(
+                        new PathFileWrapper(newFolder.resolve("hardware-qemu.ini")), null);
         assertEquals(newName, hardwareProperties.get("avd.name"));
         assertEquals(
                 mAvdFolder.getParent().toAbsolutePath()
@@ -455,9 +451,7 @@ public class AvdManagerTest extends TestCase {
         assertTrue(Files.exists(mAvdFolder.resolve("hardware-qemu.ini")));
         Map<String, String> baseConfigProperties =
                 AvdManager.parseIniFile(
-                        new FileOpFileWrapper(
-                                mFileOp.toFile(mAvdFolder.resolve("config.ini")), mFileOp, false),
-                        null);
+                        new PathFileWrapper(mAvdFolder.resolve("config.ini")), null);
         assertThat(baseConfigProperties.get("AvdId")).isNotEqualTo(newName); // Different or null
     }
 
@@ -484,8 +478,7 @@ public class AvdManagerTest extends TestCase {
           log);
         Path configIniFile = mAvdFolder.resolve("config.ini");
         Map<String, String> baseProperties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(configIniFile), mFileOp, false), null);
+                AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("true", baseProperties.get("PlayStore.enabled"));
 
         // Play Store image with non-Play Store device
@@ -502,9 +495,7 @@ public class AvdManagerTest extends TestCase {
           true,
           false,
           log);
-        baseProperties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(configIniFile), mFileOp, false), null);
+        baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
 
         // Non-Play Store image with Play Store device
@@ -521,9 +512,7 @@ public class AvdManagerTest extends TestCase {
           true,
           false,
           log);
-        baseProperties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(configIniFile), mFileOp, false), null);
+        baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
 
         // Wear image API 24 (no Play Store)
@@ -540,9 +529,7 @@ public class AvdManagerTest extends TestCase {
           true,
           false,
           log);
-        baseProperties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(configIniFile), mFileOp, false), null);
+        baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
 
         // Wear image API 25 (with Play Store)
@@ -560,9 +547,7 @@ public class AvdManagerTest extends TestCase {
           true,
           false,
           log);
-        baseProperties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(configIniFile), mFileOp, false), null);
+        baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("true", baseProperties.get("PlayStore.enabled"));
 
         // Wear image for China (no Play Store)
@@ -579,9 +564,7 @@ public class AvdManagerTest extends TestCase {
           true,
           false,
           log);
-        baseProperties =
-                AvdManager.parseIniFile(
-                        new FileOpFileWrapper(mFileOp.toFile(configIniFile), mFileOp, false), null);
+        baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
     }
 

@@ -29,10 +29,10 @@ import com.android.repository.api.ProgressIndicatorAdapter;
 import com.android.repository.io.FileOp;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
-import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.OptionalLibrary;
+import com.android.sdklib.PathFileWrapper;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
@@ -1026,11 +1026,11 @@ class AvdManagerCli extends CommandLineParser {
             errorAndExit("\"emulator\" package must be installed!");
         }
         FileOp fop = mSdkHandler.getFileOp();
-        File libDir = fop.toFile(emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB));
-        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
-        Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
-          .parseHardwareDefinitions(
-            new FileOpFileWrapper(hardwareDefs, fop, false), mSdkLog);
+        Path libDir = emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB);
+        Path hardwareDefs = libDir.resolve(SdkConstants.FN_HARDWARE_INI);
+        Map<String, HardwareProperties.HardwareProperty> hwMap =
+                HardwareProperties.parseHardwareDefinitions(
+                        new PathFileWrapper(hardwareDefs), mSdkLog);
 
         // Get the generic default values
         Map<String, String> hwConfigMap = defaultEmulatorPropertiesMap();
@@ -1090,15 +1090,11 @@ class AvdManagerCli extends CommandLineParser {
         if (emulatorPackage == null) {
             errorAndExit("\"emulator\" package must be installed!");
         }
-        File libDir =
-                mSdkHandler
-                        .getFileOp()
-                        .toFile(emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB));
-        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
-        FileOp fop = mSdkHandler.getFileOp();
-        Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
-                .parseHardwareDefinitions(
-                        new FileOpFileWrapper(hardwareDefs, fop, false), mSdkLog);
+        Path libDir = emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB);
+        Path hardwareDefs = libDir.resolve(SdkConstants.FN_HARDWARE_INI);
+        Map<String, HardwareProperties.HardwareProperty> hwMap =
+                HardwareProperties.parseHardwareDefinitions(
+                        new PathFileWrapper(hardwareDefs), mSdkLog);
 
         HashMap<String, String> map = new HashMap<>();
 

@@ -15,35 +15,29 @@
  */
 package com.android.sdklib;
 
+import com.android.io.CancellableFileIo;
 import com.android.io.IAbstractFile;
 import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
-import com.android.repository.io.FileOp;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-/**
- * An {@link IAbstractFile} or {@link IAbstractFolder} that wraps a {@link File} and uses a
- * {@link FileOp} for file operations, to allow mocking.
- */
-public class FileOpFileWrapper implements IAbstractFile, IAbstractFolder {
+/** An {@link IAbstractFile} or {@link IAbstractFolder} that wraps a {@link Path}. */
+public class PathFileWrapper implements IAbstractFile, IAbstractFolder {
 
-    private final FileOp mFileOp;
-    private final File mFile;
-    private final boolean mIsFolder;
+    private final Path mFile;
 
-    public FileOpFileWrapper(File file, FileOp fop, boolean isFolder) {
-        mFile = file;
-        mFileOp = fop;
-        mIsFolder = isFolder;
+    public PathFileWrapper(Path path) {
+        mFile = path;
     }
 
     @Override
     public InputStream getContents() throws StreamException {
         try {
-            return mFileOp.newFileInputStream(mFile);
+            return CancellableFileIo.newInputStream(mFile);
         } catch (IOException e) {
             throw new StreamException(e, this);
         }
@@ -51,9 +45,7 @@ public class FileOpFileWrapper implements IAbstractFile, IAbstractFolder {
 
     @Override
     public void setContents(InputStream source) throws StreamException {
-        OutputStream fos = null;
-        try {
-            fos = mFileOp.newFileOutputStream(mFile);
+        try (OutputStream fos = Files.newOutputStream(mFile)) {
 
             byte[] buffer = new byte[1024];
             int count;
@@ -62,21 +54,13 @@ public class FileOpFileWrapper implements IAbstractFile, IAbstractFolder {
             }
         } catch (IOException e) {
             throw new StreamException(e, this);
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    throw new StreamException(e, this);
-                }
-            }
         }
     }
 
     @Override
     public OutputStream getOutputStream() throws StreamException {
         try {
-            return mFileOp.newFileOutputStream(mFile);
+            return Files.newOutputStream(mFile);
         } catch (IOException ex) {
             throw new StreamException(ex, this);
         }
@@ -84,16 +68,16 @@ public class FileOpFileWrapper implements IAbstractFile, IAbstractFolder {
 
     @Override
     public String getOsLocation() {
-        return mFile.getAbsolutePath();
+        return mFile.toAbsolutePath().toString();
     }
 
     @Override
     public boolean exists() {
-        return mIsFolder ? mFileOp.isDirectory(mFile) : mFileOp.isFile(mFile);
+        return CancellableFileIo.exists(mFile);
     }
 
     @Override
     public IAbstractFile getFile(String name) {
-        return new FileOpFileWrapper(new File(mFile, name), mFileOp, false);
+        return new PathFileWrapper(mFile.resolve(name));
     }
 }

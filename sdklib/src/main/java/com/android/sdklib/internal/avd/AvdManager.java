@@ -30,9 +30,9 @@ import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
+import com.android.sdklib.PathFileWrapper;
 import com.android.sdklib.devices.Abi;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
@@ -991,9 +991,8 @@ public class AvdManager {
 
             // Modify the ID and display name in the new config.ini
             File configIni = new File(destAvdFolder, CONFIG_INI);
-            Map<String, String> configVals = parseIniFile(
-                    new FileOpFileWrapper(configIni, mFop, false),
-                    log);
+            Map<String, String> configVals =
+                    parseIniFile(new PathFileWrapper(mFop.toPath(configIni)), log);
             configVals.put(AVD_INI_AVD_ID, newAvdName);
             configVals.put(AVD_INI_DISPLAY_NAME, newAvdName);
             writeIniFile(configIni, configVals, true);
@@ -1041,7 +1040,7 @@ public class AvdManager {
             @NonNull String newPath,
             @NonNull ILogger log)
             throws IOException {
-        Map<String, String> iniVals = parseIniFile(new FileOpFileWrapper(iniFile, mFop, false), log);
+        Map<String, String> iniVals = parseIniFile(new PathFileWrapper(mFop.toPath(iniFile)), log);
         if (iniVals != null) {
             for (Map.Entry<String, String> iniEntry : iniVals.entrySet()) {
                 String origIniValue = iniEntry.getValue();
@@ -1398,9 +1397,7 @@ public class AvdManager {
      */
     @VisibleForTesting
     public AvdInfo parseAvdInfo(@NonNull File iniPath, @NonNull ILogger log) {
-        Map<String, String> map = parseIniFile(
-                new FileOpFileWrapper(iniPath, mFop, false),
-                log);
+        Map<String, String> map = parseIniFile(new PathFileWrapper(mFop.toPath(iniPath)), log);
 
         String avdPath = null;
         if (map != null) {
@@ -1429,7 +1426,7 @@ public class AvdManager {
             return new AvdInfo(avdName, iniPath, iniPath.getPath(), null, null, AvdStatus.ERROR_CORRUPTED_INI);
         }
 
-        FileOpFileWrapper configIniFile = null;
+        PathFileWrapper configIniFile = null;
         Map<String, String> properties = null;
         LoggerProgressIndicatorWrapper progress =
                 new LoggerProgressIndicatorWrapper(log) {
@@ -1441,7 +1438,7 @@ public class AvdManager {
 
         // load the AVD properties.
         if (avdPath != null) {
-            configIniFile = new FileOpFileWrapper(new File(avdPath, CONFIG_INI), mFop, false);
+            configIniFile = new PathFileWrapper(mFop.toPath(avdPath).resolve(CONFIG_INI));
         }
 
         if (configIniFile != null) {
@@ -2160,9 +2157,8 @@ public class AvdManager {
 
         HashMap<String, String> finalHardwareValues = new HashMap<>();
 
-        FileOpFileWrapper sysImgHardwareFile =
-                new FileOpFileWrapper(
-                        mFop.toFile(systemImage.getLocation().resolve(HARDWARE_INI)), mFop, false);
+        PathFileWrapper sysImgHardwareFile =
+                new PathFileWrapper(systemImage.getLocation().resolve(HARDWARE_INI));
         if (sysImgHardwareFile.exists()) {
             Map<String, String> imageHardwardConfig = ProjectProperties.parsePropertyFile(
                     sysImgHardwareFile, log);
@@ -2174,9 +2170,8 @@ public class AvdManager {
 
         // get the hardware properties for this skin
         if (skinFolder != null) {
-            FileOpFileWrapper skinHardwareFile =
-                    new FileOpFileWrapper(
-                            mFop.toFile(skinFolder.resolve(HARDWARE_INI)), mFop, false);
+            PathFileWrapper skinHardwareFile =
+                    new PathFileWrapper(skinFolder.resolve(HARDWARE_INI));
             if (skinHardwareFile.exists()) {
                 Map<String, String> skinHardwareConfig =
                     ProjectProperties.parsePropertyFile(skinHardwareFile, log);
