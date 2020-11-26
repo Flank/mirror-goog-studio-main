@@ -83,6 +83,8 @@ public class CheckAll {
                 GradleTestProject.builder()
                         .fromTestProject(projectName)
                         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .withKotlinVersion( // Compose alpha08 required 1.4.20
+                                "composeHelloWorld".equals(projectName) ? "1.4.20" : null)
                         .addGradleProperties(
                                 BooleanOption.USE_NEW_LINT_MODEL.getPropertyName()
                                         + "=true") // b/146208910
