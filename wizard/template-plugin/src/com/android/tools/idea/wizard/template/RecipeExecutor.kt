@@ -104,7 +104,7 @@ interface RecipeExecutor {
 
   /**
    * Looks for the given classpath dependency coordinate, in the project base, and returns the version variable name on it.
-   * For example if the base project has a classpath dependency of 'org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version'
+   * For example if the base project has a classpath dependency of 'org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version'
    * this function returns 'kotlin_version'.
    * If the dependency has no variable, or the variable can't be determined, it returns the specified default value.
    *

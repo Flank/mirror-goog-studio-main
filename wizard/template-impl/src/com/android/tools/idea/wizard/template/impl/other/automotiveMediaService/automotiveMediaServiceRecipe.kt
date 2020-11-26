@@ -62,7 +62,6 @@ fun RecipeExecutor.automotiveMediaServiceRecipe(
       source = buildGradle(
         buildApiString = apis.buildApi.apiString,
         generateKotlin = projectData.language == Language.Kotlin,
-        kotlinVersion = projectData.kotlinVersion,
         minApi = apis.minApi.apiString,
         targetApi = apis.targetApi.apiString,
         useAndroidX = useAndroidX),
