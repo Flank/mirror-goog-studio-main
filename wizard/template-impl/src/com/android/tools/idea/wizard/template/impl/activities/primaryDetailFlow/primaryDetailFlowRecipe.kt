@@ -119,7 +119,7 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   save(fragmentItemListTwoPaneXml(collectionName, itemListLayout, detailName, detailNameLayout, itemListContentLayout, childNavGraphFile, packageName,
                                   useAndroidX), resOut.resolve("layout-sw600dp/fragment_${itemListLayout}.xml"))
   save(itemListContentXml(), resOut.resolve("layout/${itemListContentLayout}.xml"))
-  save(activityMainXml(navHostFragmentId, detailNameLayout, mainNavGraphFile, useAndroidX),
+  save(activityMainXml(navHostFragmentId, detailNameFragmentLayout, mainNavGraphFile, useAndroidX),
        resOut.resolve("layout/activity_${detailNameLayout}.xml"))
 
   val mainActivity = when (projectData.language) {

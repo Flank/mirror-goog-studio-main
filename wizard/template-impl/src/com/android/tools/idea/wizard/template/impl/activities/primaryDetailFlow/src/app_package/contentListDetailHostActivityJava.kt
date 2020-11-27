@@ -39,6 +39,7 @@ package ${packageName};
 
 import android.os.Bundle;
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -52,7 +53,9 @@ public class ${collection}DetailHostActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         $contentViewBlock
 
-        NavController navController = Navigation.findNavController(this, R.id.${navHostFragmentId});
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.${navHostFragmentId});
+        NavController navController = navHostFragment.getNavController();
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.
                 Builder(navController.getGraph())
                 .build();
