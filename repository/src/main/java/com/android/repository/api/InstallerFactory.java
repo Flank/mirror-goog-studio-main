@@ -18,8 +18,6 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.io.FileOp;
-
 import java.util.List;
 
 /**
@@ -28,20 +26,14 @@ import java.util.List;
  */
 public interface InstallerFactory {
 
-    /**
-     * Canonical way to create instances of {@link Installer}.
-     */
+    /** Canonical way to create instances of {@link Installer}. */
     @NonNull
-    Installer createInstaller(@NonNull RemotePackage p, @NonNull RepoManager mgr,
-            @NonNull Downloader downloader, @NonNull FileOp fop);
+    Installer createInstaller(
+            @NonNull RemotePackage p, @NonNull RepoManager mgr, @NonNull Downloader downloader);
 
-    /**
-     * Canonical way to create instances of {@link Uninstaller}.
-     */
+    /** Canonical way to create instances of {@link Uninstaller}. */
     @NonNull
-    Uninstaller createUninstaller(@NonNull LocalPackage p, @NonNull RepoManager mgr,
-            @NonNull FileOp fop);
-
+    Uninstaller createUninstaller(@NonNull LocalPackage p, @NonNull RepoManager mgr);
 
     /**
      * Sets the factory used to generate the list of listeners added to the generated installers/

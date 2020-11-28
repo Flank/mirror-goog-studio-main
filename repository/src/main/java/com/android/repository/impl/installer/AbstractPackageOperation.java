@@ -25,15 +25,15 @@ import com.android.repository.api.PackageOperation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
+import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -126,14 +126,11 @@ public abstract class AbstractPackageOperation implements PackageOperation {
 
     private final RepoManager mRepoManager;
 
-    protected final FileOp mFop;
-
     private DelegatingProgressIndicator mPrepareProgress;
     private DelegatingProgressIndicator mCompleteProgress;
 
-    protected AbstractPackageOperation(@NonNull RepoManager repoManager, @NonNull FileOp fop) {
+    protected AbstractPackageOperation(@NonNull RepoManager repoManager) {
         mRepoManager = repoManager;
-        mFop = fop;
     }
 
     /**
@@ -188,7 +185,8 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         if (mInstallProperties != null) {
             installTempPath = mInstallProperties.getProperty(PATH_KEY);
         }
-        Path installTemp = installTempPath == null ? null : mFop.toPath(installTempPath);
+        Path installTemp =
+                installTempPath == null ? null : getLocation(progress).resolve(installTempPath);
         try {
             // Re-validate the install path, in case something was changed since prepare.
             if (!InstallerUtil.checkValidPath(
@@ -342,8 +340,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
                 mPrepareProgress.logInfo("Found existing prepared package.");
                 result = true;
             }
-        } catch (IOException e) {
-            result = false;
+        } catch (IOException ignore) {
         } finally {
             if (!result) {
                 getRepoManager().installEnded(getPackage());
@@ -376,9 +373,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         installProperties = new Properties();
 
         Path metaDir = affectedPath.resolve(InstallerUtil.INSTALLER_DIR_FN);
-        if (!Files.exists(metaDir)) {
-            Files.createDirectories(metaDir);
-        }
+        Files.createDirectories(metaDir);
         Path dataFile = metaDir.resolve(INSTALL_DATA_FN);
         Path installTempPath = getNewPackageOperationTempDir(getRepoManager(), TEMP_DIR_PREFIX);
         if (installTempPath == null) {
@@ -388,7 +383,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
                 throw new IOException("Failed to create temp path");
             }
         }
-        installProperties.put(PATH_KEY, installTempPath.toString());
+        installProperties.put(PATH_KEY, installTempPath.toAbsolutePath().toString());
         installProperties.put(CLASSNAME_KEY, getClass().getName());
         Files.createFile(dataFile);
         try (OutputStream out = Files.newOutputStream(dataFile)) {
@@ -399,14 +394,17 @@ public abstract class AbstractPackageOperation implements PackageOperation {
 
     private void deleteOrphanedTempDirs(@NonNull ProgressIndicator progress) {
         Path root = mRepoManager.getLocalPath();
-        Path suffixPath = mFop.toPath(new File(InstallerUtil.INSTALLER_DIR_FN, INSTALL_DATA_FN));
+        assert root != null;
+        FileSystem fileSystem = root.getFileSystem();
+        Path suffixPath =
+                root.getFileSystem().getPath(InstallerUtil.INSTALLER_DIR_FN, INSTALL_DATA_FN);
         try (Stream<Path> paths = Files.walk(root)) {
             Set<Path> tempDirs =
                     paths.filter(path -> path.endsWith(suffixPath))
                             .map(this::getPathPropertiesOrNull)
                             .filter(Objects::nonNull)
                             .map(props -> props.getProperty(PATH_KEY))
-                            .map(mFop::toPath)
+                            .map(fileSystem::getPath)
                             .collect(Collectors.toSet());
             retainPackageOperationTempDirs(tempDirs, TEMP_DIR_PREFIX);
         } catch (IOException e) {
@@ -462,15 +460,14 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         Properties installProperties = readOrCreateInstallProperties(installPath, progress);
         Path installTempPath =
                 installPath.getFileSystem().getPath((String) installProperties.get(PATH_KEY));
-        if (!CancellableFileIo.exists(installPath)) {
-            try {
-                Files.createDirectories(installPath);
-            } catch (IOException e) {
-                progress.logWarning("Failed to create output directory: " + installPath);
-                return null;
-            }
+        try {
+            Files.createDirectories(installPath);
+        } catch (IOException e) {
+            progress.logWarning("Failed to create output directory: " + installPath);
+            return null;
         }
-        mFop.deleteOnExit(mFop.toFile(installTempPath));
+
+        PathUtils.addRemovePathHook(installTempPath);
         return installTempPath;
     }
 

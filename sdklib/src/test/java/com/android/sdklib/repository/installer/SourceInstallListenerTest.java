@@ -98,7 +98,7 @@ public class SourceInstallListenerTest extends TestCase {
 
         // Install
         InstallerFactory factory = SdkInstallerUtil.findBestInstallerFactory(remote, mockHandler);
-        Installer installer = factory.createInstaller(remote, mgr, downloader, fop);
+        Installer installer = factory.createInstaller(remote, mgr, downloader);
         installer.prepare(progress);
         installer.complete(progress);
 
@@ -141,7 +141,7 @@ public class SourceInstallListenerTest extends TestCase {
         LocalPackage p = pkgs.getLocalPackages().get("sources;android-23");
 
         assertNotNull(p);
-        Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
+        Uninstaller uninstaller = factory.createUninstaller(p, mgr);
         uninstaller.prepare(progress);
         uninstaller.complete(progress);
 

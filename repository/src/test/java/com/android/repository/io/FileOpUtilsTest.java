@@ -16,6 +16,7 @@
 
 package com.android.repository.io;
 
+import static com.android.testutils.InMemoryFileSystemUtilsKt.*;
 import static com.android.testutils.InMemoryFileSystemUtilsKt.getPlatformSpecificPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,8 +25,13 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.DelegatingFileSystemProvider;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.CopyOption;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Assume;
 import org.junit.Test;
@@ -124,7 +130,7 @@ public class FileOpUtilsTest {
     }
 
     @Test
-    public void recursiveCopyAlreadyExists() throws Exception {
+    public void recursiveCopyAlreadyExists() {
         MockFileOp fop = new MockFileOp();
         File s1 = new File("/root/src/a");
         File s2 = new File("/root/src/foo/a");
@@ -186,7 +192,7 @@ public class FileOpUtilsTest {
     }
 
     @Test
-    public void recursiveCopyMergeFailed() throws Exception {
+    public void recursiveCopyMergeFailed() {
         MockFileOp fop = new MockFileOp();
         File s1 = new File("/root/src/a");
         File s2 = new File("/root/src/foo/a");
@@ -215,281 +221,330 @@ public class FileOpUtilsTest {
 
     @Test
     public void safeRecursiveOverwriteSimpleMove() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File s3 = new File("/root/src/foo/b");
-        File s4 = new File("/root/src/foo/bar/a");
-        File s5 = new File("/root/src/baz/c");
+        FileSystem fs = createFileSystem();
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(s3.getPath(), "content3");
-        fop.recordExistingFile(s4.getPath(), "content4");
-        fop.recordExistingFile(s5.getPath(), "content5");
+        Path src = fs.getPath(getPlatformSpecificPath("/root/src"));
+        recordExistingFile(src.resolve("a"), "content1");
+        recordExistingFile(src.resolve("foo/a"), "content2");
+        recordExistingFile(src.resolve("foo/b"), "content3");
+        recordExistingFile(src.resolve("foo/bar/a"), "content4");
+        recordExistingFile(src.resolve("baz/c"), "content5");
 
-        FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
-                new FakeProgressIndicator());
+        Path dest = fs.getPath(getPlatformSpecificPath("/root/dest"));
+        FileOpUtils.safeRecursiveOverwrite(src, dest, new FakeProgressIndicator());
 
-        assertEquals("content1", new String(fop.getContent(new File("/root/dest/a"))));
-        assertEquals("content2", new String(fop.getContent(new File("/root/dest/foo/a"))));
-        assertEquals("content3", new String(fop.getContent(new File("/root/dest/foo/b"))));
-        assertEquals("content4", new String(fop.getContent(new File("/root/dest/foo/bar/a"))));
-        assertEquals("content5", new String(fop.getContent(new File("/root/dest/baz/c"))));
+        assertEquals("content1", new String(Files.readAllBytes(dest.resolve("a"))));
+        assertEquals("content2", new String(Files.readAllBytes(dest.resolve("foo/a"))));
+        assertEquals("content3", new String(Files.readAllBytes(dest.resolve("foo/b"))));
+        assertEquals("content4", new String(Files.readAllBytes(dest.resolve("foo/bar/a"))));
+        assertEquals("content5", new String(Files.readAllBytes(dest.resolve("baz/c"))));
 
         // Verify that the original files are gone
-        assertEquals(5, fop.getExistingFiles().length);
+        assertEquals(5, getExistingFiles(fs).length);
     }
 
     @Test
     public void safeRecursiveOverwriteActuallyOverwrite() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File s3 = new File("/root/src/foo/bar/a");
+        FileSystem fs = createFileSystem();
+        Path s1 = fs.getPath(getPlatformSpecificPath("/root/src/a"));
+        Path s2 = fs.getPath(getPlatformSpecificPath("/root/src/foo/a"));
+        Path s3 = fs.getPath(getPlatformSpecificPath("/root/src/foo/bar/a"));
 
-        File d1 = new File("/root/dest/a");
-        File d2 = new File("/root/dest/foo/b");
+        Path d1 = fs.getPath(getPlatformSpecificPath("/root/dest/a"));
+        Path d2 = fs.getPath(getPlatformSpecificPath("/root/dest/foo/b"));
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(s3.getPath(), "content3");
-        fop.recordExistingFile(d1.getPath(), "content4");
-        fop.recordExistingFile(d2.getPath(), "content5");
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(s3, "content3");
+        recordExistingFile(d1, "content4");
+        recordExistingFile(d2, "content5");
 
-        FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
-                new FakeProgressIndicator());
+        FileOpUtils.safeRecursiveOverwrite(
+                s1.getParent(), d1.getParent(), new FakeProgressIndicator());
 
-        assertEquals("content1", new String(fop.getContent(new File("/root/dest/a"))));
-        assertEquals("content2", new String(fop.getContent(new File("/root/dest/foo/a"))));
-        assertEquals("content3", new String(fop.getContent(new File("/root/dest/foo/bar/a"))));
+        Path s1Moved = fs.getPath(getPlatformSpecificPath("/root/dest/a"));
+        Path s2Moved = fs.getPath(getPlatformSpecificPath("/root/dest/foo/a"));
+        Path s3Moved = fs.getPath(getPlatformSpecificPath("/root/dest/foo/bar/a"));
+
+        assertEquals("content1", new String(Files.readAllBytes(s1Moved)));
+        assertEquals("content2", new String(Files.readAllBytes(s2Moved)));
+        assertEquals("content3", new String(Files.readAllBytes(s3Moved)));
 
         // Verify that the original files are gone
-        assertEquals(3, fop.getExistingFiles().length);
+        assertEquals(3, getExistingFiles(fs).length);
     }
 
     @Test
     public void safeRecursiveOverwriteCantMoveDest() throws Exception {
+        Path[] destRef = new Path[1];
         final AtomicBoolean hitRename = new AtomicBoolean(false);
+        FileSystem fs =
+                new DelegatingFileSystemProvider(createFileSystem()) {
+                    @Override
+                    public void move(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (source.equals(destRef[0])) {
+                            hitRename.set(true);
+                            throw new IOException("can't move");
+                        }
+                        super.move(source, target);
+                    }
+                }.getFileSystem();
+        Path src = fs.getPath(getPlatformSpecificPath("/root/src"));
+        Path s1 = src.resolve("a");
+        Path s2 = src.resolve("foo/a");
+        Path dest = fs.getPath(getPlatformSpecificPath("/root/dest"));
+        Path d1 = dest.resolve("b");
+        destRef[0] = dest;
 
-        MockFileOp fop = new MockFileOp() {
-            @Override
-            public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                if (oldFile.equals(new File("/root/dest"))) {
-                    hitRename.set(true);
-                    return false;
-                }
-                return super.renameTo(oldFile, newFile);
-            }
-        };
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File d1 = new File("/root/dest/b");
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(d1, "content3");
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
-
-        FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
-                new FakeProgressIndicator());
+        FileOpUtils.safeRecursiveOverwrite(src, dest, new FakeProgressIndicator());
 
         // Make sure we tried and failed to move the dest.
         assertTrue(hitRename.get());
 
         // verify the files were moved
-        assertEquals("content1", new String(fop.getContent(new File("/root/dest/a"))));
-        assertEquals("content2", new String(fop.getContent(new File("/root/dest/foo/a"))));
+        assertEquals("content1", new String(Files.readAllBytes(dest.resolve("a"))));
+        assertEquals("content2", new String(Files.readAllBytes(dest.resolve("foo/a"))));
 
         // Finally verify that nothing else is created
-        assertEquals(2, fop.getExistingFiles().length);
-
+        assertEquals(2, getExistingFiles(fs).length);
     }
 
     @Test
     public void safeRecursiveOverwriteCantDeleteDest() throws Exception {
-        MockFileOp fop = new MockFileOp() {
-            @Override
-            public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                if (oldFile.equals(new File("/root/dest"))) {
-                    return false;
-                }
-                return super.renameTo(oldFile, newFile);
-            }
+        Path[] d1Ref = new Path[1];
 
-            @Override
-            public boolean delete(@NonNull File oldFile) {
-                if (oldFile.equals(new File("/root/dest"))) {
-                    return false;
-                }
-                return super.delete(oldFile);
-            }
-        };
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
-        File d1 = new File("/root/dest/b");
+        FileSystem fs =
+                new DelegatingFileSystemProvider(createFileSystem()) {
+                    @Override
+                    public void move(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (source.equals(d1Ref[0].getParent())) {
+                            throw new IOException("can't move");
+                        } else {
+                            super.move(source, target);
+                        }
+                    }
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
+                    @Override
+                    public void delete(@NonNull Path oldFile) throws IOException {
+                        if (oldFile.equals(d1Ref[0].getParent())) {
+                            throw new IOException("can't delete");
+                        } else {
+                            super.delete(oldFile);
+                        }
+                    }
+                }.getFileSystem();
+        Path s1 = fs.getPath(getPlatformSpecificPath("/root/src/a"));
+        Path s2 = fs.getPath(getPlatformSpecificPath("/root/src/foo/a"));
+        Path d1 = fs.getPath(getPlatformSpecificPath("/root/dest/b"));
+        d1Ref[0] = d1;
+
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(d1, "content3");
 
         try {
-            FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
-                    new FakeProgressIndicator());
+            FileOpUtils.safeRecursiveOverwrite(
+                    s1.getParent(), d1.getParent(), new FakeProgressIndicator());
             fail("Expected exception");
         }
         catch (Exception expected) {}
 
         // Ensure nothing changed
-        assertEquals("content1", new String(fop.getContent(s1)));
-        assertEquals("content2", new String(fop.getContent(s2)));
-        assertEquals("content3", new String(fop.getContent(d1)));
+        assertEquals("content1", new String(Files.readAllBytes(s1)));
+        assertEquals("content2", new String(Files.readAllBytes(s2)));
+        assertEquals("content3", new String(Files.readAllBytes(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().length);
+        assertEquals(3, getExistingFiles(fs).length);
     }
 
     @Test
     public void safeRecursiveOverwriteCantDeleteDestPartial() throws Exception {
-        File s1 = new File(getPlatformSpecificPath("/root/src/a"));
-        File s2 = new File(getPlatformSpecificPath("/root/src/foo/a"));
-        File d1 = new File(getPlatformSpecificPath("/root/dest/b"));
-        File d2 = new File(getPlatformSpecificPath("/root/dest/bar/b"));
-
         AtomicBoolean deletedSomething = new AtomicBoolean(false);
-        MockFileOp fop =
-                new MockFileOp() {
+        FileSystem fs =
+                new DelegatingFileSystemProvider(createFileSystem()) {
                     @Override
-                    public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                        if (oldFile.equals(d1.getParentFile())) {
-                            return false;
+                    public void move(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (source.toString().equals(getPlatformSpecificPath("/root/dest"))) {
+                            throw new IOException("can't move");
+                        } else {
+                            super.move(source, target);
                         }
-                        return super.renameTo(oldFile, newFile);
                     }
 
                     @Override
-                    public boolean delete(@NonNull File oldFile) {
-                        if (oldFile.getPath().startsWith(getPlatformSpecificPath("/root/dest/"))) {
+                    public void delete(@NonNull Path oldFile) throws IOException {
+                        if (oldFile.toString().startsWith(getPlatformSpecificPath("/root/dest/"))) {
                             if (deletedSomething.compareAndSet(false, true)) {
-                                return super.delete(oldFile);
+                                super.delete(oldFile);
                             }
-                            return false;
+                            throw new IOException("can't delete");
                         }
-                        return super.delete(oldFile);
+                        super.delete(oldFile);
                     }
-                };
+                }.getFileSystem();
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
-        fop.recordExistingFile(d2.getPath(), "content4");
+        Path s1 = fs.getPath(getPlatformSpecificPath("/root/src/a"));
+        Path s2 = fs.getPath(getPlatformSpecificPath("/root/src/foo/a"));
+        Path d1 = fs.getPath(getPlatformSpecificPath("/root/dest/b"));
+        Path d2 = fs.getPath(getPlatformSpecificPath("/root/dest/bar/b"));
+
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(d1, "content3");
+        recordExistingFile(d2, "content4");
 
         try {
             FileOpUtils.safeRecursiveOverwrite(
-                    s1.getParentFile(), d1.getParentFile(), fop, new FakeProgressIndicator());
+                    s1.getParent(), d1.getParent(), new FakeProgressIndicator());
             fail("Expected exception");
         }
         catch (IOException expected) {}
 
         assertTrue(deletedSomething.get());
         // Ensure nothing changed
-        assertEquals("content1", new String(fop.getContent(s1)));
-        assertEquals("content2", new String(fop.getContent(s2)));
-        assertEquals("content3", new String(fop.getContent(d1)));
-        assertEquals("content4", new String(fop.getContent(d2)));
+        assertEquals("content1", new String(Files.readAllBytes(s1)));
+        assertEquals("content2", new String(Files.readAllBytes(s2)));
+        assertEquals("content3", new String(Files.readAllBytes(d1)));
+        assertEquals("content4", new String(Files.readAllBytes(d2)));
 
         // Finally verify that nothing else is created
-        assertEquals(4, fop.getExistingFiles().length);
+        assertEquals(4, getExistingFiles(fs).length);
     }
 
     @Test
     public void safeRecursiveOverwriteCantWrite() throws Exception {
-        File s1 = new File(getPlatformSpecificPath("/root/src/a"));
-        File s2 = new File(getPlatformSpecificPath("/root/src/foo/a"));
-        File d1 = new File(getPlatformSpecificPath("/root/dest/a"));
-
-        MockFileOp fop =
-                new MockFileOp() {
+        Path[] s1Ref = new Path[1];
+        Path[] d1Ref = new Path[1];
+        FileSystem fs =
+                new DelegatingFileSystemProvider(createFileSystem()) {
                     @Override
-                    public void copyFile(@NonNull File source, @NonNull File dest)
+                    public void copy(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
                             throws IOException {
-                        if (source.equals(s1) && dest.equals(d1)) {
+                        if (source.equals(s1Ref[0]) && target.equals(d1Ref[0])) {
                             throw new IOException("failed to copy");
                         }
-                        super.copyFile(source, dest);
+                        super.copy(source, target);
                     }
 
                     @Override
-                    public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                        if (oldFile.equals(s1.getParentFile())
-                                && newFile.equals(d1.getParentFile())) {
-                            return false;
+                    public void move(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (source.equals(s1Ref[0].getParent())
+                                && target.equals(d1Ref[0].getParent())) {
+                            throw new IOException("failed to move");
+                        } else {
+                            super.move(source, target);
                         }
-                        return super.renameTo(oldFile, newFile);
                     }
-                };
+                }.getFileSystem();
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
+        Path s1 = fs.getPath(getPlatformSpecificPath("/root/src/a"));
+        Path s2 = fs.getPath(getPlatformSpecificPath("/root/src/foo/a"));
+        Path d1 = fs.getPath(getPlatformSpecificPath("/root/dest/a"));
+
+        s1Ref[0] = s1;
+        d1Ref[0] = d1;
+
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(d1, "content3");
 
         try {
             FileOpUtils.safeRecursiveOverwrite(
-                    s1.getParentFile(), d1.getParentFile(), fop, new FakeProgressIndicator());
+                    s1.getParent(), d1.getParent(), new FakeProgressIndicator());
             fail("Expected exception");
         }
         catch (IOException expected) {}
 
         // Ensure nothing changed
-        assertEquals("content1", new String(fop.getContent(s1)));
-        assertEquals("content2", new String(fop.getContent(s2)));
-        assertEquals("content3", new String(fop.getContent(d1)));
+        assertEquals("content1", new String(Files.readAllBytes(s1)));
+        assertEquals("content2", new String(Files.readAllBytes(s2)));
+        assertEquals("content3", new String(Files.readAllBytes(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().length);
+        assertEquals(3, getExistingFiles(fs).length);
     }
 
     @Test
     public void safeRecursiveOverwriteCantDeleteDestThenCantMoveBack() throws Exception {
-        File d1 = new File("/root/dest/b");
-        File d2 = new File("/root/dest/foo/b");
 
-        MockFileOp fop = new MockFileOp() {
-            @Override
-            public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                if (oldFile.equals(new File("/root/dest"))) {
-                    return false;
-                }
-                return super.renameTo(oldFile, newFile);
-            }
+        Path[] d1Ref = new Path[1];
 
-            @Override
-            public boolean delete(@NonNull File oldFile) {
-                if (oldFile.equals(new File("/root/dest"))) {
-                    return false;
-                }
-                return super.delete(oldFile);
-            }
+        FileSystem fs =
+                new DelegatingFileSystemProvider(createFileSystem()) {
+                    @Override
+                    public void move(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (source.equals(d1Ref[0].getParent())) {
+                            throw new IOException("can't move");
+                        } else {
+                            super.move(source, target);
+                        }
+                    }
 
-            @Override
-            public void copyFile(@NonNull File source, @NonNull File dest) throws IOException {
-                if (dest.equals(d1)) {
-                    throw new IOException("failed to copy");
-                }
-                super.copyFile(source, dest);
-            }
-        };
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
+                    @Override
+                    public void delete(@NonNull Path path) throws IOException {
+                        if (path.equals(d1Ref[0].getParent())) {
+                            throw new IOException("can't delete");
+                        } else {
+                            super.delete(path);
+                        }
+                    }
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
-        fop.recordExistingFile(d2.getPath(), "content4");
+                    @Override
+                    public void copy(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (target.equals(d1Ref[0])) {
+                            throw new IOException("failed to copy");
+                        }
+                        super.copy(source, target);
+                    }
+                }.getFileSystem();
+
+        Path d1 = fs.getPath(getPlatformSpecificPath("/root/dest/b"));
+        Path d2 = fs.getPath(getPlatformSpecificPath("/root/dest/foo/b"));
+        Path s1 = fs.getPath(getPlatformSpecificPath("/root/src/a"));
+        Path s2 = fs.getPath(getPlatformSpecificPath("/root/src/foo/a"));
+
+        d1Ref[0] = d1;
+
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(d1, "content3");
+        recordExistingFile(d2, "content4");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         try {
-            FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
-                    progress);
+            FileOpUtils.safeRecursiveOverwrite(s1.getParent(), d1.getParent(), progress);
             fail("Expected exception");
         }
         catch (IOException expected) {}
@@ -504,44 +559,60 @@ public class FileOpUtilsTest {
                 .substring(message.indexOf(marker) + marker.length(), message.indexOf('\n'));
 
         // Ensure backup is correct
-        assertEquals("content3", new String(fop.getContent(new File(backupPath, "b"))));
-        assertEquals("content4", new String(fop.getContent(new File(backupPath, "foo/b"))));
+        assertEquals("content3", new String(Files.readAllBytes(fs.getPath(backupPath, "b"))));
+        assertEquals("content4", new String(Files.readAllBytes(fs.getPath(backupPath, "foo/b"))));
     }
 
     @Test
     public void safeRecursiveOverwriteCantCopyThenCantRestore() throws Exception {
-        File d1 = new File("/root/dest/a");
-        File d2 = new File("/root/dest/foo/b");
-        File s1 = new File("/root/src/a");
-        File s2 = new File("/root/src/foo/a");
 
-        MockFileOp fop = new MockFileOp() {
-            @Override
-            public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                if (newFile.equals(new File("/root/dest"))) {
-                    return false;
-                }
-                return super.renameTo(oldFile, newFile);
-            }
+        Path[] d1Ref = new Path[1];
 
-            @Override
-            public void copyFile(@NonNull File source, @NonNull File dest) throws IOException {
-                if (dest.equals(d1)) {
-                    throw new IOException("failed to copy");
-                }
-                super.copyFile(source, dest);
-            }
-        };
+        FileSystem fs =
+                new DelegatingFileSystemProvider(createFileSystem()) {
+                    @Override
+                    public void move(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (target.equals(d1Ref[0].getParent())) {
+                            throw new IOException("can't move");
+                        } else {
+                            super.move(source, target);
+                        }
+                    }
 
-        fop.recordExistingFile(s1.getPath(), "content1");
-        fop.recordExistingFile(s2.getPath(), "content2");
-        fop.recordExistingFile(d1.getPath(), "content3");
-        fop.recordExistingFile(d2.getPath(), "content4");
+                    @Override
+                    public void copy(
+                            @NonNull Path source,
+                            @NonNull Path target,
+                            @NonNull CopyOption... options)
+                            throws IOException {
+                        if (target.equals(d1Ref[0])) {
+                            throw new IOException("failed to copy");
+                        }
+                        super.copy(source, target);
+                    }
+                }.getFileSystem();
+
+        Path dest = fs.getPath(getPlatformSpecificPath("/root/dest"));
+        Path src = fs.getPath(getPlatformSpecificPath("/root/src"));
+        Path d1 = dest.resolve("a");
+        Path d2 = dest.resolve("foo/b");
+        Path s1 = src.resolve("a");
+        Path s2 = src.resolve("foo/a");
+
+        d1Ref[0] = d1;
+
+        recordExistingFile(s1, "content1");
+        recordExistingFile(s2, "content2");
+        recordExistingFile(d1, "content3");
+        recordExistingFile(d2, "content4");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         try {
-            FileOpUtils.safeRecursiveOverwrite(new File("/root/src/"), new File("/root/dest"), fop,
-                    progress);
+            FileOpUtils.safeRecursiveOverwrite(src, dest, progress);
             fail("Expected exception");
         }
         catch (IOException expected) {}
@@ -556,7 +627,7 @@ public class FileOpUtilsTest {
                 .substring(message.indexOf(marker) + marker.length(), message.indexOf('\n'));
 
         // Ensure backup is correct
-        assertEquals("content3", new String(fop.getContent(new File(backupPath, "a"))));
-        assertEquals("content4", new String(fop.getContent(new File(backupPath, "foo/b"))));
+        assertEquals("content3", new String(Files.readAllBytes(fs.getPath(backupPath, "a"))));
+        assertEquals("content4", new String(Files.readAllBytes(fs.getPath(backupPath, "foo/b"))));
     }
 }

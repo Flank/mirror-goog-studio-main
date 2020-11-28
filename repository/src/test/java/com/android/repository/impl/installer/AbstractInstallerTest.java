@@ -29,7 +29,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RepoManagerImpl;
-import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
@@ -65,7 +64,7 @@ public class AbstractInstallerTest {
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
-        assertFalse(new TestInstaller(remote, mgr, downloader, fop).prepare(progress));
+        assertFalse(new TestInstaller(remote, mgr, downloader).prepare(progress));
         assertTrue(progress.getWarnings().stream().anyMatch(warning -> warning.contains("child")));
     }
 
@@ -93,7 +92,7 @@ public class AbstractInstallerTest {
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
-        TestInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
+        TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         // Install will still work, but in a different directory
         assertTrue(installer.prepare(progress));
         assertEquals(fop.toPath("/sdk/foo-2"), installer.getLocation(progress));
@@ -124,7 +123,7 @@ public class AbstractInstallerTest {
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
-        TestInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
+        TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertTrue(installer.prepare(progress));
         assertTrue(
                 progress.getWarnings().stream()
@@ -157,7 +156,7 @@ public class AbstractInstallerTest {
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
 
-        TestInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
+        TestInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertTrue(installer.prepare(progress));
         assertEquals(
                 fop.getPlatformSpecificPath("/sdk/foo/notbar"),
@@ -176,7 +175,7 @@ public class AbstractInstallerTest {
         AbstractPackageOperation.getNewPackageOperationTempDir(
                 mgr, AbstractPackageOperation.TEMP_DIR_PREFIX);
         // prepare() will create an keep a reference to temp dir 2
-        new TestInstaller(remote, mgr, downloader, fop).prepare(new FakeProgressIndicator(true));
+        new TestInstaller(remote, mgr, downloader).prepare(new FakeProgressIndicator(true));
         Path tempDir;
         // Create the remaining temp dirs
         do {
@@ -185,7 +184,7 @@ public class AbstractInstallerTest {
                             mgr, AbstractPackageOperation.TEMP_DIR_PREFIX);
         } while (tempDir != null);
         FakeRemotePackage remote2 = new FakeRemotePackage("foo;baz");
-        TestInstaller installer = new TestInstaller(remote2, mgr, downloader, fop);
+        TestInstaller installer = new TestInstaller(remote2, mgr, downloader);
         // This will cause the unreferenced temp dirs to be GCd (and a new one created)
         installer.prepare(new FakeProgressIndicator(true));
         // This will cause the newly created temp dir to be deleted.
@@ -206,7 +205,7 @@ public class AbstractInstallerTest {
         mgr.setLocalPath(fop.toPath("/sdk"));
         RemotePackage remote = new FakeRemotePackage("foo;bar");
         FakeDownloader downloader = new FakeDownloader(fop);
-        AbstractInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
+        AbstractInstaller installer = new TestInstaller(remote, mgr, downloader);
         assertSame(installer.getPackage(), remote);
         assertEquals(installer.getName(), String.format("Install %1$s (revision: %2$s)",
                                                         remote.getDisplayName(),
@@ -218,9 +217,8 @@ public class AbstractInstallerTest {
         public TestInstaller(
                 @NonNull RemotePackage p,
                 @NonNull RepoManager manager,
-                @NonNull Downloader downloader,
-                @NonNull FileOp fop) {
-            super(p, manager, downloader, fop);
+                @NonNull Downloader downloader) {
+            super(p, manager, downloader);
         }
 
         @Override

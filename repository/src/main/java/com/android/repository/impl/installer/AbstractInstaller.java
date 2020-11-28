@@ -25,7 +25,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
-import com.android.repository.io.FileOp;
 import com.android.repository.util.InstallerUtil;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -53,9 +52,11 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
 
     private Path mInstallLocation = null;
 
-    public AbstractInstaller(@NonNull RemotePackage p, @NonNull RepoManager manager,
-      @NonNull Downloader downloader, @NonNull FileOp fop) {
-        super(manager, fop);
+    public AbstractInstaller(
+            @NonNull RemotePackage p,
+            @NonNull RepoManager manager,
+            @NonNull Downloader downloader) {
+        super(manager);
         mPackage = p;
         mDownloader = downloader;
         registerStateChangeListener(

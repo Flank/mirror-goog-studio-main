@@ -21,16 +21,22 @@ import com.android.annotations.Nullable;
 import com.android.io.CancellableFileIo;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.impl.FileOpImpl;
+import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Some convenience methods for working with {@link File}s/{@link FileOp}s.
@@ -86,31 +92,54 @@ public final class FileOpUtils {
     @VisibleForTesting
     static void recursiveCopy(@NonNull File src, @NonNull File dest, boolean merge,
             @NonNull FileOp fop, @NonNull ProgressIndicator progress) throws IOException {
-        if (fop.exists(dest)) {
+        recursiveCopy(fop.toPath(src), fop.toPath(dest), merge, progress);
+    }
+
+    @VisibleForTesting
+    static void recursiveCopy(
+            @NonNull Path src,
+            @NonNull Path dest,
+            boolean merge,
+            @NonNull ProgressIndicator progress)
+            throws IOException {
+        if (CancellableFileIo.exists(dest)) {
             if (!merge) {
                 throw new IOException(dest + " already exists!");
-            }
-            else if (fop.isDirectory(src) != fop.isDirectory(dest)) {
-                throw new IOException(String.format("%s already exists but %s a directory!", dest,
-                        fop.isDirectory(dest) ? "is" : "is not"));
+            } else if (CancellableFileIo.isDirectory(src) != CancellableFileIo.isDirectory(dest)) {
+                throw new IOException(
+                        String.format(
+                                "%s already exists but %s a directory!",
+                                dest, CancellableFileIo.isDirectory(dest) ? "is" : "is not"));
             }
         }
         if (progress.isCanceled()) {
             throw new IOException("Operation cancelled");
         }
-        if (fop.isDirectory(src)) {
-            fop.mkdirs(dest);
+        if (CancellableFileIo.isDirectory(src)) {
+            Files.createDirectories(dest);
 
-            File[] children = fop.listFiles(src);
-            for (File child : children) {
-                File newDest = new File(dest, child.getName());
-                recursiveCopy(child, newDest, merge, fop, progress);
+            for (Path child : FileOpUtils.listFiles(src)) {
+                Path newDest = dest.resolve(child.getFileName());
+                recursiveCopy(child, newDest, merge, progress);
             }
-        } else if (fop.isFile(src) && !fop.exists(dest)) {
-            fop.copyFile(src, dest);
-            if (!isWindows() && fop.canExecute(src)) {
-                fop.setExecutablePermission(dest);
+        } else if (CancellableFileIo.isRegularFile(src) && !CancellableFileIo.exists(dest)) {
+            Files.copy(src, dest);
+            if (!isWindows() && CancellableFileIo.isExecutable(src)) {
+                FileOpUtils.setExecutablePermission(dest);
             }
+        }
+    }
+
+    /**
+     * Invokes {@link CancellableFileIo#list(Path)} on the given {@code file}. Contrary to the Java
+     * API, this returns an empty array instead of null when the directory does not exist.
+     */
+    @NonNull
+    public static Path[] listFiles(@NonNull Path file) {
+        try (Stream<Path> children = CancellableFileIo.list(file)) {
+            return children.toArray(Path[]::new);
+        } catch (IOException e) {
+            return new Path[0];
         }
     }
 
@@ -119,21 +148,21 @@ public final class FileOpUtils {
      * moved away, and once the operation has completed successfully, deleted. If there is a problem
      * during the copy, the original files are moved back into place.
      *
-     * @param src      File to move
-     * @param dest     Destination. Follows the same rules as {@link #recursiveCopy(File, File,
-     *                 FileOp, ProgressIndicator)}}.
-     * @param fop      The FileOp to use for file operations.
+     * @param src File to move
+     * @param dest Destination. Follows the same rules as {@link #recursiveCopy(File, File, FileOp,
+     *     ProgressIndicator)}}.
      * @param progress Currently only used for error logging.
      * @throws IOException If some problem occurs during copies or directory creation.
      */
-    public static void safeRecursiveOverwrite(@NonNull File src, @NonNull File dest,
-            @NonNull FileOp fop, @NonNull ProgressIndicator progress) throws IOException {
-        File destBackup = getTempDir(dest, "backup", fop);
+    public static void safeRecursiveOverwrite(
+            @NonNull Path src, @NonNull Path dest, @NonNull ProgressIndicator progress)
+            throws IOException {
+        Path destBackup = getTempDir(dest, "backup");
         boolean success = false;
         try {
-            if (fop.exists(dest)) {
-                moveOrCopyAndDelete(dest, destBackup, fop, progress);
-                if (fop.exists(dest)) {
+            if (CancellableFileIo.exists(dest)) {
+                moveOrCopyAndDelete(dest, destBackup, progress);
+                if (CancellableFileIo.exists(dest)) {
                     throw new IOException(String.format(
                       "Failed to move away or delete existing target file: %s%n" +
                       "Move it away manually and try again.", dest));
@@ -141,11 +170,11 @@ public final class FileOpUtils {
                 success = true;
             }
         } finally {
-            if (!success && fop.exists(destBackup)) {
+            if (!success && CancellableFileIo.exists(destBackup)) {
                 try {
                     // Merge in case some things had been moved and some not.
-                    recursiveCopy(destBackup, dest, true, fop, progress);
-                    fop.deleteFileOrFolder(destBackup);
+                    recursiveCopy(destBackup, dest, true, progress);
+                    FileOpUtils.deleteFileOrFolder(destBackup);
                 }
                 catch (IOException e) {
                     // we're already throwing the exception from the original "try", and there's
@@ -163,26 +192,26 @@ public final class FileOpUtils {
         // At this point the target should be moved away.
         try {
             // Actually move src to dest.
-            moveOrCopyAndDelete(src, dest, fop, progress);
+            moveOrCopyAndDelete(src, dest, progress);
             success = true;
         } finally {
             if (!success) {
                 // It failed. Now we have to restore the backup.
-                fop.deleteFileOrFolder(dest);
-                if (fop.exists(dest)) {
+                FileOpUtils.deleteFileOrFolder(dest);
+                if (CancellableFileIo.exists(dest)) {
                     // Failed to delete the new stuff. Move it away and delete later.
-                    File toDelete = getTempDir(dest, "delete", fop);
-                    fop.renameTo(dest, toDelete);
-                    fop.deleteOnExit(toDelete);
+                    Path toDelete = getTempDir(dest, "delete");
+                    Files.move(dest, toDelete);
+                    PathUtils.addRemovePathHook(toDelete);
                 }
                 try {
-                    if (fop.exists(dest)) {
+                    if (CancellableFileIo.exists(dest)) {
                         // Couldn't get rid of the new, partial stuff. Try merging the old ones back
                         // over.
-                        recursiveCopy(destBackup, dest, true, fop, progress);
+                        recursiveCopy(destBackup, dest, true, progress);
                     } else {
                         // dest is cleared. Move temp stuff back into place
-                        moveOrCopyAndDelete(destBackup, dest, fop, progress);
+                        moveOrCopyAndDelete(destBackup, dest, progress);
                     }
                 } catch (IOException e) {
                     // we're already throwing the exception from the original "try", and there's
@@ -195,29 +224,33 @@ public final class FileOpUtils {
         }
 
         // done, delete the backup
-        fop.deleteFileOrFolder(destBackup);
+        deleteFileOrFolder(destBackup);
     }
 
-    private static void moveOrCopyAndDelete(File src, File dest, FileOp fop,
-            ProgressIndicator progress) throws IOException {
-        if (!fop.renameTo(src, dest)) {
+    private static void moveOrCopyAndDelete(
+            @NonNull Path src, @NonNull Path dest, ProgressIndicator progress) throws IOException {
+        try {
+            Files.move(src, dest);
+        } catch (IOException ignore) {
             // Failed to move. Try copy/delete, with merge in case something already got moved.
-            recursiveCopy(src, dest, true, fop, progress);
-            fop.deleteFileOrFolder(src);
+            recursiveCopy(src, dest, true, progress);
+            if (!FileOpUtils.deleteFileOrFolder(src)) {
+                throw new IOException("Failed to delete" + src);
+            }
         }
     }
 
-    private static File getTempDir(File orig, String suffix, FileOp fop) {
-        File result = new File(orig + "." + suffix);
+    private static Path getTempDir(Path orig, String suffix) {
+        Path result = orig.getFileSystem().getPath(orig + "." + suffix);
         int i = 1;
-        while (fop.exists(result)) {
+        while (CancellableFileIo.exists(result)) {
             // The dir is already there. Try to delete it.
-            fop.deleteFileOrFolder(result);
-            if (!fop.exists(result)) {
+            deleteFileOrFolder(result);
+            if (!CancellableFileIo.exists(result)) {
                 break;
             }
             // We couldn't delete it. Make a new dir.
-            result = new File(result.getPath() + "-" + i++);
+            result = orig.getFileSystem().getPath(result + "-" + i++);
         }
         return result;
     }
@@ -228,8 +261,12 @@ public final class FileOpUtils {
      */
     @Nullable
     public static Path getNewTempDir(@NonNull String base, @NonNull FileOp fileOp) {
+        return getNewTempDir(base, fileOp.getFileSystem());
+    }
+
+    public static Path getNewTempDir(@NonNull String base, @NonNull FileSystem fileSystem) {
         for (int i = 1; i < 100; i++) {
-            Path rootTempDir = fileOp.toPath(System.getProperty("java.io.tmpdir"));
+            Path rootTempDir = fileSystem.getPath(System.getProperty("java.io.tmpdir"));
             Path folder = rootTempDir.resolve(String.format(Locale.US, "%1$s%2$02d", base, i));
             if (CancellableFileIo.notExists(folder)) {
                 try {
@@ -374,9 +411,12 @@ public final class FileOpUtils {
                     fileOrFolder,
                     new SimpleFileVisitor<Path>() {
                         @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                                throws IOException {
-                            Files.delete(file);
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                            try {
+                                Files.delete(file);
+                            } catch (IOException ignore) {
+                                sawException[0] = true;
+                            }
                             return FileVisitResult.CONTINUE;
                         }
 
@@ -387,9 +427,12 @@ public final class FileOpUtils {
                         }
 
                         @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                                throws IOException {
-                            Files.delete(dir);
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                            try {
+                                Files.delete(dir);
+                            } catch (IOException ignore) {
+                                sawException[0] = true;
+                            }
                             return FileVisitResult.CONTINUE;
                         }
                     });
@@ -409,5 +452,13 @@ public final class FileOpUtils {
     @NonNull
     public static File toFileUnsafe(@NonNull Path path) {
         return path.toFile();
+    }
+
+    public static void setExecutablePermission(@NonNull Path path) throws IOException {
+        Set<PosixFilePermission> permissions = EnumSet.copyOf(Files.getPosixFilePermissions(path));
+        permissions.add(PosixFilePermission.OWNER_EXECUTE);
+        permissions.add(PosixFilePermission.GROUP_EXECUTE);
+        permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+        Files.setPosixFilePermissions(path, permissions);
     }
 }

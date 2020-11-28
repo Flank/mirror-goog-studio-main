@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -70,7 +69,7 @@ public interface Downloader {
      */
     void downloadFully(
             @NonNull URL url,
-            @NonNull File target,
+            @NonNull Path target,
             @Nullable String checksum,
             @NonNull ProgressIndicator indicator)
             throws IOException;
@@ -98,7 +97,7 @@ public interface Downloader {
      */
     default void downloadFullyWithCaching(
             @NonNull URL url,
-            @NonNull File target,
+            @NonNull Path target,
             @Nullable String checksum,
             @NonNull ProgressIndicator indicator)
             throws IOException {
@@ -119,7 +118,7 @@ public interface Downloader {
      *
      * @param intermediatesLocation the path to use for download intermediates
      */
-    default void setDownloadIntermediatesLocation(@NonNull File intermediatesLocation) {}
+    default void setDownloadIntermediatesLocation(@NonNull Path intermediatesLocation) {}
 
     /**
      * Hash the given input stream.

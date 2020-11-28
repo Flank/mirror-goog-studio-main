@@ -21,7 +21,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.util.InstallerUtil;
 import com.android.testutils.TestExecutionTimeLogger;
@@ -170,16 +169,11 @@ public class BazelIntegrationTestsSuite {
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {
-        File offlineRepoZip = TestUtils.resolveWorkspacePath(zipName).toFile();
-
+        Path offlineRepoZip = TestUtils.resolveWorkspacePath(zipName);
         Files.createDirectory(repoPath);
 
         InstallerUtil.unzip(
-                offlineRepoZip,
-                repoPath.toFile(),
-                FileOpUtils.create(),
-                offlineRepoZip.length(),
-                new FakeProgressIndicator());
+                offlineRepoZip, repoPath, Files.size(offlineRepoZip), new FakeProgressIndicator());
     }
 
     private static ImmutableSortedMap<String, Path> mavenRepos(Path parentDirectory) {

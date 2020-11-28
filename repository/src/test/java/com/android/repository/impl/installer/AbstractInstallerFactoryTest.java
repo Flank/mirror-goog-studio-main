@@ -16,6 +16,7 @@
 
 package com.android.repository.impl.installer;
 
+import static com.android.testutils.InMemoryFileSystemUtilsKt.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -33,11 +34,9 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
-import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
@@ -61,23 +60,28 @@ public class AbstractInstallerFactoryTest {
                         return false;
                     }
                 };
-        testFactory.setFallbackFactory(new TestInstallerFactory() {
-            @NonNull
-            @Override
-            protected Installer doCreateInstaller(@NonNull RemotePackage p,
-                    @NonNull RepoManager mgr,
-                    @NonNull Downloader downloader, @NonNull FileOp fop) {
-                Installer installer = Mockito.mock(Installer.class);
-                Mockito.when(installer.getName()).thenReturn("mock installer");
-                return installer;
-            }
-        });
+        testFactory.setFallbackFactory(
+                new TestInstallerFactory() {
+                    @NonNull
+                    @Override
+                    protected Installer doCreateInstaller(
+                            @NonNull RemotePackage p,
+                            @NonNull RepoManager mgr,
+                            @NonNull Downloader downloader) {
+                        Installer installer = Mockito.mock(Installer.class);
+                        Mockito.when(installer.getName()).thenReturn("mock installer");
+                        return installer;
+                    }
+                });
 
-        assertEquals("mock installer", testFactory.createInstaller(
-                Mockito.mock(RemotePackage.class),
-                Mockito.mock(RepoManager.class),
-                Mockito.mock(Downloader.class),
-                Mockito.mock(FileOp.class)).getName());
+        assertEquals(
+                "mock installer",
+                testFactory
+                        .createInstaller(
+                                Mockito.mock(RemotePackage.class),
+                                Mockito.mock(RepoManager.class),
+                                Mockito.mock(Downloader.class))
+                        .getName());
     }
 
     @Test
@@ -89,9 +93,8 @@ public class AbstractInstallerFactoryTest {
                     protected Installer doCreateInstaller(
                             @NonNull RemotePackage p,
                             @NonNull RepoManager mgr,
-                            @NonNull Downloader downloader,
-                            @NonNull FileOp fop) {
-                        return new AbstractInstaller(p, mgr, downloader, fop) {
+                            @NonNull Downloader downloader) {
+                        return new AbstractInstaller(p, mgr, downloader) {
                             @Override
                             protected boolean doPrepare(
                                     @NonNull Path installTempPath,
@@ -109,31 +112,32 @@ public class AbstractInstallerFactoryTest {
                     }
                 };
 
-        InstallerFactory fallbackFactory = new TestInstallerFactory() {
-            @NonNull
-            @Override
-            protected Installer doCreateInstaller(@NonNull RemotePackage p,
-                    @NonNull RepoManager mgr,
-                    @NonNull Downloader downloader, @NonNull FileOp fop) {
-                Installer installer = Mockito.mock(Installer.class);
-                Mockito.when(installer.getName()).thenReturn("fallback installer");
-                return installer;
-            }
-        };
+        InstallerFactory fallbackFactory =
+                new TestInstallerFactory() {
+                    @NonNull
+                    @Override
+                    protected Installer doCreateInstaller(
+                            @NonNull RemotePackage p,
+                            @NonNull RepoManager mgr,
+                            @NonNull Downloader downloader) {
+                        Installer installer = Mockito.mock(Installer.class);
+                        Mockito.when(installer.getName()).thenReturn("fallback installer");
+                        return installer;
+                    }
+                };
 
         testFactory.setFallbackFactory(fallbackFactory);
 
-        Installer installer = testFactory.createInstaller(
-                Mockito.mock(RemotePackage.class),
-                Mockito.mock(RepoManager.class),
-                Mockito.mock(Downloader.class),
-                Mockito.mock(FileOp.class));
+        Installer installer =
+                testFactory.createInstaller(
+                        Mockito.mock(RemotePackage.class),
+                        Mockito.mock(RepoManager.class),
+                        Mockito.mock(Downloader.class));
         assertEquals("fallback installer", installer.getFallbackOperation().getName());
     }
 
     @Test
     public void installerListeners() {
-        MockFileOp fop = new MockFileOp();
         InstallerFactory factory =
                 new TestInstallerFactory() {
                     @NonNull
@@ -141,9 +145,8 @@ public class AbstractInstallerFactoryTest {
                     protected Installer doCreateInstaller(
                             @NonNull RemotePackage p,
                             @NonNull RepoManager mgr,
-                            @NonNull Downloader downloader,
-                            @NonNull FileOp fop) {
-                        return new AbstractInstaller(p, mgr, downloader, fop) {
+                            @NonNull Downloader downloader) {
+                        return new AbstractInstaller(p, mgr, downloader) {
                             @Override
                             protected boolean doPrepare(
                                     @NonNull Path installTempPath,
@@ -179,9 +182,10 @@ public class AbstractInstallerFactoryTest {
         installer.set(
                 factory.createInstaller(
                         new FakePackage.FakeRemotePackage("foo"),
-                        new FakeRepoManager(fop.toPath("/sdk"), new RepositoryPackages()),
-                        Mockito.mock(Downloader.class),
-                        fop));
+                        new FakeRepoManager(
+                                createFileSystem().getPath(getPlatformSpecificPath("/sdk")),
+                                new RepositoryPackages()),
+                        Mockito.mock(Downloader.class)));
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         installer.get().prepare(progress);
@@ -224,15 +228,17 @@ public class AbstractInstallerFactoryTest {
 
         @NonNull
         @Override
-        protected Installer doCreateInstaller(@NonNull RemotePackage p, @NonNull RepoManager mgr,
-                @NonNull Downloader downloader, @NonNull FileOp fop) {
+        protected Installer doCreateInstaller(
+                @NonNull RemotePackage p,
+                @NonNull RepoManager mgr,
+                @NonNull Downloader downloader) {
             throw new UnsupportedOperationException();
         }
 
         @NonNull
         @Override
-        protected Uninstaller doCreateUninstaller(@NonNull LocalPackage p, @NonNull RepoManager mgr,
-                @NonNull FileOp fop) {
+        protected Uninstaller doCreateUninstaller(
+                @NonNull LocalPackage p, @NonNull RepoManager mgr) {
             throw new UnsupportedOperationException();
         }
     }

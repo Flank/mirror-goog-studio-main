@@ -17,10 +17,12 @@ package com.android.sdklib.repository.legacy;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.SettingsController;
 import com.android.repository.io.FileOp;
+import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.legacy.remote.internal.DownloadCache;
 import com.android.utils.Pair;
 import java.io.BufferedInputStream;
@@ -31,6 +33,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -40,11 +43,11 @@ import java.nio.file.Path;
  */
 public class LegacyDownloader implements Downloader {
 
-    private DownloadCache mDownloadCache;
+    private final DownloadCache mDownloadCache;
 
-    private FileOp mFileOp;
+    private final FileOp mFileOp;
 
-    private SettingsController mSettingsController;
+    private final SettingsController mSettingsController;
     private static final int BUF_SIZE = 8192;
 
     public LegacyDownloader(@NonNull FileOp fop, @NonNull SettingsController settings) {
@@ -65,27 +68,35 @@ public class LegacyDownloader implements Downloader {
     @Override
     public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
             throws IOException {
-        File target = File.createTempFile("LegacyDownloader", null);
+        Path target =
+                FileOpUtils.getNewTempDir("LegacyDownloader", mFileOp.getFileSystem())
+                        .resolve("download");
         downloadFully(url, target, null, indicator);
-        return target.toPath();
+        return target;
     }
 
     @Override
-    public void downloadFully(@NonNull URL url, @NonNull File target, @Nullable String checksum,
-            @NonNull ProgressIndicator indicator) throws IOException {
-        if (mFileOp.exists(target) && checksum != null) {
+    public void downloadFully(
+            @NonNull URL url,
+            @NonNull Path target,
+            @Nullable String checksum,
+            @NonNull ProgressIndicator indicator)
+            throws IOException {
+        if (CancellableFileIo.exists(target) && checksum != null) {
             indicator.setText("Verifying previous download...");
             try (InputStream in = new BufferedInputStream(mFileOp.newFileInputStream(target))) {
                 if (checksum.equals(
                         Downloader.hash(
-                                in, mFileOp.length(target), indicator.createSubProgress(0.3)))) {
+                                in,
+                                CancellableFileIo.size(target),
+                                indicator.createSubProgress(0.3)))) {
                     return;
                 }
             }
             indicator = indicator.createSubProgress(1);
         }
-        mFileOp.mkdirs(target.getParentFile());
-        OutputStream out = mFileOp.newFileOutputStream(target);
+        Files.createDirectories(target.getParent());
+        OutputStream out = Files.newOutputStream(target);
         Pair<InputStream, URLConnection> downloadedResult =
                 mDownloadCache.openDirectUrl(getUrl(url));
         URLConnection connection = downloadedResult.getSecond();

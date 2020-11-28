@@ -29,17 +29,13 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-
-import java.nio.file.Path;
-import junit.framework.TestCase;
-
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link RemoteListSourceProvider}
@@ -90,30 +86,33 @@ public class RemoteListSourceProviderTest extends TestCase {
         provider.getSources(downloader, progress, false);
         progress.assertNoErrorsOrWarnings();
 
-        Downloader failingDownloader = new Downloader() {
-            @NonNull
-            @Override
-            public InputStream downloadAndStream(@NonNull URL url,
-                    @NonNull ProgressIndicator indicator) throws IOException {
-                fail("shouldn't be downloading again");
-                return null;
-            }
+        Downloader failingDownloader =
+                new Downloader() {
+                    @NonNull
+                    @Override
+                    public InputStream downloadAndStream(
+                            @NonNull URL url, @NonNull ProgressIndicator indicator) {
+                        fail("shouldn't be downloading again");
+                        return null;
+                    }
 
-            @NonNull
-            @Override
-            public Path downloadFully(@NonNull URL url, @NonNull ProgressIndicator indicator)
-                    throws IOException {
-                fail("shouldn't be downloading again");
-                return null;
-            }
+                    @NonNull
+                    @Override
+                    public Path downloadFully(
+                            @NonNull URL url, @NonNull ProgressIndicator indicator) {
+                        fail("shouldn't be downloading again");
+                        return null;
+                    }
 
-            @Override
-            public void downloadFully(@NonNull URL url, @Nullable File target,
-                    @Nullable String checksum, @NonNull ProgressIndicator indicator)
-                    throws IOException {
-                fail("shouldn't be downloading again");
-            }
-        };
+                    @Override
+                    public void downloadFully(
+                            @NonNull URL url,
+                            @Nullable Path target,
+                            @Nullable String checksum,
+                            @NonNull ProgressIndicator indicator) {
+                        fail("shouldn't be downloading again");
+                    }
+                };
 
         List<RepositorySource> sources = provider.getSources(failingDownloader, progress, false);
         progress.assertNoErrorsOrWarnings();

@@ -23,7 +23,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
-import com.android.repository.io.FileOp;
 
 /**
  * Factory for {@link BasicInstaller}s and {@link BasicUninstaller}s.
@@ -32,16 +31,14 @@ public class BasicInstallerFactory extends AbstractInstallerFactory {
 
     @NonNull
     @Override
-    protected Installer doCreateInstaller(@NonNull RemotePackage p, @NonNull RepoManager mgr,
-            @NonNull Downloader downloader, @NonNull FileOp fop) {
-        return new BasicInstaller(p, mgr, downloader, fop);
+    protected Installer doCreateInstaller(
+            @NonNull RemotePackage p, @NonNull RepoManager mgr, @NonNull Downloader downloader) {
+        return new BasicInstaller(p, mgr, downloader);
     }
 
     @NonNull
     @Override
-    protected Uninstaller doCreateUninstaller(@NonNull LocalPackage p,
-      @NonNull RepoManager mgr,
-      @NonNull FileOp fop) {
-        return new BasicUninstaller(p, mgr, fop);
+    protected Uninstaller doCreateUninstaller(@NonNull LocalPackage p, @NonNull RepoManager mgr) {
+        return new BasicUninstaller(p, mgr);
     }
 }

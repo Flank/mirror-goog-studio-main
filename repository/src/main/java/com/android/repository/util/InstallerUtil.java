@@ -38,7 +38,6 @@ import com.android.repository.impl.meta.LocalPackageImpl;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.RevisionType;
 import com.android.repository.impl.meta.SchemaModuleUtil;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -80,24 +79,24 @@ public class InstallerUtil {
     /**
      * Unzips the given zipped input stream into the given directory.
      *
-     * @param in           The (zipped) input stream.
-     * @param out          The directory into which to expand the files. Must exist.
-     * @param fop          The {@link FileOp} to use for file operations.
+     * @param in The (zipped) input stream.
+     * @param out The directory into which to expand the files. Must exist.
      * @param expectedSize Compressed size of the stream.
-     * @param progress     Currently only used for logging.
+     * @param progress Currently only used for logging.
      * @throws IOException If we're unable to read or write.
      */
-    public static void unzip(@NonNull File in, @NonNull File out, @NonNull FileOp fop,
-            long expectedSize, @NonNull ProgressIndicator progress)
+    public static void unzip(
+            @NonNull Path in,
+            @NonNull Path out,
+            long expectedSize,
+            @NonNull ProgressIndicator progress)
             throws IOException {
-        if (!fop.exists(out) || !fop.isDirectory(out)) {
+        if (!CancellableFileIo.exists(out) || !CancellableFileIo.isDirectory(out)) {
             throw new IllegalArgumentException("out must exist and be a directory.");
         }
-        // ZipFile requires an actual (not mock) file, so make sure we have a real one.
-        in = fop.ensureRealFile(in);
 
         progress.setText("Unzipping...");
-        ZipFile zipFile = new ZipFile(in);
+        ZipFile zipFile = new ZipFile(Files.newByteChannel(in));
         boolean indeterminate = false;
         if (expectedSize == 0) {
             progress.setIndeterminate(true);
@@ -110,7 +109,7 @@ public class InstallerUtil {
             while (entries.hasMoreElements()) {
                 ZipArchiveEntry entry = entries.nextElement();
                 String name = entry.getName();
-                File entryFile = new File(out, name);
+                Path entryFile = out.resolve(name);
                 progress.setSecondaryText(name);
                 if (entry.isUnixSymlink()) {
                     ByteArrayOutputStream targetByteStream = new ByteArrayOutputStream();
@@ -123,27 +122,20 @@ public class InstallerUtil {
                     if (!indeterminate) {
                         progress.setFraction(progressMax);
                     }
-                    Path linkPath = fop.toPath(entryFile);
-                    Path linkTarget = fop.toPath(new File(targetByteStream.toString()));
-                    Files.createSymbolicLink(linkPath, linkTarget);
+                    Path linkTarget = out.getFileSystem().getPath(targetByteStream.toString());
+                    Files.createSymbolicLink(entryFile, linkTarget);
                 } else if (entry.isDirectory()) {
-                    if (!fop.exists(entryFile)) {
-                        if (!fop.mkdirs(entryFile)) {
-                            progress.logWarning("failed to mkdirs " + entryFile);
-                        }
-                    }
+                    Files.createDirectories(entryFile);
                 } else {
-                    if (!fop.exists(entryFile)) {
-                        File parent = entryFile.getParentFile();
-                        if (parent != null && !fop.exists(parent)) {
-                            fop.mkdirs(parent);
+                    if (!CancellableFileIo.exists(entryFile)) {
+                        Path parent = entryFile.getParent();
+                        if (parent != null && !CancellableFileIo.exists(parent)) {
+                            Files.createDirectories(parent);
                         }
-                        if (!fop.createNewFile(entryFile)) {
-                            throw new IOException("Failed to create file " + entryFile);
-                        }
+                        Files.createFile(entryFile);
                     }
 
-                    OutputStream unzippedOutput = fop.newFileOutputStream(entryFile);
+                    OutputStream unzippedOutput = Files.newOutputStream(entryFile);
                     progressMax += (double) entry.getCompressedSize() / expectedSize;
                     if (readZipEntry(
                             zipFile,
@@ -161,7 +153,7 @@ public class InstallerUtil {
                         //noinspection OctalInteger
                         if ((mode & 0111) != 0) {
                             try {
-                                fop.setExecutablePermission(entryFile);
+                                FileOpUtils.setExecutablePermission(entryFile);
                             } catch (IOException ignore) {
                             }
                         }

@@ -93,7 +93,7 @@ public class BasicInstallerTest extends TestCase {
         LocalPackage p = pkgs.getLocalPackages().get("dummy;foo");
         // Uninstall it
         InstallerFactory factory = new BasicInstallerFactory();
-        Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
+        Uninstaller uninstaller = factory.createUninstaller(p, mgr);
         uninstaller.prepare(new FakeProgressIndicator(true));
         uninstaller.complete(new FakeProgressIndicator(true));
         // Verify that the deleted dir is gone.
@@ -125,7 +125,7 @@ public class BasicInstallerTest extends TestCase {
                         ImmutableList.of());
         RepoManager mgr = new FakeRepoManager(fop.toPath("/sdk"), packages);
         InstallerFactory factory = new BasicInstallerFactory();
-        Uninstaller uninstaller = factory.createUninstaller(localPackage, mgr, fop);
+        Uninstaller uninstaller = factory.createUninstaller(localPackage, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
         uninstaller.complete(progress);
@@ -190,8 +190,7 @@ public class BasicInstallerTest extends TestCase {
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         // Install one of the packages.
         RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
-        Installer basicInstaller =
-                new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop);
+        Installer basicInstaller = new BasicInstallerFactory().createInstaller(p, mgr, downloader);
         File repoTempDir =
                 new File(mgr.getLocalPath().toString(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
         File packageOperationDir = new File(repoTempDir, String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
@@ -292,12 +291,12 @@ public class BasicInstallerTest extends TestCase {
                         super.setFraction(fraction);
                     }
                 };
-        doTestCleanupWithProgress(pkgs, mgr, downloader, cancellingProgress1, fop);
+        doTestCleanupWithProgress(pkgs, mgr, downloader, cancellingProgress1);
 
         FakeProgressIndicator cancellingProgress2 = new FakeProgressIndicator(true);
         // Cancel right away - this will lead to installer exit when it first checks for the cancellation marker.
         cancellingProgress2.cancel();
-        doTestCleanupWithProgress(pkgs, mgr, downloader, cancellingProgress1, fop);
+        doTestCleanupWithProgress(pkgs, mgr, downloader, cancellingProgress1);
 
         runner = new FakeProgressRunner();
         // Reload the packages.
@@ -326,11 +325,10 @@ public class BasicInstallerTest extends TestCase {
             RepositoryPackages pkgs,
             RepoManager mgr,
             Downloader downloader,
-            FakeProgressIndicator progress,
-            MockFileOp fop) {
+            FakeProgressIndicator progress) {
         RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
         Installer basicInstaller =
-                spy(new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop));
+                spy(new BasicInstallerFactory().createInstaller(p, mgr, downloader));
         Path repoTempDir = mgr.getLocalPath().resolve(AbstractPackageOperation.REPO_TEMP_DIR_FN);
         Path packageOperationDir =
                 repoTempDir.resolve(
@@ -404,7 +402,7 @@ public class BasicInstallerTest extends TestCase {
         // Install the update
         FakeProgressIndicator progress = new FakeProgressIndicator();
         Installer basicInstaller =
-                new BasicInstallerFactory().createInstaller(update, mgr, downloader, fop);
+                new BasicInstallerFactory().createInstaller(update, mgr, downloader);
         basicInstaller.prepare(progress);
         basicInstaller.complete(progress);
 
@@ -444,15 +442,19 @@ public class BasicInstallerTest extends TestCase {
         RepoManager mgr = new RepoManagerImpl();
         Path root = fop.toPath("/repo");
         mgr.setLocalPath(root);
-        FakeDownloader downloader = new FakeDownloader(fop) {
-            @Override
-            public void downloadFully(@NonNull URL url, @NonNull File target,
-                    @Nullable String checksum, @NonNull ProgressIndicator indicator)
-                    throws IOException {
-                super.downloadFully(url, target, checksum, indicator);
-                throw new IOException("expected");
-            }
-        };
+        FakeDownloader downloader =
+                new FakeDownloader(fop) {
+                    @Override
+                    public void downloadFully(
+                            @NonNull URL url,
+                            @NonNull Path target,
+                            @Nullable String checksum,
+                            @NonNull ProgressIndicator indicator)
+                            throws IOException {
+                        super.downloadFully(url, target, checksum, indicator);
+                        throw new IOException("expected");
+                    }
+                };
         URL repoUrl = new URL("http://example.com/dummy.xml");
 
         // Create the archive and register the URL
@@ -517,8 +519,7 @@ public class BasicInstallerTest extends TestCase {
 
         // Install one of the packages.
         RemotePackage p = mgr.getPackages().getRemotePackages().get("dummy;bar");
-        Installer basicInstaller =
-                new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop);
+        Installer basicInstaller = new BasicInstallerFactory().createInstaller(p, mgr, downloader);
         FakeProgressIndicator firstInstallProgress = new FakeProgressIndicator(true);
         boolean result = basicInstaller.prepare(firstInstallProgress);
 
@@ -546,20 +547,19 @@ public class BasicInstallerTest extends TestCase {
                     @Override
                     public void downloadFully(
                             @NonNull URL url,
-                            @NonNull File target,
+                            @NonNull Path target,
                             @Nullable String checksum,
                             @NonNull ProgressIndicator indicator)
                             throws IOException {
                         assertEquals(
                                 checksum,
                                 Downloader.hash(
-                                        fop.newFileInputStream(target),
-                                        fop.length(target),
+                                        Files.newInputStream(target),
+                                        Files.size(target),
                                         indicator));
                     }
                 };
-        basicInstaller =
-                new BasicInstallerFactory().createInstaller(p, mgr, failingDownloader, fop);
+        basicInstaller = new BasicInstallerFactory().createInstaller(p, mgr, failingDownloader);
         // Try again with the failing downloader; it should not be called.
         FakeProgressIndicator secondInstallProgress = new FakeProgressIndicator(true);
         result = basicInstaller.prepare(secondInstallProgress);

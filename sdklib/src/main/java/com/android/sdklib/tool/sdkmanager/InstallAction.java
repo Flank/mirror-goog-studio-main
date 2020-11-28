@@ -91,11 +91,7 @@ class InstallAction extends SdkPackagesAction {
                 progress.setText("Installing " + p.getDisplayName());
                 Installer installer =
                         SdkInstallerUtil.findBestInstallerFactory(p, getSdkHandler())
-                                .createInstaller(
-                                        p,
-                                        getRepoManager(),
-                                        getDownloader(),
-                                        getSdkHandler().getFileOp());
+                                .createInstaller(p, getRepoManager(), getDownloader());
                 progressMax += progressIncrement;
                 if (!applyPackageOperation(installer, progress.createSubProgress(progressMax))) {
                     // there was an error, abort.
