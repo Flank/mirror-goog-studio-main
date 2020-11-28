@@ -18,7 +18,9 @@ package com.android.repository.io.impl;
 
 import static org.junit.Assert.assertArrayEquals;
 
+import com.android.annotations.NonNull;
 import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.OsType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -61,9 +63,7 @@ public class MockFileOpTest extends TestCase {
         m.recordExistingFile("/dir1/file1");
         assertTrue(m.isFile(f1));
 
-        assertEquals(
-                ImmutableList.of(m.getPlatformSpecificPath("/dir1/file1")),
-                Arrays.asList(m.getExistingFiles()));
+        assertEqualsMaybeIgnoreCase(ImmutableList.of("/dir1/file1"), m.getExistingFiles());
     }
 
     public void testIsDirectory() {
@@ -83,18 +83,15 @@ public class MockFileOpTest extends TestCase {
         assertTrue(m.isDirectory(createFile("/dir1", "dir2", "dir3")));
         assertTrue(m.isDirectory(createFile("/dir1", "dir2", "dir6")));
 
-        assertEquals(
+        assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                                "/",
-                                "/dir1",
-                                "/dir1/dir2",
-                                "/dir1/dir2/dir3",
-                                "/dir1/dir2/dir3/dir4",
-                                "/dir1/dir2/dir6")
-                        .stream()
-                        .map(m::getPlatformSpecificPath)
-                        .collect(Collectors.toList()),
-                Arrays.asList(m.getExistingFolders()));
+                        "/",
+                        "/dir1",
+                        "/dir1/dir2",
+                        "/dir1/dir2/dir3",
+                        "/dir1/dir2/dir3/dir4",
+                        "/dir1/dir2/dir6"),
+                m.getExistingFolders());
     }
 
     public void testDelete() {
@@ -102,18 +99,14 @@ public class MockFileOpTest extends TestCase {
         m.recordExistingFile("/dir1/file1");
         m.recordExistingFile("/dir1/file2");
 
-        assertEquals(
-                ImmutableList.of(
-                        m.getPlatformSpecificPath("/dir1/file1"),
-                        m.getPlatformSpecificPath("/dir1/file2")),
-                Arrays.asList(m.getExistingFiles()));
+        assertEqualsMaybeIgnoreCase(
+                ImmutableList.of("/dir1/file1", "/dir1/file2"),
+                m.getExistingFiles());
 
         assertTrue(m.delete(createFile("/dir1", "file1")));
         assertFalse(m.delete(createFile("/dir1", "file3")));
         assertFalse(m.delete(createFile("/dir2", "file2")));
-        assertEquals(
-                ImmutableList.of(m.getPlatformSpecificPath("/dir1/file2")),
-                Arrays.asList(m.getExistingFiles()));
+        assertEqualsMaybeIgnoreCase(ImmutableList.of("/dir1/file2"), m.getExistingFiles());
 
         // deleting a directory with files in it fails
         assertFalse(m.delete(createFile("/dir1")));
@@ -139,68 +132,54 @@ public class MockFileOpTest extends TestCase {
                 new File[] {
                     new File("/dir1/dir2").getAbsoluteFile(),
                     new File("/dir1/file1").getAbsoluteFile(),
-                    new File(m.getPlatformSpecificPath("/dir1/file2")).getAbsoluteFile()
+                    new File("/dir1/file2").getAbsoluteFile()
                 },
                 m.listFiles(createFile("/dir1")));
     }
 
     public void testMkDirs() {
-        assertArrayEquals(new String[] {m.getPlatformSpecificPath("/")}, m.getExistingFolders());
+        assertEqualsMaybeIgnoreCase(ImmutableList.of("/"), m.getExistingFolders());
 
         assertTrue(m.mkdirs(createFile("/dir1")));
-        assertArrayEquals(
-                new String[] {m.getPlatformSpecificPath("/"), m.getPlatformSpecificPath("/dir1")},
-                m.getExistingFolders());
+        assertEqualsMaybeIgnoreCase(ImmutableList.of("/", "/dir1"), m.getExistingFolders());
 
         m.recordExistingFolder("/dir1");
-        assertArrayEquals(
-                new String[] {m.getPlatformSpecificPath("/"), m.getPlatformSpecificPath("/dir1")},
-                m.getExistingFolders());
+        assertEqualsMaybeIgnoreCase(ImmutableList.of("/", "/dir1"), m.getExistingFolders());
 
         assertTrue(m.mkdirs(createFile("/dir1/dir2/dir3")));
-        assertEquals(
-                ImmutableList.of("/", "/dir1", "/dir1/dir2", "/dir1/dir2/dir3").stream()
-                        .map(m::getPlatformSpecificPath)
-                        .collect(Collectors.toList()),
-                Arrays.asList(m.getExistingFolders()));
+        assertEqualsMaybeIgnoreCase(
+                ImmutableList.of("/", "/dir1", "/dir1/dir2", "/dir1/dir2/dir3"),
+                m.getExistingFolders());
     }
 
     public void testRenameTo() {
         m.recordExistingFile("/dir1/dir2/dir6/file7");
         m.recordExistingFolder("/dir1/dir2/dir3/dir4");
 
-        assertArrayEquals(
-                new String[] {m.getPlatformSpecificPath("/dir1/dir2/dir6/file7")},
-                m.getExistingFiles());
-        assertEquals(
+        assertEqualsMaybeIgnoreCase(
+                ImmutableList.of("/dir1/dir2/dir6/file7"), m.getExistingFiles());
+        assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                                "/",
-                                "/dir1",
-                                "/dir1/dir2",
-                                "/dir1/dir2/dir3",
-                                "/dir1/dir2/dir3/dir4",
-                                "/dir1/dir2/dir6")
-                        .stream()
-                        .map(m::getPlatformSpecificPath)
-                        .collect(Collectors.toList()),
-                Arrays.asList(m.getExistingFolders()));
+                        "/",
+                        "/dir1",
+                        "/dir1/dir2",
+                        "/dir1/dir2/dir3",
+                        "/dir1/dir2/dir3/dir4",
+                        "/dir1/dir2/dir6"),
+                m.getExistingFolders());
 
         assertTrue(m.renameTo(createFile("/dir1", "dir2"), createFile("/dir1", "newDir2")));
-        assertArrayEquals(
-                new String[] {m.getPlatformSpecificPath("/dir1/newDir2/dir6/file7")},
-                m.getExistingFiles());
-        assertEquals(
+        assertEqualsMaybeIgnoreCase(
+                ImmutableList.of("/dir1/newDir2/dir6/file7"), m.getExistingFiles());
+        assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                                "/",
-                                "/dir1",
-                                "/dir1/newDir2",
-                                "/dir1/newDir2/dir3",
-                                "/dir1/newDir2/dir3/dir4",
-                                "/dir1/newDir2/dir6")
-                        .stream()
-                        .map(m::getPlatformSpecificPath)
-                        .collect(Collectors.toList()),
-                Arrays.asList(m.getExistingFolders()));
+                        "/",
+                        "/dir1",
+                        "/dir1/newDir2",
+                        "/dir1/newDir2/dir3",
+                        "/dir1/newDir2/dir3/dir4",
+                        "/dir1/newDir2/dir6"),
+                m.getExistingFolders());
 
         assertTrue(m.renameTo(
                 createFile("/dir1", "newDir2", "dir6", "file7"),
@@ -208,21 +187,17 @@ public class MockFileOpTest extends TestCase {
         assertTrue(m.renameTo(
                 createFile("/dir1", "newDir2", "dir3", "dir4"),
                 createFile("/dir1", "newDir2", "dir3", "newDir4")));
-        assertArrayEquals(
-                new String[] {m.getPlatformSpecificPath("/dir1/newDir2/dir6/newFile7")},
-                m.getExistingFiles());
-        assertEquals(
+        assertEqualsMaybeIgnoreCase(
+                ImmutableList.of("/dir1/newDir2/dir6/newFile7"), m.getExistingFiles());
+        assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                                "/",
-                                "/dir1",
-                                "/dir1/newDir2",
-                                "/dir1/newDir2/dir3",
-                                "/dir1/newDir2/dir3/newDir4",
-                                "/dir1/newDir2/dir6")
-                        .stream()
-                        .map(m::getPlatformSpecificPath)
-                        .collect(Collectors.toList()),
-                Arrays.asList(m.getExistingFolders()));
+                        "/",
+                        "/dir1",
+                        "/dir1/newDir2",
+                        "/dir1/newDir2/dir3",
+                        "/dir1/newDir2/dir3/newDir4",
+                        "/dir1/newDir2/dir6"),
+                m.getExistingFolders());
     }
 
     public void testReadOnlyFile() throws Exception {
@@ -262,5 +237,19 @@ public class MockFileOpTest extends TestCase {
         assertTrue(resultList.contains("a.txt"));
         assertTrue(resultList.contains("c.txt"));
         assertTrue(resultList.contains("d.txt"));
+    }
+
+    private void assertEqualsMaybeIgnoreCase(
+            @NonNull List<String> expected, @NonNull String[] actual) {
+        if (OsType.getHostOs() == OsType.WINDOWS || OsType.getHostOs() == OsType.DARWIN) {
+            assertEquals(
+                    expected.stream()
+                            .map(m::getPlatformSpecificPath)
+                            .map(String::toLowerCase)
+                            .collect(Collectors.toList()),
+                    Arrays.stream(actual).map(String::toLowerCase).collect(Collectors.toList()));
+        } else {
+            assertEquals(expected, Arrays.asList(actual));
+        }
     }
 }
