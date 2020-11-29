@@ -984,7 +984,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.commons_commons-compress",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.12:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.20:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
