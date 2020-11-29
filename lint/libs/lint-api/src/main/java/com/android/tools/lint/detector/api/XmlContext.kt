@@ -64,22 +64,23 @@ open class XmlContext(
     file: File,
     /** the [ResourceFolderType] of this file, if any */
     folderType: ResourceFolderType?,
-    /** The XML parser  */
-    val parser: XmlParser,
 
     /** The XML contents of the file */
-    contents: String,
+    contents: CharSequence?,
 
     /** The XML document */
     @JvmField // backwards compatibility
     val document: Document
 ) : ResourceContext(driver, project, main, file, folderType, contents) {
 
+    /** The XML parser */
+    val parser: XmlParser get() = project.client.xmlParser
+
     /**
-     * Returns the location for the given node, which may be an element or an attribute.
+     * Returns the location for the given node, which may be an element
+     * or an attribute.
      *
      * @param node the node to look up the location for
-     *
      * @return the location for the node
      */
     fun getLocation(node: Node): Location = parser.getLocation(this, node)
@@ -154,6 +155,7 @@ open class XmlContext(
      * @return a new location
      */
     fun getLocation(textNode: Node, begin: Int, end: Int): Location {
+        //noinspection ExpensiveAssertion
         assert(textNode.nodeType == Node.TEXT_NODE || textNode.nodeType == Node.COMMENT_NODE)
         return parser.getLocation(this, textNode, begin, end)
     }

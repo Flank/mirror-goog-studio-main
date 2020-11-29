@@ -85,6 +85,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -161,6 +162,7 @@ public class Project {
     private ResourceVisibilityLookup resourceVisibility;
     private Document mergedManifest;
     private com.intellij.openapi.project.Project ideaProject;
+    private Map<Object, Object> clientProperties;
 
     /**
      * Creates a new {@link Project} for the given directory.
@@ -231,6 +233,7 @@ public class Project {
      *
      * @return the library model, or null
      */
+    @Nullable
     public LintModelAndroidLibrary getBuildLibraryModel() {
         return null;
     }
@@ -251,6 +254,34 @@ public class Project {
     public boolean isCoreLibraryDesugaringEnabled() {
         LintModelVariant variant = getBuildVariant();
         return variant != null && variant.getBuildFeatures().getCoreLibraryDesugaringEnabled();
+    }
+
+    /**
+     * Associate the given key and value data with this project. Used to store project specific
+     * state without introducing external caching.
+     */
+    public void putClientProperty(@NonNull Object key, @Nullable Object value) {
+        if (clientProperties == null) {
+            clientProperties = new HashMap<>();
+        }
+        if (value != null) {
+            clientProperties.put(key, value);
+        } else {
+            clientProperties.remove(key);
+        }
+    }
+
+    /**
+     * Retrieve the given key and value data associated with this project. Used to store project
+     * specific state without introducing external caching.
+     */
+    @Nullable
+    public <T> T getClientProperty(@NonNull Object key) {
+        if (clientProperties == null) {
+            return null;
+        }
+        //noinspection unchecked
+        return (T) clientProperties.get(key);
     }
 
     /** Returns the corresponding IDE project. */
@@ -1679,7 +1710,7 @@ public class Project {
     }
 
     @NonNull
-    private ResourceVisibilityLookup createLibraryVisibilityLookup(
+    private static ResourceVisibilityLookup createLibraryVisibilityLookup(
             LintModelAndroidLibrary androidLibrary) {
         File publicResources = androidLibrary.getPublicResources();
         File symbolFile = androidLibrary.getSymbolFile();
@@ -1719,7 +1750,7 @@ public class Project {
         } else if (existing.isEmpty()) {
             return additional;
         } else {
-            List<File> newList = new ArrayList<File>(existing.size() + additional.size());
+            List<File> newList = new ArrayList<>(existing.size() + additional.size());
             newList.addAll(existing);
             newList.addAll(additional);
             return newList;

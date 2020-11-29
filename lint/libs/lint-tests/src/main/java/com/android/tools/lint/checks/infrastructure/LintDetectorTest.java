@@ -20,22 +20,10 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.MergingException;
-import com.android.ide.common.resources.ResourceFile;
-import com.android.ide.common.resources.ResourceItem;
-import com.android.ide.common.resources.ResourceMerger;
-import com.android.ide.common.resources.ResourceMergerItem;
-import com.android.ide.common.resources.ResourceRepositories;
-import com.android.ide.common.resources.ResourceRepository;
-import com.android.ide.common.resources.ResourceSet;
-import com.android.ide.common.resources.TestResourceRepository;
-import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceFolderType;
-import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
@@ -75,15 +63,8 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.utils.ILogger;
-import com.android.utils.StdLogger;
-import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiErrorElement;
@@ -95,19 +76,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -1038,122 +1016,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         public void setIncremental(File currentFile) {
             incrementalCheck = currentFile;
-        }
-
-        @Override
-        public boolean supportsProjectResources() {
-            return incrementalCheck != null;
-        }
-
-        @Nullable
-        protected String getProjectResourceLibraryName() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public ResourceRepository getResourceRepository(
-                Project project, boolean includeDependencies, boolean includeLibraries) {
-            if (incrementalCheck == null) {
-                return null;
-            }
-
-            TestResourceRepository repository = new TestResourceRepository(RES_AUTO);
-            ILogger logger = new StdLogger(StdLogger.Level.INFO);
-            ResourceMerger merger = new ResourceMerger(0);
-
-            ResourceSet resourceSet =
-                    new ResourceSet(
-                            project.getName(),
-                            RES_AUTO,
-                            getProjectResourceLibraryName(),
-                            true,
-                            null) {
-                        @Override
-                        protected void checkItems() {
-                            // No checking in ProjectResources; duplicates can happen, but
-                            // the project resources shouldn't abort initialization
-                        }
-                    };
-            // Only support 1 resource folder in test setup right now
-            int size = project.getResourceFolders().size();
-            assertTrue("Found " + size + " test resources folders", size <= 1);
-            if (size == 1) {
-                resourceSet.addSource(project.getResourceFolders().get(0));
-            }
-            try {
-                resourceSet.loadFromFiles(logger);
-                merger.addDataSet(resourceSet);
-                repository.update(merger);
-
-                // Make tests stable: sort the item lists!
-                for (ListMultimap<String, ResourceItem> multimap :
-                        repository.getResourceTable().values()) {
-                    ResourceRepositories.sortItemLists(multimap);
-                }
-
-                // Workaround: The repository does not insert ids from layouts! We need
-                // to do that here.
-                // TODO: namespaces
-                Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                        repository.getResourceTable().row(RES_AUTO);
-                ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
-                if (layouts != null) {
-                    for (ResourceItem item : layouts.values()) {
-                        PathString source = item.getSource();
-                        if (source == null) {
-                            continue;
-                        }
-                        File file = source.toFile();
-                        if (file == null) {
-                            continue;
-                        }
-                        try {
-                            String xml = Files.toString(file, StandardCharsets.UTF_8);
-                            Document document = XmlUtils.parseDocumentSilently(xml, true);
-                            assertNotNull(document);
-                            Set<String> ids = Sets.newHashSet();
-                            addIds(ids, document); // TODO: pull parser
-                            if (!ids.isEmpty()) {
-                                ListMultimap<String, ResourceItem> idMap =
-                                        items.get(ResourceType.ID);
-                                if (idMap == null) {
-                                    idMap = ArrayListMultimap.create();
-                                    items.put(ResourceType.ID, idMap);
-                                }
-                                for (String id : ids) {
-                                    ResourceMergerItem idItem =
-                                            new ResourceMergerItem(
-                                                    id,
-                                                    RES_AUTO,
-                                                    ResourceType.ID,
-                                                    null,
-                                                    null,
-                                                    null);
-                                    String qualifiers = source.getParentFileName();
-                                    if (qualifiers.startsWith("layout-")) {
-                                        qualifiers = qualifiers.substring("layout-".length());
-                                    } else if (qualifiers.equals("layout")) {
-                                        qualifiers = "";
-                                    }
-
-                                    // Creating the resource file will set the source of idItem.
-                                    //noinspection ResultOfObjectAllocationIgnored
-                                    ResourceFile.createSingle(file, idItem, qualifiers);
-
-                                    idMap.put(id, idItem);
-                                }
-                            }
-                        } catch (IOException e) {
-                            fail(e.toString());
-                        }
-                    }
-                }
-            } catch (MergingException e) {
-                fail(e.getMessage());
-            }
-
-            return repository;
         }
 
         @Nullable

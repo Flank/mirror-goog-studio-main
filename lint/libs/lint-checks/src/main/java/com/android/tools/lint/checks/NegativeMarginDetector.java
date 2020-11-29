@@ -26,9 +26,9 @@ import static com.android.SdkConstants.ATTR_LAYOUT_MARGIN_TOP;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.DIMEN_PREFIX;
 import static com.android.SdkConstants.PREFIX_ANDROID;
-import static com.android.SdkConstants.TAG_DIMEN;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STYLE;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -45,14 +45,13 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Lint;
-import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -91,15 +90,12 @@ public class NegativeMarginDetector extends LayoutDetector {
                             IMPLEMENTATION)
                     .setEnabledByDefault(false);
 
-    private HashMap<String, Location.Handle> mDimenUsage;
-
     /** Constructs a new {@link NegativeMarginDetector} */
     public NegativeMarginDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
-        // Look in both layouts (at attribute values) and in value files (style and dimension
-        // definitions)
+        // Look in both layouts (at attribute values) and in value files (style definitions)
         return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.VALUES;
     }
 
@@ -118,13 +114,13 @@ public class NegativeMarginDetector extends LayoutDetector {
     @Override
     @Nullable
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(TAG_DIMEN, TAG_STYLE);
+        return Collections.singletonList(TAG_STYLE);
     }
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getValue();
-        checkMarginValue(context, value, attribute, null);
+        checkMarginValue(context, value, attribute);
     }
 
     @Override
@@ -133,40 +129,22 @@ public class NegativeMarginDetector extends LayoutDetector {
             return;
         }
 
-        String tag = element.getTagName();
-        if (TAG_DIMEN.equals(tag)) {
-            NodeList itemNodes = element.getChildNodes();
-            String name = element.getAttribute(ATTR_NAME);
-            Location.Handle handle = mDimenUsage != null ? mDimenUsage.get(name) : null;
-            if (handle != null) {
-                for (int j = 0, nodeCount = itemNodes.getLength(); j < nodeCount; j++) {
-                    Node item = itemNodes.item(j);
-                    if (item.getNodeType() == Node.TEXT_NODE) {
-                        String text = item.getNodeValue().trim();
-                        checkMarginValue(context, text, null, handle);
-                    }
-                }
-            }
-        } else {
-            assert TAG_STYLE.equals(tag) : tag;
-            NodeList itemNodes = element.getChildNodes();
-            for (int j = 0, nodeCount = itemNodes.getLength(); j < nodeCount; j++) {
-                Node item = itemNodes.item(j);
-                if (item.getNodeType() == Node.ELEMENT_NODE
-                        && TAG_ITEM.equals(item.getNodeName())) {
-                    Element itemElement = (Element) item;
-                    String name = itemElement.getAttribute(ATTR_NAME);
-                    if (name.startsWith(PREFIX_ANDROID)
-                            && name.startsWith(ATTR_LAYOUT_MARGIN, PREFIX_ANDROID.length())) {
-                        NodeList childNodes = item.getChildNodes();
-                        for (int i = 0, n = childNodes.getLength(); i < n; i++) {
-                            Node child = childNodes.item(i);
-                            if (child.getNodeType() != Node.TEXT_NODE) {
-                                return;
-                            }
-
-                            checkMarginValue(context, child.getNodeValue(), child, null);
+        NodeList itemNodes = element.getChildNodes();
+        for (int j = 0, nodeCount = itemNodes.getLength(); j < nodeCount; j++) {
+            Node item = itemNodes.item(j);
+            if (item.getNodeType() == Node.ELEMENT_NODE && TAG_ITEM.equals(item.getNodeName())) {
+                Element itemElement = (Element) item;
+                String name = itemElement.getAttribute(ATTR_NAME);
+                if (name.startsWith(PREFIX_ANDROID)
+                        && name.startsWith(ATTR_LAYOUT_MARGIN, PREFIX_ANDROID.length())) {
+                    NodeList childNodes = item.getChildNodes();
+                    for (int i = 0, n = childNodes.getLength(); i < n; i++) {
+                        Node child = childNodes.item(i);
+                        if (child.getNodeType() != Node.TEXT_NODE) {
+                            return;
                         }
+
+                        checkMarginValue(context, child.getNodeValue(), child);
                     }
                 }
             }
@@ -177,59 +155,41 @@ public class NegativeMarginDetector extends LayoutDetector {
         return value.trim().startsWith("-");
     }
 
-    private void checkMarginValue(
-            @NonNull XmlContext context,
-            @NonNull String value,
-            @Nullable Node scope,
-            @Nullable Location.Handle handle) {
+    private static void checkMarginValue(
+            @NonNull XmlContext context, @NonNull String value, @NonNull Node scope) {
         if (isNegativeDimension(value)) {
             String message = "Margin values should not be negative";
-            if (scope != null) {
-                context.report(ISSUE, scope, context.getLocation(scope), message);
-            } else {
-                assert handle != null;
-                context.report(ISSUE, handle.resolve(), message);
-            }
-        } else if (value.startsWith(DIMEN_PREFIX) && scope != null) {
+            context.report(ISSUE, scope, context.getLocation(scope), message);
+        } else if (value.startsWith(DIMEN_PREFIX)) {
             ResourceUrl url = ResourceUrl.parse(value);
             if (url == null) {
                 return;
             }
-            if (context.getClient().supportsProjectResources()) {
-                // Typically interactive IDE usage, where we are only analyzing a single file,
-                // but we can use the IDE to resolve resource URLs
-                LintClient client = context.getClient();
-                Project project = context.getProject();
-                ResourceRepository resources = client.getResourceRepository(project, true, true);
-                if (resources != null) {
-                    List<ResourceItem> items =
-                            resources.getResources(ResourceNamespace.TODO(), url.type, url.name);
-                    for (ResourceItem item : items) {
-                        ResourceValue resourceValue = item.getResourceValue();
-                        if (resourceValue != null) {
-                            String dimenValue = resourceValue.getValue();
-                            if (dimenValue != null && isNegativeDimension(dimenValue)) {
-                                PathString sourceFile = item.getSource();
-                                assert sourceFile != null;
-                                String message =
-                                        String.format(
-                                                "Margin values should not be negative "
-                                                        + "(`%1$s` is defined as `%2$s` in `%3$s`",
-                                                value,
-                                                dimenValue,
-                                                Lint.getFileNameWithParent(client, sourceFile));
-                                context.report(ISSUE, scope, context.getLocation(scope), message);
-                                break;
-                            }
-                        }
+            // Typically interactive IDE usage, where we are only analyzing a single file,
+            // but we can use the IDE to resolve resource URLs
+            LintClient client = context.getClient();
+            Project project = context.getProject();
+            ResourceRepository resources = client.getResources(project, ALL_DEPENDENCIES);
+            List<ResourceItem> items =
+                    resources.getResources(ResourceNamespace.TODO(), url.type, url.name);
+            for (ResourceItem item : items) {
+                ResourceValue resourceValue = item.getResourceValue();
+                if (resourceValue != null) {
+                    String dimenValue = resourceValue.getValue();
+                    if (dimenValue != null && isNegativeDimension(dimenValue)) {
+                        PathString sourceFile = item.getSource();
+                        assert sourceFile != null;
+                        String message =
+                                String.format(
+                                        "Margin values should not be negative "
+                                                + "(`%1$s` is defined as `%2$s` in `%3$s`",
+                                        value,
+                                        dimenValue,
+                                        Lint.getFileNameWithParent(client, sourceFile));
+                        context.report(ISSUE, scope, context.getLocation(scope), message);
+                        break;
                     }
                 }
-            } else if (!context.getDriver().isSuppressed(context, ISSUE, scope)) {
-                // Batch mode where we process layouts then values in order
-                if (mDimenUsage == null) {
-                    mDimenUsage = new HashMap<>();
-                }
-                mDimenUsage.put(url.name, context.createLocationHandle(scope));
             }
         }
     }

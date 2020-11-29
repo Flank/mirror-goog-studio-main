@@ -47,7 +47,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/color/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
                         + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                        + "                                                ^\n"
+                        + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/layout/layout.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge> [NewApi]\n"
                         + "    <QuickContactBadge\n"
                         + "     ~~~~~~~~~~~~~~~~~\n"
@@ -65,7 +65,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/values/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
                         + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                        + "                                                ^\n"
+                        + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "7 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(manifest().minSdk(1), mLayout, mThemes, mThemes2)
@@ -106,8 +106,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testPropertyAnimator() {
         // Regression test for https://issuetracker.google.com/149416536
-        lint().supportResourceRepository(true)
-                .files(
+        lint().files(
                         manifest().minSdk(15),
                         kotlin(
                                         ""
@@ -919,7 +918,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/color-v11/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
                         + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                        + "                                                ^\n"
+                        + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/layout-v11/layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout> [NewApi]\n"
                         + "    <GridLayout\n"
                         + "     ~~~~~~~~~~\n"
@@ -931,7 +930,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/values-v11/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
                         + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                        + "                                                ^\n"
+                        + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "5 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(manifest().minSdk(1), mLayout2, mThemes3, mThemes4)

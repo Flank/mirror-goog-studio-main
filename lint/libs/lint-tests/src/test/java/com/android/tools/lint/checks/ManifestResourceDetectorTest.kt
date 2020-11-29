@@ -170,7 +170,7 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
         )
     }
 
-    fun testBatchAnalysis() {
+    fun testInvalidReferences() {
         lint().files(
             xml(
                 "AndroidManifest.xml",
@@ -276,21 +276,19 @@ class ManifestResourceDetectorTest : AbstractCheckTest() {
             AndroidManifest.xml:11: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in mcc [ManifestResource]
                     android:fullBackupContent="@xml/backup"
                                                ~~~~~~~~~~~
-                res/xml-mcc/backup.xml:1: This value will not be used
-            <full-backup-content>
-            ^
+                res/xml-mcc/backup.xml: This value will not be used
             AndroidManifest.xml:21: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in en-rUS [ManifestResource]
                         android:process="@string/location_process"
                                          ~~~~~~~~~~~~~~~~~~~~~~~~
                 res/values-en-rUS/values.xml:2: This value will not be used
                 <string name="location_process">Location Process (English)</string>
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            AndroidManifest.xml:22: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in watch [ManifestResource]
+                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+            AndroidManifest.xml:22: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in watch-v20 [ManifestResource]
                         android:enabled="@bool/enable_wearable_location_service">
                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 res/values-watch/bools.xml:2: This value will not be used
                 <bool name="enable_wearable_location_service">false</bool>
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                                              ~~~~~
             3 errors, 0 warnings
             """
         )

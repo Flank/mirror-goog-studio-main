@@ -131,4 +131,8 @@ public class ResourceTypeTest extends TestCase {
         assertEquals(ResourceType.AAPT, ResourceType.fromXmlValue("_aapt"));
   }
 
+  public void testSynthetic() {
+      assertTrue(ResourceType.AAPT.isSynthetic());
+      assertFalse(ResourceType.STRING.isSynthetic());
+  }
 }

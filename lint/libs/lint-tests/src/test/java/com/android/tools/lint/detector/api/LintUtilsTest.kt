@@ -56,7 +56,6 @@ import com.android.tools.lint.client.api.TYPE_LONG
 import com.android.tools.lint.client.api.TYPE_LONG_WRAPPER
 import com.android.tools.lint.client.api.TYPE_SHORT
 import com.android.tools.lint.client.api.TYPE_SHORT_WRAPPER
-import com.android.tools.lint.client.api.XmlParser
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.escapePropertyValue
 import com.android.utils.XmlUtils
@@ -713,9 +712,8 @@ class LintUtilsTest : TestCase() {
         private val xmlSource: String,
         file: File,
         type: ResourceFolderType,
-        parser: XmlParser,
         document: Document
-    ) : XmlContext(driver, project, null, file, type, parser, xmlSource, document) {
+    ) : XmlContext(driver, project, null, file, type, xmlSource, document) {
 
         override fun getContents(): String? {
             return xmlSource
@@ -941,10 +939,8 @@ class LintUtilsTest : TestCase() {
             val driver = LintDriver(TestIssueRegistry(), LintCliClient(CLIENT_UNIT_TESTS), request)
             driver.scope = Scope.JAVA_FILE_SCOPE
             val folderType = ResourceFolderType.getFolderType(relativePath.parentFile.name)
-
-            val parser = client.xmlParser
-            val document = parser.parseXml(xml, fullPath)
-            return XmlTestContext(driver, project, xml, fullPath, folderType!!, parser, document!!)
+            val document = client.getXmlDocument(fullPath, xml)
+            return XmlTestContext(driver, project, xml, fullPath, folderType!!, document!!)
         }
 
         @JvmStatic

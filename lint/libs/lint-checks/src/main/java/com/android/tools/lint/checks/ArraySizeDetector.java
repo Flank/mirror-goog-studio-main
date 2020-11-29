@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.TAG_ARRAY;
 import static com.android.SdkConstants.TAG_INTEGER_ARRAY;
 import static com.android.SdkConstants.TAG_STRING_ARRAY;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
@@ -252,8 +253,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                 if (context.getProject().getReportIssues()) {
                     int childCount = Lint.getChildCount(element);
 
-                    if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)
-                            && context.getClient().supportsProjectResources()) {
+                    if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
                         incrementalCheckCount(context, element, name, childCount);
                         return;
                     }
@@ -285,11 +285,8 @@ public class ArraySizeDetector extends ResourceXmlDetector {
             @NonNull String name,
             int childCount) {
         LintClient client = context.getClient();
-        Project project = context.getMainProject();
-        ResourceRepository resources = client.getResourceRepository(project, true, false);
-        if (resources == null) {
-            return;
-        }
+        Project project = context.getProject();
+        ResourceRepository resources = client.getResources(project, LOCAL_DEPENDENCIES);
         List<ResourceItem> items =
                 resources.getResources(ResourceNamespace.TODO(), ResourceType.ARRAY, name);
         for (ResourceItem item : items) {

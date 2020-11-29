@@ -35,6 +35,7 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
+import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Context
@@ -254,14 +255,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             }
             if (id != null || tag != null) {
                 // We can't search for tags in the resource repository incrementally
-                if (id != null && client.supportsProjectResources()) {
-                    val resources =
-                        client.getResourceRepository(
-                            context.mainProject,
-                            includeModuleDependencies = true,
-                            includeLibraries = false
-                        ) ?: return
-
+                if (id != null) {
+                    val resources = client.getResources(context.mainProject, LOCAL_DEPENDENCIES)
                     val items =
                         resources.getResources(ResourceNamespace.TODO(), ResourceType.ID, id)
                     if (items.isNotEmpty()) {

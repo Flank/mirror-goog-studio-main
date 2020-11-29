@@ -230,7 +230,7 @@ private class ProjectInitializer(
 
     /** Compute a list of lint [Project] instances from the given XML descriptor */
     fun computeMetadata(): ProjectMetadata {
-        val document = client.xmlParser.parseXml(file)
+        val document = client.getXmlDocument(file)
 
         if (document == null || document.documentElement == null) {
             // Lint isn't quite up and running yet, so create a placeholder context
@@ -536,7 +536,7 @@ private class ProjectInitializer(
             }
         }
 
-        val dir = pickDirectory(name)
+        val dir = pickDirectory(name).let { if (it.isDirectory) it else root }
         val module = ManualProject(client, dir, name, library, android)
         modules[name] = module
 

@@ -190,7 +190,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                                 + "                         ~~~~~\n"
                                 + "res/xml/network_config.xml:10: Error: Decoded digest length 30 does not match expected length for SHA-256 of 32 [NetworkSecurityConfig]\n"
                                 + "            <pin digest=\"SHA-256\">aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d</pin>\n"
-                                + "                                  ^\n"
+                                + "                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "2 errors, 1 warnings\n",
                         fiveDaysFromNow);
         //noinspection all // Sample code
@@ -288,16 +288,16 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/xml/network_config.xml:6: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
                         + "        <domain includeSubdomains=\"true\">www.Example.com</domain>\n"
-                        + "                                         ^\n"
+                        + "                                         ~~~~~~~~~~~~~~~\n"
                         + "    res/xml/network_config.xml:4: Already declared here\n"
                         + "        <domain includeSubdomains=\"true\">www.example.com</domain>\n"
-                        + "                                         ^\n"
+                        + "                                         ~~~~~~~~~~~~~~~\n"
                         + "res/xml/network_config.xml:13: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
                         + "            <domain includeSubdomains=\"true\">www.example.com</domain>\n"
-                        + "                                             ^\n"
+                        + "                                             ~~~~~~~~~~~~~~~\n"
                         + "    res/xml/network_config.xml:4: Already declared here\n"
                         + "        <domain includeSubdomains=\"true\">www.example.com</domain>\n"
-                        + "                                         ^\n"
+                        + "                                         ~~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(

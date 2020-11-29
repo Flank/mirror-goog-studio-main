@@ -64,17 +64,17 @@ class ResourceVisitor {
     private final List<XmlScanner> allAttributeDetectors = new ArrayList<>();
     private final List<XmlScanner> allDetectors;
     private final List<? extends Detector> binaryDetectors;
-    private final XmlParser parser;
+    private final LintClient client;
 
     // Really want this:
     // <T extends List<Detector> & XmlScanner> XmlVisitor(IDomParser parser,
     //    T xmlDetectors) {
     // but it makes client code tricky and ugly.
     ResourceVisitor(
-            @NonNull XmlParser parser,
+            @NonNull LintClient client,
             @NonNull List<XmlScanner> allDetectors,
             @Nullable List<Detector> binaryDetectors) {
-        this.parser = parser;
+        this.client = client;
         this.binaryDetectors = binaryDetectors;
         this.allDetectors = allDetectors;
 
@@ -189,11 +189,6 @@ class ResourceVisitor {
                 check.visitElementAfter(context, element);
             }
         }
-    }
-
-    @NonNull
-    public XmlParser getParser() {
-        return parser;
     }
 
     public void visitBinaryResource(@NonNull ResourceContext context) {

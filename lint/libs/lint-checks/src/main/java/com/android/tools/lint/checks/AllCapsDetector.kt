@@ -21,6 +21,7 @@ import com.android.SdkConstants.ATTR_TEXT
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceUrl
+import com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -81,8 +82,7 @@ class AllCapsDetector : LayoutDetector() {
 
         val client = context.client
         val project = context.mainProject
-        val repository = client.getResourceRepository(project, true, true) ?: return
-
+        val repository = client.getResources(project, ALL_DEPENDENCIES)
         val items = repository.getResources(ResourceNamespace.TODO(), url.type, url.name)
         if (items.isEmpty()) {
             return

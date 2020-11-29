@@ -114,7 +114,7 @@ public class PositionXmlParserTest extends TestCase {
         file.delete();
     }
 
-    public static void testText() throws Exception {
+    public void testText() throws Exception {
         String xml =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
@@ -128,7 +128,7 @@ public class PositionXmlParserTest extends TestCase {
                 "        android:layout_height=\"wrap_content\"\n" +
                 "        android:text=\"Button\" />\n" +
                 "          some text\n" +
-                "\n" +
+                "done\n  " +
                 "</LinearLayout>\n";
         File file = File.createTempFile("parsertest", ".xml");
         file.deleteOnExit();
@@ -157,6 +157,10 @@ public class PositionXmlParserTest extends TestCase {
         assertEquals(11, start.getStartLine());
         assertEquals(10, start.getStartColumn());
         assertEquals(xml.indexOf("some text"), start.getStartOffset());
+
+        assertEquals(12, start.getEndLine());
+        assertEquals(4, start.getEndColumn());
+        assertEquals(xml.indexOf("\n  </LinearLayout>\n"), start.getEndOffset());
 
         // Check attribute positions with text node offsets
         start = PositionXmlParser.getPosition(text, 13, 15);

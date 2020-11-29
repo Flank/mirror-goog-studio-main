@@ -236,18 +236,15 @@ public class InefficientWeightDetector extends LayoutDetector {
                 && element.hasAttributeNS(ANDROID_URI, ATTR_ID)) {
             boolean ignore;
             if (element.hasAttribute(ATTR_STYLE)) {
-                if (context.getClient().supportsProjectResources()) {
-                    List<ResourceValue> values =
-                            Lint.getStyleAttributes(
-                                    context.getMainProject(),
-                                    context.getClient(),
-                                    element.getAttribute(ATTR_STYLE),
-                                    ANDROID_URI,
-                                    ATTR_ORIENTATION);
-                    ignore = values != null && !values.isEmpty();
-                } else {
-                    ignore = true;
-                }
+                List<ResourceValue> values =
+                        Lint.getStyleAttributes(
+                                context.getMainProject(),
+                                context.getClient(),
+                                element.getAttribute(ATTR_STYLE),
+                                ANDROID_URI,
+                                ATTR_ORIENTATION,
+                                false);
+                ignore = values == null || !values.isEmpty();
             } else {
                 ignore = false;
             }
@@ -315,7 +312,8 @@ public class InefficientWeightDetector extends LayoutDetector {
                                 context.getClient(),
                                 style,
                                 ANDROID_URI,
-                                dimension);
+                                dimension,
+                                false);
                 if (sizes != null) {
                     for (ResourceValue value : sizes) {
                         String v = value.getValue();

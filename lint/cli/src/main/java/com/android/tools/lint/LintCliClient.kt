@@ -24,6 +24,7 @@ import com.android.SdkConstants.VALUE_TRUE
 import com.android.SdkConstants.currentPlatform
 import com.android.Version
 import com.android.ide.common.repository.GradleVersion
+import com.android.ide.common.resources.ResourceRepository
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.FileStreamProvider
 import com.android.manifmerger.ManifestMerger2.MergeFailureException
@@ -44,6 +45,7 @@ import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintListener
 import com.android.tools.lint.client.api.LintRequest
 import com.android.tools.lint.client.api.LintXmlConfiguration
+import com.android.tools.lint.client.api.ResourceRepositoryScope
 import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.client.api.XmlParser
 import com.android.tools.lint.detector.api.Context
@@ -468,7 +470,31 @@ open class LintCliClient : LintClient {
     override val xmlParser: XmlParser
         get() = LintCliXmlParser(this)
 
-    /** File content cache  */
+    private var xmlDocuments = HashMap<File, Document>()
+
+    override fun getXmlDocument(file: File, contents: CharSequence?): Document? {
+        return xmlDocuments[file] ?: super.getXmlDocument(file, contents)?.also {
+            xmlDocuments[file] = it
+        }
+    }
+
+    override fun getResources(
+        project: Project,
+        scope: ResourceRepositoryScope
+    ): ResourceRepository {
+        return LintResourceRepository.get(this, project, scope)
+    }
+
+    /**
+     * Returns the path to the file containing the cached resource
+     * repository for this project
+     */
+    open fun getRepositoryFile(project: Project): File {
+        val variantName = project.buildVariant?.name ?: "all"
+        return File(project.dir, "build${File.separator}lint-resources-$variantName.xml")
+    }
+
+    /** File content cache */
     private val fileContentCache: MutableMap<File, CharSequence> = HashMap(100)
 
     /** Read the contents of the given file, possibly cached  */
@@ -482,6 +508,34 @@ open class LintCliClient : LintClient {
      */
     fun setSourceText(file: File, text: CharSequence?) {
         text?.let { fileContentCache[file] = it }
+    }
+
+    /** Storage for [getClientProperty] */
+    private var clientProperties: MutableMap<Any, Any>? = null
+
+    /**
+     * Associate the given key and value data with this project. Used
+     * to store project specific state without introducing external
+     * caching.
+     */
+    open fun putClientProperty(key: Any, value: Any?) {
+        val map = clientProperties
+            ?: HashMap<Any, Any>().also { clientProperties = it }
+        if (value != null) {
+            map[key] = value
+        } else {
+            map -= key
+        }
+    }
+
+    /**
+     * Retrieve the given key and value data associated with this
+     * project. Used to store project specific state without introducing
+     * external caching.
+     */
+    open fun <T> getClientProperty(key: Any): T? {
+        @Suppress("UNCHECKED_CAST")
+        return clientProperties?.get(key) as? T?
     }
 
     override fun getUastParser(project: Project?): UastParser = LintCliUastParser(project)
@@ -1129,7 +1183,7 @@ open class LintCliClient : LintClient {
         if (manifests.isEmpty()) {
             // Only the main manifest: that's easy
             try {
-                val document = xmlParser.parseXml(mainManifest)
+                val document = getXmlDocument(mainManifest)
                 document?.let { resolveMergeManifestSources(it, mainManifest) }
                 return document
             } catch (e: IOException) {

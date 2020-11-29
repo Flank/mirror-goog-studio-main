@@ -402,7 +402,7 @@ class ProjectInitializerTest {
 
         MainTest.checkDriver(
             """
-            App: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
+            app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
             project.xml:3: Error: Invalid Java language level "1000" [LintError]
             <module name="Foo:App" android="true" library="true" javaLanguage="1000" kotlinLanguage="1.3">
             ^

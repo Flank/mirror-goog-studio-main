@@ -484,7 +484,7 @@ class SarifReporterTest {
                                                 "startLine": 3,
                                                 "startColumn": 39,
                                                 "endLine": 3,
-                                                "endColumn": 39,
+                                                "endColumn": 43,
                                                 "charOffset": 76,
                                                 "charLength": 4,
                                                 "snippet": {

@@ -28,6 +28,7 @@ import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.ide.common.resources.ResourcesUtil.resourceNameToFieldName;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 import static com.android.tools.lint.detector.api.Lint.getBaseName;
 import static com.android.tools.lint.detector.api.Lint.isXmlFile;
 import static com.android.utils.SdkUtils.isBitmapFile;
@@ -41,12 +42,14 @@ import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -135,12 +138,11 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
 
                 // See if this is resource we're overriding locally
                 if (!foreignPackage) {
+                    Project project = context.getMainProject();
+                    LintClient client = context.getClient();
                     ResourceRepository repository =
-                            context.getClient()
-                                    .getResourceRepository(context.getMainProject(), true, false);
-                    if (repository != null
-                            && repository.hasResources(
-                                    ResourceNamespace.TODO(), resourceType, name)) {
+                            client.getResources(project, LOCAL_DEPENDENCIES);
+                    if (repository.hasResources(ResourceNamespace.TODO(), resourceType, name)) {
                         return;
                     }
 

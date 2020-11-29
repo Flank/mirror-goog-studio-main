@@ -32,7 +32,7 @@ import com.android.tools.lint.checks.CheckResultDetector
 import com.android.tools.lint.checks.ChromeOsDetector
 import com.android.tools.lint.checks.CleanupDetector
 import com.android.tools.lint.checks.CommentDetector
-import com.android.tools.lint.checks.DetectMissingPrefix
+import com.android.tools.lint.checks.MissingPrefixDetector
 import com.android.tools.lint.checks.DuplicateResourceDetector
 import com.android.tools.lint.checks.EllipsizeMaxLinesDetector
 import com.android.tools.lint.checks.FontDetector
@@ -387,7 +387,7 @@ abstract class Reporter protected constructor(
                         CleanupDetector.APPLY_SHARED_PREF,
                         CleanupDetector.SHARED_PREF,
                         CommentDetector.STOP_SHIP,
-                        DetectMissingPrefix.MISSING_NAMESPACE,
+                        MissingPrefixDetector.MISSING_NAMESPACE,
                         DuplicateResourceDetector.STRING_ESCAPING,
                         DuplicateResourceDetector.TYPE_MISMATCH,
                         EllipsizeMaxLinesDetector.ISSUE,

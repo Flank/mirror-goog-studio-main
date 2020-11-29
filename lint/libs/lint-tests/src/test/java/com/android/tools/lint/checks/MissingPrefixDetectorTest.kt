@@ -15,15 +15,15 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants
 import com.android.testutils.TestUtils
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
 import com.google.common.collect.Lists
 
-class DetectMissingPrefixTest : AbstractCheckTest() {
+class MissingPrefixDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
-        return DetectMissingPrefix()
+        return MissingPrefixDetector()
     }
 
     fun testBasic() {
@@ -33,7 +33,7 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                 """
 
                 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:other="http://foo.bar" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent" orientation="true">
-                    <Button style="@style/setupWizardOuterFrame" android.text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                    <Button style="@style/setupWizardOuterFrame" android.text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                     <ImageView android:style="@style/bogus" android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
                     <LinearLayout other:orientation="horizontal"/>
                 </LinearLayout>
@@ -45,7 +45,7 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
             <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:other="http://foo.bar" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent" orientation="true">
                                                                                                                                                                                                                                                       ~~~~~~~~~~~~~~~~~~
             res/layout/namespace.xml:3: Error: Attribute is missing the Android namespace prefix [MissingPrefix]
-                <Button style="@style/setupWizardOuterFrame" android.text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+                <Button style="@style/setupWizardOuterFrame" android.text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
                                                              ~~~~~~~~~~~~~~~~~~~~~
             2 errors, 0 warnings
             """
@@ -232,8 +232,7 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    xmlns:app="http://schemas.android.com/apk/res/foo.bar.baz"
-                    xmlns:tools="http://schemas.android.com/tools">
+                    xmlns:app="http://schemas.android.com/apk/res/foo.bar.baz">
 
                     <android.support.v7.widget.GridLayout
                         android:layout_width="match_parent"
@@ -312,8 +311,7 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                 "res/layout/test.xml",
                 """
                 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-                    xmlns:bind="http://schemas.android.com/apk/res-auto"
-                    xmlns:tools="http://schemas.android.com/tools">
+                    xmlns:bind="http://schemas.android.com/apk/res-auto">
                     <data>
                         <variable name="activity" type="com.android.example.bindingdemo.MainActivity"/>
                         <!---->
@@ -388,7 +386,7 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=211348
         lint().files(
             xml(
-                "res/layout/app_compat.xml",
+                "src/main/res/layout/app_compat.xml",
                 """
                 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -406,32 +404,35 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                 """
             ).indented(),
             xml(
-                "res/values/res.xml",
+                // Simulates model mocker's location of where the AAR res folder is located
+                "build/intermediates/exploded-aar/com.android.support/appcompat-v7/+/res/values/res.xml",
                 """
                 <resources>
                     <attr name="buttonTint" />
                 </resources>
                 """
+            ).indented(),
+            gradle(
+                """
+                apply plugin: 'com.android.application'
+                dependencies {
+                    compile 'com.android.support:appcompat-v7:+'
+                }
+                """
             ).indented()
         )
-            .clientFactory({
-                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                    // Set fake library name on resources in this test to pretend the
-                    // attr comes from appcompat
-                    override fun getProjectResourceLibraryName(): String? {
-                        return "appcompat-v7"
-                    }
-                }
-            })
             .sdkHome(TestUtils.getSdk().toFile())
-            .incremental("res/layout/app_compat.xml").run().expectClean()
+            // The built-in AGP test repository does not model libraries correctly,
+            // though it could
+            .skipTestModes(TestMode.RESOURCE_REPOSITORIES)
+            .incremental("src/main/res/layout/app_compat.xml").run().expectClean()
     }
 
     fun testMaterialDesign2() {
         // Regression test for https://b.corp.google.com/78246338
         lint().files(
             xml(
-                "res/layout/app_compat.xml",
+                "src/main/res/layout/app_compat.xml",
                 """
                 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -451,7 +452,8 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                 """
             ).indented(),
             xml(
-                "res/values/res.xml",
+                // Simulates model mocker's location of where the AAR res folder is located
+                "build/intermediates/exploded-aar/com.android.support/appcompat-v7/+/res/values/res.xml",
                 """
                 <resources>
                     <attr name="cornerRadius" />
@@ -460,20 +462,23 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                     <attr name="strokeWidth" />
                 </resources>
                 """
+            ).indented(),
+            gradle(
+                """
+                apply plugin: 'com.android.application'
+                dependencies {
+                    compile 'com.android.support:appcompat-v7:+'
+                }
+                """
             ).indented()
         )
-            .clientFactory({
-                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                    // testMaterialDesign2
-                    // Set fake library name on resources in this test to pretend the
-                    // attr comes from appcompat
-                    override fun getProjectResourceLibraryName(): String? {
-                        return SdkConstants.ANDROIDX_MATERIAL_ARTIFACT + ":1.0.0"
-                    }
-                }
-            })
             .sdkHome(TestUtils.getSdk().toFile())
-            .incremental("res/layout/app_compat.xml").run().expectClean()
+            // The built-in AGP test repository does not model libraries correctly,
+            // though it could -- TODO
+            .skipTestModes(TestMode.RESOURCE_REPOSITORIES)
+            .incremental("src/main/res/layout/app_compat.xml")
+            .run()
+            .expectClean()
     }
 
     fun testAaptBundleFormat() {
@@ -533,7 +538,6 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                 """
                 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
-                    xmlns:tools="http://schemas.android.com/tools"
                     android:id="@+id/LinearLayout1"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -553,11 +557,10 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
         lint().files(
             manifest().minSdk(1),
             xml(
-                "res/layout/foo.xml",
+                "src/main/res/layout/foo.xml",
                 """
                 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
-                    xmlns:tools="http://schemas.android.com/tools"
                     android:id="@+id/LinearLayout1"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -578,8 +581,43 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
 
                 </LinearLayout>
                 """
+            ).indented(),
+            xml(
+                // Note -- we're pretending these attributes are in appcompat instead of
+                // material; that's just to simplify test setup and the detector does
+                // not care about the difference:
+                //
+                // Simulates model mocker's location of where the AAR res folder is located
+//                "build/intermediates/exploded-aar/com.android.support/appcompat-v7/+/res/values/res.xml",
+                "build/intermediates/exploded-aar/com.google.android.material/material/1.0/res/values/res.xml",
+                """
+                <resources>
+                    <attr name="autoSizeTextType" format="enum">
+                        <enum name="none" value="0" />
+                        <enum name="uniform" value="1" />
+                    </attr>
+                    <attr name="autoSizeStepGranularity" format="dimension" />
+                    <attr name="autoSizePresetSizes" format="reference"/>
+                    <attr name="autoSizeMinTextSize" format="dimension" />
+                    <attr name="autoSizeMaxTextSize" format="dimension" />
+                </resources>
+                """
+            ).indented(),
+            gradle(
+                """
+                apply plugin: 'com.android.application'
+                dependencies {
+                    //compile 'com.android.support:appcompat-v7:+'
+                    compile 'com.google.android.material:material:1.0'
+                }
+                """
             ).indented()
-        ).run().expectClean()
+        )
+            // The built-in AGP test repository does not model libraries correctly,
+            // though it could -- TODO
+            .skipTestModes(TestMode.RESOURCE_REPOSITORIES)
+            .run()
+            .expectClean()
     }
 
     override fun getIssues(): List<Issue> {

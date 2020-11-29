@@ -164,6 +164,11 @@ class LintGradleClient(
 
     override fun getGradleVisitor(): GradleVisitor = GroovyGradleVisitor()
 
+    override fun getRepositoryFile(project: Project): File {
+        val variantName = project.buildVariant?.name ?: "all"
+        return File(project.dir, "build${File.separator}lint-resources--$variantName.xml")
+    }
+
     override fun configureLintRequest(lintRequest: LintRequest) {
         val search = ProjectSearch()
         val project = search.getProject(this, gradleProject, variantName)

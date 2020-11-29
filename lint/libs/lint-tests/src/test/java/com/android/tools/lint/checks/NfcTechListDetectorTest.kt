@@ -55,13 +55,13 @@ class NfcTechListDetectorTest : AbstractCheckTest() {
             """
             res/xml/nfc_tech_list_formatted.xml:6: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]
             android.nfc.tech.NfcA
-            ^
+            ~~~~~~~~~~~~~~~~~~~~~
             res/xml/nfc_tech_list_formatted.xml:12: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]
             android.nfc.tech.MifareUltralight
-            ^
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             res/xml/nfc_tech_list_formatted.xml:18: Error: There should not be any whitespace inside <tech> elements [NfcTechWhitespace]
             android.nfc.tech.ndefformatable
-            ^
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             3 errors, 0 warnings
             """
         )

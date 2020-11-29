@@ -22,6 +22,7 @@ import static com.android.SdkConstants.ATTR_SRC_COMPAT;
 import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.TAG_ANIMATED_VECTOR;
 import static com.android.SdkConstants.TAG_VECTOR;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -39,7 +40,6 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -50,15 +50,11 @@ import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
 
 /**
  * Finds all the vector drawables and checks references to them in layouts.
@@ -98,9 +94,6 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
     /** Whether to skip the checks altogether. */
     private boolean mSkipChecks;
 
-    /** All vector drawables in the project. */
-    private final Set<String> mVectors = Sets.newHashSet();
-
     /** Whether the project uses AppCompat for vectors. */
     private boolean mUseSupportLibrary;
 
@@ -136,26 +129,6 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
         return folderType == ResourceFolderType.DRAWABLE || folderType == ResourceFolderType.LAYOUT;
     }
 
-    /**
-     * Saves names of all vector resources encountered. Because "drawable" is before "layout" in
-     * alphabetical order, Lint will first call this on every vector, before calling {@link
-     * #visitAttribute(XmlContext, Attr)} on every attribute.
-     */
-    @Override
-    public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        if (mSkipChecks) {
-            return;
-        }
-        String resourceName = Lint.getBaseName(context.file.getName());
-        mVectors.add(resourceName);
-    }
-
-    @Nullable
-    @Override
-    public Collection<String> getApplicableElements() {
-        return mSkipChecks ? null : Arrays.asList(TAG_VECTOR, TAG_ANIMATED_VECTOR);
-    }
-
     @Nullable
     @Override
     public Collection<String> getApplicableAttributes() {
@@ -168,29 +141,11 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
             return;
         }
 
-        boolean incrementalMode =
-                !context.getDriver().getScope().contains(Scope.ALL_RESOURCE_FILES);
-
-        if (!incrementalMode && mVectors.isEmpty()) {
-            return;
-        }
-
         Predicate<String> isVector;
-        if (!incrementalMode) {
-            // TODO: Always use resources, once command-line client supports it.
-            isVector = mVectors::contains;
-        } else {
-            LintClient client = context.getClient();
-            ResourceRepository resources =
-                    client.getResourceRepository(context.getMainProject(), true, false);
-            if (resources == null) {
-                // We only run on a single layout file, but have no access to the resources
-                // database, there's no way we can perform the check.
-                return;
-            }
-
-            isVector = name -> checkResourceRepository(resources, name);
-        }
+        LintClient client = context.getClient();
+        Project mainProject = context.getMainProject();
+        ResourceRepository resources = client.getResources(mainProject, LOCAL_DEPENDENCIES);
+        isVector = name -> checkResourceRepository(resources, name);
 
         String name = attribute.getLocalName();
         String namespace = attribute.getNamespaceURI();

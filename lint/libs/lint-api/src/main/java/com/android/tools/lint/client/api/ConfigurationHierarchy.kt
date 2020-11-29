@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.ide.common.resources.ResourceRepository
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
@@ -477,6 +478,13 @@ open class ConfigurationHierarchy(
                 }
 
                 override fun readFile(file: File): CharSequence {
+                    unsupported()
+                }
+
+                override fun getResources(
+                    project: Project,
+                    scope: ResourceRepositoryScope
+                ): ResourceRepository {
                     unsupported()
                 }
             })

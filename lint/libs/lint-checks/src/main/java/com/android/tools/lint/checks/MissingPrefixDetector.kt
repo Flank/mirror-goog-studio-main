@@ -46,6 +46,7 @@ import com.android.resources.ResourceFolderType.INTERPOLATOR
 import com.android.resources.ResourceFolderType.LAYOUT
 import com.android.resources.ResourceFolderType.MENU
 import com.android.resources.ResourceType
+import com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -61,8 +62,7 @@ import org.w3c.dom.Node
  * Detects layout attributes on builtin Android widgets that do not specify
  * a prefix but probably should.
  */
-/** Constructs a new [DetectMissingPrefix]  */
-class DetectMissingPrefix : LayoutDetector() {
+class MissingPrefixDetector : LayoutDetector() {
     companion object Issues {
         /** Attributes missing the android: prefix  */
         @JvmField
@@ -80,7 +80,7 @@ class DetectMissingPrefix : LayoutDetector() {
             priority = 6,
             severity = Severity.ERROR,
             implementation = Implementation(
-                DetectMissingPrefix::class.java,
+                MissingPrefixDetector::class.java,
                 Scope.MANIFEST_AND_RESOURCE_SCOPE,
                 Scope.MANIFEST_SCOPE, Scope.RESOURCE_FILE_SCOPE
             )
@@ -96,7 +96,7 @@ class DetectMissingPrefix : LayoutDetector() {
             folderType == COLOR ||
             folderType == INTERPOLATOR
 
-    override fun getApplicableAttributes(): Collection<String>? = ALL
+    override fun getApplicableAttributes(): Collection<String> = ALL
 
     private fun isNoPrefixAttribute(attribute: String): Boolean =
         when (attribute) {
@@ -136,7 +136,7 @@ class DetectMissingPrefix : LayoutDetector() {
             }
 
             val elementNamespace = element.namespaceURI
-            if (elementNamespace != null && !elementNamespace.isEmpty()) {
+            if (elementNamespace != null && elementNamespace.isNotEmpty()) {
                 // For example, <aapt:attr name="android:drawable">
                 return
             }
@@ -201,31 +201,27 @@ class DetectMissingPrefix : LayoutDetector() {
                 // Look for other app compat attributes - such as buttonTint
                 val project = context.mainProject
                 val client = context.client
-                val repository = client.getResourceRepository(
-                    project,
-                    true, true
+
+                val repository = client.getResources(project, ALL_DEPENDENCIES)
+                val items = repository.getResources(
+                    ResourceNamespace.TODO(),
+                    ResourceType.ATTR,
+                    attribute.localName
                 )
-                if (repository != null) {
-                    val items = repository.getResources(
-                        ResourceNamespace.TODO(),
-                        ResourceType.ATTR,
-                        attribute.localName
-                    )
-                    if (!items.isEmpty()) {
-                        for (item in items) {
-                            val libraryName = item.libraryName ?: continue
-                            if (libraryName.contains("appcompat") || libraryName.contains("material")) {
-                                return
-                            }
+                if (items.isNotEmpty()) {
+                    for (item in items) {
+                        val libraryName = item.libraryName ?: continue
+                        if (libraryName.contains("appcompat") || libraryName.contains("material")) {
+                            return
                         }
                     }
-
-                    context.report(
-                        MISSING_NAMESPACE, attribute,
-                        context.getLocation(attribute),
-                        "Unexpected namespace prefix \"$prefix\" found for tag `${attribute.ownerElement.tagName}`"
-                    )
                 }
+
+                context.report(
+                    MISSING_NAMESPACE, attribute,
+                    context.getLocation(attribute),
+                    "Unexpected namespace prefix \"$prefix\" found for tag `${attribute.ownerElement.tagName}`"
+                )
             }
         }
     }

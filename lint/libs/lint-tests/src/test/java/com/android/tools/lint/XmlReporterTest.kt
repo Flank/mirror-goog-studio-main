@@ -191,7 +191,7 @@ class XmlReporterTest {
                     url="https://en.wikipedia.org/wiki/Number_Forms"
                     urls="https://en.wikipedia.org/wiki/Number_Forms"
                     errorLine1="    &lt;string name=&quot;user_registration_name1_4&quot;>Register 1/4&lt;/string>"
-                    errorLine2="                                             ^">
+                    errorLine2="                                             ~~~~~~~~~~~~">
                     <location
                         file="res/values/typography.xml"
                         line="3"

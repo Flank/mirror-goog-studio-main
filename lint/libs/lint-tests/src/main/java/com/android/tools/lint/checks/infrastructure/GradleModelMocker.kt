@@ -70,7 +70,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.LintModelFactory
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelVariant
-import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
@@ -81,13 +80,10 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
-import com.google.common.hash.Hashing
 import com.google.common.io.ByteStreams
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import org.jetbrains.annotations.Contract
-import org.jetbrains.annotations.TestOnly
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import java.io.BufferedOutputStream
@@ -149,7 +145,6 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     private val ext: MutableMap<String, String> = HashMap()
     private var modelVersion = GradleVersion.parse("2.2.2")
     private val graphs: MutableMap<String, Dep> = Maps.newHashMap()
-    private var useBuildCache = false
     private var vectorDrawablesOptions: IdeVectorDrawablesOptions? = null
     private var aaptOptions: IdeAaptOptions? = null
     private var allowUnrecognizedConstructs = false
@@ -208,11 +203,6 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
 
     fun allowUnrecognizedConstructs(): GradleModelMocker {
         allowUnrecognizedConstructs = true
-        return this
-    }
-
-    fun withBuildCache(useBuildCache: Boolean): GradleModelMocker {
-        this.useBuildCache = useBuildCache
         return this
     }
 
@@ -1846,32 +1836,15 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     ): IdeAndroidLibrary {
         var jar = jar
         val coordinate = getCoordinate(coordinateString, promotedTo, GradleCoordinate.ArtifactType.AAR)
-        val dir: File
-        dir = if (useBuildCache) {
-            // Not what build cache uses, but we just want something stable and unique
-            // for tests
-            val hash = Hashing.sha1()
-                .hashString(coordinate.toString(), Charsets.UTF_8).toString()
-            File(
-                FileUtils.join(
-                    System.getProperty("user.home"),
-                    ".android",
-                    "build-cache",
-                    hash,
-                    "output"
-                )
-            )
-        } else {
-            File(
-                projectDir,
-                "build/intermediates/exploded-aar/" +
-                    coordinate.groupId +
-                    "/" +
-                    coordinate.artifactId +
-                    "/" +
-                    coordinate.revision
-            )
-        }
+        val dir = File(
+            projectDir,
+            "build/intermediates/exploded-aar/" +
+                coordinate.groupId +
+                "/" +
+                coordinate.artifactId +
+                "/" +
+                coordinate.revision
+        )
         if (jar == null) {
             jar = File(dir, "jars/" + SdkConstants.FN_CLASSES_JAR)
         }

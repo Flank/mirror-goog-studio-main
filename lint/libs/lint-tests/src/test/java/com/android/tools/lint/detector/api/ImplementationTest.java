@@ -28,8 +28,8 @@ import static com.android.tools.lint.detector.api.Scope.RESOURCE_FILE;
 import static com.android.tools.lint.detector.api.Scope.RESOURCE_FILE_SCOPE;
 
 import com.android.tools.lint.checks.ApiDetector;
-import com.android.tools.lint.checks.DetectMissingPrefix;
 import com.android.tools.lint.checks.DuplicateResourceDetector;
+import com.android.tools.lint.checks.MissingPrefixDetector;
 import com.android.tools.lint.checks.RtlDetector;
 import com.android.tools.lint.checks.SecureRandomGeneratorDetector;
 import java.util.EnumSet;
@@ -106,15 +106,15 @@ public class ImplementationTest extends TestCase {
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(RESOURCE_FILE_SCOPE));
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(MANIFEST_SCOPE));
         assertTrue(
-                DetectMissingPrefix.MISSING_NAMESPACE
+                MissingPrefixDetector.MISSING_NAMESPACE
                         .getImplementation()
                         .isAdequate(RESOURCE_FILE_SCOPE));
         assertTrue(
-                DetectMissingPrefix.MISSING_NAMESPACE
+                MissingPrefixDetector.MISSING_NAMESPACE
                         .getImplementation()
                         .isAdequate(MANIFEST_SCOPE));
         assertFalse(
-                DetectMissingPrefix.MISSING_NAMESPACE
+                MissingPrefixDetector.MISSING_NAMESPACE
                         .getImplementation()
                         .isAdequate(JAVA_FILE_SCOPE));
         assertTrue(RtlDetector.COMPAT.getImplementation().isAdequate(MANIFEST_SCOPE));

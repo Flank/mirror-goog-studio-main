@@ -47,23 +47,22 @@ class WrongIdDetectorTest : AbstractCheckTest() {
     fun testSingleFile() {
         val expected =
             """
-            res/layout/layout1.xml:18: Error: @id/my_id1 is not a sibling in the same RelativeLayout [NotSibling]
-                    android:layout_alignTop="@id/my_id1"
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            res/layout/layout1.xml:14: Warning: The id "button5" is not referring to any views in this layout [UnknownIdInLayout]
+            res/layout/layout1.xml:14: Error: The id "button5" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]
                     android:layout_alignBottom="@+id/button5"
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            res/layout/layout1.xml:15: Warning: The id "my_id2" is not referring to any views in this layout [UnknownIdInLayout]
+            res/layout/layout1.xml:15: Error: The id "my_id2" is not defined anywhere. Did you mean my_id3 ? [UnknownId]
                     android:layout_alignLeft="@+id/my_id2"
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            res/layout/layout1.xml:17: Warning: The id "my_id3" is not referring to any views in this layout [UnknownIdInLayout]
+            res/layout/layout1.xml:17: Error: The id "my_id3" is not defined anywhere. Did you mean my_id2 ? [UnknownId]
                     android:layout_alignRight="@+id/my_id3"
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            1 errors, 3 warnings
+            res/layout/layout1.xml:18: Error: The id "my_id1" is not defined anywhere. Did you mean one of {my_id2, my_id3} ? [UnknownId]
+                    android:layout_alignTop="@id/my_id1"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            4 errors, 0 warnings
             """
         lint()
             .files(mLayout1)
-            .supportResourceRepository(false)
             .incremental(mLayout1.targetRelativePath)
             .run()
             .expect(expected)
@@ -697,88 +696,6 @@ class WrongIdDetectorTest : AbstractCheckTest() {
             4 errors, 0 warnings
             """
         )
-    }
-
-    fun testConstraintReferencedIdsSingleFile() {
-        // Validate id lists in <Barrier> elements
-        val expected =
-            """
-                res/layout/layout3.xml:13: Error: my_id0 is not a sibling in the same ConstraintLayout [NotSibling]
-                        app:constraint_referenced_ids="text1,text2,text3,my_id0,my_id1" />
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/layout/layout3.xml:13: Error: text2 is not a sibling in the same ConstraintLayout [NotSibling]
-                        app:constraint_referenced_ids="text1,text2,text3,my_id0,my_id1" />
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/layout/layout3.xml:13: Error: text3 is not a sibling in the same ConstraintLayout [NotSibling]
-                        app:constraint_referenced_ids="text1,text2,text3,my_id0,my_id1" />
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                3 errors, 0 warnings
-                """
-        lint().files(
-            xml(
-                "res/layout/layout3.xml",
-                """
-                <android.support.constraint.ConstraintLayout
-                    xmlns:android="http://schemas.android.com/apk/res/android"
-                    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    xmlns:tools="http://schemas.android.com/tools"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <android.support.constraint.Barrier
-                        android:id="@+id/barrier"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:barrierDirection="end"
-                        app:constraint_referenced_ids="text1,text2,text3,my_id0,my_id1" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Hello World!"
-                        android:id="@+id/text1"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Happy New Year!"
-                        android:id="@id/my_id1"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintTop_toTopOf="parent">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Happy New Year!"
-                            android:id="@+id/text3" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Happy New Year!"
-                            android:id="@id/my_id0" />
-                    </LinearLayout>
-                </android.support.constraint.ConstraintLayout>
-                """
-            ).indented()
-        )
-            .incremental("res/layout/layout3.xml")
-            .supportResourceRepository(false)
-            .run().expect(expected)
     }
 
     fun testIncludes() {

@@ -27,6 +27,7 @@ import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.resources.ResourceUrl
+import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -103,9 +104,9 @@ class StartDestinationDetector : ResourceXmlDetector() {
                 if (child.tagName == TAG_INCLUDE) {
                     val includedGraph = child.getAttributeNS(AUTO_URI, ATTR_GRAPH)
                     val includedUrl = ResourceUrl.parse(includedGraph) ?: continue
-                    val repository =
-                        context.client.getResourceRepository(context.project, true, true)
-                            ?: continue
+                    val client = context.client
+                    val project = context.project
+                    val repository = client.getResources(project, LOCAL_DEPENDENCIES)
                     val items = repository.getResources(
                         ResourceNamespace.TODO(),
                         includedUrl.type,
@@ -114,7 +115,7 @@ class StartDestinationDetector : ResourceXmlDetector() {
                     for (item in items) {
                         val source = item.source ?: continue
                         try {
-                            val parser = context.client.createXmlPullParser(source)
+                            val parser = client.createXmlPullParser(source)
                             if (parser != null && checkId(parser, url.name)) {
                                 return
                             }

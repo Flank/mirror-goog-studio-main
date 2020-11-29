@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
 public class TextFieldDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -187,9 +186,22 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
                         + "res/layout/edit_type.xml:83: Warning: This text field does not specify an inputType [TextFields]\n"
                         + "    <EditText\n"
                         + "     ~~~~~~~~\n"
-                        + "0 errors, 7 warnings";
+                        + "res/layout/edit_type.xml:96: Warning: This text field does not specify an inputType [TextFields]\n"
+                        + "    <EditText\n"
+                        + "     ~~~~~~~~\n"
+                        + "0 errors, 8 warnings";
         //noinspection all // Sample code
         lint().files(
+                        xml(
+                                "res/values/values.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <style name=\"exists1\">\n"
+                                        + "    </style>\n"
+                                        + "    <style name=\"exists2\">\n"
+                                        + "        <item name=\"android:inputType\">text</item>\n"
+                                        + "    </style>\n"
+                                        + "</resources>"),
                         xml(
                                 "res/layout/edit_type.xml",
                                 ""
@@ -281,9 +293,28 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        android:ems=\"10\" />\n"
                                         + "\n"
+                                        // References an unknown symbol: we should not warn
                                         + "    <EditText\n"
-                                        + "        style=\"@style/foo\"\n"
-                                        + "        android:id=\"@+id/number_of_items\"\n"
+                                        + "        style=\"@style/nonexistent\"\n"
+                                        + "        android:id=\"@+id/foo\"\n"
+                                        + "        android:layout_width=\"match_parent\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:ems=\"10\" />\n"
+                                        + "\n"
+                                        // References a known style which doesn't have the attribute
+                                        // defined: warn
+                                        + "    <EditText\n"
+                                        + "        style=\"@style/exists1\"\n"
+                                        + "        android:id=\"@+id/bar\"\n"
+                                        + "        android:layout_width=\"match_parent\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:ems=\"10\" />\n"
+                                        + "\n"
+                                        // References a known style which *does* have the attribute
+                                        // defined: don't warn
+                                        + "    <EditText\n"
+                                        + "        style=\"@style/exists2\"\n"
+                                        + "        android:id=\"@+id/bar\"\n"
                                         + "        android:layout_width=\"match_parent\"\n"
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        android:ems=\"10\" />\n"
@@ -347,20 +378,28 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
     }
 
     public void testIncremental1() {
+        // Only complain about missing input types if the referenced style can be
+        // found (and doesn't contain an orientation settings)
         String expected =
                 ""
                         + "res/layout/note_edit2.xml:7: Warning: This text field does not specify an inputType [TextFields]\n"
                         + "    <EditText\n"
                         + "     ~~~~~~~~\n"
-                        + "res/layout/note_edit2.xml:12: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "    <EditText\n"
-                        + "     ~~~~~~~~\n"
-                        + "0 errors, 2 warnings";
-        lint().files(mNote_edit2).incremental("res/layout/note_edit2.xml").run().expect(expected);
+                        + "0 errors, 1 warnings";
+        lint().files(
+                        mNote_edit2,
+                        xml(
+                                "res/values/styles-orientation.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <style name=\"TextWithHint\"/>\n"
+                                        + "</resources>\n"))
+                .incremental("res/layout/note_edit2.xml")
+                .run()
+                .expect(expected);
     }
 
     public void testIncremental2() {
-
         String expected =
                 ""
                         + "res/layout/note_edit2.xml:7: Warning: This text field does not specify an inputType [TextFields]\n"
@@ -371,7 +410,6 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
                         + "     ~~~~~~~~\n"
                         + "0 errors, 2 warnings";
 
-        //noinspection all // Sample code
         lint().files(
                         mNote_edit2,
                         xml(
@@ -402,7 +440,6 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    @SuppressWarnings("all") // Sample code
     private TestFile mNote_edit2 =
             xml(
                     "res/layout/note_edit2.xml",

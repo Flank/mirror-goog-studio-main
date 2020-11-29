@@ -36,6 +36,7 @@ import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_LITERAL;
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_PREFIX;
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_SIMPLE_GLOB;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES;
 import static com.android.tools.lint.detector.api.Lint.isDataBindingExpression;
 import static com.android.tools.lint.detector.api.Lint.isManifestPlaceHolderExpression;
 import static com.android.tools.lint.detector.api.Lint.resolvePlaceHolders;
@@ -766,18 +767,12 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             return str;
         }
         LintClient client = context.getClient();
-        if (!client.supportsProjectResources()) {
-            return str;
-        }
         ResourceUrl url = ResourceUrl.parse(str);
         if (url == null || url.isFramework()) {
             return str;
         }
         Project project = context.getProject();
-        ResourceRepository resources = client.getResourceRepository(project, true, true);
-        if (resources == null) {
-            return str;
-        }
+        ResourceRepository resources = client.getResources(project, ALL_DEPENDENCIES);
         List<ResourceItem> items =
                 resources.getResources(ResourceNamespace.TODO(), ResourceType.STRING, url.name);
         if (items.isEmpty()) {

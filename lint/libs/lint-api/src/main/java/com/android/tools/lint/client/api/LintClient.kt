@@ -211,13 +211,29 @@ abstract class LintClient {
     abstract val xmlParser: XmlParser
 
     /**
+     * Reads the given [file] (or in the IDE, fetches the possibly
+     * edited editor contents corresponding to the given file) ad parses
+     * it into an XML document. This is a convenience wrapper around
+     * [xmlParser] but allows the client to do some caching. If the
+     * optional [contents] parameter is non null, it will be taken to be
+     * the content of the file.
+     */
+    open fun getXmlDocument(file: File, contents: CharSequence? = null): Document? {
+        return if (contents?.isNotBlank() == true) {
+            xmlParser.parseXml(contents, file)
+        } else {
+            xmlParser.parseXml(file)
+        }
+    }
+
+    /**
      * Returns a [UastParser] to use to parse Java
      *
-     * @param project the project to parse, if known (this can be used to look up
-     *                the class path for type attribution etc, and it can also be used
-     *                to more efficiently process a set of files, for example to
-     *                perform type attribution for multiple units in a single pass)
-     *
+     * @param project the project to parse, if known (this can be used
+     *     to look up the class path for type attribution
+     *     etc, and it can also be used to more efficiently
+     *     process a set of files, for example to perform type
+     *     attribution for multiple units in a single pass)
      * @return a new [UastParser]
      */
     abstract fun getUastParser(project: Project?): UastParser
@@ -1530,13 +1546,12 @@ abstract class LintClient {
         return TextFormat.TEXT.convertTo(file.path, format)
     }
 
-    /**
-     * Returns true if this client supports project resource repository lookup via
-     * [.getResourceRepository]
-     *
-     * @return true if the client can provide project resources
-     */
-    open fun supportsProjectResources(): Boolean = false
+    /** Obsolete; here for backwards compatibility */
+    @Deprecated(
+        "Resource repositories are now always supported",
+        replaceWith = ReplaceWith("true")
+    )
+    fun supportsProjectResources(): Boolean = true
 
     /**
      * Returns the project resources, if available
@@ -1548,11 +1563,32 @@ abstract class LintClient {
      *
      * @return the project resources, or null if not available
      */
-    open fun getResourceRepository(
+    @Deprecated(
+        "Use getResources(project, scope) instead",
+        replaceWith = ReplaceWith("getResources(project, scope")
+    )
+    fun getResourceRepository(
         project: Project,
         includeModuleDependencies: Boolean,
         includeLibraries: Boolean
-    ): ResourceRepository? = null
+    ): ResourceRepository {
+        val scope = when {
+            includeLibraries -> ResourceRepositoryScope.ALL_DEPENDENCIES
+            includeModuleDependencies -> ResourceRepositoryScope.LOCAL_DEPENDENCIES
+            else -> ResourceRepositoryScope.PROJECT_ONLY
+        }
+
+        return getResources(project, scope)
+    }
+
+    /**
+     * Returns the resources from the given [project] with the given
+     * [scope]
+     */
+    abstract fun getResources(
+        project: Project,
+        scope: ResourceRepositoryScope
+    ): ResourceRepository
 
     /**
      * For a lint client which supports resource items (via [.supportsProjectResources])
@@ -1562,8 +1598,12 @@ abstract class LintClient {
      *
      * @return a corresponding handle
      */
-    open fun createResourceItemHandle(item: ResourceItem): Location.Handle =
-        Location.ResourceItemHandle(item)
+    open fun createResourceItemHandle(
+        item: ResourceItem,
+        nameOnly: Boolean = false,
+        valueOnly: Boolean = true
+    ): Location.ResourceItemHandle =
+        Location.ResourceItemHandle(this, item, nameOnly, valueOnly)
 
     private var resourceVisibilityProvider: ResourceVisibilityLookup.Provider? = null
 

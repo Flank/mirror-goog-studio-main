@@ -19,6 +19,7 @@ package com.android.tools.lint.client.api
 import com.android.SdkConstants.FD_ADDONS
 import com.android.SdkConstants.FD_DATA
 import com.android.SdkConstants.FD_PLATFORMS
+import com.android.SdkConstants.FD_RES
 import com.android.SdkConstants.FN_FRAMEWORK_LIBRARY
 import com.android.SdkConstants.FN_SOURCE_PROP
 import com.android.SdkConstants.VALUE_FALSE
@@ -439,6 +440,7 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
             return when (pathId) {
                 IAndroidTarget.ANDROID_JAR -> File(location, FN_FRAMEWORK_LIBRARY)
                 IAndroidTarget.DATA -> File(location, FD_DATA)
+                IAndroidTarget.RESOURCES -> File(location, FD_DATA + File.separator + FD_RES)
                 IAndroidTarget.ATTRIBUTES -> File(location, "data/res/values/attrs.xml")
                 else -> error("Unsupported path id in ${SimplePlatformLookup::class.java.name}")
             }

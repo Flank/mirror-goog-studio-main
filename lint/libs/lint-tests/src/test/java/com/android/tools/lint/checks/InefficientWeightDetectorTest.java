@@ -742,17 +742,8 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
                                 + "+         android:orientation=\"vertical\" >\n");
     }
 
-    public void testIncremental1() {
-        String expected =
-                ""
-                        + "res/layout/orientation2.xml:5: Error: No orientation specified, and the default is horizontal. This is a common source of bugs when children are added dynamically. [Orientation]\n"
-                        + "    <LinearLayout\n"
-                        + "     ~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings";
-        lint().files(mOrientation2)
-                .incremental("res/layout/orientation2.xml")
-                .run()
-                .expect(expected);
+    public void testUnknownStyle() {
+        lint().files(mOrientation2).incremental("res/layout/orientation2.xml").run().expectClean();
     }
 
     public void testIncremental2() {
@@ -763,10 +754,8 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     }
 
     public void testIncremental3() {
-        lint().files(mOrientation2, mStyles_orientation)
-                .incremental("res/layout/orientation2.xml")
-                .run()
-                .expectClean();
+        // References styles that can't resolve in the files provided
+        lint().files(mOrientation2).incremental("res/layout/orientation2.xml").run().expectClean();
     }
 
     public void testIncremental4() {
@@ -783,10 +772,16 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     }
 
     public void testIncremental5() {
+        String expected =
+                ""
+                        + "res/layout/inefficient_weight3.xml:9: Warning: Use a layout_height of 0dp instead of (undefined) for better performance [InefficientWeight]\n"
+                        + "    <Button\n"
+                        + "     ~~~~~~\n"
+                        + "0 errors, 1 warnings";
         lint().files(mInefficient_weight3, mStyles_orientation)
                 .incremental("res/layout/inefficient_weight3.xml")
                 .run()
-                .expectClean();
+                .expect(expected);
     }
 
     public void testIncremental6() {

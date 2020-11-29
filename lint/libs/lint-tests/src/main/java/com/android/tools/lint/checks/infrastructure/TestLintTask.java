@@ -83,6 +83,10 @@ public class TestLintTask {
     /** True if the project in the task was only constructed from {@link #files(TestFile...)} */
     boolean impliedProject;
 
+    boolean requestedResourceRepository;
+    boolean forceAgpResourceRepository;
+
+    // User configurable state
     boolean allowCompilationErrors;
     boolean allowObsoleteLintChecks = true;
     boolean allowSystemErrors = true;
@@ -103,7 +107,6 @@ public class TestLintTask {
     Detector detector;
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
-    Boolean supportResourceRepository;
     boolean allowMissingSdk;
     boolean requireCompileSdk;
     boolean vital;
@@ -836,8 +839,9 @@ public class TestLintTask {
      * @return this, for constructor chaining
      */
     public TestLintTask supportResourceRepository(boolean supportResourceRepository) {
-        ensurePreRun();
-        this.supportResourceRepository = supportResourceRepository;
+        if (!supportResourceRepository) {
+            fail("Resource repositories are now always supported");
+        }
         return this;
     }
 
