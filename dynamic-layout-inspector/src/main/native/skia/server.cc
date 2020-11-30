@@ -16,7 +16,6 @@
 #include <grpc++/grpc++.h>
 #include "skia.grpc.pb.h"
 #include "tree_building_canvas.h"
-#include "tree_building_canvas_v0.h"
 
 class SkiaParserServiceImpl final
     : public ::layoutinspector::proto::SkiaParserService::Service {
@@ -24,17 +23,10 @@ class SkiaParserServiceImpl final
       ::grpc::ServerContext* context,
       const ::layoutinspector::proto::GetViewTreeRequest* request,
       ::layoutinspector::proto::GetViewTreeResponse* response) override {
-    if (request->version() == 0) {
-      v0::TreeBuildingCanvas::ParsePicture(request->skp().data(),
-                                           request->skp().length(),
-                                           response->mutable_root());
-    } else {
-      v1::TreeBuildingCanvas::ParsePicture(
-          request->skp().data(), request->skp().length(), request->version(),
-          &request->requested_nodes(),
-          request->scale() == 0 ? 1 : request->scale(),
-          response->mutable_root());
-    }
+    v1::TreeBuildingCanvas::ParsePicture(
+        request->skp().data(), request->skp().length(), request->version(),
+        &request->requested_nodes(),
+        request->scale() == 0 ? 1 : request->scale(), response->mutable_root());
     return ::grpc::Status::OK;
   }
 };
