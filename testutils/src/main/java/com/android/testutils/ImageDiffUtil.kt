@@ -69,16 +69,6 @@ object ImageDiffUtil {
         assertImageSimilar(goldenFile.fileName.toString(), goldenImage, actual, maxPercentDifferent)
     }
 
-    /**
-     * Asserts that the given image is similar to the golden one contained in the given file.
-     * If the golden image file does not exist, it is created and the test fails.
-     */
-    @Throws(IOException::class)
-    @JvmStatic
-    fun assertImageSimilar(goldenFile: File, actual: BufferedImage, maxPercentDifferent: Double) {
-        return assertImageSimilar(goldenFile.toPath(), actual, maxPercentDifferent)
-    }
-
     @Throws(IOException::class)
     @JvmStatic
     fun assertImageSimilar(
