@@ -56,9 +56,27 @@ data class AndroidGradlePluginAttributionData(
     /**
      * Contains the ids of the plugins defined in the buildSrc.
      */
-    val buildSrcPlugins: Set<String> = emptySet()
+    val buildSrcPlugins: Set<String> = emptySet(),
+
+    /**
+     * Contains information about java used to run this build.
+     */
+    val javaInfo: JavaInfo = JavaInfo()
 ) : Serializable {
+
+    /**
+     * Information about java used to run this build.
+     * Default values are empty, e.g. when no value found.
+     */
+    data class JavaInfo(
+        val version: String = "",
+        val vendor: String = "",
+        val home: String = "",
+        val vmArguments: List<String> = emptyList()
+    ) : Serializable
+
     companion object {
+
         fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
             val file = FileUtils.join(
                 outputDir,
@@ -88,6 +106,7 @@ data class AndroidGradlePluginAttributionData(
     }
 
     internal object AttributionDataAdapter : TypeAdapter<AndroidGradlePluginAttributionData>() {
+
         override fun write(writer: JsonWriter, data: AndroidGradlePluginAttributionData) {
             writer.beginObject()
             writer.name("taskNameToClassNameMap").beginArray()
@@ -126,6 +145,16 @@ data class AndroidGradlePluginAttributionData(
                 writer.value(plugin)
             }
             writer.endArray()
+            writer.name("javaInfo").run {
+                beginObject()
+                name("javaVersion").value(data.javaInfo.version)
+                name("javaVendor").value(data.javaInfo.vendor)
+                name("javaHome").value(data.javaInfo.home)
+                name("vmArguments").beginArray()
+                data.javaInfo.vmArguments.forEach { value(it) }
+                endArray()
+                endObject()
+            }
             writer.endObject()
         }
 
@@ -134,6 +163,7 @@ data class AndroidGradlePluginAttributionData(
             val tasksSharingOutput = HashMap<String, List<String>>()
             val garbageCollectionData = HashMap<String, Long>()
             val buildSrcPlugins = HashSet<String>()
+            var javaInfo = JavaInfo()
 
             reader.beginObject()
 
@@ -198,6 +228,7 @@ data class AndroidGradlePluginAttributionData(
                         }
                         reader.endArray()
                     }
+
                     "buildSrcPlugins" -> {
                         reader.beginArray()
                         while (reader.hasNext()) {
@@ -205,6 +236,31 @@ data class AndroidGradlePluginAttributionData(
                         }
                         reader.endArray()
                     }
+
+                    "javaInfo" -> {
+                        reader.beginObject()
+                        var version: String = ""
+                        var vendor: String = ""
+                        var home: String = ""
+                        val vmArguments = ArrayList<String>()
+                        while (reader.hasNext()) {
+                            when (reader.nextName()) {
+                                "javaVersion" -> version = reader.nextString()
+                                "javaVendor" -> vendor = reader.nextString()
+                                "javaHome" -> home = reader.nextString()
+                                "vmArguments" -> {
+                                    reader.beginArray()
+                                    while (reader.hasNext()) {
+                                        vmArguments.add(reader.nextString())
+                                    }
+                                    reader.endArray()
+                                }
+                            }
+                        }
+                        javaInfo = JavaInfo(version, vendor, home, vmArguments)
+                        reader.endObject()
+                    }
+
                     else -> {
                         reader.skipValue()
                     }
@@ -217,7 +273,8 @@ data class AndroidGradlePluginAttributionData(
                 taskNameToClassNameMap = taskNameToClassNameMap,
                 tasksSharingOutput = tasksSharingOutput,
                 garbageCollectionData = garbageCollectionData,
-                buildSrcPlugins = buildSrcPlugins
+                buildSrcPlugins = buildSrcPlugins,
+                javaInfo = javaInfo
             )
         }
     }

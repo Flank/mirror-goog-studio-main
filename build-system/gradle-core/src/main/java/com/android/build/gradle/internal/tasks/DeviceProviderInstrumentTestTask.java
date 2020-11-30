@@ -25,6 +25,7 @@ import static com.android.builder.core.BuilderConstants.FD_FLAVORS;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.builder.model.TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR;
+import static com.android.builder.model.TestOptions.Execution.ANDROID_TEST_ORCHESTRATOR;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -154,6 +155,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     new GradleJavaProcessExecutor(getExecOperations()::javaexec);
 
             if (getUnifiedTestPlatform().get()) {
+                boolean useOrchestrator =
+                        (getExecutionEnum().get() == ANDROID_TEST_ORCHESTRATOR
+                                || getExecutionEnum().get() == ANDROIDX_TEST_ORCHESTRATOR);
                 return new UtpTestRunner(
                         getSplitSelectExec().getOrNull(),
                         gradleProcessExecutor,
@@ -161,7 +165,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         executorServiceAdapter,
                         getUtpDependencies(),
                         getSdkBuildService().get(),
-                        getRetentionConfig().get());
+                        getRetentionConfig().get(),
+                        useOrchestrator);
             } else {
                 switch (getExecutionEnum().get()) {
                     case ANDROID_TEST_ORCHESTRATOR:
@@ -358,10 +363,12 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
      * @return true if there are some tests to run, false otherwise
      */
     private boolean testsFound() {
-        // For now we check if there are any test sources. We could inspect the test classes and
+        // For now we check if there is a test APK. We could inspect the test classes and
         // apply JUnit logic to see if there's something to run, but that would not catch the case
-        // where user makes a typo in a test name or forgets to inherit from a JUnit class
-        return !getTestData().get().getTestDirectories().getAsFileTree().isEmpty();
+        // where user makes a typo in a test name or forgets to inherit from a JUnit class.
+        // Be aware that there may be a compiler generated code and don't simply check if
+        // the java source directory is empty. See b/173770818.
+        return getTestData().get().getTestApk().get().exists();
     }
 
     @OutputDirectory
@@ -610,13 +617,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                     projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM);
             task.getTestRunnerFactory().getUnifiedTestPlatform().set(useUtp);
             if (useUtp) {
-                Preconditions.checkArgument(
-                        executionEnum == ANDROIDX_TEST_ORCHESTRATOR,
-                        "Unified Test Platform only supports Android Test Orchestrator. "
-                                + "Please either add android.testOptions.execution \"ANDROIDX_TEST_ORCHESTRATOR\"\n"
-                                + "to your build file or unset "
-                                + BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM
-                                        .getPropertyName());
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
                 UtpDependencyUtilsKt.resolveDependencies(
                         task.getTestRunnerFactory().getUtpDependencies(),

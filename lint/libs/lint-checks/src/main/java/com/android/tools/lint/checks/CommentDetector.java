@@ -264,14 +264,7 @@ public class CommentDetector extends ResourceXmlDetector
         }
 
         Location location = context.getLocation(node);
-        LintFix fix =
-                LintFix.create()
-                        .name("Remove TODO")
-                        .replace()
-                        .all()
-                        .with("")
-                        .reformat(true)
-                        .build();
+        LintFix fix = fix().name("Remove TODO").replace().all().with("").reformat(true).build();
         context.report(STOP_SHIP, node, location, message, fix);
     }
 

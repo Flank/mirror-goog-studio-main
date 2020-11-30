@@ -18,8 +18,9 @@
 #define PROTO_PIPE_H
 
 #include <google/protobuf/message_lite.h>
-
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
 
@@ -33,6 +34,7 @@ class ProtoPipe {
   bool Write(const google::protobuf::MessageLite& message) {
     std::string bytes;
     if (!message.SerializeToString(&bytes)) {
+      ErrEvent("Protopipe: Unable to serialize protobuffer message");
       return false;
     }
     return pipe_.Write(bytes);
@@ -43,10 +45,15 @@ class ProtoPipe {
   bool Read(int timeout_ms, google::protobuf::MessageLite* message) {
     std::string bytes;
     if (!pipe_.Read(timeout_ms, &bytes)) {
+      ErrEvent("Protopipe: Unable to read() from pipe");
       return false;
     }
 
-    return message->ParseFromString(bytes);
+    if (!message->ParseFromString(bytes)) {
+      ErrEvent("Unable to parse proto message");
+      return false;
+    }
+    return true;
   }
 
   void Close() { pipe_.Close(); }

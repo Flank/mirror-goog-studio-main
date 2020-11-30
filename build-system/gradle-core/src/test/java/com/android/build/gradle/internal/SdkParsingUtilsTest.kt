@@ -219,7 +219,7 @@ class SdkParsingUtilsTest {
         assertThat(localPackage).isNotNull()
 
         val expectedJars = listOf("maps.jar", "usb.jar", "effects.jar")
-            .map { testFolder.root.resolve("libs").resolve(it).absoluteFile }
+            .map { testFolder.root.resolve("libs").resolve(it).toPath() }
 
         val optionalLibraries = parseAdditionalLibraries(localPackage!!).map { it.jar }
         assertThat(optionalLibraries).containsExactlyElementsIn(expectedJars)
@@ -254,7 +254,7 @@ class SdkParsingUtilsTest {
             "org.apache.http.legacy.jar",
             "android.test.mock.jar",
             "android.test.base.jar",
-            "android.test.runner.jar").map { optionalDir.resolve(it).absoluteFile }
+            "android.test.runner.jar").map { optionalDir.resolve(it).toPath() }
 
         val optionalLibraries = parseOptionalLibraries(localPackage!!).map { it.jar }
         assertThat(optionalLibraries).containsExactlyElementsIn(expectedJars)

@@ -81,11 +81,4 @@ void ConvertEventToProtoEvent(deploy::Event& event,
   proto_event->set_tid(event.tid);
   proto_event->set_timestamp_ns(event.timestamp_ns);
 }
-
-std::string GetAgentExceptionLogDir(const std::string& package_name) {
-  std::ostringstream log_dir;
-  log_dir << "/data/data/" << package_name << "/.agent-logs";
-  return log_dir.str();
-}
-
 }  // namespace deploy

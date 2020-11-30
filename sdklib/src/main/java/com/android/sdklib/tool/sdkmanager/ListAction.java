@@ -25,7 +25,9 @@ import com.android.repository.api.RepoPackage;
 import com.android.repository.api.UpdatablePackage;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.RevisionType;
+import com.android.repository.io.FileOp;
 import com.android.utils.FileUtils;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -184,9 +186,12 @@ class ListAction extends SdkAction {
         localTable.addColumn("Description", RepoPackage::getDisplayName, 100, 0);
         localTable.addColumn(
                 "Location",
-                p ->
-                        FileUtils.relativePossiblyNonExistingPath(
-                                p.getLocation(), getRepoManager().getLocalPath()),
+                p -> {
+                    FileOp fop = mSettings.getSdkHandler().getFileOp();
+                    Path path = getRepoManager().getLocalPath();
+                    return FileUtils.relativePossiblyNonExistingPath(
+                            fop.toFile(p.getLocation()), fop.toFile(path));
+                },
                 9999,
                 0);
 

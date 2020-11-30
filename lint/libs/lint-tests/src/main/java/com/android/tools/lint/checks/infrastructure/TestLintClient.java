@@ -53,7 +53,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.support.AndroidxNameUtils;
 import com.android.testutils.TestUtils;
-import com.android.tools.lint.Incident;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintCliXmlParser;
@@ -76,6 +75,7 @@ import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.GradleContext;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
@@ -172,6 +172,11 @@ public class TestLintClient extends LintCliClient {
         TextReporter reporter = new TextReporter(this, flags, writer, false);
         reporter.setForwardSlashPaths(true); // stable tests
         flags.getReporters().add(reporter);
+    }
+
+    @Override
+    public String getClientDisplayName() {
+        return "Lint Unit Tests";
     }
 
     protected void setLintTask(@Nullable TestLintTask task) {
@@ -400,6 +405,9 @@ public class TestLintClient extends LintCliClient {
         }
         if (task.baselineFile != null) {
             flags.setBaselineFile(task.baselineFile);
+        }
+        if (task.overrideConfigFile != null) {
+            flags.setOverrideLintConfig(task.overrideConfigFile);
         }
         if (mocker != null && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
             description.type(ProjectDescription.Type.JAVA);
@@ -641,14 +649,7 @@ public class TestLintClient extends LintCliClient {
                 });
 
         for (File dir : sorted) {
-            String path = dir.getPath();
-            if (result.contains(path)) {
-                result = result.replace(path, "/TESTROOT");
-            }
-            path = path.replace(File.separatorChar, '/');
-            if (result.contains(path)) {
-                result = result.replace(path, "/TESTROOT");
-            }
+            result = task.stripRoot(dir, result);
         }
 
         return result;
@@ -779,7 +780,7 @@ public class TestLintClient extends LintCliClient {
         assertNotNull(location);
 
         if (fix != null && !task.allowExceptions) {
-            Throwable throwable = LintFix.getData(fix, Throwable.class);
+            Throwable throwable = LintFix.getThrowable(fix, LintDriver.KEY_THROWABLE);
             if (throwable != null && this.firstThrowable == null) {
                 this.firstThrowable = throwable;
             }
@@ -832,7 +833,7 @@ public class TestLintClient extends LintCliClient {
             }
             while (l != null) {
                 if (l.getMessage() == null) {
-                    l.setMessage("<No location-specific message");
+                    l.setMessage("<No location-specific message>");
                 }
                 if (l == l.getSecondary()) {
                     fail("Location link cycle");
@@ -938,6 +939,10 @@ public class TestLintClient extends LintCliClient {
     public Configuration getConfiguration(
             @NonNull com.android.tools.lint.detector.api.Project project,
             @Nullable final LintDriver driver) {
+        if (!task.useTestConfiguration) {
+            return super.getConfiguration(project, driver);
+        }
+
         return getConfigurations()
                 .getConfigurationForProject(
                         project,
@@ -950,6 +955,16 @@ public class TestLintClient extends LintCliClient {
             @NonNull Configuration defaultConfiguration) {
         // Ensure that we have a fallback configuration which disables everything
         // except the relevant issues
+
+        if (task.overrideConfigFile != null) {
+            ConfigurationHierarchy configurations = getConfigurations();
+            if (configurations.getOverrides() == null) {
+                Configuration config =
+                        LintXmlConfiguration.create(configurations, task.overrideConfigFile);
+                configurations.addGlobalConfigurations(null, config);
+            }
+        }
+
         LintModelModule model = project.getBuildModule();
         final ConfigurationHierarchy configurations = getConfigurations();
         if (model != null) {

@@ -959,13 +959,16 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun test() {
         val expected =
             """
+            src/test/pkg/SharedPrefsTest.java:16: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
+                    editor.commit();
+                    ~~~~~~~~~~~~~~~
             src/test/pkg/SharedPrefsTest.java:54: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     SharedPreferences.Editor editor = preferences.edit();
                                                       ~~~~~~~~~~~~~~~~~~
             src/test/pkg/SharedPrefsTest.java:62: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     SharedPreferences.Editor editor = preferences.edit();
                                                       ~~~~~~~~~~~~~~~~~~
-            0 errors, 2 warnings
+            0 errors, 3 warnings
             """
         lint().files(
             java(
@@ -1244,7 +1247,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented()
-        ).run().expect(expected)
+        ).issues(CleanupDetector.SHARED_PREF).run().expect(expected)
     }
 
     fun test6() {
@@ -1280,10 +1283,6 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
-    fun test7() {
-        lint().files(sharedPrefsTest8).run().expectClean() // minSdk < 9: no warnings
-    }
-
     fun test8() {
         val expected =
             """
@@ -1305,10 +1304,13 @@ class CleanupDetectorTest : AbstractCheckTest() {
     fun testChainedCalls() {
         val expected =
             """
+            src/test/pkg/Chained.java:8: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
+                    PreferenceManager
+                    ^
             src/test/pkg/Chained.java:24: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
                     PreferenceManager
                     ^
-            0 errors, 1 warnings
+            0 errors, 2 warnings
             """
         lint().files(
             java(

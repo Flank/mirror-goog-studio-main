@@ -125,16 +125,14 @@ class InstallAction extends SdkPackagesAction {
         remotes.forEach(
                 remote -> {
                     License l = remote.getLicense();
-                    if (l != null
-                            && !l.checkAccepted(
-                                    getSdkHandler().getLocation(), getSdkHandler().getFileOp())) {
+                    if (l != null && !l.checkAccepted(getSdkHandler().getLocation())) {
                         unacceptedLicenses.put(l, remote);
                     }
                 });
         for (License l : new TreeSet<>(unacceptedLicenses.keySet())) {
             if (SdkManagerCli.askForLicense(l, getOutputStream(), getInputReader())) {
                 unacceptedLicenses.removeAll(l);
-                l.setAccepted(getRepoManager().getLocalPath(), getSdkHandler().getFileOp());
+                l.setAccepted(getRepoManager().getLocalPath());
             }
         }
         if (!unacceptedLicenses.isEmpty()) {

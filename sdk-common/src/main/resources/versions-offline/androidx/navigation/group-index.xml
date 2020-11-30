@@ -2,6 +2,7 @@
 <androidx.navigation>
   <navigation-common versions="2.3.1"/>
   <navigation-common-ktx versions="2.3.1"/>
+  <navigation-compose versions="1.0.0-alpha02"/>
   <navigation-dynamic-features-fragment versions="2.3.1"/>
   <navigation-dynamic-features-runtime versions="2.3.1"/>
   <navigation-fragment versions="2.3.1"/>

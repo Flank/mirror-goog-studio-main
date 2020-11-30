@@ -27,9 +27,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
-import org.jetbrains.uast.UReferenceExpression
-import org.jetbrains.uast.getQualifiedName
-import org.jetbrains.uast.matchesQualified
 
 class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames() = METHOD_NAMES
@@ -61,7 +58,8 @@ class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "UnspecifiedImmutableFlag",
             briefDescription = "Missing `PendingIntent` mutability flag",
-            explanation = """
+            explanation =
+                """
                 Apps targeting Android 12 and higher must specify either `FLAG_IMMUTABLE` or \
                 `FLAG_MUTABLE` when constructing a `PendingIntent`.
             """,

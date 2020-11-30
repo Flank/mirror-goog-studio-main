@@ -101,8 +101,7 @@ public class TextViewDetector extends LayoutDetector {
                                     + "`android:textIsSelectable=\"true\"`.\n"
                                     + "\n"
                                     + "This lint check looks for TextViews which are likely to be displaying data: "
-                                    + "views whose text is set dynamically. This value will be ignored on platforms "
-                                    + "older than API 11, so it is okay to set it regardless of your `minSdkVersion`.",
+                                    + "views whose text is set dynamically.",
                             Category.USABILITY,
                             7,
                             Severity.WARNING,
@@ -133,7 +132,6 @@ public class TextViewDetector extends LayoutDetector {
                     && !element.hasAttributeNS(ANDROID_URI, ATTR_TEXT_IS_SELECTABLE)
                     && !element.hasAttributeNS(ANDROID_URI, ATTR_VISIBILITY)
                     && !element.hasAttributeNS(ANDROID_URI, ATTR_ON_CLICK)
-                    && context.getMainProject().getTargetSdk() >= 11
                     && context.isEnabled(SELECTABLE)) {
                 LintFix fix = fix().set(ANDROID_URI, ATTR_TEXT_IS_SELECTABLE, VALUE_TRUE).build();
                 context.report(

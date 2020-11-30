@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -46,7 +47,7 @@ import junit.framework.TestCase;
  */
 public class AndroidTargetManagerTest extends TestCase {
 
-    public void testNew() throws Exception {
+    public void testNewTarget() {
         MockFileOp fop = new MockFileOp();
         recordPlatform13(fop);
         recordPlatform23(fop);
@@ -56,8 +57,7 @@ public class AndroidTargetManagerTest extends TestCase {
         recordSysImg13(fop);
         recordGoogleApisSysImg23(fop);
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
@@ -76,15 +76,14 @@ public class AndroidTargetManagerTest extends TestCase {
         verifyAddon23(addon23, platform23, fop);
     }
 
-    public void testLegacyAddon() throws Exception {
+    public void testLegacyAddon() {
         MockFileOp fop = new MockFileOp();
         recordPlatform23(fop);
         recordLegacyGoogleApis23(fop);
         recordBuildTool23(fop);
         recordGoogleApisSysImg23(fop);
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -98,15 +97,14 @@ public class AndroidTargetManagerTest extends TestCase {
         verifyAddon23(addon23, platform23, fop);
     }
 
-    public void testInstalledLegacyAddon() throws Exception {
+    public void testInstalledLegacyAddon() {
         MockFileOp fop = new MockFileOp();
         recordPlatform23(fop);
         recordInstalledLegacyGoogleApis23(fop);
         recordBuildTool23(fop);
         recordGoogleApisSysImg23(fop);
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         Collection<IAndroidTarget> targets = mgr.getTargets(progress);
@@ -120,17 +118,16 @@ public class AndroidTargetManagerTest extends TestCase {
         verifyPlatform23(platform23, fop);
     }
 
-    public void testSources() throws Exception {
+    public void testSources() {
         MockFileOp fop = new MockFileOp();
         recordPlatform23(fop);
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager mgr = handler.getAndroidTargetManager(progress);
         IAndroidTarget target = mgr.getTargets(progress).iterator().next();
         progress.assertNoErrorsOrWarnings();
-        String sourcesPath = target.getPath(IAndroidTarget.SOURCES);
+        String sourcesPath = target.getPath(IAndroidTarget.SOURCES).toString();
         assertEquals(fop.getPlatformSpecificPath("/sdk/platforms/android-23/sources"), sourcesPath);
 
         recordSources23(fop);
@@ -138,7 +135,7 @@ public class AndroidTargetManagerTest extends TestCase {
         mgr = handler.getAndroidTargetManager(progress);
         target = mgr.getTargets(progress).iterator().next();
         progress.assertNoErrorsOrWarnings();
-        sourcesPath = target.getPath(IAndroidTarget.SOURCES);
+        sourcesPath = target.getPath(IAndroidTarget.SOURCES).toString();
         assertEquals(fop.getPlatformSpecificPath("/sdk/sources/android-23"), sourcesPath);
     }
 
@@ -151,8 +148,8 @@ public class AndroidTargetManagerTest extends TestCase {
 
         assertEquals(
                 ImmutableSet.of(
-                        new File("/sdk/platforms/android-13/skins/HVGA").getAbsoluteFile(),
-                        new File("/sdk/platforms/android-13/skins/WVGA800").getAbsoluteFile()),
+                        fop.toPath("/sdk/platforms/android-13/skins/HVGA"),
+                        fop.toPath("/sdk/platforms/android-13/skins/WVGA800")),
                 ImmutableSet.copyOf(target.getSkins()));
         assertEquals(
                 ImmutableList.of(
@@ -161,9 +158,7 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals(
                 new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
                 target.getBuildToolInfo().getLocation());
-        assertEquals(
-                new File("/sdk/platforms/android-13/skins/WXGA").getAbsoluteFile(),
-                target.getDefaultSkin());
+        assertEquals(fop.toPath("/sdk/platforms/android-13/skins/WXGA"), target.getDefaultSkin());
     }
 
     private static void verifyPlatform23(IAndroidTarget target, MockFileOp fop) {
@@ -174,9 +169,9 @@ public class AndroidTargetManagerTest extends TestCase {
         assertNull(target.getParent());
         assertTrue(
                 Arrays.deepEquals(
-                        new File[] {
-                            new File("/sdk/platforms/android-23/skins/HVGA").getAbsoluteFile(),
-                            new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile()
+                        new Path[] {
+                            fop.toPath("/sdk/platforms/android-23/skins/HVGA"),
+                            fop.toPath("/sdk/platforms/android-23/skins/WVGA800")
                         },
                         target.getSkins()));
         assertEquals(
@@ -187,8 +182,7 @@ public class AndroidTargetManagerTest extends TestCase {
                 new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
                 target.getBuildToolInfo().getLocation());
         assertEquals(
-                new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile(),
-                target.getDefaultSkin());
+                fop.toPath("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
     }
 
     private static void verifyAddon13(IAndroidTarget target, IAndroidTarget platform13,
@@ -201,12 +195,11 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals(platform13, target.getParent());
         assertEquals(
                 ImmutableSet.of(
-                        new File("/sdk/platforms/android-13/skins/HVGA").getAbsoluteFile(),
-                        new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p")
-                                .getAbsoluteFile(),
-                        new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan")
-                                .getAbsoluteFile(),
-                        new File("/sdk/platforms/android-13/skins/WVGA800").getAbsoluteFile()),
+                        fop.toPath("/sdk/platforms/android-13/skins/HVGA"),
+                        fop.toPath("/sdk/add-ons/addon-google_tv_addon-google-13/skins/1080p"),
+                        fop.toPath(
+                                "/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p-overscan"),
+                        fop.toPath("/sdk/platforms/android-13/skins/WVGA800")),
                 ImmutableSet.copyOf(target.getSkins()));
         assertEquals(
                 ImmutableList.of(
@@ -216,8 +209,7 @@ public class AndroidTargetManagerTest extends TestCase {
                 new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
                 target.getBuildToolInfo().getLocation());
         assertEquals(
-                new File("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p")
-                        .getAbsoluteFile(),
+                fop.toPath("/sdk/add-ons/addon-google_tv_addon-google-13/skins/720p"),
                 target.getDefaultSkin());
     }
 
@@ -231,8 +223,8 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals(platform23, target.getParent());
         assertEquals(
                 ImmutableSet.of(
-                        new File("/sdk/platforms/android-23/skins/HVGA").getAbsoluteFile(),
-                        new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile()),
+                        fop.toPath("/sdk/platforms/android-23/skins/HVGA"),
+                        fop.toPath("/sdk/platforms/android-23/skins/WVGA800")),
                 ImmutableSet.copyOf(target.getSkins()));
         assertEquals(
                 ImmutableList.of(
@@ -242,28 +234,25 @@ public class AndroidTargetManagerTest extends TestCase {
                 new File("/sdk/build-tools/23.0.2").getAbsoluteFile(),
                 target.getBuildToolInfo().getLocation());
         assertEquals(
-                new File("/sdk/platforms/android-23/skins/WVGA800").getAbsoluteFile(),
-                target.getDefaultSkin());
+                fop.toPath("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
 
         Set<OptionalLibrary> desired =
                 Sets.newHashSet(
                         new OptionalLibraryImpl(
                                 "com.google.android.maps",
-                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar")
-                                        .getAbsoluteFile(),
+                                fop.toPath(
+                                        "/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar"),
                                 "",
                                 false),
                         new OptionalLibraryImpl(
                                 "com.android.future.usb.accessory",
-                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar")
-                                        .getAbsoluteFile(),
+                                fop.toPath("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar"),
                                 "",
                                 false),
                         new OptionalLibraryImpl(
                                 "com.google.android.media.effects",
-                                new File(
-                                                "/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar")
-                                        .getAbsoluteFile(),
+                                fop.toPath(
+                                        "/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar"),
                                 "",
                                 false));
 
@@ -721,15 +710,14 @@ public class AndroidTargetManagerTest extends TestCase {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public void testBuildTools() throws Exception {
+    public void testBuildTools() {
         MockFileOp fop = new MockFileOp();
         recordPlatform13(fop);
         recordPlatform23(fop);
         recordBuildTool23(fop);
         recordBuildTool24Preview1(fop);
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         assertEquals("23.0.2", handler.getLatestBuildTool(progress, false).getRevision().toString());
@@ -737,7 +725,7 @@ public class AndroidTargetManagerTest extends TestCase {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public void testBuildToolsWithPreviewOlderThanStable() throws Exception {
+    public void testBuildToolsWithPreviewOlderThanStable() {
         MockFileOp fop = new MockFileOp();
         recordPlatform13(fop);
         recordPlatform23(fop);
@@ -746,24 +734,24 @@ public class AndroidTargetManagerTest extends TestCase {
         // This test like testBuildTools but also adds in a final version of 24
         recordBuildTool24(fop);
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
 
         assertEquals("24.0.0", handler.getLatestBuildTool(progress, false).getRevision().toString());
         assertEquals("24.0.0", handler.getLatestBuildTool(progress, true).getRevision().toString());
     }
 
-    public void testDuplicatePlatform() throws Exception {
+    public void testDuplicatePlatform() {
         MockFileOp fop = new MockFileOp();
-        File bogus1Location = new File("/sdk", "foo");
-        File bogus2Location = new File("/sdk", "bar");
-        File real1Location = new File("/sdk", "platforms/android-20");
-        File real2Location = new File("/sdk", "platforms/android-19");
-        fop.recordExistingFile(new File(bogus1Location, SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(new File(bogus2Location, SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(new File(real1Location, SdkConstants.FN_BUILD_PROP));
-        fop.recordExistingFile(new File(real2Location, SdkConstants.FN_BUILD_PROP));
+        Path sdkPath = fop.toPath("/sdk");
+        Path bogus1Location = sdkPath.resolve("foo");
+        Path bogus2Location = sdkPath.resolve("bar");
+        Path real1Location = sdkPath.resolve("platforms/android-20");
+        Path real2Location = sdkPath.resolve("platforms/android-19");
+        fop.recordExistingFile(bogus1Location.resolve(SdkConstants.FN_BUILD_PROP));
+        fop.recordExistingFile(bogus2Location.resolve(SdkConstants.FN_BUILD_PROP));
+        fop.recordExistingFile(real1Location.resolve(SdkConstants.FN_BUILD_PROP));
+        fop.recordExistingFile(real2Location.resolve(SdkConstants.FN_BUILD_PROP));
         LocalPackage bogus1 = new FakePlatformPackage("foo", bogus1Location, 20);
         LocalPackage bogus2 = new FakePlatformPackage("bar", bogus2Location, 20);
         LocalPackage real1 = new FakePlatformPackage(
@@ -772,8 +760,7 @@ public class AndroidTargetManagerTest extends TestCase {
         List<LocalPackage> locals = ImmutableList.of(bogus1, bogus2, real1, real2);
         RepositoryPackages packages = new RepositoryPackages(locals, ImmutableList.of());
         RepoManager mgr = new FakeRepoManager(packages);
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File("/sdk"), null, fop, mgr);
+        AndroidSdkHandler handler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         AndroidTargetManager targetMgr =
                 handler.getAndroidTargetManager(progress);
@@ -793,26 +780,18 @@ public class AndroidTargetManagerTest extends TestCase {
 
     private static class FakePlatformPackage extends FakePackage.FakeLocalPackage {
         private final DetailsTypes.PlatformDetailsType mDetails;
-        private final File mLocation;
 
-        public FakePlatformPackage(@NonNull String path, @NonNull File location, int apiLevel) {
-            super(path);
+        public FakePlatformPackage(@NonNull String path, @NonNull Path location, int apiLevel) {
+            super(path, location);
             mDetails = AndroidSdkHandler.getRepositoryModule().createLatestFactory()
                     .createPlatformDetailsType();
             mDetails.setApiLevel(apiLevel);
-            mLocation = location;
         }
 
         @NonNull
         @Override
         public TypeDetails getTypeDetails() {
             return (TypeDetails)mDetails;
-        }
-
-        @NonNull
-        @Override
-        public File getLocation() {
-            return mLocation;
         }
     }
 }

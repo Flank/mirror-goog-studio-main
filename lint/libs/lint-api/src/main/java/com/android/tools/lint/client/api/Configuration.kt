@@ -16,11 +16,15 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.ATTR_ID
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.guessGradleLocation
 import com.google.common.annotations.Beta
 import java.io.File
 
@@ -274,7 +278,7 @@ abstract class Configuration(
     open fun validateIssueIds(
         client: LintClient,
         driver: LintDriver,
-        project: Project,
+        project: Project?,
         registry: IssueRegistry
     ) {
         parent?.validateIssueIds(client, driver, project, registry)
@@ -285,4 +289,106 @@ abstract class Configuration(
 
     /** Sets the given configuration as the parent of this one */
     fun setParent(parent: Configuration) = configurations.setParent(this, parent)
+
+    /**
+     * Attempts to find the configuration location responsible for a given [issue]'s
+     * configuration (such as severity). It will make sure that the location applies;
+     * e.g. if an issue is specified in a parent configuration, but is blocked by an
+     * "all" match in a closer configuration, this will return that "all" location,
+     * or if [specificOnly] is true, null.
+     *
+     * If [specificOnly] is true, it will ignore generic configuration matches (such
+     * as references to "all" or flags like checkAllWarnings).
+     *
+     * If [severityOnly] is true, limit the search to configurations that set the
+     * issue severity (as opposed to option configuration, setting ignore paths, etc.)
+     */
+    open fun getIssueConfigLocation(
+        issue: String,
+        specificOnly: Boolean = false,
+        severityOnly: Boolean = false
+    ): Location? = null
+
+    /** Convenience method for configurations to report unknown issue id problems */
+    protected fun reportNonExistingIssueId(
+        client: LintClient,
+        driver: LintDriver?,
+        issueRegistry: IssueRegistry,
+        project: Project?,
+        id: String
+    ) {
+        if (IssueRegistry.isDeletedIssueId(id)) {
+            // Recently deleted, but avoid complaining about leftover configuration
+            return
+        }
+        val message = getUnknownIssueIdErrorMessage(id, issueRegistry)
+        if (driver != null) {
+            val severity = getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID)
+            if (severity !== Severity.IGNORE) {
+                val location = getIssueConfigLocation(id, specificOnly = true, severityOnly = false)
+                    ?: if (project != null) {
+                        guessGradleLocation(project)
+                    } else {
+                        Location.create(File("(unknown location; supplied by command line flags)"))
+                    }
+                LintClient.report(
+                    client = client,
+                    issue = IssueRegistry.UNKNOWN_ISSUE_ID,
+                    message = message,
+                    driver = driver,
+                    project = project,
+                    location = location,
+                    fix = LintFix.create().data(ATTR_ID, id)
+                )
+            } else {
+                client.log(
+                    Severity.WARNING,
+                    null,
+                    dir?.path + ": " + message
+                )
+            }
+        }
+    }
+
+    companion object {
+        /**
+         * Creates the error message to show when an unknown issue id is encountered.
+         */
+        fun getUnknownIssueIdErrorMessage(id: String, issueRegistry: IssueRegistry): String {
+            val message = StringBuilder(30)
+            message.append("Unknown issue id \"").append(id).append("\"")
+            val suggestions: List<String> = issueRegistry.getIdSpellingSuggestions(id)
+            if (suggestions.isNotEmpty()) {
+                message.append(". Did you mean")
+                val size = suggestions.size
+                if (size == 1) {
+                    message.append(" ")
+                    appendIssueDescription(message, suggestions[0], issueRegistry)
+                    message.append(" ")
+                } else {
+                    message.append(":\n")
+                    for (suggestion in suggestions) {
+                        appendIssueDescription(message, suggestion, issueRegistry)
+                        message.append("\n")
+                    }
+                }
+                message.append("?")
+            }
+            return message.toString()
+        }
+
+        private fun appendIssueDescription(
+            message: StringBuilder,
+            id: String,
+            issueRegistry: IssueRegistry
+        ) {
+            message.append("'").append(id).append("'")
+            val issue = issueRegistry.getIssue(id)
+            if (issue != null) {
+                message.append(" (")
+                message.append(issue.getBriefDescription(TextFormat.RAW))
+                message.append(")")
+            }
+        }
+    }
 }

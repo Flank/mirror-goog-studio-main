@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.testutils.truth.FileSubject.assertThat
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -57,5 +58,24 @@ class LintStandaloneCustomRuleTest(lintInvocationType: LintInvocationType) {
         assertThat(file).exists()
         assertThat(file).contains("MyClass.java:3: Error: Do not implement java.util.List directly [UnitTestLintCheck2 from com.example.google.lint]")
         assertThat(file).contains("1 errors, 0 warnings")
+    }
+
+    @Test
+    fun checkPublishing() {
+        project.executor()
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .run(":library:publishAllPublicationsToMavenRepository")
+
+        val publishDir = project.file("repo/org/example/sample/library/0.1")
+        val publishedFiles = publishDir.list()?.filter { !isCheckSum(it) }
+        assertThat(publishedFiles)
+            .containsExactly("library-0.1.jar", "library-0.1.module", "library-0.1.pom")
+    }
+
+    private fun isCheckSum(fileName: String) : Boolean {
+        return fileName.endsWith("md5") ||
+                fileName.endsWith("sha1")||
+                fileName.endsWith("sha256")||
+                fileName.endsWith("sha512")
     }
 }

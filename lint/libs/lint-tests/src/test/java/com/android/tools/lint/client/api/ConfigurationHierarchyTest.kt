@@ -206,7 +206,7 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 """
                 <lint>
                     <issue id="ManifestOrder">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                 </lint>
                 """
@@ -222,7 +222,7 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 <lint>
                     <!-- This will turn it off in lib and in indirect lib. It will not affect app. -->
                     <issue id="WrongManifestParent">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                 </lint>
                 """
@@ -236,9 +236,12 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 "../lint.xml",
                 """
                 <lint>
+                    <issue id="OldTargetApi" severity="hide" />
+                    <issue id="AllowBackup" severity="hide" />
+                    <issue id="MissingApplicationIcon" severity="hide" />
                     <!-- This is in a parent of all; will work everywhere -->
                     <issue id="DuplicateUsesFeature">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                     <issue id="IllegalResourceRef">
                         <ignore regexp="must be a literal integer" />
@@ -250,9 +253,9 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
                 "lint.xml",
                 """
                 <lint>
-                    <!-- This will turn it off both in app, lib and indirectlib -->
+                    <!-- This will turn it off in all of app, lib and indirectlib -->
                     <issue id="MultipleUsesSdk">
-                        <ignore path="src/main/AndroidManifest.xml" />
+                        <ignore regexp="AndroidManifest.xml" />
                     </issue>
                 </lint>
                 """
@@ -260,20 +263,25 @@ class ConfigurationHierarchyTest : AbstractCheckTest() {
             gradle("apply plugin: 'com.android.application'")
         ).dependsOn(lib).name("app")
 
-        lint().issues(*manifestIssues).projects(main).run().expect(
-            """
-            app/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
-               <uses-library android:name="android.test.runner" android:required="false" />
-                ~~~~~~~~~~~~
-            app/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
-               <uses-sdk android:targetSdkVersion="24" />
-                ~~~~~~~~
-            lib/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
-               <uses-sdk android:targetSdkVersion="24" />
-                ~~~~~~~~
-            1 errors, 2 warnings
-            """
-        )
+        lint()
+            .issues(*manifestIssues)
+            .useTestConfiguration(false)
+            .projects(main)
+            .run()
+            .expect(
+                """
+                app/src/main/AndroidManifest.xml:11: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]
+                   <uses-library android:name="android.test.runner" android:required="false" />
+                    ~~~~~~~~~~~~
+                app/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
+                   <uses-sdk android:targetSdkVersion="24" />
+                    ~~~~~~~~
+                lib/src/main/AndroidManifest.xml:9: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]
+                   <uses-sdk android:targetSdkVersion="24" />
+                    ~~~~~~~~
+                1 errors, 2 warnings
+                """
+            )
     }
 
     fun testFlagsAndLintXmlInteraction() {
@@ -426,9 +434,7 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
                 "--disable",
                 "LintError",
                 "--disable",
-                "UsesMinSdkAttributes",
-                "--disable",
-                "UnusedResources",
+                "UsesMinSdkAttributes,UnusedResources,ButtonStyle,UnusedResources,AllowBackup",
                 "--config",
                 File(project, "fallback.xml").path,
                 "--override-config",
@@ -490,9 +496,7 @@ src/main/AndroidManifest.xml:10: Error: There should only be a single <uses-sdk>
                 "--disable",
                 "LintError",
                 "--disable",
-                "UsesMinSdkAttributes",
-                "--disable",
-                "UnusedResources",
+                "UsesMinSdkAttributes,UnusedResources,ButtonStyle,UnusedResources,AllowBackup",
                 "--config",
                 File(project, "fallback.xml").path,
                 "--override-config",

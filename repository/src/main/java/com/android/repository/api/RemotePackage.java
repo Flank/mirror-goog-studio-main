@@ -19,7 +19,7 @@ package com.android.repository.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.impl.meta.Archive;
-
+import com.android.repository.io.FileOp;
 import java.io.File;
 import java.io.IOException;
 
@@ -57,9 +57,10 @@ public interface RemotePackage extends RepoPackage {
     /**
      * Gets the path into which this {@code RemotePackage} should be installed.
      *
-     * @throws IOException if the generated path is invalid, or {@code manager} doesn't support
-     * a local repository.
+     * @throws IOException if the generated path is invalid, or {@code manager} doesn't support a
+     *     local repository.
      */
     @NonNull
-    File getInstallDir(@NonNull RepoManager manager, @NonNull ProgressIndicator progress);
+    File getInstallDir(
+            @NonNull RepoManager manager, @NonNull ProgressIndicator progress, @NonNull FileOp fop);
 }

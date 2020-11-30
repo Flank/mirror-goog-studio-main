@@ -1,5 +1,8 @@
-apply plugin: 'java-library'
-apply plugin: 'com.android.lint'
+plugins {
+    id 'java-library'
+    id 'com.android.lint'
+    id 'maven-publish'
+}
 
 lintOptions {
     textReport true
@@ -11,4 +14,20 @@ lintOptions {
 
 dependencies {
 	lintChecks project(':lint')
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'org.example.sample'
+            artifactId = 'library'
+            version = '0.1'
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = rootProject.file("repo")
+        }
+    }
 }

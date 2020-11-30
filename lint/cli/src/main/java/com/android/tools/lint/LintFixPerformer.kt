@@ -28,6 +28,7 @@ import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.XMLNS_PREFIX
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintFix.GroupType
 import com.android.tools.lint.detector.api.LintFix.LintFixGroup

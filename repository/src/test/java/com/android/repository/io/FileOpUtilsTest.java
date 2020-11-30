@@ -572,35 +572,4 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(fop.getContent(new File(backupPath, "a"))));
         assertEquals("content4", new String(fop.getContent(new File(backupPath, "foo/b"))));
     }
-
-    @Test
-    public void retainTempDirs() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        Set<File> retain = new HashSet<>();
-        for (int i = 0; i < 10; i++) {
-            File f = FileOpUtils.getNewTempDir("Test", fop);
-            if (i % 2 == 0) {
-                retain.add(f);
-            }
-        }
-        Set<String> desiredResult = retain.stream()
-                .map(File::getPath)
-                .collect(Collectors.toSet());
-        for (int i = 0; i < 10; i++) {
-            desiredResult.add(FileOpUtils.getNewTempDir("OtherTest", fop).getPath());
-        }
-
-        File root = new File(System.getProperty("java.io.tmpdir"));
-        while (root != null) {
-            desiredResult.add(root.getPath());
-            root = root.getParentFile();
-        }
-        FileOpUtils.retainTempDirs(retain, "Test", fop);
-        desiredResult =
-                desiredResult.stream()
-                        .map(fop::getPlatformSpecificPath)
-                        .collect(Collectors.toSet());
-
-        assertEquals(desiredResult, Sets.newHashSet(fop.getExistingFolders()));
-    }
 }

@@ -43,18 +43,24 @@ class HtmlReporterTest {
 
     @Test
     fun testBasic() {
-        val client = object : TestLintClient() {
-            override fun createDriver(registry: IssueRegistry, request: LintRequest): LintDriver {
-                // Temporarily switch HardcodedValuesDetector.ISSUE to a custom
-                // registry with an example vendor to test output of vendor info
-                // (which we normally omit for built-in checks)
-                HardcodedValuesDetector.ISSUE.vendor = createTestVendor()
+        val factory: () -> TestLintClient = {
+            val client = object : TestLintClient() {
+                override fun createDriver(
+                    registry: IssueRegistry,
+                    request: LintRequest
+                ): LintDriver {
+                    // Temporarily switch HardcodedValuesDetector.ISSUE to a custom
+                    // registry with an example vendor to test output of vendor info
+                    // (which we normally omit for built-in checks)
+                    HardcodedValuesDetector.ISSUE.vendor = createTestVendor()
 
-                return super.createDriver(registry, request)
+                    return super.createDriver(registry, request)
+                }
             }
+            client.flags.enabledIds.add(LogDetector.CONDITIONAL.id)
+            client
         }
 
-        client.flags.enabledIds.add(LogDetector.CONDITIONAL.id)
         val transformer = TestResultTransformer { output ->
             var report: String
             // Replace the timestamp to make golden file comparison work
@@ -115,7 +121,7 @@ class HtmlReporterTest {
                 // Not reported, but disabled by default and enabled via flags (b/111035260)
                 LogDetector.CONDITIONAL
             )
-            .client(client)
+            .clientFactory(factory)
             .run()
 
             // NOTE: If you change the output, please validate it manually in

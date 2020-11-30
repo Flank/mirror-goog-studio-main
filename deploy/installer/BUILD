@@ -126,6 +126,7 @@ genrule(
 cc_library(
     name = "installer_lib",
     srcs = [
+        "agent_interaction.cc",
         "apk_archive.cc",
         "base_install.cc",
         "base_swap.cc",
@@ -154,6 +155,7 @@ cc_library(
         "workspace.cc",
     ],
     hdrs = [
+        "agent_interaction.h",
         "apk_archive.h",
         "base_install.h",
         "base_swap.h",

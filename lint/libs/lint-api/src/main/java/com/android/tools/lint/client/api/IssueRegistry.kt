@@ -395,6 +395,9 @@ protected constructor() {
          */
         fun isDeletedIssueId(id: String): Boolean {
             return when (id) {
+                "IconLauncherFormat", // deleted a while back
+                "ViewTag", // no longer relevant, only applied to minSdk < 14
+                "FieldGetter", // no longer relevant, only applied to minSdk < 9
                 "MissingRegistered", // Renamed to MissingClass
                 "Assert" -> true // Deleted; no longer needed thanks to d8
                 else -> false

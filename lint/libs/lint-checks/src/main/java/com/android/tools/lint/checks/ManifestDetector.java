@@ -208,7 +208,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
     /** Documentation URL for app backup. */
     private static final String BACKUP_DOCUMENTATION_URL =
-            "https://developer.android.com/training/backup/autosyncapi.html";
+            "https://developer.android.com/guide/topics/data/autobackup";
 
     /** Not explicitly defining allowBackup */
     public static final Issue ALLOW_BACKUP =
@@ -236,7 +236,8 @@ public class ManifestDetector extends Detector implements XmlScanner {
                                     + "and explicitly set `android:allowBackup=(true|false)\"`.\n"
                                     + "\n"
                                     + "If not set to false, and if targeting API 23 or later, lint will also warn "
-                                    + "that you should set `android:fullBackupContent` to configure auto backup.",
+                                    + "that you should set `android:fullBackupContent` or `android:fullBackupOnly` "
+                                    + "to configure auto backup.",
                             Category.SECURITY,
                             3,
                             Severity.WARNING,
@@ -536,6 +537,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 }
             } else if (fullBackupNode == null
                     && !VALUE_FALSE.equals(allowBackup)
+                    && !application.hasAttributeNS(ANDROID_URI, "fullBackupOnly")
                     && mainProject.getTargetSdk() >= 23) {
                 if (hasGcmReceiver(application)) {
                     Location location = context.getNameLocation(sourceApplicationElement);
@@ -561,12 +563,13 @@ public class ManifestDetector extends Detector implements XmlScanner {
                                     + "On SDK version 23 and up, your app data will be automatically "
                                     + "backed up and restored on app install. Consider adding the "
                                     + "attribute `android:fullBackupContent` to specify an `@xml` "
-                                    + "resource which configures which files to backup. More info: "
+                                    + "resource which configures which files to backup, or just "
+                                    + "set `android:fullBackupOnly=true`. More info: "
                                     + BACKUP_DOCUMENTATION_URL);
                 }
             }
 
-            if ((allowBackup == null || allowBackup.isEmpty() && mainProject.getMinSdk() >= 4)) {
+            if ((allowBackup == null || allowBackup.isEmpty())) {
                 context.report(
                         ALLOW_BACKUP,
                         sourceApplicationElement,

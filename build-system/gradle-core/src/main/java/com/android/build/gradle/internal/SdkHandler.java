@@ -150,10 +150,9 @@ public class SdkHandler {
         // Check if platform-tools are installed. We check here because realistically, all projects
         // should have platform-tools in order to build.
         ProgressIndicator progress = new ConsoleProgressIndicator();
+        File sdkDir = SdkLocator.getSdkLocation(sdkLocationSourceSet, issueReporter).getDirectory();
         AndroidSdkHandler sdk =
-                AndroidSdkHandler.getInstance(
-                        SdkLocator.getSdkLocation(sdkLocationSourceSet, issueReporter)
-                                .getDirectory());
+                AndroidSdkHandler.getInstance(sdkDir == null ? null : sdkDir.toPath());
         LocalPackage platformToolsPackage =
                 sdk.getLatestLocalPackageForPrefix(
                         SdkConstants.FD_PLATFORM_TOOLS, null, true, progress);

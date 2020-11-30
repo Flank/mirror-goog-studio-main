@@ -72,6 +72,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
+import com.android.repository.io.FileOp;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -224,18 +225,18 @@ public class BuildToolInfo {
         return new BuildToolInfo(revision, path);
     }
 
-    /**
-     * Creates a {@link BuildToolInfo} from a {@link LocalPackage}.
-     */
+    /** Creates a {@link BuildToolInfo} from a {@link LocalPackage}. */
     @NonNull
-    public static BuildToolInfo fromLocalPackage(@NonNull LocalPackage localPackage) {
+    public static BuildToolInfo fromLocalPackage(
+            @NonNull LocalPackage localPackage, @NonNull FileOp fop) {
         checkNotNull(localPackage, "localPackage");
         checkArgument(
                 localPackage.getPath().contains(SdkConstants.FD_BUILD_TOOLS),
                 "%s package required.",
                 SdkConstants.FD_BUILD_TOOLS);
 
-        return fromStandardDirectoryLayout(localPackage.getVersion(), localPackage.getLocation());
+        return fromStandardDirectoryLayout(
+                localPackage.getVersion(), fop.toFile(localPackage.getLocation()));
     }
 
     /**

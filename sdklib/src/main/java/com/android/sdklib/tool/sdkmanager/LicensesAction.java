@@ -20,7 +20,9 @@ import com.android.annotations.concurrency.Slow;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
+import com.android.repository.io.FileOp;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -42,8 +44,7 @@ class LicensesAction extends SdkAction {
 
     @Slow
     @Override
-    public void execute(@NonNull ProgressIndicator progress)
-            throws SdkManagerCli.CommandFailedException {
+    public void execute(@NonNull ProgressIndicator progress) {
         getRepoManager().loadSynchronously(0, progress, getDownloader(), mSettings);
 
         Set<License> licenses =
@@ -58,10 +59,9 @@ class LicensesAction extends SdkAction {
 
         // Find licences that are not accepted yet.
         ImmutableList.Builder<License> licensesNotYetAcceptedBuilder = ImmutableList.builder();
+        FileOp fop = getSdkHandler().getFileOp();
         for (License license : licenses) {
-            boolean accepted =
-                    license.checkAccepted(
-                            getSdkHandler().getLocation(), getSdkHandler().getFileOp());
+            boolean accepted = license.checkAccepted(getSdkHandler().getLocation());
 
             if (!accepted) {
                 licensesNotYetAcceptedBuilder.add(license);
@@ -96,7 +96,8 @@ class LicensesAction extends SdkAction {
             getOutputStream().format("%n%1$d/%2$d: ", i + 1, licensesNotYetAccepted.size());
             License license = licensesNotYetAccepted.get(i);
             if (SdkManagerCli.askForLicense(license, getOutputStream(), getInputReader())) {
-                license.setAccepted(getRepoManager().getLocalPath(), getSdkHandler().getFileOp());
+                Path repoPath = getRepoManager().getLocalPath();
+                license.setAccepted(repoPath);
                 newlyAcceptedCount++;
             }
         }

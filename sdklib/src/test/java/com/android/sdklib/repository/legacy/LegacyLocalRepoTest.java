@@ -19,6 +19,7 @@ package com.android.sdklib.repository.legacy;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepoManager;
@@ -34,12 +35,11 @@ import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.local.LocalSdk;
 import com.android.sdklib.repository.meta.DetailsTypes;
-import com.android.sdklib.repository.meta.SdkCommonFactory;
+import com.android.sdklib.repository.meta.Library;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -50,7 +50,7 @@ import junit.framework.TestCase;
  */
 public class LegacyLocalRepoTest extends TestCase {
 
-    public void testParseLegacy() throws URISyntaxException, FileNotFoundException {
+    public void testParseLegacy() {
         MockFileOp mockFop = new MockFileOp();
         mockFop.recordExistingFolder("/sdk/tools");
         mockFop.recordExistingFile("/sdk/tools/source.properties",
@@ -64,14 +64,15 @@ public class LegacyLocalRepoTest extends TestCase {
         mockFop.recordExistingFile("/sdk/tools/" + LocalSdk.androidCmdName(), "placeholder");
         mockFop.recordExistingFile("/sdk/tools/" + SdkConstants.FN_EMULATOR, "placeholder");
 
-        File root = new File("/sdk").getAbsoluteFile();
+        Path root = mockFop.toPath("/sdk");
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RepoManager mgr =
                 new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
         progress.assertNoErrorsOrWarnings();
 
-        LocalRepoLoader sdk = new LocalRepoLoaderImpl(root, mgr,
-                                                      new LegacyLocalRepoLoader(root, mockFop), mockFop);
+        LocalRepoLoader sdk =
+                new LocalRepoLoaderImpl(
+                        root, mgr, new LegacyLocalRepoLoader(mockFop.toFile(root), mockFop));
         Map<String, LocalPackage> packages = sdk.getPackages(progress);
         progress.assertNoErrorsOrWarnings();
         assertEquals(1, packages.size());
@@ -129,7 +130,6 @@ public class LegacyLocalRepoTest extends TestCase {
         recordLegacyGoogleApis23(mockFop);
 
         LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
-        SdkCommonFactory factory = AndroidSdkHandler.getCommonModule().createLatestFactory();
 
         assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
         assertEquals(new Revision(1, 0, 0), local.getVersion());
@@ -138,28 +138,39 @@ public class LegacyLocalRepoTest extends TestCase {
         DetailsTypes.AddonDetailsType details = (DetailsTypes.AddonDetailsType) typeDetails;
         Set<OptionalLibrary> desired =
                 Sets.newHashSet(
-                        factory.createLibraryType(
+                        createLibraryType(
                                 "com.google.android.maps",
                                 "maps.jar",
                                 "API for Google Maps",
-                                new File("/sdk/add-ons/addon-google_apis-google-23/"),
-                                false),
-                        factory.createLibraryType(
+                                mockFop.toPath("/sdk/add-ons/addon-google_apis-google-23/")),
+                        createLibraryType(
                                 "com.android.future.usb.accessory",
                                 "usb.jar",
                                 "API for USB Accessories",
-                                new File("/sdk/add-ons/addon-google_apis-google-23/"),
-                                false),
-                        factory.createLibraryType(
+                                mockFop.toPath("/sdk/add-ons/addon-google_apis-google-23/")),
+                        createLibraryType(
                                 "com.google.android.media.effects",
                                 "effects.jar",
                                 "Collection of video effects",
-                                new File("/sdk/add-ons/addon-google_apis-google-23/"),
-                                false));
+                                mockFop.toPath("/sdk/add-ons/addon-google_apis-google-23/")));
 
         Set<OptionalLibrary> libraries = Sets.newHashSet(details.getLibraries().getLibrary());
         assertEquals(desired, libraries);
 
+    }
+
+    private Library createLibraryType(
+            @NonNull String libraryName,
+            @NonNull String jarPath,
+            @NonNull String description,
+            @NonNull Path packagePath) {
+        Library result =
+                AndroidSdkHandler.getCommonModule().createLatestFactory().createLibraryType();
+        result.setName(libraryName);
+        result.setLocalJarPath(jarPath);
+        result.setDescription(description);
+        result.setPackagePath(packagePath);
+        return result;
     }
 
     public void testRewriteLegacyAddonWithMinimalSourceProperties() throws Exception {
@@ -262,7 +273,7 @@ public class LegacyLocalRepoTest extends TestCase {
             MockFileOp mockFop, String rootPath, String packagePath, boolean allowWarnings)
             throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
-        File root = new File(rootPath).getAbsoluteFile();
+        Path root = mockFop.toPath(rootPath);
         RepoManager mgr = new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
 
         if (!allowWarnings) {

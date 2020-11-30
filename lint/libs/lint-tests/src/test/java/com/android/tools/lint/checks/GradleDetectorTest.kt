@@ -165,39 +165,39 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                    "Fix for build.gradle line 24: Replace with 19.1.0:\n" +
+                    "Fix for build.gradle line 25: Replace with 19.1.0:\n" +
                     "@@ -25 +25\n" +
                     "-     compile 'com.android.support:appcompat-v7:13.0.0'\n" +
                     "+     compile 'com.android.support:appcompat-v7:19.1.0'\n" +
-                    "Fix for build.gradle line 0: Replace with com.android.application:\n" +
+                    "Fix for build.gradle line 1: Replace with com.android.application:\n" +
                     "@@ -1 +1\n" +
                     "- apply plugin: 'android'\n" +
                     "+ apply plugin: 'com.android.application'\n" +
-                    "Fix for build.gradle line 4: Change to 19.1:\n" +
+                    "Fix for build.gradle line 5: Change to 19.1:\n" +
                     "@@ -5 +5\n" +
                     "-     buildToolsVersion \"19.0.0\"\n" +
                     "+     buildToolsVersion \"19.1\"\n" +
-                    "Fix for build.gradle line 23: Change to 21.0:\n" +
+                    "Fix for build.gradle line 24: Change to 21.0:\n" +
                     "@@ -24 +24\n" +
                     "-     freeCompile 'com.google.guava:guava:11.0.2'\n" +
                     "+     freeCompile 'com.google.guava:guava:21.0'\n" +
-                    "Fix for build.gradle line 24: Change to 19.1.0:\n" +
+                    "Fix for build.gradle line 25: Change to 19.1.0:\n" +
                     "@@ -25 +25\n" +
                     "-     compile 'com.android.support:appcompat-v7:13.0.0'\n" +
                     "+     compile 'com.android.support:appcompat-v7:19.1.0'\n" +
-                    "Fix for build.gradle line 25: Change to 1.3.0:\n" +
+                    "Fix for build.gradle line 26: Change to 1.3.0:\n" +
                     "@@ -26 +26\n" +
                     "-     compile 'com.google.android.support:wearable:1.2.0'\n" +
                     "+     compile 'com.google.android.support:wearable:1.3.0'\n" +
-                    "Fix for build.gradle line 26: Change to 1.0.1:\n" +
+                    "Fix for build.gradle line 27: Change to 1.0.1:\n" +
                     "@@ -27 +27\n" +
                     "-     compile 'com.android.support:multidex:1.0.0'\n" +
                     "+     compile 'com.android.support:multidex:1.0.1'\n" +
-                    "Fix for build.gradle line 28: Change to 0.5:\n" +
+                    "Fix for build.gradle line 29: Change to 0.5:\n" +
                     "@@ -29 +29\n" +
                     "-     androidTestCompile 'com.android.support.test:runner:0.3'\n" +
                     "+     androidTestCompile 'com.android.support.test:runner:0.5'\n" +
-                    "Data for build.gradle line 22:   GradleCoordinate : com.android.support:appcompat-v7:+"
+                    "Data for build.gradle line 23:   coordinate : com.android.support:appcompat-v7:+"
             )
     }
 
@@ -470,7 +470,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(COMPATIBILITY).run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for build.gradle line 3: Set compileSdkVersion to 19:\n" +
+                "Fix for build.gradle line 4: Set compileSdkVersion to 19:\n" +
                 "@@ -4 +4\n" +
                 "-     compileSdkVersion 18\n" +
                 "+     compileSdkVersion 19\n"
@@ -506,7 +506,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(MIN_SDK_TOO_LOW).run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for build.gradle line 7: Update minSdkVersion to 16:\n" +
+                "Fix for build.gradle line 8: Update minSdkVersion to 16:\n" +
                 "@@ -8 +8\n" +
                 "-         minSdkVersion 7\n" +
                 "+         minSdkVersion " +
@@ -579,11 +579,13 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).issues(AGP_DEPENDENCY)
-            .client(object :
+            .clientFactory({
+                object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
                     override fun getClientRevision(): String? = "3.0.0.0"
-                })
+                }
+            })
             .run().expect(expected)
     }
 
@@ -613,11 +615,13 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).issues(AGP_DEPENDENCY)
-            .client(object :
+            .clientFactory({
+                object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
                     override fun getClientRevision(): String? = "3.1.0"
-                })
+                }
+            })
             .run().expect(
                 "" +
                     "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha01 is available: 3.1.0 [AndroidGradlePluginVersion]\n" +
@@ -652,11 +656,13 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).issues(AGP_DEPENDENCY)
-            .client(object :
+            .clientFactory({
+                object :
                     com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
                     // Studio 3.0.0
                     override fun getClientRevision(): String? = "2.3.0.0"
-                })
+                }
+            })
             .run().expect(
                 """
                 build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 3.0.0-alpha4 is available: 3.0.1 [AndroidGradlePluginVersion]
@@ -755,12 +761,6 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testDependenciesMinSdkVersion() {
-        val expected = "" +
-            "build.gradle:13: Warning: Using the appcompat library when minSdkVersion >= 14 and compileSdkVersion < 21 is not necessary [GradleDependency]\n" +
-            "    compile 'com.android.support:appcompat-v7:+'\n" +
-            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 1 warnings\n"
-
         lint().files(
             gradle(
                 "" +
@@ -779,7 +779,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "    compile 'com.android.support:appcompat-v7:+'\n" +
                     "}\n"
             )
-        ).issues(DEPENDENCY).run().expect(expected)
+        ).issues(DEPENDENCY).run().expectClean()
     }
 
     fun testNoWarningFromUnknownSupportLibrary() {
@@ -1010,15 +1010,15 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(STRING_INTEGER).run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for build.gradle line 3: Replace with integer:\n" +
+                "Fix for build.gradle line 4: Replace with integer:\n" +
                 "@@ -4 +4\n" +
                 "-     compileSdkVersion '19'\n" +
                 "+     compileSdkVersion 19\n" +
-                "Fix for build.gradle line 6: Replace with integer:\n" +
+                "Fix for build.gradle line 7: Replace with integer:\n" +
                 "@@ -7 +7\n" +
                 "-         minSdkVersion '8'\n" +
                 "+         minSdkVersion 8\n" +
-                "Fix for build.gradle line 7: Replace with integer:\n" +
+                "Fix for build.gradle line 8: Replace with integer:\n" +
                 "@@ -8 +8\n" +
                 "-         targetSdkVersion \"16\"\n" +
                 "+         targetSdkVersion 16\n"
@@ -1062,11 +1062,11 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(DEPRECATED).ignoreUnknownGradleConstructs().run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for build.gradle line 3: Replace with com.android.application:\n" +
+                "Fix for build.gradle line 4: Replace with com.android.application:\n" +
                 "@@ -4 +4\n" +
                 "- apply plugin: 'android'\n" +
                 "+ apply plugin: 'com.android.application'\n" +
-                "Fix for build.gradle line 4: Replace with com.android.library:\n" +
+                "Fix for build.gradle line 5: Replace with com.android.library:\n" +
                 "@@ -5 +5\n" +
                 "- apply plugin: 'android-library'\n" +
                 "+ apply plugin: 'com.android.library'\n"
@@ -1138,7 +1138,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         ).issues(COMPATIBILITY).run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for build.gradle line 4: Change to 11.1.71:\n" +
+                "Fix for build.gradle line 5: Change to 11.1.71:\n" +
                 "@@ -5 +5\n" +
                 "-     compile 'com.google.android.gms:play-services:5.2.08'\n" +
                 "+     compile 'com.google.android.gms:play-services:11.1.71'\n"
@@ -1693,7 +1693,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                    "Fix for build.gradle line 4: Replace single quotes with double quotes:\n" +
+                    "Fix for build.gradle line 5: Replace single quotes with double quotes:\n" +
                     "@@ -5 +5\n" +
                     "-     compile 'com.android.support:design:\${supportLibVersion}'\n" +
                     "+     compile \"com.android.support:design:\${supportLibVersion}\"\n"
@@ -1733,15 +1733,15 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                    "Fix for build.gradle line 2: Change to 1.22.1:\n" +
+                    "Fix for build.gradle line 3: Change to 1.22.1:\n" +
                     "@@ -3 +3\n" +
                     "-     classpath 'io.fabric.tools:gradle:1.21.2'\n" +
                     "+     classpath 'io.fabric.tools:gradle:1.22.1'\n" +
-                    "Fix for build.gradle line 3: Change to 1.22.1:\n" +
+                    "Fix for build.gradle line 4: Change to 1.22.1:\n" +
                     "@@ -4 +4\n" +
                     "-     classpath 'io.fabric.tools:gradle:1.20.0'\n" +
                     "+     classpath 'io.fabric.tools:gradle:1.22.1'\n" +
-                    "Fix for build.gradle line 4: Change to 1.25.1:\n" +
+                    "Fix for build.gradle line 5: Change to 1.25.1:\n" +
                     "@@ -5 +5\n" +
                     "-     classpath 'io.fabric.tools:gradle:1.22.0'\n" +
                     "+     classpath 'io.fabric.tools:gradle:1.25.1'"
@@ -1854,23 +1854,23 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                    "Fix for build.gradle line 2: Change to 2.4.1:\n" +
+                    "Fix for build.gradle line 3: Change to 2.4.1:\n" +
                     "@@ -3 +3\n" +
                     "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n" +
                     "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.4.1'\n" +
-                    "Fix for build.gradle line 3: Change to 2.4.1:\n" +
+                    "Fix for build.gradle line 4: Change to 2.4.1:\n" +
                     "@@ -4 +4\n" +
                     "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n" +
                     "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.4.1'\n" +
-                    "Fix for build.gradle line 4: Change to 3.2.5:\n" +
+                    "Fix for build.gradle line 5: Change to 3.2.5:\n" +
                     "@@ -5 +5\n" +
                     "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n" +
                     "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:3.2.5'\n" +
-                    "Fix for build.gradle line 5: Change to 3.2.5:\n" +
+                    "Fix for build.gradle line 6: Change to 3.2.5:\n" +
                     "@@ -6 +6\n" +
                     "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n" +
                     "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:3.2.5'\n" +
-                    "Fix for build.gradle line 6: Change to 3.2.5:\n" +
+                    "Fix for build.gradle line 7: Change to 3.2.5:\n" +
                     "@@ -7 +7\n" +
                     "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.5'\n" +
                     "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:3.2.5'"
@@ -1904,7 +1904,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                    "Fix for build.gradle line 8: Replace with Firebase:\n" +
+                    "Fix for build.gradle line 9: Replace with Firebase:\n" +
                     "@@ -9 +9\n" +
                     "- compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n" +
                     "+ compile 'com.google.firebase:firebase-appindexing:10.2.1'\n"
@@ -2172,7 +2172,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         )
             .issues(COMPATIBILITY)
-            .client(getClientWithMockPlatformTarget(AndroidVersion("25"), 1))
+            .clientFactory(getClientWithMockPlatformTarget(AndroidVersion("25"), 1))
             .run()
             .expectClean()
 
@@ -2198,7 +2198,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         )
             .issues(COMPATIBILITY)
-            .client(getClientWithMockPlatformTarget(AndroidVersion("26"), 2))
+            .clientFactory(getClientWithMockPlatformTarget(AndroidVersion("26"), 2))
             .run()
             .expectClean()
 
@@ -2224,7 +2224,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         )
             .issues(COMPATIBILITY)
-            .client(getClientWithMockPlatformTarget(AndroidVersion("O"), 2))
+            .clientFactory(getClientWithMockPlatformTarget(AndroidVersion("O"), 2))
             .run()
             .expect(
                 "" +
@@ -2255,7 +2255,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         )
             .issues(COMPATIBILITY)
-            .client(getClientWithMockPlatformTarget(AndroidVersion("O"), 1))
+            .clientFactory(getClientWithMockPlatformTarget(AndroidVersion("O"), 1))
             .run()
             .expect(
                 "" +
@@ -2286,7 +2286,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         )
             .issues(COMPATIBILITY)
-            .client(
+            .clientFactory(
                 getClientWithMockPlatformTarget(
                     // Using apiLevel implies version.isPreview is false
                     AndroidVersion("26"), 1
@@ -3995,7 +3995,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
             }
 
-            val client: com.android.tools.lint.checks.infrastructure.TestLintClient =
+            task.clientFactory({
                 object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
                     override fun getSdkHome(): File? {
                         if (task.sdkHome != null) {
@@ -4018,7 +4018,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         } else null
                     }
                 }
-            task.client(client)
+            })
 
             val cacheDir2 =
                 com.android.tools.lint.checks.infrastructure.TestLintClient()
@@ -4038,13 +4038,15 @@ class GradleDetectorTest : AbstractCheckTest() {
         private fun getClientWithMockPlatformTarget(
             version: AndroidVersion,
             revision: Int
-        ): com.android.tools.lint.checks.infrastructure.TestLintClient {
-            return object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                override fun getCompileTarget(project: Project): IAndroidTarget {
-                    val target = mock(IAndroidTarget::class.java)
-                    `when`(target.revision).thenReturn(revision)
-                    `when`(target.version).thenReturn(version)
-                    return target
+        ): () -> com.android.tools.lint.checks.infrastructure.TestLintClient {
+            return {
+                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    override fun getCompileTarget(project: Project): IAndroidTarget {
+                        val target = mock(IAndroidTarget::class.java)
+                        `when`(target.revision).thenReturn(revision)
+                        `when`(target.version).thenReturn(version)
+                        return target
+                    }
                 }
             }
         }

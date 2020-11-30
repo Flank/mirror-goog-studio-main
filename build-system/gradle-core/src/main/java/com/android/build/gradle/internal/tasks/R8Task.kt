@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
@@ -41,6 +40,7 @@ import com.android.builder.dexing.getR8Version
 import com.android.builder.dexing.runR8
 import com.android.ide.common.blame.MessageReceiver
 import com.android.utils.FileUtils
+import com.android.zipflinger.ZipArchive
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
@@ -118,7 +118,11 @@ abstract class R8Task: ProguardConfigurableTask() {
 
     @get:Optional
     @get:Classpath
-    abstract val featureJars: ConfigurableFileCollection
+    abstract val featureClassJars: ConfigurableFileCollection
+
+    @get:Optional
+    @get:Classpath
+    abstract val featureJavaResourceJars: ConfigurableFileCollection
 
     @get:Optional
     @get:Classpath
@@ -148,6 +152,10 @@ abstract class R8Task: ProguardConfigurableTask() {
     @get:Optional
     @get:OutputDirectory
     abstract val featureDexDir: DirectoryProperty
+
+    @get:Optional
+    @get:OutputDirectory
+    abstract val featureJavaResourceOutputDir: DirectoryProperty
 
     @get:OutputFile
     abstract val outputResources: RegularFileProperty
@@ -201,13 +209,18 @@ abstract class R8Task: ProguardConfigurableTask() {
                 creationConfig.variantScope.consumesFeatureJars() -> {
                     creationConfig.artifacts.setInitialProvider(
                         taskProvider,
+                        R8Task::baseDexDir
+                    ).on(InternalArtifactType.BASE_DEX)
+
+                    creationConfig.artifacts.setInitialProvider(
+                        taskProvider,
                         R8Task::featureDexDir
                     ).on(InternalArtifactType.FEATURE_DEX)
 
                     creationConfig.artifacts.setInitialProvider(
                         taskProvider,
-                        R8Task::baseDexDir
-                    ).on(InternalArtifactType.BASE_DEX)
+                        R8Task::featureJavaResourceOutputDir
+                    ).on(InternalArtifactType.FEATURE_SHRUNK_JAVA_RES)
 
                     if (creationConfig.needsShrinkDesugarLibrary) {
                         creationConfig.artifacts
@@ -291,11 +304,18 @@ abstract class R8Task: ProguardConfigurableTask() {
                         InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                         task.baseJar
                     )
-                    task.featureJars.from(
+                    task.featureClassJars.from(
                         creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
                             AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.REVERSE_METADATA_CLASSES
+                        )
+                    )
+                    task.featureJavaResourceJars.from(
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
+                            AndroidArtifacts.ArtifactType.REVERSE_METADATA_JAVA_RES
                         )
                     )
                 }
@@ -304,7 +324,8 @@ abstract class R8Task: ProguardConfigurableTask() {
                 }
             }
             task.baseJar.disallowChanges()
-            task.featureJars.disallowChanges()
+            task.featureClassJars.disallowChanges()
+            task.featureJavaResourceJars.disallowChanges()
         }
 
         override fun keep(keep: String) {
@@ -337,6 +358,29 @@ abstract class R8Task: ProguardConfigurableTask() {
                 includeFeaturesInScopes.get() -> baseDexDir
                 else -> outputDex
             }
+
+        // Check for duplicate java resources if there are dynamic features. We allow duplicate
+        // META-INF/services/** entries.
+        val featureJavaResourceJarsList = featureJavaResourceJars.toList()
+        if (featureJavaResourceJarsList.isNotEmpty()) {
+            val paths: MutableSet<String> = mutableSetOf()
+            resources.toList().plus(featureJavaResourceJarsList).forEach { file ->
+                ZipArchive(file).use { jar ->
+                    jar.listEntries().forEach { path ->
+                        if (!path.startsWith("META-INF/services/") && !paths.add(path)) {
+                            throw RuntimeException(
+                                "Multiple dynamic-feature and/or base APKs will contain entries "
+                                        + "with the same path, '$path', which can cause unexpected "
+                                        + "behavior or errors at runtime. Please consider using "
+                                        + "android.packagingOptions in the dynamic-feature and/or "
+                                        + "application modules to ensure that only one of the APKs "
+                                        + "contains this path."
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         shrink(
             bootClasspath = bootClasspath.toList(),
@@ -380,8 +424,10 @@ abstract class R8Task: ProguardConfigurableTask() {
             output = output.get().asFile,
             outputResources = outputResources.get().asFile,
             mainDexListOutput = mainDexListOutput.orNull?.asFile,
-            featureJars = featureJars.toList(),
+            featureClassJars = featureClassJars.toList(),
+            featureJavaResourceJars = featureJavaResourceJarsList,
             featureDexDir = featureDexDir.asFile.orNull,
+            featureJavaResourceOutputDir = featureJavaResourceOutputDir.asFile.orNull,
             libConfiguration = coreLibDesugarConfig.orNull,
             outputKeepRulesDir = projectOutputKeepRules.asFile.orNull
         )
@@ -411,8 +457,10 @@ abstract class R8Task: ProguardConfigurableTask() {
             output: File,
             outputResources: File,
             mainDexListOutput: File?,
-            featureJars: List<File>,
+            featureClassJars: List<File>,
+            featureJavaResourceJars: List<File>,
             featureDexDir: File?,
+            featureJavaResourceOutputDir: File?,
             libConfiguration: String?,
             outputKeepRulesDir: File?
         ) {
@@ -441,6 +489,7 @@ abstract class R8Task: ProguardConfigurableTask() {
                 Format.DIRECTORY -> {
                     FileUtils.cleanOutputDir(output)
                     featureDexDir?.let { FileUtils.cleanOutputDir(it) }
+                    featureJavaResourceOutputDir?.let { FileUtils.cleanOutputDir(it) }
                     outputKeepRulesDir?.let { FileUtils.cleanOutputDir(it) }
                 }
                 Format.JAR -> FileUtils.deleteIfExists(output)
@@ -488,8 +537,10 @@ abstract class R8Task: ProguardConfigurableTask() {
                 mainDexListConfig,
                 messageReceiver,
                 useFullR8,
-                featureJars.map { it.toPath() },
+                featureClassJars.map { it.toPath() },
+                featureJavaResourceJars.map { it.toPath() },
                 featureDexDir?.toPath(),
+                featureJavaResourceOutputDir?.toPath(),
                 libConfiguration,
                 outputKeepRulesFile?.toPath()
             )

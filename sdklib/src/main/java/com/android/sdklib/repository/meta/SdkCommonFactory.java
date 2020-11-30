@@ -39,23 +39,4 @@ public abstract class SdkCommonFactory {
      */
     @NonNull
     public abstract Library createLibraryType();
-
-    /**
-     * Convenience to create and initialize a {@link Library}.
-     */
-    public Library createLibraryType(
-            @NonNull String libraryName,
-            @NonNull String jarPath,
-            @NonNull String description,
-            @NonNull File packagePath,
-            boolean requireManifestEntry) {
-        Library result = createLibraryType();
-        result.setName(libraryName);
-        result.setLocalJarPath(jarPath);
-        result.setDescription(description);
-        result.setManifestEntryRequired(requireManifestEntry);
-        result.setPackagePath(packagePath);
-        return result;
-    }
-
 }

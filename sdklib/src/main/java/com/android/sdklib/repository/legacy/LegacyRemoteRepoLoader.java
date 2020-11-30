@@ -35,6 +35,7 @@ import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.RemotePackageImpl;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
+import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.LayoutlibVersion;
 import com.android.sdklib.OptionalLibrary;
@@ -53,6 +54,8 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
@@ -145,14 +148,22 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                 if (mWrapped instanceof RemoteAddonPkgInfo) {
                     for (RemoteAddonPkgInfo.Lib wrappedLib : ((RemoteAddonPkgInfo) mWrapped)
                             .getLibs()) {
-                        libs.add(new OptionalLibraryImpl(wrappedLib.getName(), new File(""),
-                                wrappedLib.getDescription(), false));
+                        libs.add(
+                                new OptionalLibraryImpl(
+                                        wrappedLib.getName(),
+                                        Paths.get(""),
+                                        wrappedLib.getDescription(),
+                                        false));
                     }
                 }
                 ProgressIndicator progress = new ConsoleProgressIndicator();
-                mDetails = LegacyRepoUtils
-                        .createTypeDetails(mWrapped.getPkgDesc(), layoutlibApi, libs, null,
-                                progress, FileOpUtils.create());
+                mDetails =
+                        LegacyRepoUtils.createTypeDetails(
+                                mWrapped.getPkgDesc(),
+                                layoutlibApi,
+                                libs,
+                                null,
+                                FileOpUtils.create());
             }
             return mDetails;
         }
@@ -283,10 +294,12 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
 
         @NonNull
         @Override
-        public File getInstallDir(@NonNull RepoManager manager,
-                @NonNull ProgressIndicator progress) {
-            File localPath = manager.getLocalPath();
-            assert localPath != null;
+        public File getInstallDir(
+                @NonNull RepoManager manager,
+                @NonNull ProgressIndicator progress,
+                @NonNull FileOp fop) {
+            Path path = manager.getLocalPath();
+            File localPath = path == null ? null : fop.toFile(path);
             return mWrapped.getPkgDesc().getCanonicalInstallFolder(localPath);
         }
 

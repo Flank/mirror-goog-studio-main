@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -190,7 +191,7 @@ class AvdManagerCli extends CommandLineParser {
         init();
         parseArgs(args);
         if (mSdkHandler == null) {
-            mSdkHandler = AndroidSdkHandler.getInstance(new File(mOsSdkFolder));
+            mSdkHandler = AndroidSdkHandler.getInstance(Paths.get(mOsSdkFolder));
         }
         doAction();
     }
@@ -563,8 +564,9 @@ class AvdManagerCli extends CommandLineParser {
                 if (!libraries.isEmpty()) {
                     mSdkLog.info("     Libraries:\n");
                     for (OptionalLibrary library : libraries) {
-                        mSdkLog.info("      * %1$s (%2$s)\n",
-                                library.getName(), library.getJar().getName());
+                        mSdkLog.info(
+                                "      * %1$s (%2$s)\n",
+                                library.getName(), library.getJar().getFileName().toString());
                         mSdkLog.info("          %1$s\n", library.getDescription());
                     }
                 }
@@ -1016,9 +1018,9 @@ class AvdManagerCli extends CommandLineParser {
         if (emulatorPackage == null) {
             errorAndExit("\"emulator\" package must be installed!");
         }
-        File libDir = new File(emulatorPackage.getLocation(), SdkConstants.FD_LIB);
-        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
         FileOp fop = mSdkHandler.getFileOp();
+        File libDir = fop.toFile(emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB));
+        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
         Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
           .parseHardwareDefinitions(
             new FileOpFileWrapper(hardwareDefs, fop, false), mSdkLog);
@@ -1046,7 +1048,6 @@ class AvdManagerCli extends CommandLineParser {
      * value for each parameter.
      *
      * @return The resulting config
-     * @throws IOException
      */
     @NonNull
     private Map<String, String> promptForHardware() throws IOException {
@@ -1082,7 +1083,10 @@ class AvdManagerCli extends CommandLineParser {
         if (emulatorPackage == null) {
             errorAndExit("\"emulator\" package must be installed!");
         }
-        File libDir = new File(emulatorPackage.getLocation(), SdkConstants.FD_LIB);
+        File libDir =
+                mSdkHandler
+                        .getFileOp()
+                        .toFile(emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB));
         File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
         FileOp fop = mSdkHandler.getFileOp();
         Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
@@ -1142,7 +1146,6 @@ class AvdManagerCli extends CommandLineParser {
      * Validate the user's input against the property that is being set.
      * @param userInput What the user typed
      * @param property The property that is being set
-     * @param logger
      * @return The property value string corresponding to the user's valid input. Null if the input is invalid.
      */
     @VisibleForTesting

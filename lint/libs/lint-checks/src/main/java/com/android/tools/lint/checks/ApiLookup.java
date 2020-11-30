@@ -21,6 +21,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.LocalPackage;
+import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -118,7 +119,10 @@ public class ApiLookup extends ApiDatabase {
                     }
                 } else {
                     if (target != null && version.getFeatureLevel() >= SDK_DATABASE_MIN_VERSION) {
-                        file = new File(target.getFile(IAndroidTarget.DATA), XML_FILE_PATH);
+                        FileOp fop = client.getSdk().getFileOp();
+                        file =
+                                fop.toFile(
+                                        target.getPath(IAndroidTarget.DATA).resolve(XML_FILE_PATH));
                         if (!file.isFile()) {
                             file = null;
                         }

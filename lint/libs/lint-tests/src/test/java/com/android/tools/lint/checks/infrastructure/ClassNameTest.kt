@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import junit.framework.TestCase.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ClassNameTest {
@@ -50,6 +51,22 @@ class ClassNameTest {
                     " */\n" +
                     "public class ApiCallTest3 extends Intermediate {}"
             )
+        )
+    }
+
+    @Test
+    fun testClassLiterals() {
+        // Make sure that in Kotlin where there may be no class declaration (e.g. package
+        // functions) we don't accidentally match on T::class.java in the source code.
+        assertNull(
+            "Foo",
+            ClassName(
+                "" +
+                    "package test.pkg\n" +
+                    "import android.content.Context\n" +
+                    "inline fun <reified T> Context.systemService1() = getSystemService(T::class.java)\n" +
+                    "inline fun Context.systemService2() = getSystemService(String::class.java)"
+            ).className
         )
     }
 

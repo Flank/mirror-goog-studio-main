@@ -43,4 +43,5 @@ open class CliConfiguration(
     override fun exactCategories(): Set<Category>? = flags.exactCategories
     override fun severityOverride(issue: Issue): Severity? = flags.severityOverrides[issue.id]
     override fun allowSuppress(): Boolean = flags.allowSuppress
+    override fun severityOverrides(): Set<String> = flags.severityOverrides.keys
 }

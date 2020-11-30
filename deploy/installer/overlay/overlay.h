@@ -25,7 +25,7 @@ namespace deploy {
 class Overlay {
  public:
   Overlay(const std::string& overlay_folder, const std::string& id)
-      : overlay_folder_(overlay_folder + '/'), id_(id), is_open_(false) {}
+      : overlay_folder_(overlay_folder), id_(id), is_open_(false) {}
   ~Overlay() = default;
 
   // Returns true if this overlay exists at the specified path with the provided

@@ -32,6 +32,7 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.NoErrorsOrWarningsLogger;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -40,10 +41,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
 public class DeviceManagerTest {
 
     static final String WSVGA_HASH             = "MD5:176ce220cc833bcb6dc60ff13b82c716";
@@ -368,7 +366,9 @@ public class DeviceManagerTest {
     @Test
     public final void testGetDevices_SysImgDevice() throws Exception {
 
-        File location = sdkManager.getSdkHandler().getLocation();
+        AndroidSdkHandler handler = sdkManager.getSdkHandler();
+        Path sdkPath = handler.getLocation();
+        File location = sdkPath == null ? null : handler.getFileOp().toFile(sdkPath);
         FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
 
         // Create a system image directory with one device
@@ -590,8 +590,11 @@ public class DeviceManagerTest {
 
     @Test
     public final void testDeviceOverrides() throws Exception {
-        File location = sdkManager.getSdkHandler().getLocation();
-        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("sample");
+        AndroidSdkHandler handler = sdkManager.getSdkHandler();
+        Path sdkPath = handler.getLocation();
+        File location = sdkPath == null ? null : handler.getFileOp().toFile(sdkPath);
+        FakePackage.FakeLocalPackage p =
+                new FakePackage.FakeLocalPackage("sample", sdkManager.getSdkHandler().getFileOp());
 
         // Create a local DeviceManager, get the number of devices, and verify one device
         DeviceManager localDeviceManager = createDeviceManager();

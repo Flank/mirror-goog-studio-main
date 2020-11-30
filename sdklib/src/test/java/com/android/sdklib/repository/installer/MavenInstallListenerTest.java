@@ -75,10 +75,10 @@ public class MavenInstallListenerTest extends TestCase {
 
     public void testInstallFirst() throws Exception {
         MockFileOp fop = new MockFileOp();
-        RepoManager mgr = new RepoManagerImpl(fop);
+        RepoManager mgr = new RepoManagerImpl();
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
-        mgr.setLocalPath(ROOT);
+        mgr.setLocalPath(fop.toPath(ROOT));
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/sample.xml");
 
@@ -126,7 +126,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Installer installer = factory.createInstaller(p, mgr, downloader, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
@@ -192,10 +192,10 @@ public class MavenInstallListenerTest extends TestCase {
         fop.recordExistingFile(
                 "/repo/m2repository/com/android/group1/artifact1/1.0.0/artifact1-1.0.0.pom",
                 POM_1_0_0_CONTENTS);
-        RepoManager mgr = new RepoManagerImpl(fop);
+        RepoManager mgr = new RepoManagerImpl();
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
-        mgr.setLocalPath(ROOT);
+        mgr.setLocalPath(fop.toPath(ROOT));
         FakeDownloader downloader = new FakeDownloader(fop);
         URL repoUrl = new URL("http://example.com/sample.xml");
 
@@ -244,7 +244,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Installer installer = factory.createInstaller(remotePackage, mgr, downloader, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
@@ -357,8 +357,8 @@ public class MavenInstallListenerTest extends TestCase {
                         + "  </versioning>\n"
                         + "</metadata>\n");
 
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(ROOT);
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath(ROOT));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
@@ -383,7 +383,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
@@ -398,7 +398,7 @@ public class MavenInstallListenerTest extends TestCase {
         assertEquals("1.0.0", metadata.versioning.release);
     }
 
-    public void testRemoveAll() throws Exception {
+    public void testRemoveAll() {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile(
                 "/repo/m2repository/com/android/group1/artifact1/1.2.3/package.xml",
@@ -441,8 +441,8 @@ public class MavenInstallListenerTest extends TestCase {
                         + "  </versioning>\n"
                         + "</metadata>\n");
 
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(ROOT);
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath(ROOT));
         mgr.registerSchemaModule(AndroidSdkHandler.getCommonModule());
         mgr.registerSchemaModule(AndroidSdkHandler.getAddonModule());
 
@@ -467,7 +467,7 @@ public class MavenInstallListenerTest extends TestCase {
         factory.setListenerFactory(
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
-                                new AndroidSdkHandler(ROOT, null, fop))));
+                                new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
         Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);

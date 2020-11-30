@@ -22,6 +22,7 @@ import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_KTS;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -30,20 +31,22 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.testutils.TestUtils;
-import com.android.tools.lint.Incident;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
+import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JarFileIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
+import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Desugaring;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintModelModuleProject;
@@ -111,7 +114,7 @@ public class TestLintTask {
     String variantName;
     EnumSet<Scope> customScope;
     public boolean forceSymbolResolutionErrors;
-    TestLintClient client;
+    ClientFactory clientFactory;
     Detector detector;
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
@@ -126,12 +129,16 @@ public class TestLintTask {
     File tempDir = Files.createTempDir();
     private TestFile baseline;
     File baselineFile;
+    TestFile overrideConfig;
+    File overrideConfigFile;
     Set<Desugaring> desugaring;
     EnumSet<Platform> platforms;
     boolean checkUInjectionHost = true;
     boolean useTestProject;
     boolean allowExceptions;
     public String testName = null;
+    boolean useTestConfiguration = true;
+    boolean stripRoot = true;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -322,6 +329,38 @@ public class TestLintTask {
     public TestLintTask baseline(@NonNull TestFile baseline) {
         ensurePreRun();
         this.baseline = baseline;
+        return this;
+    }
+
+    /**
+     * Configures the test task to run with the given override configuration.
+     *
+     * @param overrideConfig the override config XML contents
+     * @return this, for constructor chaining
+     */
+    public TestLintTask overrideConfig(@NonNull TestFile overrideConfig) {
+        ensurePreRun();
+        this.overrideConfig = overrideConfig;
+        return this;
+    }
+
+    /**
+     * Whether the lint test infrastructure should insert a special test configuration which exactly
+     * enables the specific issues analyzed by this test task ({@see #issues}), and disables all
+     * others. This makes it easier to write tests: you don't start picking up warnings from
+     * unrelated other checks, and if it's a check that's disabled by default, you don't have to
+     * provide a test configuration to override it.
+     *
+     * <p>However, lint itself need to test the behavior of lint.xml inheritance, and the test
+     * configurations interfere with this. This flag (which is on by default) can be turned off to
+     * use only the configurations present in the project.
+     *
+     * @param useTestConfiguration the override config XML contents
+     * @return this, for constructor chaining
+     */
+    public TestLintTask useTestConfiguration(boolean useTestConfiguration) {
+        ensurePreRun();
+        this.useTestConfiguration = useTestConfiguration;
         return this;
     }
 
@@ -543,16 +582,53 @@ public class TestLintTask {
         this.projectInspector = inspector;
         return this;
     }
-
     /**
      * Configures lint to run with a custom lint client instead of the default one.
      *
      * @param client the custom client to use
      * @return this, for constructor chaining
+     * @deprecated Use {@link #clientFactory} instead
      */
-    public TestLintTask client(@Nullable TestLintClient client) {
+    @Deprecated
+    public TestLintTask client(@NonNull TestLintClient client) {
         ensurePreRun();
-        this.client = client;
+        assertNull("Only specify clientFactory", clientFactory);
+        this.clientFactory =
+                new ClientFactory() {
+                    int count = 0;
+
+                    @NonNull
+                    @Override
+                    public TestLintClient create() {
+                        count++;
+                        if (count > 1) {
+                            client.log(
+                                    null,
+                                    ""
+                                            + "Warning: Using the same client more than once; make sure you call\n"
+                                            + "clientFactory() instead of the deprecated client() from your lint()\n"
+                                            + "task. This normally just means passing in your creation code as a\n"
+                                            + "lambda; e.g. client(object : TestLintClient()...) should be converted\n"
+                                            + "to clientFactory({object: TestLintClient()...}).\n");
+                        }
+                        return client;
+                    }
+                };
+        return this;
+    }
+
+    /**
+     * Configures lint to run with a custom lint client instead of the default one. This is a
+     * factory method instead of a method which takes an instance because during testing, lint may
+     * need to run multiple times, and we want to make sure there's no leaking of instance state
+     * between these separate runs.
+     *
+     * @param factory the factor which creates custom clients to use
+     * @return this, for constructor chaining
+     */
+    public TestLintTask clientFactory(@Nullable ClientFactory factory) {
+        ensurePreRun();
+        this.clientFactory = factory;
         return this;
     }
 
@@ -677,6 +753,18 @@ public class TestLintTask {
         return this;
     }
 
+    /**
+     * Normally, lint reports will show absolute paths in output by removing the local details of
+     * the paths down to the project directories and showing this as a "/TESTROOT/" prefix.
+     *
+     * <p>By default it will also strip off the /TESTROOT/ prefix to show everything as relative,
+     * but with this method you can turn this off.
+     */
+    public TestLintTask stripRoot(boolean stripRoot) {
+        this.stripRoot = stripRoot;
+        return this;
+    }
+
     private void ensureConfigured() {
         getCheckedIssues(); // ensures that you've used one of the many DSL options to set issues
 
@@ -690,6 +778,29 @@ public class TestLintTask {
         if (alreadyRun) {
             throw new RuntimeException("This method should only be called before run()");
         }
+    }
+
+    /**
+     * Given a result string possibly containing absolute paths to the given directory, replaces the
+     * directory prefixes with {@code TESTROOT}, and optionally (if configured via {@link
+     * #stripRoot}) makes the path relative to the test root.
+     */
+    public String stripRoot(File rootDir, String s) {
+        String path = rootDir.getPath();
+        if (s.contains(path)) {
+            s = s.replace(path, "TESTROOT");
+        }
+        path = path.replace(File.separatorChar, '/');
+        if (s.contains(path)) {
+            s = s.replace(path, "/TESTROOT");
+        }
+        if (stripRoot && s.contains("TESTROOT")) {
+            s = s.replace("/TESTROOT/", "").replace("/TESTROOT\\", "").replace("\nTESTROOT/", "\n");
+            if (s.startsWith("TESTROOT/")) {
+                s = s.substring("TESTROOT/".length());
+            }
+        }
+        return s;
     }
 
     private static void addProjects(
@@ -774,6 +885,9 @@ public class TestLintTask {
 
                 if (baseline != null) {
                     baselineFile = baseline.createFile(projectDir);
+                }
+                if (overrideConfig != null) {
+                    overrideConfigFile = overrideConfig.createFile(projectDir);
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
@@ -971,12 +1085,31 @@ public class TestLintTask {
     }
 
     @NonNull
-    private TestLintClient createClient() {
-        TestLintClient lintClient = client;
-        if (lintClient == null) {
-            lintClient = new TestLintClient();
+    TestLintClient createClient() {
+        TestLintClient client;
+        if (clientFactory != null) {
+            client = clientFactory.create();
+        } else {
+            LintClient.Companion.ensureClientNameInitialized();
+            String clientName = LintClient.getClientName();
+            try {
+                client = new TestLintClient();
+            } finally {
+                LintClient.setClientName(clientName);
+            }
         }
-        return lintClient;
+
+        if (!useTestConfiguration && overrideConfigFile != null) {
+            ConfigurationHierarchy configurations = client.getConfigurations();
+            if (configurations.getOverrides() == null) {
+                Configuration config =
+                        LintXmlConfiguration.create(configurations, overrideConfigFile);
+                configurations.addGlobalConfigurations(null, config);
+            }
+        }
+
+        client.task = this;
+        return client;
     }
 
     public void populateProjectDirectory(
@@ -1025,6 +1158,13 @@ public class TestLintTask {
             }
 
             fp.createFile(projectDir);
+
+            // Note -- lint-override.xml is only a convention in the test suite; it's
+            // not something lint automatically picks up!
+            if ("lint-override.xml".equals(fp.targetRelativePath)) {
+                overrideConfig = fp;
+                continue;
+            }
 
             if (fp instanceof GradleTestFile) {
                 // Record mocking relationship used by createProject lint callback
@@ -1313,6 +1453,16 @@ public class TestLintTask {
                 @NonNull Location location,
                 @NonNull String message,
                 @Nullable LintFix fixData);
+    }
+
+    /**
+     * Interface to implement to have the test use a custom {@link TestLintClient}, typically
+     * because you want to override one or more methods in the client.
+     */
+    @FunctionalInterface
+    public interface ClientFactory {
+        @NonNull
+        TestLintClient create();
     }
 
     /**

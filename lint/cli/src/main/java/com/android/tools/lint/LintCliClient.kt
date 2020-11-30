@@ -37,6 +37,7 @@ import com.android.tools.lint.LintCliFlags.ERRNO_ERRORS
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.LintStats.Companion.create
 import com.android.tools.lint.checks.HardcodedValuesDetector
+import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.GradleVisitor
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
@@ -48,6 +49,7 @@ import com.android.tools.lint.client.api.LintXmlConfiguration
 import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.client.api.XmlParser
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
@@ -59,6 +61,7 @@ import com.android.tools.lint.detector.api.describeCounts
 import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getEncodedString
 import com.android.tools.lint.detector.api.guessGradleLocation
+import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import com.android.tools.lint.detector.api.isJdkFolder
 import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.utils.CharSequences
@@ -144,7 +147,7 @@ open class LintCliClient : LintClient {
     /** Flags configuring the lint runs */
     val flags: LintCliFlags
 
-    private var validatedIds = false
+    protected var validatedIds = false
     private var kotlinPerformanceManager: LintCliKotlinPerformanceManager? = null
     private var jdkHome: File? = null
     var uastEnvironment: UastEnvironment? = null
@@ -643,12 +646,11 @@ open class LintCliClient : LintClient {
                 return
             }
             validatedIds = true
-            validateIssueIds(project, registry, flags.exactCheckedIds)
-            validateIssueIds(project, registry, flags.enabledIds)
-            validateIssueIds(project, registry, flags.suppressedIds)
-            validateIssueIds(project, registry, flags.severityOverrides.keys)
+
+            val override = configurations.overrides
+            override?.validateIssueIds(this, driver, project, registry)
             if (project != null) {
-                val configuration = project.getConfiguration(driver)
+                val configuration: Configuration = project.getConfiguration(driver)
                 configuration.validateIssueIds(this, driver, project, registry)
             }
         }
@@ -657,25 +659,34 @@ open class LintCliClient : LintClient {
     private fun validateIssueIds(
         project: Project?,
         registry: IssueRegistry,
-        ids: Collection<String>?
+        ids: Collection<String>?,
+        file: File? = null
     ) {
         if (ids != null) {
             for (id in ids) {
                 if (registry.getIssue(id) == null) {
-                    reportNonExistingIssueId(project, registry, id)
+                    reportNonExistingIssueId(project, registry, id, file)
                 }
             }
         }
     }
 
-    private fun reportNonExistingIssueId(project: Project?, registry: IssueRegistry, id: String) {
+    private fun reportNonExistingIssueId(
+        project: Project?,
+        registry: IssueRegistry,
+        id: String,
+        file: File? = null
+    ) {
         if (IssueRegistry.isDeletedIssueId(id)) {
             // Recently deleted, but avoid complaining about leftover configuration
             return
         }
-        val message = LintXmlConfiguration.getUnknownIssueIdErrorMessage(id, registry)
+        val message = Configuration.getUnknownIssueIdErrorMessage(id, registry)
         if (::driver.isInitialized && project != null && !isSuppressed(IssueRegistry.UNKNOWN_ISSUE_ID)) {
-            val location = guessGradleLocation(this, project.dir, id)
+            val location = if (file != null)
+                guessGradleLocationForFile(this, file, id)
+            else
+                guessGradleLocation(this, project.dir, id)
             report(
                 this,
                 IssueRegistry.UNKNOWN_ISSUE_ID,
@@ -862,7 +873,7 @@ open class LintCliClient : LintClient {
 
         val env = UastEnvironment.create(config)
         uastEnvironment = env
-        kotlinPerformanceManager?.notifyCompilerInitialized()
+        kotlinPerformanceManager?.notifyCompilerInitialized(-1, -1, "Android Lint")
 
         for (project in allProjects) {
             project.ideaProject = env.ideaProject
@@ -878,7 +889,7 @@ open class LintCliClient : LintClient {
 
         val buildTarget = pickBuildTarget(knownProjects)
         if (buildTarget != null) {
-            val file: File? = buildTarget.getFile(IAndroidTarget.ANDROID_JAR)
+            val file: File? = buildTarget.getPath(IAndroidTarget.ANDROID_JAR)?.toFile()
             if (file != null) {
                 // because we're partially mocking it in some tests
                 files.add(file)

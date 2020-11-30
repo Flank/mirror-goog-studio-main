@@ -20,7 +20,6 @@ import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
-import java.io.File;
 import junit.framework.TestCase;
 
 public class BuildToolInfoTest extends TestCase {
@@ -28,8 +27,7 @@ public class BuildToolInfoTest extends TestCase {
     public void testGetCurrentJvmVersion() {
         MockFileOp fop = new MockFileOp();
         recordBuildTool23(fop);
-        AndroidSdkHandler sdkHandler =
-                new AndroidSdkHandler(new File("/sdk").getAbsoluteFile(), null, fop);
+        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(fop.toPath("/sdk"), null, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         BuildToolInfo bt = sdkHandler.getBuildToolInfo(new Revision(23, 0, 2), progress);
         progress.assertNoErrorsOrWarnings();

@@ -546,21 +546,6 @@ class MinifyFeaturesTest(
                     }
                 }""")
 
-    private val app =
-        MinimalSubProject.app("com.example.app")
-            .appendToBuild("""
-                android {
-                    buildTypes {
-                        minified.initWith(buildTypes.debug)
-                        minified {
-                            minifyEnabled true
-                            useProguard ${codeShrinker == CodeShrinker.PROGUARD}
-                            proguardFiles getDefaultProguardFile('proguard-android.txt')
-                        }
-                    }
-                }
-                """)
-
     private val testApp =
         MultiModuleTestProject.builder()
             .subproject(":lib1", lib1)
@@ -632,10 +617,7 @@ class MinifyFeaturesTest(
             assertThat(apk).containsClass("Lcom/example/lib1/EmptyClassToKeep;")
             assertThat(apk).containsClass("Lcom/example/lib1/a;")
             assertThat(apk).containsJavaResource("base_java_res.txt")
-            assertThat(apk).containsJavaResource("other_java_res_1.txt")
-            assertThat(apk).containsJavaResource("other_java_res_2.txt")
             assertThat(apk).containsJavaResource("lib1_java_res.txt")
-            assertThat(apk).containsJavaResource("lib2_java_res.txt")
             assertThat(apk).doesNotContainClass("Lcom/example/baseFeature/EmptyClassToRemove;")
             assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToRemove;")
             assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassKeep;")
@@ -643,6 +625,19 @@ class MinifyFeaturesTest(
             assertThat(apk).doesNotContainClass("Lcom/example/lib2/a;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+            // we split java resources back to features if using R8, but not if using proguard
+            when (codeShrinker) {
+                CodeShrinker.R8 -> {
+                    assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
+                    assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
+                    assertThat(apk).doesNotContainJavaResource("lib2_java_res.txt")
+                }
+                CodeShrinker.PROGUARD -> {
+                    assertThat(apk).containsJavaResource("other_java_res_1.txt")
+                    assertThat(apk).containsJavaResource("other_java_res_2.txt")
+                    assertThat(apk).containsJavaResource("lib2_java_res.txt")
+                }
+            }
         }
 
         project.getSubproject(":foo:otherFeature1").getApk(apkType).use { apk ->
@@ -654,7 +649,6 @@ class MinifyFeaturesTest(
             assertThat(apk).containsClass("Lcom/example/lib2/EmptyClassToKeep;")
             assertThat(apk).containsClass("Lcom/example/lib2/FooView;")
             assertThat(apk).containsClass("Lcom/example/lib2/a;")
-            assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
             assertThat(apk).doesNotContainClass(
                 "Lcom/example/otherFeature1/EmptyClassToRemove;"
             )
@@ -664,16 +658,35 @@ class MinifyFeaturesTest(
             assertThat(apk).doesNotContainClass("Lcom/example/lib1/a;")
             assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature2/Main;")
+            // we split java resources back to features if using R8, but not if using proguard
+            when (codeShrinker) {
+                CodeShrinker.R8 -> {
+                    assertThat(apk).containsJavaResource("other_java_res_1.txt")
+                    assertThat(apk).containsJavaResource("lib2_java_res.txt")
+                }
+                CodeShrinker.PROGUARD -> {
+                    assertThat(apk).doesNotContainJavaResource("other_java_res_1.txt")
+                    assertThat(apk).doesNotContainJavaResource("lib2_java_res.txt")
+                }
+            }
         }
 
         project.getSubproject(otherFeature2GradlePath).getApk(apkType).use { apk ->
             assertThat(apk.file.toFile()).exists()
             assertThat(apk).containsClass("Lcom/example/otherFeature2/Main;")
-            assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
             assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
             assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")
             assertThat(apk).doesNotContainClass("Lcom/example/baseModule/Main;")
             assertThat(apk).doesNotContainClass("Lcom/example/otherFeature1/Main;")
+            // we split java resources back to features if using R8, but not if using proguard
+            when (codeShrinker) {
+                CodeShrinker.R8 -> {
+                    assertThat(apk).containsJavaResource("other_java_res_2.txt")
+                }
+                CodeShrinker.PROGUARD -> {
+                    assertThat(apk).doesNotContainJavaResource("other_java_res_2.txt")
+                }
+            }
         }
     }
 
@@ -687,15 +700,26 @@ class MinifyFeaturesTest(
         assertThat(bundleFile).exists()
 
         Aab(bundleFile).use {
-            // check that java resources are packaged as expected
-            val expectedJavaRes = listOf(
-                "/base/root/base_java_res.txt",
-                "/base/root/lib1_java_res.txt",
-                "/base/root/lib2_java_res.txt",
-                "/base/root/other_java_res_1.txt",
-                "/base/root/other_java_res_2.txt"
-            )
-            Truth.assertThat(it.entries.map { it.toString() }).containsAllIn(expectedJavaRes)
+            // Check that java resources are packaged as expected. We split java resources back to
+            // features if using R8, but not if using proguard
+            val expectedJavaRes = when (codeShrinker) {
+                CodeShrinker.R8 -> listOf(
+                    "/base/root/base_java_res.txt",
+                    "/base/root/lib1_java_res.txt",
+                    "/otherFeature1/root/lib2_java_res.txt",
+                    "/otherFeature1/root/other_java_res_1.txt",
+                    "/otherFeature2/root/other_java_res_2.txt"
+                )
+                CodeShrinker.PROGUARD -> listOf(
+                    "/base/root/base_java_res.txt",
+                    "/base/root/lib1_java_res.txt",
+                    "/base/root/lib2_java_res.txt",
+                    "/base/root/other_java_res_1.txt",
+                    "/base/root/other_java_res_2.txt"
+                )
+            }
+            Truth.assertThat(it.entries.map { entry -> entry.toString() })
+                .containsAtLeastElementsIn(expectedJavaRes)
             // check base classes
             val expectedBaseClasses = listOf(
                 "Lcom/example/baseModule/Main;",

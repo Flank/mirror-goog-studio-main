@@ -245,7 +245,7 @@ class UastTest : TestCase() {
                                 UReturnExpression [return <init>(i)] : PsiType:Void
                                     UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(i)] : PsiType:BaseImpl
                                         UIdentifier (Identifier (BaseImpl)) [UIdentifier (Identifier (BaseImpl))]
-                                        USimpleNameReferenceExpression (identifier = <init>, resolvesTo = BaseImpl) [<init>] : PsiType:BaseImpl
+                                        USimpleNameReferenceExpression (identifier = <init>, resolvesTo = PsiClass: BaseImpl) [<init>] : PsiType:BaseImpl
                                         USimpleNameReferenceExpression (identifier = i) [i] : PsiType:int
                     UClass (name = Base) [public abstract interface Base {...}]
                         UMethod (name = print) [public abstract fun print() : void = UastEmptyExpression]
@@ -444,16 +444,16 @@ class UastTest : TestCase() {
                             UMethod (name = hashCode-impl) [public static fun hashCode-impl(@null p: java.lang.String) : int = UastEmptyExpression]
                                 UParameter (name = p) [@null var p: java.lang.String]
                                     UAnnotation (fqName = null) [@null]
-                            UMethod (name = equals-impl) [public static fun equals-impl(@null p: java.lang.String, @org.jetbrains.annotations.Nullable p1: java.lang.Object) : boolean = UastEmptyExpression]
+                            UMethod (name = equals-impl) [public static fun equals-impl(@null p: java.lang.String, @null p1: java.lang.Object) : boolean = UastEmptyExpression]
                                 UParameter (name = p) [@null var p: java.lang.String]
                                     UAnnotation (fqName = null) [@null]
-                                UParameter (name = p1) [@org.jetbrains.annotations.Nullable var p1: java.lang.Object]
-                                    UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]
-                            UMethod (name = equals-impl0) [public static final fun equals-impl0(@org.jetbrains.annotations.NotNull p1: java.lang.String, @org.jetbrains.annotations.NotNull p2: java.lang.String) : boolean = UastEmptyExpression]
-                                UParameter (name = p1) [@org.jetbrains.annotations.NotNull var p1: java.lang.String]
-                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
-                                UParameter (name = p2) [@org.jetbrains.annotations.NotNull var p2: java.lang.String]
-                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                UParameter (name = p1) [@null var p1: java.lang.Object]
+                                    UAnnotation (fqName = null) [@null]
+                            UMethod (name = equals-impl0) [public static final fun equals-impl0(@null p1: java.lang.String, @null p2: java.lang.String) : boolean = UastEmptyExpression]
+                                UParameter (name = p1) [@null var p1: java.lang.String]
+                                    UAnnotation (fqName = null) [@null]
+                                UParameter (name = p2) [@null var p2: java.lang.String]
+                                    UAnnotation (fqName = null) [@null]
                             UMethod (name = toString) [public fun toString() : java.lang.String = UastEmptyExpression]
                             UMethod (name = hashCode) [public fun hashCode() : int = UastEmptyExpression]
                             UMethod (name = equals) [public fun equals(@null p: java.lang.Object) : boolean = UastEmptyExpression]
@@ -636,8 +636,8 @@ class UastTest : TestCase() {
                     public static fun constructor-impl(@org.jetbrains.annotations.NotNull set: java.util.Set<test.pkg.GraphVariable<?>>) : java.util.Set = UastEmptyExpression
                     public static fun toString-impl(@null p: java.util.Set) : java.lang.String = UastEmptyExpression
                     public static fun hashCode-impl(@null p: java.util.Set) : int = UastEmptyExpression
-                    public static fun equals-impl(@null p: java.util.Set, @org.jetbrains.annotations.Nullable p1: java.lang.Object) : boolean = UastEmptyExpression
-                    public static final fun equals-impl0(@org.jetbrains.annotations.NotNull p1: java.util.Set, @org.jetbrains.annotations.NotNull p2: java.util.Set) : boolean = UastEmptyExpression
+                    public static fun equals-impl(@null p: java.util.Set, @null p1: java.lang.Object) : boolean = UastEmptyExpression
+                    public static final fun equals-impl0(@null p1: java.util.Set, @null p2: java.util.Set) : boolean = UastEmptyExpression
                     public fun toString() : java.lang.String = UastEmptyExpression
                     public fun hashCode() : int = UastEmptyExpression
                     public fun equals(@null p: java.lang.Object) : boolean = UastEmptyExpression
@@ -778,7 +778,7 @@ class UastTest : TestCase() {
                           ULocalVariable (name = thread1) [var thread1: java.lang.Thread = <init>({ ...})]
                             UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>({ ...})] : PsiType:Thread
                               UIdentifier (Identifier (Thread)) [UIdentifier (Identifier (Thread))]
-                              USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Thread) [<init>] : PsiType:Thread
+                              USimpleNameReferenceExpression (identifier = <init>, resolvesTo = PsiClass: Thread) [<init>] : PsiType:Thread
                               ULambdaExpression [{ ...}] : PsiType:Function0<? extends Unit>
                                 UBlockExpression [{...}]
                                   UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:void
@@ -791,10 +791,10 @@ class UastTest : TestCase() {
                           ULocalVariable (name = thread2) [var thread2: java.lang.Thread = <init>(Runnable({ ...}))]
                             UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(Runnable({ ...}))] : PsiType:Thread
                               UIdentifier (Identifier (Thread)) [UIdentifier (Identifier (Thread))]
-                              USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Thread) [<init>] : PsiType:Thread
+                              USimpleNameReferenceExpression (identifier = <init>, resolvesTo = PsiClass: Thread) [<init>] : PsiType:Thread
                               UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [Runnable({ ...})] : PsiType:Runnable
                                 UIdentifier (Identifier (Runnable)) [UIdentifier (Identifier (Runnable))]
-                                USimpleNameReferenceExpression (identifier = Runnable, resolvesTo = Runnable) [Runnable] : PsiType:Runnable
+                                USimpleNameReferenceExpression (identifier = Runnable, resolvesTo = PsiClass: Runnable) [Runnable] : PsiType:Runnable
                                 ULambdaExpression [{ ...}] : PsiType:Function0<? extends Unit>
                                   UBlockExpression [{...}]
                                     UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:void

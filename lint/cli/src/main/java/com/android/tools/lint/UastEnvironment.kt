@@ -32,7 +32,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.registry.Registry
-import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.impl.ZipHandler
@@ -248,11 +247,7 @@ class UastEnvironment private constructor(
             kotlinCompilerEnv::createPackagePartProvider
         )
 
-        perfManager?.notifyAnalysisFinished(
-            files = ktPsiFiles.size,
-            lines = ktPsiFiles.sumBy { StringUtil.getLineBreakCount(it.text) },
-            additionalDescription = "UastEnvironment.analyzeFiles"
-        )
+        perfManager?.notifyAnalysisFinished()
     }
 
     private fun addKtFilesFromSrcJars(out: MutableList<KtFile>) {

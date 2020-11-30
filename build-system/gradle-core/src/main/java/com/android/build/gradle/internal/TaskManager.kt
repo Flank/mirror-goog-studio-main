@@ -17,6 +17,7 @@ package com.android.build.gradle.internal
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
+import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.artifact.Artifact.SingleArtifact
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.component.impl.AndroidTestImpl
@@ -2358,7 +2359,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             isTestApplication: Boolean,
             addCompileRClass: Boolean): TaskProvider<R8Task> {
         if (creationConfig is ApplicationCreationConfig) {
-            publishFeatureDex(creationConfig)
+            publishArtifactsToDynamicFeatures(
+                    creationConfig,
+                    FEATURE_DEX,
+                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
+                    null)
+            publishArtifactsToDynamicFeatures(
+                    creationConfig,
+                    InternalArtifactType.FEATURE_SHRUNK_JAVA_RES,
+                    AndroidArtifacts.ArtifactType.FEATURE_SHRUNK_JAVA_RES,
+                    DOT_JAR)
         }
         return taskFactory.register(
                 R8Task.CreationAction(creationConfig, isTestApplication, addCompileRClass))
@@ -2370,21 +2380,35 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
         taskFactory.register(DexSplitterTask.CreationAction(creationConfig))
         if (creationConfig is ApplicationCreationConfig) {
-            publishFeatureDex(creationConfig)
+            publishArtifactsToDynamicFeatures(
+                    creationConfig,
+                    FEATURE_DEX,
+                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
+                    null)
         }
     }
 
     /**
-     * We have a separate method for publishing the classes.dex files back to the features (instead
-     * of using the typical PublishingSpecs pipeline) because multiple artifacts are published per
-     * BuildableArtifact in this case.
+     * We have a separate method for publishing artifacts back to the features (instead of using the
+     * typical PublishingSpecs pipeline) because multiple artifacts are published with different
+     * attributes for the given ArtifactType in this case.
      *
+     * <p>This method will publish each of the children of the directory corresponding to the given
+     * internalArtifactType. The children files' names must match the names of the corresponding
+     * feature modules + the given fileExtension.
      *
-     * This method is similar to VariantScopeImpl.publishIntermediateArtifact, and some of the
-     * code was pulled from there. Once there's support for publishing multiple artifacts per
-     * BuildableArtifact in the PublishingSpecs pipeline, we can get rid of this method.
+     * @param creationConfig the ApplicationCreationConfig
+     * @param internalArtifactType the InternalArtifactType of the directory whose children will be
+     *     published to the features
+     * @param artifactType the ArtifactType used when publishing to the features
+     * @param fileExtension the fileExtension of the directory's children files, or null if the
+     *     children files are directories
      */
-    private fun publishFeatureDex(creationConfig: ApplicationCreationConfig) {
+    private fun publishArtifactsToDynamicFeatures(
+            creationConfig: ApplicationCreationConfig,
+            internalArtifactType: InternalArtifactType<Directory>,
+            artifactType: AndroidArtifacts.ArtifactType,
+            fileExtension: String?) {
         // first calculate the list of module paths
         val modulePaths: Collection<String>
         val extension = globalScope.extension
@@ -2400,17 +2424,19 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 "Publishing to Runtime Element with no Runtime Elements configuration object. "
                         + "VariantType: "
                         + creationConfig.variantType)
-        val artifact = creationConfig.artifacts.get(FEATURE_DEX)
+        val artifact = creationConfig.artifacts.get(internalArtifactType)
         val artifactDirectory = creationConfig.globalScope.project.objects.directoryProperty()
         artifactDirectory.set(artifact)
         for (modulePath in modulePaths) {
-            val file = artifactDirectory.file(getFeatureFileName(modulePath, null))
+            val file = artifactDirectory.file(getFeatureFileName(modulePath, fileExtension))
             publishArtifactToConfiguration(
                     configuration!!,
                     file,
-                    AndroidArtifacts.ArtifactType.FEATURE_DEX,
-                    AndroidAttributes(Pair(AndroidArtifacts.MODULE_PATH,
-                            project.absoluteProjectPath(modulePath))))
+                    artifactType,
+                    AndroidAttributes(
+                            AndroidArtifacts.MODULE_PATH to project.absoluteProjectPath(modulePath)
+                    )
+            )
         }
     }
 

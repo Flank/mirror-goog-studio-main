@@ -36,7 +36,6 @@ import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import junit.framework.TestCase;
@@ -51,7 +50,7 @@ import org.xml.sax.SAXParseException;
 public class LocalRepoTest extends TestCase {
 
     // Test that we can parse a basic package.
-    public void testParseGeneric() throws Exception {
+    public void testParseGeneric() {
         MockFileOp mockFop = new MockFileOp();
         mockFop.recordExistingFolder("/repo/random");
         mockFop.recordExistingFile("/repo/random/package.xml",
@@ -83,10 +82,9 @@ public class LocalRepoTest extends TestCase {
                         + "</repo:repository>"
         );
 
-        RepoManager manager = RepoManager.create(mockFop);
+        RepoManager manager = RepoManager.create();
         LocalRepoLoader localLoader =
-                new LocalRepoLoaderImpl(
-                        new File("/repo").getAbsoluteFile(), manager, null, mockFop);
+                new LocalRepoLoaderImpl(mockFop.toPath("/repo"), manager, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         progress.assertNoErrorsOrWarnings();
@@ -99,7 +97,7 @@ public class LocalRepoTest extends TestCase {
 
     // Test writing a package out to xml
     public void testMarshalGeneric() throws Exception {
-        RepoManager manager = new RepoManagerImpl(new MockFileOp());
+        RepoManager manager = new RepoManagerImpl();
 
         CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
         GenericFactory genericFactory = RepoManager.getGenericModule().createLatestFactory();
@@ -180,7 +178,7 @@ public class LocalRepoTest extends TestCase {
     }
 
     // Test that a package in an inconsistent location gives a warning.
-    public void testWrongPath() throws Exception {
+    public void testWrongPath() {
         MockFileOp mockFop = new MockFileOp();
         mockFop.recordExistingFile("/repo/bogus/package.xml",
                 "<repo:repository\n"
@@ -197,17 +195,17 @@ public class LocalRepoTest extends TestCase {
                         + "</repo:repository>"
         );
 
-        RepoManager manager = RepoManager.create(mockFop);
-        LocalRepoLoader localLoader = new LocalRepoLoaderImpl(new File("/repo"), manager, null,
-                mockFop);
+        RepoManager manager = RepoManager.create();
+        LocalRepoLoader localLoader =
+                new LocalRepoLoaderImpl(mockFop.toPath("/repo"), manager, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         assertEquals(new Revision(3), p.getVersion());
-        assertTrue(!progress.getWarnings().isEmpty());
+        assertFalse(progress.getWarnings().isEmpty());
     }
 
     // Test that a package in an inconsistent is overridden by one in the right place
-    public void testDuplicate() throws Exception {
+    public void testDuplicate() {
         MockFileOp mockFop = new MockFileOp();
         mockFop.recordExistingFile("/repo/bogus/package.xml",
                 "<repo:repository\n"
@@ -238,14 +236,13 @@ public class LocalRepoTest extends TestCase {
                         + "</repo:repository>"
         );
 
-        RepoManager manager = RepoManager.create(mockFop);
+        RepoManager manager = RepoManager.create();
         LocalRepoLoader localLoader =
-                new LocalRepoLoaderImpl(
-                        new File("/repo").getAbsoluteFile(), manager, null, mockFop);
+                new LocalRepoLoaderImpl(mockFop.toPath("/repo"), manager, null);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         LocalPackage p = localLoader.getPackages(progress).get("random");
         assertEquals(new Revision(3), p.getVersion());
-        assertTrue(!progress.getWarnings().isEmpty());
+        assertFalse(progress.getWarnings().isEmpty());
     }
 
     // todo: test strictness

@@ -57,8 +57,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
-import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -186,21 +187,16 @@ public final class AndroidSdkHandler {
      */
     private final FileOp mFop;
 
-    /**
-     * Singleton instance of this class.
-     */
-    private static final Map<File, AndroidSdkHandler> sInstances = Maps.newConcurrentMap();
+    /** Singleton instance of this class. */
+    private static final Map<Path, AndroidSdkHandler> sInstances = Maps.newConcurrentMap();
 
-    /**
-     * Location of the local SDK.
-     */
-    private final File mLocation;
+    private static final Path NULL_PATH = Paths.get("");
 
-    /**
-     * @see AndroidLocation#getFolder()
-     */
-    @Nullable
-    private final File mAndroidFolder;
+    /** Location of the local SDK. */
+    @Nullable private final Path mLocation;
+
+    /** @see AndroidLocation#getFolder() */
+    @Nullable private final Path mAndroidFolder;
 
     /**
      * Provider for user-specified {@link RepositorySource}s.
@@ -217,25 +213,28 @@ public final class AndroidSdkHandler {
      * Get a {@code AndroidSdkHandler} instance.
      *
      * @param localPath The path to the local SDK. If {@code null} this handler will only be used
-     *                  for remote operations.
+     *     for remote operations.
      */
     @NonNull
-    public static AndroidSdkHandler getInstance(@Nullable File localPath) {
-        File key = localPath == null ? new File("") : localPath;
+    public static AndroidSdkHandler getInstance(@Nullable Path localPath) {
+        return getInstance(localPath, FileOpUtils.create());
+    }
+
+    @VisibleForTesting
+    @NonNull
+    public static AndroidSdkHandler getInstance(@Nullable Path localPath, @NonNull FileOp fop) {
+        Path key = localPath == null ? NULL_PATH : localPath;
         synchronized (sInstances) {
             return sInstances.computeIfAbsent(
                     key,
                     k -> {
-                        File androidFolder;
+                        Path androidFolder;
                         try {
-                            androidFolder = new File(AndroidLocation.getFolder());
+                            androidFolder = Paths.get(AndroidLocation.getFolder());
                         } catch (AndroidLocation.AndroidLocationException e) {
                             androidFolder = null;
                         }
-                        return new AndroidSdkHandler(
-                                localPath,
-                                androidFolder,
-                                FileOpUtils.create());
+                        return new AndroidSdkHandler(localPath, androidFolder, fop);
                     });
         }
     }
@@ -246,19 +245,19 @@ public final class AndroidSdkHandler {
      *
      * @param localPath The path to the local SDK.
      */
-    public static void resetInstance(@NonNull File localPath) {
+    public static void resetInstance(@NonNull Path localPath) {
         synchronized (sInstances) {
             sInstances.remove(localPath);
         }
     }
 
     /**
-     * Don't use this, use {@link #getInstance(File)}, unless you're in a unit test and need to
+     * Don't use this, use {@link #getInstance(Path)}, unless you're in a unit test and need to
      * specify a custom {@link FileOp} and/or {@code androidFolder}.
      */
     @VisibleForTesting
     public AndroidSdkHandler(
-            @Nullable File localPath, @Nullable File androidFolder, @NonNull FileOp fop) {
+            @Nullable Path localPath, @Nullable Path androidFolder, @NonNull FileOp fop) {
         mLocation = localPath;
         mAndroidFolder = androidFolder;
         mFop = checkNotNull(fop);
@@ -268,12 +267,12 @@ public final class AndroidSdkHandler {
      * Don't use this either, unless you're in a unit test and need to specify a custom {@link
      * RepoManager}.
      *
-     * @see #AndroidSdkHandler(File, File, FileOp)
+     * @see #AndroidSdkHandler(Path, Path, FileOp)
      */
     @VisibleForTesting
     public AndroidSdkHandler(
-            @Nullable File localPath,
-            @Nullable File androidFolder,
+            @Nullable Path localPath,
+            @Nullable Path androidFolder,
             @NonNull FileOp fop,
             @NonNull RepoManager repoManager) {
         this(localPath, androidFolder, fop);
@@ -331,21 +330,19 @@ public final class AndroidSdkHandler {
     public AndroidTargetManager getAndroidTargetManager(@NonNull ProgressIndicator progress) {
         if (mAndroidTargetManager == null) {
             getSdkManager(progress);
-            mAndroidTargetManager = new AndroidTargetManager(this, mFop);
+            mAndroidTargetManager = new AndroidTargetManager(this);
         }
         return mAndroidTargetManager;
     }
 
-    /**
-     * Gets the path of the local SDK, if set.
-     */
+    /** Gets the path of the local SDK, if set. */
     @Nullable
-    public File getLocation() {
+    public Path getLocation() {
         return mLocation;
     }
 
     @Nullable
-    public File getAndroidFolder() {
+    public Path getAndroidFolder() {
         return mAndroidFolder;
     }
 
@@ -591,15 +588,11 @@ public final class AndroidSdkHandler {
          */
         private RemoteListSourceProvider mAddonsListSourceProvider;
 
-        /**
-         * Provider for the main new-style {@link RepositorySource}
-         */
-        private ConstantSourceProvider mRepositorySourceProvider;
+        /** Provider for the main new-style {@link RepositorySource} */
+        private final ConstantSourceProvider mRepositorySourceProvider;
 
-        /**
-         * Extra source providers that were added externally.
-         */
-        private Set<RepositorySourceProvider> mCustomSourceProviders = new HashSet<>();
+        /** Extra source providers that were added externally. */
+        private final Set<RepositorySourceProvider> mCustomSourceProviders = new HashSet<>();
 
         /**
          * Sets up our {@link SchemaModule}s and {@link RepositorySourceProvider}s if they haven't
@@ -642,14 +635,12 @@ public final class AndroidSdkHandler {
                     ImmutableSet.of(REPOSITORY_MODULE, RepoManager.getGenericModule()));
         }
 
-        /**
-         * Creates a customizable {@link RepositorySourceProvider}.
-         */
+        /** Creates a customizable {@link RepositorySourceProvider}. */
         @NonNull
         public static LocalSourceProvider createUserSourceProvider(
-                @NonNull FileOp fileOp, @NonNull File androidFolder) {
+                @NonNull FileOp fileOp, @NonNull Path androidFolder) {
             return new LocalSourceProvider(
-                    new File(androidFolder, LOCAL_ADDONS_FILENAME),
+                    fileOp.toFile(androidFolder.resolve(LOCAL_ADDONS_FILENAME)),
                     ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE),
                     fileOp);
         }
@@ -686,7 +677,7 @@ public final class AndroidSdkHandler {
 
         /**
          * Add a {@link RepositorySourceProvider} to this config. It will be added to any {@link
-         * RepoManager} created by {@link #createRepoManager(ProgressIndicator, File,
+         * RepoManager} created by {@link #createRepoManager(ProgressIndicator, Path,
          * LocalSourceProvider, FileOp)}
          */
         public void addCustomSourceProvider(@NonNull RepositorySourceProvider provider) {
@@ -697,10 +688,10 @@ public final class AndroidSdkHandler {
         @NonNull
         public RepoManager createRepoManager(
                 @NonNull ProgressIndicator progress,
-                @Nullable File localLocation,
+                @Nullable Path localLocation,
                 @Nullable LocalSourceProvider userProvider,
                 @NonNull FileOp fop) {
-            RepoManager result = RepoManager.create(fop);
+            RepoManager result = RepoManager.create();
 
             // Create the schema modules etc. if they haven't been already.
             result.registerSchemaModule(ADDON_MODULE);
@@ -730,7 +721,8 @@ public final class AndroidSdkHandler {
             if (localLocation != null) {
                 // If we have a local sdk path set, set up the old-style loader so we can parse
                 // any legacy packages.
-                result.setFallbackLocalRepoLoader(new LegacyLocalRepoLoader(localLocation, fop));
+                result.setFallbackLocalRepoLoader(
+                        new LegacyLocalRepoLoader(fop.toFile(localLocation), fop));
 
                 // If a location is set we'll always want at least the local packages loaded, so
                 // load them now.
@@ -756,12 +748,10 @@ public final class AndroidSdkHandler {
                         .getPackages()
                         .getLocalPackagesForPrefix(prefix);
 
-        return allBuildTools
-                .stream()
+        // Consider highest versions first:
+        return allBuildTools.stream()
                 .filter(p -> range.contains(p.getVersion()))
-                // Consider highest versions first:
-                .sorted(Comparator.comparing(LocalPackage::getVersion).reversed())
-                .findFirst()
+                .max(Comparator.comparing(LocalPackage::getVersion))
                 .orElse(null);
     }
 
@@ -804,7 +794,8 @@ public final class AndroidSdkHandler {
             return null;
         }
 
-        BuildToolInfo latestBuildTool = BuildToolInfo.fromLocalPackage(latestBuildToolPackage);
+        BuildToolInfo latestBuildTool =
+                BuildToolInfo.fromLocalPackage(latestBuildToolPackage, mFop);
 
         // Don't cache if preview.
         if (!latestBuildToolPackage.getVersion().isPreview()) {
@@ -832,7 +823,7 @@ public final class AndroidSdkHandler {
         if (p == null) {
             return null;
         }
-        return BuildToolInfo.fromLocalPackage(p);
+        return BuildToolInfo.fromLocalPackage(p, mFop);
     }
 
     /**

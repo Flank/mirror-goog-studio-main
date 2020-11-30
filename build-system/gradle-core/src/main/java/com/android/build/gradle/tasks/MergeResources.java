@@ -102,7 +102,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.jetbrains.annotations.NotNull;
 
 @CacheableTask
 public abstract class MergeResources extends ResourceAwareTask {
@@ -480,7 +479,7 @@ public abstract class MergeResources extends ResourceAwareTask {
         }
     }
 
-    @NotNull
+    @NonNull
     private Map<String, String> getRelativeSourceSetMap(
             List<ResourceSet> resourceSets, File destinationDir) {
         if (!getRelativePathsEnabled().get()) {

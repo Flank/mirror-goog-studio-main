@@ -19,6 +19,7 @@
 #include <poll.h>
 #include <unistd.h>
 
+#include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/size_buffer.h"
 #include "tools/base/deploy/common/utils.h"
 
@@ -31,15 +32,18 @@ namespace deploy {
 
 bool MessagePipeWrapper::Write(const std::string& message) const {
   if (!WriteBytes(MAGIC_NUMBER.data(), MAGIC_NUMBER.size())) {
+    ErrEvent("Unable to write magic number to pipe");
     return false;
   }
 
   SizeBuffer size_bytes = SizeToBuffer(message.size());
   if (!WriteBytes(size_bytes.data(), size_bytes.size())) {
+    ErrEvent("Unable to write size to pipe");
     return false;
   }
 
   if (!WriteBytes(message.c_str(), message.size())) {
+    ErrEvent("Unable to write payload to pipe");
     return false;
   }
 
@@ -50,6 +54,9 @@ bool MessagePipeWrapper::Read(std::string* message) const {
   std::array<unsigned char, 8> header;
   header.fill(0);
   if (!ReadBytes(header.data(), header.size()) || header != MAGIC_NUMBER) {
+    std::string magic(std::begin(header), std::end(header));
+    ErrEvent("MessagePipeWrapper: Unable to read magic number (received= '" +
+             magic + "')");
     return false;
   }
 
@@ -57,12 +64,14 @@ bool MessagePipeWrapper::Read(std::string* message) const {
   size_bytes.fill(0);
 
   if (!ReadBytes(size_bytes.data(), size_bytes.size())) {
+    ErrEvent("MessagePipeWrapper: Unable to read() size");
     return false;
   }
 
   size_t size = BufferToSize(size_bytes);
   message->resize(size);
   if (!ReadBytes((char*)message->data(), size)) {
+    ErrEvent("MessagePipeWrapper: Unable to read() payload");
     return false;
   }
 
@@ -73,6 +82,8 @@ bool MessagePipeWrapper::Read(int timeout_ms, std::string* message) {
   // TODO: Fix this when we fix MessagePipeWrapper to not take a vector.
   auto ready = MessagePipeWrapper::Poll({this}, timeout_ms);
   if (ready.size() == 0) {
+    ErrEvent("MessagePipeWrapper read() timeout (" + to_string(timeout_ms) +
+             "ms)");
     return false;
   }
 
@@ -122,6 +133,7 @@ bool MessagePipeWrapper::ReadBytes(T* array, size_t size) const {
     // A length of zero indicates EOF has been received; we treat this as
     // failure, since that implies we were unable to fully read <size> bytes.
     if (len <= 0) {
+      ErrEvent("MessagePipeWrapper: Cannot read (EOF)");
       return false;
     }
     count += len;
@@ -138,6 +150,7 @@ bool MessagePipeWrapper::WriteBytes(T* array, size_t size) const {
     // A length of zero indicates EOF has been received; we treat this as
     // failure, since that implies we were unable to fully write <size> bytes.
     if (len <= 0) {
+      ErrEvent("MessagePipeWrapper: Cannot write (EOF)");
       return false;
     }
     count += len;

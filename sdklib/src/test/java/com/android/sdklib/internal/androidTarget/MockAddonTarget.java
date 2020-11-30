@@ -16,13 +16,13 @@
 package com.android.sdklib.internal.androidTarget;
 
 import com.android.annotations.NonNull;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.OptionalLibrary;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +53,7 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
-    public File getDefaultSkin() {
+    public Path getDefaultSkin() {
         return null;
     }
 
@@ -65,7 +65,7 @@ public class MockAddonTarget implements IAndroidTarget {
     @Override
     @NonNull
     public String getLocation() {
-        return "/sdk/add-ons/addon-" + mName;
+        return "/sdk/add-ons/addon-" + mName + File.separator;
     }
 
     @Override
@@ -91,7 +91,7 @@ public class MockAddonTarget implements IAndroidTarget {
 
     @Override
     @NonNull
-    public String getPath(int pathId) {
+    public Path getPath(int pathId) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 
@@ -128,8 +128,8 @@ public class MockAddonTarget implements IAndroidTarget {
 
     @Override
     @NonNull
-    public File[] getSkins() {
-        return FileOp.EMPTY_FILE_ARRAY;
+    public Path[] getSkins() {
+        return new Path[0];
     }
 
     @Override
@@ -170,7 +170,7 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
-    public int compareTo(IAndroidTarget o) {
+    public int compareTo(@NonNull IAndroidTarget o) {
         throw new UnsupportedOperationException("Implement this as needed for tests");
     }
 

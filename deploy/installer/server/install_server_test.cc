@@ -29,11 +29,16 @@
 
 namespace deploy {
 
+static std::string kOverlayFolder = "./foo/.bar/";
+
 class InstallServerTest : public ::testing::Test {
  public:
   InstallServerTest() = default;
 
-  void TearDown() override { EXPECT_EQ(0, system("rm -rf .overlay")); }
+  void TearDown() override {
+    const std::string cmd = "rm -rf " + kOverlayFolder;
+    EXPECT_EQ(0, system(cmd.c_str()));
+  }
 };
 
 class FakeExecutor : public Executor {
@@ -142,7 +147,7 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
 
   request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
   request.mutable_overlay_request()->set_overlay_id("id");
-  request.mutable_overlay_request()->set_overlay_path(".");
+  request.mutable_overlay_request()->set_overlay_path(kOverlayFolder);
   EXPECT_TRUE(client->Write(request));
 
   EXPECT_TRUE(client->Read(&response));
@@ -201,7 +206,7 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
 
   request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
   request.mutable_overlay_request()->set_overlay_id("id");
-  request.mutable_overlay_request()->set_overlay_path(".");
+  request.mutable_overlay_request()->set_overlay_path(kOverlayFolder);
   EXPECT_TRUE(client->Write(request));
 
   EXPECT_TRUE(client->Read(&response));
@@ -242,7 +247,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
 
   request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
   request.mutable_overlay_request()->set_overlay_id("id");
-  request.mutable_overlay_request()->set_overlay_path(".");
+  request.mutable_overlay_request()->set_overlay_path(kOverlayFolder);
   proto::OverlayFile* added =
       request.mutable_overlay_request()->add_files_to_write();
   added->set_path("apk/hello.txt");
@@ -257,7 +262,7 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   EXPECT_TRUE(client->KillServerAndWait(&response));
 
   std::string content;
-  EXPECT_TRUE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
+  EXPECT_TRUE(deploy::ReadFile(kOverlayFolder + "apk/hello.txt", &content));
   EXPECT_EQ("hello world", content);
 
   fake_exec.JoinServerThread();
@@ -282,11 +287,11 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   EXPECT_TRUE(client->KillServerAndWait(&response));
 
   content.clear();
-  EXPECT_FALSE(deploy::ReadFile(".overlay/apk/hello.txt", &content));
+  EXPECT_FALSE(deploy::ReadFile(kOverlayFolder + "apk/hello.txt", &content));
   EXPECT_TRUE(content.empty());
 
   content.clear();
-  EXPECT_TRUE(deploy::ReadFile(".overlay/apk/hello_2.txt", &content));
+  EXPECT_TRUE(deploy::ReadFile(kOverlayFolder + "apk/hello_2.txt", &content));
   EXPECT_EQ("hello again world", content);
 
   fake_exec.JoinServerThread();

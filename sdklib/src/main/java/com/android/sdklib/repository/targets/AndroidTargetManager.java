@@ -23,7 +23,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
@@ -46,8 +45,6 @@ public class AndroidTargetManager {
      */
     private Map<LocalPackage, IAndroidTarget> mTargets;
 
-    private final FileOp mFop;
-
     private final AndroidSdkHandler mSdkHandler;
 
     /**
@@ -66,9 +63,8 @@ public class AndroidTargetManager {
      * Create a manager using the new {@link AndroidSdkHandler}/{@link RepoManager} mechanism for
      * finding packages.
      */
-    public AndroidTargetManager(@NonNull AndroidSdkHandler handler, @NonNull FileOp fop) {
+    public AndroidTargetManager(@NonNull AndroidSdkHandler handler) {
         mSdkHandler = handler;
-        mFop = fop;
     }
 
     /**
@@ -91,7 +87,7 @@ public class AndroidTargetManager {
                 TypeDetails details = p.getTypeDetails();
                 if (details instanceof DetailsTypes.PlatformDetailsType) {
                     try {
-                        PlatformTarget target = new PlatformTarget(p, mSdkHandler, mFop, progress);
+                        PlatformTarget target = new PlatformTarget(p, mSdkHandler, progress);
                         AndroidVersion androidVersion = target.getVersion();
                         // If we've already seen a platform with this version, replace the existing
                         // with this if this is the "real" package (with the expected path).
@@ -117,8 +113,7 @@ public class AndroidTargetManager {
                             ((DetailsTypes.AddonDetailsType)details).getAndroidVersion();
                     PlatformTarget baseTarget = platformTargets.get(addonVersion);
                     if (baseTarget != null) {
-                        tempTargetToPackage.put(new AddonTarget(p, baseTarget,
-                          mSdkHandler.getSystemImageManager(progress), progress, mFop), p);
+                        tempTargetToPackage.put(new AddonTarget(p, baseTarget, progress), p);
                     }
                 }
             }

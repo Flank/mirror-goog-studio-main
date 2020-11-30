@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
+import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -3201,10 +3202,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "src/test/pkg/.java).kt:3: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
+                                + "src/test/pkg/test.kt:3: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
                                 + "inline fun <reified T> Context.systemService1() = getSystemService(T::class.java)\n"
                                 + "                                                  ~~~~~~~~~~~~~~~~\n"
-                                + "src/test/pkg/.java).kt:4: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
+                                + "src/test/pkg/test.kt:4: Error: Call requires API level 23 (current min is 19): android.content.Context#getSystemService [NewApi]\n"
                                 + "inline fun Context.systemService2() = getSystemService(String::class.java)\n"
                                 + "                                      ~~~~~~~~~~~~~~~~\n"
                                 + "2 errors, 0 warnings");
@@ -5111,7 +5112,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected)
-                .expectFixDiffs("Data for src/test/pkg/MapApiTest.java line 7:   Integer : 24");
+                .expectFixDiffs("Data for src/test/pkg/MapApiTest.java line 8:   requiresApi : 24");
     }
 
     public void testObsoleteFolder() {
@@ -5821,7 +5822,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expect(
-                        "src/test/pkg/}.kt:6: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n"
+                        ""
+                                + "src/test/pkg/test.kt:6: Error: Class requires API level 8 (current min is 1): org.w3c.dom.DOMErrorHandler [NewApi]\n"
                                 + "    val clz = DOMErrorHandler::class // API 8\n"
                                 + "              ~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");
@@ -6935,9 +6937,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
             }
             assertTrue(fixData instanceof LintFix.DataMap);
             LintFix.DataMap map = (LintFix.DataMap) fixData;
-            Integer apiLevel = map.get(Integer.class);
-            assertNotNull(apiLevel);
-            int requiredVersion = apiLevel;
+            int requiredVersion = map.getInt(KEY_REQUIRES_API, -1);
+            assertTrue(requiredVersion != -1);
             assertTrue(
                     "Could not extract message tokens from \"" + message + "\"",
                     requiredVersion >= 1 && requiredVersion <= SdkVersionInfo.HIGHEST_KNOWN_API);

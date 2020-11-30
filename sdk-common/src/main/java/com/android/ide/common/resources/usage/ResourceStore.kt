@@ -26,6 +26,8 @@ import com.android.utils.SdkUtils
 import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.BiMap
+import com.google.common.collect.HashBiMap
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -47,10 +49,6 @@ import java.util.regex.PatternSyntaxException
  * </ul>
  */
 class ResourceStore(val supportMultipackages: Boolean = false) {
-
-    companion object {
-        private const val TYPICAL_RESOURCE_COUNT = 200
-    }
 
     /** All known resources by id. */
     private val resourceById: MutableMap<ResourceId, Resource> =
@@ -88,7 +86,6 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
     val discardAttributes: List<String>
         get() = Collections.unmodifiableList(_discardAttributes)
     private val _discardAttributes: MutableList<String> = Lists.newArrayList()
-
 
     /**
      * Whether we should attempt to guess resources that should be kept based on looking at the
@@ -244,13 +241,13 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
      */
     fun processToolsAttributes() {
         _keepAttributes.asSequence()
-            .flatMap { getResourcesForKeepOrDiscardPatter(it) }
+            .flatMap { getResourcesForKeepOrDiscardPattern(it) }
             .forEach {
                 it.isReachable = true
-                keepResources += ResourceId(it.type,it.name, it.packageName)
+                keepResources += ResourceId(it.type, it.name, it.packageName)
             }
         _discardAttributes.asSequence()
-            .flatMap { getResourcesForKeepOrDiscardPatter(it) }
+            .flatMap { getResourcesForKeepOrDiscardPattern(it) }
             .forEach { it.isReachable = false }
     }
 
@@ -277,6 +274,7 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
         _resources.asSequence()
             .filter { it.references != null }
             .map { "$it => ${it.references}" }
+            .sorted()
             .joinToString("\n", "Resource Reference Graph:\n", "")
 
     fun dumpResourceModel(): String =
@@ -285,11 +283,11 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
             .flatMap { r ->
                 val references = r.references?.asSequence() ?: emptySequence()
                 sequenceOf("${r.url} : reachable=${r.isReachable}") +
-                        references.map { "    ${it.url}" }
+                    references.map { "    ${it.url}" }
             }
             .joinToString("\n", "", "\n")
 
-    private fun getResourcesForKeepOrDiscardPatter(pattern: String): Sequence<Resource> {
+    private fun getResourcesForKeepOrDiscardPattern(pattern: String): Sequence<Resource> {
         val url = ResourceUrl.parse(pattern)
         if (url == null || url.isFramework) {
             return emptySequence()
@@ -308,6 +306,310 @@ class ResourceStore(val supportMultipackages: Boolean = false) {
         }
     }
 
+    /** Merges the other [ResourceStore] into this one */
+    fun merge(other: ResourceStore) {
+        // Populate resource store
+        other._discardAttributes.forEach {
+            if (!_discardAttributes.contains(it)) _discardAttributes.add(it)
+        }
+        other._keepAttributes.forEach {
+            if (!_keepAttributes.contains(it)) _keepAttributes.add(it)
+        }
+        // First create all the resources to make sure they exist, and merge flags.
+        // We'll recreate the references next so that they point to items in the new graph
+        other._resources.forEach { r ->
+            val existing = getResource(r.packageName, r.type, r.name)
+                ?: addResource(Resource(r.packageName, r.type, r.name, r.value))
+            existing.mFlags = existing.mFlags or r.mFlags
+            r.declarations?.forEach { location ->
+                val locations = existing.declarations
+                if (locations == null || !locations.contains(location)) {
+                    existing.addLocation(location)
+                }
+            }
+        }
+        other._resources.forEach { r ->
+            val existing = getResource(r.packageName, r.type, r.name)
+            if (existing != null) {
+                r.references?.forEach { referenced ->
+                    val ref = getResource(referenced.packageName, referenced.type, referenced.name)
+                    if (ref != null) {
+                        existing.addReference(ref)
+                    }
+                }
+            }
+        }
+    }
+
+    companion object {
+        private const val TYPICAL_RESOURCE_COUNT = 200
+
+        /**
+         * Serialize the given store into a compact string; this will allow the
+         * [ResourceStore] to be restored via a call to [deserialize]. This method
+         * tries to generate compact output, generate semi-readable output and
+         * be low overhead.
+         */
+        fun serialize(store: ResourceStore, includeValues: Boolean = true): String {
+            val sb = StringBuilder(2000)
+            serializeInto(sb, store, includeValues)
+            return sb.toString()
+        }
+
+        fun serializeInto(
+            sb: StringBuilder,
+            store: ResourceStore,
+            includeValues: Boolean = true
+        ) {
+            // Format
+            // All numbers are stored as hex.
+            // Sections divided by ";" (we're trying to avoid characters that have to be
+            // escaped in XML such as newlines).
+            if (store.supportMultipackages) {
+                sb.append("P;")
+            }
+
+            // Assign id's to each resource
+            val storeTypeToName = store.typeToName
+            val referenceMap: BiMap<Resource, Int> = HashBiMap.create(storeTypeToName.size)
+            var nextId = 0
+            // Make sure we're sorting by type
+            for (type in storeTypeToName.keys) {
+                val list = storeTypeToName[type] ?: continue
+                for (resource in list.values()) {
+                    referenceMap[resource] = nextId++
+                }
+            }
+
+            if (referenceMap.isEmpty()) {
+                return
+            }
+
+            fun Resource.id(): String = Integer.toHexString(referenceMap[this]!!)
+
+            var prev: ResourceType? = null
+            var first = true
+            for (resource in referenceMap.keys) {
+                val type = resource.type
+                if (type != prev) {
+                    prev = type
+                    if (!first) {
+                        sb.append(']')
+                        sb.append(',')
+                        first = true
+                    }
+                    sb.append(type.getName())
+                    // Resource names. These names cannot contain the characters , ( ) ; - which is
+                    // why we use them to separate tokens.
+                    sb.append('[')
+                }
+                if (first) {
+                    first = false
+                } else {
+                    sb.append(',')
+                }
+                sb.append(resource.name)
+                sb.append('(')
+                sb.append(resource.flagString())
+                val includeValue = includeValues && resource.value != -1
+                if (store.supportMultipackages) {
+                    if (resource.packageName != null) {
+                        sb.append(',')
+                        sb.append(resource.packageName)
+                    } else if (includeValue) {
+                        sb.append(',')
+                    }
+                }
+                if (includeValue) {
+                    sb.append(',')
+                    sb.append(Integer.toHexString(resource.value))
+                }
+                sb.append(')')
+            }
+            sb.append(']')
+            sb.append(';')
+
+            // Store reference graph
+
+            first = true
+            for (resource in referenceMap.keys) {
+                val references = resource.references
+                if (references != null && references.isNotEmpty()) {
+                    if (first) {
+                        first = false
+                    } else {
+                        sb.append(',')
+                    }
+                    sb.append(resource.id())
+                    for (reference in references) {
+                        sb.append('^')
+                        sb.append(reference.id())
+                    }
+                }
+            }
+            sb.append(';')
+
+            with(store._keepAttributes) {
+                if (isNotEmpty()) {
+                    joinTo(sb, separator = ",")
+                }
+            }
+
+            sb.append(';')
+
+            with(store._discardAttributes) {
+                if (isNotEmpty()) {
+                    joinTo(sb, separator = ",")
+                }
+            }
+
+            sb.append(';')
+        }
+
+        /** Reverses the [serialize] process */
+        fun deserialize(s: String): ResourceStore {
+            if (s.isEmpty()) {
+                return ResourceStore()
+            }
+            var offset = 0
+            var supportMultiPackages = false
+            if (s.startsWith("P;")) {
+                supportMultiPackages = true
+                offset += 2
+            }
+
+            val resourceStore = ResourceStore(supportMultiPackages)
+            val referenceMap: BiMap<Resource, Int> = HashBiMap.create(s.length / 10)
+
+            var nextId = 0
+            val length = s.length
+            // initial value doesn't matter but want non-nullable type
+            var type: ResourceType = ResourceType.SAMPLE_DATA
+            val delimiters = charArrayOf(',', ')', '^', ';')
+            while (offset < length) {
+                // Find the next type start
+                // attr[myAttr1(D,7f010000),myAttr2(D,7f010001)],...
+                // ~~~~~
+                val next = s[offset]
+                if (next == ';') {
+                    // Done with resource name table
+                    break
+                }
+                val typeEnd = s.indexOf('[', offset)
+                assert(typeEnd != -1)
+                type = ResourceType.fromClassName(s.substring(offset, typeEnd))!!
+                offset = typeEnd + 1
+
+                // Read in resources
+                // attr[myAttr1(D,7f010000),myAttr2(D,7f010001)],dimen[activity_vertical_margin(...
+                //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                while (offset < length) {
+                    //noinspection ExpensiveAssertion
+                    assert(s[offset] != ']') // no empty lists should have been written
+                    val nameEnd = s.indexOf('(', offset)
+                    assert(nameEnd != -1)
+                    val name = s.substring(offset, nameEnd)
+                    offset = nameEnd + 1
+                    var end = s.indexOfAny(delimiters, offset)
+                    val flagString = s.substring(offset, end)
+                    val flags = Resource.stringToFlag(flagString)
+
+                    var pkg: String? = null
+                    if (supportMultiPackages && s[end] == ',') {
+                        // Also specifying package
+                        offset = end + 1
+                        val packageEnd = s.indexOfAny(delimiters, offset)
+                        if (packageEnd > offset) {
+                            pkg = s.substring(offset, packageEnd)
+                        }
+                        end = packageEnd
+                    }
+
+                    var value: Int
+                    if (s[end] == ',') {
+                        // Also specifying value
+                        offset = end + 1
+                        val valueEnd = s.indexOf(')', offset)
+                        val valueString = s.substring(offset, valueEnd)
+                        value = Integer.parseUnsignedInt(valueString, 16)
+                        offset = valueEnd + 1
+                    } else {
+                        value = -1
+                        offset = end + 1
+                    }
+
+                    val resource = Resource(pkg, type, name, value)
+                    resource.mFlags = flags
+                    referenceMap[resource] = nextId++
+
+                    if (s[offset++] != ',') {
+                        if (s[offset] == ',') {
+                            offset++
+                        }
+                        break
+                    }
+                }
+            }
+
+            // Read in the resource graph
+            if (offset < length - 1) {
+                val inverse = referenceMap.inverse()
+
+                offset++
+                while (offset < length) {
+                    if (s[offset] == ';') {
+                        offset++
+                        break
+                    }
+
+                    val end = s.indexOfAny(delimiters, offset)
+                    val idString = s.substring(offset, end)
+                    val id = Integer.parseInt(idString, 16)
+                    val resource = inverse[id]!!
+
+                    offset = end + 1
+                    while (offset < length) {
+                        val refEnd = s.indexOfAny(delimiters, offset)
+                        val refIdString = s.substring(offset, refEnd)
+                        val ref = Integer.parseInt(refIdString, 16)
+                        val reference = inverse[ref]!!
+                        resource.addReference(reference)
+                        offset = refEnd + 1
+                        if (s[offset - 1] == ',' || s[offset - 1] == ';') {
+                            break
+                        }
+                    }
+                    if (s[offset - 1] == ';') {
+                        break
+                    }
+                }
+            }
+
+            // Keep attributes
+            val keepEnd = s.indexOf(';', offset)
+            if (keepEnd > offset) {
+                val keep = s.substring(offset, keepEnd)
+                resourceStore.recordKeepToolAttribute(keep)
+            }
+            offset = keepEnd + 1
+
+            val discardEnd = s.indexOf(';', offset)
+            if (discardEnd > offset) {
+                val discard = s.substring(offset, discardEnd)
+                resourceStore.recordDiscardToolAttribute(discard)
+            }
+
+            // Populate resource store
+            referenceMap.forEach { (resource, _) ->
+                resourceStore.addResource(resource)
+            }
+
+            // Mark keep resources
+            resourceStore.processToolsAttributes()
+
+            return resourceStore
+        }
+    }
 }
 
 private data class ResourceId(

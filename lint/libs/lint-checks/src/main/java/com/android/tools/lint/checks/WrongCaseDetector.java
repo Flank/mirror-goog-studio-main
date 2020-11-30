@@ -35,6 +35,8 @@ import org.w3c.dom.Element;
  * <p>TODO: Generalize this to handling spelling errors in general.
  */
 public class WrongCaseDetector extends LayoutDetector {
+    public static final String KEY_REPLACEMENTS = "replacements";
+
     /** Using the wrong case for layout tags */
     public static final Issue WRONG_CASE =
             Issue.create(
@@ -61,7 +63,7 @@ public class WrongCaseDetector extends LayoutDetector {
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         String tag = element.getTagName();
         String correct = Character.toLowerCase(tag.charAt(0)) + tag.substring(1);
-        LintFix fix = fix().data(Arrays.asList(tag, correct));
+        LintFix fix = fix().data(KEY_REPLACEMENTS, Arrays.asList(tag, correct));
         context.report(
                 WRONG_CASE,
                 element,

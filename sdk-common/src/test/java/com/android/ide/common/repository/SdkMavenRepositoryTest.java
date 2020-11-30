@@ -41,7 +41,7 @@ public class SdkMavenRepositoryTest extends TestCase {
 
     private MockFileOp mFileOp;
     private AndroidSdkHandler mSdkHandler;
-    private RepositoryPackages mRepositoryPackages = new RepositoryPackages();
+    private final RepositoryPackages mRepositoryPackages = new RepositoryPackages();
 
     @Override
     protected void setUp() throws Exception {
@@ -49,23 +49,24 @@ public class SdkMavenRepositoryTest extends TestCase {
         mFileOp = new MockFileOp();
         mSdkHandler =
                 new AndroidSdkHandler(
-                        SDK_HOME,
+                        mFileOp.toPath(SDK_HOME),
                         null,
                         mFileOp,
-                        new FakeRepoManager(SDK_HOME, mRepositoryPackages));
+                        new FakeRepoManager(mFileOp.toPath(SDK_HOME), mRepositoryPackages));
     }
 
     private void registerRepo(@NonNull String vendor) {
         String path = String.format("extras;%s;m2repository", vendor);
         // Create and add the package
         Map<String, LocalPackage> existing = new HashMap<>(mRepositoryPackages.getLocalPackages());
-        LocalPackage pkg = new FakePackage.FakeLocalPackage(path);
+        LocalPackage pkg = new FakePackage.FakeLocalPackage(path, mFileOp);
         existing.put(path, pkg);
         mRepositoryPackages.setLocalPkgInfos(existing.values());
         // SdkMavenRepo requires that the path exists.
         ProgressIndicator progress = new FakeProgressIndicator();
-        mFileOp.mkdirs(new FakePackage.FakeRemotePackage(path)
-                .getInstallDir(mSdkHandler.getSdkManager(progress), progress));
+        mFileOp.mkdirs(
+                new FakePackage.FakeRemotePackage(path)
+                        .getInstallDir(mSdkHandler.getSdkManager(progress), progress, mFileOp));
     }
 
     private void registerAndroidRepo() {
@@ -126,7 +127,7 @@ public class SdkMavenRepositoryTest extends TestCase {
                 SdkMavenRepository.find(SDK_HOME, "com.google.guava", "guava", mFileOp));
     }
 
-    public void testGetSdkPath() throws Exception {
+    public void testGetSdkPath() {
         GradleCoordinate coord = new GradleCoordinate("foo.bar.baz", "artifact1",
                 GradleCoordinate.parseRevisionNumber("1.2.3-alpha1"), null);
         String result = DetailsTypes.MavenType.getRepositoryPath(
@@ -139,7 +140,7 @@ public class SdkMavenRepositoryTest extends TestCase {
         assertEquals("extras;m2repository;foo;bar;baz;artifact1;1", result);
     }
 
-    public void testGetCoordinateFromSdkPath() throws Exception {
+    public void testGetCoordinateFromSdkPath() {
         GradleCoordinate result = SdkMavenRepository
                 .getCoordinateFromSdkPath("extras;m2repository;foo;bar;baz;artifact1;1.2.3-alpha1");
         assertEquals(new GradleCoordinate("foo.bar.baz", "artifact1",
@@ -181,9 +182,10 @@ public class SdkMavenRepositoryTest extends TestCase {
         assertNull(SdkMavenRepository.findBestPackageMatching(pattern, packages));
     }
 
-    private static void addLocalVersion(@NonNull HashMap<String, LocalPackage> existing, String revision) {
+    private void addLocalVersion(@NonNull HashMap<String, LocalPackage> existing, String revision) {
         String basePath = "extras;m2repository;com;android;tools;build;gradle;";
-        FakePackage.FakeLocalPackage fakePackage = new FakePackage.FakeLocalPackage(basePath + revision);
+        FakePackage.FakeLocalPackage fakePackage =
+                new FakePackage.FakeLocalPackage(basePath + revision, mFileOp);
         fakePackage.setRevision(Revision.parseRevision(revision));
         existing.put(basePath + revision, fakePackage);
     }
@@ -217,7 +219,8 @@ public class SdkMavenRepositoryTest extends TestCase {
         assertNull(result);
     }
 
-    private void addRemoteVersion(@NonNull HashMap<String, RemotePackage> existing, String revision) {
+    private static void addRemoteVersion(
+            @NonNull HashMap<String, RemotePackage> existing, String revision) {
         String basePath = "extras;m2repository;com;android;tools;build;gradle;";
         FakePackage.FakeRemotePackage fakePackage = new FakePackage.FakeRemotePackage(basePath + revision);
         fakePackage.setRevision(Revision.parseRevision(revision));

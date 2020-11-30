@@ -41,6 +41,7 @@ import com.android.prefs.AndroidLocation
 import com.android.repository.Revision
 import com.android.repository.api.ProgressIndicator
 import com.android.repository.api.ProgressIndicatorAdapter
+import com.android.repository.io.FileOp
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -87,6 +88,7 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.net.URLConnection
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.ArrayList
 import java.util.HashMap
@@ -540,9 +542,9 @@ abstract class LintClient {
             for (i in targets.indices.reversed()) {
                 val target = targets[i]
                 if (target.isPlatform && target.version.featureLevel >= SDK_DATABASE_MIN_VERSION) {
-                    val file = File(target.getFile(IAndroidTarget.DATA), relativePath)
-                    if (file.isFile) {
-                        return file
+                    val path = target.getPath(IAndroidTarget.DATA).resolve(relativePath)
+                    if (Files.isRegularFile(path)) {
+                        return getSdk()?.fileOp?.toFile(path) ?: FileOp.toFileUnsafe(path)
                     }
                 }
             }
@@ -944,7 +946,7 @@ abstract class LintClient {
 
     open fun getSdk(): AndroidSdkHandler? {
         if (sdk == null) {
-            sdk = AndroidSdkHandler.getInstance(getSdkHome())
+            sdk = AndroidSdkHandler.getInstance(getSdkHome()?.toPath())
         }
 
         return sdk
@@ -1660,6 +1662,9 @@ abstract class LintClient {
 
     /** Returns the version number of this lint client, if known */
     open fun getClientRevision(): String? = null
+
+    /** Returns the display name of this lint client, if known */
+    open fun getClientDisplayName(): String = clientName
 
     /** Returns the version number of this lint client, if known. This is the one
      * meant to be displayed to users; e.g. for Studio, client revision may be

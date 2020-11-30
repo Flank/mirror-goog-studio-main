@@ -204,8 +204,10 @@ class DexSplitterTaskTest {
             output = shrunkDexDir,
             outputResources = tmp.newFile("shrunkResources.jar"),
             mainDexListOutput = null,
-            featureJars = listOf(),
+            featureClassJars = listOf(),
+            featureJavaResourceJars = listOf(),
             featureDexDir = null,
+            featureJavaResourceOutputDir = null,
             libConfiguration = null,
             outputKeepRulesDir = null
         )

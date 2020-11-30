@@ -26,13 +26,10 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.Repository;
 import com.android.repository.api.RepositorySource;
-import com.android.repository.util.InstallerUtil;
+import com.android.repository.io.FileOp;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
@@ -95,10 +92,13 @@ public abstract class RemotePackageImpl extends RepoPackageImpl implements Remot
 
     @NonNull
     @Override
-    public File getInstallDir(@NonNull RepoManager manager, @NonNull ProgressIndicator progress) {
+    public File getInstallDir(
+            @NonNull RepoManager manager,
+            @NonNull ProgressIndicator progress,
+            @NonNull FileOp fop) {
         assert manager.getLocalPath() != null;
         String path = getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar);
-        return new File(manager.getLocalPath(), path);
+        return fop.toFile(manager.getLocalPath().resolve(path));
     }
 
     /**

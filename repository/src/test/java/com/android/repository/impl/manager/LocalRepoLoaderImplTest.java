@@ -25,6 +25,8 @@ import com.android.repository.impl.installer.AbstractPackageOperation;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.Test;
 
@@ -65,27 +67,26 @@ public class LocalRepoLoaderImplTest {
     public void testHashFile() throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         MockFileOp fop = new MockFileOp();
-        File repoRoot = new File("/repo").getAbsoluteFile();
-        File knownPackagesFile = new File(repoRoot, LocalRepoLoaderImpl.KNOWN_PACKAGES_HASH_FN);
-        fop.mkdirs(repoRoot);
-        RepoManager mgr = new RepoManagerImpl(fop);
-        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
+        Path repoRoot = fop.toPath("/repo");
+        Path knownPackagesFile = repoRoot.resolve(LocalRepoLoaderImpl.KNOWN_PACKAGES_HASH_FN);
+        Files.createDirectories(repoRoot);
+        RepoManager mgr = new RepoManagerImpl();
+        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
         // If there's no file we should think that an update is needed.
         assertTrue(loader.needsUpdate(0, false));
         assertTrue(loader.needsUpdate(Long.MAX_VALUE, false));
 
         // After the load, if there are no packages found, we shouldn't create a file
         loader.getPackages(progress);
-        assertFalse(fop.exists(knownPackagesFile));
+        assertFalse(Files.exists(knownPackagesFile));
 
         // check that the file is created when loading when there are packages
-        File package1 = new File(repoRoot, "foo/package.xml");
-        fop.recordExistingFile(package1.getPath(),
-                LOCAL_PACKAGE.getBytes());
+        Path package1 = repoRoot.resolve("foo/package.xml");
+        fop.recordExistingFile(package1.toString(), LOCAL_PACKAGE.getBytes());
         // loader caches the packages it found, so we need to recreate it
-        loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
+        loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
         loader.getPackages(progress);
-        assertTrue(fop.exists(knownPackagesFile));
+        assertTrue(Files.exists(knownPackagesFile));
 
         // check that iff the file exists and is newer than the last update,
         // shallow check returns true
@@ -104,9 +105,9 @@ public class LocalRepoLoaderImplTest {
         assertTrue(loader.needsUpdate(2000, true));
 
         // check that deep check returns true if there's an unknown package
-        fop.recordExistingFile(new File(repoRoot, "bar/package.xml").getPath(),
-                LOCAL_PACKAGE_2.getBytes());
-        loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
+        fop.recordExistingFile(
+                repoRoot.resolve("bar/package.xml").toString(), LOCAL_PACKAGE_2.getBytes());
+        loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
         assertTrue(loader.needsUpdate(2000, true));
 
         // now reload and check that update is no longer needed
@@ -116,8 +117,8 @@ public class LocalRepoLoaderImplTest {
         assertFalse(loader.needsUpdate(currentTime + 1000, false));
 
         // remove package and ensure shallow check doesn't catch it
-        loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
-        fop.delete(new File(repoRoot, "bar/package.xml"));
+        loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
+        Files.delete(repoRoot.resolve("bar/package.xml"));
         assertFalse(loader.needsUpdate(currentTime + 1000, false));
 
         // but deep check does
@@ -126,7 +127,7 @@ public class LocalRepoLoaderImplTest {
     }
 
     @Test
-    public void testNoScanningForMetadataFolders() throws Exception {
+    public void testNoScanningForMetadataFolders() {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         MockFileOp fop = new MockFileOp();
         // Allow the repo root name to start with metadata prefix. Although it wouldn't normally
@@ -135,7 +136,7 @@ public class LocalRepoLoaderImplTest {
                 new File("/" + AbstractPackageOperation.METADATA_FILENAME_PREFIX + "repo")
                         .getAbsoluteFile();
         fop.mkdirs(repoRoot);
-        RepoManager mgr = new RepoManagerImpl(fop);
+        RepoManager mgr = new RepoManagerImpl();
 
         // Check that the metadata folders are not scanned for packages.
         File package1 = new File(repoRoot, "foo/package.xml");
@@ -145,10 +146,12 @@ public class LocalRepoLoaderImplTest {
         fop.recordExistingFile(package2.getPath(),
                                LOCAL_PACKAGE_2.getBytes());
         // loader caches the packages it found, so we need to recreate it
-        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
+        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(fop.toPath(repoRoot), mgr, null);
         Map<String, LocalPackage> localPackages = loader.getPackages(progress);
         assertEquals(1, localPackages.size());
-        assertEquals(package1.getParent(), localPackages.values().iterator().next().getLocation().getPath());
+        assertEquals(
+                package1.getParent(),
+                localPackages.values().iterator().next().getLocation().toString());
     }
 
 }

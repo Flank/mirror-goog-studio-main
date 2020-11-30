@@ -102,6 +102,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     public static final String EXCLUDE_TESTS_PROPERTY = "lint.unused-resources.exclude-tests";
     public static final String INCLUDE_TESTS_PROPERTY = "lint.unused-resources.include-tests";
 
+    public static final String KEY_RESOURCE_FIELD = "field";
+
     static {
         EnumSet<Scope> scopeSet =
                 EnumSet.of(
@@ -392,7 +394,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     if (location == null) {
                         location = Location.create(context.getProject().getDir());
                     }
-                    LintFix fix = fix().data(field);
+                    LintFix fix = fix().data(KEY_RESOURCE_FIELD, field);
                     context.report(getIssue(resource), location, message, fix);
                 }
             }

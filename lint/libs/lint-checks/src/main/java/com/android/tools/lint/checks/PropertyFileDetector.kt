@@ -22,7 +22,6 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -78,7 +77,7 @@ class PropertyFileDetector : Detector() {
             )
             val startOffset = offset + valueStart
             val endOffset = startOffset + 4 // 4: "http".length()
-            val fix = LintFix.create().replace().text("http").with("https").build()
+            val fix = fix().replace().text("http").with("https").build()
             val location = Location.create(context.file, contents, startOffset, endOffset)
             context.report(HTTP, location, message, fix)
         } else if (line.startsWith("systemProp.http.proxyPassword=") ||
@@ -178,7 +177,7 @@ class PropertyFileDetector : Detector() {
 
             val locationRange = contents.subSequence(startOffset, endOffset).toString()
             val escapedRange = suggestEscapes(locationRange)
-            val fix = LintFix.create()
+            val fix = fix()
                 .name("Escape")
                 .replace()
                 .text(locationRange)

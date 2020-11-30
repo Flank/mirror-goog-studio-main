@@ -142,7 +142,8 @@ class UtpConfigFactoryTest {
             mockOutputDir,
             mockTmpDir,
             File(TEST_LOG_DIR),
-            mockRetentionConfig)
+            mockRetentionConfig,
+            useOrchestrator = false)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -264,6 +265,140 @@ class UtpConfigFactoryTest {
     }
 
     @Test
+    fun createRunnerConfigProtoForLocalDeviceUseOrchestrator() {
+        val factory = UtpConfigFactory()
+        val runnerConfigProto = factory.createRunnerConfigProtoForLocalDevice(
+                mockDevice,
+                testData,
+                listOf(mockAppApk, mockTestApk, mockHelperApk),
+                utpDependencies,
+                mockSdkComponents,
+                mockOutputDir,
+                mockTmpDir,
+                File(TEST_LOG_DIR),
+                mockRetentionConfig,
+                useOrchestrator = true)
+
+        assertThat(runnerConfigProto.toString()).isEqualTo("""
+            device {
+              device_id {
+                id: "mockDeviceSerialNumber"
+              }
+              provider {
+                label {
+                  label: "local_android_device_provider"
+                }
+                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                jar {
+                  path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
+                  value: "\022\026mockDeviceSerialNumber"
+                }
+              }
+            }
+            test_fixture {
+              test_fixture_id {
+                id: "AGP_Test_Fixture"
+              }
+              setup {
+                installable {
+                  source_path {
+                    path: "mockAppApkPath"
+                  }
+                  type: ANDROID_APK
+                }
+                installable {
+                  source_path {
+                    path: "mockTestApkPath"
+                  }
+                  type: ANDROID_APK
+                }
+                installable {
+                  source_path {
+                    path: "mockHelperApkPath"
+                  }
+                  type: ANDROID_APK
+                }
+              }
+              host_plugin {
+                label {
+                  label: "android_device_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "android_test_device_info_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                }
+              }
+              environment {
+                output_dir {
+                  path: "mockOutputDirPath"
+                }
+                tmp_dir {
+                  path: "mockTmpDirPath"
+                }
+                android_environment {
+                  android_sdk {
+                    sdk_path {
+                      path: "mockSdkDirPath"
+                    }
+                    aapt_path {
+                      path: "mockAaptPath"
+                    }
+                    adb_path {
+                      path: "mockAdbPath"
+                    }
+                    dexdump_path {
+                      path: "mockDexdumpPath"
+                    }
+                  }
+                  test_log_dir {
+                    path: "testlog"
+                  }
+                  test_run_log {
+                    path: "test-results.log"
+                  }
+                }
+              }
+              test_driver {
+                label {
+                  label: "ANDROID_DRIVER_INSTRUMENTATION"
+                }
+                class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+                jar {
+                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
+                  value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000\030\001"
+                }
+              }
+            }
+            single_device_executor {
+              device_execution {
+                device_id {
+                  id: "mockDeviceSerialNumber"
+                }
+                test_fixture_id {
+                  id: "AGP_Test_Fixture"
+                }
+              }
+            }
+
+            """.trimIndent())
+    }
+
+    @Test
     fun createRunnerConfigProtoWithIcebox() {
         `when`(mockRetentionConfig.enabled).thenReturn(true)
         `when`(mockRetentionConfig.retainAll).thenReturn(true)
@@ -278,7 +413,8 @@ class UtpConfigFactoryTest {
             mockOutputDir,
             mockTmpDir,
             File(TEST_LOG_DIR),
-            mockRetentionConfig)
+            mockRetentionConfig,
+            useOrchestrator = false)
 
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -432,7 +568,8 @@ class UtpConfigFactoryTest {
             mockOutputDir,
             mockTmpDir,
             File(TEST_LOG_DIR),
-            mockRetentionConfig
+            mockRetentionConfig,
+            useOrchestrator = false
         )
         assertThat(runnerConfigProto.toString()).isEqualTo("""
             device {
@@ -536,6 +673,148 @@ class UtpConfigFactoryTest {
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
                   value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000"
+                }
+              }
+            }
+            single_device_executor {
+              device_execution {
+                device_id {
+                  id: ":app:deviceNameDebugAndroidTest"
+                }
+                test_fixture_id {
+                  id: "AGP_Test_Fixture"
+                }
+              }
+            }
+
+        """.trimIndent())
+    }
+
+    @Test
+    fun createRunnerConfigProtoForManagedDeviceUseOrchestrator() {
+        val factory = UtpConfigFactory()
+        val managedDevice = UtpManagedDevice(
+                "deviceName",
+                "avdName",
+                29,
+                "x86",
+                "path/to/gradle/avd",
+                ":app:deviceNameDebugAndroidTest",
+                "path/to/emulator")
+        val runnerConfigProto = factory.createRunnerConfigProtoForManagedDevice(
+                managedDevice,
+                testData,
+                listOf(mockAppApk, mockTestApk, mockHelperApk),
+                utpDependencies,
+                mockSdkComponents,
+                mockOutputDir,
+                mockTmpDir,
+                File(TEST_LOG_DIR),
+                mockRetentionConfig,
+                useOrchestrator = true
+        )
+        assertThat(runnerConfigProto.toString()).isEqualTo("""
+            device {
+              device_id {
+                id: ":app:deviceNameDebugAndroidTest"
+              }
+              provider {
+                label {
+                  label: "gradle_managed_android_device_provider_config"
+                }
+                class_name: "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider"
+                jar {
+                  path: "pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.GradleManagedAndroidDeviceProviderConfig"
+                  value: "\nT\n\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*\022\n\020path/to/emulator\020\255\'"
+                }
+              }
+            }
+            test_fixture {
+              test_fixture_id {
+                id: "AGP_Test_Fixture"
+              }
+              setup {
+                installable {
+                  source_path {
+                    path: "mockAppApkPath"
+                  }
+                  type: ANDROID_APK
+                }
+                installable {
+                  source_path {
+                    path: "mockTestApkPath"
+                  }
+                  type: ANDROID_APK
+                }
+                installable {
+                  source_path {
+                    path: "mockHelperApkPath"
+                  }
+                  type: ANDROID_APK
+                }
+              }
+              host_plugin {
+                label {
+                  label: "android_device_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
+                jar {
+                  path: "pathToANDROID_TEST_PLUGIN.jar"
+                }
+              }
+              host_plugin {
+                label {
+                  label: "android_test_device_info_plugin"
+                }
+                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                jar {
+                  path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
+                }
+              }
+              environment {
+                output_dir {
+                  path: "mockOutputDirPath"
+                }
+                tmp_dir {
+                  path: "mockTmpDirPath"
+                }
+                android_environment {
+                  android_sdk {
+                    sdk_path {
+                      path: "mockSdkDirPath"
+                    }
+                    aapt_path {
+                      path: "mockAaptPath"
+                    }
+                    adb_path {
+                      path: "mockAdbPath"
+                    }
+                    dexdump_path {
+                      path: "mockDexdumpPath"
+                    }
+                  }
+                  test_log_dir {
+                    path: "testlog"
+                  }
+                  test_run_log {
+                    path: "test-results.log"
+                  }
+                }
+              }
+              test_driver {
+                label {
+                  label: "ANDROID_DRIVER_INSTRUMENTATION"
+                }
+                class_name: "com.google.testing.platform.runtime.android.driver.AndroidInstrumentationDriver"
+                jar {
+                  path: "pathToANDROID_DRIVER_INSTRUMENTATION.jar"
+                }
+                config {
+                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.AndroidInstrumentationDriver"
+                  value: "\nd\n`\n\027com.example.application\022\034com.example.application.test\032\'androidx.test.runner.AndroidJUnitRunner\022\000\030\001"
                 }
               }
             }

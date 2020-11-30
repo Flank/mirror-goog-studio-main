@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.PrintStream;
+import java.util.Locale;
 
 /**
  * A simple {@link ProgressIndicator} that prints log messages to {@code stdout} and {@code stderr}.
@@ -92,7 +93,7 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
             }
             line.append("] ");
 
-            line.append(String.format("%.0f%%", 100 * mProgress));
+            line.append(String.format(Locale.US, "%.0f%%", 100 * mProgress));
             line.append(" ");
         }
         line.append(mText);

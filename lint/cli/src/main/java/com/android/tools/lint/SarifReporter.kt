@@ -28,6 +28,7 @@ import com.android.SdkConstants.FN_BUILD_GRADLE_KTS
 import com.android.repository.Revision
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.DefaultPosition
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location

@@ -85,12 +85,6 @@ public class TitleDetector extends ResourceXmlDetector {
             return;
         }
 
-        // TODO: Find out if this is necessary on older versions too.
-        // I swear I saw it mentioned.
-        if (context.getMainProject().getTargetSdk() < 11) {
-            return;
-        }
-
         if (VALUE_FALSE.equals(element.getAttributeNS(ANDROID_URI, ATTR_VISIBLE))) {
             return;
         }

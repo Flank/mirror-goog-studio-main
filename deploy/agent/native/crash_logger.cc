@@ -24,6 +24,7 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
+#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
@@ -33,7 +34,7 @@ CrashLogger CrashLogger::instance_ = CrashLogger();
 void CrashLogger::Initialize(const std::string& package_name,
                              proto::AgentExceptionLog::AgentPurpose purpose) {
   instance_.log_init_ns_ = GetTime();
-  instance_.log_dir_ = GetAgentExceptionLogDir(package_name);
+  instance_.log_dir_ = Sites::AppLog(package_name);
   instance_.agent_attach_count_++;
   instance_.agent_purpose_ = purpose;
 }
@@ -75,7 +76,7 @@ void CrashLogger::WriteLog(const proto::AgentExceptionLog& log) const {
   IO::mkdir(log_dir_, S_IRWXG | S_IRWXU | S_IRWXO);
 
   std::ostringstream log_file(log_dir_, std::ostringstream::ate);
-  log_file << "/agent-" << getpid() << "-" << log.event_time_ns() << ".log";
+  log_file << "agent-" << getpid() << "-" << log.event_time_ns() << ".log";
 
   // These log files will persist between installations of the app. They are
   // deleted when the install-server recovers them.

@@ -18,6 +18,7 @@ package com.android.builder.internal;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -25,7 +26,8 @@ import com.android.sdklib.OptionalLibrary;
 import com.android.utils.SparseArray;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -33,13 +35,13 @@ import java.util.Map;
  * Fake IAndroidTarget used for SDK prebuilts in the Android source tree.
  */
 public class FakeAndroidTarget implements IAndroidTarget {
-    private final String mSdkLocation;
-    private final SparseArray<String> mPaths = new SparseArray<String>();
+    private final Path mSdkLocation;
+    private final SparseArray<Path> mPaths = new SparseArray<>();
     private final List<String> mBootClasspath = Lists.newArrayListWithExpectedSize(2);
     private final int mApiLevel;
 
     public FakeAndroidTarget(String sdkLocation, String target) {
-        mSdkLocation = sdkLocation;
+        mSdkLocation = Paths.get(sdkLocation);
         mApiLevel = getApiLevel(target);
 
         if ("unstubbed".equals(target)) {
@@ -49,23 +51,30 @@ public class FakeAndroidTarget implements IAndroidTarget {
                     "/out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar");
 
             // pre-build the path to the platform components
-            mPaths.put(ANDROID_JAR, mSdkLocation + "/prebuilts/sdk/current/" +
-                    SdkConstants.FN_FRAMEWORK_LIBRARY);
-            mPaths.put(ANDROID_AIDL, mSdkLocation + "/prebuilts/sdk/renderscript/" +
-                    SdkConstants.FN_FRAMEWORK_AIDL);
+            mPaths.put(
+                    ANDROID_JAR,
+                    mSdkLocation
+                            .resolve("prebuilts/sdk/current")
+                            .resolve(SdkConstants.FN_FRAMEWORK_LIBRARY));
+            mPaths.put(
+                    ANDROID_AIDL,
+                    mSdkLocation
+                            .resolve("prebuilts/sdk/renderscript")
+                            .resolve(SdkConstants.FN_FRAMEWORK_AIDL));
         } else {
-            String apiPrebuilts;
+            Path apiPrebuilts;
 
             if ("current".equals(target)) {
-                apiPrebuilts = mSdkLocation + "/prebuilts/sdk/current/";
+                apiPrebuilts = mSdkLocation.resolve("prebuilts/sdk/current/");
             } else {
-                apiPrebuilts = mSdkLocation + "/prebuilts/sdk/" + Integer.toString(mApiLevel) + "/";
+                apiPrebuilts =
+                        mSdkLocation.resolve("prebuilts/sdk").resolve(Integer.toString(mApiLevel));
             }
 
             // pre-build the path to the platform components
             mBootClasspath.add(apiPrebuilts + SdkConstants.FN_FRAMEWORK_LIBRARY);
-            mPaths.put(ANDROID_JAR, apiPrebuilts + SdkConstants.FN_FRAMEWORK_LIBRARY);
-            mPaths.put(ANDROID_AIDL, apiPrebuilts + SdkConstants.FN_FRAMEWORK_AIDL);
+            mPaths.put(ANDROID_JAR, apiPrebuilts.resolve(SdkConstants.FN_FRAMEWORK_LIBRARY));
+            mPaths.put(ANDROID_AIDL, apiPrebuilts.resolve(SdkConstants.FN_FRAMEWORK_AIDL));
         }
     }
 
@@ -81,14 +90,10 @@ public class FakeAndroidTarget implements IAndroidTarget {
         return 99;
     }
 
+    @NonNull
     @Override
-    public String getPath(int pathId) {
+    public Path getPath(int pathId) {
         return mPaths.get(pathId);
-    }
-
-    @Override
-    public File getFile(int pathId) {
-        return new File(getPath(pathId));
     }
 
     @Override
@@ -103,9 +108,10 @@ public class FakeAndroidTarget implements IAndroidTarget {
         return mBootClasspath;
     }
 
+    @NonNull
     @Override
     public String getLocation() {
-        return mSdkLocation;
+        return mSdkLocation.toString();
     }
 
     @Override
@@ -166,12 +172,13 @@ public class FakeAndroidTarget implements IAndroidTarget {
 
     @NonNull
     @Override
-    public File[] getSkins() {
-        return new File[0];
+    public Path[] getSkins() {
+        return new Path[0];
     }
 
+    @Nullable
     @Override
-    public File getDefaultSkin() {
+    public Path getDefaultSkin() {
         return null;
     }
 

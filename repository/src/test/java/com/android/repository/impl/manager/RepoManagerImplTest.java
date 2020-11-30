@@ -36,15 +36,14 @@ import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 /**
  * Tests for {@link RepoManagerImpl}.
@@ -52,7 +51,7 @@ import junit.framework.TestCase;
 public class RepoManagerImplTest extends TestCase {
 
     // test load with local and remote, dummy loaders, callbacks called in order
-    public void testLoadOperationsInOrder() throws Exception {
+    public void testLoadOperationsInOrder() {
         MockFileOp fop = new MockFileOp();
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
@@ -65,8 +64,8 @@ public class RepoManagerImplTest extends TestCase {
                 packages -> assertEquals(4, counter.addAndGet(1));
         Runnable errorCallback = Assert::fail;
 
-        RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
-        mgr.setLocalPath(new File("/repo"));
+        RepoManagerImpl mgr = new RepoManagerImpl(localFactory, remoteFactory);
+        mgr.setLocalPath(fop.toPath("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -83,7 +82,7 @@ public class RepoManagerImplTest extends TestCase {
     }
 
     // test error causes error callbacks to be called
-    public void testErrorCallbacks1() throws Exception {
+    public void testErrorCallbacks1() {
         MockFileOp fop = new MockFileOp();
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
@@ -95,8 +94,8 @@ public class RepoManagerImplTest extends TestCase {
         RepoManager.RepoLoadedListener remoteCallback = packages -> fail();
         Runnable errorCallback = () -> assertEquals(4, counter.addAndGet(1));
 
-        RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
-        mgr.setLocalPath(new File("/repo"));
+        RepoManagerImpl mgr = new RepoManagerImpl(localFactory, remoteFactory);
+        mgr.setLocalPath(fop.toPath("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -116,7 +115,7 @@ public class RepoManagerImplTest extends TestCase {
     }
 
     // test error causes error callbacks to be called
-    public void testErrorCallbacks2() throws Exception {
+    public void testErrorCallbacks2() {
         MockFileOp fop = new MockFileOp();
         final AtomicInteger counter = new AtomicInteger(0);
         RepoManagerImpl.LocalRepoLoaderFactory localFactory =
@@ -127,8 +126,8 @@ public class RepoManagerImplTest extends TestCase {
         RepoManager.RepoLoadedListener remoteCallback = packages -> fail();
         Runnable errorCallback = () -> assertEquals(2, counter.addAndGet(1));
 
-        RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
-        mgr.setLocalPath(new File("/repo"));
+        RepoManagerImpl mgr = new RepoManagerImpl(localFactory, remoteFactory);
+        mgr.setLocalPath(fop.toPath("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -192,8 +191,8 @@ public class RepoManagerImplTest extends TestCase {
 
         Runnable errorCallback = Assert::fail;
 
-        RepoManagerImpl mgr = new RepoManagerImpl(fop, localFactory, new TestLoaderFactory());
-        mgr.setLocalPath(new File("/repo"));
+        RepoManagerImpl mgr = new RepoManagerImpl(localFactory, new TestLoaderFactory());
+        mgr.setLocalPath(fop.toPath("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -225,7 +224,7 @@ public class RepoManagerImplTest extends TestCase {
     }
 
     // test timeout makes/doesn't make load happen
-    public void testTimeout() throws Exception {
+    public void testTimeout() {
         MockFileOp fop = new MockFileOp();
         final AtomicBoolean localDidRun = new AtomicBoolean(false);
         final AtomicBoolean remoteDidRun = new AtomicBoolean(false);
@@ -240,8 +239,8 @@ public class RepoManagerImplTest extends TestCase {
         TestLoaderFactory<RemotePackage> remoteRunningFactory = new TestLoaderFactory<>(
                 new RunningLoader<>(remoteDidRun));
 
-        RepoManagerImpl mgr = new RepoManagerImpl(fop, localRunningFactory, remoteRunningFactory);
-        mgr.setLocalPath(new File("/repo"));
+        RepoManagerImpl mgr = new RepoManagerImpl(localRunningFactory, remoteRunningFactory);
+        mgr.setLocalPath(fop.toPath("/repo"));
         mgr.registerSourceProvider(new FakeRepositorySourceProvider(
                 ImmutableList.of()));
         FakeProgressRunner runner = new FakeProgressRunner();
@@ -287,7 +286,7 @@ public class RepoManagerImplTest extends TestCase {
     }
 
     // test that we do the local repo needsUpdate check correctly
-    public void testCheckForNewPackages() throws Exception {
+    public void testCheckForNewPackages() {
         MockFileOp fop = new MockFileOp();
         AtomicBoolean didRun = new AtomicBoolean(false);
         final AtomicBoolean shallowResult = new AtomicBoolean(false);
@@ -299,8 +298,8 @@ public class RepoManagerImplTest extends TestCase {
             }
         };
 
-        RepoManager mgr = new RepoManagerImpl(fop, new TestLoaderFactory<>(loader), null);
-        mgr.setLocalPath(new File("/repo"));
+        RepoManager mgr = new RepoManagerImpl(new TestLoaderFactory<>(loader), null);
+        mgr.setLocalPath(fop.toPath("/repo"));
         FakeProgressRunner runner = new FakeProgressRunner();
 
         // First time we should load, despite not being out of date
@@ -339,11 +338,11 @@ public class RepoManagerImplTest extends TestCase {
     }
 
     // test local/remote change listeners
-    public void testChangeListeners() throws Exception {
+    public void testChangeListeners() {
         MockFileOp fop = new MockFileOp();
         final Map<String, LocalPackage> localPackages = new HashMap<>();
         FakeLoader<LocalPackage> localLoader = new FakeLoader<>(localPackages);
-        localPackages.put("foo", new FakeLocalPackage("foo"));
+        localPackages.put("foo", new FakeLocalPackage("foo", fop));
 
         final Map<String, RemotePackage> remotePackages = Maps.newHashMap();
         FakeLoader<RemotePackage> remoteLoader = new FakeLoader<>(remotePackages);
@@ -353,8 +352,8 @@ public class RepoManagerImplTest extends TestCase {
 
         TestLoaderFactory localFactory = new TestLoaderFactory<>(localLoader);
         TestLoaderFactory remoteFactory = new TestLoaderFactory<>(remoteLoader);
-        RepoManager mgr = new RepoManagerImpl(fop, localFactory, remoteFactory);
-        mgr.setLocalPath(new File("/repo"));
+        RepoManager mgr = new RepoManagerImpl(localFactory, remoteFactory);
+        mgr.setLocalPath(fop.toPath("/repo"));
 
         FakeProgressRunner runner = new FakeProgressRunner();
         FakeDownloader downloader = new FakeDownloader(fop);
@@ -378,7 +377,7 @@ public class RepoManagerImplTest extends TestCase {
         assertFalse(remoteRan.get());
 
         // update local and ensure the local listener fired
-        localPackages.put("bar", new FakeLocalPackage("bar"));
+        localPackages.put("bar", new FakeLocalPackage("bar", fop));
         mgr.loadSynchronously(-1, null, null, null, runner, downloader, null);
         assertTrue(localRan.compareAndSet(true, false));
         assertFalse(remoteRan.get());

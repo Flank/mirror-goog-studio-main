@@ -87,7 +87,7 @@ class ConstraintLayoutDetector : LayoutDetector() {
                     if (COMPARE_PLUS_LOWER.compare(latestAvailable, version) > 0) {
                         val message =
                             "Using version ${version.revision} of the constraint library, which is obsolete"
-                        val fix = fix().data(ConstraintLayoutDetector::class.java)
+                        val fix = fix().data(KEY_UPGRADE_CONSTRAINT_LAYOUT, true)
                         context.report(
                             GradleDetector.DEPENDENCY,
                             element,
@@ -220,6 +220,8 @@ class ConstraintLayoutDetector : LayoutDetector() {
     }
 
     companion object {
+        const val KEY_UPGRADE_CONSTRAINT_LAYOUT = "constraint-layout"
+
         @JvmField
         val ISSUE =
             Issue.create(

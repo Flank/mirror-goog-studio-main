@@ -27,6 +27,7 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
@@ -235,7 +236,7 @@ void InstallServer::HandleCheckSetup(
 void InstallServer::HandleOverlayUpdate(
     const proto::OverlayUpdateRequest& request,
     proto::OverlayUpdateResponse* response) const {
-  const std::string overlay_folder = request.overlay_path() + "/.overlay"_s;
+  const std::string overlay_folder = request.overlay_path();
 
   if (request.wipe_all_files()) {
     if (nftw(
@@ -289,7 +290,7 @@ void InstallServer::HandleOverlayUpdate(
 void InstallServer::HandleGetAgentExceptionLog(
     const proto::GetAgentExceptionLogRequest& request,
     proto::GetAgentExceptionLogResponse* response) const {
-  const std::string log_dir = GetAgentExceptionLogDir(request.package_name());
+  const std::string log_dir = Sites::AppLog(request.package_name());
   DIR* dir = IO::opendir(log_dir);
   if (dir == nullptr) {
     return;
@@ -299,7 +300,7 @@ void InstallServer::HandleGetAgentExceptionLog(
     if (entry->d_type != DT_REG) {
       continue;
     }
-    const std::string log_path = log_dir + "/" + entry->d_name;
+    const std::string log_path = log_dir + entry->d_name;
     struct stat info;
     if (IO::stat(log_path, &info) != 0) {
       continue;
@@ -360,7 +361,7 @@ std::unique_ptr<InstallClient> StartInstallServer(
     Executor& executor, const std::string& server_path,
     const std::string& package_name, const std::string& exec_name) {
   Phase p("InstallServer::StartServer");
-  const std::string exec_path = "/data/data/" + package_name + "/code_cache/";
+  const std::string exec_path = Sites::AppCodeCache(package_name);
   const RunasExecutor run_as(package_name, executor);
 
   auto client = TryStartServer(run_as, exec_path + exec_name);

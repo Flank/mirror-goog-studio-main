@@ -90,6 +90,7 @@ public class LintCliFlags {
     public static final int ERRNO_INVALID_ARGS = 5;
     public static final int ERRNO_CREATED_BASELINE = 6;
     public static final int ERRNO_APPLIED_SUGGESTIONS = 7;
+    public static final int ERRNO_INTERNAL_CONTINUE = 100;
 
     /**
      * Returns the set of issue id's to suppress. Callers are allowed to modify this collection. To

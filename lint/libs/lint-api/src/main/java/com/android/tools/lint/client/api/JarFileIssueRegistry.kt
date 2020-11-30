@@ -171,6 +171,13 @@ private constructor(
                     val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry, vendor)
                     for (issue in userRegistry.issues) {
                         issue.registry = jarIssueRegistry
+                        if (issue.defaultSeverity === Severity.IGNORE) {
+                            client.log(
+                                Severity.ERROR, null,
+                                "Issue ${issue.id} has defaultSeverity=IGNORE; that's " +
+                                    "not valid. Use enabledByDefault=false instead."
+                            )
+                        }
                     }
                     cache!![jarFile] = SoftReference(jarIssueRegistry)
                     jarIssueRegistry

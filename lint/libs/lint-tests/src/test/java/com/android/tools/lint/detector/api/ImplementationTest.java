@@ -30,8 +30,8 @@ import static com.android.tools.lint.detector.api.Scope.RESOURCE_FILE_SCOPE;
 import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
 import com.android.tools.lint.checks.DuplicateResourceDetector;
-import com.android.tools.lint.checks.FieldGetterDetector;
 import com.android.tools.lint.checks.RtlDetector;
+import com.android.tools.lint.checks.SecureRandomGeneratorDetector;
 import java.util.EnumSet;
 import junit.framework.TestCase;
 
@@ -98,7 +98,10 @@ public class ImplementationTest extends TestCase {
         assertTrue(implementation.isAdequate(RESOURCE_FILE_SCOPE));
         assertTrue(implementation.isAdequate(ALL));
 
-        assertFalse(FieldGetterDetector.ISSUE.getImplementation().isAdequate(JAVA_FILE_SCOPE));
+        assertFalse(
+                SecureRandomGeneratorDetector.ISSUE
+                        .getImplementation()
+                        .isAdequate(JAVA_FILE_SCOPE));
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(CLASS_FILE_SCOPE));
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(RESOURCE_FILE_SCOPE));
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(MANIFEST_SCOPE));

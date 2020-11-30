@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint
+package com.android.tools.lint.detector.api
 
-import com.android.tools.lint.LintFixPerformer.Companion.canAutoFix
 import com.android.tools.lint.client.api.Configuration
-import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Project
-import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.TextFormat
 import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Sets
+import com.intellij.psi.PsiElement
+import org.jetbrains.annotations.Contract
+import org.jetbrains.uast.UElement
+import org.w3c.dom.Node
 import java.io.File
 import java.util.Comparator
 import java.util.HashSet
@@ -35,27 +32,87 @@ import java.util.HashSet
  * sort them all before presenting them all at the end.
  */
 class Incident(
-    /** The [Issue] type of the in incident */
+    /** The [Issue] corresponding to the incident */
     val issue: Issue,
 
-    /** The associated error message, in [TextFormat.RAW] format */
-    val message: String,
+    /**
+     * The message to display to the user. This message should typically include the
+     * details of the specific incident instead of just being a generic message, to make the
+     * errors more useful when there are multiple errors in the same file. For example,
+     * instead of just saying "Duplicate resource name", say "Duplicate resource name my_string".
+     *
+     * (Note that the message should be in [TextFormat.RAW] format.)
+     */
+    var message: String,
 
-    /** The [Location] of the incident */
-    val location: Location,
+    /**
+     * The primary location of the error. Secondary locations can be linked from the
+     * primary location.
+     */
+    var location: Location,
 
-    /** An optional [LintFix] which can address the issue */
+    /**
+     * The scope element of the error. This is used by lint to search the AST (or XML doc
+     * etc) for suppress annotations or comments. In a Kotlin or Java file, this would be
+     * the nearest [UElement] or [PsiElement]; in an XML document it's the [Node], etc.
+     */
+    val scope: Any? = null,
+
+    /** A quickfix descriptor, if any, capable of addressing this issue */
     val fix: LintFix? = null
 ) : Comparable<Incident> {
+    /** Secondary constructor for convenience from Java where default arguments are not available */
+    constructor(issue: Issue, message: String, location: Location) :
+        this(issue, message, location, null, null)
+
+    /** Secondary constructor for convenience from Java where default arguments are not available */
+    constructor(issue: Issue, message: String, location: Location, fix: LintFix?) :
+        this(issue, message, location, null, fix)
+
+    /**
+     * Secondary constructor which mirrors the old {@link Context#report} signature
+     * parameter orders to make it easy to migrate code: just put new Indent() around
+     * argument list
+     */
+    constructor(issue: Issue, location: Location, message: String) :
+        this(issue, message, location, null, null)
+
+    /**
+     * Secondary constructor which mirrors the old {@link Context#report} signature
+     * parameter orders to make it easy to migrate code: just put new Indent() around
+     * argument list
+     */
+    constructor(issue: Issue, location: Location, message: String, fix: LintFix?) :
+        this(issue, message, location, null, fix)
+
+    /**
+     * Secondary constructor which mirrors the old {@link Context#report} signature
+     * parameter orders to make it easy to migrate code: just put new Indent() around
+     * argument list
+     */
+    constructor(issue: Issue, scope: Any, location: Location, message: String) :
+        this(issue, message, location, scope, null)
+
+    /**
+     * Secondary constructor which mirrors the old {@link Context#report} signature
+     * parameter orders to make it easy to migrate code: just put new Indent() around
+     * argument list
+     */
+    constructor(issue: Issue, scope: Any, location: Location, message: String, fix: LintFix?) :
+        this(issue, message, location, scope, fix)
 
     /** The associated [Project] */
     var project: Project? = null
 
     /**
      * The display path for this error, which is typically relative to the
-     * project's reference dir
+     * project's reference dir, but if project is null, it can also be
+     * displayed relative to the given root directory
      */
-    val displayPath: String get() = project?.getDisplayPath(file) ?: file.path
+    fun getDisplayPath(): String {
+        return project?.getDisplayPath(file)
+            ?: file.path
+    }
 
     /** The associated file; shorthand for [Location.file] */
     val file: File get() = location.file
@@ -98,12 +155,63 @@ class Incident(
     var applicableVariants: ApplicableVariants? = null
 
     /**
-     * Whether this incident has a fix that can be automatically performed without
-     * user intervention
+     * Notes related to this incident. This is intended to be used by
+     * detectors when asked to merge previously reported results from
+     * upstream modules.
+     *
+     * This is limited to a few primitive data types (because it needs
+     * to be safely persisted across lint invocations.)
      */
-    fun hasAutoFix(): Boolean {
-        val fixData = fix ?: return false
-        return canAutoFix(fixData)
+    var notes: LintMap? = null
+
+    /**
+     * Records a string note related to this incident.
+     *
+     * This is intended to be used by detectors when asked to merge
+     * previously reported results from upstream modules.
+     */
+    fun put(key: String, value: String): Incident {
+        val map = notes ?: LintMap().also { notes = it }
+        map.put(key, value)
+        return this
+    }
+
+    /** Like [put] but for integers */
+    fun put(key: String, value: Int): Incident {
+        val map = notes ?: LintMap().also { notes = it }
+        map.put(key, value)
+        return this
+    }
+
+    /** Like [put] but for booleans */
+    fun put(key: String, value: Boolean): Incident {
+        val map = notes ?: LintMap().also { notes = it }
+        map.put(key, value)
+        return this
+    }
+
+    /** Returns a note previously stored as a String by [put] */
+    @Contract("_, !null -> !null")
+    fun getString(key: String, default: String? = null): String? {
+        return notes?.getString(key, default)
+    }
+
+    /** Returns a note previously stored as an integer by [put] */
+    @Contract("_, !null -> !null")
+    fun getInt(key: String, default: Int? = null): Int? {
+        return notes?.getInt(key, default)
+    }
+
+    /** Returns an API level previously stored as an integer or string by [put] */
+    @Contract("_, !null -> !null")
+    fun getApi(key: String, default: Int? = null): Int? {
+        return notes?.getApi(key, default)
+    }
+
+    /** Returns a note previously stored as a boolean by [put] */
+    @Contract("_, !null -> !null")
+    fun getBoolean(key: String, default: Boolean? = null): Boolean? {
+        return notes?.getBoolean(key, default)
     }
 
     override fun compareTo(other: Incident): Int {
@@ -136,7 +244,8 @@ class Incident(
                 file,
                 other.file,
                 Comparator.nullsLast(Comparator.naturalOrder())
-            ) // This handles the case where you have a huge XML document without newlines,
+            )
+            // This handles the case where you have a huge XML document without newlines,
             // such that all the errors end up on the same line.
             .compare(
                 col1,
@@ -167,7 +276,7 @@ class Incident(
     }
 
     override fun toString(): String {
-        return "Warning{issue=$issue, message='$message', file=$file, line=$line}"
+        return "Incident(issue='$issue', message='$message', file=${project?.getDisplayPath(file) ?: file}, line=$line)"
     }
 }
 

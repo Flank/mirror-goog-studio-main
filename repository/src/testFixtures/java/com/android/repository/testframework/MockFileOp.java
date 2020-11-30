@@ -17,9 +17,9 @@ package com.android.repository.testframework;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.io.impl.FileOpImpl;
-import com.android.repository.io.impl.FileSystemFileOp;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -39,17 +39,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Mock version of {@link FileOpImpl} that wraps some common {@link File}
- * operations on files and folders.
- * <p>
- * This version does not perform any file operation. Instead it records a textual
- * representation of all the file operations performed.
+ * Mock version of {@link FileOpImpl} that wraps some common {@link File} operations on files and
+ * folders.
  *
- * @deprecated Use {@link com.google.common.jimfs.Jimfs} and
- *     {@link com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
+ * <p>This version does not perform any file operation. Instead it records a textual representation
+ * of all the file operations performed.
+ *
+ * <p>To avoid cross-platform path issues (e.g. Windows path), the methods here should always use
+ * rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3". When processing {@link File},
+ * you can convert them using {@link #getPlatformSpecificPath(File)}.
+ *
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs} and {@code
+ *     com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
 @Deprecated
-public class MockFileOp extends FileSystemFileOp {
+public class MockFileOp extends FileOp {
     private FileSystem mFileSystem;
 
     public MockFileOp() {
@@ -123,6 +127,10 @@ public class MockFileOp extends FileSystemFileOp {
         recordExistingFile(file.getAbsolutePath(), 0, (byte[]) null);
     }
 
+    public void recordExistingFile(@NonNull Path path) {
+        recordExistingFile(path, 0, null);
+    }
+
     /**
      * Records a new absolute file path.
      * Parent folders are automatically created.
@@ -165,8 +173,16 @@ public class MockFileOp extends FileSystemFileOp {
      */
     public void recordExistingFile(
             @NonNull String absFilePath, long lastModified, @Nullable byte[] inputStream) {
+        recordExistingFile(
+                mFileSystem.getPath(getPlatformSpecificPath(absFilePath)),
+                lastModified,
+                inputStream);
+    }
+
+    public void recordExistingFile(
+            @NonNull Path path, long lastModified, @Nullable byte[] inputStream) {
+        assert path.getFileSystem().equals(mFileSystem);
         try {
-            Path path = mFileSystem.getPath(getPlatformSpecificPath(absFilePath));
             Files.createDirectories(path.getParent());
             Files.write(path,
               inputStream == null ? new byte[0] : inputStream);
@@ -227,14 +243,18 @@ public class MockFileOp extends FileSystemFileOp {
     @NonNull
     public String[] getExistingFiles() {
         List<String> result = new ArrayList<>();
-        mFileSystem.getRootDirectories().forEach(path -> {
-            try {
-                Files.find(path, 100, (p, a) -> true).filter(p -> Files.isRegularFile(p))
-                  .forEach(p -> result.add(p.toString()));
-            } catch (IOException e) {
-                assert false : e.getMessage();
-            }
-        });
+        mFileSystem
+                .getRootDirectories()
+                .forEach(
+                        path -> {
+                            try {
+                                Files.find(path, 100, (p, a) -> true)
+                                        .filter(Files::isRegularFile)
+                                        .forEach(p -> result.add(p.toString()));
+                            } catch (IOException e) {
+                                assert false : e.getMessage();
+                            }
+                        });
         return result.toArray(new String[0]);
     }
 
@@ -247,14 +267,18 @@ public class MockFileOp extends FileSystemFileOp {
     @NonNull
     public String[] getExistingFolders() {
         List<String> result = new ArrayList<>();
-        mFileSystem.getRootDirectories().forEach(path -> {
-            try {
-                Files.find(path, 100, (p, a) -> true).filter(p -> Files.isDirectory(p))
-                  .forEach(p -> result.add(p.toString()));
-            } catch (IOException e) {
-                assert false : e.getMessage();
-            }
-        });
+        mFileSystem
+                .getRootDirectories()
+                .forEach(
+                        path -> {
+                            try {
+                                Files.find(path, 100, (p, a) -> true)
+                                        .filter(Files::isDirectory)
+                                        .forEach(p -> result.add(p.toString()));
+                            } catch (IOException e) {
+                                assert false : e.getMessage();
+                            }
+                        });
         return result.toArray(new String[0]);
     }
 
@@ -265,12 +289,8 @@ public class MockFileOp extends FileSystemFileOp {
         }
         File result = File.createTempFile("MockFileOp", null);
         result.deleteOnExit();
-        OutputStream os = new FileOutputStream(result);
-        try {
+        try (OutputStream os = new FileOutputStream(result)) {
             ByteStreams.copy(newFileInputStream(in), os);
-        }
-        finally {
-            os.close();
         }
         return result;
     }
@@ -287,6 +307,18 @@ public class MockFileOp extends FileSystemFileOp {
     @NonNull
     @Override
     public Path toPath(@NonNull File file) {
-        return getFileSystem().getPath(getPlatformSpecificPath(file.getPath()));
+        return toPath(file.getPath());
+    }
+
+    @NonNull
+    @Override
+    public Path toPath(@NonNull String path) {
+        return getFileSystem().getPath(getPlatformSpecificPath(path));
+    }
+
+    @NonNull
+    @Override
+    public File toFile(@NonNull Path path) {
+        return new File(path.toString());
     }
 }

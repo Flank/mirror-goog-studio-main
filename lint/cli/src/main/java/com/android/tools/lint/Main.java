@@ -21,6 +21,7 @@ import static com.android.SdkConstants.VALUE_NONE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_HELP;
+import static com.android.tools.lint.LintCliFlags.ERRNO_INTERNAL_CONTINUE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_USAGE;
@@ -57,7 +58,6 @@ import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
-import com.intellij.openapi.util.Ref;
 import com.intellij.pom.java.LanguageLevel;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -111,20 +111,36 @@ public class Main {
     private static final String ARG_LIST_IDS = "--list";
     private static final String ARG_SHOW = "--show";
     private static final String ARG_QUIET = "--quiet";
+
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_FULL_PATH = "--fullpath";
+
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_SHOW_ALL = "--showall";
+
     private static final String ARG_HELP = "--help";
+
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_LINES = "--nolines";
+
     private static final String ARG_HTML = "--html";
+
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_SIMPLE_HTML = "--simplehtml";
+
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_SARIF = "--sarif";
+
     private static final String ARG_XML = "--xml";
     private static final String ARG_TEXT = "--text";
     private static final String ARG_CONFIG = "--config";
     private static final String ARG_OVERRIDE_CONFIG = "--override-config";
     private static final String ARG_URL = "--url";
     private static final String ARG_VERSION = "--version";
+
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_EXIT_CODE = "--exitcode";
+
     private static final String ARG_SDK_HOME = "--sdk-home";
     private static final String ARG_JDK_HOME = "--jdk-home";
     private static final String ARG_FATAL_ONLY = "--fatalOnly";
@@ -145,13 +161,17 @@ public class Main {
     private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
     private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
 
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_WARN_2 = "--nowarn";
     // GCC style flag names for options
     private static final String ARG_NO_WARN_1 = "-w";
     private static final String ARG_WARN_ALL = "-Wall";
+
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_ALL_ERROR = "-Werror";
 
     private static final String PROP_WORK_DIR = "com.android.tools.lint.workdir";
+
     private final LintCliFlags flags = new LintCliFlags();
     private IssueRegistry globalIssueRegistry;
     @Nullable private File sdkHome;
@@ -176,12 +196,28 @@ public class Main {
     protected void initializeDriver(@NonNull LintDriver driver) {}
 
     /**
+     * State read from command line flags to be shared by various initialization methods. This is
+     * similar to {@link LintCliFlags} which we're also initializing during startup, but the
+     * semantic difference between the two is that {@link LintCliFlags} represents user level
+     * concepts, and this class represents more implementation-level state, such as which driver
+     * mode to use etc.
+     */
+    static class ArgumentState {
+        @Nullable LanguageLevel javaLanguageLevel = null;
+        @Nullable LanguageVersionSettings kotlinLanguageLevel = null;
+        @NonNull List<LintModelModule> modules = new ArrayList<>();
+        @Nullable String variantName = null;
+        // Mapping from file path prefix to URL. Applies only to HTML reports
+        @Nullable String urlMap = null;
+        @NonNull List<File> files = new ArrayList<>();
+    }
+
+    /**
      * Runs the static analysis command line driver
      *
      * @param args program arguments
      * @return the return code for lint
      */
-    @SuppressWarnings("UnnecessaryLocalVariable")
     public int run(String[] args) {
         if (args.length < 1) {
             printUsage(System.err);
@@ -190,372 +226,373 @@ public class Main {
 
         LintClient.setClientName(LintClient.CLIENT_CLI);
 
-        Ref<LanguageLevel> javaLanguageLevel = new Ref<>(null);
-        Ref<LanguageVersionSettings> kotlinLanguageLevel = new Ref<>(null);
-        List<LintModelModule> modules = new ArrayList<>();
-        String variantName = null;
+        ArgumentState argumentState = new ArgumentState();
+        LintCliClient client = createClient(argumentState);
+        int exitCode = parseArguments(args, client, argumentState);
+        if (exitCode != ERRNO_INTERNAL_CONTINUE) {
+            return exitCode;
+        }
+        initializeConfigurations(client, argumentState);
+        exitCode = initializeReporters(client, argumentState);
+        if (exitCode != ERRNO_INTERNAL_CONTINUE) {
+            return exitCode;
+        }
+        LintRequest lintRequest = createLintRequest(client, argumentState);
+        return run(client, lintRequest);
+    }
 
-        // When running lint from the command line, warn if the project is a Gradle project
-        // since those projects may have custom project configuration that the command line
-        // runner won't know about.
-        LintCliClient client =
-                new LintCliClient(flags, LintClient.CLIENT_CLI) {
+    private LintCliClient createClient(ArgumentState argumentState) {
+        return new MainLintClient(flags, argumentState);
+    }
 
-                    private Pattern mAndroidAnnotationPattern;
-                    private Project unexpectedGradleProject = null;
+    class MainLintClient extends LintCliClient {
+        final ArgumentState argumentState;
 
-                    @Override
-                    @NonNull
-                    protected LintDriver createDriver(
-                            @NonNull IssueRegistry registry, @NonNull LintRequest request) {
-                        LintDriver driver = super.createDriver(registry, request);
+        MainLintClient(LintCliFlags flags, ArgumentState argumentState) {
+            super(flags, LintClient.CLIENT_CLI);
+            this.argumentState = argumentState;
+        }
 
-                        Project project = unexpectedGradleProject;
-                        if (project != null) {
-                            String message =
-                                    String.format(
-                                            "\"`%1$s`\" is a Gradle project. To correctly "
-                                                    + "analyze Gradle projects, you should run \"`gradlew lint`\" "
-                                                    + "instead.",
-                                            project.getName());
-                            Location location =
-                                    Lint.guessGradleLocation(this, project.getDir(), null);
-                            LintClient.Companion.report(
-                                    this,
-                                    IssueRegistry.LINT_ERROR,
-                                    message,
-                                    driver,
-                                    project,
-                                    location,
-                                    null);
-                        }
+        private Pattern mAndroidAnnotationPattern;
+        private Project unexpectedGradleProject = null;
 
-                        initializeDriver(driver);
+        @Override
+        @NonNull
+        protected LintDriver createDriver(
+                @NonNull IssueRegistry registry, @NonNull LintRequest request) {
+            LintDriver driver = super.createDriver(registry, request);
 
-                        return driver;
-                    }
+            Project project = unexpectedGradleProject;
+            if (project != null) {
+                String message =
+                        String.format(
+                                "\"`%1$s`\" is a Gradle project. To correctly "
+                                        + "analyze Gradle projects, you should run \"`gradlew lint`\" "
+                                        + "instead.",
+                                project.getName());
+                Location location = Lint.guessGradleLocation(this, project.getDir(), null);
+                LintClient.Companion.report(
+                        this, IssueRegistry.LINT_ERROR, message, driver, project, location, null);
+            }
 
-                    @NonNull
-                    @Override
-                    protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                        Project project = super.createProject(dir, referenceDir);
-                        if (project.isGradleProject()) {
-                            // Can't report error yet; stash it here so we can report it after the
-                            // driver has been created
-                            unexpectedGradleProject = project;
-                        }
+            initializeDriver(driver);
 
-                        return project;
-                    }
+            return driver;
+        }
 
-                    @NonNull
-                    @Override
-                    public LanguageLevel getJavaLanguageLevel(@NonNull Project project) {
-                        LanguageLevel level = javaLanguageLevel.get();
-                        if (level != null) {
-                            return level;
-                        }
-                        return super.getJavaLanguageLevel(project);
-                    }
+        @NonNull
+        @Override
+        protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+            Project project = super.createProject(dir, referenceDir);
+            if (project.isGradleProject()) {
+                // Can't report error yet; stash it here so we can report it after the
+                // driver has been created
+                unexpectedGradleProject = project;
+            }
 
-                    @NonNull
-                    @Override
-                    public LanguageVersionSettings getKotlinLanguageLevel(
-                            @NonNull Project project) {
-                        LanguageVersionSettings settings = kotlinLanguageLevel.get();
-                        if (settings != null) {
-                            return settings;
-                        }
-                        return super.getKotlinLanguageLevel(project);
-                    }
+            return project;
+        }
 
-                    @NonNull
-                    @Override
-                    public Configuration getConfiguration(
-                            @NonNull final Project project, @Nullable LintDriver driver) {
-                        if (project.isGradleProject()
-                                && !(project instanceof LintModelModuleProject)) {
-                            // Don't report any issues when analyzing a Gradle project from the
-                            // non-Gradle runner; they are likely to be false, and will hide the
-                            // real problem reported above. We also need to turn off overrides
-                            // and fallbacks such that we don't inherit any re-enabled issues etc.
-                            ConfigurationHierarchy configurations = getConfigurations();
-                            configurations.setOverrides(null);
-                            configurations.setFallback(null);
-                            return new CliConfiguration(configurations, flags, true) {
-                                @NonNull
-                                @Override
-                                public Severity getDefinedSeverity(
-                                        @NonNull Issue issue, @NonNull Configuration source) {
-                                    return issue == IssueRegistry.LINT_ERROR
-                                            ? Severity.FATAL
-                                            : Severity.IGNORE;
-                                }
+        @NonNull
+        @Override
+        public LanguageLevel getJavaLanguageLevel(@NonNull Project project) {
+            LanguageLevel level = argumentState.javaLanguageLevel;
+            if (level != null) {
+                return level;
+            }
+            return super.getJavaLanguageLevel(project);
+        }
 
-                                @Override
-                                public boolean isIgnored(
-                                        @NonNull Context context,
-                                        @NonNull Issue issue,
-                                        @Nullable Location location,
-                                        @NonNull String message) {
-                                    // If you've deliberately ignored IssueRegistry.LINT_ERROR
-                                    // don't flag that one either
-                                    if (issue == IssueRegistry.LINT_ERROR
-                                            && new LintCliClient(flags, LintClient.getClientName())
-                                                    .isSuppressed(IssueRegistry.LINT_ERROR)) {
-                                        return true;
-                                    } else if (issue == IssueRegistry.LINT_WARNING
-                                            && new LintCliClient(flags, LintClient.getClientName())
-                                                    .isSuppressed(IssueRegistry.LINT_WARNING)) {
-                                        return true;
-                                    }
+        @NonNull
+        @Override
+        public LanguageVersionSettings getKotlinLanguageLevel(@NonNull Project project) {
+            LanguageVersionSettings settings = argumentState.kotlinLanguageLevel;
+            if (settings != null) {
+                return settings;
+            }
+            return super.getKotlinLanguageLevel(project);
+        }
 
-                                    return issue != IssueRegistry.LINT_ERROR
-                                            && issue != IssueRegistry.LINT_WARNING;
-                                }
-                            };
-                        }
-
-                        return super.getConfiguration(project, driver);
-                    }
-
-                    private byte[] readSrcJar(@NonNull File file) {
-                        String path = file.getPath();
-                        int srcJarIndex = path.indexOf("srcjar!");
-                        if (srcJarIndex != -1) {
-                            File jarFile = new File(path.substring(0, srcJarIndex + 6));
-                            if (jarFile.exists()) {
-                                try (ZipFile zipFile = new ZipFile(jarFile)) {
-                                    String name =
-                                            path.substring(srcJarIndex + 8)
-                                                    .replace(File.separatorChar, '/');
-                                    ZipEntry entry = zipFile.getEntry(name);
-                                    if (entry != null) {
-                                        try (InputStream is = zipFile.getInputStream(entry)) {
-                                            byte[] bytes = ByteStreams.toByteArray(is);
-                                            return bytes;
-                                        } catch (Exception e) {
-                                            log(e, null);
-                                        }
-                                    }
-                                } catch (ZipException e) {
-                                    Main.this.log(e, "Could not unzip %1$s", jarFile);
-                                } catch (IOException e) {
-                                    Main.this.log(e, "Could not read %1$s", jarFile);
-                                }
-                            }
-                        }
-
-                        return null;
-                    }
-
+        @NonNull
+        @Override
+        public Configuration getConfiguration(
+                @NonNull final Project project, @Nullable LintDriver driver) {
+            if (project.isGradleProject() && !(project instanceof LintModelModuleProject)) {
+                // Don't report any issues when analyzing a Gradle project from the
+                // non-Gradle runner; they are likely to be false, and will hide the
+                // real problem reported above. We also need to turn off overrides
+                // and fallbacks such that we don't inherit any re-enabled issues etc.
+                ConfigurationHierarchy configurations = getConfigurations();
+                configurations.setOverrides(null);
+                configurations.setFallback(null);
+                return new CliConfiguration(configurations, flags, true) {
                     @NonNull
                     @Override
-                    public CharSequence readFile(@NonNull File file) {
-                        // .srcjar file handle?
-                        byte[] srcJarBytes = readSrcJar(file);
-                        if (srcJarBytes != null) {
-                            return new String(srcJarBytes, Charsets.UTF_8);
-                        }
-
-                        CharSequence contents = super.readFile(file);
-                        if (Project.isAospBuildEnvironment()
-                                && file.getPath().endsWith(SdkConstants.DOT_JAVA)) {
-                            if (mAndroidAnnotationPattern == null) {
-                                mAndroidAnnotationPattern = Pattern.compile("android\\.annotation");
-                            }
-                            return mAndroidAnnotationPattern
-                                    .matcher(contents)
-                                    .replaceAll("android.support.annotation");
-                        } else {
-                            return contents;
-                        }
-                    }
-
-                    @NonNull
-                    @Override
-                    public byte[] readBytes(@NonNull File file) throws IOException {
-                        // .srcjar file handle?
-                        byte[] srcJarBytes = readSrcJar(file);
-                        if (srcJarBytes != null) {
-                            return srcJarBytes;
-                        }
-
-                        return super.readBytes(file);
-                    }
-
-                    private ProjectMetadata metadata;
-
-                    @Override
-                    protected void configureLintRequest(@NonNull LintRequest request) {
-                        File descriptor = flags.getProjectDescriptorOverride();
-                        if (descriptor != null) {
-                            metadata = ProjectInitializerKt.computeMetadata(this, descriptor);
-
-                            String clientName = metadata.getClientName();
-                            if (clientName != null) {
-                                //noinspection ResultOfObjectAllocationIgnored
-                                new LintCliClient(clientName); // constructor has side effect
-                            }
-
-                            List<Project> projects = metadata.getProjects();
-                            if (!projects.isEmpty()) {
-                                request.setProjects(projects);
-
-                                if (metadata.getSdk() != null) {
-                                    sdkHome = metadata.getSdk();
-                                }
-
-                                if (metadata.getJdk() != null) {
-                                    jdkHome = metadata.getJdk();
-                                }
-
-                                if (metadata.getBaseline() != null) {
-                                    flags.setBaselineFile(metadata.getBaseline());
-                                }
-
-                                EnumSet<Scope> scope = EnumSet.copyOf(Scope.ALL);
-                                if (metadata.getIncomplete()) {
-                                    scope.remove(Scope.ALL_CLASS_FILES);
-                                    scope.remove(Scope.ALL_JAVA_FILES);
-                                    scope.remove(Scope.ALL_RESOURCE_FILES);
-                                }
-                                request.setScope(scope);
-
-                                request.setPlatform(metadata.getPlatforms());
-                            }
-                        }
-                    }
-
-                    @NonNull
-                    @Override
-                    public Iterable<File> findRuleJars(@NonNull Project project) {
-                        if (metadata != null) {
-                            List<File> jars = metadata.getLintChecks().get(project);
-                            if (jars != null) {
-                                return jars;
-                            }
-                        }
-
-                        return super.findRuleJars(project);
-                    }
-
-                    @NonNull
-                    @Override
-                    public List<File> findGlobalRuleJars() {
-                        if (metadata != null) {
-                            List<File> jars = metadata.getGlobalLintChecks();
-                            if (!jars.isEmpty()) {
-                                return jars;
-                            }
-                        }
-
-                        return super.findGlobalRuleJars();
-                    }
-
-                    @Nullable
-                    @Override
-                    public File getCacheDir(@Nullable String name, boolean create) {
-                        if (metadata != null) {
-                            File dir = metadata.getCache();
-                            if (dir != null) {
-                                if (name != null) {
-                                    dir = new File(dir, name);
-                                }
-
-                                if (create && !dir.exists()) {
-                                    if (!dir.mkdirs()) {
-                                        return null;
-                                    }
-                                }
-                                return dir;
-                            }
-                        }
-
-                        return super.getCacheDir(name, create);
-                    }
-
-                    @Nullable
-                    @Override
-                    public Document getMergedManifest(@NonNull Project project) {
-                        if (metadata != null) {
-                            File manifest = metadata.getMergedManifests().get(project);
-                            if (manifest != null && manifest.exists()) {
-                                try {
-                                    // We can't call
-                                    //   resolveMergeManifestSources(document, manifestReportFile)
-                                    // here since we don't have the merging log.
-                                    return XmlUtils.parseUtfXmlFile(manifest, true);
-                                } catch (IOException | SAXException e) {
-                                    log(e, "Could not read/parse %1$s", manifest);
-                                }
-                            }
-                        }
-
-                        return super.getMergedManifest(project);
-                    }
-
-                    @Nullable
-                    @Override
-                    public File getSdkHome() {
-                        if (Main.this.sdkHome != null) {
-                            return Main.this.sdkHome;
-                        }
-                        return super.getSdkHome();
-                    }
-
-                    @Nullable
-                    @Override
-                    public File getJdkHome(@Nullable Project project) {
-                        if (Main.this.jdkHome != null) {
-                            return Main.this.jdkHome;
-                        }
-                        return super.getJdkHome(project);
+                    public Severity getDefinedSeverity(
+                            @NonNull Issue issue, @NonNull Configuration source) {
+                        return issue == IssueRegistry.LINT_ERROR ? Severity.FATAL : Severity.IGNORE;
                     }
 
                     @Override
-                    protected boolean addBootClassPath(
-                            @NonNull Collection<? extends Project> knownProjects,
-                            @NonNull Set<File> files) {
-                        if (metadata != null && !metadata.getJdkBootClasspath().isEmpty()) {
-                            boolean isAndroid = false;
-                            for (Project project : knownProjects) {
-                                if (project.isAndroidProject()) {
-                                    isAndroid = true;
-                                    break;
-                                }
-                            }
-                            if (!isAndroid) {
-                                files.addAll(metadata.getJdkBootClasspath());
-                                return true;
-                            }
-
-                            boolean ok = super.addBootClassPath(knownProjects, files);
-                            if (!ok) {
-                                files.addAll(metadata.getJdkBootClasspath());
-                            }
-                            return ok;
+                    public boolean isIgnored(
+                            @NonNull Context context,
+                            @NonNull Issue issue,
+                            @Nullable Location location,
+                            @NonNull String message) {
+                        // If you've deliberately ignored IssueRegistry.LINT_ERROR
+                        // don't flag that one either
+                        if (issue == IssueRegistry.LINT_ERROR
+                                && new LintCliClient(flags, LintClient.getClientName())
+                                        .isSuppressed(IssueRegistry.LINT_ERROR)) {
+                            return true;
+                        } else if (issue == IssueRegistry.LINT_WARNING
+                                && new LintCliClient(flags, LintClient.getClientName())
+                                        .isSuppressed(IssueRegistry.LINT_WARNING)) {
+                            return true;
                         }
 
-                        return super.addBootClassPath(knownProjects, files);
-                    }
-
-                    @NonNull
-                    @Override
-                    public List<File> getExternalAnnotations(
-                            @NonNull Collection<? extends Project> projects) {
-                        List<File> externalAnnotations = super.getExternalAnnotations(projects);
-                        if (metadata != null) {
-                            externalAnnotations.addAll(metadata.getExternalAnnotations());
-                        }
-                        return externalAnnotations;
+                        return issue != IssueRegistry.LINT_ERROR
+                                && issue != IssueRegistry.LINT_WARNING;
                     }
                 };
+            }
 
+            return super.getConfiguration(project, driver);
+        }
+
+        private byte[] readSrcJar(@NonNull File file) {
+            String path = file.getPath();
+            //noinspection SpellCheckingInspection
+            int srcJarIndex = path.indexOf("srcjar!");
+            if (srcJarIndex != -1) {
+                File jarFile = new File(path.substring(0, srcJarIndex + 6));
+                if (jarFile.exists()) {
+                    try (ZipFile zipFile = new ZipFile(jarFile)) {
+                        String name =
+                                path.substring(srcJarIndex + 8).replace(File.separatorChar, '/');
+                        ZipEntry entry = zipFile.getEntry(name);
+                        if (entry != null) {
+                            try (InputStream is = zipFile.getInputStream(entry)) {
+                                return ByteStreams.toByteArray(is);
+                            } catch (Exception e) {
+                                log(e, null);
+                            }
+                        }
+                    } catch (ZipException e) {
+                        Main.this.log(e, "Could not unzip %1$s", jarFile);
+                    } catch (IOException e) {
+                        Main.this.log(e, "Could not read %1$s", jarFile);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public CharSequence readFile(@NonNull File file) {
+            // .srcjar file handle?
+            byte[] srcJarBytes = readSrcJar(file);
+            if (srcJarBytes != null) {
+                return new String(srcJarBytes, Charsets.UTF_8);
+            }
+
+            CharSequence contents = super.readFile(file);
+            if (Project.isAospBuildEnvironment()
+                    && file.getPath().endsWith(SdkConstants.DOT_JAVA)) {
+                if (mAndroidAnnotationPattern == null) {
+                    mAndroidAnnotationPattern = Pattern.compile("android\\.annotation");
+                }
+                return mAndroidAnnotationPattern
+                        .matcher(contents)
+                        .replaceAll("android.support.annotation");
+            } else {
+                return contents;
+            }
+        }
+
+        @NonNull
+        @Override
+        public byte[] readBytes(@NonNull File file) throws IOException {
+            // .srcjar file handle?
+            byte[] srcJarBytes = readSrcJar(file);
+            if (srcJarBytes != null) {
+                return srcJarBytes;
+            }
+
+            return super.readBytes(file);
+        }
+
+        private ProjectMetadata metadata;
+
+        @Override
+        protected void configureLintRequest(@NonNull LintRequest request) {
+            super.configureLintRequest(request);
+            File descriptor = flags.getProjectDescriptorOverride();
+            if (descriptor != null) {
+                metadata = ProjectInitializerKt.computeMetadata(this, descriptor);
+
+                String clientName = metadata.getClientName();
+                if (clientName != null) {
+                    //noinspection ResultOfObjectAllocationIgnored
+                    new LintCliClient(clientName); // constructor has side effect
+                }
+
+                List<Project> projects = metadata.getProjects();
+                if (!projects.isEmpty()) {
+                    request.setProjects(projects);
+
+                    if (metadata.getSdk() != null) {
+                        sdkHome = metadata.getSdk();
+                    }
+
+                    if (metadata.getJdk() != null) {
+                        jdkHome = metadata.getJdk();
+                    }
+
+                    if (metadata.getBaseline() != null) {
+                        flags.setBaselineFile(metadata.getBaseline());
+                    }
+
+                    EnumSet<Scope> scope = EnumSet.copyOf(Scope.ALL);
+                    if (metadata.getIncomplete()) {
+                        scope.remove(Scope.ALL_CLASS_FILES);
+                        scope.remove(Scope.ALL_JAVA_FILES);
+                        scope.remove(Scope.ALL_RESOURCE_FILES);
+                    }
+                    request.setScope(scope);
+
+                    request.setPlatform(metadata.getPlatforms());
+                }
+            }
+        }
+
+        @NonNull
+        @Override
+        public Iterable<File> findRuleJars(@NonNull Project project) {
+            if (metadata != null) {
+                List<File> jars = metadata.getLintChecks().get(project);
+                if (jars != null) {
+                    return jars;
+                }
+            }
+
+            return super.findRuleJars(project);
+        }
+
+        @NonNull
+        @Override
+        public List<File> findGlobalRuleJars() {
+            if (metadata != null) {
+                List<File> jars = metadata.getGlobalLintChecks();
+                if (!jars.isEmpty()) {
+                    return jars;
+                }
+            }
+
+            return super.findGlobalRuleJars();
+        }
+
+        @Nullable
+        @Override
+        public File getCacheDir(@Nullable String name, boolean create) {
+            if (metadata != null) {
+                File dir = metadata.getCache();
+                if (dir != null) {
+                    if (name != null) {
+                        dir = new File(dir, name);
+                    }
+
+                    if (create && !dir.exists()) {
+                        if (!dir.mkdirs()) {
+                            return null;
+                        }
+                    }
+                    return dir;
+                }
+            }
+
+            return super.getCacheDir(name, create);
+        }
+
+        @Nullable
+        @Override
+        public Document getMergedManifest(@NonNull Project project) {
+            if (metadata != null) {
+                File manifest = metadata.getMergedManifests().get(project);
+                if (manifest != null && manifest.exists()) {
+                    try {
+                        // We can't call
+                        //   resolveMergeManifestSources(document, manifestReportFile)
+                        // here since we don't have the merging log.
+                        return XmlUtils.parseUtfXmlFile(manifest, true);
+                    } catch (IOException | SAXException e) {
+                        log(e, "Could not read/parse %1$s", manifest);
+                    }
+                }
+            }
+
+            return super.getMergedManifest(project);
+        }
+
+        @Nullable
+        @Override
+        public File getSdkHome() {
+            if (Main.this.sdkHome != null) {
+                return Main.this.sdkHome;
+            }
+            return super.getSdkHome();
+        }
+
+        @Nullable
+        @Override
+        public File getJdkHome(@Nullable Project project) {
+            if (Main.this.jdkHome != null) {
+                return Main.this.jdkHome;
+            }
+            return super.getJdkHome(project);
+        }
+
+        @Override
+        protected boolean addBootClassPath(
+                @NonNull Collection<? extends Project> knownProjects, @NonNull Set<File> files) {
+            if (metadata != null && !metadata.getJdkBootClasspath().isEmpty()) {
+                boolean isAndroid = false;
+                for (Project project : knownProjects) {
+                    if (project.isAndroidProject()) {
+                        isAndroid = true;
+                        break;
+                    }
+                }
+                if (!isAndroid) {
+                    files.addAll(metadata.getJdkBootClasspath());
+                    return true;
+                }
+
+                boolean ok = super.addBootClassPath(knownProjects, files);
+                if (!ok) {
+                    files.addAll(metadata.getJdkBootClasspath());
+                }
+                return ok;
+            }
+
+            return super.addBootClassPath(knownProjects, files);
+        }
+
+        @NonNull
+        @Override
+        public List<File> getExternalAnnotations(@NonNull Collection<? extends Project> projects) {
+            List<File> externalAnnotations = super.getExternalAnnotations(projects);
+            if (metadata != null) {
+                externalAnnotations.addAll(metadata.getExternalAnnotations());
+            }
+            return externalAnnotations;
+        }
+    }
+
+    private int parseArguments(String[] args, LintCliClient client, ArgumentState argumentState) {
         // Mapping from file path prefix to URL. Applies only to HTML reports
-        String urlMap = null;
-
-        List<File> files = new ArrayList<>();
         for (int index = 0; index < args.length; index++) {
             String arg = args[index];
 
@@ -566,7 +603,7 @@ public class Main {
                         printHelpTopicSuppress();
                         return ERRNO_HELP;
                     } else {
-                        System.err.println(String.format("Unknown help topic \"%1$s\"", topic));
+                        System.err.printf("Unknown help topic \"%1$s\"%n", topic);
                         return ERRNO_INVALID_ARGS;
                     }
                 }
@@ -580,6 +617,7 @@ public class Main {
                     for (String id : ids) {
                         if (registry.isCategoryName(id)) {
                             // List all issues with the given category
+                            //noinspection UnnecessaryLocalVariable // clearer code
                             String category = id;
                             for (Issue issue : registry.getIssues()) {
                                 // Check prefix such that filtering on the "Usability" category
@@ -607,6 +645,7 @@ public class Main {
                     for (String id : ids) {
                         if (registry.isCategoryName(id)) {
                             // Show all issues in the given category
+                            //noinspection UnnecessaryLocalVariable // clearer code
                             String category = id;
                             for (Issue issue : registry.getIssues()) {
                                 // Check prefix such that filtering on the "Usability" category
@@ -653,12 +692,13 @@ public class Main {
                 }
                 String map = args[++index];
                 // Allow repeated usage of the argument instead of just comma list
+                String urlMap = argumentState.urlMap;
                 if (urlMap != null) {
-                    //noinspection StringConcatenationInLoop
                     urlMap = urlMap + ',' + map;
                 } else {
                     urlMap = map;
                 }
+                argumentState.urlMap = urlMap;
             } else if (arg.equals(ARG_CONFIG) || arg.equals(ARG_OVERRIDE_CONFIG)) {
                 if (index == args.length - 1 || !endsWith(args[index + 1], DOT_XML)) {
                     System.err.println("Missing XML configuration file argument");
@@ -781,11 +821,10 @@ public class Main {
                     return ERRNO_INVALID_ARGS;
                 }
 
-                Writer writer = null;
+                Writer writer;
                 boolean closeWriter;
                 String outputName = args[++index];
                 if (outputName.equals("stdout")) {
-                    //noinspection IOResourceOpenedButNotSafelyClosed,resource
                     writer = new PrintWriter(System.out, true);
                     closeWriter = false;
                 } else {
@@ -807,7 +846,6 @@ public class Main {
                         return ERRNO_EXISTS;
                     }
                     try {
-                        //noinspection IOResourceOpenedButNotSafelyClosed,resource
                         writer = new BufferedWriter(new FileWriter(output));
                     } catch (IOException e) {
                         log(e, null);
@@ -989,7 +1027,7 @@ public class Main {
                     System.err.println("Invalid Java language level \"" + version + "\"");
                     return ERRNO_INVALID_ARGS;
                 }
-                javaLanguageLevel.set(level);
+                argumentState.javaLanguageLevel = level;
             } else if (arg.equals(ARG_KOTLIN_LANGUAGE_LEVEL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing Kotlin language level");
@@ -1002,9 +1040,8 @@ public class Main {
                     return ERRNO_INVALID_ARGS;
                 }
                 ApiVersion apiVersion = ApiVersion.createByLanguageVersion(languageLevel);
-                LanguageVersionSettingsImpl settings =
+                argumentState.kotlinLanguageLevel =
                         new LanguageVersionSettingsImpl(languageLevel, apiVersion);
-                kotlinLanguageLevel.set(settings);
             } else if (arg.equals(ARG_PROJECT)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing project description file");
@@ -1038,7 +1075,7 @@ public class Main {
                     System.err.println("Missing variant name after " + ARG_VARIANT);
                     return ERRNO_INVALID_ARGS;
                 }
-                variantName = args[++index];
+                argumentState.variantName = args[++index];
             } else if (arg.equals(ARG_LINT_MODEL)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing lint model argument after " + ARG_LINT_MODEL);
@@ -1068,7 +1105,7 @@ public class Main {
                                         // TODO: Define any path variables Gradle may be setting!
                                         true,
                                         Collections.emptyList());
-                        modules.add(module);
+                        argumentState.modules.add(module);
                     } catch (Throwable error) {
                         System.err.println(
                                 "Could not deserialize "
@@ -1151,18 +1188,25 @@ public class Main {
                 printUsage(System.err);
                 return ERRNO_INVALID_ARGS;
             } else {
-                String filename = arg;
-                File file = getInArgumentPath(filename);
-
+                File file = getInArgumentPath(arg);
                 if (!file.exists()) {
-                    System.err.println(String.format("%1$s does not exist.", filename));
+                    System.err.printf("%1$s does not exist.%n", arg);
                     return ERRNO_EXISTS;
                 }
-                files.add(file);
+                argumentState.files.add(file);
             }
         }
 
+        List<LintModelModule> modules = argumentState.modules;
+        List<File> files = argumentState.files;
+        String variantName = argumentState.variantName;
         if (!modules.isEmpty()) {
+            if (!files.isEmpty()) {
+                System.err.println(
+                        "Do not specify both files and lint models: lint models should instead include the files");
+                return ERRNO_INVALID_ARGS;
+            }
+
             // Sync the first lint model's lint options.
             SyncOptions.syncTo(modules.get(0), client, flags, variantName, null, true);
         }
@@ -1175,13 +1219,16 @@ public class Main {
                         || flags.getSourcesOverride() != null
                         || flags.getLibrariesOverride() != null
                         || flags.getResourcesOverride() != null)) {
-            System.err.println(
-                    String.format(
-                            "The %1$s, %2$s, %3$s and %4$s arguments can only be used with a single project",
-                            ARG_SOURCES, ARG_CLASSES, ARG_LIBRARIES, ARG_RESOURCES));
+            System.err.printf(
+                    "The %1$s, %2$s, %3$s and %4$s arguments can only be used with a single project%n",
+                    ARG_SOURCES, ARG_CLASSES, ARG_LIBRARIES, ARG_RESOURCES);
             return ERRNO_INVALID_ARGS;
         }
 
+        return ERRNO_INTERNAL_CONTINUE;
+    }
+
+    private void initializeConfigurations(LintCliClient client, ArgumentState argumentState) {
         ConfigurationHierarchy configurations = client.getConfigurations();
 
         File overrideConfig = flags.getOverrideLintConfig();
@@ -1196,14 +1243,21 @@ public class Main {
         configurations.addGlobalConfigurationFromFile(defaultConfiguration, override);
         client.syncConfigOptions();
 
+        if (!argumentState.modules.isEmpty()) {
+            File dir = argumentState.modules.get(0).getDir();
+            override.setAssociatedLocation(Location.create(dir));
+        }
+    }
+
+    private int initializeReporters(LintCliClient client, ArgumentState argumentState) {
+        String urlMap = argumentState.urlMap;
         List<Reporter> reporters = flags.getReporters();
         if (reporters.isEmpty()) {
             //noinspection VariableNotUsedInsideIf
             if (urlMap != null) {
-                System.err.println(
-                        String.format(
-                                "Warning: The %1$s option only applies to HTML reports (%2$s)",
-                                ARG_URL, ARG_HTML));
+                System.err.printf(
+                        "Warning: The %1$s option only applies to HTML reports (%2$s)%n",
+                        ARG_URL, ARG_HTML);
             }
 
             reporters.add(
@@ -1230,17 +1284,19 @@ public class Main {
             }
         }
 
+        return ERRNO_INTERNAL_CONTINUE;
+    }
+
+    private static LintRequest createLintRequest(
+            LintCliClient client, ArgumentState argumentState) {
         LintRequest lintRequest;
+        List<LintModelModule> modules = argumentState.modules;
         if (!modules.isEmpty()) {
-            if (!files.isEmpty()) {
-                System.err.println(
-                        "Do not specify both files and lint models: lint models should instead include the files");
-                return ERRNO_INVALID_ARGS;
-            }
             List<Project> projects = new ArrayList<>();
             for (LintModelModule module : modules) {
                 File dir = module.getDir();
                 LintModelVariant variant = null;
+                String variantName = argumentState.variantName;
                 if (variantName != null) {
                     variant = module.findVariant(variantName);
                     if (variant == null) {
@@ -1254,6 +1310,7 @@ public class Main {
                 if (variant == null) {
                     variant = module.defaultVariant();
                 }
+                assert variant != null; // clear from above if but help inspection machinery out
                 LintModelModuleProject project =
                         new LintModelModuleProject(client, dir, dir, variant, null);
                 client.registerProject(project.getDir(), project);
@@ -1263,13 +1320,16 @@ public class Main {
             lintRequest.setProjects(projects);
             // TODO: What about dynamic features? See LintGradleProject#configureLintRequest
         } else {
-            lintRequest = client.createLintRequest(files);
+            lintRequest = client.createLintRequest(argumentState.files);
         }
 
+        return lintRequest;
+    }
+
+    private int run(LintCliClient client, LintRequest lintRequest) {
         try {
             // Not using globalIssueRegistry; LintClient will do its own registry merging
             // also including project rules.
-
             return client.run(new BuiltinIssueRegistry(), lintRequest);
         } catch (IOException e) {
             log(e, null);
@@ -1512,7 +1572,7 @@ public class Main {
     private static void printVersion(LintCliClient client) {
         String revision = client.getClientDisplayRevision();
         if (revision != null) {
-            System.out.println(String.format("lint: version %1$s", revision));
+            System.out.printf("lint: version %1$s%n", revision);
         } else {
             System.out.println("lint: unknown version");
         }
@@ -1594,9 +1654,7 @@ public class Main {
 
         if (!issue.isEnabledByDefault()) {
             System.out.println("NOTE: This issue is disabled by default!");
-            System.out.println(
-                    String.format(
-                            "You can enable it by adding %1$s %2$s", ARG_ENABLE, issue.getId()));
+            System.out.printf("You can enable it by adding %1$s %2$s%n", ARG_ENABLE, issue.getId());
         }
 
         System.out.println();
@@ -1619,7 +1677,10 @@ public class Main {
         return wrap(explanation, MAX_LINE_WIDTH, "");
     }
 
-    static String wrap(String explanation, int lineWidth, String hangingIndent) {
+    static String wrap(
+            String explanation,
+            @SuppressWarnings("SameParameterValue") int lineWidth,
+            String hangingIndent) {
         return SdkUtils.wrap(explanation, lineWidth, hangingIndent);
     }
 
@@ -1810,6 +1871,7 @@ public class Main {
             System.err.println();
         }
         if (format != null) {
+            //noinspection RedundantStringFormatCall
             System.err.println(String.format(format, args));
         }
         if (exception != null) {

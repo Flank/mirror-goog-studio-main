@@ -21,39 +21,35 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.OptionalLibrary;
 import com.google.common.base.Objects;
 import java.io.File;
+import java.nio.file.Path;
 import javax.xml.bind.annotation.XmlTransient;
 
 /** Information about a {@link OptionalLibrary} provided by a package. */
 @XmlTransient
 public abstract class Library implements OptionalLibrary {
 
-    /**
-     * Reference to the path of the containing package.
-     */
-    @XmlTransient
-    private File mPackagePath;
+    /** Reference to the path of the containing package. */
+    @XmlTransient private Path mPackagePath;
 
-    /**
-     * Sets the path of the containing package. Must be called before calling {@link #getJar()}.
-     */
-    public void setPackagePath(@NonNull File packagePath) {
+    /** Sets the path of the containing package. Must be called before calling {@link #getJar()}. */
+    public void setPackagePath(@NonNull Path packagePath) {
         mPackagePath = packagePath;
     }
 
     /**
-     * Absolute path to the library jar file. Will be {@code null} when a legacy remote package
-     * is installed.
+     * Absolute path to the library jar file. Will be {@code null} when a legacy remote package is
+     * installed.
      */
     @Override
     @Nullable
-    public File getJar() {
+    public Path getJar() {
         assert mPackagePath != null;
         String localPath = getLocalJarPath();
         if (localPath == null) {
             return null;
         }
         localPath = localPath.replace('/', File.separatorChar);
-        return new File(mPackagePath, SdkConstants.OS_ADDON_LIBS_FOLDER + localPath);
+        return mPackagePath.resolve(SdkConstants.OS_ADDON_LIBS_FOLDER + localPath);
     }
 
     /**

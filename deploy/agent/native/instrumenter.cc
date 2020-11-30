@@ -32,6 +32,7 @@
 #include "tools/base/deploy/agent/native/transforms.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 
 namespace deploy {
@@ -62,8 +63,7 @@ std::vector<dex::u4> last_class_bytes;
 #define FILE_MODE (S_IRUSR | S_IWUSR)
 
 std::string GetInstrumentJarPath(const std::string& package_name) {
-  return "/data/data/" + package_name + "/code_cache/.studio/" +
-         kInstrumentationJarName;
+  return Sites::AppStudio(package_name) + kInstrumentationJarName;
 }
 
 // Check if the jar_path exists. If it doesn't, generate its content using the

@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.internal
 
+import com.android.io.CancellableFileIo
 import com.android.repository.Revision
 import com.android.repository.api.ConsoleProgressIndicator
 import com.android.repository.api.LocalPackage
 import com.android.repository.api.Repository
 import com.android.repository.impl.meta.SchemaModuleUtil
+import com.android.repository.io.FileOpUtils
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -39,7 +41,7 @@ fun buildBuildTools(sdkDirectory: File, revision: Revision): BuildToolInfo? {
     val buildToolsXml = sdkDirectory.resolve(buildToolsPath).resolve("package.xml")
     val buildToolsPackage = parsePackage(buildToolsXml) ?: return null
     // BuildToolInfo is cheap to build and verify, so we can keep using it.
-    val buildToolInfo = BuildToolInfo.fromLocalPackage(buildToolsPackage)
+    val buildToolInfo = BuildToolInfo.fromLocalPackage(buildToolsPackage, FileOpUtils.create())
     if (!buildToolInfo.isValid(null)) {
         // The build tools we loaded is missing some expected components.
         return null
@@ -74,7 +76,7 @@ fun parsePackage(packageXml: File): LocalPackage? {
         return null
     }
 
-    repo.localPackage?.setInstalledPath(packageXml.parentFile)
+    repo.localPackage?.setInstalledPath(packageXml.toPath().parent)
     return repo.localPackage
 }
 
@@ -108,8 +110,8 @@ fun parseAdditionalLibraries(localPackage: LocalPackage): List<OptionalLibrary> 
  * {@code optional/optional.json} file under it, like $SDK/platforms/android-28/optional/...
  */
 fun parseOptionalLibraries(localPackage: LocalPackage): List<OptionalLibrary> {
-    val optionalJson = File(localPackage.location, "optional/optional.json")
-    if (optionalJson.isFile) {
+    val optionalJson = localPackage.location.resolve("optional/optional.json")
+    if (CancellableFileIo.isRegularFile(optionalJson)) {
         return PlatformTarget.getLibsFromJson(optionalJson)
     }
     return emptyList()

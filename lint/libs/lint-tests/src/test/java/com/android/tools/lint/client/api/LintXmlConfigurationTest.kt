@@ -21,12 +21,12 @@ import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ActionsXmlDetector
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.ChromeOsDetector
-import com.android.tools.lint.checks.FieldGetterDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.IconDetector
 import com.android.tools.lint.checks.InteroperabilityDetector
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector
 import com.android.tools.lint.checks.SdCardDetector
+import com.android.tools.lint.checks.SecureRandomGeneratorDetector
 import com.android.tools.lint.checks.TooManyViewsDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
@@ -74,7 +74,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
          can be a comma separated list -->
     <issue in="studio" id="NewerVersionAvailable" severity="error" />
     <!-- You can also use ! to specify that it does not apply in a tool  -->
-    <issue in="!gradle" id="FieldGetter" severity="error" />
+    <issue in="!gradle" id="TrulyRandom" severity="error" />
     <issue id="UnknownNullness">
         <!-- For detectors that support it, you can also specify option values -->
         <option name="ignore-deprecated" value="true" />
@@ -94,7 +94,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                     <ignore path="res/layout-xlarge/activation.xml" />
                 </issue>
                 <issue id="ValidActionsXml" severity="ignore" />
-                <issue id="FieldGetter" severity="error" />
+                <issue id="TrulyRandom" severity="error" />
                 <issue id="SdCardPath,ContentDescription" severity="ignore" />
                 <issue id="NewApi">
                     <ignore path="res/layout-xlarge" />
@@ -108,8 +108,8 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         assertFalse(configuration.isEnabled(AccessibilityDetector.ISSUE))
         assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE))
         assertEquals(Severity.WARNING, AccessibilityDetector.ISSUE.defaultSeverity)
-        assertEquals(Severity.WARNING, FieldGetterDetector.ISSUE.defaultSeverity)
-        assertEquals(Severity.ERROR, configuration.getSeverity(FieldGetterDetector.ISSUE))
+        assertEquals(Severity.WARNING, SecureRandomGeneratorDetector.ISSUE.defaultSeverity)
+        assertEquals(Severity.ERROR, configuration.getSeverity(SecureRandomGeneratorDetector.ISSUE))
         assertEquals(Severity.IGNORE, configuration.getSeverity(ActionsXmlDetector.ISSUE))
     }
 
@@ -300,7 +300,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             """.trimIndent()
         )
         assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE))
-        assertEquals(Severity.IGNORE, configuration.getSeverity(FieldGetterDetector.ISSUE))
+        assertEquals(Severity.IGNORE, configuration.getSeverity(SecureRandomGeneratorDetector.ISSUE))
         assertEquals(Severity.IGNORE, configuration.getSeverity(HardcodedValuesDetector.ISSUE))
         assertEquals(Severity.ERROR, configuration.getSeverity(ActionsXmlDetector.ISSUE))
     }
@@ -772,10 +772,19 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     private fun getConfiguration(
         xml: String,
         projectLevel: Boolean = false,
-        create: (File) -> Unit = {}
+        create: (File) -> Unit = {},
+        dir: File? = null
     ): LintXmlConfiguration {
         val client: LintClient = createClient()
-        val lintFile = File.createTempFile("lintconfig", ".xml")
+        val lintFile =
+            if (dir != null) {
+                val file = File(dir, "lintconfig.xml")
+                dir.mkdirs()
+                file.deleteOnExit()
+                file
+            } else {
+                File.createTempFile("lintconfig", ".xml")
+            }
         lintFile.writeText(xml)
         create(lintFile)
         val configuration = client.configurations.getConfigurationForFile(lintFile)
@@ -975,6 +984,11 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     }
 
     fun testSeverityImpliesIgnore() {
+        val projectDir = getProjectDir(
+            null,
+            image("src/main/res/drawable/abc.png", 48, 48),
+            source("build/generated/R.java", "class R { };")
+        )
         // Let's say you ignore a specific path for "all". If you also
         // deliberately enable a check in the same lint.xml file, that
         // should act as an "unignore", so you'll have to specifically
@@ -990,12 +1004,10 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                     <ignore path="src/" />
                 </issue>
             </lint>
-            """.trimIndent()
-        )
-        val projectDir = getProjectDir(
-            null,
-            image("src/main/res/drawable/abc.png", 48, 48),
-            source("build/generated/R.java", "class R { };")
+            """.trimIndent(),
+            // Place the configuration file in the project directory to make sure that
+            // relative paths are resolved relative to the config file
+            dir = projectDir
         )
         val client: LintClient = TestLintClient()
         val project = Project.create(client, projectDir, projectDir)
@@ -1041,6 +1053,56 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         )
     }
 
+    fun testIgnoreRelativePath() {
+        val projectDir = getProjectDir(
+            null,
+            image("src/main/res/drawable/abc.png", 48, 48),
+            source("build/generated/R.java", "class R { };")
+        )
+        // Let's say you ignore a specific path for "all". If you also
+        // deliberately enable a check in the same lint.xml file, that
+        // should act as an "unignore", so you'll have to specifically
+        // repeat the ignore for that path
+        val configuration = getConfiguration(
+            """
+            <lint>
+                <issue id="ObsoleteLayoutParam" severity="error">
+                    <ignore path="drawable/" />
+                </issue>
+            </lint>
+            """.trimIndent(),
+            // Place the configuration file in somewhere in the project to make sure
+            // relative paths are resolved relative to the config file
+            dir = File(projectDir, "src/main/res")
+        )
+        val client: LintClient = TestLintClient()
+        val project = Project.create(client, projectDir, projectDir)
+        val request = LintRequest(client, emptyList())
+        val driver = LintDriver(TestIssueRegistry(), client, request)
+        val drawable = File(projectDir, "src/main/res/drawable/abc.png")
+        assertTrue(drawable.exists())
+        val generatedR = File(projectDir, "build/generated/R.java")
+        assertTrue(generatedR.exists())
+        val drawableContext = Context(driver, project, project, drawable, null)
+        val generatedRContext = Context(driver, project, project, generatedR, null)
+        assertTrue(
+            configuration.isIgnored(
+                drawableContext,
+                ObsoleteLayoutParamsDetector.ISSUE,
+                create(drawable),
+                ""
+            )
+        )
+        assertFalse(
+            configuration.isIgnored(
+                generatedRContext,
+                ObsoleteLayoutParamsDetector.ISSUE,
+                create(generatedR),
+                ""
+            )
+        )
+    }
+
     fun testWriteConfig() {
         // Make sure that when we have a placeholder configuration in a project (which we
         // expect at the root of a project which does not specify a lint.xml), attempting to
@@ -1051,8 +1113,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                 _, project, configuration ->
                 assertNull(configuration.parent)
                 assertFalse(configuration.fileLevel)
-
-                assertTrue(configuration.javaClass.simpleName.equals("ProjectPlaceholderConfiguration"))
+                assertEquals("ProjectPlaceholderConfiguration", configuration.javaClass.simpleName)
                 val dir = configuration.dir
                 println(dir)
                 assertNull(configuration.getDefinedSeverity(ApiDetector.UNSUPPORTED))
@@ -1088,7 +1149,6 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         expected: String = "No warnings.",
         vararg testFiles: com.android.tools.lint.checks.infrastructure.TestFile
     ) {
-
         lint().files(
             *testFiles,
             // To make sure we have at least one project
@@ -1102,14 +1162,16 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             // Trigger src/main/java source sets
             gradle("")
         )
-            .client(object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                override fun getConfiguration(
-                    project: Project,
-                    driver: LintDriver?
-                ): Configuration {
-                    // Make sure we don't pick up the special TestConfiguration; we want the
-                    // real configuration lint would create in production
-                    return configurations.getConfigurationForProject(project)
+            .clientFactory({
+                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    override fun getConfiguration(
+                        project: Project,
+                        driver: LintDriver?
+                    ): Configuration {
+                        // Make sure we don't pick up the special TestConfiguration; we want the
+                        // real configuration lint would create in production
+                        return configurations.getConfigurationForProject(project)
+                    }
                 }
             })
             .checkProjects(object : TestLintTask.ProjectInspector {

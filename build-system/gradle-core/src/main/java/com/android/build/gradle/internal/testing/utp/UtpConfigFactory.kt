@@ -82,7 +82,8 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         testLogDir: File,
-        retentionConfig: RetentionConfig
+        retentionConfig: RetentionConfig,
+        useOrchestrator: Boolean
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createLocalDevice(device, testData, utpDependencies))
@@ -96,7 +97,8 @@ class UtpConfigFactory {
                     outputDir,
                     tmpDir,
                     testLogDir,
-                    retentionConfig
+                    retentionConfig,
+                    useOrchestrator
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber)
@@ -118,14 +120,15 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         testLogDir: File,
-        retentionConfig: RetentionConfig
+        retentionConfig: RetentionConfig,
+        useOrchestrator: Boolean
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             addDevice(createGradleManagedDevice(device, testData, utpDependencies))
             addTestFixture(
                 createTestFixture(
                     null, apks, testData, utpDependencies, sdkComponents,
-                    outputDir, tmpDir, testLogDir, retentionConfig
+                    outputDir, tmpDir, testLogDir, retentionConfig, useOrchestrator
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.id)
@@ -233,7 +236,8 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         testLogDir: File,
-        retentionConfig: RetentionConfig
+        retentionConfig: RetentionConfig,
+        useOrchestrator: Boolean
     ): FixtureProto.TestFixture {
         return FixtureProto.TestFixture.newBuilder().apply {
             testFixtureIdBuilder.apply {
@@ -264,7 +268,8 @@ class UtpConfigFactory {
                         instrumentationRunnerArguments = testData.instrumentationRunnerArguments
                             .toMutableMap()
                             .apply { put("debug", "true") })
-                    testDriver = createTestDriver(retentionTestData, utpDependencies)
+                    testDriver = createTestDriver(
+                            retentionTestData, utpDependencies, useOrchestrator)
                     addHostPlugin(ExtensionProto.Extension.newBuilder().apply {
                         label = LabelProto.Label.newBuilder().apply {
                             label = "icebox_plugin"
@@ -296,7 +301,7 @@ class UtpConfigFactory {
                     }.build())
                 }
             } else {
-                testDriver = createTestDriver(testData, utpDependencies)
+                testDriver = createTestDriver(testData, utpDependencies, useOrchestrator)
             }
             addHostPlugin(createAndroidTestPlugin(utpDependencies))
             addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
@@ -345,7 +350,8 @@ class UtpConfigFactory {
 
     private fun createTestDriver(
         testData: StaticTestData,
-        utpDependencies: UtpDependencies
+        utpDependencies: UtpDependencies,
+        useOrchestrator: Boolean
     ): ExtensionProto.Extension {
         return ExtensionProto.Extension.newBuilder().apply {
             className = ANDROID_DRIVER_INSTRUMENTATION.mainClass
@@ -369,6 +375,7 @@ class UtpConfigFactory {
                             putAllArgsMap(testData.instrumentationRunnerArguments)
                         }
                     }
+                    this.useOrchestrator = useOrchestrator
                 }.build())
         }.build()
     }

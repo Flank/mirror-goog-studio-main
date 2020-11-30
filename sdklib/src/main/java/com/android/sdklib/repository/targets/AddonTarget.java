@@ -21,12 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.ISystemImage;
 import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.PackageParserUtils;
 import com.android.sdklib.repository.legacy.LegacyRepoUtils;
@@ -35,6 +32,7 @@ import com.android.sdklib.repository.meta.Library;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -42,48 +40,36 @@ import java.util.Map;
  * Represents an add-on target in the SDK. An add-on extends a standard {@link PlatformTarget}.
  */
 public class AddonTarget implements IAndroidTarget {
-    /**
-     * The {@link LocalPackage} from which this target was created.
-     */
-    private LocalPackage mPackage;
+    /** The {@link LocalPackage} from which this target was created. */
+    private final LocalPackage mPackage;
 
-    /**
-     * The {@link TypeDetails} of {@link #mPackage}.
-     */
-    private DetailsTypes.AddonDetailsType mDetails;
+    /** The {@link TypeDetails} of {@link #mPackage}. */
+    private final DetailsTypes.AddonDetailsType mDetails;
 
-    /**
-     * The target on which this addon is based.
-     */
-    private IAndroidTarget mBasePlatform;
+    /** The target on which this addon is based. */
+    private final IAndroidTarget mBasePlatform;
 
     /**
      * All skins included in this target, including those in this addon, the base package, and
      * associated system images.
      */
-    private File[] mSkins;
+    private final Path[] mSkins;
 
-    /**
-     * The default skin for this package, as (optionally) specified in the package xml.
-     */
-    private File mDefaultSkin;
+    /** The default skin for this package, as (optionally) specified in the package xml. */
+    private final Path mDefaultSkin;
 
-    private List<OptionalLibrary> mAdditionalLibraries;
+    private final List<OptionalLibrary> mAdditionalLibraries;
 
     /**
      * Constructs a new {@link AddonTarget}.
      *
-     * @param p          The {@link LocalPackage} containing this target.
+     * @param p The {@link LocalPackage} containing this target.
      * @param baseTarget The {@link IAndroidTarget} on which this addon is based.
-     * @param sysImgMgr  A {@link SystemImageManager}, used to find {@link ISystemImage}s associated
-     *                   associated with this target.
-     * @param progress
-     * @param fop        {@link FileOp} to use for file operations. For normal use should be {@link
-     *                   FileOpUtils#create()}.
      */
-    public AddonTarget(@NonNull LocalPackage p, @NonNull IAndroidTarget baseTarget,
-            @NonNull SystemImageManager sysImgMgr, @NonNull ProgressIndicator progress,
-            @NonNull FileOp fop) {
+    public AddonTarget(
+            @NonNull LocalPackage p,
+            @NonNull IAndroidTarget baseTarget,
+            @NonNull ProgressIndicator progress) {
         mPackage = p;
         mBasePlatform = baseTarget;
         TypeDetails details = p.getTypeDetails();
@@ -91,22 +77,23 @@ public class AddonTarget implements IAndroidTarget {
         mDetails = (DetailsTypes.AddonDetailsType) details;
 
         // Gather skins for this target. We'll only keep a single skin with each name.
-        Map<String, File> skins = Maps.newHashMap();
+        Map<String, Path> skins = Maps.newHashMap();
         // Collect skins from the base target. This have precedence over system image skins with the
         // same name.
-        for (File skin : baseTarget.getSkins()) {
-            skins.put(skin.getName(), skin);
+        for (Path skin : baseTarget.getSkins()) {
+            skins.put(skin.getFileName().toString(), skin);
         }
         // Finally collect skins from this package itself, which have highest priority.
-        for (File skin : PackageParserUtils
-                .parseSkinFolder(new File(p.getLocation(), SdkConstants.FD_SKINS), fop)) {
-            skins.put(skin.getName(), skin);
+        for (Path skin :
+                PackageParserUtils.parseSkinFolder(
+                        p.getLocation().resolve(SdkConstants.FD_SKINS))) {
+            skins.put(skin.getFileName().toString(), skin);
         }
-        mSkins = skins.values().toArray(new File[0]);
+        mSkins = skins.values().toArray(new Path[0]);
 
         String defaultSkinName = mDetails.getDefaultSkin();
         if (defaultSkinName != null) {
-            mDefaultSkin = new File(getPath(SKINS), defaultSkinName);
+            mDefaultSkin = getPath(SKINS).resolve(defaultSkinName);
         } else {
             // No default skin name specified, use the first one from the addon
             // or the default from the platform.
@@ -117,12 +104,12 @@ public class AddonTarget implements IAndroidTarget {
             }
         }
 
-        mAdditionalLibraries = parseAdditionalLibraries(p, progress, fop);
+        mAdditionalLibraries = parseAdditionalLibraries(p, progress);
     }
 
     @NonNull
-    private static List<OptionalLibrary> parseAdditionalLibraries(@NonNull LocalPackage p,
-            @NonNull ProgressIndicator progress, @NonNull FileOp fop) {
+    private static List<OptionalLibrary> parseAdditionalLibraries(
+            @NonNull LocalPackage p, @NonNull ProgressIndicator progress) {
         DetailsTypes.AddonDetailsType.Libraries libraries = ((DetailsTypes.AddonDetailsType) p
                 .getTypeDetails()).getLibraries();
         List<OptionalLibrary> result = Lists.newArrayList();
@@ -131,8 +118,8 @@ public class AddonTarget implements IAndroidTarget {
                 if (library.getLocalJarPath() == null) {
                     // We must be looking at a legacy package. Abort and use the libraries derived
                     // in the old way.
-                    return LegacyRepoUtils
-                            .parseLegacyAdditionalLibraries(p.getLocation(), progress, fop);
+                    return LegacyRepoUtils.parseLegacyAdditionalLibraries(
+                            p.getLocation(), progress);
                 }
                 library.setPackagePath(p.getLocation());
                 result.add(library);
@@ -145,7 +132,7 @@ public class AddonTarget implements IAndroidTarget {
     @Override
     @NonNull
     public String getLocation() {
-        return mPackage.getLocation().getPath() + File.separator;
+        return mPackage.getLocation().toString() + File.separator;
     }
 
     @Override
@@ -201,14 +188,15 @@ public class AddonTarget implements IAndroidTarget {
 
     @Override
     @NonNull
-    public String getPath(int pathId) {
-        String installPath = mPackage.getLocation().getPath();
+    public Path getPath(int pathId) {
+        Path installPath = mPackage.getLocation();
         switch (pathId) {
             case SKINS:
-                return installPath + File.separator + SdkConstants.OS_SKINS_FOLDER;
+                return installPath.resolve(SdkConstants.OS_SKINS_FOLDER);
             case DOCS:
-                return installPath + File.separator + SdkConstants.FD_DOCS + File.separator
-                        + SdkConstants.FD_DOCS_REFERENCE;
+                return installPath
+                        .resolve(SdkConstants.FD_DOCS)
+                        .resolve(SdkConstants.FD_DOCS_REFERENCE);
 
             default:
                 return mBasePlatform.getPath(pathId);
@@ -245,13 +233,13 @@ public class AddonTarget implements IAndroidTarget {
 
     @Override
     @NonNull
-    public File[] getSkins() {
+    public Path[] getSkins() {
         return mSkins;
     }
 
     @Override
     @Nullable
-    public File getDefaultSkin() {
+    public Path getDefaultSkin() {
         return mDefaultSkin;
     }
 

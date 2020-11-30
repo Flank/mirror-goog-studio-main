@@ -88,7 +88,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
                 getRepoManager().getPackages().getLocalPackages().get(mPackage.getPath());
         if (existing != null) {
             // We're updating an existing package, overwrite it.
-            return existing.getLocation();
+            return mFop.toFile(existing.getLocation());
         }
         // Get a new directory, without overwriting anything.
         return getNonConflictingPath(progress);
@@ -96,7 +96,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
 
     @NonNull
     private File getNonConflictingPath(@NonNull ProgressIndicator progress) {
-        File dir = mPackage.getInstallDir(getRepoManager(), progress);
+        File dir = mPackage.getInstallDir(getRepoManager(), progress, mFop);
         if (!mFop.exists(dir)) {
             return dir;
         }
@@ -130,7 +130,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
                             + conflicting.getPath()
                             + ") "
                             + "is already installed ";
-            if (conflicting.getLocation().equals(dir)) {
+            if (conflicting.getLocation().equals(mFop.toPath(dir))) {
                 warning += "there.";
             } else {
                 warning += "in \n\"" + conflicting.getLocation() + "\".";
@@ -156,7 +156,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
             @NonNull File dir, @NonNull ProgressIndicator progress) {
         for (LocalPackage existing : getRepoManager().getPackages().getLocalPackages().values()) {
             try {
-                String existingLocation = existing.getLocation().getCanonicalPath();
+                String existingLocation = existing.getLocation().normalize().toString();
                 String newLocation = dir.getCanonicalPath();
                 if (existingLocation.startsWith(newLocation)
                         || newLocation.startsWith(existingLocation)) {

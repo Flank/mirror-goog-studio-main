@@ -111,7 +111,6 @@ public abstract class CommonFactory {
     @NonNull
     public abstract License createLicenseType();
 
-    @VisibleForTesting
     @NonNull
     public abstract Dependency createDependencyType();
 

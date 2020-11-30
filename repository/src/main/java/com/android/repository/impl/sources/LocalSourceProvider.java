@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
@@ -117,10 +118,14 @@ public class LocalSourceProvider implements RepositorySourceProvider {
                     int count = Integer.parseInt(props.getProperty(KEY_COUNT, "0"));
 
                     for (int i = 0; i < count; i++) {
-                        String url = props.getProperty(String.format("%s%02d", KEY_SRC, i));
-                        String disp = props.getProperty(String.format("%s%02d", KEY_DISPLAY, i));
-                        String enabledStr = props
-                                .getProperty(String.format("%s%02d", KEY_ENABLED, i));
+                        String url =
+                                props.getProperty(String.format(Locale.US, "%s%02d", KEY_SRC, i));
+                        String disp =
+                                props.getProperty(
+                                        String.format(Locale.US, "%s%02d", KEY_DISPLAY, i));
+                        String enabledStr =
+                                props.getProperty(
+                                        String.format(Locale.US, "%s%02d", KEY_ENABLED, i));
                         boolean enabled;
                         if (enabledStr == null) {
                             // for backward compatibility
@@ -217,13 +222,15 @@ public class LocalSourceProvider implements RepositorySourceProvider {
                 int count = 0;
 
                 for (RepositorySource s : mSources) {
-                    props.setProperty(String.format("%s%02d", KEY_SRC, count), //$NON-NLS-1$
-                            s.getUrl());
+                    props.setProperty(
+                            String.format(Locale.US, "%s%02d", KEY_SRC, count), s.getUrl());
                     if (s.getDisplayName() != null) {
-                        props.setProperty(String.format("%s%02d", KEY_DISPLAY, count), //$NON-NLS-1$
+                        props.setProperty(
+                                String.format(Locale.US, "%s%02d", KEY_DISPLAY, count),
                                 s.getDisplayName());
                     }
-                    props.setProperty(String.format("%s%02d", KEY_ENABLED, count),
+                    props.setProperty(
+                            String.format(Locale.US, "%s%02d", KEY_ENABLED, count),
                             Boolean.toString(s.isEnabled()));
                     count++;
                 }

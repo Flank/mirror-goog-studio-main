@@ -1457,12 +1457,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             Map<File, Long> fileSizes,
             @Nullable Map<String, File> notificationIconsCompatibility) {
         String folderName = folder.getName();
-        if (folderName.equals(DRAWABLE_FOLDER)
-                && context.isEnabled(ICON_LOCATION)
-                &&
-                // If supporting older versions than Android 1.6, it's not an error
-                // to include bitmaps in drawable/
-                context.getProject().getMinSdk() >= 4) {
+        if (folderName.equals(DRAWABLE_FOLDER)) {
             for (File file : files) {
                 String name = file.getName();
                 //noinspection StatementWithEmptyBody
@@ -1736,7 +1731,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             }
         }
 
-        long total = imageHeight * imageWidth;
+        long total = (long) imageHeight * imageWidth;
         double percentDifferent = 100 * different / (double) total;
 
         // Allow 4% difference or less -- mainly to account for anti-aliasing edge differences
@@ -1748,23 +1743,6 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
      * other checks)
      */
     private Dimension checkColor(Context context, File file, boolean isActionBarIcon) {
-        int folderVersion = context.getDriver().getResourceFolderVersion(file);
-        if (isActionBarIcon) {
-            if (folderVersion != -1 && folderVersion < 11 || !isAndroid30(context, folderVersion)) {
-                return null;
-            }
-        } else {
-            if (folderVersion != -1 && folderVersion < 9
-                    || !isAndroid23(context, folderVersion)
-                            && !isAndroid30(context, folderVersion)) {
-                return null;
-            }
-        }
-
-        // TODO: This only checks icons that are known to be using the Holo style.
-        // However, if the user has minSdk < 11 as well as targetSdk > 11, we should
-        // also check that they actually include a -v11 or -v14 folder with proper
-        // icons, since the below won't flag the older icons.
         try {
             BufferedImage image = getImage(file);
             if (image != null) {
@@ -1790,76 +1768,54 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                         }
                     }
                 } else {
-                    if (folderVersion >= 11 || isAndroid30(context, folderVersion)) {
-                        // Notification icons. Should be white as of API 14
-                        checkPixels:
-                        for (int y = 0, height = image.getHeight(); y < height; y++) {
-                            for (int x = 0, width = image.getWidth(); x < width; x++) {
-                                int rgb = image.getRGB(x, y);
-                                // If the pixel is not completely transparent, insist that
-                                // its RGB channel must be white (with any alpha value)
-                                if ((rgb & 0xFF000000) != 0 && (rgb & 0xFFFFFF) != 0xFFFFFF) {
-                                    int r = (rgb & 0xFF0000) >>> 16;
-                                    int g = (rgb & 0x00FF00) >>> 8;
-                                    int b = (rgb & 0x0000FF);
-                                    if (r == g && r == b) {
-                                        // If the pixel is not white, it might be because of
-                                        // anti-aliasing. In that case, at least one neighbor
-                                        // should be of a different color
-                                        if (x < width - 1 && rgb != image.getRGB(x + 1, y)) {
-                                            continue;
-                                        }
-                                        if (x > 0 && rgb != image.getRGB(x - 1, y)) {
-                                            continue;
-                                        }
-                                        if (y < height - 1 && rgb != image.getRGB(x, y + 1)) {
-                                            continue;
-                                        }
-                                        if (y > 0 && rgb != image.getRGB(x, y - 1)) {
-                                            continue;
-                                        }
+                    // else: transparent
+                    checkPixels:
+                    for (int y = 0, height = image.getHeight(); y < height; y++) {
+                        for (int x = 0, width = image.getWidth(); x < width; x++) {
+                            int rgb = image.getRGB(x, y);
+                            // If the pixel is not completely transparent, insist that
+                            // its RGB channel must be white (with any alpha value)
+                            if ((rgb & 0xFF000000) != 0 && (rgb & 0xFFFFFF) != 0xFFFFFF) {
+                                int r = (rgb & 0xFF0000) >>> 16;
+                                int g = (rgb & 0x00FF00) >>> 8;
+                                int b = (rgb & 0x0000FF);
+                                if (r == g && r == b) {
+                                    // If the pixel is not white, it might be because of
+                                    // anti-aliasing. In that case, at least one neighbor
+                                    // should be of a different color
+                                    if (x < width - 1 && rgb != image.getRGB(x + 1, y)) {
+                                        continue;
                                     }
-
-                                    String message = "Notification icons must be entirely white";
-                                    Location location = Location.create(file);
-
-                                    String name = getBaseName(file.getName());
-                                    UElement usage =
-                                            notificationIcons != null
-                                                    ? notificationIcons.get(name)
-                                                    : null;
-                                    if (usage != null) {
-                                        LintClient client = context.getClient();
-                                        Project project = context.getProject();
-                                        UastParser parser = client.getUastParser(project);
-                                        if (parser != null) {
-                                            Location secondary = parser.createLocation(usage);
-                                            secondary.setMessage("Icon used in notification here");
-                                            location.setSecondary(secondary);
-                                        }
+                                    if (x > 0 && rgb != image.getRGB(x - 1, y)) {
+                                        continue;
                                     }
-
-                                    context.report(ICON_COLORS, location, message);
-                                    break checkPixels;
-                                }
-                            }
-                        }
-                    } else {
-                        // As of API 9, should be gray.
-                        checkPixels:
-                        for (int y = 0, height = image.getHeight(); y < height; y++) {
-                            for (int x = 0, width = image.getWidth(); x < width; x++) {
-                                int rgb = image.getRGB(x, y);
-                                if ((rgb & 0xFF000000) != 0) { // else: transparent
-                                    int r = (rgb & 0xFF0000) >>> 16;
-                                    int g = (rgb & 0x00FF00) >>> 8;
-                                    int b = (rgb & 0x0000FF);
-                                    if (r != g || r != b) {
-                                        String message = "Notification icons should not use colors";
-                                        context.report(ICON_COLORS, Location.create(file), message);
-                                        break checkPixels;
+                                    if (y < height - 1 && rgb != image.getRGB(x, y + 1)) {
+                                        continue;
+                                    }
+                                    if (y > 0 && rgb != image.getRGB(x, y - 1)) {
+                                        continue;
                                     }
                                 }
+
+                                String message = "Notification icons must be entirely white";
+                                Location location = Location.create(file);
+
+                                String name = getBaseName(file.getName());
+                                UElement usage =
+                                        notificationIcons != null
+                                                ? notificationIcons.get(name)
+                                                : null;
+                                if (usage != null) {
+                                    LintClient client = context.getClient();
+                                    Project project = context.getProject();
+                                    UastParser parser = client.getUastParser(project);
+                                    Location secondary = parser.createLocation(usage);
+                                    secondary.setMessage("Icon used in notification here");
+                                    location.setSecondary(secondary);
+                                }
+
+                                context.report(ICON_COLORS, location, message);
+                                break checkPixels;
                             }
                         }
                     }
@@ -2061,64 +2017,18 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                 checkSize(context, folderName, file, 32, 32, true, /*exact*/ folderConfig);
             } else if (isNotificationIcon(baseName)) {
                 // Notification icons
-                if (isAndroid30(context, folderVersion)) {
-                    checkSize(context, folderName, file, 24, 24, true, /*exact*/ folderConfig);
-                } else if (isAndroid23(context, folderVersion)) {
-                    checkSize(context, folderName, file, 16, 25, false, /*exact*/ folderConfig);
-                } else {
-                    // Android 2.2 or earlier
-                    // TODO: Should this be done for each folder size?
-                    checkSize(context, folderName, file, 25, 25, true, /*exact*/ folderConfig);
-                }
+                checkSize(context, folderName, file, 24, 24, true, /*exact*/ folderConfig);
             } else if (isAdaptiveIconLayer(baseName)) {
                 checkSize(context, folderName, file, 108, 108, true, /*exact*/ folderConfig);
             } else if (name.startsWith("ic_menu_")) {
-                if (isAndroid30(context, folderVersion)) {
-                    // Menu icons (<=2.3 only: Replaced by action bar icons (ic_action_ in 3.0).
-                    // However the table halfway down the page on
-                    // http://developer.android.com/guide/practices/ui_guidelines/icon_design.html
-                    // and the README in the icon template download says that convention is ic_menu
-                    checkSize(context, folderName, file, 32, 32, true, folderConfig);
-                } else if (isAndroid23(context, folderVersion)) {
-                    // The icon should be 32x32 inside the transparent image; should
-                    // we check that this is mostly the case (a few pixels are allowed to
-                    // overlap for anti-aliasing etc)
-                    checkSize(context, folderName, file, 48, 48, true, /*exact*/ folderConfig);
-                } else {
-                    // Android 2.2 or earlier
-                    // TODO: Should this be done for each folder size?
-                    checkSize(context, folderName, file, 48, 48, true, /*exact*/ folderConfig);
-                }
+                // Menu icons (<=2.3 only: Replaced by action bar icons (ic_action_ in 3.0).
+                // However the table halfway down the page on
+                // http://developer.android.com/guide/practices/ui_guidelines/icon_design.html
+                // and the README in the icon template download says that convention is ic_menu
+                checkSize(context, folderName, file, 32, 32, true, folderConfig);
             }
             // TODO: ListView icons?
         }
-    }
-
-    /**
-     * Is this drawable folder for an Android 3.0 drawable? This will be the case if it specifies
-     * -v11+, or if the minimum SDK version declared in the manifest is at least 11.
-     */
-    private static boolean isAndroid30(Context context, int folderVersion) {
-        return folderVersion >= 11 || context.getMainProject().getMinSdk() >= 11;
-    }
-
-    /**
-     * Is this drawable folder for an Android 2.3 drawable? This will be the case if it specifies
-     * -v9 or -v10, or if the minimum SDK version declared in the manifest is 9 or 10 (and it does
-     * not specify some higher version like -v11
-     */
-    private static boolean isAndroid23(Context context, int folderVersion) {
-        if (isAndroid30(context, folderVersion)) {
-            return false;
-        }
-
-        if (folderVersion == 9 || folderVersion == 10) {
-            return true;
-        }
-
-        int minSdk = context.getMainProject().getMinSdk();
-
-        return minSdk == 9 || minSdk == 10;
     }
 
     private static float getMdpiScalingFactor(String folderName) {
@@ -2520,9 +2430,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
 
         // As of Android 3.0 ic_menu_ are action icons
         //noinspection SimplifiableIfStatement,RedundantIfStatement
-        if (file != null
-                && name.startsWith("ic_menu_")
-                && isAndroid30(context, context.getDriver().getResourceFolderVersion(file))) {
+        if (file != null && name.startsWith("ic_menu_")) {
             // Naming convention
             return true;
         }

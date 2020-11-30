@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -205,10 +206,18 @@ abstract class MergeJavaResourceTask
             taskProvider: TaskProvider<MergeJavaResourceTask>
         ) {
             super.handleProvider(taskProvider)
+            val fileName = if (creationConfig.variantType.isBaseModule) {
+                "base.jar"
+            } else {
+                TaskManager.getFeatureFileName(
+                    creationConfig.globalScope.project.path,
+                    SdkConstants.DOT_JAR
+                )
+            }
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 MergeJavaResourceTask::outputFile
-            ).withName("out.jar").on(InternalArtifactType.MERGED_JAVA_RES)
+            ).withName(fileName).on(InternalArtifactType.MERGED_JAVA_RES)
         }
 
         override fun configure(

@@ -28,7 +28,6 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
@@ -67,7 +66,7 @@ class MotionLayoutDetector : ResourceXmlDetector() {
                     INVALID_SCENE_FILE_REFERENCE,
                     location,
                     "The motion scene file: ${reference.url} doesn't exist",
-                    LintFix.create().name("Create ${reference.url}").data(reference.url)
+                    fix().name("Create ${reference.url}").data(KEY_URL, reference.url)
                 )
             }
         }
@@ -97,7 +96,7 @@ class MotionLayoutDetector : ResourceXmlDetector() {
                 element,
                 context.getNameLocation(element),
                 "The attribute: `$ATTR_CONSTRAINT_LAYOUT_DESCRIPTION` is missing",
-                LintFix.create().name("Create $sceneUrl and set attribute").data(sceneUrl)
+                fix().name("Create $sceneUrl and set attribute").data(KEY_URL, sceneUrl)
             )
         } else {
             val resource = resourceModel.getResourceFromUrl(description.value)
@@ -111,7 +110,7 @@ class MotionLayoutDetector : ResourceXmlDetector() {
                     element,
                     context.getValueLocation(description),
                     "`${description.value}` is an invalid value for $ATTR_CONSTRAINT_LAYOUT_DESCRIPTION",
-                    LintFix.create().name("Create $sceneUrl and set attribute").data(sceneUrl)
+                    fix().name("Create $sceneUrl and set attribute").data(KEY_URL, sceneUrl)
                 )
             }
         }
@@ -124,6 +123,8 @@ class MotionLayoutDetector : ResourceXmlDetector() {
         "@xml/${context.file.nameWithoutExtension}_scene"
 
     companion object {
+        const val KEY_URL = "url"
+
         private val IMPLEMENTATION = Implementation(
             MotionLayoutDetector::class.java,
             Scope.RESOURCE_FILE_SCOPE

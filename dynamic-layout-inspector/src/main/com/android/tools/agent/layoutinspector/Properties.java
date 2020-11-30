@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inspector.WindowInspector;
 import android.webkit.WebView;
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.android.tools.agent.layoutinspector.TreeBuilderWrapper.InspectorNodeWrapper;
@@ -41,7 +42,11 @@ import java.util.Set;
 
 /** Services for writing the properties of a View into a PropertyEvent protobuf. */
 class Properties {
+    private final Object stringTableLock = new Object();
+
+    @GuardedBy("stringTableLock")
     private final StringTable mStringTable = new StringTable();
+
     private Map<Long, InspectorNodeWrapper> mComposeNodes;
 
     Properties() {
@@ -178,17 +183,19 @@ class Properties {
 
     private void sendComposeParameters(
             long viewId, @NonNull InspectorNodeWrapper node, int generation) {
-        mStringTable.clear();
         long event = allocatePropertyEvent();
         try {
-            writeParameters(node.getParameters(), event, 0);
-            writeStringTable(event);
+            synchronized (stringTableLock) {
+                mStringTable.clear();
+                writeParameters(node.getParameters(), event, 0);
+                writeStringTable(event);
+                mStringTable.clear();
+            }
             sendPropertyEvent(event, viewId, generation);
         } catch (Throwable ex) {
             LayoutInspectorService.sendErrorMessage(ex);
         } finally {
             freePropertyEvent(event);
-            mStringTable.clear();
         }
     }
 
@@ -211,17 +218,19 @@ class Properties {
     }
 
     private void handlePropertyEvent(@NonNull View view, int generation) {
-        mStringTable.clear();
         long event = allocatePropertyEvent();
         try {
-            writeProperties(view, event);
-            writeStringTable(event);
+            synchronized (stringTableLock) {
+                mStringTable.clear();
+                writeProperties(view, event);
+                writeStringTable(event);
+                mStringTable.clear();
+            }
             sendPropertyEvent(event, view.getUniqueDrawingId(), generation);
         } catch (Throwable ex) {
             LayoutInspectorService.sendErrorMessage(ex);
         } finally {
             freePropertyEvent(event);
-            mStringTable.clear();
         }
     }
 
@@ -237,8 +246,10 @@ class Properties {
     }
 
     private void writeStringTable(long event) {
-        for (Map.Entry<String, Integer> entry : mStringTable.entries()) {
-            addString(event, entry.getValue(), entry.getKey());
+        synchronized (stringTableLock) {
+            for (Map.Entry<String, Integer> entry : mStringTable.entries()) {
+                addString(event, entry.getValue(), entry.getKey());
+            }
         }
     }
 
@@ -483,7 +494,9 @@ class Properties {
     }
 
     private int toInt(@Nullable String value) {
-        return mStringTable.generateStringId(value);
+        synchronized (stringTableLock) {
+            return mStringTable.generateStringId(value);
+        }
     }
 
     private long addIntFlagProperty(

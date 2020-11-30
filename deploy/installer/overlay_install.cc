@@ -20,6 +20,7 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
+#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
@@ -94,11 +95,9 @@ void OverlayInstallCommand::SetUpAgent(
   Phase p("SetUpAgent");
 
   std::string version = workspace_.GetVersion() + "-";
-  std::string code_cache =
-      "/data/data/" + request_.package_name() + "/code_cache/";
 
-  std::string startup_path = code_cache + "startup_agents/";
-  std::string studio_path = code_cache + ".studio/";
+  std::string startup_path = Sites::AppStartupAgent(request_.package_name());
+  std::string studio_path = Sites::AppStudio(request_.package_name());
   std::string agent_path = startup_path + version + agent;
 
   std::unordered_set<std::string> missing_files;
@@ -158,8 +157,7 @@ void OverlayInstallCommand::UpdateOverlay(
   overlay_request->set_overlay_id(request_.overlay_id());
   overlay_request->set_expected_overlay_id(request_.expected_overlay_id());
 
-  const std::string overlay_path =
-      "/data/data/" + request_.package_name() + "/code_cache";
+  const std::string overlay_path = Sites::AppOverlays(request_.package_name());
   overlay_request->set_overlay_path(overlay_path);
 
   for (auto overlay_file : request_.overlay_files()) {

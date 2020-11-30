@@ -52,6 +52,9 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Category
+import org.gradle.api.component.AdhocComponentWithVariants
+import org.gradle.api.component.ConfigurationVariantDetails
+import org.gradle.api.component.SoftwareComponent
 import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
@@ -141,13 +144,27 @@ abstract class LintPlugin : Plugin<Project> {
 
         javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME) { mainSourceSet ->
             project.configurations.getByName(mainSourceSet.runtimeElementsConfigurationName) { configuration ->
+                val androidLintCategory = projectServices.objectFactory.named(Category::class.java, "android-lint")
                 publishArtifactToConfiguration(
                     configuration,
                     lintModelWriterTask.flatMap { it.outputDirectory },
                     AndroidArtifacts.ArtifactType.LINT_MODEL,
-                    AndroidAttributes(category = projectServices.objectFactory.named(Category::class.java, "android-lint"))
+                    AndroidAttributes(category = androidLintCategory)
                 )
+                // We don't want to publish the lint models to repositories. Remove them.
+                project.components.all { component: SoftwareComponent ->
+                    if (component.name == "java" && component is AdhocComponentWithVariants) {
+                        component.withVariantsFromConfiguration(configuration) { variant: ConfigurationVariantDetails ->
+                            val category =
+                                variant.configurationVariant.attributes.getAttribute(Category.CATEGORY_ATTRIBUTE)
+                            if (category == androidLintCategory) {
+                                variant.skip()
+                            }
+                        }
+                    }
+                }
             }
+
         }
     }
 

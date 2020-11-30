@@ -23,10 +23,6 @@ import java.io.OutputStream;
  * A file.
  */
 public interface IAbstractFile extends IAbstractResource {
-    enum PreferredWriteMode {
-        INPUTSTREAM, OUTPUTSTREAM
-    }
-
     /**
      * Returns an {@link InputStream} object on the file content.
      *
@@ -48,14 +44,4 @@ public interface IAbstractFile extends IAbstractResource {
      * @throws StreamException
      */
     OutputStream getOutputStream() throws StreamException;
-
-    /**
-     * Returns the preferred mode to write into the file.
-     */
-    PreferredWriteMode getPreferredWriteMode();
-
-    /**
-     * Returns the last modification timestamp
-     */
-    long getModificationStamp();
 }

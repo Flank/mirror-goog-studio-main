@@ -40,6 +40,9 @@ class NativeTransport {
     public static native void sendCreateInspectorResponseLibraryMissing(
             int commandId, String errorMessage);
 
+    public static native void sendCreateInspectorResponseAppProguarded(
+            int commandId, String errorMessage);
+
     public static native void sendDisposeInspectorResponseSuccess(int commandId);
 
     public static native void sendDisposeInspectorResponseError(int commandId, String errorMessage);

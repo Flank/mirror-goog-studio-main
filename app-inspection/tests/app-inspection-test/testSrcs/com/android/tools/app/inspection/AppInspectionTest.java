@@ -335,7 +335,7 @@ public final class AppInspectionTest {
                         createLibraryInspector(
                                 "test.inspector",
                                 onDevicePath,
-                                artifactCoordinate("test.library", "test", "0.0.1"))),
+                                artifactCoordinate("androidx.unreal", "unreal-unengine", "0.0.1"))),
                 SUCCESS);
         appInspectionRule.assertInput(EXPECTED_INSPECTOR_CREATED);
     }
@@ -352,6 +352,20 @@ public final class AppInspectionTest {
         assertThat(response.getStatus()).isEqualTo(ERROR);
         assertThat(response.getCreateInspectorResponse().getStatus())
                 .isEqualTo(AppInspection.CreateInspectorResponse.Status.VERSION_INCOMPATIBLE);
+    }
+
+    @Test
+    public void createInspectorInProguardedApp() throws Exception {
+        String onDevicePath = injectInspectorDex();
+        AppInspectionResponse response =
+                appInspectionRule.sendCommandAndGetResponse(
+                        createLibraryInspector(
+                                "test.inspector",
+                                onDevicePath,
+                                artifactCoordinate("test.library", "test", "0.0.1")));
+        assertThat(response.getStatus()).isEqualTo(ERROR);
+        assertThat(response.getCreateInspectorResponse().getStatus())
+                .isEqualTo(AppInspection.CreateInspectorResponse.Status.APP_PROGUARDED);
     }
 
     private static AppInspection.ArtifactCoordinate artifactCoordinate(
@@ -412,7 +426,7 @@ public final class AppInspectionTest {
     public void getLibraryCompatibilityInfoCommand() throws Exception {
         List<AppInspection.ArtifactCoordinate> artifacts = new ArrayList<>();
         // SUCCESS
-        artifacts.add(artifactCoordinate("test.library", "test", "1.0.0"));
+        artifacts.add(artifactCoordinate("androidx.unreal", "unreal-unengine", "1.0.0"));
         // NOT FOUND
         artifacts.add(artifactCoordinate("non", "existent", "1.0.0"));
         // SERVICE ERROR
@@ -421,12 +435,15 @@ public final class AppInspectionTest {
         artifacts.add(artifactCoordinate("test.library", "test", "2.0.0"));
         // INVALID MIN VERSION
         artifacts.add(artifactCoordinate("test.library", "test", "1232ad"));
+        // APP_PROGUARDED
+        artifacts.add(artifactCoordinate("test.library", "test", "1.0.0"));
 
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
                         getLibraryCompatibilityInfoCommand(artifacts));
         assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
-        assertThat(response.getGetLibraryCompatibilityResponse().getResponsesCount()).isEqualTo(5);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponsesCount())
+                .isEqualTo(artifacts.size());
 
         assertThat(response.getGetLibraryCompatibilityResponse().getResponses(0).getStatus())
                 .isEqualTo(AppInspection.LibraryCompatibilityInfo.Status.COMPATIBLE);
@@ -467,6 +484,15 @@ public final class AppInspectionTest {
         assertThat(response.getGetLibraryCompatibilityResponse().getResponses(4).getErrorMessage())
                 .startsWith("Failed to parse provided min version");
         assertThat(response.getGetLibraryCompatibilityResponse().getResponses(4).getVersion())
+                .isEqualTo("1.0.0");
+
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(5).getStatus())
+                .isEqualTo(AppInspection.LibraryCompatibilityInfo.Status.APP_PROGUARDED);
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(5).getTargetLibrary())
+                .isEqualTo(artifacts.get(5));
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(5).getErrorMessage())
+                .startsWith("Proguard run was detected on the inspected app");
+        assertThat(response.getGetLibraryCompatibilityResponse().getResponses(5).getVersion())
                 .isEqualTo("1.0.0");
     }
 

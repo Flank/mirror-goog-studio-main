@@ -152,7 +152,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
 
             val fix = if (suggested != null) {
-                fix().data(suggested)
+                fix().data(KEY_SUGGESTION, suggested)
             } else {
                 null
             }
@@ -226,6 +226,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return false
             }
         }
+
+        const val KEY_SUGGESTION = "suggestion"
 
         private val IMPLEMENTATION = Implementation(
             CheckResultDetector::class.java,

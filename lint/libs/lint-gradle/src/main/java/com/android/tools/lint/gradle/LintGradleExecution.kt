@@ -16,8 +16,8 @@
 package com.android.tools.lint.gradle
 
 import com.android.SdkConstants
-import com.android.tools.lint.ApplicableVariants
-import com.android.tools.lint.Incident
+import com.android.tools.lint.detector.api.ApplicableVariants
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.LintCliClient.Companion.continueAfterBaseLineCreated
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.LintFixPerformer

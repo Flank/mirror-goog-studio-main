@@ -374,6 +374,8 @@ public class SchemaModuleUtil {
                         int version = Integer.parseInt(uri.substring(lastSlash));
                         SchemaModule<?> module = mPrefixMap.get(namespacePrefix);
                         if (module != null && module.getNamespaceVersionMap().size() < version) {
+                            // jaxb asserts that the uri is interned.
+                            @SuppressWarnings("NoInterning")
                             String oldUri = module.getLatestNamespace().intern();
                             mProgress.logWarning("Mapping new ns " + uri + " to old ns " + oldUri);
                             mNewToOldMap.put(uri, oldUri);

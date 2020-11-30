@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.TextFormat
 import com.android.utils.SdkUtils
 import com.google.common.annotations.Beta
 import com.google.common.base.Splitter
@@ -49,6 +48,8 @@ import java.util.Locale
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import kotlin.math.max
+import com.android.utils.iterator
+import org.w3c.dom.Element
 
 /**
  * Default implementation of a [Configuration] which reads and writes configuration data into
@@ -349,7 +350,11 @@ open class LintXmlConfiguration protected constructor(
             return false
         }
         val file = location.file
-        val relativePath = context.project.getRelativePath(file)
+        val parentFile = configFile.parentFile
+        val relativePath = if (parentFile != null)
+            client.getRelativePath(parentFile, file) ?: return false
+        else
+            file.path
         for (suppressedPath in paths) {
             if (suppressedPath == relativePath) {
                 return true
@@ -472,6 +477,40 @@ open class LintXmlConfiguration protected constructor(
         return false
     }
 
+    override fun getIssueConfigLocation(
+        issue: String,
+        specificOnly: Boolean,
+        severityOnly: Boolean
+    ): Location? {
+        overrides?.getIssueConfigLocation(issue, specificOnly, severityOnly)?.let {
+            return it
+        }
+
+        val issueMaps = getIssueMaps()
+
+        for (issueMap in issueMaps) {
+            val data: IssueData? = issueMap[issue]
+            if (data != null) {
+                return getConfigLocation(issue, severityOnly)
+            }
+        }
+
+        for (issueMap in issueMaps) {
+            issueMap[VALUE_ALL]?.let {
+                return if (!specificOnly) {
+                    return getConfigLocation(VALUE_ALL, severityOnly)
+                } else {
+                    // There's a match in this file via the all attribute, so don't
+                    // keep searching upwards; that would be misleading since that
+                    // outer configuration does not apply
+                    null
+                }
+            }
+        }
+
+        return parent?.getIssueConfigLocation(issue, specificOnly, severityOnly)
+    }
+
     override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
         if (issue.suppressNames != null) {
             // Not allowed to suppress this issue via lint.xml.
@@ -527,6 +566,26 @@ open class LintXmlConfiguration protected constructor(
         if (issueMap == null) {
             readConfig()
         }
+    }
+
+    private fun getConfigLocation(id: String, severityOnly: Boolean): Location {
+        return getLocation { element ->
+            id == element.getAttribute(ATTR_ID) &&
+                (!severityOnly || element.hasAttribute(ATTR_SEVERITY))
+        }
+    }
+
+    private fun getLocation(filter: (Element) -> Boolean): Location {
+        val parser = client.xmlParser
+        parser.parseXml(configFile)?.documentElement?.let { document ->
+            for (element in document) {
+                if (filter(element)) {
+                    return parser.getLocation(configFile, element)
+                }
+            }
+        }
+
+        return Location.create(configFile)
     }
 
     private fun getLocation(parser: XmlPullParser): Location {
@@ -1185,7 +1244,7 @@ open class LintXmlConfiguration protected constructor(
                     writeAttribute(writer, ATTR_ID, id)
                     val severity = data.severity
                     if (severity != null) {
-                        writeAttribute(writer, ATTR_SEVERITY, severity.name.toLowerCase(Locale.US))
+                        writeAttribute(writer, ATTR_SEVERITY, severity.name.toLowerCase(Locale.ROOT))
                     }
                     val regexps = data.patterns
                     val paths = data.paths
@@ -1335,32 +1394,39 @@ open class LintXmlConfiguration protected constructor(
                 }
         }
 
+    /**
+     * Already validated this issue? We can encounter the same configuration multiple times
+     * when searching up the parent tree. (We can't skip calling the parent because the
+     * parent references can change over time.)
+     */
+    private var validated = false
+
     override fun validateIssueIds(
         client: LintClient,
         driver: LintDriver,
-        project: Project,
+        project: Project?,
         registry: IssueRegistry
     ) {
         parent?.validateIssueIds(client, driver, project, registry)
+        if (validated) {
+            return
+        }
+        validated = true
         for (map in getIssueMaps()) {
             validateIssueIds(client, driver, project, registry, map.keys)
         }
     }
 
-    private fun validateIssueIds(
+    protected fun validateIssueIds(
         client: LintClient,
-        driver: LintDriver?,
-        project: Project,
+        driver: LintDriver,
+        project: Project?,
         registry: IssueRegistry,
         ids: Collection<String>
     ) {
         for (id in ids) {
             if (id == SUPPRESS_ALL) {
                 // builtin special "id" which means all id's
-                continue
-            }
-            if (id == "IconLauncherFormat") {
-                // Deleted issue, no longer flagged
                 continue
             }
             if (registry.getIssue(id) == null) {
@@ -1371,41 +1437,7 @@ open class LintXmlConfiguration protected constructor(
                 reportNonExistingIssueId(client, driver, registry, project, id)
             }
         }
-    }
-
-    private fun reportNonExistingIssueId(
-        client: LintClient,
-        driver: LintDriver?,
-        issueRegistry: IssueRegistry,
-        project: Project,
-        id: String
-    ) {
-        if (IssueRegistry.isDeletedIssueId(id)) {
-            // Recently deleted, but avoid complaining about leftover configuration
-            return
-        }
-        val message = getUnknownIssueIdErrorMessage(id, issueRegistry)
-        if (driver != null) {
-            val location = Location.create(configFile)
-            val severity = getSeverity(IssueRegistry.UNKNOWN_ISSUE_ID)
-            if (severity !== Severity.IGNORE) {
-                client.report(
-                    Context(driver, project, project, project.dir, null),
-                    IssueRegistry.UNKNOWN_ISSUE_ID,
-                    severity,
-                    location,
-                    message,
-                    TextFormat.RAW,
-                    null
-                )
-            } else {
-                client.log(
-                    Severity.WARNING,
-                    null,
-                    configFile.path + ": " + message
-                )
-            }
-        }
+        parent?.validateIssueIds(client, driver, project, registry)
     }
 
     // For debugging only
@@ -1449,43 +1481,6 @@ open class LintXmlConfiguration protected constructor(
             lintFile: File
         ): LintXmlConfiguration {
             return LintXmlConfiguration(configurations, lintFile)
-        }
-
-        fun getUnknownIssueIdErrorMessage(id: String, issueRegistry: IssueRegistry): String {
-            val message = StringBuilder(30)
-            message.append("Unknown issue id \"").append(id).append("\"")
-            val suggestions: List<String> = issueRegistry.getIdSpellingSuggestions(id)
-            if (suggestions.isNotEmpty()) {
-                message.append(". Did you mean")
-                val size = suggestions.size
-                if (size == 1) {
-                    message.append(" ")
-                    appendIssueDescription(message, suggestions[0], issueRegistry)
-                    message.append(" ")
-                } else {
-                    message.append(":\n")
-                    for (suggestion in suggestions) {
-                        appendIssueDescription(message, suggestion, issueRegistry)
-                        message.append("\n")
-                    }
-                }
-                message.append("?")
-            }
-            return message.toString()
-        }
-
-        private fun appendIssueDescription(
-            message: StringBuilder,
-            id: String,
-            issueRegistry: IssueRegistry
-        ) {
-            message.append("'").append(id).append("'")
-            val issue = issueRegistry.getIssue(id)
-            if (issue != null) {
-                message.append(" (")
-                message.append(issue.getBriefDescription(TextFormat.RAW))
-                message.append(")")
-            }
         }
     }
 }

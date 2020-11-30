@@ -61,7 +61,7 @@ class SdkFullLoadingStrategy(
     fun getAdbExecutable() = if (init()) sdkInfo.adb else null
     fun getAnnotationsJar() = if (init()) sdkInfo.annotationsJar else null
 
-    private fun getFileFromTarget(component: Int) = if (init()) targetInfo.target.getFile(component) else null
+    private fun getFileFromTarget(component: Int) = if (init()) targetInfo.target.getPath(component).toFile() else null
     fun getAidlFramework() = getFileFromTarget(IAndroidTarget.ANDROID_AIDL)
     fun getAndroidJar() = getFileFromTarget(IAndroidTarget.ANDROID_JAR)
     fun getAdditionalLibraries(): List<OptionalLibrary>? = if (init()) targetInfo.target.additionalLibraries else null

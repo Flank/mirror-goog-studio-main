@@ -143,7 +143,7 @@ fun getClassName(source: String): String? {
     var start = 0
     while (matcher.find(start)) {
         val cls = matcher.group(2)
-        val groupStart = matcher.start(2)
+        val groupStart = matcher.start(1)
 
         // Make sure this "class" reference isn't part of an annotation on the class
         // referencing a class literal -- Foo.class, or in Kotlin, Foo::class.java)

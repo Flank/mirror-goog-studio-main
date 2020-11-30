@@ -146,6 +146,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
     public static final AndroidxName PERMISSION_ANNOTATION_WRITE =
             AndroidxName.of(PERMISSION_ANNOTATION, "Write");
 
+    public static final String KEY_CASES = "cases";
+
     // TODO: Add analysis to enforce this annotation:
     public static final AndroidxName HALF_FLOAT_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "HalfFloat");
@@ -929,7 +931,6 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                         // Report warnings if you specify hardcoded constants.
                         // It's the wrong thing to do.
                         List<String> list = computeFieldNames(mSwitchExpression, mAllowedValues);
-                        // Keep error message in sync with {@link #getMissingCases}
                         String message =
                                 "Don't use a constant here; expected one of: "
                                         + displayConstants(list);
@@ -986,11 +987,10 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                             } else {
                                 List<String> list =
                                         computeFieldNames(mSwitchExpression, mAllowedValues);
-                                // Keep error message in sync with {@link #getMissingCases}
                                 String message =
                                         "Unexpected constant; expected one of: "
                                                 + displayConstants(list);
-                                LintFix fix = fix().data(list);
+                                LintFix fix = fix().data(KEY_CASES, list);
                                 Location location = mContext.getNameLocation(caseValue);
                                 mContext.report(SWITCH_TYPE_DEF, caseValue, location, message, fix);
                             }
@@ -1032,8 +1032,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
 
                 if (!mFields.isEmpty()) {
                     List<String> list = computeFieldNames(mSwitchExpression, mFields);
-                    // Keep error message in sync with {@link #getMissingCases}
-                    LintFix fix = fix().data(list);
+                    LintFix fix = fix().data(KEY_CASES, list);
                     UIdentifier identifier = mSwitchExpression.getSwitchIdentifier();
                     Location location = mContext.getLocation(identifier);
                     // Workaround Kotlin UAST passing <error> instead of PsiKeyword as in Java

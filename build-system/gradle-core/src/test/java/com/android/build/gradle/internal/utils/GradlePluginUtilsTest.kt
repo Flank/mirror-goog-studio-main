@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.utils
 
 import com.android.build.gradle.internal.fixtures.FakeModuleVersionIdentifier
 import com.android.build.gradle.internal.fixtures.FakeResolvedComponentResult
-import com.android.build.gradle.internal.fixtures.FakeResolvedDependencyResult
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.artifacts.result.DependencyResult
 import org.junit.Test
 
 /**
@@ -36,7 +34,8 @@ class GradlePluginUtilsTest {
             name = "kotlin-gradle-plugin",
             version = "1.0"
         )
-        val projectPath = "root project 'project'"
+        val rootDependency = createDependency("", "project", "unspecified")
+        val projectDisplayName = "root project 'project'"
         val dependencyInfo = DependencyInfo(
             displayName = "Kotlin",
             dependencyGroup = "org.jetbrains.kotlin",
@@ -45,13 +44,8 @@ class GradlePluginUtilsTest {
         )
         val pathsToViolatingPlugins = mutableListOf<String>()
 
-        visitDependency(
-            violatingDependency,
-            projectPath,
-            dependencyInfo,
-            pathsToViolatingPlugins,
-            mutableSetOf()
-        )
+        ViolatingPluginDetector(dependencyInfo, projectDisplayName, pathsToViolatingPlugins)
+                .visitDependency(violatingDependency, listOf(rootDependency))
         assertThat(pathsToViolatingPlugins)
             .contains("root project 'project' -> org.jetbrains.kotlin:kotlin-gradle-plugin:1.0")
     }
@@ -63,7 +57,8 @@ class GradlePluginUtilsTest {
             name = "kotlin-gradle-plugin",
             version = "1.3.10"
         )
-        val projectPath = "root project 'project'"
+        val rootDependency = createDependency("", "project", "unspecified")
+        val projectDisplayName = "root project 'project'"
         val dependencyInfo = DependencyInfo(
             displayName = "Kotlin",
             dependencyGroup = "org.jetbrains.kotlin",
@@ -72,23 +67,15 @@ class GradlePluginUtilsTest {
         )
         val pathsToViolatingPlugins = mutableListOf<String>()
 
-        visitDependency(
-            nonViolatingDependency,
-            projectPath,
-            dependencyInfo,
-            pathsToViolatingPlugins,
-            mutableSetOf()
-        )
+        ViolatingPluginDetector(dependencyInfo, projectDisplayName, pathsToViolatingPlugins)
+                .visitDependency(nonViolatingDependency, listOf(rootDependency))
         assertThat(pathsToViolatingPlugins).isEmpty()
     }
 
-    private fun createDependency(group: String, name: String, version: String): DependencyResult {
-        val dependencyIdentifier =
-            FakeModuleVersionIdentifier(group = group, name = name, version = version)
-        val dependencyResult = FakeResolvedComponentResult(
-            moduleVersion = dependencyIdentifier,
-            dependencies = mutableSetOf()
-        )
-        return FakeResolvedDependencyResult(selected = dependencyResult)
-    }
+    @Suppress("SameParameterValue")
+    private fun createDependency(group: String, name: String, version: String) =
+            FakeResolvedComponentResult(
+                    moduleVersion = FakeModuleVersionIdentifier(group = group, name = name, version = version),
+                    dependencies = mutableSetOf()
+            )
 }

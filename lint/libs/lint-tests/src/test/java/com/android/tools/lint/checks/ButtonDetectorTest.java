@@ -124,67 +124,28 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "res/layout/buttonbar.xml:12: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "res/layout/buttonbar.xml:12: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
                                 + "        <Button\n"
                                 + "         ~~~~~~\n"
-                                + "res/layout/buttonbar.xml:44: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "res/layout/buttonbar.xml:44: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
                                 + "        <Button\n"
                                 + "         ~~~~~~\n"
-                                + "res/layout/buttonbar.xml:92: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "res/layout/buttonbar.xml:92: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
                                 + "        <Button\n"
                                 + "         ~~~~~~\n"
-                                + "res/layout/buttonbar.xml:124: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
+                                + "res/layout/buttonbar.xml:124: Warning: OK button should be on the right (was \"OK | Cancel\", should be \"Cancel | OK\") [ButtonOrder]\n"
                                 + "        <Button\n"
                                 + "         ~~~~~~\n"
-                                + "res/layout/buttonbar.xml:140: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
+                                + "res/layout/buttonbar.xml:140: Warning: OK button should be on the right (was \"Ok | CANCEL\", should be \"CANCEL | Ok\") [ButtonOrder]\n"
                                 + "        <Button\n"
                                 + "         ~~~~~~\n"
-                                + "res/layout/buttonbar.xml:156: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
+                                + "res/layout/buttonbar.xml:156: Warning: OK button should be on the right (was \"OK | Abort\", should be \"Abort | OK\") [ButtonOrder]\n"
                                 + "        <Button\n"
                                 + "         ~~~~~~\n"
-                                + "res/layout/buttonbar.xml:177: Warning: Layout uses the wrong button order for API >= 14: Create a layout-v14/buttonbar.xml file with opposite order: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
+                                + "res/layout/buttonbar.xml:177: Warning: Cancel button should be on the left (was \"Send | Cancel\", should be \"Cancel | Send\") [ButtonOrder]\n"
                                 + "        <Button\n"
                                 + "         ~~~~~~\n"
                                 + "0 errors, 7 warnings\n");
-    }
-
-    public void testButtonOrder5() {
-        // If the layout is in a non-ICS folder and has the wrong button order,
-        // but there is a v14 version of the layout, don't complain about the non-v14 version
-        lint().files(
-                        mMinsdk5targetsdk14,
-                        mButtonbar,
-                        xml(
-                                "res/layout-v14/buttonbar.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    android:layout_width=\"match_parent\"\n"
-                                        + "    android:layout_height=\"match_parent\"\n"
-                                        + "    android:orientation=\"vertical\" >\n"
-                                        + "\n"
-                                        + "    <include\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        layout=\"@layout/layout2\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button1\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Button\" />\n"
-                                        + "\n"
-                                        + "    <Button\n"
-                                        + "        android:id=\"@+id/button2\"\n"
-                                        + "        android:layout_width=\"wrap_content\"\n"
-                                        + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:text=\"Button\" />\n"
-                                        + "\n"
-                                        + "</LinearLayout>\n"),
-                        mButtonbar_values)
-                .issues(ButtonDetector.ORDER)
-                .run()
-                .expectClean();
     }
 
     public void testSuppressed() {
@@ -352,42 +313,6 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                 + "    <Button\n"
                                 + "     ~~~~~~\n"
                                 + "0 errors, 1 warnings\n");
-    }
-
-    public void testOldApp() {
-        // Target SDK < 14 - no warnings on button order
-        lint().files(
-                        xml(
-                                "AndroidManifest.xml",
-                                ""
-                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                        + "    package=\"test.bytecode\"\n"
-                                        + "    android:versionCode=\"1\"\n"
-                                        + "    android:versionName=\"1.0\" >\n"
-                                        + "\n"
-                                        + "    <uses-sdk android:minSdkVersion=\"5\" android:targetSdkVersion=\"9\" />\n"
-                                        + "\n"
-                                        + "    <application\n"
-                                        + "        android:icon=\"@drawable/ic_launcher\"\n"
-                                        + "        android:label=\"@string/app_name\" >\n"
-                                        + "        <activity\n"
-                                        + "            android:name=\".BytecodeTestsActivity\"\n"
-                                        + "            android:label=\"@string/app_name\" >\n"
-                                        + "            <intent-filter>\n"
-                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                                        + "\n"
-                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                                        + "            </intent-filter>\n"
-                                        + "        </activity>\n"
-                                        + "    </application>\n"
-                                        + "\n"
-                                        + "</manifest>\n"),
-                        mButtonbar,
-                        mButtonbar_values)
-                .issues(ButtonDetector.ORDER)
-                .run()
-                .expectClean();
     }
 
     public void testEnglishLocales() {
@@ -564,18 +489,6 @@ public class ButtonDetectorTest extends AbstractCheckTest {
                                 + "+         style=\"?android:attr/buttonBarButtonStyle\"\n"
                                 + "@@ -11 +12\n"
                                 + "+             style=\"?android:attr/buttonBarButtonStyle\"");
-    }
-
-    public void testButtonStyleOldMinSdk() {
-        lint().files(
-                        manifest().minSdk(4),
-                        mButtonbar,
-                        mButtonbar2_class,
-                        mButtonbar3_class,
-                        mButtonbar_values)
-                .issues(ButtonDetector.STYLE)
-                .run()
-                .expectClean();
     }
 
     public void testYesNo() {

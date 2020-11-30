@@ -354,7 +354,7 @@ class LintBaseline(
                 )
             ).use { reader ->
                 val parser = KXmlParser()
-                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
+                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
                 parser.setInput(reader)
 
                 var issue: String? = null
@@ -805,6 +805,21 @@ class LintBaseline(
                         return true
                     }
                     if (s1[i1] != s2[i2]) {
+                        // The delta happened inside an HTTP URL. At this point, consider
+                        // the two strings equivalent (even if they have a different suffix
+                        // after the
+                        val http = s1.lastIndexOf("http", i1)
+                        if (http != -1) {
+                            val blank1 = s1.indexOf(' ', http)
+                            val blank2 = s2.indexOf(' ', http)
+                            if (blank1 == -1 || blank2 == -1) {
+                                return true
+                            } else if (i1 < blank1) {
+                                i1 = blank1
+                                i2 = blank2
+                                continue
+                            }
+                        }
                         return false
                     }
                 }

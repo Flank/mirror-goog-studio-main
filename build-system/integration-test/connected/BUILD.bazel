@@ -200,12 +200,30 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "MinifyConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/minify"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "MlModelBindingConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + [
         "//tools/base/build-system/integration-test:test-projects/mlModelBinding",
         "//prebuilts/tools/common/mlkit/testData",
     ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MultiresConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/multires"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
@@ -219,6 +237,15 @@ gradle_connected_test(
         "//prebuilts/studio/sdk:ndk",
         "//tools/base/build-system/integration-test:test-projects/ndkJniLib",
     ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "Overlay1ConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/overlay1"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,

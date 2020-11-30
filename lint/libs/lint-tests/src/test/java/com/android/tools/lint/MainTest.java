@@ -353,26 +353,14 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testClassPath() throws Exception {
-        File project = getProjectDir(null, manifest().minSdk(1), mGetterTest, mGetterTest2);
+        File project = getProjectDir(null, manifest().minSdk(1), cipherTestSource, cipherTestClass);
         checkDriver(
                 "\n"
                         + "Scanning MainTest_testClassPath: \n"
-                        + "src/test/bytecode/GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
-                        + "  getFoo1();\n"
-                        + "  ~~~~~~~\n"
-                        + "src/test/bytecode/GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
-                        + "  getFoo2();\n"
-                        + "  ~~~~~~~\n"
-                        + "src/test/bytecode/GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access (mBar1) [FieldGetter]\n"
-                        + "  isBar1();\n"
-                        + "  ~~~~~~\n"
-                        + "src/test/bytecode/GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
-                        + "  this.getFoo1();\n"
-                        + "       ~~~~~~~\n"
-                        + "src/test/bytecode/GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
-                        + "  this.getFoo2();\n"
-                        + "       ~~~~~~~\n"
-                        + "0 errors, 5 warnings\n",
+                        + "src/test/pkg/CipherTest1.java:11: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
+                        + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
+                        + "               ~~~~\n"
+                        + "0 errors, 1 warnings\n",
                 "",
 
                 // Expected exit code
@@ -381,7 +369,7 @@ public class MainTest extends AbstractCheckTest {
                 // Args
                 new String[] {
                     "--check",
-                    "FieldGetter",
+                    "TrulyRandom",
                     "--classpath",
                     new File(project, "bin/classes.jar").getPath(),
                     "--disable",
@@ -391,7 +379,7 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testLibraries() throws Exception {
-        File project = getProjectDir(null, manifest().minSdk(1), mGetterTest, mGetterTest2);
+        File project = getProjectDir(null, manifest().minSdk(1), cipherTestSource, cipherTestClass);
         checkDriver(
                 "\nScanning MainTest_testLibraries: \nNo issues found.\n",
                 "",
@@ -402,7 +390,7 @@ public class MainTest extends AbstractCheckTest {
                 // Args
                 new String[] {
                     "--check",
-                    "FieldGetter",
+                    "TrulyRandom",
                     "--libraries",
                     new File(project, "bin/classes.jar").getPath(),
                     "--disable",
@@ -534,33 +522,21 @@ public class MainTest extends AbstractCheckTest {
      */
     public void testRelativePaths() throws Exception {
         // Project with source only
-        File project = getProjectDir(null, manifest().minSdk(1), mGetterTest);
+        File project = getProjectDir(null, manifest().minSdk(1), cipherTestSource);
 
         // Create external jar somewhere outside of project dir.
         File pwd = new File(System.getProperty("user.dir"));
         assertTrue(pwd.isDirectory());
-        File classFile = mGetterTest2.createFile(pwd);
+        File classFile = cipherTestClass.createFile(pwd);
 
         try {
             checkDriver(
                     "\n"
                             + "Scanning MainTest_testRelativePaths: \n"
-                            + "src/test/bytecode/GetterTest.java:47: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
-                            + "  getFoo1();\n"
-                            + "  ~~~~~~~\n"
-                            + "src/test/bytecode/GetterTest.java:48: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
-                            + "  getFoo2();\n"
-                            + "  ~~~~~~~\n"
-                            + "src/test/bytecode/GetterTest.java:52: Warning: Calling getter method isBar1() on self is slower than field access (mBar1) [FieldGetter]\n"
-                            + "  isBar1();\n"
-                            + "  ~~~~~~\n"
-                            + "src/test/bytecode/GetterTest.java:54: Warning: Calling getter method getFoo1() on self is slower than field access (mFoo1) [FieldGetter]\n"
-                            + "  this.getFoo1();\n"
-                            + "       ~~~~~~~\n"
-                            + "src/test/bytecode/GetterTest.java:55: Warning: Calling getter method getFoo2() on self is slower than field access (mFoo2) [FieldGetter]\n"
-                            + "  this.getFoo2();\n"
-                            + "       ~~~~~~~\n"
-                            + "0 errors, 5 warnings\n",
+                            + "src/test/pkg/CipherTest1.java:11: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
+                            + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
+                            + "               ~~~~\n"
+                            + "0 errors, 1 warnings\n",
                     "",
 
                     // Expected exit code
@@ -569,9 +545,9 @@ public class MainTest extends AbstractCheckTest {
                     // Args
                     new String[] {
                         "--check",
-                        "FieldGetter",
+                        "TrulyRandom",
                         "--classpath",
-                        mGetterTest2.targetRelativePath,
+                        cipherTestClass.targetRelativePath,
                         "--disable",
                         "LintError",
                         project.getPath()
@@ -807,7 +783,9 @@ public class MainTest extends AbstractCheckTest {
         checkDriver(
                 ""
                         + "Scanning MainTest_testInvalidLintXmlId: \n"
-                        + "lint.xml: Error: Unknown issue id \"SomeUnknownId\". Did you mean 'UnknownId' (Reference to an unknown id) ? [UnknownIssueId]\n"
+                        + "lint.xml:4: Error: Unknown issue id \"SomeUnknownId\". Did you mean 'UnknownId' (Reference to an unknown id) ? [UnknownIssueId]\n"
+                        + "    <issue id=\"SomeUnknownId\" severity=\"fatal\" />\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings",
                 "",
 
@@ -874,9 +852,7 @@ public class MainTest extends AbstractCheckTest {
                 new String[] {
                     "--quiet",
                     "--disable",
-                    "LintError",
-                    "--disable",
-                    "UsesMinSdkAttributes",
+                    "LintError,UsesMinSdkAttributes,ButtonStyle,AllowBackup",
                     project.getPath()
                 });
 
@@ -1022,94 +998,49 @@ public class MainTest extends AbstractCheckTest {
             xml("myres2/layout/accessibility1.xml", ACCESSIBILITY_XML);
 
     @SuppressWarnings("all") // Sample code
-    private TestFile mGetterTest =
+    private TestFile cipherTestSource =
             java(
                     ""
-                            + "package test.bytecode;\n"
+                            + "package test.pkg;\n"
                             + "\n"
-                            + "public class GetterTest {\n"
-                            + "\tprivate int mFoo1;\n"
-                            + "\tprivate String mFoo2;\n"
-                            + "\tprivate int mBar1;\n"
-                            + "\tprivate static int sFoo4;\n"
+                            + "import java.security.Key;\n"
+                            + "import java.security.SecureRandom;\n"
                             + "\n"
-                            + "\tpublic int getFoo1() {\n"
-                            + "\t\treturn mFoo1;\n"
-                            + "\t}\n"
+                            + "import javax.crypto.Cipher;\n"
                             + "\n"
-                            + "\tpublic String getFoo2() {\n"
-                            + "\t\treturn mFoo2;\n"
-                            + "\t}\n"
+                            + "@SuppressWarnings(\"all\")\n"
+                            + "public class CipherTest1 {\n"
+                            + "    public void test1(Cipher cipher, Key key) {\n"
+                            + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
+                            + "    }\n"
                             + "\n"
-                            + "\tpublic int isBar1() {\n"
-                            + "\t\treturn mBar1;\n"
-                            + "\t}\n"
+                            + "    public void test2(Cipher cipher, Key key, SecureRandom random) {\n"
+                            + "        cipher.init(Cipher.ENCRYPT_MODE, key, random);\n"
+                            + "    }\n"
                             + "\n"
-                            + "\t// Not \"plain\" getters:\n"
-                            + "\n"
-                            + "\tpublic String getFoo3() {\n"
-                            + "\t\t// NOT a plain getter\n"
-                            + "\t\tif (mFoo2 == null) {\n"
-                            + "\t\t\tmFoo2 = \"\";\n"
-                            + "\t\t}\n"
-                            + "\t\treturn mFoo2;\n"
-                            + "\t}\n"
-                            + "\n"
-                            + "\tpublic int getFoo4() {\n"
-                            + "\t\t// NOT a plain getter (using static)\n"
-                            + "\t\treturn sFoo4;\n"
-                            + "\t}\n"
-                            + "\n"
-                            + "\tpublic int getFoo5(int x) {\n"
-                            + "\t\t// NOT a plain getter (has extra argument)\n"
-                            + "\t\treturn sFoo4;\n"
-                            + "\t}\n"
-                            + "\n"
-                            + "\tpublic int isBar2(String s) {\n"
-                            + "\t\t// NOT a plain getter (has extra argument)\n"
-                            + "\t\treturn mFoo1;\n"
-                            + "\t}\n"
-                            + "\n"
-                            + "\tpublic void test() {\n"
-                            + "\t\tgetFoo1();\n"
-                            + "\t\tgetFoo2();\n"
-                            + "\t\tgetFoo3();\n"
-                            + "\t\tgetFoo4();\n"
-                            + "\t\tgetFoo5(42);\n"
-                            + "\t\tisBar1();\n"
-                            + "\t\tisBar2(\"foo\");\n"
-                            + "\t\tthis.getFoo1();\n"
-                            + "\t\tthis.getFoo2();\n"
-                            + "\t\tthis.getFoo3();\n"
-                            + "\t\tthis.getFoo4();\n"
-                            + "\t}\n"
+                            + "    public void setup(String transform) {\n"
+                            + "        Cipher cipher = Cipher.getInstance(transform);\n"
+                            + "    }\n"
                             + "}\n");
 
     @SuppressWarnings("all") // Sample code
-    private TestFile mGetterTest2 =
-            base64gzip(
+    private TestFile cipherTestClass =
+            jar(
                     "bin/classes.jar",
-                    ""
-                            + "H4sIAAAAAAAAAAvwZmYRYeAAQoFoOwcGJMDJwMLg6xriqOvp56b/7xQDAzND"
-                            + "gDc7B0iKCaokAKdmESCGa/Z19PN0cw0O0fN1++x75rSPt67eRV5vXa1zZ85v"
-                            + "DjK4YvzgaZGel6+Op+/F0lUsnDNeSh6RjtTKsBATebJEq+KZ6uvMT0UfixjB"
-                            + "tk83XmlkAzTbBmo7F8Q6NNtZgbgktbhEH7cSPpiSpMqS1OT8lFR9hGfQ1cph"
-                            + "qHVPLSlJLQoBiukl5yQWF5cGxeYLOYrYMuf8LODq2LJty62krYdWLV16wak7"
-                            + "d5EnL+dVdp/KuIKja3WzE7K/5P+wrglYbPrxYLhw/ZSP9xJ3q26onbmz+L3t"
-                            + "83mWxvX///7iXdDx14CJqbjPsoDrbX/fzY3xM1vTlz2e8Xf6FG5llQk2Zvek"
-                            + "W4UXX9fdkyE/W9bdwdp2w1texsDyx4scVhXevF7yK2z97tNH1d3mS21lNJ3K"
-                            + "siwr7HzRN5amnX8mOrzQPNut2NFyxNSj0eXwq5nnz/vdNrmfMX+GT3Z5z2Tl"
-                            + "xfkfb/q2zTG/5qBweYeXRS9fuW/6iklpVxcL7NBcmHhq9YRnJXr2K2dFi6sc"
-                            + "6pgQl31A/MGV3M4XHFXGTWsYni6f3XexsjpjT/HWnV+Fkt95HnEzSA2at/r5"
-                            + "SZOPD5tmh5x5oua6Yhnj/Sl5wsqrTDtN0iyips84bOPu2rk0MWRShGTYdpWw"
-                            + "wvmLu44opSndUGSPu222PEuo8gXTxmW1197PYBfj9ou5te2Y1YSl5xRq+wWY"
-                            + "ciRcGcuc3waW9n3cmvHc+tLujdwlWhf8pjlcrlf6F7pVPXNu0EmFdZe12nk9"
-                            + "HrLdsNl1ieWHdZp9f2PyvoSig+xzfhqx9f1uEq9Vvy81f84nVv3Kyfwro79+"
-                            + "fGLf8WrlU/kTMSc4tJbtKCqeZ3NGIK2wxfCp0b3AvUmzJmnPW2caHv5C+l3f"
-                            + "6VN9E1psIr980NvmVP2A682qQ+f4XutNWzxnFfc/RT3vq6kfayezK5vMcl8c"
-                            + "aLcoQ67q/6PJrwN97Y8vFtNljTOruJnz0vPWKZn87V9Cvsrs1t2/7fT7EJW4"
-                            + "OhPe11/0zSYs8JGaHeHAeVpjMmu0SfVsLdGuVTeOnuuIND2/5nhX4Xt7UEY4"
-                            + "ZPg5Pw+YD7lZQRmBkUmEATUjwrIoKBejApQ8ja4VOX+JoGizxZGjQSZwMeDO"
-                            + "hwiwG5ErcWvhQ9FyD0suRTgYpBc5HORQ9HIxEsq1Ad6sbBBnsjJYAFUfYQbx"
-                            + "AFJZ3LASBQAA");
+                    base64gzip(
+                            "test/pkg/CipherTest1.class",
+                            ""
+                                    + "H4sIAAAAAAAAAI1S227TQBA92zh2kgZSmrTlUqBAgSROa5U+BvFScYkIRSJV"
+                                    + "3x13m7pNbMveoOazeCmIBz6Aj0LM2FYSgrnY2pnZ2Zk5M2f3+4+v3wDsY7cE"
+                                    + "HVslPMBDFo9YbBt4bOCJgP7c9Vz1QiBXbxwLaAf+iRSodF1PHo5HfRke2f0h"
+                                    + "eVa7vmMPj+3Q5X3q1NSZGwmsd5WMlBVcDKwDNzijHNrutQXy7N8TMOvdc/uj"
+                                    + "fWk54SRQfhrVjp1WJJ1x6KqJ9VZO2tyD7sTHAmuZWdTqhZwIVDPSBUovLx0Z"
+                                    + "KNf3IgNP0xaeCbz+7xYWXD025AfbO/FHSXthbAts/i2SkCOpxgFNkSBbQ9sb"
+                                    + "WD0Vut4grlNUVCg69cMRs/tbCI3S88ehI1+5TPXKHLO7HFyGgYKBehkNNFmY"
+                                    + "ZbSwI1DLugwqMEN43z+XjiIGZ64pa6l3gSe6an4mAhv1zh9ubT/z5F9kLg+k"
+                                    + "6niRsj2HhmxkUZV5b/SE8/Sq+dMgmAqSRdpZpAXpfPMzxCcyllAiqcfOIpZJ"
+                                    + "lpMA0tdIC1xHhaI4uYMc/YBh6q0rLM3SS6RByTolcYmtJCwtwdYKbsRlDayi"
+                                    + "StG1tLM1WuvYSAGOyKeRLphaa+cKuUWESlyJEZpJ3BShMEUopAhs3cQt6mQe"
+                                    + "6zbupFhvaMdd6uYXaO8WkapEQG1uFn2KpGMTdyk3T4sxf53lXlzn/k9RvT9I"
+                                    + "XQQAAA=="));
 }

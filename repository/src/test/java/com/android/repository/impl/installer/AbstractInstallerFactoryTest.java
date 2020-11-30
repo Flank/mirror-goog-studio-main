@@ -52,7 +52,7 @@ import org.mockito.Mockito;
 public class AbstractInstallerFactoryTest {
 
     @Test
-    public void fallbackFactory() throws Exception {
+    public void fallbackFactory() {
         InstallerFactory testFactory = new TestInstallerFactory() {
             @Override
             protected boolean canHandlePackage(@NonNull RepoPackage pack,
@@ -81,7 +81,7 @@ public class AbstractInstallerFactoryTest {
     }
 
     @Test
-    public void installerFallback() throws Exception {
+    public void installerFallback() {
         InstallerFactory testFactory = new TestInstallerFactory() {
             @NonNull
             @Override
@@ -127,7 +127,7 @@ public class AbstractInstallerFactoryTest {
     }
 
     @Test
-    public void installerListeners() throws Exception {
+    public void installerListeners() {
         MockFileOp fop = new MockFileOp();
         InstallerFactory factory = new TestInstallerFactory() {
             @NonNull
@@ -166,11 +166,12 @@ public class AbstractInstallerFactoryTest {
                 }
         );
         factory.setListenerFactory(p -> listeners);
-        installer.set(factory.createInstaller(
-                new FakePackage.FakeRemotePackage("foo"),
-                new FakeRepoManager(new File("/sdk"), new RepositoryPackages()),
-                Mockito.mock(Downloader.class),
-                fop));
+        installer.set(
+                factory.createInstaller(
+                        new FakePackage.FakeRemotePackage("foo"),
+                        new FakeRepoManager(fop.toPath("/sdk"), new RepositoryPackages()),
+                        Mockito.mock(Downloader.class),
+                        fop));
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
         installer.get().prepare(progress);
@@ -182,7 +183,7 @@ public class AbstractInstallerFactoryTest {
     }
 
     @Test
-    public void addInstallerListenersToFallback() throws Exception {
+    public void addInstallerListenersToFallback() {
 
         InstallerFactory testFactory = new TestInstallerFactory();
 
@@ -196,7 +197,7 @@ public class AbstractInstallerFactoryTest {
     }
 
     @Test
-    public void addInstallerListenersToFallbackWhenSettingFallback() throws Exception {
+    public void addInstallerListenersToFallbackWhenSettingFallback() {
 
         InstallerFactory testFactory = new TestInstallerFactory();
 
@@ -215,14 +216,14 @@ public class AbstractInstallerFactoryTest {
         @Override
         protected Installer doCreateInstaller(@NonNull RemotePackage p, @NonNull RepoManager mgr,
                 @NonNull Downloader downloader, @NonNull FileOp fop) {
-            return null;
+            throw new UnsupportedOperationException();
         }
 
         @NonNull
         @Override
         protected Uninstaller doCreateUninstaller(@NonNull LocalPackage p, @NonNull RepoManager mgr,
                 @NonNull FileOp fop) {
-            return null;
+            throw new UnsupportedOperationException();
         }
     }
 }

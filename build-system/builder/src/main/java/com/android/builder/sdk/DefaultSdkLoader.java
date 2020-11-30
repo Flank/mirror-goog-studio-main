@@ -37,6 +37,7 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.UpdatablePackage;
+import com.android.repository.io.FileOp;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -54,6 +55,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -341,24 +343,24 @@ public class DefaultSdkLoader implements SdkLoader {
 
         Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
         for (RemotePackage p : remotePackages) {
+            Path localPath = repoManager.getLocalPath();
             progress.logVerbose(
                     "Checking the license for package "
                             + p.getDisplayName()
                             + " in "
-                            + repoManager.getLocalPath()
+                            + localPath
                             + File.separator
                             + License.LICENSE_DIR);
+            FileOp fileOp = mSdkHandler.getFileOp();
             if (p.getLicense() != null
-                    && !p.getLicense()
-                            .checkAccepted(repoManager.getLocalPath(), mSdkHandler.getFileOp())) {
+                    && !p.getLicense().checkAccepted(repoManager.getLocalPath())) {
                 progress.logWarning("License for package " + p.getDisplayName() + " not accepted.");
                 installResults.put(p, InstallResultType.LICENSE_FAIL);
             } else {
                 progress.logVerbose("License for package " + p.getDisplayName() + " accepted.");
                 Installer installer =
                         SdkInstallerUtil.findBestInstallerFactory(p, mSdkHandler)
-                                .createInstaller(
-                                        p, repoManager, downloader, mSdkHandler.getFileOp());
+                                .createInstaller(p, repoManager, downloader, fileOp);
                 if (installer.prepare(progress) && installer.complete(progress)) {
                     installResults.put(p, InstallResultType.SUCCESS);
                 } else {
@@ -389,7 +391,7 @@ public class DefaultSdkLoader implements SdkLoader {
 
     private synchronized void init(@NonNull ILogger logger) {
         if (mSdkHandler == null) {
-            mSdkHandler = AndroidSdkHandler.getInstance(mSdkLocation);
+            mSdkHandler = AndroidSdkHandler.getInstance(mSdkLocation.toPath());
             ProgressIndicator progress = new LoggerProgressIndicatorWrapper(logger);
             mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
 
@@ -457,8 +459,11 @@ public class DefaultSdkLoader implements SdkLoader {
                         mSdkHandler.getLatestLocalPackageForPrefix(packageId, null, true, progress);
             }
         }
-        // getLatestLocalPackageForPrefix above should have set it to non-null by now, but let's be safe.
-        return localSdkToolPackage != null ? localSdkToolPackage.getLocation() : null;
+        // getLatestLocalPackageForPrefix above should have set it to non-null by now, but let's be
+        // safe.
+        return localSdkToolPackage != null
+                ? mSdkHandler.getFileOp().toFile(localSdkToolPackage.getLocation())
+                : null;
     }
 
     @Override
@@ -476,7 +481,7 @@ public class DefaultSdkLoader implements SdkLoader {
             // unintended side-effects such as invalidating pre-existing avd snapshots.
             return null;
         }
-        return localEmulatorPackage.getLocation();
+        return mSdkHandler.getFileOp().toFile(localEmulatorPackage.getLocation());
     }
 
     /**

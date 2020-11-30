@@ -37,6 +37,10 @@ class TestLintOptionsConfiguration(
     lintOptions,
     fatalOnly
 ) {
+    init {
+        associatedLocation = Location.create(project.dir)
+    }
+
     override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
         val override = overrideSeverity(task, issue)
         if (override != null) {

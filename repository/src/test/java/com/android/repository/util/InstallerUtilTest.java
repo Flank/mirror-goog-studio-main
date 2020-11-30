@@ -45,10 +45,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
  */
 public class InstallerUtilTest extends TestCase {
 
-    /**
-     * Simple case: a package requires itself, even if has no dependencies set.
-     */
-    public void testNoDeps() throws Exception {
+    /** Simple case: a package requires itself, even if has no dependencies set. */
+    public void testNoDeps() {
         RemotePackage r1 = new FakeRemotePackage("r1");
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -60,10 +58,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * Simple chain of dependencies, r1->r2->r3. Should be returned in reverse order.
-     */
-    public void testSimple() throws Exception {
+    /** Simple chain of dependencies, r1->r2->r3. Should be returned in reverse order. */
+    public void testSimple() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -81,10 +77,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * Request r1 and r1. The latest version of r1 is installed so only r2 is returned.
-     */
-    public void testLocalInstalled() throws Exception {
+    /** Request r1 and r1. The latest version of r1 is installed so only r2 is returned. */
+    public void testLocalInstalled() {
         RemotePackage r1 = new FakeRemotePackage("r1");
         RemotePackage r2 = new FakeRemotePackage("r2");
 
@@ -100,10 +94,10 @@ public class InstallerUtilTest extends TestCase {
     }
 
     /**
-     * Request r1 and r1. r1 is installed but there is an update for it available, and so both
-     * r1 and r2 are returned.
+     * Request r1 and r1. r1 is installed but there is an update for it available, and so both r1
+     * and r2 are returned.
      */
-    public void testLocalInstalledWithUpdate() throws Exception {
+    public void testLocalInstalledWithUpdate() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setRevision(new Revision(2));
         RemotePackage r2 = new FakeRemotePackage("r2");
@@ -123,7 +117,7 @@ public class InstallerUtilTest extends TestCase {
      * Dependency chain r1->r2->r3, but r3 is already installed with sufficient version, and so is
      * not returned.
      */
-    public void testLocalSatisfies() throws Exception {
+    public void testLocalSatisfies() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -144,10 +138,10 @@ public class InstallerUtilTest extends TestCase {
     }
 
     /**
-     * Dependency chain r1->r2->r3, but r3 is already installed with no required version
-     * specified, and so is not returned.
+     * Dependency chain r1->r2->r3, but r3 is already installed with no required version specified,
+     * and so is not returned.
      */
-    public void testLocalSatisfiesNoVersion() throws Exception {
+    public void testLocalSatisfiesNoVersion() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -168,7 +162,7 @@ public class InstallerUtilTest extends TestCase {
     /**
      * Dependency chain r1->r2->r3, and r3 is installed but doesn't meet the version requirement.
      */
-    public void testUpdateNeeded() throws Exception {
+    public void testUpdateNeeded() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -187,10 +181,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * r1->{r2, r3}. All should be returned, with r1 last.
-     */
-    public void testMulti() throws Exception {
+    /** r1->{r2, r3}. All should be returned, with r1 last. */
+    public void testMulti() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2"), new FakeDependency("r3")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -208,10 +200,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * r1->{r2, r3}->r4. All should be returned, with r4 first and r1 last.
-     */
-    public void testDag() throws Exception {
+    /** r1->{r2, r3}->r4. All should be returned, with r4 first and r1 last. */
+    public void testDagDeps() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2"), new FakeDependency("r3")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -233,10 +223,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * r1->r2->r3->r1. All should be returned, in undefined order.
-     */
-    public void testCycle() throws Exception {
+    /** r1->r2->r3->r1. All should be returned, in undefined order. */
+    public void testCycle() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -256,10 +244,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * r1->r2->r3->r4->r3. All should be returned, with [r2, r1] last.
-     */
-    public void testCycle2() throws Exception {
+    /** r1->r2->r3->r4->r3. All should be returned, with [r2, r1] last. */
+    public void testCycle2() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
 
@@ -284,10 +270,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * {r1, r2}->r3. Request both r1 and r2. All should be returned, with r3 first.
-     */
-    public void testMultiRequest() throws Exception {
+    /** {r1, r2}->r3. Request both r1 and r2. All should be returned, with r3 first. */
+    public void testMultiRequest() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r3")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -308,10 +292,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * {r1, r2}->r3. Request both r1 and r2. R3 is installed, so only r1 and r2 are returned.
-     */
-    public void testMultiRequestSatisfied() throws Exception {
+    /** {r1, r2}->r3. Request both r1 and r2. R3 is installed, so only r1 and r2 are returned. */
+    public void testMultiRequestSatisfied() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r3")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -333,10 +315,10 @@ public class InstallerUtilTest extends TestCase {
     }
 
     /**
-     * {r1, r2}->r3. Request both r1 and r2. R3 is installed, but r2 requires an update.
-     * All should be returned, with r3 before r2.
+     * {r1, r2}->r3. Request both r1 and r2. R3 is installed, but r2 requires an update. All should
+     * be returned, with r3 before r2.
      */
-    public void testMultiRequestHalfSatisfied() throws Exception {
+    public void testMultiRequestHalfSatisfied() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r3")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -360,10 +342,8 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    /**
-     * r1->bogus. Null should be returned, and there should be an error.
-     */
-    public void testBogus() throws Exception {
+    /** r1->bogus. Null should be returned, and there should be an error. */
+    public void testBogus() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("bogus")));
         ImmutableList<RemotePackage> request = ImmutableList.of(r1);
@@ -372,14 +352,14 @@ public class InstallerUtilTest extends TestCase {
                 new RepositoryPackages(
                         ImmutableList.of(),
                         ImmutableList.of(r1)), progress));
-        assertTrue(!progress.getWarnings().isEmpty());
+        assertFalse(progress.getWarnings().isEmpty());
     }
 
     /**
      * r1->r2->r3. r3 is installed, but a higher version is required and not available. Null should
      * be returned, and there should be an error.
      */
-    public void testUpdateNotAvailable() throws Exception {
+    public void testUpdateNotAvailable() {
         FakeRemotePackage r1 = new FakeRemotePackage("r1");
         r1.setDependencies(ImmutableList.of(new FakeDependency("r2")));
         FakeRemotePackage r2 = new FakeRemotePackage("r2");
@@ -393,10 +373,10 @@ public class InstallerUtilTest extends TestCase {
                 new RepositoryPackages(
                         ImmutableList.of(new FakeLocalPackage("r3")),
                         ImmutableList.of(r1, r2, r3)), progress));
-        assertTrue(!progress.getWarnings().isEmpty());
+        assertFalse(progress.getWarnings().isEmpty());
     }
 
-    public void testInstallInChild() throws Exception {
+    public void testInstallInChild() {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile("/sdk/foo/package.xml",
                 "<repo:repository\n"
@@ -410,15 +390,15 @@ public class InstallerUtilTest extends TestCase {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
         assertFalse(InstallerUtil.checkValidPath(new File("/sdk/foo/bar"), mgr, progress));
         assertFalse(progress.getWarnings().isEmpty());
     }
 
-    public void testInstallInParent() throws Exception {
+    public void testInstallInParent() {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile("/sdk/foo/bar/package.xml",
                 "<repo:repository\n"
@@ -432,15 +412,15 @@ public class InstallerUtilTest extends TestCase {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk"));
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
         assertFalse(InstallerUtil.checkValidPath(new File("/sdk/foo"), mgr, progress));
         assertFalse(progress.getWarnings().isEmpty());
     }
 
-    public void testInstallSeparately() throws Exception {
+    public void testInstallSeparately() {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile("/sdk/foo2/package.xml",
                 "<repo:repository\n"
@@ -454,8 +434,8 @@ public class InstallerUtilTest extends TestCase {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk").getAbsoluteFile());
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
         assertTrue(
@@ -464,7 +444,7 @@ public class InstallerUtilTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
     }
 
-    public void testInstallSeparately2() throws Exception {
+    public void testInstallSeparately2() {
         MockFileOp fop = new MockFileOp();
         fop.recordExistingFile("/sdk/foo/package.xml",
                 "<repo:repository\n"
@@ -478,8 +458,8 @@ public class InstallerUtilTest extends TestCase {
                         + "        <display-name>The first Android platform ever</display-name>\n"
                         + "    </localPackage>\n"
                         + "</repo:repository>");
-        RepoManager mgr = new RepoManagerImpl(fop);
-        mgr.setLocalPath(new File("/sdk").getAbsoluteFile());
+        RepoManager mgr = new RepoManagerImpl();
+        mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
         assertTrue(

@@ -1944,7 +1944,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             "**loading** the class will cause a crash. Consider marking the " +
                             "surrounding class with `RequiresApi(19)` to ensure that the " +
                             "class is never loaded except when on API 19 or higher."
-                        val fix = LintFix.create().data(api, PsiClass::class.java)
+                        val fix = fix().data(KEY_REQUIRES_API, api, KEY_REQUIRE_CLASS, true)
 
                         val clause = typeReference.uastParent as? UCatchClause
                         if (clause != null && context.driver.isSuppressed(
@@ -1968,9 +1968,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 val fqcn = resolved.qualifiedName
                 val fix =
                     if (minSdk < 19) {
-                        LintFix.create().data(api, PsiClass::class.java)
+                        fix().data(KEY_REQUIRES_API, api, KEY_REQUIRE_CLASS, true)
                     } else {
-                        LintFix.create().data(api)
+                        fix().data(KEY_REQUIRES_API, api)
                     }
                 report(
                     UNSUPPORTED,
@@ -2180,7 +2180,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     binary,
                     context.getLocation(binary),
                     message,
-                    fix().data(isConditional)
+                    fix().data(KEY_CONDITIONAL, isConditional)
                 )
             }
         }
@@ -2202,7 +2202,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     "`minSdkVersion` is ${minSdkVersion.apiString}. " +
                     "Merge all the resources in this folder " +
                     "into `$newFolderName`.",
-                fix().data(context.file, newFolderName, minSdkVersion)
+                fix().data(
+                    KEY_FILE, context.file,
+                    KEY_FOLDER_NAME, newFolderName,
+                    KEY_REQUIRES_API, minSdkVersion.apiLevel
+                )
+
             )
         }
     }
@@ -2211,6 +2216,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         @JvmField
         val REQUIRES_API_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresApi")
 
+        const val KEY_FILE = "file"
+        const val KEY_REQUIRES_API = "requiresApi"
+        const val KEY_FOLDER_NAME = "folderName"
+        const val KEY_CONDITIONAL = "conditional"
+        const val KEY_REQUIRE_CLASS = "requireClass"
         private const val SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"
         private const val ANDROIDX_SDK_SUPPRESS_ANNOTATION = "androidx.test.filters.SdkSuppress"
         private const val ATTR_PROPERTY_VALUES_HOLDER = "propertyValuesHolder"
@@ -2407,7 +2417,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             TRUE == project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
 
         private fun apiLevelFix(api: Int): LintFix {
-            return LintFix.create().data(api)
+            return LintFix.create().data(KEY_REQUIRES_API, api)
         }
 
         private fun isTargetAnnotation(fqcn: String): Boolean {

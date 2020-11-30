@@ -18,6 +18,7 @@ package com.android.sdklib.internal.avd;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.prefs.AndroidLocation;
@@ -62,6 +63,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -234,8 +236,6 @@ public class AvdManager {
     /**
      * AVD/config.ini key name representing the presence of the snapshots file.
      * This property is for UI purposes only. It is not used by the emulator.
-     *
-     * @see #SNAPSHOTS_IMG
      */
     public static final String AVD_INI_SNAPSHOT_PRESENT = "snapshot.present"; //$NON-NLS-1$
 
@@ -450,8 +450,7 @@ public class AvdManager {
         synchronized(mManagers) {
             AvdManager manager;
             FileOp fop = sdkHandler.getFileOp();
-            WeakReference<AvdManager> ref = mManagers
-                    .get(sdkHandler.getLocation().getPath(), fop);
+            WeakReference<AvdManager> ref = mManagers.get(sdkHandler.getLocation().toString(), fop);
             if (ref != null && (manager = ref.get()) != null) {
                 return manager;
             }
@@ -465,8 +464,7 @@ public class AvdManager {
                 log.warning("Exception during AvdManager initialization: %1$s", e);
                 return null;
             }
-            mManagers.put(sdkHandler.getLocation().getPath(), fop,
-                    new WeakReference<>(manager));
+            mManagers.put(sdkHandler.getLocation().toString(), fop, new WeakReference<>(manager));
             return manager;
         }
     }
@@ -741,7 +739,7 @@ public class AvdManager {
         if (mFop.exists(f)) {
             return mFop.readText(f).trim();
         }
-        if (mFop.exists(alternative)){
+        if (mFop.exists(alternative)) {
             return mFop.readText(alternative).trim();
         }
         return null;
@@ -1012,19 +1010,21 @@ public class AvdManager {
     }
 
     /**
-     * Modifies an ini file to switch values from an old AVD name and path to
-     * a new AVD name and path.
-     * Values that are {@link oldName} are switched to {@link newName}
-     * Values that start with {@link oldPath} are modified to start with {@link newPath}
+     * Modifies an ini file to switch values from an old AVD name and path to a new AVD name and
+     * path. Values that are {@code oldName} are switched to {@code newName} Values that start with
+     * {@code oldPath} are modified to start with {@code newPath}
+     *
      * @return the updated ini settings
      */
     @Nullable
-    private Map<String, String> updateNameAndIniPaths(@NonNull File iniFile,
-                                                      @NonNull String oldName,
-                                                      @NonNull String oldPath,
-                                                      @NonNull String newName,
-                                                      @NonNull String newPath,
-                                                      @NonNull ILogger log) throws IOException {
+    private Map<String, String> updateNameAndIniPaths(
+            @NonNull File iniFile,
+            @NonNull String oldName,
+            @NonNull String oldPath,
+            @NonNull String newName,
+            @NonNull String newPath,
+            @NonNull ILogger log)
+            throws IOException {
         Map<String, String> iniVals = parseIniFile(new FileOpFileWrapper(iniFile, mFop, false), log);
         if (iniVals != null) {
             for (Map.Entry<String, String> iniEntry : iniVals.entrySet()) {
@@ -1054,7 +1054,7 @@ public class AvdManager {
         String imageFullPath = folder.getAbsolutePath();
 
         // make this path relative to the SDK location
-        String sdkLocation = mSdkHandler.getLocation().getAbsolutePath();
+        String sdkLocation = mSdkHandler.getLocation().toAbsolutePath().toString();
         if (!imageFullPath.startsWith(sdkLocation)) {
             // this really really should not happen.
             assert false;
@@ -1112,12 +1112,12 @@ public class AvdManager {
 
         String absPath = avdFolder.getAbsolutePath();
         String relPath = null;
-        File androidFolder = mSdkHandler.getAndroidFolder();
+        Path androidFolder = mSdkHandler.getAndroidFolder();
         if (androidFolder == null) {
             throw new AndroidLocation.AndroidLocationException(
                     "Can't locate Android SDK installation directory for the AVD .ini file.");
         }
-        String androidPath = androidFolder.getAbsolutePath() + File.separator;
+        String androidPath = androidFolder.toAbsolutePath().toString() + File.separator;
         if (absPath.startsWith(androidPath)) {
             // Compute the AVD path relative to the android path.
             assert androidPath.endsWith(File.separator);
@@ -1389,10 +1389,13 @@ public class AvdManager {
                 // Try to fallback on the relative path, if present.
                 String relPath = map.get(AVD_INFO_REL_PATH);
                 if (relPath != null) {
-                    File androidFolder = mSdkHandler.getAndroidFolder();
-                    File f = new File(androidFolder, relPath);
-                    if (mFop.isDirectory(f)) {
-                        avdPath = f.getAbsolutePath();
+                    Path androidFolder = mSdkHandler.getAndroidFolder();
+                    Path f =
+                            androidFolder == null
+                                    ? mSdkHandler.getFileOp().toPath(relPath)
+                                    : androidFolder.resolve(relPath);
+                    if (CancellableFileIo.isDirectory(f)) {
+                        avdPath = f.toAbsolutePath().toString();
                     }
                 }
             }
@@ -1443,12 +1446,15 @@ public class AvdManager {
         if (properties != null) {
             imageSysDir = properties.get(AVD_INI_IMAGES_1);
             if (imageSysDir != null) {
-                File sdkLocation = mSdkHandler.getLocation();
-                File imageDir =
+                Path sdkLocation = mSdkHandler.getLocation();
+                Path imageDir =
                         sdkLocation == null
-                                ? new File(imageSysDir)
-                                : sdkLocation.toPath().resolve(imageSysDir).toFile();
-                sysImage = mSdkHandler.getSystemImageManager(progress).getImageAt(imageDir);
+                                ? mFop.toPath(imageSysDir)
+                                : sdkLocation.resolve(imageSysDir);
+                sysImage =
+                        mSdkHandler
+                                .getSystemImageManager(progress)
+                                .getImageAt(mFop.toFile(imageDir));
             }
         }
 
@@ -1991,14 +1997,8 @@ public class AvdManager {
             }
 
             // if skinFolder is in the sdk, use the relative path
-            if (skinFolder.getPath().startsWith(mSdkHandler.getLocation().getPath())) {
-                try {
-                    skinPath = FileOpUtils.makeRelative(mSdkHandler.getLocation(), skinFolder,
-                            mFop);
-                } catch (IOException e) {
-                    // In case it fails, just use the absolute path
-                    skinPath = skinFolder.getAbsolutePath();
-                }
+            if (skinFolder.getPath().startsWith(mSdkHandler.getLocation().toString())) {
+                skinPath = mSdkHandler.getLocation().relativize(mFop.toPath(skinFolder)).toString();
             } else {
                 // Skin isn't in the sdk. Just use the absolute path.
                 skinPath = skinFolder.getAbsolutePath();
@@ -2093,15 +2093,14 @@ public class AvdManager {
                                 SdkConstants.mkSdCardCmdName(), SdkConstants.FD_EMULATOR));
                 throw new AvdMgrException();
             }
-            File mkSdCard = new File(p.getLocation(), SdkConstants.mkSdCardCmdName());
+            Path mkSdCard = p.getLocation().resolve(SdkConstants.mkSdCardCmdName());
 
-            if (!mFop.isFile(mkSdCard)) {
-                log.warning("'%1$s' is missing from the SDK tools folder.",
-                        mkSdCard.getName());
+            if (!CancellableFileIo.isRegularFile(mkSdCard)) {
+                log.warning("'%1$s' is missing from the SDK tools folder.", mkSdCard.getFileName());
                 throw new AvdMgrException();
             }
 
-            if (!createSdCard(mkSdCard.getAbsolutePath(), sdcard, path, log)) {
+            if (!createSdCard(mkSdCard.toAbsolutePath().toString(), sdcard, path, log)) {
                 // mksdcard output has already been displayed, no need to
                 // output anything else.
                 log.warning("Failed to create sdcard in the AVD folder.");

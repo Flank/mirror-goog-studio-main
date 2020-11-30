@@ -162,11 +162,11 @@ void EnqueueAppInspectionGetLibraryCompatibilityInfoResponse(
     jfieldID status_field =
         env->GetFieldID(result_class, "status",
                         "Lcom/android/tools/agent/app/inspection/version/"
-                        "VersionCheckerResult$Status;");
+                        "CompatibilityCheckerResult$Status;");
     jobject status = env->GetObjectField(result, status_field);
     jmethodID ordinal_method = env->GetMethodID(
         env->FindClass("com/android/tools/agent/app/inspection/version/"
-                       "VersionCheckerResult$Status"),
+                       "CompatibilityCheckerResult$Status"),
         "ordinal", "()I");
     jint jstatus_value = env->CallIntMethod(status, ordinal_method);
 
@@ -213,7 +213,10 @@ void EnqueueAppInspectionGetLibraryCompatibilityInfoResponse(
       case 2:  // Missing library
         response->set_status(LibraryCompatibilityInfo::LIBRARY_MISSING);
         break;
-      case 3:  // Error
+      case 3:  // PROGUARDED
+        response->set_status(LibraryCompatibilityInfo::APP_PROGUARDED);
+        break;
+      case 4:  // Error
         response->set_status(LibraryCompatibilityInfo::SERVICE_ERROR);
         break;
     }
@@ -397,6 +400,14 @@ Java_com_android_tools_agent_app_inspection_NativeTransport_sendCreateInspectorR
   app_inspection::EnqueueAppInspectionCreateInspectorResponse(
       env, command_id, AppInspectionResponse::ERROR, error_message,
       CreateInspectorResponse::LIBRARY_MISSING);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_app_inspection_NativeTransport_sendCreateInspectorResponseAppProguarded(
+    JNIEnv *env, jobject obj, jint command_id, jstring error_message) {
+  app_inspection::EnqueueAppInspectionCreateInspectorResponse(
+      env, command_id, AppInspectionResponse::ERROR, error_message,
+      CreateInspectorResponse::APP_PROGUARDED);
 }
 
 JNIEXPORT void JNICALL

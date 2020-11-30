@@ -43,10 +43,12 @@ class CustomRuleTest {
             appCompatTestClass
         )
             .allowObsoleteLintChecks(false)
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = emptyList()
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = emptyList()
 
-                override fun findRuleJars(project: Project): List<File> = listOf(lintJar)
+                    override fun findRuleJars(project: Project): List<File> = listOf(lintJar)
+                }
             }).customRules(lintJar).allowMissingSdk().run().expect(expected)
     }
 
@@ -63,12 +65,14 @@ class CustomRuleTest {
             appCompatTestClass
         )
             .allowObsoleteLintChecks(false)
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = emptyList()
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = emptyList()
 
-                override fun findRuleJars(project: Project): List<File> = listOf(
-                    lintJarWithServiceRegistry
-                )
+                    override fun findRuleJars(project: Project): List<File> = listOf(
+                        lintJarWithServiceRegistry
+                    )
+                }
             }).customRules(lintJarWithServiceRegistry).allowMissingSdk().run().expect(expected)
     }
 
@@ -162,10 +166,12 @@ class CustomRuleTest {
         lint()
             .allowObsoleteLintChecks(false)
             .files(classpath(), manifest().minSdk(1), appCompatTestSource, appCompatTestClass)
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(lintJar)
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintJar)
 
-                override fun findRuleJars(project: Project): List<File> = emptyList()
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                }
             }).customRules(lintJar).allowMissingSdk().run().expect(expected)
     }
 
@@ -185,10 +191,12 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(oldLintJar)
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(oldLintJar)
 
-                override fun findRuleJars(project: Project): List<File> = emptyList()
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                }
             })
             .issueIds("MyId")
             .allowMissingSdk()
@@ -236,10 +244,12 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(psiLintJar)
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(psiLintJar)
 
-                override fun findRuleJars(project: Project): List<File> = emptyList()
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                }
             })
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
@@ -282,10 +292,12 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel0)
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel0)
 
-                override fun findRuleJars(project: Project): List<File> = emptyList()
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                }
             })
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
@@ -320,10 +332,13 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000.canonicalFile)
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> =
+                        listOf(lintApiLevel1000.canonicalFile)
 
-                override fun findRuleJars(project: Project): List<File> = emptyList()
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                }
             })
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
@@ -352,10 +367,12 @@ class CustomRuleTest {
                     "}"
             )
         )
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000min1)
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000min1)
 
-                override fun findRuleJars(project: Project): List<File> = emptyList()
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                }
             })
             .issueIds("MainActivityDetector")
             .allowMissingSdk()
@@ -387,9 +404,11 @@ class CustomRuleTest {
                     "</resources>"
             )
         )
-            .client(object : TestLintClient() {
-                override fun findGlobalRuleJars(): List<File> = listOf(lintXmlScannerAll30)
-                override fun findRuleJars(project: Project): List<File> = emptyList()
+            .clientFactory({
+                object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintXmlScannerAll30)
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                }
             })
             .issueIds("ShortUniqueId")
             .allowMissingSdk()

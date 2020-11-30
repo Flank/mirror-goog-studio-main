@@ -16,8 +16,8 @@
 
 package com.android.tools.agent.app.inspection.version;
 
-/** Represents the result of the Version Check. */
-public class VersionCheckerResult {
+/** Represents the result of the Compatibility Check. */
+public final class CompatibilityCheckerResult {
 
     // Note whenever making a change to this enum, the corresponding logic in JNI must be
     // updated as well to prevent it from crashing.
@@ -31,6 +31,11 @@ public class VersionCheckerResult {
         INCOMPATIBLE,
         /** The version file of the library could not be found. */
         NOT_FOUND,
+        /**
+         * We detected the app was proguarded, which means classes may have been stripped and we
+         * should probably abort inspection.
+         */
+        PROGUARDED,
         /**
          * This signals an error was encountered while trying to perform the version check. For
          * example: IOException when reading from file stream.
@@ -50,7 +55,7 @@ public class VersionCheckerResult {
     /** The version of the library. Null if it couldn't be read. */
     public String version;
 
-    public VersionCheckerResult(
+    public CompatibilityCheckerResult(
             Status status, String message, ArtifactCoordinate artifactCoordinate, String version) {
         this.status = status;
         this.message = message;

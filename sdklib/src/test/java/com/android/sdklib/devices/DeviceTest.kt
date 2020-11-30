@@ -25,7 +25,6 @@ import com.android.testutils.NoErrorsOrWarningsLogger
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.awt.Dimension
-import java.io.File
 
 class DeviceTest {
 
@@ -34,8 +33,8 @@ class DeviceTest {
 
   private val fileOp = MockFileOp()
   val repoPackages = RepositoryPackages()
-  val repoMgr = FakeRepoManager(File(SDK_LOCATION), repoPackages)
-  val sdkHandler = AndroidSdkHandler(File(SDK_LOCATION), File(AVD_LOCATION), fileOp, repoMgr)
+  val repoMgr = FakeRepoManager(fileOp.toPath(SDK_LOCATION), repoPackages)
+  val sdkHandler = AndroidSdkHandler(fileOp.toPath(SDK_LOCATION), fileOp.toPath(AVD_LOCATION), fileOp, repoMgr)
   val devMgr = DeviceManager.createInstance(sdkHandler, NoErrorsOrWarningsLogger())
 
   val qvgaPhone = devMgr.getDevice("2.7in QVGA", "Generic")

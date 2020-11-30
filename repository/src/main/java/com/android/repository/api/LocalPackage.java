@@ -17,8 +17,7 @@
 package com.android.repository.api;
 
 import com.android.annotations.NonNull;
-
-import java.io.File;
+import java.nio.file.Path;
 
 /**
  * A locally-installed package. In addition to what's provided by {@link RepoPackage},
@@ -26,15 +25,13 @@ import java.io.File;
  */
 public interface LocalPackage extends RepoPackage {
 
-    /**
-     * Gets the installed location of this package.
-     */
+    /** Gets the installed location of this package. */
     @NonNull
-    File getLocation();
+    Path getLocation();
 
     /**
-     * Specifies the path at which this package is installed. This should be called
-     * directly after the package is created.
+     * Specifies the path at which this package is installed. This should be called directly after
+     * the package is created.
      */
-    void setInstalledPath(@NonNull File root);
+    void setInstalledPath(@NonNull Path root);
 }

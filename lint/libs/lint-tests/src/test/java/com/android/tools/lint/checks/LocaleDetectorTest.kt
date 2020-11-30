@@ -129,7 +129,7 @@ class LocaleDetectorTest : AbstractCheckTest() {
                     }
                     """
             ).indented()
-        ).client(TestLintClient(LintClient.CLIENT_STUDIO)).run().expect(expected)
+        ).clientFactory({ TestLintClient(LintClient.CLIENT_STUDIO) }).run().expect(expected)
     }
 
     fun testKotlinCapitalize() {

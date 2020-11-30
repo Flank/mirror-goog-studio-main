@@ -37,6 +37,7 @@ class ManagedDeviceTestRunner(
     private val utpDependencies: UtpDependencies,
     private val sdkComponents: SdkComponentsBuildService,
     private val retentionConfig: RetentionConfig,
+    private val useOrchestrator: Boolean,
     private val configFactory: UtpConfigFactory = UtpConfigFactory()) {
 
     fun runTests(
@@ -64,7 +65,8 @@ class ManagedDeviceTestRunner(
                     utpOutputDir,
                     utpTmpDir,
                     utpTestLogDir,
-                    retentionConfig).writeTo(writer)
+                    retentionConfig,
+                    useOrchestrator).writeTo(writer)
             }
         }
         val resultsProto = runUtpTestSuite(

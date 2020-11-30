@@ -19,12 +19,6 @@ package com.android.sdklib.devices;
 import com.android.dvlib.DeviceSchema;
 import com.android.resources.ScreenRound;
 import com.android.resources.UiMode;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.awt.Point;
 import java.io.File;
 import java.io.OutputStream;
@@ -32,7 +26,6 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
-
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -43,6 +36,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class DeviceWriter {
 
@@ -156,17 +153,20 @@ public class DeviceWriter {
             Element icons = doc.createElement(PREFIX + DeviceSchema.NODE_ICONS);
             m.appendChild(icons);
             if (meta.hasIconSixtyFour()) {
-                addElement(doc, icons, DeviceSchema.NODE_SIXTY_FOUR,
-                        meta.getIconSixtyFour().getPath());
+                addElement(
+                        doc,
+                        icons,
+                        DeviceSchema.NODE_SIXTY_FOUR,
+                        meta.getIconSixtyFour().toString());
             }
             if (meta.hasIconSixteen()) {
-                addElement(doc, icons, DeviceSchema.NODE_SIXTEEN, meta.getIconSixteen().getPath());
+                addElement(doc, icons, DeviceSchema.NODE_SIXTEEN, meta.getIconSixteen().toString());
             }
         }
 
         if (meta.hasFrame()) {
             Element frame = doc.createElement(PREFIX + DeviceSchema.NODE_FRAME);
-            addElement(doc, frame, DeviceSchema.NODE_PATH, meta.getFrame().getPath());
+            addElement(doc, frame, DeviceSchema.NODE_PATH, meta.getFrame().toString());
             Point offset = meta.getFrameOffsetPortrait();
             addElement(doc, frame, DeviceSchema.NODE_PORTRAIT_X_OFFSET, Integer.toString(offset.x));
             addElement(doc, frame, DeviceSchema.NODE_PORTRAIT_Y_OFFSET, Integer.toString(offset.y));

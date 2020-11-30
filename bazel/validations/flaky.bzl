@@ -7,8 +7,11 @@ the allowlisted targets below can set "flaky" to true.
 APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/application:tests__GradlePluginMemoryLeakTest",  # b/153972155
     "//tools/base/build-system/integration-test/connected:ParentLibsConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:Overlay1ConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:NdkJniLibConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MultiresConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MlModelBindingConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MinifyConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MigratedConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:KotlinAppConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:JacocoConnectedTest",  # b/148626301
@@ -24,6 +27,7 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:AnnotationProcessorConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AndroidTestResourcesConnectedTest",  # b/148626301
     "//tools/adt/idea/app-inspection/inspectors/workmanager/view:intellij.android.app-inspection.inspectors.workmanager.view.tests_tests",  # b/169760203
+    "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",  # b/172521726
 ]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.

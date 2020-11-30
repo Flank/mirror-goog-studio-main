@@ -23,6 +23,7 @@ import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.client.api.Vendor
 import com.android.tools.lint.detector.api.DefaultPosition
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Location.Companion.create
 import com.android.tools.lint.detector.api.Project

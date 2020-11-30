@@ -673,13 +673,13 @@ class SdkDirectLoadingStrategyTest {
             RenderScriptProcessor.getSupportBlasLibFolder(buildToolDirectory))
     }
 
-    private fun getExpectedOptionalJars(platformHash: String): List<File> {
-        val optionalDir = testFolder.root.resolve("sdk/platforms/$platformHash/optional/")
+    private fun getExpectedOptionalJars(platformHash: String): List<Path> {
+        val optionalDir = testFolder.root.toPath().resolve("sdk/platforms/$platformHash/optional/")
         return listOf(
             "org.apache.http.legacy.jar",
             "android.test.mock.jar",
             "android.test.base.jar",
-            "android.test.runner.jar").map { optionalDir.resolve(it).absoluteFile }
+            "android.test.runner.jar").map { optionalDir.resolve(it) }
     }
 
     private fun String.largerThanAndroidSdk30(): Boolean {

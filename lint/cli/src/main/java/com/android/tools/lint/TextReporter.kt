@@ -16,6 +16,7 @@
 package com.android.tools.lint
 
 import com.android.tools.lint.client.api.IssueRegistry
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
@@ -98,7 +99,7 @@ class TextReporter(
                     lastIssue = issue
                 }
                 val startLength = output.length
-                val p = incident.displayPath
+                val p = incident.getDisplayPath()
                 appendPath(output, p)
                 output.append(':')
                 if (incident.line >= 0) {

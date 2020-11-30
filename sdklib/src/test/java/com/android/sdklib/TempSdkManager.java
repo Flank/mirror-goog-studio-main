@@ -22,7 +22,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
-import com.android.repository.io.FileOpUtils;
+import com.android.repository.testframework.MockFileOp;
 import com.android.resources.Density;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
@@ -45,21 +45,20 @@ import com.android.sdklib.devices.Software;
 import com.android.sdklib.devices.State;
 import com.android.sdklib.devices.Storage;
 import com.android.sdklib.devices.Storage.Unit;
-import com.android.sdklib.repository.legacy.local.LocalSdk;
-import com.android.testutils.MockLog;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.local.LocalPlatformPkgInfo;
 import com.android.sdklib.repository.legacy.local.LocalSysImgPkgInfo;
-
-import org.junit.rules.ExternalResource;
-
+import com.android.testutils.MockLog;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.rules.ExternalResource;
 
 /**
  * {@link org.junit.rules.TestRule} that allocates a temporary SDK, a temporary AVD base folder
@@ -70,11 +69,12 @@ public class TempSdkManager extends ExternalResource {
     private static final String TARGET_DIR_NAME_0 = "android-0";
     private final String mTestName;
 
-    private File mFakeSdk;
-    private File mFakeAndroidFolder;
+    private Path mFakeSdk;
+    private Path mFakeAndroidFolder;
 
     private MockLog mLog;
 
+    private final MockFileOp mFileOp = new MockFileOp();
     private AndroidSdkHandler mSdkHandler;
 
     public TempSdkManager(String testName) {
@@ -110,15 +110,7 @@ public class TempSdkManager extends ExternalResource {
      * will be reparsed.
      */
     private void createSdkAvdManagers() {
-        mSdkHandler = new AndroidSdkHandler(mFakeSdk, mFakeAndroidFolder, FileOpUtils.create());
-    }
-
-    /**
-     * Removes the temporary SDK and AVD directories.
-     */
-    @Override
-    protected void after() {
-        tearDownSdk();
+        mSdkHandler = new AndroidSdkHandler(mFakeSdk, mFakeAndroidFolder, mFileOp);
     }
 
     /**
@@ -127,22 +119,17 @@ public class TempSdkManager extends ExternalResource {
      * impossible.
      */
     private void makeFakeSdk() throws IOException {
-        // First we create a temp file to "reserve" the temp directory name we want to use.
-        mFakeSdk = File.createTempFile(mTestName, "sdk");
-        // Then erase the file and make the directory
-        mFakeSdk.delete();
-        mFakeSdk.mkdirs();
+        mFakeSdk = mFileOp.toPath("/sdk");
 
-        File addonsDir = new File(mFakeSdk, SdkConstants.FD_ADDONS);
-        addonsDir.mkdir();
+        Path addonsDir = mFakeSdk.resolve(SdkConstants.FD_ADDONS);
+        Files.createDirectories(addonsDir);
 
-        makePlatformTools(new File(mFakeSdk, SdkConstants.FD_PLATFORM_TOOLS));
+        makePlatformTools(mFakeSdk.resolve(SdkConstants.FD_PLATFORM_TOOLS));
         makeBuildTools(mFakeSdk);
 
-        File platformsDir = new File(mFakeSdk, SdkConstants.FD_PLATFORMS);
-
+        Path platformsDir = mFakeSdk.resolve(SdkConstants.FD_PLATFORMS);
         // Creating a fake target here on down
-        File targetDir = makeFakeTargetInternal(platformsDir);
+        Path targetDir = makeFakeTargetInternal(platformsDir);
         makeFakeLegacySysImg(targetDir);
 
         makeFakeSkin(targetDir, "HVGA");
@@ -150,23 +137,17 @@ public class TempSdkManager extends ExternalResource {
     }
 
     private void makeFakeAndroidFolder() throws IOException {
-        mFakeAndroidFolder = File.createTempFile(mTestName, "android-home");
-        mFakeAndroidFolder.delete();
-        mFakeAndroidFolder.mkdirs();
-    }
-
-    private void tearDownSdk() {
-        deleteDir(mFakeSdk);
+        mFakeAndroidFolder = mFileOp.toPath("/android-home");
+        Files.createDirectories(mFakeAndroidFolder);
     }
 
     /**
      * Creates the system image folder and places a fake userdata.img in it.
      *
-     * @param systemImage A system image with a valid location.
+     * @param systemImage A system image with a valid location inside this sdk.
      */
-    public static void makeSystemImageFolder(ISystemImage systemImage, String deviceId)
-            throws Exception {
-        File sysImgDir = systemImage.getLocation();
+    public void makeSystemImageFolder(ISystemImage systemImage, String deviceId) throws Exception {
+        Path sysImgDir = mFileOp.toPath(systemImage.getLocation());
         String vendor = systemImage.getAddonVendor() == null ? null
                 : systemImage.getAddonVendor().getId();
         // Path should like SDK/system-images/platform-N/tag/abi/userdata.img+source.properties
@@ -184,39 +165,36 @@ public class TempSdkManager extends ExternalResource {
      * after {@link #before} so that it can use the temp fake SDK folder, and consequently you do
      * not need to specify the SDK root.
      *
-     * @param tagId     An optional tag id. Use null for legacy no-tag system images.
-     * @param abiType   The abi for the system image.
+     * @param tagId An optional tag id. Use null for legacy no-tag system images.
+     * @param abiType The abi for the system image.
      * @return The directory of the system-image/tag/abi created.
      * @throws IOException if the file fails to be created.
      */
     @NonNull
-    public File makeSystemImageFolder(
-            @Nullable String tagId,
-            @NonNull String abiType) throws Exception {
-        File sysImgDir = new File(mFakeSdk, SdkConstants.FD_SYSTEM_IMAGES);
-        sysImgDir = new File(sysImgDir, TARGET_DIR_NAME_0);
+    public Path makeSystemImageFolder(@Nullable String tagId, @NonNull String abiType)
+            throws Exception {
+        Path sysImgDir = mFakeSdk.resolve(SdkConstants.FD_SYSTEM_IMAGES);
+        sysImgDir = sysImgDir.resolve(TARGET_DIR_NAME_0);
         if (tagId != null) {
-            sysImgDir = new File(sysImgDir, tagId);
+            sysImgDir = sysImgDir.resolve(tagId);
         }
-        sysImgDir = new File(sysImgDir, abiType);
+        sysImgDir = sysImgDir.resolve(abiType);
 
         makeFakeSysImgInternal(sysImgDir, tagId, abiType, null, null, null);
         return sysImgDir;
     }
 
-    private static void createTextFile(File dir, String filepath, String... lines) throws IOException {
-        File file = new File(dir, filepath);
+    private static void createTextFile(Path dir, String filepath, String... lines)
+            throws IOException {
+        Path file = dir.resolve(filepath);
 
-        File parent = file.getParentFile();
-        if (!parent.isDirectory()) {
-            parent.mkdirs();
+        Path parent = file.getParent();
+        if (!Files.isDirectory(parent)) {
+            Files.createDirectories(parent);
         }
 
-        if (!file.isFile()) {
-            assertTrue(file.createNewFile());
-        }
         if (lines != null && lines.length > 0) {
-            FileWriter out = new FileWriter(file);
+            BufferedWriter out = Files.newBufferedWriter(file);
             for (String line : lines) {
                 out.write(line);
             }
@@ -224,14 +202,12 @@ public class TempSdkManager extends ExternalResource {
         }
     }
 
-    /**
-     * Utility used by {@link #makeFakeSdk()} to create a fake target with API 0, rev 0.
-     */
-    private static File makeFakeTargetInternal(File platformsDir) throws IOException {
-        File targetDir = new File(platformsDir, TARGET_DIR_NAME_0);
-        targetDir.mkdirs();
-        new File(targetDir, SdkConstants.FN_FRAMEWORK_LIBRARY).createNewFile();
-        new File(targetDir, SdkConstants.FN_FRAMEWORK_AIDL).createNewFile();
+    /** Utility used by {@link #makeFakeSdk()} to create a fake target with API 0, rev 0. */
+    private static Path makeFakeTargetInternal(Path platformsDir) throws IOException {
+        Path targetDir = platformsDir.resolve(TARGET_DIR_NAME_0);
+        Files.createDirectories(targetDir);
+        Files.createFile(targetDir.resolve(SdkConstants.FN_FRAMEWORK_LIBRARY));
+        Files.createFile(targetDir.resolve(SdkConstants.FN_FRAMEWORK_AIDL));
 
         createSourceProps(targetDir,
                 PkgProps.PKG_REVISION, "1",
@@ -252,35 +228,36 @@ public class TempSdkManager extends ExternalResource {
      * Utility to create a fake *legacy* sys image in a platform folder. Legacy system images follow
      * that path pattern: $SDK/platforms/platform-N/images/userdata.img
      *
-     * They have no source.properties file in that directory.
+     * <p>They have no source.properties file in that directory.
      */
-    private static void makeFakeLegacySysImg(@NonNull File platformDir) throws IOException {
-        File imagesDir = new File(platformDir, "images");
-        imagesDir.mkdirs();
-        new File(imagesDir, "userdata.img").createNewFile();
+    private static void makeFakeLegacySysImg(@NonNull Path platformDir) throws IOException {
+        Path imagesDir = platformDir.resolve("images");
+        Files.createDirectories(imagesDir);
+        Files.createFile(imagesDir.resolve("userdata.img"));
     }
 
     /**
      * Utility to create a fake sys image in the system-images folder.
      *
-     * "modern" (as in "not legacy") system-images follow that path pattern:
+     * <p>"modern" (as in "not legacy") system-images follow that path pattern:
      * $SDK/system-images/platform-N/abi/source.properties
      * $SDK/system-images/platform-N/abi/userdata.img
      * $SDK/system-images/platform-N/tag/abi/source.properties
      * $SDK/system-images/platform-N/tag/abi/userdata.img
      *
-     * The tag id is optional and was only introduced in API 20 / Tools 22.6. The platform-N and the
-     * tag folder names are irrelevant as the info from source.properties matters most.
+     * <p>The tag id is optional and was only introduced in API 20 / Tools 22.6. The platform-N and
+     * the tag folder names are irrelevant as the info from source.properties matters most.
      */
     private static void makeFakeSysImgInternal(
-            @NonNull File sysImgDir,
+            @NonNull Path sysImgDir,
             @Nullable String tagId,
             @NonNull String abiType,
             @Nullable String deviceId,
             @Nullable String apiLevel,
-            @Nullable String deviceMfg) throws Exception {
-        sysImgDir.mkdirs();
-        new File(sysImgDir, "userdata.img").createNewFile();
+            @Nullable String deviceMfg)
+            throws Exception {
+        Files.createDirectories(sysImgDir);
+        Files.createFile(sysImgDir.resolve("userdata.img"));
 
         if (tagId == null) {
             createSourceProps(sysImgDir,
@@ -350,54 +327,49 @@ public class TempSdkManager extends ExternalResource {
 
             devices.add(b.build());
 
-            File f = new File(sysImgDir, "devices.xml");
-            FileOutputStream fos = new FileOutputStream(f);
+            OutputStream fos = Files.newOutputStream(sysImgDir.resolve("devices.xml"));
             DeviceWriter.writeToXml(fos, devices);
             fos.close();
         }
     }
 
-    /**
-     * Utility to make a fake skin for the given target
-     */
-    private static void makeFakeSkin(File targetDir, String skinName) throws IOException {
-        File skinFolder = FileOpUtils.append(targetDir, "skins", skinName);
-        skinFolder.mkdirs();
+    /** Utility to make a fake skin for the given target */
+    private static void makeFakeSkin(Path targetDir, String skinName) throws IOException {
+        Path skinFolder = targetDir.resolve("skins").resolve(skinName);
+        Files.createDirectories(skinFolder);
 
         // To be detected properly, the skin folder should have a "layout" file.
         // Its content is however not parsed.
-        FileWriter out = new FileWriter(new File(skinFolder, "layout"));
+        BufferedWriter out = Files.newBufferedWriter(skinFolder.resolve("layout"));
         out.write("parts {\n}\n");
         out.close();
     }
 
-    /**
-     * Utility to create a fake source with a few files in the given sdk folder.
-     */
-    private static void makeFakeSourceInternal(File sdkDir) throws IOException {
-        File sourcesDir = FileOpUtils.append(sdkDir, SdkConstants.FD_PKG_SOURCES, "android-0");
-        sourcesDir.mkdirs();
+    /** Utility to create a fake source with a few files in the given sdk folder. */
+    private static void makeFakeSourceInternal(Path sdkDir) throws IOException {
+        Path sourcesDir = sdkDir.resolve(SdkConstants.FD_PKG_SOURCES).resolve("android-0");
+        Files.createDirectories(sourcesDir);
 
         createSourceProps(sourcesDir, PkgProps.VERSION_API_LEVEL, "0");
 
-        File dir1 = FileOpUtils.append(sourcesDir, "src", "com", "android");
-        dir1.mkdirs();
-        FileOpUtils.append(dir1, "File1.java").createNewFile();
-        FileOpUtils.append(dir1, "File2.java").createNewFile();
+        Path dir1 = sourcesDir.resolve("src").resolve("com").resolve("android");
+        Files.createDirectories(dir1);
+        Files.createFile(dir1.resolve("File1.java"));
+        Files.createFile(dir1.resolve("File2.java"));
 
-        FileOpUtils.append(sourcesDir, "res", "values").mkdirs();
-        FileOpUtils.append(sourcesDir, "res", "values", "styles.xml").createNewFile();
+        Files.createDirectories(sourcesDir.resolve("res").resolve("values"));
+        Files.createFile(sourcesDir.resolve("res").resolve("values").resolve("styles.xml"));
     }
 
-    private static void makePlatformTools(File platformToolsDir) throws IOException {
-        platformToolsDir.mkdir();
+    private static void makePlatformTools(Path platformToolsDir) throws IOException {
+        Files.createDirectories(platformToolsDir);
         createSourceProps(platformToolsDir, PkgProps.PKG_REVISION, "17.1.2");
 
         // platform-tools revision >= 17 requires only an adb file to be valid.
-        new File(platformToolsDir, SdkConstants.FN_ADB).createNewFile();
+        Files.createFile(platformToolsDir.resolve(SdkConstants.FN_ADB));
     }
 
-    private static void makeBuildTools(File sdkDir) throws IOException {
+    private static void makeBuildTools(Path sdkDir) throws IOException {
         for (String revision : new String[]{"3.0.0", "3.0.1", "18.3.4-rc5"}) {
             createFakeBuildTools(sdkDir, "ANY", revision);
         }
@@ -406,15 +378,15 @@ public class TempSdkManager extends ExternalResource {
     /**
      * Adds a new fake build tools to the SDK In the given SDK/build-tools folder.
      *
-     * @param sdkDir   The SDK top folder. Must already exist.
-     * @param os       The OS. One of HostOs#toString() or "ANY".
+     * @param sdkDir The SDK top folder. Must already exist.
+     * @param os The OS. One of HostOs#toString() or "ANY".
      * @param revisionStr The "x.y.z rc r" revisionStr number from {@link Revision#toShortString()}.
      */
-    private static void createFakeBuildTools(File sdkDir, String os, String revisionStr)
+    private static void createFakeBuildTools(Path sdkDir, String os, String revisionStr)
             throws IOException {
-        File buildToolsTopDir = new File(sdkDir, SdkConstants.FD_BUILD_TOOLS);
-        buildToolsTopDir.mkdir();
-        File buildToolsDir = new File(buildToolsTopDir, revisionStr);
+        Path buildToolsTopDir = sdkDir.resolve(SdkConstants.FD_BUILD_TOOLS);
+        Files.createDirectories(buildToolsTopDir);
+        Path buildToolsDir = buildToolsTopDir.resolve(revisionStr);
         createSourceProps(buildToolsDir,
                 PkgProps.PKG_REVISION, revisionStr,
                 "Archive.Os", os);
@@ -463,7 +435,8 @@ public class TempSdkManager extends ExternalResource {
                 BuildToolInfo.PathId.LD_X86_64, SdkConstants.FN_LD_X86_64);
     }
 
-    private static void createFakeBuildToolsFile(@NonNull File dir,
+    private static void createFakeBuildToolsFile(
+            @NonNull Path dir,
             @NonNull Revision buildToolsRevision,
             @NonNull BuildToolInfo.PathId pathId,
             @NonNull String filepath)
@@ -474,45 +447,23 @@ public class TempSdkManager extends ExternalResource {
         }
     }
 
-    private static void createSourceProps(File parentDir, String... paramValuePairs) throws IOException {
+    private static void createSourceProps(Path parentDir, String... paramValuePairs)
+            throws IOException {
         createFileProps(SdkConstants.FN_SOURCE_PROP, parentDir, paramValuePairs);
     }
 
-    private static void createFileProps(String fileName, File parentDir, String... paramValuePairs)
+    private static void createFileProps(String fileName, Path parentDir, String... paramValuePairs)
             throws IOException {
-        File sourceProp = new File(parentDir, fileName);
-        parentDir = sourceProp.getParentFile();
-        if (!parentDir.isDirectory()) {
-            assertTrue(parentDir.mkdirs());
+        Path sourceProp = parentDir.resolve(fileName);
+        if (!Files.isDirectory(parentDir)) {
+            Files.createDirectories(parentDir);
         }
-        if (!sourceProp.isFile()) {
-            assertTrue(sourceProp.createNewFile());
-        }
-        FileWriter out = new FileWriter(sourceProp);
+        BufferedWriter out = Files.newBufferedWriter(sourceProp);
         int n = paramValuePairs.length;
         assertTrue("paramValuePairs must have an even length, format [param=value]+", n % 2 == 0);
         for (int i = 0; i < n; i += 2) {
             out.write(paramValuePairs[i] + '=' + paramValuePairs[i + 1] + '\n');
         }
         out.close();
-
-    }
-
-    /**
-     * Recursive delete directory. Mostly for fake SDKs.
-     *
-     * @param root directory to delete
-     */
-    private static void deleteDir(File root) {
-        if (root.exists()) {
-            for (File file : root.listFiles()) {
-                if (file.isDirectory()) {
-                    deleteDir(file);
-                } else {
-                    file.delete();
-                }
-            }
-            root.delete();
-        }
     }
 }

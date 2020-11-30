@@ -6,3 +6,4 @@ test.inspector.TestCancellationInspectorFactory
 test.inspector.TestExecutorsInspectorFactory
 test.inspector.TestNoReplyInspectorFactory
 test.inspector.PayloadInspectorFactory
+test.inspector.TestProguardCheckInspectorFactory

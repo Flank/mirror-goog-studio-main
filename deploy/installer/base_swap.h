@@ -21,15 +21,15 @@
 #include <unordered_set>
 #include <vector>
 
-#include "tools/base/deploy/installer/command.h"
+#include "tools/base/deploy/installer/agent_interaction.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
-class BaseSwapCommand : public Command {
+class BaseSwapCommand : public AgentInteractionCommand {
  public:
-  BaseSwapCommand(Workspace& workspace) : Command(workspace) {}
+  BaseSwapCommand(Workspace& workspace) : AgentInteractionCommand(workspace) {}
   virtual ~BaseSwapCommand() = default;
   virtual void Run(proto::InstallerResponse* response) final;
 
@@ -89,8 +89,6 @@ class BaseSwapCommand : public Command {
   // agents will be connecting, or tell the install-server what SwapRequest to
   // forward the agents.
   proto::SwapResponse::Status ListenForAgents() const;
-
-  bool AttachAgents() const;
 };
 
 }  // namespace deploy

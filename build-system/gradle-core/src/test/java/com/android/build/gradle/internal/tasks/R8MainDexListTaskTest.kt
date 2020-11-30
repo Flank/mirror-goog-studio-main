@@ -74,7 +74,9 @@ class R8MainDexListTaskTest {
             minSdkVersion = 19,
             r8Keep = "class **",
             outputDir = outputDir,
-            proguardOutputDir = tmp.root
+            proguardOutputDir = tmp.root,
+            featureJavaResourceJars = listOf(),
+            featureJavaResourceOutputDir = null
         )
 
         val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
@@ -112,7 +114,9 @@ class R8MainDexListTaskTest {
             r8Keep = "class **",
             outputDir = outputDir,
             mappingFile = tmp.newFolder("mapping"),
-            proguardOutputDir = tmp.root
+            proguardOutputDir = tmp.root,
+            featureJavaResourceJars = listOf(),
+            featureJavaResourceOutputDir = null
         )
 
         assertThatDex(outputDir.resolve("main/classes.dex").toFile())
@@ -138,8 +142,10 @@ fun runR8(
     outputDir: Path,
     mappingFile: File = outputDir.resolve("mapping.txt").toFile(),
     proguardOutputDir: File,
-    featureJars: List<File> = listOf(),
-    featureDexDir: File? = null
+    featureClassJars: List<File> = listOf(),
+    featureJavaResourceJars: List<File>,
+    featureDexDir: File? = null,
+    featureJavaResourceOutputDir: File?
 ) {
 
 
@@ -180,8 +186,10 @@ fun runR8(
         output = output,
         outputResources = outputDir.resolve("java_res.jar").toFile(),
         mainDexListOutput = null,
-        featureJars = featureJars,
+        featureClassJars = featureClassJars,
+        featureJavaResourceJars = featureJavaResourceJars,
         featureDexDir = featureDexDir,
+        featureJavaResourceOutputDir = featureJavaResourceOutputDir,
         libConfiguration = null,
         outputKeepRulesDir = null
     )

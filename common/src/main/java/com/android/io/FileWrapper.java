@@ -24,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 
 /**
  * An implementation of {@link IAbstractFile} extending {@link File}.
@@ -49,40 +48,6 @@ public class FileWrapper extends File implements IAbstractFile {
      */
     public FileWrapper(File parent, String child) {
         super(parent, child);
-    }
-
-    /**
-     * Creates a new File instance by converting the given pathname string into an abstract
-     * pathname.
-     * @param osPathname the OS pathname
-     *
-     * @see File#File(String)
-     */
-    public FileWrapper(String osPathname) {
-        super(osPathname);
-    }
-
-    /**
-     * Creates a new File instance from a parent abstract pathname and a child pathname string.
-     * @param parent the parent pathname
-     * @param child the child name
-     *
-     * @see File#File(String, String)
-     */
-    public FileWrapper(String parent, String child) {
-        super(parent, child);
-    }
-
-    /**
-     * Creates a new File instance by converting the given <code>file:</code> URI into an
-     * abstract pathname.
-     * @param uri An absolute, hierarchical URI with a scheme equal to "file", a non-empty path
-     * component, and undefined authority, query, and fragment components
-     *
-     * @see File#File(URI)
-     */
-    public FileWrapper(URI uri) {
-        super(uri);
     }
 
     @Override
@@ -128,11 +93,6 @@ public class FileWrapper extends File implements IAbstractFile {
     }
 
     @Override
-    public PreferredWriteMode getPreferredWriteMode() {
-        return PreferredWriteMode.OUTPUTSTREAM;
-    }
-
-    @Override
     public String getOsLocation() {
         return getAbsolutePath();
     }
@@ -140,19 +100,5 @@ public class FileWrapper extends File implements IAbstractFile {
     @Override
     public boolean exists() {
         return isFile();
-    }
-
-    @Override
-    public long getModificationStamp() {
-        return lastModified();
-    }
-
-    @Override
-    public IAbstractFolder getParentFolder() {
-        String p = this.getParent();
-        if (p == null) {
-            return null;
-        }
-        return new FolderWrapper(p);
     }
 }

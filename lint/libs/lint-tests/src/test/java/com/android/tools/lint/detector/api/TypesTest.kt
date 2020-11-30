@@ -92,7 +92,7 @@ class TypesTest : TestCase() {
                 "            UBlockExpression [{...}]\n" +
                 "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 0)) [<init>()]\n" +
                 "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
-                "                    USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent) [<init>]\n" +
+                "                    USimpleNameReferenceExpression (identifier = <init>, resolvesTo = PsiClass: Parent) [<init>]\n" +
                 "    UClass (name = Parent) [public class Parent {...}]\n" +
                 "        UMethod (name = method) [public fun method() : java.lang.String {...}]\n" +
                 "            UBlockExpression [{...}]\n" +
@@ -159,7 +159,7 @@ class TypesTest : TestCase() {
                         UBlockExpression
                             UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 0))
                                 UIdentifier (Identifier (Parent))
-                                USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent)
+                                USimpleNameReferenceExpression (identifier = <init>, resolvesTo = PsiClass: Parent)
                 UClass (name = Parent)
                     UMethod (name = method)
                         UBlockExpression
@@ -301,7 +301,7 @@ class TypesTest : TestCase() {
                 "            UBlockExpression [{...}]\n" +
                 "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(5)]\n" +
                 "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
-                "                    USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent) [<init>]\n" +
+                "                    USimpleNameReferenceExpression (identifier = <init>, resolvesTo = PsiClass: Parent) [<init>]\n" +
                 "                    ULiteralExpression (value = 5) [5] : PsiType:int\n",
             file?.asLogTypes()
         )

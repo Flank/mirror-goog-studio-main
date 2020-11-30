@@ -25,11 +25,9 @@ import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.GenericFactory;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +42,7 @@ import org.w3c.dom.ls.LSResourceResolver;
  * <ul>
  *   <li>Register the {@link SchemaModule}s used to parse the package.xml files and remote
  *       repositories used by this repo using {@link #registerSchemaModule(SchemaModule)}
- *   <li>Set the path where the repo is installed locally using {@link #setLocalPath(File)}.
+ *   <li>Set the path where the repo is installed locally using {@link #setLocalPath(Path)}.
  *   <li>If your local repo might contain packages created by a previous system, set a {@link
  *       FallbackLocalRepoLoader} that can recognize and convert those packages using {@link
  *       #setFallbackLocalRepoLoader(FallbackLocalRepoLoader)}.
@@ -124,14 +122,10 @@ public abstract class RepoManager {
         }
     }
 
-    /**
-     * @param fop The {@link FileOp} to use for local filesystem operations. Probably {@link
-     *            FileOpUtils#create()} unless part of a unit test.
-     * @return A new {@code RepoManager}.
-     */
+    /** @return A new {@code RepoManager}. */
     @NonNull
-    public static RepoManager create(@NonNull FileOp fop) {
-        return new RepoManagerImpl(fop);
+    public static RepoManager create() {
+        return new RepoManagerImpl();
     }
 
     /** Register an {@link SchemaModule} that can be used when parsing XML for this repo. */
@@ -162,17 +156,15 @@ public abstract class RepoManager {
         return sGenericModule;
     }
 
-    /**
-     * Sets the path to the local repository root.
-     */
-    public abstract void setLocalPath(@Nullable File path);
+    /** Sets the path to the local repository root. */
+    public abstract void setLocalPath(@Nullable Path path);
 
     /**
      * Gets the path to the local repository root. This probably shouldn't be needed except by the
      * repository manager and unit tests.
      */
     @Nullable
-    public abstract File getLocalPath();
+    public abstract Path getLocalPath();
 
     /**
      * Sets the {@link FallbackLocalRepoLoader} to use when scanning the local repository for

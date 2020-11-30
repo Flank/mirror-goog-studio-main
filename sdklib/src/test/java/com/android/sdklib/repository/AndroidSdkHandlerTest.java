@@ -22,13 +22,14 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.impl.meta.RepositoryPackages;
+import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.Predicate;
 import junit.framework.TestCase;
 
 /**
@@ -37,18 +38,19 @@ import junit.framework.TestCase;
 public class AndroidSdkHandlerTest extends TestCase {
 
     public void testGetLatestPackage() {
-        FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1");
+        FileOp fop = new MockFileOp();
+        FakeLocalPackage p1_1 = new FakeLocalPackage("p;1.1", fop);
         p1_1.setRevision(Revision.parseRevision("1.1"));
-        FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20");
+        FakeLocalPackage p1_20 = new FakeLocalPackage("p;1.20", fop);
         p1_20.setRevision(Revision.parseRevision("1.20"));
-        FakeLocalPackage p2_1 = new FakeLocalPackage("p;2.1");
+        FakeLocalPackage p2_1 = new FakeLocalPackage("p;2.1", fop);
         p2_1.setRevision(Revision.parseRevision("2.1"));
-        FakeLocalPackage p2_2_rc3 = new FakeLocalPackage("p;2.2-rc3");
+        FakeLocalPackage p2_2_rc3 = new FakeLocalPackage("p;2.2-rc3", fop);
         p2_2_rc3.setRevision(Revision.parseRevision("2.2-rc3"));
 
-        FakeLocalPackage qr2_0 = new FakeLocalPackage("q;r;2.0");
+        FakeLocalPackage qr2_0 = new FakeLocalPackage("q;r;2.0", fop);
         qr2_0.setRevision(Revision.parseRevision("2.0"));
-        FakeLocalPackage qr2_1 = new FakeLocalPackage("q;r;2.1");
+        FakeLocalPackage qr2_1 = new FakeLocalPackage("q;r;2.1", fop);
         qr2_1.setRevision(Revision.parseRevision("2.1"));
 
         RepositoryPackages packages = new RepositoryPackages();
@@ -205,7 +207,7 @@ public class AndroidSdkHandlerTest extends TestCase {
         Locale.setDefault(new Locale("hi", "IN"));
         try {
             Set<RepositorySourceProvider> providers =
-                    AndroidSdkHandler.getInstance(TestUtils.getSdk())
+                    AndroidSdkHandler.getInstance(TestUtils.getSdk().toPath())
                             .getSdkManager(new FakeProgressIndicator())
                             .getSourceProviders();
             boolean found = false;

@@ -28,7 +28,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.PlatformTarget;
-import java.io.File;
+import java.nio.file.Path;
 
 /**
  * A {@link PackageOperation.StatusChangeListener} that knows how to install and uninstall Sources
@@ -54,9 +54,9 @@ public class SourceInstallListener implements StatusChangeListener {
             IAndroidTarget target = mSdkHandler.getAndroidTargetManager(progress)
                     .getTargetFromHashString(targetHash, progress);
             if (target instanceof PlatformTarget) {
-                File sourcePath = null;
+                Path sourcePath = null;
                 if (op instanceof Installer) {
-                    sourcePath = op.getLocation(progress);
+                    sourcePath = mSdkHandler.getFileOp().toPath(op.getLocation(progress));
                 }
                 ((PlatformTarget) target).setSources(sourcePath);
             }

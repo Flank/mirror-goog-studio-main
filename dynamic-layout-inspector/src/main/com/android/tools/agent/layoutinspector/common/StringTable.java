@@ -22,6 +22,11 @@ import androidx.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Table for representing a String with an id to avoid String duplication in protobuf events.
+ *
+ * <p>This class is not thread-safe and must be synchronized externally.
+ */
 public class StringTable {
     private final Map<String, Integer> mStringMap = new HashMap<>();
 

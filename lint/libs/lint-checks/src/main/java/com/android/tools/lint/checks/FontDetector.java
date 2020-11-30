@@ -75,6 +75,9 @@ public class FontDetector extends ResourceXmlDetector {
     public static final int FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK =
             Integer.MAX_VALUE - 1;
 
+    public static final String KEY_ARTIFACT_ID = "artifact";
+    public static final String KEY_APP_NAMESPACE = "app-namespace";
+
     private static final Implementation IMPLEMENTATION =
             new Implementation(FontDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
@@ -236,7 +239,7 @@ public class FontDetector extends ResourceXmlDetector {
                             + " library. Required version for using downloadable fonts: "
                             + MIN_APPSUPPORT_VERSION.getRevision()
                             + " or higher.";
-            LintFix fix = LintFix.create().data(APPCOMPAT_LIB_ARTIFACT_ID);
+            LintFix fix = LintFix.create().data(KEY_ARTIFACT_ID, APPCOMPAT_LIB_ARTIFACT_ID);
             reportError(context, element, message, context.getNameLocation(element), fix);
         }
     }

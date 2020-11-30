@@ -53,7 +53,7 @@ class AvdManager(
     }
 
     private val deviceManager: DeviceManager by lazy {
-        DeviceManager.createInstance(sdkDirectory, logger)
+        DeviceManager.createInstance(sdkDirectory.toPath(), logger)
     }
 
     fun createOrRetrieveAvd(

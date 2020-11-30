@@ -243,7 +243,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                 "This method is accessed from an ObjectAnimator so it should be " +
                     "annotated with `@Keep` to ensure that it is not discarded or renamed " +
                     "in release builds",
-                fix().map().put(PsiMethod::class.java, bestMethod).build()
+                fix().data(KEY_METHOD, bestMethod)
             )
         }
     }
@@ -613,6 +613,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
 
     companion object {
         private const val MOTION_LAYOUT_URI = AUTO_URI
+        const val KEY_METHOD = "method"
 
         val KEEP_ANNOTATION = AndroidxName.of(
             SUPPORT_ANNOTATIONS_PREFIX,

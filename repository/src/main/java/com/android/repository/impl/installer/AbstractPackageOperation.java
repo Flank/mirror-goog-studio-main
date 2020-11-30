@@ -18,7 +18,6 @@ package com.android.repository.impl.installer;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.repository.api.DelegatingProgressIndicator;
 import com.android.repository.api.Installer;
 import com.android.repository.api.PackageOperation;
@@ -27,6 +26,7 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.io.FileOp;
 import com.android.repository.util.InstallerUtil;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -118,10 +119,8 @@ public abstract class AbstractPackageOperation implements PackageOperation {
 
     private enum StartTaskStatus {STARTED, ALREADY_DONE, FAILED}
 
-    /**
-     * Listeners that will be notified when the status changes.
-     */
-    private List<StatusChangeListener> mListeners = Lists.newArrayList();
+    /** Listeners that will be notified when the status changes. */
+    private final List<StatusChangeListener> mListeners = Lists.newArrayList();
 
     private final RepoManager mRepoManager;
 
@@ -398,7 +397,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     }
 
     private void deleteOrphanedTempDirs(@NonNull ProgressIndicator progress) {
-        Path root = mFop.toPath(mRepoManager.getLocalPath());
+        Path root = mRepoManager.getLocalPath();
         Path suffixPath = mFop.toPath(new File(InstallerUtil.INSTALLER_DIR_FN, INSTALL_DATA_FN));
         try (Stream<Path> paths = Files.walk(root)) {
             Set<File> tempDirs =
@@ -417,7 +416,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     @VisibleForTesting
     static File getNewPackageOperationTempDir(@NonNull RepoManager repoManager, @NonNull String base, @NonNull FileOp fileOp) {
         for (int i = 1; i < MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
-            File folder = getPackageOperationTempDir(repoManager, base, i);
+            File folder = getPackageOperationTempDir(repoManager, base, i, fileOp);
             if (!fileOp.exists(folder)) {
                 fileOp.mkdirs(folder);
                 return folder;
@@ -427,16 +426,17 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     }
 
     @VisibleForTesting
-    static File getPackageOperationTempDir(@NonNull RepoManager repoManager, @NonNull String base, int index) {
-        File rootTempDir = new File(repoManager.getLocalPath(), REPO_TEMP_DIR_FN);
-        return new File(rootTempDir, String.format("%1$s%2$02d", base, index));
+    static File getPackageOperationTempDir(
+            @NonNull RepoManager repoManager, @NonNull String base, int index, FileOp fop) {
+        File rootTempDir = new File(fop.toFile(repoManager.getLocalPath()), REPO_TEMP_DIR_FN);
+        return new File(rootTempDir, String.format(Locale.US, "%1$s%2$02d", base, index));
     }
 
-    private void retainPackageOperationTempDirs(Set<File> retain, String base, FileOp mFop) {
+    private void retainPackageOperationTempDirs(Set<File> retain, String base, FileOp fop) {
         for (int i = 1; i < MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
-            File dir = getPackageOperationTempDir(getRepoManager(), base, i);
-            if (mFop.exists(dir) && !retain.contains(dir)) {
-                mFop.deleteFileOrFolder(dir);
+            File dir = getPackageOperationTempDir(getRepoManager(), base, i, fop);
+            if (fop.exists(dir) && !retain.contains(dir)) {
+                fop.deleteFileOrFolder(dir);
             }
         }
     }
