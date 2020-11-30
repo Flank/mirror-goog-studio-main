@@ -76,7 +76,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     static File sdk;
 
     static {
-        sdk = TestUtils.getSdk();
+        sdk = TestUtils.getSdk().toFile();
     }
 
     @NonNull
@@ -145,7 +145,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         @Nullable
         @Override
         public File getSdkHome() {
-            return TestUtils.getSdk();
+            return TestUtils.getSdk().toFile();
         }
     }
 

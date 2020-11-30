@@ -292,7 +292,7 @@ ${
 
     val testingElements = TestingElements(scriptingLanguage)
 
-    open fun sdkLocation(): String = TestUtils.getSdk().absolutePath
+    open fun sdkLocation(): String = TestUtils.getSdk().toString()
 
     open class ModuleGivenBuilder(val scriptingLanguage: ScriptingLanguage) {
 

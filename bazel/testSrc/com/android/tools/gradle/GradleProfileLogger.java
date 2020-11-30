@@ -63,7 +63,7 @@ public class GradleProfileLogger implements BenchmarkListener {
             try {
                 Files.copy(
                         profileJson,
-                        TestUtils.getTestOutputDir().toPath().resolve(profileJson.getFileName()));
+                        TestUtils.getTestOutputDir().resolve(profileJson.getFileName()));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

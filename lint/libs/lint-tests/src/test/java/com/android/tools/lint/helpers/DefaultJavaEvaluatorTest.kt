@@ -50,7 +50,7 @@ class DefaultJavaEvaluatorTest {
                     }"""
             ).indented()
         )
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .issues(TestAnnotationLookupDetector.ISSUE)
             .run()
             .expectClean()

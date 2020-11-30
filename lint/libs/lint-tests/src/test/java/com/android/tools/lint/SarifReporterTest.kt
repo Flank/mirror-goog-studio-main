@@ -787,6 +787,6 @@ class SarifReporterTest {
     }
 
     private fun lint(): TestLintTask {
-        return TestLintTask.lint().sdkHome(TestUtils.getSdk())
+        return TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
     }
 }

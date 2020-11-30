@@ -83,7 +83,7 @@ public class IntegrationTest {
      */
     @NonNull
     public static Path getPathToAdb() {
-        return TestUtils.getSdk().toPath().resolve("platform-tools").resolve(SdkConstants.FN_ADB);
+        return TestUtils.getSdk().resolve("platform-tools").resolve(SdkConstants.FN_ADB);
     }
 
     @Test

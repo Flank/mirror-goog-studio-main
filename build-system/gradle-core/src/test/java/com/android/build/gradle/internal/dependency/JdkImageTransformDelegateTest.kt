@@ -40,11 +40,11 @@ class JdkImageTransformDelegateTest {
     @Rule
     val tmp = TemporaryFolder()
 
-    val javaHome = TestUtils.getJava11Jdk()
+    val javaHome = TestUtils.getJava11Jdk().toFile()
 
     fun copyCfsmJarToTempFolder(): File {
         val originalCfsmJar =
-            TestUtils.getPlatformFile(SdkConstants.FN_CORE_FOR_SYSTEM_MODULES)
+                TestUtils.resolvePlatformPath(SdkConstants.FN_CORE_FOR_SYSTEM_MODULES).toFile()
         val cfsmJar = tmp.newFile(originalCfsmJar.name)
         FileUtils.copyFile(originalCfsmJar, cfsmJar)
         return cfsmJar
@@ -303,13 +303,13 @@ class JdkImageTransformDelegateTest {
         //compile a java 11 source file against the system image
         assertThat(java11SourceFile).exists()
 
-        val androidJar = TestUtils.getPlatformFile(SdkConstants.FN_FRAMEWORK_LIBRARY)
+        val androidJar = TestUtils.resolvePlatformPath(SdkConstants.FN_FRAMEWORK_LIBRARY)
 
         val pib = ProcessInfoBuilder().apply {
             setExecutable(javaHome.resolve("bin").resolve("javac".optionalExe()))
             addArgs("--system", systemImageDir.absolutePath)
             addArgs("-d", compiledJava11Dir.absolutePath)
-            addArgs("-cp", androidJar.absolutePath)
+            addArgs("-cp", androidJar.toString())
             addArgs(java11SourceFile.absolutePath)
 
         }

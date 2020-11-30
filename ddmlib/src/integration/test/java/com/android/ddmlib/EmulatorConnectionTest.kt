@@ -17,7 +17,7 @@
 package com.android.ddmlib
 
 import com.android.SdkConstants.FN_ADB
-import com.android.testutils.TestUtils
+import com.android.testutils.TestUtils.getSdk
 import com.android.tools.bazel.avd.Emulator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
@@ -38,15 +38,10 @@ class EmulatorConnectionTest {
         val timeoutInMs = 30000L
         val bridge =
             AndroidDebugBridge.createBridge(
-                TestUtils.getSdk()
-                    .toPath()
-                    .resolve("platform-tools")
-                    .resolve(FN_ADB)
-                    .toFile()
-                    .absolutePath,
-                false,
-                timeoutInMs,
-                TimeUnit.MILLISECONDS
+                    getSdk().resolve("platform-tools").resolve(FN_ADB).toString(),
+                    false,
+                    timeoutInMs,
+                    TimeUnit.MILLISECONDS
             )
         if (bridge == null ) {
             fail("unable to create bridge")
@@ -66,7 +61,6 @@ class EmulatorConnectionTest {
     }
 
     companion object {
-
         @ClassRule
         @JvmField
         val emulator = Emulator("tools/base/ddmlib/avd", 5554)

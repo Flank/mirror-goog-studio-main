@@ -195,9 +195,7 @@ public class NdkSampleTest {
     }
 
     private NativeBuildConfigValues checkJson(String path, int operatingSystem) throws IOException {
-
-        File ndkPath = TestUtils.getNdk();
-        File androidMkPath = new File(ndkPath, path);
+        File androidMkPath = TestUtils.getNdk().resolve(path).toFile();
         Map<String, String> variantConfigs = getVariantConfigs();
 
         // Get the baseline config

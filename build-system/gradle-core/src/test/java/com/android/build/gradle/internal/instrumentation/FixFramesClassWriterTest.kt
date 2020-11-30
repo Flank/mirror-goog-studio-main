@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.internal.instrumentation
 
 import com.android.testutils.TestUtils
@@ -32,7 +31,7 @@ import java.net.URLClassLoader
 
 class FixFramesClassWriterTest {
 
-    private val androidJar = TestUtils.getPlatformFile("android.jar")
+    private val androidJar = TestUtils.resolvePlatformPath("android.jar")
 
     private lateinit var fixFramesClassWriter: FixFramesClassWriterWrapper
     private lateinit var classWriter: ClassWriterWrapper
@@ -40,8 +39,8 @@ class FixFramesClassWriterTest {
     @Before
     fun setUp() {
         fixFramesClassWriter = FixFramesClassWriterWrapper(
-                ClassesHierarchyResolver.Builder(ClassesDataCache()).addSources(androidJar).build())
-        classWriter = ClassWriterWrapper(URLClassLoader(arrayOf(androidJar.toURI().toURL()), null))
+                ClassesHierarchyResolver.Builder(ClassesDataCache()).addSources(androidJar.toFile()).build())
+        classWriter = ClassWriterWrapper(URLClassLoader(arrayOf(androidJar.toUri().toURL()), null))
     }
 
     @Test

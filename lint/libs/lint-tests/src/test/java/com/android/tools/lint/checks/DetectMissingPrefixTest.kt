@@ -423,7 +423,7 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                     }
                 }
             })
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .incremental("res/layout/app_compat.xml").run().expectClean()
     }
 
@@ -472,7 +472,7 @@ class DetectMissingPrefixTest : AbstractCheckTest() {
                     }
                 }
             })
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .incremental("res/layout/app_compat.xml").run().expectClean()
     }
 

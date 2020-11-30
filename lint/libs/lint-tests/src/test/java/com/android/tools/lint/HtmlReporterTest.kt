@@ -82,7 +82,7 @@ class HtmlReporterTest {
         }
 
         val testName = javaClass.simpleName + "_" + testName.methodName
-        TestLintTask.lint().testName(testName).sdkHome(TestUtils.getSdk()).files(
+        TestLintTask.lint().testName(testName).sdkHome(TestUtils.getSdk().toFile()).files(
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"

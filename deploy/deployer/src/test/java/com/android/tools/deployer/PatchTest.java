@@ -52,7 +52,7 @@ public class PatchTest {
         PatchSetGenerator patchSetGenerator =
                 new PatchSetGenerator(
                         PatchSetGenerator.WhenNoChanges.GENERATE_EMPTY_PATCH, new NullLogger());
-        Path testOutputDir = TestUtils.getTestOutputDir().toPath();
+        Path testOutputDir = TestUtils.getTestOutputDir();
         ApkParser apkParser = new ApkParser();
 
         int fileSize = PatchSetGenerator.MAX_PATCHSET_SIZE - 1;
@@ -87,7 +87,7 @@ public class PatchTest {
     @Test
     public void testPatchTooBig() throws IOException, DeployerException {
         PatchGenerator patchGenerator = new PatchGenerator(new NullLogger());
-        Path testOutputDir = TestUtils.getTestOutputDir().toPath();
+        Path testOutputDir = TestUtils.getTestOutputDir();
 
         int fileSize = PatchSetGenerator.MAX_PATCHSET_SIZE + 1;
 

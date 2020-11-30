@@ -476,7 +476,7 @@ class DexArchiveBuilderDelegateDesugaringTest(private val withIncrementalDexingT
     ): DexArchiveBuilderTaskDelegate {
 
         val bootClasspath = if (includeAndroidJar) {
-            setOf(TestUtils.getPlatformFile("android.jar"))
+            setOf(TestUtils.resolvePlatformPath("android.jar").toFile())
         } else {
             emptySet()
         }

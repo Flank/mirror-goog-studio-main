@@ -176,7 +176,7 @@ class DexSplitterTaskTest {
         r8Keep?.let { proguardConfigurations.add("-keep $it") }
 
         R8Task.shrink(
-            bootClasspath = listOf(TestUtils.getPlatformFile("android.jar")),
+            bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
             minSdkVersion = 21,
             isDebuggable = true,
             enableDesugaring = false,
@@ -230,6 +230,4 @@ class DexSplitterTaskTest {
         val dexFiles = Files.walk(path).filter { it.toString().endsWith(".dex") }.toList()
         return Dex(dexFiles.single())
     }
-
-
 }

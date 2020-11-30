@@ -83,7 +83,7 @@ class LintBatchAnalyticsTest : AbstractCheckTest() {
                 "--check",
                 "SdCardPath",
                 "--sdk-home", // SDK is needed to get version number for the baseline
-                TestUtils.getSdk().path,
+                TestUtils.getSdk().toString(),
                 "--disable",
                 "LintError",
                 "-Werror",

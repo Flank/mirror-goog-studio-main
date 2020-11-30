@@ -434,7 +434,7 @@ public class MainTest extends AbstractCheckTest {
                     "--baseline",
                     baseline.getPath(),
                     "--sdk-home", // SDK is needed to get version number for the baseline
-                    TestUtils.getSdk().getPath(),
+                    TestUtils.getSdk().toString(),
                     "--disable",
                     "LintError",
                     getProjectDir(null, mAccessibility).getPath()
@@ -911,7 +911,7 @@ public class MainTest extends AbstractCheckTest {
                 // Args
                 new String[] {
                     "--sdk-home", // SDK is needed to get version number for the baseline
-                    TestUtils.getSdk().getPath(),
+                    TestUtils.getSdk().toString(),
                     "--text",
                     new File(outputDir, "foo2.text").getPath(),
                     project.getPath(),

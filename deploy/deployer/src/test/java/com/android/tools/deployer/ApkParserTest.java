@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -212,7 +211,7 @@ public class ApkParserTest {
 
     @Test
     public void testParsingBigZip() throws Exception {
-        Path zipArchive = Paths.get(TestUtils.getTestOutputDir().getAbsolutePath() + "big.zip");
+        Path zipArchive = TestUtils.getTestOutputDir().resolve("big.zip");
         int numFiles = 3;
         int sizePerFile = 1_000_000_000;
         createZip(numFiles, sizePerFile, zipArchive.toFile());

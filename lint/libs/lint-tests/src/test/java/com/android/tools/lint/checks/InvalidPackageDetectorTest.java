@@ -492,7 +492,7 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
         // Regression test for https://code.google.com/p/android/issues/detail?id=187191
         lint().files(manifest().minSdk(14), mLayout, mThemes, mThemes2, mUnsupported)
                 .clientFactory(factory)
-                .sdkHome(TestUtils.getSdk())
+                .sdkHome(TestUtils.getSdk().toFile())
                 .run()
                 .expectClean();
     }

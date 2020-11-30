@@ -402,7 +402,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             // Put in test undeclared output directory.
             outputs =
                     TestUtils.getTestOutputDir()
-                            .toPath()
                             .resolve(projectDirectory.getParent().getParent().getFileName())
                             .resolve(projectDirectory.getParent().getFileName())
                             .resolve(projectDirectory.getFileName());

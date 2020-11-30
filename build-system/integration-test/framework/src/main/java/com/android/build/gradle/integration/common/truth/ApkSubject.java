@@ -199,7 +199,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
     public void hasMaxSdkVersion(int maxSdkVersion) {
 
-        List<String> output = getBadging(actual().getFile().toFile().toPath());
+        List<String> output = getBadging(actual().getFile());
 
         checkMaxSdkVersion(output, maxSdkVersion);
     }

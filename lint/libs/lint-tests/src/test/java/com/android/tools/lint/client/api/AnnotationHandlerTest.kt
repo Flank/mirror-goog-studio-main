@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.client.api
 
-import com.android.testutils.TestUtils
+import com.android.testutils.TestUtils.getSdk
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintTask
@@ -36,7 +36,7 @@ import org.junit.Test
 class AnnotationHandlerTest {
     @Test
     fun testReferenceKotlinAnnotation() {
-        TestLintTask.lint().sdkHome(TestUtils.getSdk()).files(
+        TestLintTask.lint().sdkHome(getSdk().toFile()).files(
             java(
                 """
                     package test.pkg;

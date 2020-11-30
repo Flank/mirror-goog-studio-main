@@ -111,11 +111,8 @@ class MissingCompileSdkVersionTest {
 
     private fun installPlatform(version: String) {
         FileUtils.copyDirectoryToDirectory(
-            TestUtils.getSdk()
-                .toPath()
-                .resolve(SdkConstants.FD_PLATFORMS)
-                .resolve("android-$version")
-                .toFile(),
+            TestUtils.getSdk().resolve(SdkConstants.FD_PLATFORMS).resolve("android-$version")
+                    .toFile(),
             FileUtils.join(sdkHome, SdkConstants.FD_PLATFORMS)
         )
     }

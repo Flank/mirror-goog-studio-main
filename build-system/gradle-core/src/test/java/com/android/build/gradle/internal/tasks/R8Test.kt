@@ -713,7 +713,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             }
 
         R8Task.shrink(
-            bootClasspath = listOf(TestUtils.getPlatformFile("android.jar")),
+            bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
             enableDesugaring =

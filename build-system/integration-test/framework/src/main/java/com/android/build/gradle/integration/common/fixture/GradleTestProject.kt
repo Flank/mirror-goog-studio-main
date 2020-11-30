@@ -63,6 +63,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.Arrays
@@ -227,16 +228,14 @@ class GradleTestProject @JvmOverloads internal constructor(
          */
         @JvmStatic
         fun getCmakeVersionFolder(cmakeVersion: String): File {
-            val cmakeVersionFolderInSdk = File(
-                TestUtils.getSdk(),
-                String.format("cmake/%s", cmakeVersion)
-            )
-            if (!cmakeVersionFolderInSdk.isDirectory) {
+            val cmakeVersionFolderInSdk =
+                    TestUtils.getSdk().resolve(String.format("cmake/%s", cmakeVersion))
+            if (!Files.isDirectory(cmakeVersionFolderInSdk)) {
                 throw RuntimeException(
                     String.format("Could not find CMake in %s", cmakeVersionFolderInSdk)
                 )
             }
-            return cmakeVersionFolderInSdk
+            return cmakeVersionFolderInSdk.toFile()
         }
 
         /**

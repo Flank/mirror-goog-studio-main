@@ -223,7 +223,7 @@ public class Gradle implements Closeable {
         if (!Files.isDirectory(profiles)) {
             return;
         }
-        Path destination = TestUtils.getTestOutputDir().toPath().resolve("gradle_profiles");
+        Path destination = TestUtils.getTestOutputDir().resolve("gradle_profiles");
         copyDirectory(profiles, destination);
     }
 

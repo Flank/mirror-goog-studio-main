@@ -58,7 +58,7 @@ object ImageDiffUtil {
         if (Files.notExists(goldenFile)) {
             val converted = convertToARGB(actual)
             Files.createDirectories(goldenFile.parent)
-            val outFile = TestUtils.getTestOutputDir().toPath().resolve(goldenFile.fileName.toString())
+            val outFile = TestUtils.getTestOutputDir().resolve(goldenFile.fileName.toString())
             // This will show up in undeclared outputs when running on a test server
             converted.writeImage("PNG", outFile)
             // This will copy the file to its designated location. Useful when running locally.
@@ -171,8 +171,8 @@ object ImageDiffUtil {
 
             // Write image diff to undeclared outputs dir so ResultStore archives.
             val output =
-                    TestUtils.getTestOutputDir().toPath().resolve(
-                    "delta-" + imageName.replace(File.separatorChar, '_'))
+                    TestUtils.getTestOutputDir().resolve(
+                            "delta-" + imageName.replace(File.separatorChar, '_'))
             Files.createDirectories(output.parent)
             deltaImage.writeImage("PNG", output)
             error += " - see details in archived file $output"

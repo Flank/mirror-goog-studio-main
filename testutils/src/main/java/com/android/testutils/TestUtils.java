@@ -16,6 +16,7 @@
 
 package com.android.testutils;
 
+import static com.android.SdkConstants.FD_PLATFORMS;
 import static org.junit.Assume.assumeFalse;
 
 import com.android.SdkConstants;
@@ -24,9 +25,9 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,7 +38,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import junit.framework.TestCase;
 
 /**
  * Utility methods to deal with loading the test data.
@@ -78,37 +78,6 @@ public class TestUtils {
         } catch (IOException e) {
             throw new IllegalStateException("Could not determine Kotlin plugin version", e);
         }
-    }
-
-    /**
-     * Returns a File for the subfolder of the test resource data.
-     *
-     * @deprecated Use {@link #getWorkspaceRoot()} or {@link #resolveWorkspacePath(String)} instead.
-     */
-    @Deprecated
-    @NonNull
-    public static File getRoot(String... names) {
-        File root = new File("src/test/resources/testData/");
-
-        for (String name : names) {
-            root = new File(root, name);
-
-            // Hack: The sdk-common tests are not configured properly; running tests
-            // works correctly from Gradle but not from within the IDE. The following
-            // hack works around this quirk:
-            if (!root.isDirectory() && !root.getPath().contains("sdk-common")) {
-                File r = new File("sdk-common", root.getPath()).getAbsoluteFile();
-                if (r.isDirectory()) {
-                    root = r;
-                }
-            }
-
-            TestCase.assertTrue("Test folder '" + name + "' does not exist! "
-                    + "(Tip: Check unit test launch config pwd)",
-                    root.isDirectory());
-        }
-
-        return root;
     }
 
     /** @deprecated Temporary directories and files should be deleted after each test. */
@@ -228,16 +197,15 @@ public class TestUtils {
      * returns a tmp directory that is deleted on exit.
      */
     @NonNull
-    public static File getTestOutputDir() throws IOException {
+    public static Path getTestOutputDir() throws IOException {
         // If running via bazel, returns the sandboxed test output dir.
         String testOutputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
         if (testOutputDir != null) {
-            return new File(testOutputDir);
+            return Paths.get(testOutputDir);
         }
 
-        return createTempDirDeletedOnExit().toFile();
+        return createTempDirDeletedOnExit();
     }
-
     /**
      * Returns a file at {@code path} relative to the root for {@link #getLatestAndroidPlatform}.
      *
@@ -245,11 +213,10 @@ public class TestUtils {
      * @throws IllegalArgumentException if the path results in a file not found.
      */
     @NonNull
-    public static File getPlatformFile(String path) {
+    public static Path resolvePlatformPath(@NonNull String path) {
         String latestAndroidPlatform = getLatestAndroidPlatform();
-        File file =
-                FileUtils.join(getSdk(), SdkConstants.FD_PLATFORMS, latestAndroidPlatform, path);
-        if (!file.exists()) {
+        Path file = getSdk().resolve(FD_PLATFORMS).resolve(latestAndroidPlatform).resolve(path);
+        if (Files.notExists(file)) {
             throw new IllegalArgumentException(
                     "File \"" + path + "\" not found in platform " + latestAndroidPlatform);
         }
@@ -271,7 +238,6 @@ public class TestUtils {
      *
      * @throws IllegalStateException if the current OS is not supported.
      * @throws IllegalArgumentException if the path results in a file not found.
-     * @return a valid File object pointing at the SDK directory.
      */
     @NonNull
     public static String getRelativeSdk() {
@@ -290,16 +256,16 @@ public class TestUtils {
      *
      * @throws IllegalStateException if the current OS is not supported.
      * @throws IllegalArgumentException if the path results in a file not found.
-     * @return a valid File object pointing at the SDK directory.
+     * @return a valid Path object pointing at the SDK directory.
      */
     @NonNull
-    public static File getSdk() {
-        return resolveWorkspacePath(getRelativeSdk()).toFile();
+    public static Path getSdk() {
+        return resolveWorkspacePath(getRelativeSdk());
     }
 
     @NonNull
-    public static File getMockJdk() {
-        return resolveWorkspacePath("prebuilts/studio/jdk/mock-jdk17").toFile();
+    public static Path getMockJdk() {
+        return resolveWorkspacePath("prebuilts/studio/jdk/mock-jdk17");
     }
 
     /**
@@ -308,25 +274,28 @@ public class TestUtils {
      * @see #getSdk()
      */
     @NonNull
-    public static File getNdk() {
-        return new File(getSdk(), SdkConstants.FD_NDK);
+    public static Path getNdk() {
+        return getSdk().resolve(SdkConstants.FD_NDK);
     }
 
     /** Returns the prebuilt offline Maven repository used during IDE tests. */
-    public static File getPrebuiltOfflineMavenRepo() {
+    @NonNull
+    public static Path getPrebuiltOfflineMavenRepo() {
         if (runningFromBazel()) {
             // If running with Bazel, then Maven artifacts are unzipped into this directory
             // at runtime using IdeaTestSuiteBase#unzipIntoOfflineMavenRepo. Thus we use
             // a writeable temp directory instead of //prebuilts/tools/common/m2/repository.
             // See b/148081564 for how this could be simplified in the future.
-            File dir = new File(System.getProperty("java.io.tmpdir"), "offline-maven-repo");
-            if (!dir.isDirectory() && !dir.mkdirs()) {
-                throw new RuntimeException(
-                        "Failed to create directory for offline maven repository: " + dir);
+            Path dir = Paths.get(System.getProperty("java.io.tmpdir"), "offline-maven-repo");
+            try {
+                Files.createDirectories(dir);
+            } catch (IOException e) {
+                throw new UncheckedIOException(
+                        "Failed to create directory for offline maven repository: " + dir, e);
             }
             return dir;
         } else {
-            return resolveWorkspacePath("prebuilts/tools/common/m2/repository").toFile();
+            return resolveWorkspacePath("prebuilts/tools/common/m2/repository");
         }
     }
 
@@ -334,7 +303,6 @@ public class TestUtils {
      * Returns the remote SDK directory.
      *
      * @throws IllegalArgumentException if the path results in a file not found.
-     * @return a valid File object pointing at the remote SDK directory.
      */
     @NonNull
     public static Path getRemoteSdk() {
@@ -361,7 +329,7 @@ public class TestUtils {
     }
 
     @NonNull
-    private static Path getDesugarLibJarWithVersion(String version) {
+    private static Path getDesugarLibJarWithVersion(@NonNull String version) {
         return resolveWorkspacePath(
                 "prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/"
                         + version
@@ -405,7 +373,7 @@ public class TestUtils {
     }
 
     @NonNull
-    public static File getJava11Jdk() {
+    public static Path getJava11Jdk() {
         OsType osType = OsType.getHostOs();
         String hostDir;
         switch (osType) {
@@ -422,7 +390,7 @@ public class TestUtils {
                 throw new IllegalStateException(
                         "Java11 JDK not found for platform: " + OsType.getOsName());
         }
-        return resolveWorkspacePath("prebuilts/studio/jdk/jdk11/" + hostDir).toFile();
+        return resolveWorkspacePath("prebuilts/studio/jdk/jdk11/" + hostDir);
     }
 
     @NonNull
@@ -459,10 +427,12 @@ public class TestUtils {
     }
 
     private static long getFreshTimestamp() throws IOException {
-        File notUsed = File.createTempFile(TestUtils.class.getName(), "waitForFileSystemTick");
-        long freshTimestamp = notUsed.lastModified();
-        FileUtils.delete(notUsed);
-        return freshTimestamp;
+        Path notUsed = Files.createTempFile(TestUtils.class.getName(), "waitForFileSystemTick");
+        try {
+            return Files.getLastModifiedTime(notUsed).toMillis();
+        } finally {
+            Files.delete(notUsed);
+        }
     }
 
     @NonNull

@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class ExtractAnnotationsDriverTest {
 
     @Test
     public void testProGuard() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project = createProject(keepTest, SUPPORT_ANNOTATIONS_JAR);
         File supportLib = new File(project, SUPPORT_JAR_PATH);
@@ -69,7 +70,7 @@ public class ExtractAnnotationsDriverTest {
                         "--sources",
                         new File(project, "src").getPath(),
                         "--classpath",
-                        androidJar.getPath() + pathSeparator + supportLib,
+                        androidJar + pathSeparator + supportLib,
                         "--quiet",
                         "--proguard",
                         output.getPath());
@@ -105,7 +106,7 @@ public class ExtractAnnotationsDriverTest {
 
     @Test
     public void testIncludeClassRetention() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project =
                 createProject(
@@ -125,7 +126,7 @@ public class ExtractAnnotationsDriverTest {
                         "--sources",
                         new File(project, "src").getPath(),
                         "--classpath",
-                        androidJar.getPath() + pathSeparator + supportLib,
+                        androidJar + pathSeparator + supportLib,
                         "--quiet",
                         "--output",
                         output.getPath(),
@@ -216,7 +217,7 @@ public class ExtractAnnotationsDriverTest {
 
     @Test
     public void testSkipClassRetention() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project =
                 createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);
@@ -230,7 +231,7 @@ public class ExtractAnnotationsDriverTest {
                         "--sources",
                         new File(project, "src").getPath(),
                         "--classpath",
-                        androidJar.getPath() + pathSeparator + supportLib,
+                        androidJar + pathSeparator + supportLib,
                         "--quiet",
                         "--skip-class-retention",
                         "--output",
@@ -277,7 +278,7 @@ public class ExtractAnnotationsDriverTest {
     @Test
     public void testKotlin() throws Exception {
         assumeNotWindows();
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        File androidJar = TestUtils.resolvePlatformPath("android.jar").toFile();
 
         File project =
                 createProject(
@@ -346,7 +347,7 @@ public class ExtractAnnotationsDriverTest {
 
     @Test
     public void testWriteJarRecipeFile() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        File androidJar = TestUtils.resolvePlatformPath("android.jar").toFile();
 
         File project =
                 createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);

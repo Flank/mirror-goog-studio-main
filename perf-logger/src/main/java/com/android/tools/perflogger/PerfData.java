@@ -20,10 +20,10 @@ import com.android.testutils.TestUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,8 +57,8 @@ public class PerfData {
 
     /** Serializes all of the performance data to a default location in JSON format. */
     public void commit() throws IOException {
-        File outputDirectory = TestUtils.getTestOutputDir();
-        try (Writer jsonWriter = new FileWriter(new File(outputDirectory, FILE_NAME))) {
+        Path outputDirectory = TestUtils.getTestOutputDir();
+        try (Writer jsonWriter = Files.newBufferedWriter(outputDirectory.resolve(FILE_NAME))) {
             commit(jsonWriter);
         }
     }

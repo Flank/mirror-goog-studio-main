@@ -290,7 +290,7 @@ public class TestUtilsTest {
     @Test
     public void testGetPlatformFile_exception() throws Exception {
         try {
-            TestUtils.getPlatformFile("foo.jar");
+            TestUtils.resolvePlatformPath("foo.jar");
             fail("Should have thrown.");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage()).contains("foo.jar");
