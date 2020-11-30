@@ -68,6 +68,12 @@ public class ZipArchive implements Archive {
         modified = false;
     }
 
+    /** @deprecated Use ZipArchive(Path) instead. */
+    @Deprecated
+    public ZipArchive(@NonNull File file) throws IOException {
+        this(file.toPath());
+    }
+
     /** @deprecated Use {@link #ZipArchive(Path, Zip64.Policy)} instead. */
     @Deprecated
     public ZipArchive(@NonNull File file, Zip64.Policy policy) throws IOException {
