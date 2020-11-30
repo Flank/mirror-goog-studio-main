@@ -51,15 +51,12 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.support.AndroidxNameUtils;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintCliXmlParser;
-import com.android.tools.lint.LintExternalAnnotationsManager;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
-import com.android.tools.lint.checks.ApiLookup;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
@@ -1228,46 +1225,6 @@ public class TestLintClient extends LintCliClient {
         }
 
         return false;
-    }
-
-    @Override
-    public File findResource(@NonNull String relativePath) {
-        if (relativePath.equals(LintExternalAnnotationsManager.SDK_ANNOTATIONS_PATH)) {
-            try {
-                File rootDir = TestUtils.getWorkspaceRoot().toFile();
-                File file = new File(rootDir, "tools/adt/idea/android/annotations");
-                if (!file.exists()) {
-                    throw new RuntimeException("File " + file + " not found");
-                }
-                return file;
-            } catch (Throwable ignore) {
-                // Lint checks not running inside a tools build -- typically
-                // a third party lint check.
-                return super.findResource(relativePath);
-            }
-        } else if (relativePath.startsWith("tools/support/")) {
-            try {
-                File rootDir = TestUtils.getWorkspaceRoot().toFile();
-                String base = relativePath.substring("tools/support/".length());
-                File file = new File(rootDir, "tools/base/files/typos/" + base);
-                if (!file.exists()) {
-                    return null;
-                }
-                return file;
-            } catch (Throwable ignore) {
-                // Lint checks not running inside a tools build -- typically
-                // a third party lint check.
-                return super.findResource(relativePath);
-            }
-        } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
-            File file = super.findResource(relativePath);
-            if (file == null || !file.exists()) {
-                throw new RuntimeException(
-                        "File " + (file == null ? relativePath : file.getPath()) + " not found");
-            }
-            return file;
-        }
-        throw new RuntimeException("Resource " + relativePath + " not found.");
     }
 
     @NonNull

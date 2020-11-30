@@ -50,6 +50,8 @@ import java.util.regex.Pattern.MULTILINE
 import javax.swing.text.BadLocationException
 import javax.swing.text.Document
 import javax.swing.text.PlainDocument
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * The result of running a [TestLintTask].
@@ -868,5 +870,122 @@ class TestLintResult internal constructor(
         // format but old tests continue to pass.
         private const val OLD_ERROR_MESSAGE = "No location-specific message"
         private val MATCH_OLD_ERROR_MESSAGE = Regex("$OLD_ERROR_MESSAGE[^>]")
+
+        /** Returns a test-suitable diff of the two strings */
+        fun getDiff(before: String, after: String): String {
+            return getDiff(before, after, 0)
+        }
+
+        /** Returns a test-suitable diff of the two strings, including [windowSize] lines around */
+        fun getDiff(before: String, after: String, windowSize: Int): String {
+            return getDiff(
+                before.split("\n").toTypedArray(),
+                after.split("\n").toTypedArray(),
+                windowSize
+            )
+        }
+
+        /** Returns a test-suitable diff of the two string arrays, including [windowSize]
+         * lines of delta */
+        fun getDiff(
+            before: Array<String>,
+            after: Array<String>,
+            windowSize: Int = 0
+        ): String {
+            // Based on the LCS section in http://introcs.cs.princeton.edu/java/96optimization/
+            val sb = java.lang.StringBuilder()
+            val n = before.size
+            val m = after.size
+
+            // Compute longest common subsequence of x[i..m] and y[j..n] bottom up
+            val lcs = Array(n + 1) {
+                IntArray(
+                    m + 1
+                )
+            }
+            for (i in n - 1 downTo 0) {
+                for (j in m - 1 downTo 0) {
+                    if (before[i] == after[j]) {
+                        lcs[i][j] = lcs[i + 1][j + 1] + 1
+                    } else {
+                        lcs[i][j] = max(lcs[i + 1][j], lcs[i][j + 1])
+                    }
+                }
+            }
+            var i = 0
+            var j = 0
+            while (i < n && j < m) {
+                if (before[i] == after[j]) {
+                    i++
+                    j++
+                } else {
+                    sb.append("@@ -")
+                    sb.append((i + 1).toString())
+                    sb.append(" +")
+                    sb.append((j + 1).toString())
+                    sb.append('\n')
+                    if (windowSize > 0) {
+                        for (context in max(0, i - windowSize) until i) {
+                            sb.append("  ")
+                            sb.append(before[context].trimEnd())
+                            sb.append("\n")
+                        }
+                    }
+                    while (i < n && j < m && before[i] != after[j]) {
+                        if (lcs[i + 1][j] >= lcs[i][j + 1]) {
+                            sb.append('-')
+                            if (before[i].trim().isNotEmpty()) {
+                                sb.append(' ')
+                            }
+                            sb.append(before[i].trimEnd())
+                            sb.append('\n')
+                            i++
+                        } else {
+                            sb.append('+')
+                            if (after[j].trim().isNotEmpty()) {
+                                sb.append(' ')
+                            }
+                            sb.append(after[j].trimEnd())
+                            sb.append('\n')
+                            j++
+                        }
+                    }
+                    if (windowSize > 0) {
+                        for (context in i until min(n, i + windowSize)) {
+                            sb.append("  ")
+                            sb.append(before[context].trimEnd())
+                            sb.append("\n")
+                        }
+                    }
+                }
+            }
+            if (i < n || j < m) {
+                assert(i == n || j == m)
+                sb.append("@@ -")
+                sb.append((i + 1).toString())
+                sb.append(" +")
+                sb.append((j + 1).toString())
+                sb.append('\n')
+                while (i < n) {
+                    sb.append('-')
+                    if (before[i].trim().isNotEmpty()) {
+                        sb.append(' ')
+                    }
+                    sb.append(before[i])
+                    sb.append('\n')
+                    i++
+                }
+                while (j < m) {
+                    sb.append('+')
+                    if (after[j].trim().isNotEmpty()) {
+                        sb.append(' ')
+                    }
+                    sb.append(after[j])
+                    sb.append('\n')
+                    j++
+                }
+            }
+            return sb.toString().trim()
+        }
     }
 }

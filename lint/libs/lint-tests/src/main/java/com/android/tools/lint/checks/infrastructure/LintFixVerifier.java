@@ -32,7 +32,6 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.xml.XmlPrettyPrinter;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.LintFix;
@@ -135,9 +134,21 @@ public class LintFixVerifier {
         String actual =
                 StringsKt.trimIndent(diff.toString().replace("\r\n", "\n")).replace('$', '＄');
         expected = StringsKt.trimIndent(expected).replace('$', '＄');
-        if (!expected.equals(actual)) {
+        if (!expected.equals(actual)
+                &&
+                // Also allow trailing spaces in embedded lines since the old differ
+                // included that
+                !actual.replaceAll("\\s+\n", "\n")
+                        .trim()
+                        .equals(expected.replaceAll("\\s+\n", "\n").trim())) {
             // Until 3.2 canary 10 the line numbers were off by one; try adjusting
-            if (!bumpFixLineNumbers(expected).trim().equals(actual.trim())) {
+            if (!bumpFixLineNumbers(expected.replaceAll("\\s+\n", "\n"))
+                    .trim()
+                    .equals(actual.replaceAll("\\s+\n", "\n").trim())) {
+                // If not implicitly matching with whitespace cleanup and number adjustments
+                // just assert that they're equal -- this will never be true but we want
+                // the test failure output to show the original comparison such that updated
+                // test copying from the diff includes the new normalized output.
                 assertEquals(expected, actual);
             }
         }
@@ -627,7 +638,7 @@ public class LintFixVerifier {
             @NonNull String before,
             @NonNull String after,
             @NonNull StringBuilder diffs) {
-        String diff = TestUtils.getDiff(before, after, diffWindow);
+        String diff = TestLintResult.Companion.getDiff(before, after, diffWindow);
         if (!diff.isEmpty()) {
             String targetPath = incident.getDisplayPath().replace(File.separatorChar, '/');
             diffs.append("Fix for ")
@@ -637,8 +648,10 @@ public class LintFixVerifier {
                     .append(": ");
             if (fixDescription != null) {
                 diffs.append(fixDescription).append(":\n");
+            } else {
+                diffs.append("\n");
             }
-            diffs.append(diff);
+            diffs.append(diff).append("\n");
         }
     }
 

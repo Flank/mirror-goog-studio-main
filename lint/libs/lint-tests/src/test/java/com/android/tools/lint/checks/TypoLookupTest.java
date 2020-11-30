@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.annotations.NonNull;
+import com.android.testutils.TestUtils;
+import com.android.tools.lint.LintExternalAnnotationsManager;
+import com.android.tools.lint.checks.infrastructure.TestLintClient;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.google.common.base.Charsets;
@@ -296,6 +300,57 @@ public class TypoLookupTest extends AbstractCheckTest {
                 " - besser ganz darauf verzichten",
                 "svw. bzw. so viel wie bzw. sprachverwandt"
             };
+
+    private class TypoTestClient extends ToolsBaseTestLintClient {
+        @Override
+        public File findResource(@NonNull String relativePath) {
+            if (relativePath.equals(LintExternalAnnotationsManager.SDK_ANNOTATIONS_PATH)) {
+                try {
+                    if (true) throw new RuntimeException();
+                    File rootDir = TestUtils.getWorkspaceRoot().toFile();
+                    File file = new File(rootDir, "tools/adt/idea/android/annotations");
+                    if (!file.exists()) {
+                        throw new RuntimeException("File " + file + " not found");
+                    }
+                    return file;
+                } catch (Throwable ignore) {
+                    // Lint checks not running inside a tools build -- typically
+                    // a third party lint check.
+                    return super.findResource(relativePath);
+                }
+            } else if (relativePath.startsWith("tools/support/")) {
+                try {
+                    File rootDir = TestUtils.getWorkspaceRoot().toFile();
+                    String base = relativePath.substring("tools/support/".length());
+                    File file = new File(rootDir, "tools/base/files/typos/" + base);
+                    if (!file.exists()) {
+                        return null;
+                    }
+                    return file;
+                } catch (Throwable ignore) {
+                    // Lint checks not running inside a tools build -- typically
+                    // a third party lint check.
+                    return super.findResource(relativePath);
+                }
+            } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
+                if (true) throw new RuntimeException();
+                File file = super.findResource(relativePath);
+                if (file == null || !file.exists()) {
+                    throw new RuntimeException(
+                            "File "
+                                    + (file == null ? relativePath : file.getPath())
+                                    + " not found");
+                }
+                return file;
+            }
+            throw new RuntimeException("Resource " + relativePath + " not found.");
+        }
+    }
+
+    @Override
+    protected TestLintClient createClient() {
+        return new TypoTestClient();
+    }
 
     private void validateDictionary(String locale) throws Exception {
         // Check that all the typo files are well formed
