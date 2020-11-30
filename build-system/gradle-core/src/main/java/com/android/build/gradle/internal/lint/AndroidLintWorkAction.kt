@@ -45,7 +45,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         parameters.lintFixBuildService.orNull
         val logger = Logging.getLogger(this.javaClass)
         val arguments = parameters.arguments.get()
-        logger.lifecycle("Running lint " + arguments.joinToString(" "))
+        logger.debug("Running lint " + arguments.joinToString(" "))
         val execResult = process.javaexec {
             it.classpath = parameters.classpath
             it.args = arguments
@@ -53,7 +53,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             it.isIgnoreExitValue = true
         }
 
-        logger.lifecycle("Lint returned ${execResult.exitValue}")
+        logger.debug("Lint returned ${execResult.exitValue}")
         if (execResult.exitValue == ERRNO_SUCCESS) {
             return
         }
