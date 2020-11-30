@@ -31,6 +31,9 @@ public abstract class Bridge {
 
     public static final int API_CURRENT = 17;
 
+    /** Records whether a Layoutlib native crash has been detected */
+    private static boolean sNativeCrash = false;
+
     /**
      * Initializes the Bridge object.
      *
@@ -141,5 +144,13 @@ public abstract class Bridge {
      */
     public boolean isRtl(String locale) {
         return false;
+    }
+
+    public static boolean hasNativeCrash() {
+        return sNativeCrash;
+    }
+
+    public static void setNativeCrash(boolean nativeCrash) {
+        sNativeCrash = nativeCrash;
     }
 }
