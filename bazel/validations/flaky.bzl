@@ -23,7 +23,6 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:D8DesugaringConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:CoreLibraryDesugarConversionConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:ComposeHelloWorldConnectedTest",  # b/148626301
-    "//tools/base/build-system/integration-test/connected:BasicConnectedTest2",  # b/148626301
     "//tools/base/build-system/integration-test/connected:BasicConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:ApiConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AnnotationProcessorConnectedTest",  # b/148626301
