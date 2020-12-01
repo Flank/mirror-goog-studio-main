@@ -27,6 +27,7 @@ import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.MavenRepositories
+import com.android.io.CancellableFileIo
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
@@ -1101,16 +1102,14 @@ open class GradleDetector : Detector(), GradleScanner {
         dependency: GradleCoordinate,
         filter: Predicate<GradleVersion>?
     ): GradleVersion? {
-        val versionDir = File(
-            getArtifactCacheHome(),
-            dependency.groupId + File.separator + dependency.artifactId
-        )
-        return if (versionDir.exists()) {
+        val versionDir =
+            getArtifactCacheHome().toPath().resolve(
+                dependency.groupId + File.separator + dependency.artifactId)
+        return if (CancellableFileIo.exists(versionDir)) {
             MavenRepositories.getHighestVersion(
                 versionDir,
                 filter,
-                MavenRepositories.isPreview(dependency),
-                FileOpUtils.create()
+                MavenRepositories.isPreview(dependency)
             )
         } else null
     }
