@@ -27,6 +27,7 @@ import com.google.common.truth.Truth.assertWithMessage
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
@@ -1192,6 +1193,82 @@ class LintModelSerializationTest {
             .about(PathSubject.paths())
             .that(debugVariant.manifestMergeReport?.toPath())
             .hasContents("Manifest merge report")
+    }
+
+    /**
+     * Check that special references to output files "stderr" and "stdout" are not turned into
+     * actual files. Regression test for https://issuetracker.google.com/174480831.
+     */
+    @Test
+    fun testSpecialHandlingOfStderrAndStdout() {
+        val temp = temporaryFolder.newFolder()
+        val projectDirectory = temp.resolve("projectDir").createDirectories()
+        val buildDirectory = temp.resolve("buildDir").createDirectories()
+        val modelsDir = buildDirectory.resolve("intermediates/lint-models").createDirectories()
+        modelsDir.resolve("module.xml")
+            .writeText(
+                """
+                <lint-module
+                    format="1"
+                    dir="${projectDirectory.absolutePath}"
+                    name="test_project"
+                    type="APP"
+                    maven="com.android.tools.demo:test_project:"
+                    gradle="4.0.0-beta01"
+                    buildFolder="${buildDirectory.absolutePath}"
+                    javaSourceLevel="1.7"
+                    compileTarget="android-25"
+                    neverShrinking="true">
+                    <lintOptions
+                      abortOnError="true"
+                      absolutePaths="true"
+                      checkReleaseBuilds="true"
+                      explainIssues="true"
+                      textReport="true"
+                      textOutput="stderr"
+                      xmlOutput="stdout"
+                      htmlOutput="relative"
+                      htmlReport="true"
+                      xmlReport="true"/>
+                    <variant name="debug"/>
+                </lint-module>
+                """.trimIndent()
+            )
+        modelsDir.resolve("debug.xml")
+            .writeText(
+                """
+                <variant
+                    name="debug"
+                    minSdkVersion="5"
+                    targetSdkVersion="16"
+                    debuggable="true">
+                  <buildFeatures />
+                  <sourceProviders>
+                    <sourceProvider
+                        manifest="src/main/AndroidManifest.xml"
+                        javaDirectories="src/main/java:src/main/kotlin"
+                        resDirectories="src/main/res"
+                        assetsDirectories="src/main/assets"/>
+                  </sourceProviders>
+                  <mainArtifact
+                      classOutputs="${buildDirectory.absolutePath}/intermediates/javac/freeBetaDebug/classes:${buildDirectory.absolutePath}/intermediates/kotlin-classes/freeBetaDebug"
+                      applicationId="com.android.tools.test">
+                  </mainArtifact>
+                </variant>
+                """.trimIndent()
+            )
+
+        val module = LintModelSerialization.readModule(
+            source = modelsDir,
+            readDependencies = false
+        )
+
+        val lintOptions = module.lintOptions
+        val textOutput = lintOptions.textOutput
+        assertEquals("stderr", textOutput!!.path)
+        assertEquals("stdout", lintOptions.xmlOutput!!.path)
+        assertEquals("relative", lintOptions.htmlOutput!!.name)
+        assertTrue(lintOptions.htmlOutput!!.isAbsolute)
     }
 
     // ----------------------------------------------------------------------------------
