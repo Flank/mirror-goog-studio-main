@@ -38,6 +38,7 @@ kotlin_library(
         "//tools/base/mlkit-common:tools.mlkit-common",
     ],
     lint_baseline = "lint_baseline.xml",
+    lint_timeout = "long",
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],
