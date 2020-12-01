@@ -16,14 +16,9 @@
 
 package android.testing.testapp;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.SmallTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class TestCode {
