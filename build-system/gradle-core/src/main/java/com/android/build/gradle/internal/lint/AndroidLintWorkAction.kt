@@ -20,10 +20,9 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.process.ExecOperations
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
-import javax.inject.Inject
+import java.net.URLClassLoader
 
 @Suppress("UnstableApiUsage")
 abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWorkActionParameters> {
@@ -33,28 +32,16 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         abstract val classpath: ConfigurableFileCollection
         abstract val android: Property<Boolean>
         abstract val fatalOnly: Property<Boolean>
-        abstract val lintFixBuildService: Property<LintFixBuildService>
+        abstract val cacheClassLoader: Property<Boolean>
     }
 
-    @get:Inject
-    abstract val process: ExecOperations
-
     override fun execute() {
-        // The lint fix build service, when present, prevents multiple lint fix actions from running
-        // concurrently potentially on the same sources.
-        parameters.lintFixBuildService.orNull
         val logger = Logging.getLogger(this.javaClass)
         val arguments = parameters.arguments.get()
         logger.debug("Running lint " + arguments.joinToString(" "))
-        val execResult = process.javaexec {
-            it.classpath = parameters.classpath
-            it.args = arguments
-            it.main = "com.android.tools.lint.Main"
-            it.isIgnoreExitValue = true
-        }
-
-        logger.debug("Lint returned ${execResult.exitValue}")
-        if (execResult.exitValue == ERRNO_SUCCESS) {
+        val execResult = runLint(arguments)
+        logger.debug("Lint returned $execResult")
+        if (execResult == ERRNO_SUCCESS) {
             return
         }
 
@@ -104,7 +91,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             }
         }
 
-        throw when (execResult.exitValue) {
+        throw when (execResult) {
             ERRNO_ERRORS -> RuntimeException(message)
             ERRNO_USAGE -> IllegalStateException("Internal Error: Unexpected lint usage")
             ERRNO_EXISTS -> throw RuntimeException("Unable to write lint output")
@@ -112,8 +99,46 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             ERRNO_INVALID_ARGS -> throw IllegalStateException("Internal error: Unexpected lint invalid arguments")
             ERRNO_CREATED_BASELINE -> throw RuntimeException("Aborting build since new baseline file was created")
             ERRNO_APPLIED_SUGGESTIONS -> throw RuntimeException("Aborting build since sources were modified to apply quickfixes after compilation")
-            else -> throw IllegalStateException("Internal error: unexpected lint return value ${execResult.exitValue}")
+            else -> throw IllegalStateException("Internal error: unexpected lint return value ${execResult}")
         }
+    }
+
+    private fun runLint(arguments: List<String>): Int {
+        if (parameters.cacheClassLoader.get()) {
+            if (cachedClassLoader == null) {
+                cachedClassLoader = createClassLoader()
+            }
+            return invokeLintMainRunMethod(cachedClassLoader!!, arguments)
+        } else {
+            createClassLoader().use {
+                return invokeLintMainRunMethod(it, arguments)
+            }
+        }
+    }
+
+    private fun createClassLoader(): URLClassLoader {
+        val classpathUrls = parameters.classpath.files.map { it.toURI().toURL() }.toTypedArray()
+        return URLClassLoader(classpathUrls, getPlatformClassLoader())
+    }
+
+    private fun invokeLintMainRunMethod(classLoader: ClassLoader, arguments: List<String>): Int {
+        // val returnValue: Int = Main().run(arguments.toTypedArray())
+        val cls = classLoader.loadClass("com.android.tools.lint.Main")
+        val method = cls.getMethod("run", Array<String>::class.java)
+        val lintMain = cls.getDeclaredConstructor().newInstance()
+        val returnValue = method.invoke(lintMain, arguments.toTypedArray()) as Int
+
+        // UastEnvironment.disposeApplicationEnvironment()
+        val uastEnvironment = classLoader.loadClass("com.android.tools.lint.UastEnvironment")
+        val disposeMethod = uastEnvironment.getDeclaredMethod("disposeApplicationEnvironment")
+        disposeMethod.invoke(null)
+
+        return returnValue
+    }
+
+    private fun getPlatformClassLoader(): ClassLoader {
+        // AGP is currently compiled against java 8 APIs, so do this by reflection (b/160392650)
+        return ClassLoader::class.java.getMethod("getPlatformClassLoader").invoke(null) as ClassLoader
     }
 
     companion object {
@@ -126,5 +151,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
         private const val ERRNO_INVALID_ARGS = 5
         private const val ERRNO_CREATED_BASELINE = 6
         private const val ERRNO_APPLIED_SUGGESTIONS = 7
+
+        private var cachedClassLoader: URLClassLoader? = null
     }
 }
