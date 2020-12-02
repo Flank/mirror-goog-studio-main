@@ -62,6 +62,28 @@ fun createCxxModuleModel(
         null
     }
 
+    // When configuration folding is enabled, the intermediates folder needs to look like:
+    //
+    //    app1/build/intermediates/cxx
+    //
+    // rather than:
+    //
+    //    app1/build/intermediates
+    //
+    // because the folder segments that are appended to it for different variants don't
+    // have "cmake" or "ndk-build" in them. They look like this:
+    //
+    //    app1/build/intermediates/cxx/Debug/[configuration hash]
+    //
+    // Without the added "cxx", there's no indication that these intermediates are for C/C++
+    // and we risk colliding with a variant named "Debug" in that folder.
+    //
+    val intermediatesFolder = if (configurationParameters.isConfigurationFoldingEnabled) {
+        join(configurationParameters.intermediatesFolder, "cxx")
+    } else {
+        configurationParameters.intermediatesFolder
+    }
+
     return CxxModuleModel(
         moduleBuildFile = configurationParameters.buildFile,
         cxxFolder = cxxFolder,
@@ -103,7 +125,7 @@ fun createCxxModuleModel(
         ndkDefaultStl = ndk.ndkInfo.getDefaultStl(configurationParameters.buildSystem),
         makeFile = configurationParameters.makeFile,
         buildSystem = configurationParameters.buildSystem,
-        intermediatesFolder = configurationParameters.intermediatesFolder,
+        intermediatesFolder = intermediatesFolder,
         gradleModulePathName = configurationParameters.gradleModulePathName,
         moduleRootFolder = configurationParameters.moduleRootFolder,
         stlSharedObjectMap =
