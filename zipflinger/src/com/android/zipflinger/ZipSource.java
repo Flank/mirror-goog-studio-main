@@ -42,15 +42,7 @@ public class ZipSource {
 
     @NonNull
     public void select(@NonNull String entryName, @NonNull String newName) {
-        select(entryName, newName, COMPRESSION_NO_CHANGE, Source.NO_ALIGNMENT, 0);
-    }
-
-    public void select(
-            @NonNull String entryName,
-            @NonNull String newName,
-            int compressionLevel,
-            long alignment) {
-        select(entryName, newName, compressionLevel, alignment, 0);
+        select(entryName, newName, COMPRESSION_NO_CHANGE, Source.NO_ALIGNMENT);
     }
 
     /**
@@ -66,7 +58,6 @@ public class ZipSource {
      * @param entryName Name of the entry in the source zip.
      * @param newName Name of the entry in the destination zip.
      * @param compressionLevel The desired compression level.
-     * @param externalAttributes additional attributes to add.
      * @return
      */
     @NonNull
@@ -74,8 +65,7 @@ public class ZipSource {
             @NonNull String entryName,
             @NonNull String newName,
             int compressionLevel,
-            long alignment,
-            int externalAttributes) {
+            long alignment) {
         Entry entry = map.getEntries().get(entryName);
         if (entry == null) {
             throw new IllegalStateException(
@@ -84,7 +74,7 @@ public class ZipSource {
         Source entrySource = newZipSourceEntryFor(newName, entry, compressionLevel);
         entrySource.align(alignment);
         entrySource.versionMadeBy = entry.getVersionMadeBy();
-        entrySource.externalAttributes = entry.getExternalAttributes() | externalAttributes;
+        entrySource.externalAttributes = entry.getExternalAttributes();
         selectedEntries.add(entrySource);
     }
 
