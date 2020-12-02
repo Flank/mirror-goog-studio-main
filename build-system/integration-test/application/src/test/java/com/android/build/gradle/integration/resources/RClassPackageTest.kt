@@ -132,10 +132,10 @@ class RClassPackageTest {
     }
 
     @Test
-    fun testCustomPackageName() {
+    fun testCustomNamespace() {
         project.buildFile.appendText(
                 """
-                android.packageName "com.example.fromDsl"
+                android.namespace "com.example.fromDsl"
             """)
 
         // Update the R class namespaces in MyClass.java and MyTestClass.java
@@ -158,22 +158,22 @@ class RClassPackageTest {
     }
 
     @Test
-    fun testCustomPackageNameAndApplicationId() {
+    fun testCustomNamespaceAndApplicationId() {
         project.buildFile.appendText(
                 """
-                android.packageName "com.example.packageName"
+                android.namespace "com.example.namespace"
                 android.defaultConfig.applicationId "com.example.applicationId"
             """)
 
         // Update the R class namespaces in MyClass.java and MyTestClass.java
         val appClass = project.file("src/main/java/com/example/app/MyClass.java")
         assertThat(appClass).exists()
-        TestFileUtils.searchAndReplace(appClass, "R", "com.example.packageName.R")
+        TestFileUtils.searchAndReplace(appClass, "R", "com.example.namespace.R")
         val testClass = project.file("src/androidTest/java/com/example/app/test/MyTestClass.java")
         assertThat(testClass).exists()
-        TestFileUtils.searchAndReplace(testClass, "com.example.app.R", "com.example.packageName.R")
+        TestFileUtils.searchAndReplace(testClass, "com.example.app.R", "com.example.namespace.R")
         // TODO(170945282): migrate everything to use the actual package name in AGP 7.0, in which
-        // case we'll replace this with "com.example.packageName.test.R".
+        // case we'll replace this with "com.example.namespace.test.R".
         TestFileUtils.searchAndReplace(
                 testClass,
                 "com.example.app.test.R",
@@ -187,10 +187,10 @@ class RClassPackageTest {
     }
 
     @Test
-    fun testCustomPackageNameApplicationIdAndTestApplicationId() {
+    fun testCustomNamespaceApplicationIdAndTestApplicationId() {
         project.buildFile.appendText(
                 """
-                android.packageName "com.example.packageName"
+                android.namespace "com.example.namespace"
                 android.defaultConfig.applicationId "com.example.applicationId"
                 android.defaultConfig.testApplicationId "com.example.testApplicationId"
             """)
@@ -198,12 +198,12 @@ class RClassPackageTest {
         // Update the R class namespaces in MyClass.java and MyTestClass.java
         val appClass = project.file("src/main/java/com/example/app/MyClass.java")
         assertThat(appClass).exists()
-        TestFileUtils.searchAndReplace(appClass, "R", "com.example.packageName.R")
+        TestFileUtils.searchAndReplace(appClass, "R", "com.example.namespace.R")
         val testClass = project.file("src/androidTest/java/com/example/app/test/MyTestClass.java")
         assertThat(testClass).exists()
-        TestFileUtils.searchAndReplace(testClass, "com.example.app.R", "com.example.packageName.R")
+        TestFileUtils.searchAndReplace(testClass, "com.example.app.R", "com.example.namespace.R")
         // TODO(170945282): migrate everything to use the actual package name in AGP 7.0, in which
-        // case we'll replace this with "com.example.packageName.test.R".
+        // case we'll replace this with "com.example.namespace.test.R".
         TestFileUtils.searchAndReplace(
                 testClass,
                 "com.example.app.test.R",

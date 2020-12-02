@@ -60,7 +60,7 @@ public class VariantDslInfoTest {
     private BuildType buildType;
     private DslServices dslServices;
     private VariantPropertiesApiServices variantPropertiesApiServices;
-    private String packageName;
+    private String namespace;
 
     @Before
     public void setUp() throws Exception {
@@ -283,14 +283,14 @@ public class VariantDslInfoTest {
     }
 
     @Test
-    public void testPackageName() {
+    public void testNamespace() {
         initNoDeviceApiInjection();
 
-        packageName = "com.example.myPackageName";
+        namespace = "com.example.myNamespace";
 
         VariantDslInfo variant = getVariant();
 
-        assertThat(variant.getPackageName().get()).isEqualTo("com.example.myPackageName");
+        assertThat(variant.getPackageName().get()).isEqualTo("com.example.myNamespace");
     }
 
     private VariantDslInfo getVariant() {
@@ -316,7 +316,7 @@ public class VariantDslInfoTest {
                         Mockito.mock(LazyManifestParser.class),
                         dslServices,
                         variantPropertiesApiServices,
-                        packageName);
+                        namespace);
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
@@ -371,6 +371,6 @@ public class VariantDslInfoTest {
         flavorConfig = dslServices.newInstance(ProductFlavor.class, "flavor", dslServices);
         flavorConfig.dimension("dimension1");
         buildType = dslServices.newInstance(BuildType.class, "debug", dslServices);
-        packageName = null;
+        namespace = null;
     }
 }

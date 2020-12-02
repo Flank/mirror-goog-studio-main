@@ -695,7 +695,7 @@ public abstract class BasePlugin<
                 variantFactory.createBuildFeatureValues(
                         extension.getBuildFeatures(), projectServices.getProjectOptions());
 
-        variantManager.createVariants(buildFeatureValues, extension.getPackageName());
+        variantManager.createVariants(buildFeatureValues, extension.getNamespace());
 
         List<ComponentInfo<VariantBuilderT, VariantT>> variants =
                 variantManager.getMainComponents();

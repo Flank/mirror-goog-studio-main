@@ -251,5 +251,5 @@ abstract class CommonExtensionImpl<
         libraryRequests.add(LibraryRequest(name, required))
     }
 
-    override var packageName: String? = null
+    override var namespace: String? = null
 }
