@@ -53,10 +53,10 @@ public abstract class Source {
     private static final int UNX_IRALL = UNX_IRUSR | UNX_IRGRP | UNX_IROTH;
     private static final int UNX_IWALL = UNX_IWUSR | UNX_IWGRP | UNX_IWOTH;
 
-    static final int PERMISSION_RW = (UNX_IRALL | UNX_IWALL) << 16;
-    static final int PERMISSION_EXEC = (UNX_IXUSR | UNX_IXGRP | UNX_IXOTH) << 16;
-    static final int PERMISSION_LINK = TYPE_FLNK << 16;
-    static final int PERMISSION_DEFAULT = (TYPE_FREG << 16) | PERMISSION_RW;
+    public static final int PERMISSION_RW = (UNX_IRALL | UNX_IWALL) << 16;
+    public static final int PERMISSION_EXEC = (UNX_IXUSR | UNX_IXGRP | UNX_IXOTH) << 16;
+    public static final int PERMISSION_LINK = TYPE_FLNK << 16;
+    public static final int PERMISSION_DEFAULT = (TYPE_FREG << 16) | PERMISSION_RW;
 
     protected int externalAttributes;
 

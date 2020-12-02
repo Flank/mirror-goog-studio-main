@@ -17,6 +17,7 @@
 package com.android.tools.binaries;
 
 import com.android.zipflinger.BytesSource;
+import com.android.zipflinger.Source;
 import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipRepo;
 import com.android.zipflinger.ZipSource;
@@ -190,7 +191,12 @@ public class ZipMerger {
                 ZipFile src = e.getKey();
                 ZipSource zipsrc = new ZipSource(src.file);
                 for (String entry : e.getValue()) {
-                    zipsrc.select(entry, src.root + entry);
+                    zipsrc.select(
+                            entry,
+                            src.root + entry,
+                            ZipSource.COMPRESSION_NO_CHANGE,
+                            Source.NO_ALIGNMENT,
+                            Source.PERMISSION_RW);
                 }
                 zip.add(zipsrc);
             }
