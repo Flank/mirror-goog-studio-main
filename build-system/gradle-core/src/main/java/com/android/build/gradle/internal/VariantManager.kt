@@ -112,12 +112,12 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
      * Creates the variants.
      *
      * @param buildFeatureValues the build feature value instance
-     * @param dslPackageName the packageName from the android extension DSL
+     * @param dslNamespace the namespace from the android extension DSL
      */
-    fun createVariants(buildFeatureValues: BuildFeatureValues, dslPackageName: String?) {
+    fun createVariants(buildFeatureValues: BuildFeatureValues, dslNamespace: String?) {
         variantFactory.validateModel(variantInputModel)
         variantFactory.preVariantWork(project)
-        computeVariants(buildFeatureValues, dslPackageName)
+        computeVariants(buildFeatureValues, dslNamespace)
     }
 
     private fun getFlavorSelection(
@@ -141,9 +141,9 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
      * Create all variants.
      *
      * @param buildFeatureValues the build feature value instance
-     * @param dslPackageName the packageName from the android extension DSL
+     * @param dslNamespace the namespace from the android extension DSL
      */
-    private fun computeVariants(buildFeatureValues: BuildFeatureValues, dslPackageName: String?) {
+    private fun computeVariants(buildFeatureValues: BuildFeatureValues, dslNamespace: String?) {
         val flavorDimensionList: List<String> = extension.flavorDimensionList
         val computer = DimensionCombinator(
                 variantInputModel,
@@ -160,7 +160,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     variant,
                     testBuildTypeData,
                     buildFeatureValues,
-                    dslPackageName
+                    dslNamespace
             )
         }
 
@@ -191,7 +191,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             productFlavorDataList: List<ProductFlavorData<ProductFlavor>>,
             variantType: VariantType,
             buildFeatureValues: BuildFeatureValues,
-            dslPackageName: String?
+            dslNamespace: String?
     ): VariantComponentInfo<VariantBuilderT, VariantT>? {
         // entry point for a given buildType/Flavors/VariantType combo.
         // Need to run the new variant API to selectively ignore variants.
@@ -212,7 +212,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         variantType.requiresManifest) { canParseManifest() },
                 dslServices,
                 variantPropertiesApiServices,
-                dslPackageName)
+                dslNamespace)
 
         // We must first add the flavors to the variant config, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -617,7 +617,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
             dimensionCombination: DimensionCombination,
             testBuildTypeData: BuildTypeData<BuildType>?,
             buildFeatureValues: BuildFeatureValues,
-            dslPackageName: String?
+            dslNamespace: String?
     ) {
         val variantType = variantFactory.variantType
 
@@ -653,7 +653,7 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     productFlavorDataList,
                     variantType,
                     buildFeatureValues,
-                    dslPackageName)?.let { variantInfo ->
+                    dslNamespace)?.let { variantInfo ->
                 addVariant(variantInfo)
                 val variant = variantInfo.variant
                 val variantDslInfo = variant.variantDslInfo

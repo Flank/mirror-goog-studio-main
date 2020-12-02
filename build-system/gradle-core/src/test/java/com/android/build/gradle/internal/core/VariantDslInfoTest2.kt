@@ -597,17 +597,17 @@ class VariantDslInfoTest2 :
     }
 
     @Test
-    fun `packageName from DSL overrides manifest`() {
+    fun `namespace from DSL overrides manifest`() {
         given {
             manifestData {
                 packageName = "com.example.fromManifest"
             }
 
-            packageName = "com.example.fromDsl"
+            namespace = "com.example.fromDsl"
         }
 
         expect {
-            packageName = "com.example.fromDsl"
+            namespace = "com.example.fromDsl"
         }
     }
 
@@ -639,7 +639,7 @@ class VariantDslInfoTest2 :
             dslServices = dslServices,
             services = services,
             buildDirectory = buildDirectory,
-            dslPackageName = given.packageName
+            dslNamespace = given.namespace
         )
 
         return instantiateResult().also {
@@ -655,10 +655,10 @@ class VariantDslInfoTest2 :
                     it.functionalTest = variantDslInfo.functionalTest.get()
                 }
                 try {
-                    it.packageName = variantDslInfo.packageName.orNull
+                    it.namespace = variantDslInfo.packageName.orNull
                 } catch (e: RuntimeException) {
                     // RuntimeException can be thrown when ManifestData.packageName is null
-                    it.packageName = null
+                    it.namespace = null
                 }
             }
         }
@@ -700,7 +700,7 @@ class VariantDslInfoTest2 :
 
         var dexingType = DexingType.NATIVE_MULTIDEX
 
-        var packageName: String? = null
+        var namespace: String? = null
 
         /** default Config values */
         val defaultConfig: DefaultConfig = DefaultConfig(BuilderConstants.MAIN, dslServices)
@@ -736,7 +736,7 @@ class VariantDslInfoTest2 :
         var instrumentationRunner: String? = null,
         var handleProfiling: Boolean? = null,
         var functionalTest: Boolean? = null,
-        var packageName: String? = null,
+        var namespace: String? = null,
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -749,7 +749,7 @@ class VariantDslInfoTest2 :
             if (instrumentationRunner != other.instrumentationRunner) return false
             if (handleProfiling != other.handleProfiling) return false
             if (functionalTest != other.functionalTest) return false
-            if (packageName != other.packageName) return false
+            if (namespace != other.namespace) return false
 
             return true
         }
@@ -760,12 +760,12 @@ class VariantDslInfoTest2 :
             result = 31 * result + (instrumentationRunner?.hashCode() ?: 0)
             result = 31 * result + (handleProfiling?.hashCode() ?: 0)
             result = 31 * result + (functionalTest?.hashCode() ?: 0)
-            result = 31 * result + (packageName?.hashCode() ?: 0)
+            result = 31 * result + (namespace?.hashCode() ?: 0)
             return result
         }
 
         override fun toString(): String {
-            return "ResultData(versionCode=$versionCode, versionName=$versionName, instrumentationRunner=$instrumentationRunner, handleProfiling=$handleProfiling, functionalTest=$functionalTest, packageName=$packageName)"
+            return "ResultData(versionCode=$versionCode, versionName=$versionName, instrumentationRunner=$instrumentationRunner, handleProfiling=$handleProfiling, functionalTest=$functionalTest, namespace=$namespace)"
         }
     }
 

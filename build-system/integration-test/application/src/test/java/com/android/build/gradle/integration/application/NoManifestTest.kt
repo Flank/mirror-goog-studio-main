@@ -80,11 +80,11 @@ class NoManifestTest {
     }
 
     @Test
-    fun noManifestSyncWithPackageNameTest() {
+    fun noManifestSyncWithNamespaceTest() {
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").buildFile,
                 """
-                    android.packageName "com.example.app"
+                    android.namespace "com.example.app"
                     """.trimIndent()
         )
         val issues =
