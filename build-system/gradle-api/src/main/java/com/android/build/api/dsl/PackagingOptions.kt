@@ -20,6 +20,55 @@ import org.gradle.api.Incubating
 
 @Incubating
 interface PackagingOptions {
+    // TODO (Issue 149770867) - deprecate and then remove these top-level excludes, pickFirsts,
+    // merges, and doNotStrip properties once the corresponding properties in jniLibs and resources
+    // are working.
+    /** The list of excluded paths.*/
+    val excludes: MutableSet<String>
+
+    /**
+     * The list of patterns where the first occurrence is packaged in the APK. First pick patterns
+     * do get packaged in the APK, but only the first occurrence found gets packaged.
+     */
+    val pickFirsts: MutableSet<String>
+
+    /** The list of patterns where all occurrences are concatenated and packaged in the APK. */
+    val merges: MutableSet<String>
+
+    /**
+     * The list of patterns for native library that should not be stripped of debug symbols.
+     *
+     * Example: `packagingOptions.doNotStrip "*`/`armeabi-v7a/libhello-jni.so"`
+     */
+    val doNotStrip: MutableSet<String>
+
+    /**
+     * Adds an excluded pattern.
+     *
+     * @param pattern the pattern
+     */
+    fun exclude(pattern: String)
+
+    /**
+     * Adds a first-pick pattern.
+     *
+     * @param pattern the path to add.
+     */
+    fun pickFirst(pattern: String)
+
+    /**
+     * Adds a merge pattern.
+     *
+     * @param pattern the pattern, as packaged in the APK
+     */
+    fun merge(pattern: String)
+
+    /**
+     * Adds a doNotStrip pattern.
+     *
+     * @param pattern the pattern, as packaged in the APK
+     */
+    fun doNotStrip(pattern: String)
 
     /** PackagingOptions for dex */
     val dex: DexPackagingOptions
