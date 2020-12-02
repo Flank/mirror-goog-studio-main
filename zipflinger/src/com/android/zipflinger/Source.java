@@ -33,7 +33,7 @@ public abstract class Source {
     protected short compressionFlag;
 
     protected short versionMadeBy;
-    static final short MADE_BY_UNIX = 3 << 8;
+    public static final short MADE_BY_UNIX = 3 << 8;
 
     // For more of these magical values, see zipinfo.c in unzip source code.
     // All these values are shifted left 16 bits because this is where they
@@ -53,10 +53,11 @@ public abstract class Source {
     private static final int UNX_IRALL = UNX_IRUSR | UNX_IRGRP | UNX_IROTH;
     private static final int UNX_IWALL = UNX_IWUSR | UNX_IWGRP | UNX_IWOTH;
 
-    static final int PERMISSION_RW = (UNX_IRALL | UNX_IWALL) << 16;
-    static final int PERMISSION_EXEC = (UNX_IXUSR | UNX_IXGRP | UNX_IXOTH) << 16;
-    static final int PERMISSION_LINK = TYPE_FLNK << 16;
-    static final int PERMISSION_DEFAULT = (TYPE_FREG << 16) | PERMISSION_RW;
+    public static final int PERMISSION_USR_RW = (UNX_IRUSR | UNX_IWUSR) << 16;
+    public static final int PERMISSION_RW = (UNX_IRALL | UNX_IWALL) << 16;
+    public static final int PERMISSION_EXEC = (UNX_IXUSR | UNX_IXGRP | UNX_IXOTH) << 16;
+    public static final int PERMISSION_LINK = TYPE_FLNK << 16;
+    public static final int PERMISSION_DEFAULT = (TYPE_FREG << 16) | PERMISSION_RW;
 
     protected int externalAttributes;
 
@@ -105,12 +106,16 @@ public abstract class Source {
         return compressionFlag;
     }
 
-    short getVersionMadeBy() {
+    public short getVersionMadeBy() {
         return versionMadeBy;
     }
 
-    int getExternalAttributes() {
+    public int getExternalAttributes() {
         return externalAttributes;
+    }
+
+    public void setExternalAttributes(int externalAttributes) {
+        this.externalAttributes = externalAttributes;
     }
 
     // Guaranteed to be called before writeTo. After this method has been called, every fields
