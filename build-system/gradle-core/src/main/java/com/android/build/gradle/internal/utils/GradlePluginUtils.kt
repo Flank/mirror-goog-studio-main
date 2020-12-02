@@ -22,6 +22,7 @@ import com.android.builder.errors.IssueReporter
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.initialization.dsl.ScriptHandler.CLASSPATH_CONFIGURATION
 import java.net.JarURLConnection
@@ -165,6 +166,13 @@ internal class ViolatingPluginDetector(
             }
         }
     }
+}
+
+/** Lists all module dependencies resolved for buildscript classpath. */
+fun getBuildscriptDependencies(project: Project): List<ModuleComponentIdentifier> {
+    val buildScriptClasspath = project.buildscript.configurations.getByName(CLASSPATH_CONFIGURATION)
+    return buildScriptClasspath.incoming.resolutionResult.getModuleComponents()
+            .map { it.id as ModuleComponentIdentifier }
 }
 
 /**
