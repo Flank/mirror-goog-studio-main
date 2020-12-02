@@ -69,6 +69,13 @@ fun getPlatformSpecificPath(path: String): String {
  * Records a new absolute file path.
  * Parent folders are automatically created.
  */
+fun recordExistingFile(path: Path, contents: String) =
+        recordExistingFile(path, 0, contents.toByteArray())
+
+/**
+ * Records a new absolute file path.
+ * Parent folders are automatically created.
+ */
 fun recordExistingFile(
     path: Path, lastModified: Long = 0, inputStream: ByteArray? = null) {
     try {

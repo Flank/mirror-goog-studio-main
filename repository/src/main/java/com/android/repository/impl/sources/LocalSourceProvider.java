@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -103,37 +104,32 @@ public class LocalSourceProvider implements RepositorySourceProvider {
 
             // Load new user sources from property file
             try (InputStream fis = CancellableFileIo.newInputStream(mLocation)) {
-                if (CancellableFileIo.exists(mLocation)) {
-                    Properties props = new Properties();
-                    props.load(fis);
+                Properties props = new Properties();
+                props.load(fis);
 
-                    int count = Integer.parseInt(props.getProperty(KEY_COUNT, "0"));
+                int count = Integer.parseInt(props.getProperty(KEY_COUNT, "0"));
 
-                    for (int i = 0; i < count; i++) {
-                        String url =
-                                props.getProperty(String.format(Locale.US, "%s%02d", KEY_SRC, i));
-                        String disp =
-                                props.getProperty(
-                                        String.format(Locale.US, "%s%02d", KEY_DISPLAY, i));
-                        String enabledStr =
-                                props.getProperty(
-                                        String.format(Locale.US, "%s%02d", KEY_ENABLED, i));
-                        boolean enabled;
-                        if (enabledStr == null) {
-                            // for backward compatibility
-                            enabled = true;
-                        } else {
-                            enabled = Boolean.parseBoolean(enabledStr);
-                        }
-                        if (url != null) {
-                            result.add(new SimpleRepositorySource(url, disp, enabled,
-                                    mAllowedModules, this));
-                        }
+                for (int i = 0; i < count; i++) {
+                    String url = props.getProperty(String.format(Locale.US, "%s%02d", KEY_SRC, i));
+                    String disp =
+                            props.getProperty(String.format(Locale.US, "%s%02d", KEY_DISPLAY, i));
+                    String enabledStr =
+                            props.getProperty(String.format(Locale.US, "%s%02d", KEY_ENABLED, i));
+                    boolean enabled;
+                    if (enabledStr == null) {
+                        // for backward compatibility
+                        enabled = true;
+                    } else {
+                        enabled = Boolean.parseBoolean(enabledStr);
                     }
-                } else {
-                    progress.logInfo(
-                            "File " + mLocation.toAbsolutePath() + " could not be loaded.");
+                    if (url != null) {
+                        result.add(
+                                new SimpleRepositorySource(
+                                        url, disp, enabled, mAllowedModules, this));
+                    }
                 }
+            } catch (NoSuchFileException ignore) {
+                // This is expected if no custom sources have been set up.
             } catch (NumberFormatException | IOException e) {
                 progress.logWarning("Failed to parse user addon file at " + mLocation, e);
             }
