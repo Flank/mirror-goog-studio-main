@@ -37,6 +37,7 @@ class ComposeHelloWorldConnectedTest {
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
         // b/158092419
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        .withKotlinVersion("1.4.20")
         .create()
 
     @Before
