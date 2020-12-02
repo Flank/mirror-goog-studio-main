@@ -17,6 +17,7 @@
 package com.android.tools.binaries;
 
 import com.android.zipflinger.BytesSource;
+import com.android.zipflinger.Source;
 import com.android.zipflinger.ZipArchive;
 import com.android.zipflinger.ZipRepo;
 import com.android.zipflinger.ZipSource;
@@ -72,8 +73,7 @@ public class ZipMerger {
             }
             adds.add(new ZipFile(root, Paths.get(dataPath), override));
         }
-
-        mergeZips(out, adds, level);
+        mergeZips(out, adds, true, level);
     }
 
     private static class ZipFile {
@@ -99,17 +99,20 @@ public class ZipMerger {
     }
 
     /**
-     * Recursively merge a set of zip files, in <files> into one zip file. If the same entry
-     * is in two or more zip files, the tool will throw an error, unless one of them is
-     * marked to override. If two or more entries collide, the behavior depends on whether
-     * the entry is an archive (zip or jar) or a file.
-     * If multiple source zip files provide the same file, the tool will fail unless exactly
-     * one of them is comes from an override zip. In that case, that entry is chosen.
-     * If multiple source zip files provide the same archive, then only one of them is allowed
-     * not to come from an override zip. If that's the case, all these archived are merged
+     * Recursively merge a set of zip files, in <files> into one zip file. If the same entry is in
+     * two or more zip files, the tool will throw an error, unless one of them is marked to
+     * override. If two or more entries collide, the behavior depends on whether the entry is an
+     * archive (zip or jar) or a file. If multiple source zip files provide the same file, the tool
+     * will fail unless exactly one of them is comes from an override zip. In that case, that entry
+     * is chosen. If multiple source zip files provide the same archive, then only one of them is
+     * allowed not to come from an override zip. If that's the case, all these archived are merged
      * recursively. See the tests for examples.
+     *
+     * <p>If ensureRW is true, all the entries in the resulting zip will have linux read/write
+     * permissions.
      */
-    private static void mergeZips(String out, List<ZipFile> files, int compressionLevel)
+    private static void mergeZips(
+            String out, List<ZipFile> files, boolean ensureRW, int compressionLevel)
             throws Exception {
         Path outFile = Paths.get(out);
         Files.deleteIfExists(outFile);
@@ -153,7 +156,7 @@ public class ZipMerger {
                     Path part = extract(zip.zip.file, zip.entry);
                     toMerge.add(new ZipFile("", part, zip.zip.override));
                 }
-                mergeZips(tmp.toAbsolutePath().toString(), toMerge, compressionLevel);
+                mergeZips(tmp.toAbsolutePath().toString(), toMerge, false, compressionLevel);
                 tmp.toFile().deleteOnExit();
 
                 Path mergedZip = File.createTempFile("merged", ".zip").toPath();
@@ -186,6 +189,17 @@ public class ZipMerger {
                 ZipSource zipsrc = new ZipSource(src.file);
                 for (String entry : e.getValue()) {
                     zipsrc.select(entry, src.root + entry);
+                }
+                if (ensureRW) {
+                    for (Source source : zipsrc.getSelectedEntries()) {
+                        if ((source.getVersionMadeBy() & 0xFF00) != Source.MADE_BY_UNIX) {
+                            // Only adjust UNIX entries
+                            continue;
+                        }
+                        // Make sure entries are owner RW
+                        int attr = source.getExternalAttributes();
+                        source.setExternalAttributes(attr | Source.PERMISSION_USR_RW);
+                    }
                 }
                 zip.add(zipsrc);
             }
