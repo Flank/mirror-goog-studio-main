@@ -18,7 +18,6 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_CORE_FOR_SYSTEM_MODULES
-import com.android.aapt.Resources
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.builder.core.ToolsRevisionUtils
@@ -544,7 +543,7 @@ class SdkDirectLoadingStrategyTest {
             buildToolsRoot.mkdirs()
 
             val buildToolInfo = BuildToolInfo.fromStandardDirectoryLayout(
-                ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION, buildToolsRoot)
+                ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION, buildToolsRoot.toPath())
             for (id in BuildToolInfo.PathId.values()) {
                 if (!id.isPresentIn(ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION)) {
                     continue
@@ -651,7 +650,7 @@ class SdkDirectLoadingStrategyTest {
             sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
         if (platformHash.largerThanAndroidSdk30()) {
             assertThat(sdkDirectLoadingStrategy.getCoreForSystemModulesJar()).isEqualTo(
-                sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_CORE_FOR_SYSTEM_MODULES}")
+                sdkRoot.resolve("platforms/$platformHash/$FN_CORE_FOR_SYSTEM_MODULES")
             )
         }
 

@@ -196,7 +196,7 @@ public class ModelInfoTest {
     }
 
     private static ByteBuffer extractByteBufferFromModel(String filePath) throws IOException {
-        File modelFile = TestUtils.getWorkspaceFile(filePath);
+        File modelFile = TestUtils.resolveWorkspacePath(filePath).toFile();
         try (RandomAccessFile f = new RandomAccessFile(modelFile, "r")) {
             byte[] data = new byte[(int) f.length()];
             f.readFully(data);

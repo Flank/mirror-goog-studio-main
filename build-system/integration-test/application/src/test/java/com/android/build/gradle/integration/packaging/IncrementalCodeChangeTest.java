@@ -23,6 +23,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.Rule;
 import org.junit.Test;
+
 /**
  * test for incremental code change.
  *
@@ -46,11 +47,9 @@ public class IncrementalCodeChangeTest {
     public void checkNonMultiDex() throws Exception {
         Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
                 .write("include 'app', 'library'");
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n"
-                + "dependencies {\n"
-                + "    compile project(':library')\n"
-                + "}");
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    api project(':library')\n" + "}");
 
         project.executor().run("clean", ":app:assembleDebug");
 
@@ -74,16 +73,17 @@ public class IncrementalCodeChangeTest {
     public void checkLegacyMultiDex() throws Exception {
         Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
                 .write("include 'app', 'library'");
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
                 "\n"
-                + "android {\n"
-                + "    defaultConfig {\n"
-                + "        multiDexEnabled = true\n"
-                + "    }\n"
-                + "}\n"
-                + "dependencies {\n"
-                + "    compile project(':library')\n"
-                + "}");
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        multiDexEnabled = true\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    api project(':library')\n"
+                        + "}");
 
         project.executor().run("clean", ":app:assembleDebug");
 
@@ -111,17 +111,18 @@ public class IncrementalCodeChangeTest {
     public void checkNativeMultiDex() throws Exception {
         Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
                 .write("include 'app', 'library'");
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
                 "\n"
-                + "android {\n"
-                + "    defaultConfig {\n"
-                + "        minSdkVersion 21\n"
-                + "        multiDexEnabled = true\n"
-                + "    }\n"
-                + "}\n"
-                + "dependencies {\n"
-                + "    compile project(':library')\n"
-                + "}\n");
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 21\n"
+                        + "        multiDexEnabled = true\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    api project(':library')\n"
+                        + "}\n");
 
         project.executor().run("clean", ":app:assembleDebug");
 

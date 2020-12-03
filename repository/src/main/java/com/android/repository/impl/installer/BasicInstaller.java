@@ -18,6 +18,7 @@ package com.android.repository.impl.installer;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
 import com.android.repository.api.ProgressIndicator;
@@ -28,9 +29,13 @@ import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.google.common.base.Strings;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A simple {@link Installer} that just unzips the {@code complete} version of an {@link
@@ -40,7 +45,7 @@ import java.net.URL;
  */
 class BasicInstaller extends AbstractInstaller {
     static final String FN_UNZIP_DIR = "unzip";
-    private File myUnzipDir;
+    private Path myUnzipDir;
 
     BasicInstaller(@NonNull RemotePackage p, @NonNull RepoManager mgr,
       @NonNull Downloader downloader, @NonNull FileOp fop) {
@@ -53,8 +58,8 @@ class BasicInstaller extends AbstractInstaller {
      * @see #prepare(ProgressIndicator)
      */
     @Override
-    protected boolean doPrepare(@NonNull File installTempPath,
-      @NonNull ProgressIndicator progress) {
+    protected boolean doPrepare(
+            @NonNull Path installTempPath, @NonNull ProgressIndicator progress) {
         URL url = InstallerUtil.resolveCompleteArchiveUrl(getPackage(), progress);
         if (url == null) {
             progress.logWarning("No compatible archive found!");
@@ -64,26 +69,29 @@ class BasicInstaller extends AbstractInstaller {
         assert archive != null;
         try {
             String path = url.getPath();
-            File downloadLocation =
-                    new File(installTempPath, path.substring(path.lastIndexOf('/') + 1));
+            Path downloadLocation =
+                    installTempPath.resolve(path.substring(path.lastIndexOf('/') + 1));
             String checksum = archive.getComplete().getChecksum();
             getDownloader()
                     .downloadFullyWithCaching(
-                            url, downloadLocation, checksum, progress.createSubProgress(0.5));
+                            url,
+                            mFop.toFile(downloadLocation),
+                            checksum,
+                            progress.createSubProgress(0.5));
             if (progress.isCanceled()) {
                 progress.setFraction(1);
                 return false;
             }
             progress.setFraction(0.5);
-            if (!mFop.exists(downloadLocation)) {
+            if (!CancellableFileIo.exists(downloadLocation)) {
                 progress.logWarning("Failed to download package!");
                 return false;
             }
-            myUnzipDir = new File(installTempPath, FN_UNZIP_DIR);
-            mFop.mkdirs(myUnzipDir);
+            myUnzipDir = installTempPath.resolve(FN_UNZIP_DIR);
+            Files.createDirectories(myUnzipDir);
             InstallerUtil.unzip(
-                    downloadLocation,
-                    myUnzipDir,
+                    mFop.toFile(downloadLocation),
+                    mFop.toFile(myUnzipDir),
                     mFop,
                     archive.getComplete().getSize(),
                     progress.createSubProgress(1));
@@ -91,7 +99,7 @@ class BasicInstaller extends AbstractInstaller {
             if (progress.isCanceled()) {
                 return false;
             }
-            mFop.delete(downloadLocation);
+            FileOpUtils.deleteFileOrFolder(downloadLocation);
 
             return true;
         } catch (IOException e) {
@@ -109,9 +117,9 @@ class BasicInstaller extends AbstractInstaller {
     @Override
     protected void cleanup(@NonNull ProgressIndicator progress) {
         super.cleanup(progress);
-        mFop.deleteFileOrFolder(getLocation(progress));
+        FileOpUtils.deleteFileOrFolder(getLocation(progress));
         if (myUnzipDir != null) {
-            mFop.deleteFileOrFolder(myUnzipDir);
+            FileOpUtils.deleteFileOrFolder(myUnzipDir);
         }
     }
 
@@ -121,8 +129,8 @@ class BasicInstaller extends AbstractInstaller {
      * @see #complete(ProgressIndicator)
      */
     @Override
-    protected boolean doComplete(@Nullable File installTempPath,
-            @NonNull ProgressIndicator progress) {
+    protected boolean doComplete(
+            @Nullable Path installTempPath, @NonNull ProgressIndicator progress) {
         if (installTempPath == null) {
             return false;
         }
@@ -131,26 +139,29 @@ class BasicInstaller extends AbstractInstaller {
                 return false;
             }
             // Archives must contain a single top-level directory.
-            File unzipDir = new File(installTempPath, FN_UNZIP_DIR);
-            File[] topDirContents = mFop.listFiles(unzipDir);
-            File packageRoot;
-            if (topDirContents.length != 1) {
-                // TODO: we should be consistent and only support packages with a single top-level
-                // directory, but right now haxm doesn't have one. Put this check back when it's
-                // fixed.
-                // throw new IOException("Archive didn't have single top level directory");
-                packageRoot = unzipDir;
-            } else {
-                packageRoot = topDirContents[0];
+            Path unzipDir = installTempPath.resolve(FN_UNZIP_DIR);
+            Path packageRoot;
+            try (Stream<Path> topDirContents = CancellableFileIo.list(unzipDir)) {
+                List<Path> children = topDirContents.collect(Collectors.toList());
+                if (children.size() != 1) {
+                    // TODO: we should be consistent and only support packages with a single
+                    // top-level
+                    // directory, but right now haxm doesn't have one. Put this check back when it's
+                    // fixed.
+                    // throw new IOException("Archive didn't have single top level directory");
+                    packageRoot = unzipDir;
+                } else {
+                    packageRoot = children.get(0);
+                }
             }
-
-            progress
-              .logInfo(String.format("Installing %1$s in %2$s", getPackage().getDisplayName(),
-                getLocation(progress)));
+            progress.logInfo(
+                    String.format(
+                            "Installing %1$s in %2$s",
+                            getPackage().getDisplayName(), getLocation(progress)));
 
             // Move the final unzipped archive into place.
-            FileOpUtils.safeRecursiveOverwrite(packageRoot, getLocation(progress), mFop, progress);
-
+            FileOpUtils.safeRecursiveOverwrite(
+                    mFop.toFile(packageRoot), mFop.toFile(getLocation(progress)), mFop, progress);
             return true;
         } catch (IOException e) {
             String message = e.getMessage();

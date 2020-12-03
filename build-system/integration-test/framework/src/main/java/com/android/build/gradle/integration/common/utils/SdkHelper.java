@@ -54,7 +54,7 @@ public class SdkHelper {
                             + androidSdk.getAbsolutePath()
                             + " is not a directory");
         } else {
-            androidSdk = TestUtils.getSdk();
+            androidSdk = TestUtils.getSdk().toFile();
         }
 
         return androidSdk;

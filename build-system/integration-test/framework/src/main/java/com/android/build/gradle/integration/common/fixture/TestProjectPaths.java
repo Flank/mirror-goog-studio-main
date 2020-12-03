@@ -27,14 +27,14 @@ public class TestProjectPaths {
     private static final String EXTERNAL_PROJECT_PATH = "external";
 
     public static File getTestProjectDir(@NonNull String name) {
-        return TestUtils.getWorkspaceFile(TEST_PROJECT_PATH + "/" + name);
+        return TestUtils.resolveWorkspacePath(TEST_PROJECT_PATH + "/" + name).toFile();
     }
 
     public static File getTestProjectDir() {
-        return TestUtils.getWorkspaceFile(TEST_PROJECT_PATH);
+        return TestUtils.resolveWorkspacePath(TEST_PROJECT_PATH).toFile();
     }
 
     public static File getExternalProjectDir() {
-        return TestUtils.getWorkspaceFile(EXTERNAL_PROJECT_PATH);
+        return TestUtils.resolveWorkspacePath(EXTERNAL_PROJECT_PATH).toFile();
     }
 }

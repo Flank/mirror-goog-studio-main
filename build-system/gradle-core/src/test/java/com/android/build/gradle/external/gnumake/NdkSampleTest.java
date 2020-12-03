@@ -150,14 +150,15 @@ public class NdkSampleTest {
             @NonNull File testPath,
             @NonNull String variant,
             int operatingSystem) {
-        return TestUtils.getWorkspaceFile(
-                TEST_DATA_FOLDER
-                        + testPath.getName()
-                        + "."
-                        + variant
-                        + "."
-                        + getOsName(operatingSystem)
-                        + ".txt");
+        return TestUtils.resolveWorkspacePath(
+                        TEST_DATA_FOLDER
+                                + testPath.getName()
+                                + "."
+                                + variant
+                                + "."
+                                + getOsName(operatingSystem)
+                                + ".txt")
+                .toFile();
     }
 
     @NonNull
@@ -176,8 +177,13 @@ public class NdkSampleTest {
 
     @NonNull
     private static File getJsonFile(@NonNull File testPath, int operatingSystem) {
-        return TestUtils.getWorkspaceFile(
-                TEST_DATA_FOLDER + testPath.getName() + "." + getOsName(operatingSystem) + ".json");
+        return TestUtils.resolveWorkspacePath(
+                        TEST_DATA_FOLDER
+                                + testPath.getName()
+                                + "."
+                                + getOsName(operatingSystem)
+                                + ".json")
+                .toFile();
     }
 
     private NativeBuildConfigValues checkJson(String path) throws IOException {
@@ -189,9 +195,7 @@ public class NdkSampleTest {
     }
 
     private NativeBuildConfigValues checkJson(String path, int operatingSystem) throws IOException {
-
-        File ndkPath = TestUtils.getNdk();
-        File androidMkPath = new File(ndkPath, path);
+        File androidMkPath = TestUtils.getNdk().resolve(path).toFile();
         Map<String, String> variantConfigs = getVariantConfigs();
 
         // Get the baseline config

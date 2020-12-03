@@ -54,10 +54,10 @@ test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-pe
 declare -a conditional_flags
 if [[ " $@ " =~ " --detect_flakes " ]];
 then
-  conditional_flags+=(--runs_per_test=20)
-  conditional_flags+=(--runs_per_test_detects_flakes)
+  conditional_flags+=(--flaky_test_attempts=3)
   conditional_flags+=(--nocache_test_results)
-
+  conditional_flags+=(--build_tests_only)
+  skip_bazel_artifacts=1
 # Only run tests tagged with `very_flaky`, this is different than tests using
 # the 'Flaky' attribute/tag. Tests that are excessively flaky use this tag to
 # avoid running in presubmit.

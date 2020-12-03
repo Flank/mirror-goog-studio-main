@@ -26,7 +26,6 @@ import com.android.zipflinger.ZipSource;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitOption;
@@ -45,7 +44,6 @@ import java.util.jar.Manifest;
 import java.util.zip.Deflater;
 
 public class JarFlinger implements JarCreator {
-
     private final ZipArchive zipArchive;
     private final Predicate<String> filter;
 
@@ -59,7 +57,7 @@ public class JarFlinger implements JarCreator {
     public JarFlinger(@NonNull Path jarFile, @Nullable Predicate<String> filter)
             throws IOException {
         Files.deleteIfExists(jarFile);
-        zipArchive = new ZipArchive(jarFile.toFile());
+        zipArchive = new ZipArchive(jarFile);
         this.filter = filter;
     }
 
@@ -130,9 +128,7 @@ public class JarFlinger implements JarCreator {
             @Nullable Predicate<String> filterOverride,
             @Nullable Relocator relocator)
             throws IOException {
-        File file = path.toFile();
-
-        ZipSource source = new ZipSource(file);
+        ZipSource source = new ZipSource(path);
         Map<String, Entry> entries = source.entries();
         for (Entry entry : entries.values()) {
             if (entry.isDirectory()) {
@@ -155,7 +151,7 @@ public class JarFlinger implements JarCreator {
 
     @Override
     public void addFile(@NonNull String entryPath, @NonNull Path path) throws IOException {
-        BytesSource source = new BytesSource(path.toFile(), entryPath, compressionLevel);
+        BytesSource source = new BytesSource(path, entryPath, compressionLevel);
         zipArchive.add(source);
     }
 

@@ -32,9 +32,15 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                         + "res/menu-land/actions.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\" [AlwaysShowAction]\n"
                         + "        android:showAsAction=\"always|collapseActionView\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/menu-land/actions.xml:13: <No location-specific message\n"
-                        + "    res/menu-land/actions.xml:18: <No location-specific message\n"
-                        + "    res/menu-land/actions.xml:54: <No location-specific message\n"
+                        + "    res/menu-land/actions.xml:13: <No location-specific message>\n"
+                        + "            android:showAsAction=\"always\"\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/menu-land/actions.xml:18: <No location-specific message>\n"
+                        + "            android:showAsAction=\"always\" />\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/menu-land/actions.xml:54: <No location-specific message>\n"
+                        + "            android:showAsAction=\"always\"\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
                         xml(
@@ -118,9 +124,15 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                         + "res/menu-land/actions2.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\" [AlwaysShowAction]\n"
                         + "        android:showAsAction=\"always|collapseActionView\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/menu-land/actions2.xml:13: <No location-specific message\n"
-                        + "    res/menu-land/actions2.xml:18: <No location-specific message\n"
-                        + "    res/menu-land/actions2.xml:54: <No location-specific message\n"
+                        + "    res/menu-land/actions2.xml:13: <No location-specific message>\n"
+                        + "            android:showAsAction=\"always|collapseActionView\"\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/menu-land/actions2.xml:18: <No location-specific message>\n"
+                        + "            android:showAsAction=\"always|collapseActionView\" />\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/menu-land/actions2.xml:54: <No location-specific message>\n"
+                        + "            android:showAsAction=\"always|collapseActionView\"\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(

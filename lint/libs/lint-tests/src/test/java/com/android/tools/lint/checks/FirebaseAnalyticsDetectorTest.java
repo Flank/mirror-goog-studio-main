@@ -164,6 +164,8 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    src/test/pkg/MainActivity.java:7: Analytics event parameter name must be 40 characters or less (found 41)\n"
+                        + "        bundle.putString(\"12345678901234567890123456789012345678901\", \"foo\");\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
 
         lint().files(mFirebaseAnalytics, mainActivity).run().expect(expected);
@@ -191,6 +193,8 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    src/test/pkg/MainActivity.java:8: Analytics event parameter name must be 40 characters or less (found 41)\n"
+                        + "        bundle.putString(PARAM_NAME, \"foo\");\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
 
         lint().files(mFirebaseAnalytics, mainActivity).run().expect(expected);
@@ -229,6 +233,8 @@ public class FirebaseAnalyticsDetectorTest extends AbstractCheckTest {
                         + "        FirebaseAnalytics.getInstance(this).logEvent(\"bar\", bundle);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    src/test/pkg/Util.java:6: Analytics event parameter name must be 40 characters or less (found 41)\n"
+                        + "      bundle.putString(\"12345678901234567890123456789012345678901\", \"foo\");\n"
+                        + "      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
 
         lint().files(util, mFirebaseAnalytics, mainActivity).run().expect(expected);

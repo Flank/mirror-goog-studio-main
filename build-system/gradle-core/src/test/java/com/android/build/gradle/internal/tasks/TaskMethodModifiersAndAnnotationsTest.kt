@@ -132,6 +132,7 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.LintStandaloneTask::setReportDir",
                 "com.android.build.gradle.tasks.MapSourceSetPathsTask::setResourceComputer",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask::setPreserveDefinedOption",
+                "com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask::setDisplayEmulatorOption",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.MergeFileTask::setInputFiles",
                 "com.android.build.gradle.internal.tasks.NdkTask::setNdkConfig",

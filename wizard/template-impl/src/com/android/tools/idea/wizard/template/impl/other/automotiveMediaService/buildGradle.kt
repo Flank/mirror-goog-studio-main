@@ -22,15 +22,10 @@ import com.android.tools.idea.wizard.template.renderIf
 fun buildGradle(
   buildApiString: String?,
   generateKotlin: Boolean,
-  kotlinVersion: String,
   minApi: String,
   targetApi: String,
   useAndroidX: Boolean
 ): String {
-  val kotlinDependenciesBlock = renderIf(generateKotlin) {"""
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-  """}
-
   return """
 apply plugin: "com.android.library"
 ${renderIf(generateKotlin) {"""
@@ -39,7 +34,7 @@ apply plugin: "kotlin-android"
 
 android {
     compileSdkVersion ${buildApiString?.toIntOrNull() ?: "\"$buildApiString\""}
-    
+
     defaultConfig {
         minSdkVersion ${minApi.toIntOrNull() ?: "\"$minApi\""}
         targetSdkVersion ${targetApi.toIntOrNull() ?: "\"$targetApi\""}
@@ -50,7 +45,5 @@ android {
     }
 }
 
-dependencies {
-$kotlinDependenciesBlock
-}"""
+"""
 }

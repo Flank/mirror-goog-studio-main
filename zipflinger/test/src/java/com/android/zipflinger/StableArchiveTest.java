@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import java.io.IOException;
@@ -36,13 +35,13 @@ public class StableArchiveTest extends AbstractZipflingerTest {
     @Test
     public void testDifferentOrderFiles() throws Exception {
         Path dst1 = getTestPath("testDifferentOrderFiles1.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(dst1.toFile()))) {
+        try (Archive archive = new StableArchive(new ZipArchive(dst1))) {
             archive.add(new BytesSource(new byte[0], "a", 0));
             archive.add(new BytesSource(new byte[0], "b", 0));
         }
 
         Path dst2 = getTestPath("testDifferentOrderFiles2.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(dst2.toFile()))) {
+        try (Archive archive = new StableArchive(new ZipArchive(dst2))) {
             archive.add(new BytesSource(new byte[0], "b", 0));
             archive.add(new BytesSource(new byte[0], "a", 0));
         }
@@ -55,26 +54,26 @@ public class StableArchiveTest extends AbstractZipflingerTest {
 
         // Zip source 1
         Path src1 = getTestPath(base + "Source1.zip");
-        try (Archive archive = new ZipArchive(src1.toFile())) {
+        try (Archive archive = new ZipArchive(src1)) {
             archive.add(new BytesSource(new byte[0], "a", 0));
             archive.add(new BytesSource(new byte[0], "b", 0));
         }
 
         // Zip source 2
         Path src2 = getTestPath(base + "Source2.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(src2.toFile()))) {
+        try (Archive archive = new StableArchive(new ZipArchive(src2))) {
             archive.add(new BytesSource(new byte[0], "c", 0));
             archive.add(new BytesSource(new byte[0], "d", 0));
         }
 
         // Create an archive by adding source 1 and then source 2.
         Path dst1 = getTestPath(base + "1.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(dst1.toFile()))) {
-            ZipSource zipSource1 = new ZipSource(src1.toFile());
+        try (Archive archive = new StableArchive(new ZipArchive(dst1))) {
+            ZipSource zipSource1 = new ZipSource(src1);
             zipSource1.select("a", "a");
             zipSource1.select("b", "b");
 
-            ZipSource zipSource2 = new ZipSource(src2.toFile());
+            ZipSource zipSource2 = new ZipSource(src2);
             zipSource2.select("c", "c");
             zipSource2.select("d", "d");
 
@@ -85,12 +84,12 @@ public class StableArchiveTest extends AbstractZipflingerTest {
         // Same archive but add zipSource in different order.
         // Create an archive by adding source 2 and then source 1.
         Path dst2 = getTestPath(base + "2.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(dst2.toFile()))) {
-            ZipSource zipSource1 = new ZipSource(src1.toFile());
+        try (Archive archive = new StableArchive(new ZipArchive(dst2))) {
+            ZipSource zipSource1 = new ZipSource(src1);
             zipSource1.select("a", "a");
             zipSource1.select("b", "b");
 
-            ZipSource zipSource2 = new ZipSource(src2.toFile());
+            ZipSource zipSource2 = new ZipSource(src2);
             zipSource2.select("c", "c");
             zipSource2.select("d", "d");
 
@@ -107,26 +106,26 @@ public class StableArchiveTest extends AbstractZipflingerTest {
 
         // Zip source 1
         Path src1 = getTestPath(base + "Source1.zip");
-        try (Archive archive = new ZipArchive(src1.toFile())) {
+        try (Archive archive = new ZipArchive(src1)) {
             archive.add(new BytesSource(new byte[0], "a", 0));
             archive.add(new BytesSource(new byte[0], "b", 0));
         }
 
         // Zip source 2
         Path src2 = getTestPath(base + "Source2.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(src2.toFile()))) {
+        try (Archive archive = new StableArchive(new ZipArchive(src2))) {
             archive.add(new BytesSource(new byte[0], "c", 0));
             archive.add(new BytesSource(new byte[0], "d", 0));
         }
 
         // Create an archive by adding source 1 (b, a) and then source 2 (d, c).
         Path dst1 = getTestPath(base + "1.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(dst1.toFile()))) {
-            ZipSource zipSource1 = new ZipSource(src1.toFile());
+        try (Archive archive = new StableArchive(new ZipArchive(dst1))) {
+            ZipSource zipSource1 = new ZipSource(src1);
             zipSource1.select("b", "b");
             zipSource1.select("a", "a");
 
-            ZipSource zipSource2 = new ZipSource(src2.toFile());
+            ZipSource zipSource2 = new ZipSource(src2);
             zipSource2.select("d", "d");
             zipSource2.select("c", "c");
 
@@ -136,12 +135,12 @@ public class StableArchiveTest extends AbstractZipflingerTest {
 
         // Same archives order but different entry selection order.
         Path dst2 = getTestPath(base + "2.zip");
-        try (Archive archive = new StableArchive(new ZipArchive(dst2.toFile()))) {
-            ZipSource zipSource1 = new ZipSource(src1.toFile());
+        try (Archive archive = new StableArchive(new ZipArchive(dst2))) {
+            ZipSource zipSource1 = new ZipSource(src1);
             zipSource1.select("a", "a");
             zipSource1.select("b", "b");
 
-            ZipSource zipSource2 = new ZipSource(src2.toFile());
+            ZipSource zipSource2 = new ZipSource(src2);
             zipSource2.select("c", "c");
             zipSource2.select("d", "d");
 
@@ -158,7 +157,7 @@ public class StableArchiveTest extends AbstractZipflingerTest {
 
         // Zip source 1
         Path src1 = getTestPath(base + "Source1.zip");
-        try (Archive archive = new ZipArchive(src1.toFile())) {
+        try (Archive archive = new ZipArchive(src1)) {
             archive.add(new BytesSource(new byte[0], "a", 0));
             archive.add(new BytesSource(new byte[0], "b", 0));
             archive.add(new BytesSource(new byte[0], "c", 0));
@@ -171,14 +170,14 @@ public class StableArchiveTest extends AbstractZipflingerTest {
         verifyBinaryIdentical(src1, src2);
 
         // Delete entries in order b, a, and c.
-        try (Archive archive = new StableArchive(new ZipArchive(src1.toFile()))) {
+        try (Archive archive = new StableArchive(new ZipArchive(src1))) {
             archive.delete("b");
             archive.delete("a");
             archive.delete("c");
         }
 
         // Delete entries in reverse order (c, a, and b).
-        try (Archive archive = new StableArchive(new ZipArchive(src2.toFile()))) {
+        try (Archive archive = new StableArchive(new ZipArchive(src2))) {
             archive.delete("c");
             archive.delete("a");
             archive.delete("b");

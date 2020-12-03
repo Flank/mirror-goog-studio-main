@@ -132,10 +132,14 @@ class AnnotationDetectorTest : AbstractCheckTest() {
                     @IntDef({STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT})
                                                                            ~~~~~~~~~~~~~~
                     src/test/pkg/IntDefTest.java:9: Previous same value
+                    @IntDef({STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT})
+                                                           ~~~~~~~~~~~~~~
                 src/test/pkg/IntDefTest.java:28: Error: Constants FLAG3 and FLAG2 specify the same exact value (562949953421312); this is usually a cut & paste or merge error [UniqueConstants]
                     @IntDef({FLAG2, FLAG3, FLAG1})
                                     ~~~~~
                     src/test/pkg/IntDefTest.java:28: Previous same value
+                    @IntDef({FLAG2, FLAG3, FLAG1})
+                             ~~~~~
                 2 errors, 0 warnings
                 """
         )

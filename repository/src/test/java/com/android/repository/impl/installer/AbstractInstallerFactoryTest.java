@@ -39,7 +39,7 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -53,14 +53,14 @@ public class AbstractInstallerFactoryTest {
 
     @Test
     public void fallbackFactory() {
-        InstallerFactory testFactory = new TestInstallerFactory() {
-            @Override
-            protected boolean canHandlePackage(@NonNull RepoPackage pack,
-                    @NonNull RepoManager manager,
-                    @NonNull FileOp fop) {
-                return false;
-            }
-        };
+        InstallerFactory testFactory =
+                new TestInstallerFactory() {
+                    @Override
+                    protected boolean canHandlePackage(
+                            @NonNull RepoPackage pack, @NonNull RepoManager manager) {
+                        return false;
+                    }
+                };
         testFactory.setFallbackFactory(new TestInstallerFactory() {
             @NonNull
             @Override
@@ -82,27 +82,32 @@ public class AbstractInstallerFactoryTest {
 
     @Test
     public void installerFallback() {
-        InstallerFactory testFactory = new TestInstallerFactory() {
-            @NonNull
-            @Override
-            protected Installer doCreateInstaller(@NonNull RemotePackage p,
-                    @NonNull RepoManager mgr,
-                    @NonNull Downloader downloader, @NonNull FileOp fop) {
-                return new AbstractInstaller(p, mgr, downloader, fop) {
+        InstallerFactory testFactory =
+                new TestInstallerFactory() {
+                    @NonNull
                     @Override
-                    protected boolean doPrepare(@NonNull File installTempPath,
-                            @NonNull ProgressIndicator progress) {
-                        return false;
-                    }
+                    protected Installer doCreateInstaller(
+                            @NonNull RemotePackage p,
+                            @NonNull RepoManager mgr,
+                            @NonNull Downloader downloader,
+                            @NonNull FileOp fop) {
+                        return new AbstractInstaller(p, mgr, downloader, fop) {
+                            @Override
+                            protected boolean doPrepare(
+                                    @NonNull Path installTempPath,
+                                    @NonNull ProgressIndicator progress) {
+                                return false;
+                            }
 
-                    @Override
-                    protected boolean doComplete(@Nullable File installTemp,
-                            @NonNull ProgressIndicator progress) {
-                        return false;
+                            @Override
+                            protected boolean doComplete(
+                                    @Nullable Path installTemp,
+                                    @NonNull ProgressIndicator progress) {
+                                return false;
+                            }
+                        };
                     }
                 };
-            }
-        };
 
         InstallerFactory fallbackFactory = new TestInstallerFactory() {
             @NonNull
@@ -129,27 +134,32 @@ public class AbstractInstallerFactoryTest {
     @Test
     public void installerListeners() {
         MockFileOp fop = new MockFileOp();
-        InstallerFactory factory = new TestInstallerFactory() {
-            @NonNull
-            @Override
-            protected Installer doCreateInstaller(@NonNull RemotePackage p,
-                    @NonNull RepoManager mgr,
-                    @NonNull Downloader downloader, @NonNull FileOp fop) {
-                return new AbstractInstaller(p, mgr, downloader, fop) {
+        InstallerFactory factory =
+                new TestInstallerFactory() {
+                    @NonNull
                     @Override
-                    protected boolean doPrepare(@NonNull File installTempPath,
-                            @NonNull ProgressIndicator progress) {
-                        return true;
-                    }
+                    protected Installer doCreateInstaller(
+                            @NonNull RemotePackage p,
+                            @NonNull RepoManager mgr,
+                            @NonNull Downloader downloader,
+                            @NonNull FileOp fop) {
+                        return new AbstractInstaller(p, mgr, downloader, fop) {
+                            @Override
+                            protected boolean doPrepare(
+                                    @NonNull Path installTempPath,
+                                    @NonNull ProgressIndicator progress) {
+                                return true;
+                            }
 
-                    @Override
-                    protected boolean doComplete(@Nullable File installTemp,
-                            @NonNull ProgressIndicator progress) {
-                        return true;
+                            @Override
+                            protected boolean doComplete(
+                                    @Nullable Path installTemp,
+                                    @NonNull ProgressIndicator progress) {
+                                return true;
+                            }
+                        };
                     }
                 };
-            }
-        };
         AtomicBoolean didPrepare = new AtomicBoolean(false);
         AtomicBoolean didComplete = new AtomicBoolean(false);
         AtomicReference<Installer> installer = new AtomicReference<>();

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.builder.internal.packaging
 
 import com.android.apksig.ApkVerifier
@@ -41,7 +40,6 @@ import java.io.File
 import java.util.zip.Deflater
 
 class ApkFlingerTest {
-
     @get:Rule
     val tmp = TemporaryFolder()
 
@@ -163,7 +161,7 @@ class ApkFlingerTest {
         ApkFlinger(creationData, Deflater.BEST_SPEED).use {
             it.writeFile(largeFile, "largeFile.txt")
         }
-        assertThat(ZipArchive.listEntries(apkFile).keys).containsExactly("largeFile.txt")
+        assertThat(ZipArchive.listEntries(apkFile.toPath()).keys).containsExactly("largeFile.txt")
     }
 
     @Test

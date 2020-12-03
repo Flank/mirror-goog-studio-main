@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
@@ -85,7 +84,7 @@ class L8DexDesugarLibTaskTest {
     }
 
     companion object {
-        val bootClasspath = TestUtils.getPlatformFile("android.jar")
+        val bootClasspath = TestUtils.resolvePlatformPath("android.jar").toFile()
         val desugarJar = listOf(TestUtils.getDesugarLibJar().toFile())
         val desugarConfig = TestUtils.getDesugarLibConfigContent()
     }

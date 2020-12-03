@@ -68,17 +68,15 @@ public class NativeSoPackagingFromJarTest {
                 .write("include \"app\"\ninclude \"library\"\n");
 
         // setup dependencies.
-        TestFileUtils.appendToFile(appProject.getBuildFile(),
-"\ndependencies {\n" +
-"  compile files(\"libs/foo.jar\")\n" +
-"}\n");
+        TestFileUtils.appendToFile(
+                appProject.getBuildFile(),
+                "\ndependencies {\n" + "  api files(\"libs/foo.jar\")\n" + "}\n");
 
         libProject = project.getSubproject("library");
 
-        TestFileUtils.appendToFile(libProject.getBuildFile(),
-"\ndependencies {\n" +
-"  compile files(\"libs/bar.jar\")\n" +
-"}\n");
+        TestFileUtils.appendToFile(
+                libProject.getBuildFile(),
+                "\ndependencies {\n" + "  api files(\"libs/bar.jar\")\n" + "}\n");
 
         File appDir = appProject.getProjectDir();
         createJarWithNativeLib(new File(appDir, "libs"), "foo.jar", false);

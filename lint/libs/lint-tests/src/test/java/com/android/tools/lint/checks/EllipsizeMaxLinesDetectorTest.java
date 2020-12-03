@@ -58,11 +58,15 @@ public class EllipsizeMaxLinesDetectorTest extends AbstractCheckTest {
                                 + "res/layout/sample.xml:9: Error: Combining ellipsize=start and lines=1 can lead to crashes. Use singleLine=true instead. [EllipsizeMaxLines]\n"
                                 + "        android:lines=\"1\"\n"
                                 + "        ~~~~~~~~~~~~~~~~~\n"
-                                + "    res/layout/sample.xml:8: <No location-specific message\n"
+                                + "    res/layout/sample.xml:8: <No location-specific message>\n"
+                                + "        android:ellipsize=\"start\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "res/layout/sample.xml:16: Error: Combining ellipsize=start and maxLines=1 can lead to crashes. Use singleLine=true instead. [EllipsizeMaxLines]\n"
                                 + "        android:maxLines=\"1\"\n"
                                 + "        ~~~~~~~~~~~~~~~~~~~~\n"
-                                + "    res/layout/sample.xml:15: <No location-specific message\n"
+                                + "    res/layout/sample.xml:15: <No location-specific message>\n"
+                                + "        android:ellipsize=\"start\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "2 errors, 0 warnings\n")
                 .expectFixDiffs(
                         ""

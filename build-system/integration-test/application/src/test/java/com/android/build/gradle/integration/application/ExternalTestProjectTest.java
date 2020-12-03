@@ -73,17 +73,22 @@ public class ExternalTestProjectTest {
 
     @Test
     public void testExtraJarDependency() throws Exception {
-        TestFileUtils.appendToFile(app2BuildFile,
+        TestFileUtils.appendToFile(
+                app2BuildFile,
                 "apply plugin: 'com.android.application'\n"
-                + "\n"
-                + "android {\n"
-                + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
-                + "}\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile project(path: ':app1', configuration: 'testLib')\n"
-                + "}\n");
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    api project(path: ':app1', configuration: 'testLib')\n"
+                        + "}\n");
 
         project.executor()
                 // http://b/149978740 and http://b/146208910

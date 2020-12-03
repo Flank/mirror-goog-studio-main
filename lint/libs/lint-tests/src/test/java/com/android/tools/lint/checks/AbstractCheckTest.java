@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
@@ -75,12 +76,17 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     static File sdk;
 
     static {
-        sdk = TestUtils.getSdk();
+        sdk = TestUtils.getSdk().toFile();
     }
 
     @NonNull
     public static File getSdk() {
         return sdk;
+    }
+
+    @NonNull
+    protected ProjectDescription project() {
+        return new ProjectDescription();
     }
 
     @Override
@@ -124,6 +130,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
             }
         }
 
+        task.showSecondaryLintContent(true);
         task.issues(getIssues().toArray(new Issue[0]));
         task.sdkHome(sdk);
         return task;
@@ -138,7 +145,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         @Nullable
         @Override
         public File getSdkHome() {
-            return TestUtils.getSdk();
+            return TestUtils.getSdk().toFile();
         }
     }
 

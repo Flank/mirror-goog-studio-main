@@ -44,6 +44,7 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
+import org.junit.Assert.assertEquals
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -187,7 +188,8 @@ class ProjectInitializerTest {
         configFile.writeText(config.trimIndent())
 
         val projects = lint().projects(main, library).createProjects(root)
-        val appProjectDir = projects[0]
+        // 1: test infrastructure will sort projects by dependency graph
+        val appProjectDir = projects[1]
         val appProjectPath = appProjectDir.path
 
         val sdk = temp.newFolder("fake-sdk")
@@ -400,7 +402,7 @@ class ProjectInitializerTest {
 
         MainTest.checkDriver(
             """
-            app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
+            App: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
             project.xml:3: Error: Invalid Java language level "1000" [LintError]
             <module name="Foo:App" android="true" library="true" javaLanguage="1000" kotlinLanguage="1.3">
             ^
@@ -1166,7 +1168,7 @@ class ProjectInitializerTest {
         val root = temp.newFolder()
 
         val projects = lint().projects(
-            ProjectDescription(
+            project(
                 java(
                     """
                     package test.pkg;
@@ -1283,7 +1285,7 @@ class ProjectInitializerTest {
         val root = temp.newFolder()
 
         val projects = lint().projects(
-            ProjectDescription(
+            project(
                 java(
                     """
                 package test.pkg;
@@ -1503,7 +1505,11 @@ class ProjectInitializerTest {
         configFile.writeText(config.trimIndent())
 
         val projects = lint().projects(main, library).createProjects(root)
-        val appProjectDir = projects[0]
+        // create projects will sort directories in dependency order so
+        // the app module comes after lib even though it's the second listed
+        // project
+        val appProjectDir = projects[1]
+        assertEquals("App", appProjectDir.name)
         val appProjectPath = appProjectDir.path
 
         val sdk = temp.newFolder("fake-sdk-dir")

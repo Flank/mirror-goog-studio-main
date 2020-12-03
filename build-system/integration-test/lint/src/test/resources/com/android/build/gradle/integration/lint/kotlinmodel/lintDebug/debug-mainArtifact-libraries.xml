@@ -1,9 +1,9 @@
 <libraries>
   <library
       name="${projectDir}@@:library::debug"
-      jars="${projectDir}/library/build/.transforms/<digest>/library-debug/jars/classes.jar"
+      jars="${projectDir}/library/build/.transforms/<digest>/transformed/library-debug/jars/classes.jar"
       resolved="artifacts::library:unspecified"
-      folder="${projectDir}/library/build/.transforms/<digest>/library-debug"
+      folder="${projectDir}/library/build/.transforms/<digest>/transformed/library-debug"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -14,9 +14,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:appcompat-v7:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/appcompat-v7-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/appcompat-v7-28.0.0/jars/classes.jar"
       resolved="com.android.support:appcompat-v7:28.0.0"
-      folder="${gradleCacheDir}/<digest>/appcompat-v7-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/appcompat-v7-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -27,9 +27,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:support-fragment:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/support-fragment-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/support-fragment-28.0.0/jars/classes.jar"
       resolved="com.android.support:support-fragment:28.0.0"
-      folder="${gradleCacheDir}/<digest>/support-fragment-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/support-fragment-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -40,9 +40,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:animated-vector-drawable:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/animated-vector-drawable-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/animated-vector-drawable-28.0.0/jars/classes.jar"
       resolved="com.android.support:animated-vector-drawable:28.0.0"
-      folder="${gradleCacheDir}/<digest>/animated-vector-drawable-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/animated-vector-drawable-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -53,9 +53,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:support-core-ui:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/support-core-ui-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/support-core-ui-28.0.0/jars/classes.jar"
       resolved="com.android.support:support-core-ui:28.0.0"
-      folder="${gradleCacheDir}/<digest>/support-core-ui-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/support-core-ui-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -66,9 +66,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:support-core-utils:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/support-core-utils-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/support-core-utils-28.0.0/jars/classes.jar"
       resolved="com.android.support:support-core-utils:28.0.0"
-      folder="${gradleCacheDir}/<digest>/support-core-utils-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/support-core-utils-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -79,9 +79,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:support-vector-drawable:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/support-vector-drawable-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/support-vector-drawable-28.0.0/jars/classes.jar"
       resolved="com.android.support:support-vector-drawable:28.0.0"
-      folder="${gradleCacheDir}/<digest>/support-vector-drawable-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/support-vector-drawable-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -92,9 +92,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:loader:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/loader-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/loader-28.0.0/jars/classes.jar"
       resolved="com.android.support:loader:28.0.0"
-      folder="${gradleCacheDir}/<digest>/loader-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/loader-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -105,9 +105,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:viewpager:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/viewpager-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/viewpager-28.0.0/jars/classes.jar"
       resolved="com.android.support:viewpager:28.0.0"
-      folder="${gradleCacheDir}/<digest>/viewpager-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/viewpager-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -118,9 +118,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:coordinatorlayout:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/coordinatorlayout-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/coordinatorlayout-28.0.0/jars/classes.jar"
       resolved="com.android.support:coordinatorlayout:28.0.0"
-      folder="${gradleCacheDir}/<digest>/coordinatorlayout-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/coordinatorlayout-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -131,9 +131,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:drawerlayout:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/drawerlayout-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/drawerlayout-28.0.0/jars/classes.jar"
       resolved="com.android.support:drawerlayout:28.0.0"
-      folder="${gradleCacheDir}/<digest>/drawerlayout-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/drawerlayout-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -144,9 +144,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:slidingpanelayout:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/slidingpanelayout-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/slidingpanelayout-28.0.0/jars/classes.jar"
       resolved="com.android.support:slidingpanelayout:28.0.0"
-      folder="${gradleCacheDir}/<digest>/slidingpanelayout-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/slidingpanelayout-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -157,9 +157,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:customview:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/customview-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/customview-28.0.0/jars/classes.jar"
       resolved="com.android.support:customview:28.0.0"
-      folder="${gradleCacheDir}/<digest>/customview-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/customview-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -170,9 +170,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:swiperefreshlayout:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/swiperefreshlayout-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/swiperefreshlayout-28.0.0/jars/classes.jar"
       resolved="com.android.support:swiperefreshlayout:28.0.0"
-      folder="${gradleCacheDir}/<digest>/swiperefreshlayout-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/swiperefreshlayout-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -183,9 +183,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:asynclayoutinflater:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/asynclayoutinflater-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/asynclayoutinflater-28.0.0/jars/classes.jar"
       resolved="com.android.support:asynclayoutinflater:28.0.0"
-      folder="${gradleCacheDir}/<digest>/asynclayoutinflater-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/asynclayoutinflater-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -196,9 +196,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:support-compat:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/support-compat-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/support-compat-28.0.0/jars/classes.jar"
       resolved="com.android.support:support-compat:28.0.0"
-      folder="${gradleCacheDir}/<digest>/support-compat-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/support-compat-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -209,9 +209,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:versionedparcelable:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/versionedparcelable-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/versionedparcelable-28.0.0/jars/classes.jar"
       resolved="com.android.support:versionedparcelable:28.0.0"
-      folder="${gradleCacheDir}/<digest>/versionedparcelable-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/versionedparcelable-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -226,9 +226,9 @@
       resolved="com.android.support:collections:28.0.0"/>
   <library
       name="com.android.support:cursoradapter:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/cursoradapter-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/cursoradapter-28.0.0/jars/classes.jar"
       resolved="com.android.support:cursoradapter:28.0.0"
-      folder="${gradleCacheDir}/<digest>/cursoradapter-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/cursoradapter-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -239,9 +239,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="android.arch.lifecycle:runtime:1.1.1@aar"
-      jars="${gradleCacheDir}/<digest>/runtime-1.1.1/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/runtime-1.1.1/jars/classes.jar"
       resolved="android.arch.lifecycle:runtime:1.1.1"
-      folder="${gradleCacheDir}/<digest>/runtime-1.1.1"
+      folder="${gradleCacheDir}/<digest>/transformed/runtime-1.1.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -252,9 +252,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:documentfile:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/documentfile-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/documentfile-28.0.0/jars/classes.jar"
       resolved="com.android.support:documentfile:28.0.0"
-      folder="${gradleCacheDir}/<digest>/documentfile-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/documentfile-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -265,9 +265,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:localbroadcastmanager:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/localbroadcastmanager-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/localbroadcastmanager-28.0.0/jars/classes.jar"
       resolved="com.android.support:localbroadcastmanager:28.0.0"
-      folder="${gradleCacheDir}/<digest>/localbroadcastmanager-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/localbroadcastmanager-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -278,9 +278,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="com.android.support:print:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/print-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/print-28.0.0/jars/classes.jar"
       resolved="com.android.support:print:28.0.0"
-      folder="${gradleCacheDir}/<digest>/print-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/print-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -291,9 +291,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="android.arch.lifecycle:viewmodel:1.1.1@aar"
-      jars="${gradleCacheDir}/<digest>/viewmodel-1.1.1/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/viewmodel-1.1.1/jars/classes.jar"
       resolved="android.arch.lifecycle:viewmodel:1.1.1"
-      folder="${gradleCacheDir}/<digest>/viewmodel-1.1.1"
+      folder="${gradleCacheDir}/<digest>/transformed/viewmodel-1.1.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -304,9 +304,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="android.arch.lifecycle:livedata:1.1.1@aar"
-      jars="${gradleCacheDir}/<digest>/livedata-1.1.1/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/livedata-1.1.1/jars/classes.jar"
       resolved="android.arch.lifecycle:livedata:1.1.1"
-      folder="${gradleCacheDir}/<digest>/livedata-1.1.1"
+      folder="${gradleCacheDir}/<digest>/transformed/livedata-1.1.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -317,9 +317,9 @@
       proguardRules="proguard.txt"/>
   <library
       name="android.arch.lifecycle:livedata-core:1.1.1@aar"
-      jars="${gradleCacheDir}/<digest>/livedata-core-1.1.1/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/livedata-core-1.1.1/jars/classes.jar"
       resolved="android.arch.lifecycle:livedata-core:1.1.1"
-      folder="${gradleCacheDir}/<digest>/livedata-core-1.1.1"
+      folder="${gradleCacheDir}/<digest>/transformed/livedata-core-1.1.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -334,9 +334,9 @@
       resolved="android.arch.lifecycle:common:1.1.1"/>
   <library
       name="android.arch.core:runtime:1.1.1@aar"
-      jars="${gradleCacheDir}/<digest>/runtime-1.1.1/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/runtime-1.1.1/jars/classes.jar"
       resolved="android.arch.core:runtime:1.1.1"
-      folder="${gradleCacheDir}/<digest>/runtime-1.1.1"
+      folder="${gradleCacheDir}/<digest>/transformed/runtime-1.1.1"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -351,9 +351,9 @@
       resolved="android.arch.core:common:1.1.1"/>
   <library
       name="com.android.support:interpolator:28.0.0@aar"
-      jars="${gradleCacheDir}/<digest>/interpolator-28.0.0/jars/classes.jar"
+      jars="${gradleCacheDir}/<digest>/transformed/interpolator-28.0.0/jars/classes.jar"
       resolved="com.android.support:interpolator:28.0.0"
-      folder="${gradleCacheDir}/<digest>/interpolator-28.0.0"
+      folder="${gradleCacheDir}/<digest>/transformed/interpolator-28.0.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

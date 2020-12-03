@@ -100,15 +100,20 @@ class IntentDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-                    src/test/pkg/IntentTest.java:19: Warning: Calling setType after calling setData will clear the data: Call setDataAndType instead? [IntentReset]
-                                intent.setType(type); // ERROR
-                                ~~~~~~~~~~~~~~~~~~~~
-                        src/test/pkg/IntentTest.java:18: Originally set here
-                    src/test/pkg/IntentTest.java:26: Warning: Calling setData after calling setType will clear the type: Call setDataAndType instead? [IntentReset]
-                                intent.setData(uri); // ERROR
-                                ~~~~~~~~~~~~~~~~~~~
-                        src/test/pkg/IntentTest.java:25: Originally set here
-                    0 errors, 2 warnings"""
+            src/test/pkg/IntentTest.java:19: Warning: Calling setType after calling setData will clear the data: Call setDataAndType instead? [IntentReset]
+                        intent.setType(type); // ERROR
+                        ~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/IntentTest.java:18: Originally set here
+                        intent.setData(uri); // ERROR
+                        ~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/IntentTest.java:26: Warning: Calling setData after calling setType will clear the type: Call setDataAndType instead? [IntentReset]
+                        intent.setData(uri); // ERROR
+                        ~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/IntentTest.java:25: Originally set here
+                        intent.setType(type); // ERROR
+                        ~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
         )
     }
 
@@ -139,11 +144,14 @@ class IntentDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(
             """
-                src/test/pkg/IntentReset.java:13: Warning: Calling setType after setting URI in Intent constructor will clear the data: Call setDataAndType instead? [IntentReset]
-                        myIntent.setType("text/plain");
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    src/test/pkg/IntentReset.java:12: Originally set here
-                0 errors, 1 warnings"""
+            src/test/pkg/IntentReset.java:13: Warning: Calling setType after setting URI in Intent constructor will clear the data: Call setDataAndType instead? [IntentReset]
+                    myIntent.setType("text/plain");
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/IntentReset.java:12: Originally set here
+                    Intent myIntent = new Intent(Intent.ACTION_VIEW, uri);
+                                                                     ~~~
+            0 errors, 1 warnings
+            """
         )
     }
 }

@@ -114,8 +114,8 @@ public class UnifiedDiffTest {
 
     @Test
     public void testFullDiff() throws IOException {
-        File data = TestUtils.getWorkspaceFile("tools/base/testutils/src/test/data");
-        File tmp = TestUtils.createTempDirDeletedOnExit();
+        File data = TestUtils.resolveWorkspacePath("tools/base/testutils/src/test/data").toFile();
+        File tmp = TestUtils.createTempDirDeletedOnExit().toFile();
         File before = new File(data, "before");
         File after = new File(data, "after");
         FileUtils.copyDirectory(before, tmp);

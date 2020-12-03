@@ -31,8 +31,8 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.ISystemImage;
+import com.android.sdklib.PathFileWrapper;
 import com.android.sdklib.devices.Storage;
 import com.android.sdklib.internal.avd.AvdInfo;
 import com.android.sdklib.internal.avd.AvdManager;
@@ -45,6 +45,8 @@ import com.android.testutils.MockLog;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -116,8 +118,7 @@ public class AvdManagerCliTest {
         SystemImageManager systemImageManager = mSdkHandler.getSystemImageManager(progress);
         mGapiImage =
                 systemImageManager.getImageAt(
-                        mFileOp.toFile(
-                                mSdkHandler.getLocalPackage(gApiPath, progress).getLocation()));
+                        mSdkHandler.getLocalPackage(gApiPath, progress).getLocation());
     }
 
     @Test
@@ -136,10 +137,11 @@ public class AvdManagerCliTest {
         assertEquals(new AndroidVersion(25, null), info.getAndroidVersion());
         assertEquals(mGapiImage, info.getSystemImage());
 
-        File avdConfigFile = new File(info.getDataFolderPath(), "config.ini");
-        assertTrue("Expected config.ini in " + info.getDataFolderPath(), mFileOp.exists(avdConfigFile));
-        Map<String, String> config = AvdManager.parseIniFile(
-          new FileOpFileWrapper(avdConfigFile, mFileOp, false), null);
+        Path avdConfigFile = mFileOp.toPath(info.getDataFolderPath()).resolve("config.ini");
+        assertTrue(
+                "Expected config.ini in " + info.getDataFolderPath(), Files.exists(avdConfigFile));
+        Map<String, String> config =
+                AvdManager.parseIniFile(new PathFileWrapper(avdConfigFile), null);
         assertEquals("123", config.get("integerPropName"));
         assertEquals(new Storage(1536, Storage.Unit.MiB), Storage.getStorageFromString(config.get("hw.ramSize")));
         assertEquals(new Storage(512, Storage.Unit.MiB), Storage.getStorageFromString(config.get("sdcard.size")));
@@ -361,10 +363,10 @@ public class AvdManagerCliTest {
 
     @Test
     public void validateResponse() {
-        File hardwareDefs = new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI);
-        Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
-          .parseHardwareDefinitions(
-            new FileOpFileWrapper(hardwareDefs, mFileOp, false), mLogger);
+        Path hardwareDefs = mFileOp.toPath(EMU_LIB_LOCATION).resolve(SdkConstants.FN_HARDWARE_INI);
+        Map<String, HardwareProperties.HardwareProperty> hwMap =
+                HardwareProperties.parseHardwareDefinitions(
+                        new PathFileWrapper(hardwareDefs), mLogger);
         HardwareProperties.HardwareProperty[] hwProperties = hwMap.values().toArray(
           new HardwareProperties.HardwareProperty[0]);
 

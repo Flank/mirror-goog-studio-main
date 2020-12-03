@@ -125,14 +125,19 @@ public class TestWithSameDepAsApp {
 
     @Before
     public void setUp() throws Exception {
-        appendToFile(project.getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile \"" + this.appDependency + "\"\n" +
-                "    androidTestCompile \"" + this.testDependency + "\"\n" +
-                "}\n" +
-                "\n" +
-                "android.defaultConfig.minSdkVersion 16\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    api \""
+                        + this.appDependency
+                        + "\"\n"
+                        + "    androidTestImplementation \""
+                        + this.testDependency
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "android.defaultConfig.minSdkVersion 16\n");
 
         TestFileUtils.addMethod(
                 project.file("src/main/java/com/example/helloworld/HelloWorld.java"),

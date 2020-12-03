@@ -31,8 +31,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
- * App with androidTestCompile dependency on a library that share the same dependencies on a second
- * library.
+ * App with androidTestImplementation dependency on a library that share the same dependencies on a
+ * second library.
  */
 public class AppWithAndroidTestDependencyOnLibTest {
 

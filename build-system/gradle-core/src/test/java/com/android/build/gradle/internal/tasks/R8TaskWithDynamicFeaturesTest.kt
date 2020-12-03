@@ -140,12 +140,12 @@ class R8TaskWithDynamicFeaturesTest {
         // Check feature java resource outputs
         val feature1JavaResOutput = featureJavaResOutputDir.resolve("feature1.jar")
         FileSubject.assertThat(feature1JavaResOutput).exists()
-        ZipArchive(feature1JavaResOutput).use {
+        ZipArchive(feature1JavaResOutput.toPath()).use {
             Truth.assertThat(it.listEntries()).containsExactly("foo.txt")
         }
         val feature2JavaResOutput = featureJavaResOutputDir.resolve("feature2.jar")
         FileSubject.assertThat(feature2JavaResOutput).exists()
-        ZipArchive(feature2JavaResOutput).use {
+        ZipArchive(feature2JavaResOutput.toPath()).use {
             Truth.assertThat(it.listEntries()).isEmpty()
         }
     }
@@ -199,12 +199,12 @@ class R8TaskWithDynamicFeaturesTest {
         // Check feature java resource outputs
         val feature1JavaResOutput = featureJavaResOutputDir.resolve("feature1.jar")
         FileSubject.assertThat(feature1JavaResOutput).exists()
-        ZipArchive(feature1JavaResOutput).use {
+        ZipArchive(feature1JavaResOutput.toPath()).use {
             Truth.assertThat(it.listEntries()).containsExactly("foo.txt")
         }
         val feature2JavaResOutput = featureJavaResOutputDir.resolve("feature2.jar")
         FileSubject.assertThat(feature2JavaResOutput).exists()
-        ZipArchive(feature2JavaResOutput).use {
+        ZipArchive(feature2JavaResOutput.toPath()).use {
             Truth.assertThat(it.listEntries()).isEmpty()
         }
     }

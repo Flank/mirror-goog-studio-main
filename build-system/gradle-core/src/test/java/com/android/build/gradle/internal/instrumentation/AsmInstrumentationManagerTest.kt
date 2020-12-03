@@ -66,7 +66,7 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
     val temporaryFolder = TemporaryFolder()
 
     private val apiVersion: Int = ASM7
-    private val androidJar = TestUtils.getPlatformFile("android.jar")
+    private val androidJar = TestUtils.resolvePlatformPath("android.jar").toFile()
 
     private lateinit var classesHierarchyResolver: ClassesHierarchyResolver
     private lateinit var inputDir: File

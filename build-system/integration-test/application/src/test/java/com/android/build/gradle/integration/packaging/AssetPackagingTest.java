@@ -80,13 +80,12 @@ public class AssetPackagingTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile project(':library')\n"
+                        + "    api project(':library')\n"
                         + "}");
 
-        TestFileUtils.appendToFile(libProject.getBuildFile(), "\n"
-                + "dependencies {\n"
-                + "    compile project(':library2')\n"
-                + "}");
+        TestFileUtils.appendToFile(
+                libProject.getBuildFile(),
+                "\n" + "dependencies {\n" + "    api project(':library2')\n" + "}");
         TestFileUtils.appendToFile(testProject.getBuildFile(), "\n"
                 + "android {\n"
                 + "    targetProjectPath ':app'\n"

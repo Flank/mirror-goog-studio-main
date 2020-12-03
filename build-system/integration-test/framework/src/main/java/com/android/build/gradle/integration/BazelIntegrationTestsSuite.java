@@ -70,7 +70,7 @@ public class BazelIntegrationTestsSuite {
             NDK_IN_TMP = DATA_DIR.resolve("ndk-bundle").toAbsolutePath();
             Path ndkSideBySideRoot;
             try {
-                File root = new File(TestUtils.getSdk(), SdkConstants.FD_NDK_SIDE_BY_SIDE);
+                File root = TestUtils.getSdk().resolve(SdkConstants.FD_NDK_SIDE_BY_SIDE).toFile();
                 ndkSideBySideRoot = WindowsPathUtilsKt.getWindowsShortNameFile(root).toPath();
             } catch (IllegalArgumentException e) {
                 // this is thrown when getSdk() calls getWorkspaceFile() with a string that cannot be
@@ -132,7 +132,7 @@ public class BazelIntegrationTestsSuite {
         assertThat(NDK_IN_TMP).doesNotExist();
 
         try {
-            Path ndk = new File(TestUtils.getSdk(), SdkConstants.FD_NDK).toPath();
+            Path ndk = TestUtils.getSdk().resolve(SdkConstants.FD_NDK);
             if (Files.exists(ndk)) {
                 Files.createSymbolicLink(NDK_IN_TMP, ndk);
             }
@@ -170,7 +170,7 @@ public class BazelIntegrationTestsSuite {
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {
-        File offlineRepoZip = TestUtils.getWorkspaceFile(zipName);
+        File offlineRepoZip = TestUtils.resolveWorkspacePath(zipName).toFile();
 
         Files.createDirectory(repoPath);
 

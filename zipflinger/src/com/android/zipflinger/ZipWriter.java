@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
@@ -23,17 +22,23 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 public class ZipWriter implements Closeable {
-
-    private final File file;
+    private final Path file;
     private FileChannel channel;
     private boolean isOpen;
 
-    public ZipWriter(File file) {
+    public ZipWriter(Path file) {
         this.file = file;
         isOpen = false;
+    }
+
+    /** @deprecated Use {@link #ZipWriter(Path)} instead. */
+    @Deprecated
+    public ZipWriter(File file) {
+        this(file.toPath());
     }
 
     @Override
@@ -92,11 +97,9 @@ public class ZipWriter implements Closeable {
         if (isOpen) {
             return;
         }
-        channel =
-                FileChannel.open(
-                        file.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        channel = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         if (!channel.isOpen()) {
-            throw new IllegalStateException("Unable to open Channel to " + file.getAbsolutePath());
+            throw new IllegalStateException("Unable to open Channel to " + file.toAbsolutePath());
         }
         isOpen = true;
     }

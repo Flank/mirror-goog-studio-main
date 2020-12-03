@@ -56,7 +56,7 @@ public class SourceInstallListener implements StatusChangeListener {
             if (target instanceof PlatformTarget) {
                 Path sourcePath = null;
                 if (op instanceof Installer) {
-                    sourcePath = mSdkHandler.getFileOp().toPath(op.getLocation(progress));
+                    sourcePath = op.getLocation(progress);
                 }
                 ((PlatformTarget) target).setSources(sourcePath);
             }

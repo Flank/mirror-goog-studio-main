@@ -71,10 +71,9 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
                                 + "0 errors, 1 warnings\n")
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/mywidget.xml line 1: Set focusable=\"true\":\n"
+                                + "Fix for res/layout/mywidget.xml line 2: Set focusable=\"true\":\n"
                                 + "@@ -3 +3\n"
                                 + "-     android:clickable=\"true\" />\n"
-                                + "@@ -4 +3\n"
                                 + "+     android:clickable=\"true\"\n"
                                 + "+     android:focusable=\"true\" />\n");
     }

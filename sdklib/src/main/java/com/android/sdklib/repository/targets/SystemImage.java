@@ -25,7 +25,7 @@ import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.base.Objects;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Comparator;
 
 /**
@@ -74,10 +74,8 @@ public class SystemImage implements ISystemImage {
      */
     public static final IdDisplay GOOGLE_APIS_X86_TAG = IdDisplay.create("google_apis_x86", "Google APIs x86");
 
-    /**
-     * Directory containing the system image.
-     */
-    private final File mLocation;
+    /** Directory containing the system image. */
+    private final Path mLocation;
 
     /**
      * Tag of the system image. Used for matching addons and system images, and for filtering.
@@ -95,10 +93,8 @@ public class SystemImage implements ISystemImage {
      */
     private final String mAbi;
 
-    /**
-     * Skins contained in this system image, or in the platform/addon it's based on.
-     */
-    private final File[] mSkins;
+    /** Skins contained in this system image, or in the platform/addon it's based on. */
+    private final Path[] mSkins;
 
     /**
      * Android API level of this system image.
@@ -110,8 +106,12 @@ public class SystemImage implements ISystemImage {
      */
     private final RepoPackage mPackage;
 
-    public SystemImage(@NonNull File location, @Nullable IdDisplay tag, @Nullable IdDisplay vendor,
-            @NonNull String abi, @NonNull File[] skins,
+    public SystemImage(
+            @NonNull Path location,
+            @Nullable IdDisplay tag,
+            @Nullable IdDisplay vendor,
+            @NonNull String abi,
+            @NonNull Path[] skins,
             @NonNull RepoPackage pkg) {
         mLocation = location;
         mTag = tag;
@@ -126,7 +126,7 @@ public class SystemImage implements ISystemImage {
 
     @NonNull
     @Override
-    public File getLocation() {
+    public Path getLocation() {
         return mLocation;
     }
 
@@ -150,7 +150,7 @@ public class SystemImage implements ISystemImage {
 
     @NonNull
     @Override
-    public File[] getSkins() {
+    public Path[] getSkins() {
         return mSkins;
     }
 
@@ -177,9 +177,9 @@ public class SystemImage implements ISystemImage {
         }
         // A Wear system image has Play Store if it is
         // a recent API version and is NOT Wear-for-China.
-        if (WEAR_TAG.equals(getTag()) &&
-            mAndroidVersion.getApiLevel() >= AndroidVersion.MIN_RECOMMENDED_WEAR_API &&
-            !getLocation().getAbsolutePath().contains(WEAR_CN_DIRECTORY)) {
+        if (WEAR_TAG.equals(getTag())
+                && mAndroidVersion.getApiLevel() >= AndroidVersion.MIN_RECOMMENDED_WEAR_API
+                && !getLocation().toAbsolutePath().toString().contains(WEAR_CN_DIRECTORY)) {
             return true;
         }
         return false;
@@ -199,8 +199,8 @@ public class SystemImage implements ISystemImage {
         if (res != 0) {
             return res;
         }
-        File[] skins = getSkins();
-        File[] otherSkins = o.getSkins();
+        Path[] skins = getSkins();
+        Path[] otherSkins = o.getSkins();
         for (int i = 0; i < skins.length && i < otherSkins.length; i++) {
             res = skins[i].compareTo(otherSkins[i]);
             if (res != 0) {
@@ -220,7 +220,7 @@ public class SystemImage implements ISystemImage {
 
     public int hashCode() {
         int hashCode = Objects.hashCode(getTag(), getAbiType(), getAddonVendor(), getLocation());
-        for (File f : getSkins()) {
+        for (Path f : getSkins()) {
             hashCode *= 37;
             hashCode += f.hashCode();
         }

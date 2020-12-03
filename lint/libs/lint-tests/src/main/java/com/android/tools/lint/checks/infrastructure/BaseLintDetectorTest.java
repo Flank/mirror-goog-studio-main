@@ -16,7 +16,6 @@
 package com.android.tools.lint.checks.infrastructure;
 
 import com.android.SdkConstants;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.client.api.LintClient;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -274,7 +273,7 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
     }
 
     protected static void deleteFile(File dir) {
-        TestUtils.deleteFile(dir);
+        TestFile.deleteFilesRecursively(dir);
     }
 
     protected static File makeTestFile(

@@ -42,6 +42,8 @@ class StateListDetectorTest : AbstractCheckTest() {
                 <item android:state_pressed="true"
                 ^
                 res/drawable/states.xml:2: Earlier item which masks item
+                <item  android:color="#ff000000"/> <!-- WRONG, SHOULD BE LAST -->
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         )
@@ -127,6 +129,8 @@ class StateListDetectorTest : AbstractCheckTest() {
                 <item android:state_checked="false" android:state_window_focused="false"
                 ^
                 res/drawable/states3.xml:18: Earlier item which masks item
+                <item android:state_checked="false" android:state_window_focused="false"
+                ^
             0 errors, 1 warnings
             """
         )

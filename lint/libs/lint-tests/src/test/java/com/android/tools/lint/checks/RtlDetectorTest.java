@@ -710,10 +710,12 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "            android:textAlignment=\"textStart\"/> <!-- ERROR -->\n"
                         + "                                   ~~~~~~~~~\n"
                         + "    res/layout/spinner.xml:46: Incompatible direction here\n"
+                        + "            android:layout_gravity=\"end\"\n"
+                        + "                                    ~~~\n"
                         + "res/layout/spinner.xml:58: Error: To support older versions than API 17 (project specifies 5) you must also specify gravity or layout_gravity=\"center_horizontal\" [RtlCompat]\n"
                         + "            android:textAlignment=\"center\"/> <!-- ERROR -->\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
+                        + "2 errors, 0 warnings";
         lint().files(
                         projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),

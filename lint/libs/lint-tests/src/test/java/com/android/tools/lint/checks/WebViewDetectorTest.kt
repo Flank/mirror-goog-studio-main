@@ -64,6 +64,8 @@ class WebViewDetectorTest : AbstractCheckTest() {
                     <WebView
                      ~~~~~~~
                 res/layout/webview.xml:15: wrap_content here may not work well with WebView below
+                    android:layout_height="wrap_content">
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )
@@ -112,6 +114,8 @@ class WebViewDetectorTest : AbstractCheckTest() {
                     <WebView
                      ~~~~~~~
                 res/layout/webview2.xml:15: wrap_content here may not work well with WebView below
+                        android:layout_width="wrap_content"
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )

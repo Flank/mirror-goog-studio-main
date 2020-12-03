@@ -73,7 +73,7 @@ class MemoryLeakTest {
     private fun lint(): TestLintTask {
         val task = TestLintTask()
         GradleDetectorTest.initializeNetworkMocksAndCaches(task)
-        task.sdkHome(TestUtils.getSdk())
+        task.sdkHome(TestUtils.getSdk().toFile())
         return task
     }
 

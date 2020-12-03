@@ -438,7 +438,7 @@ class Aapt2DaemonImplTest {
 
     companion object {
         private val target: IAndroidTarget by lazy(LazyThreadSafetyMode.NONE) {
-            AndroidSdkHandler.getInstance(TestUtils.getSdk().toPath())
+            AndroidSdkHandler.getInstance(TestUtils.getSdk())
                 .getAndroidTargetManager(FakeProgressIndicator())
                 .getTargets(FakeProgressIndicator())
                 .maxBy { it.version }!!

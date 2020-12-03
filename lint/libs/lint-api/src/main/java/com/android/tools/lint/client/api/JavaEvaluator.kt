@@ -131,7 +131,7 @@ class JavaEvaluator {
 
     /**
      * Checks whether the class extends a super class or implements a given interface. Like calling
-     * both [.extendsClass] and [ ][.implementsInterface].
+     * both [.extendsClass] and [.implementsInterface].
      */
     open fun inheritsFrom(
         cls: PsiClass?,

@@ -346,9 +346,9 @@ class MlGeneratedClassTest {
         // Add model file to ml folder
         val modelFile = project.file(dstModelFilePath)
         FileUtils.copyFile(
-            TestUtils.getWorkspaceFile(
+            TestUtils.resolveWorkspacePath(
                 "prebuilts/tools/common/mlkit/testData/models/$modelFileName"
-            ),
+            ).toFile(),
             modelFile
         )
         project.executor().run(":assembleDebug")
@@ -366,7 +366,7 @@ class MlGeneratedClassTest {
         }
 
         // Check model.tflite is uncompressed (Issue 152875817)
-        val entry = ZipArchive.listEntries(apk.file.toFile())[apkModelFile]
+        val entry = ZipArchive.listEntries(apk.file)[apkModelFile]
         assertThat(entry?.compressionFlag).isEqualTo(ZipEntry.STORED)
     }
 

@@ -68,7 +68,7 @@ public class DesugarAppWithLibraryTest {
                         + "    targetCompatibility 1.8\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "    compile project(':lib')\n"
+                        + "    api project(':lib')\n"
                         + "}");
         TestFileUtils.appendToFile(
                 project.getSubproject("lib").getBuildFile(),

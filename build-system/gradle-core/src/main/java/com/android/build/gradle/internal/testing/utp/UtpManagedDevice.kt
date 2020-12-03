@@ -36,4 +36,5 @@ data class UtpManagedDevice(
     val abi: String,
     val avdFolder: String,
     val id: String,
-    val emulatorPath: String)
+    val emulatorPath: String,
+    val displayEmulator: Boolean)

@@ -24,6 +24,8 @@ import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
 import java.io.File
 import java.io.Serializable
+import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -42,9 +44,10 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
         private fun initFileType(elements: Collection<BuiltArtifactImpl>): String? {
             val (files, directories)  = elements
                     .asSequence()
-                    .map { File(it.outputFile) }
-                    .filter { it.exists() }
-                    .partition { it.isFile }
+                    .map { FileSystems.getDefault().getPath(it.outputFile) }
+                    // ensure that the file exists and it can be determined as a File or Directory
+                    .filter { it.toFile().exists() && (Files.isRegularFile(it) || Files.isDirectory(it)) }
+                    .partition { Files.isRegularFile(it) }
             if (files.isNotEmpty() && directories.isNotEmpty()) {
                 throw IllegalArgumentException("""
                 You cannot store both files and directories as a single artifact.
@@ -59,10 +62,10 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
             }
         }
 
-        private fun display(files: Collection<File>, singular: String, plural: String): String {
+        private fun display(files: Collection<Path>, singular: String, plural: String): String {
             return if (files.size > 1)
-                "${files.joinToString(",") { it.name }} are $plural"
-            else "${files.first().name} is a $singular"
+                "${files.joinToString(",") { it.fileName.toString() }} are $plural"
+            else "${files.first().fileName.toString()} is a $singular"
         }
     }
 

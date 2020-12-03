@@ -389,7 +389,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
             String name, String allResources, String publicResources) throws IOException {
         // Identical to PrivateResourceDetectorTest, but these are in test modules that
         // can't access each other
-        final File tempDir = TestUtils.createTempDirDeletedOnExit();
+        final File tempDir = TestUtils.createTempDirDeletedOnExit().toFile();
 
         File rFile = new File(tempDir, FN_RESOURCE_TEXT);
         Files.asCharSink(rFile, Charsets.UTF_8).write(allResources);

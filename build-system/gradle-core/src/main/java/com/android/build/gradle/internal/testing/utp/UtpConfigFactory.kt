@@ -217,7 +217,7 @@ class UtpConfigFactory {
                                     }.build()
                                     avdName = deviceInfo.avdName
                                     avdId = deviceInfo.id
-                                    enableDisplay = false
+                                    enableDisplay = deviceInfo.displayEmulator
                                     emulatorPath = PathProto.Path.newBuilder().apply {
                                         path = deviceInfo.emulatorPath
                                     }.build()

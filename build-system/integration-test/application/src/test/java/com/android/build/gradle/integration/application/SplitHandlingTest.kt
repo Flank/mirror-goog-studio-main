@@ -68,9 +68,9 @@ class SplitHandlingTest {
                + "}\n"
                + "\n"
                + "dependencies {\n"
-               + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+               + "    api 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
                + "'\n"
-               + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+               + "    api 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
                + "'\n"
                + "}\n")
         val failure = project.executeExpectingFailure("clean", "assembleDebug")
@@ -101,9 +101,9 @@ class SplitHandlingTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n")
 
@@ -145,9 +145,9 @@ class SplitHandlingTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n")
         project.execute("clean", "assembleDebug")
@@ -181,9 +181,9 @@ class SplitHandlingTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n")
         project.execute("clean", "assembleDebug")

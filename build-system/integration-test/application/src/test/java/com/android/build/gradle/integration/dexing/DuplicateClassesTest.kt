@@ -45,7 +45,7 @@ class DuplicateClassesTest {
             MultiModuleTestProject.builder()
                 .subproject(":app", app)
                 .subproject(":lib", javaLib)
-                .dependency("compile", app, javaLib)
+                .dependency("implementation", app, javaLib)
                 .build()
         ).create()
 
@@ -63,7 +63,7 @@ class DuplicateClassesTest {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile,
             """dependencies {
-                        |compile files('libs/jar1.jar', 'libs/jar2.jar')
+                        |api files('libs/jar1.jar', 'libs/jar2.jar')
                     |}""".trimMargin())
         val result = project.executor().expectFailure().run("clean", ":app:checkDebugDuplicateClasses")
 

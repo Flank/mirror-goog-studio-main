@@ -100,7 +100,7 @@ class ApkFlinger(
         val signingOptions: SigningOptions? = creationData.signingOptions.orNull()
         val innerArchive =
             if (signingOptions == null) {
-                ZipArchive(creationData.apkPath, Zip64.Policy.FORBID)
+                ZipArchive(creationData.apkPath.toPath(), Zip64.Policy.FORBID)
             } else {
                 SignedApk(
                     creationData.apkPath,
@@ -158,7 +158,7 @@ class ApkFlinger(
 
         val ignorePredicate : Predicate<String> = isIgnored ?: Predicate { false }
 
-        val zipSource = ZipSource(zip)
+        val zipSource = ZipSource(zip.toPath())
         val entries = zipSource.entries().values
         for (entry in entries) {
             if (entry.isDirectory || ignorePredicate.apply(entry.name)) {

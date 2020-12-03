@@ -76,7 +76,7 @@ public class SignedApk implements Archive {
             @NonNull Zip64.Policy zip64Policy)
             throws InvalidKeyException, IOException {
         this.options = options;
-        this.archive = new ZipArchive(file, zip64Policy);
+        this.archive = new ZipArchive(file.toPath(), zip64Policy);
         DefaultApkSignerEngine.SignerConfig signerConfig =
                 new DefaultApkSignerEngine.SignerConfig.Builder(
                                 options.name, options.privateKey, options.certificates)
@@ -188,7 +188,7 @@ public class SignedApk implements Archive {
         if (!options.v4Enabled) {
             return;
         }
-        Path path = archive.getFile().toPath();
+        Path path = archive.getPath();
         try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
             FileChannelDataSource dataSource = new FileChannelDataSource(channel);
             signer.signV4(dataSource, options.v4Output, FAIL_ON_V4_ERROR);
@@ -215,7 +215,7 @@ public class SignedApk implements Archive {
         }
 
         ZipInfo zipInfo = archive.closeWithInfo();
-        try (RandomAccessFile raf = new RandomAccessFile(archive.getFile(), "rw")) {
+        try (RandomAccessFile raf = new RandomAccessFile(archive.getPath().toFile(), "rw")) {
             byte[] sigBlock = v2andV3Sign(raf, zipInfo);
             sigBlock =
                     SigningBlockUtils.addToSigningBlock(

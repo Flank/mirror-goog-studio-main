@@ -174,7 +174,7 @@ public class LintClientTest extends TestCase {
                 new LintCliClient(CLIENT_UNIT_TESTS) {
                     @Override
                     public File getSdkHome() {
-                        return TestUtils.getSdk();
+                        return TestUtils.getSdk().toFile();
                     }
                 };
         String revision = client.getClientRevision();

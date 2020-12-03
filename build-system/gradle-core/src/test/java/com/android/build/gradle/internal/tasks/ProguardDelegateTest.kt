@@ -153,7 +153,7 @@ class ProguardDelegateTest {
 
         builder.configurationFiles = ImmutableList.of()
 
-        val bootClasspath = ImmutableList.of(TestUtils.getPlatformFile("android.jar"))
+        val bootClasspath = ImmutableList.of(TestUtils.resolvePlatformPath("android.jar").toFile())
         builder.bootClasspath = bootClasspath
         builder.fullBootClasspath = bootClasspath
 

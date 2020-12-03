@@ -347,7 +347,7 @@ class CustomRuleTest {
             .rootDirectory(lintApiLevel1000.parentFile.canonicalFile)
             .run()
             .expect(
-                "../lint6.jar: Warning: Lint found an issue registry " +
+                "../../lint6.jar: Warning: Lint found an issue registry " +
                     "(com.example.google.lint.MyIssueRegistry) which requires a newer API " +
                     "level. That means that the custom lint checks are intended for a" +
                     " newer lint version; please upgrade [ObsoleteLintCustomCheck]\n" +

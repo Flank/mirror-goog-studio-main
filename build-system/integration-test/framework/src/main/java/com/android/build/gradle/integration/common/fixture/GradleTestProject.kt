@@ -63,6 +63,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.Arrays
@@ -163,7 +164,7 @@ class GradleTestProject @JvmOverloads internal constructor(
 
         /** Crawls the tools/external/gradle dir, and gets the latest gradle binary.  */
         private fun computeLatestGradleCheckedIn(): String? {
-            val gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle")
+            val gradleDir = TestUtils.resolveWorkspacePath("tools/external/gradle").toFile()
 
             // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
             val gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-.+)?-bin\\.zip$")
@@ -227,16 +228,14 @@ class GradleTestProject @JvmOverloads internal constructor(
          */
         @JvmStatic
         fun getCmakeVersionFolder(cmakeVersion: String): File {
-            val cmakeVersionFolderInSdk = File(
-                TestUtils.getSdk(),
-                String.format("cmake/%s", cmakeVersion)
-            )
-            if (!cmakeVersionFolderInSdk.isDirectory) {
+            val cmakeVersionFolderInSdk =
+                    TestUtils.getSdk().resolve(String.format("cmake/%s", cmakeVersion))
+            if (!Files.isDirectory(cmakeVersionFolderInSdk)) {
                 throw RuntimeException(
                     String.format("Could not find CMake in %s", cmakeVersionFolderInSdk)
                 )
             }
-            return cmakeVersionFolderInSdk
+            return cmakeVersionFolderInSdk.toFile()
         }
 
         /**
@@ -1339,8 +1338,8 @@ allprojects { proj ->
     }
 
     private fun createLocalProp(destDir: File): File {
-        val localProp = ProjectProperties.create(
-            destDir.absolutePath, ProjectProperties.PropertyType.LOCAL
+        val localProp = ProjectPropertiesWorkingCopy.create(
+            destDir.absolutePath, ProjectPropertiesWorkingCopy.PropertyType.LOCAL
         )
         if (withSdk) {
             val androidSdkDir = this.androidSdkDir

@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI_IS_DEFAULT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI_IS_DEPRECATED
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_BUILD_ROOT
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MAX_PLATFORM
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MIN_PLATFORM
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_MODULE_BUILD_INTERMEDIATES_DIR
@@ -177,7 +178,14 @@ fun CxxAbiModel.getAndroidGradleSettings() : Settings {
                     .map { macro -> macro to resolveMacroValue(macro) }
     )
 
-    val configurationSegment = join(variant.module.buildSystem.tag, NDK_VARIANT_NAME.ref)
+    // This is the main switch point which defines the group of output folders used for
+    // configuration and build.
+    val configurationSegment =
+            if (variant.module.project.isConfigurationFoldingEnabled) {
+                join(NDK_VARIANT_OPTIMIZATION_TAG.ref, NDK_CONFIGURATION_HASH.ref)
+            } else {
+                join(variant.module.buildSystem.tag, NDK_VARIANT_NAME.ref)
+            }
 
     nameTable.addAll(
         NDK_VARIANT_BUILD_ROOT to join(NDK_MODULE_BUILD_ROOT.ref, configurationSegment),

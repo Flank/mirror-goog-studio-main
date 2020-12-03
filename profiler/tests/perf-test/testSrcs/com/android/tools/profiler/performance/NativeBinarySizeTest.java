@@ -20,12 +20,11 @@ import com.android.testutils.TestUtils;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.WindowDeviationAnalyzer;
 import com.google.common.collect.ImmutableMap;
-import org.junit.Test;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
 
 /**
  * Measures the sizes of the profiler libraries we generate and generates the data files for
@@ -52,11 +51,12 @@ public final class NativeBinarySizeTest {
                 try {
                     // getWorkspaceFile asserts the file exists.
                     File binary =
-                            TestUtils.getWorkspaceFile(
-                                    String.format(
-                                                    "tools/base/profiler/native/%s/android/",
-                                                    file.getKey())
-                                            + String.format("%s/%s", abi, file.getValue()));
+                            TestUtils.resolveWorkspacePath(
+                                            String.format(
+                                                            "tools/base/profiler/native/%s/android/",
+                                                            file.getKey())
+                                                    + String.format("%s/%s", abi, file.getValue()))
+                                    .toFile();
                     benchmark.log(String.format("%s_%s", file.getKey(), abi),
                             binary.length(),
                             /* we don't expect this to deviate so tighten parameters to detect slightest regression */

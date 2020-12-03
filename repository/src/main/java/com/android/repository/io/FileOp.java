@@ -47,12 +47,6 @@ import java.util.stream.Stream;
  * CancellableFileIo} to check for cancellation before read I/O operations.
  */
 public abstract class FileOp {
-    protected boolean mIsWindows;
-
-    public FileOp() {
-        mIsWindows = System.getProperty("os.name").startsWith("Windows");
-    }
-
     /** Returns the {@link FileSystem} this is based on. */
     public abstract FileSystem getFileSystem();
 
@@ -69,30 +63,6 @@ public abstract class FileOp {
             }
         }
         delete(fileOrFolder);
-    }
-
-    /**
-     * Helper to delete a file or a directory. For a directory, recursively deletes all of its
-     * content. It's ok for the file or folder to not exist at all.
-     *
-     * @return true if the delete was successful
-     */
-    public static boolean deleteFileOrFolder(@NonNull Path fileOrFolder) {
-        boolean[] sawException = new boolean[1];
-        try (Stream<Path> contents = CancellableFileIo.walk(fileOrFolder)) {
-            contents.sorted(Comparator.reverseOrder())
-                    .forEach(
-                            path -> {
-                                try {
-                                    Files.delete(path);
-                                } catch (IOException e) {
-                                    sawException[0] = true;
-                                }
-                            });
-        } catch (IOException e) {
-            return false;
-        }
-        return !sawException[0];
     }
 
     /**
@@ -302,10 +272,6 @@ public abstract class FileOp {
         }
     }
 
-    public final boolean isWindows() {
-        return mIsWindows;
-    }
-
     /** @see Files#isExecutable(Path) */
     public final boolean canExecute(@NonNull File file) {
         return CancellableFileIo.isExecutable(toPath(file));
@@ -410,16 +376,4 @@ public abstract class FileOp {
      */
     @NonNull
     public abstract File toFile(@NonNull Path path);
-
-    /**
-     * Temporary functionality to help with File-to-Path migration. Should only be called when a
-     * FileOp is not available and with a Path that is backed by the default FileSystem (notably not
-     * in the context of any tests that use MockFileOp or jimfs).
-     *
-     * @throws UnsupportedOperationException if the Path is backed by a non-default FileSystem.
-     */
-    @NonNull
-    public static File toFileUnsafe(@NonNull Path path) {
-        return path.toFile();
-    }
 }

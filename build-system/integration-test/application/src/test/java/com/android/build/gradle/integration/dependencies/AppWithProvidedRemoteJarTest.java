@@ -36,7 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/** test for provided local jar in app */
+/** test for compileOnly local jar in app */
 public class AppWithProvidedRemoteJarTest {
 
     @ClassRule

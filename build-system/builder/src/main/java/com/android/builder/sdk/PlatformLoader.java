@@ -36,6 +36,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Singleton-based implementation of SdkLoader for a platform-based SDK.
@@ -82,28 +83,28 @@ public class PlatformLoader implements SdkLoader {
         init(logger);
         IAndroidTarget androidTarget = new FakeAndroidTarget(mTreeLocation.getPath(), targetHash);
 
-        File hostTools = getHostToolsFolder();
+        Path hostTools = getHostToolsFolder().toPath();
 
         BuildToolInfo buildToolInfo =
                 BuildToolInfo.modifiedLayout(
                         buildToolRevision,
-                        mTreeLocation,
-                        new File(hostTools, FN_AAPT),
-                        new File(hostTools, FN_AIDL),
-                        new File(mTreeLocation, "prebuilts/sdk/tools/dx"),
-                        new File(mTreeLocation, "prebuilts/sdk/tools/lib/dx.jar"),
-                        new File(hostTools, FN_RENDERSCRIPT),
-                        new File(mTreeLocation, "prebuilts/sdk/renderscript/include"),
-                        new File(mTreeLocation, "prebuilts/sdk/renderscript/clang-include"),
-                        new File(hostTools, FN_BCC_COMPAT),
-                        new File(hostTools, "arm-linux-androideabi-ld"),
-                        new File(hostTools, "aarch64-linux-android-ld"),
-                        new File(hostTools, "i686-linux-android-ld"),
-                        new File(hostTools, "x86_64-linux-android-ld"),
-                        new File(hostTools, "mipsel-linux-android-ld"),
-                        new File(hostTools, "lld"),
-                        new File(hostTools, FN_ZIPALIGN),
-                        new File(hostTools, FN_AAPT2));
+                        mTreeLocation.toPath(),
+                        hostTools.resolve(FN_AAPT),
+                        hostTools.resolve(FN_AIDL),
+                        mTreeLocation.toPath().resolve("prebuilts/sdk/tools/dx"),
+                        mTreeLocation.toPath().resolve("prebuilts/sdk/tools/lib/dx.jar"),
+                        hostTools.resolve(FN_RENDERSCRIPT),
+                        mTreeLocation.toPath().resolve("prebuilts/sdk/renderscript/include"),
+                        mTreeLocation.toPath().resolve("prebuilts/sdk/renderscript/clang-include"),
+                        hostTools.resolve(FN_BCC_COMPAT),
+                        hostTools.resolve("arm-linux-androideabi-ld"),
+                        hostTools.resolve("aarch64-linux-android-ld"),
+                        hostTools.resolve("i686-linux-android-ld"),
+                        hostTools.resolve("x86_64-linux-android-ld"),
+                        hostTools.resolve("mipsel-linux-android-ld"),
+                        hostTools.resolve("lld"),
+                        hostTools.resolve(FN_ZIPALIGN),
+                        hostTools.resolve(FN_AAPT2));
 
         return new TargetInfo(androidTarget, buildToolInfo);
     }

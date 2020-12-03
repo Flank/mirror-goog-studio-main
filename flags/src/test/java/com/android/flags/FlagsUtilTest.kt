@@ -37,4 +37,20 @@ class FlagsUtilTest {
     })
     assertTrue("ifEnabled should have executed the callback", isExecuted)
   }
+
+  @Test
+  fun `check ifDisabled is executed only when the flag is false`() {
+    val flags = Flags()
+    val group = FlagGroup(flags, "group", "Unused")
+    val flagBoolFalse = Flag.create(group, "bool.false", "Unused", "Unused", false)
+    val flagBoolTrue = Flag.create(group, "bool.true", "Unused", "Unused", true)
+
+    assertNull(flagBoolTrue.ifDisabled { fail("The callback should not run for a flag set to true") })
+    var isExecuted = false
+    assertEquals(12, flagBoolFalse.ifDisabled {
+      isExecuted = true
+      12
+    })
+    assertTrue("ifDisabled should have executed the callback", isExecuted)
+  }
 }

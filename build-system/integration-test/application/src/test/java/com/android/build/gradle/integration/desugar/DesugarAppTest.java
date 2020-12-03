@@ -125,9 +125,7 @@ public class DesugarAppTest {
         enableJava8();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "dependencies {\n"
-                        + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
-                        + "}");
+                "dependencies {\n" + "    api fileTree(dir: 'libs', include: ['*.jar'])\n" + "}");
         List<String> classes = createLibToDesugarAndGetClasses();
         getProjectExecutor().run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
@@ -143,7 +141,7 @@ public class DesugarAppTest {
                 "android.compileOptions.sourceCompatibility 1.7\n"
                         + "android.compileOptions.targetCompatibility 1.7\n"
                         + "dependencies {\n"
-                        + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
+                        + "    api fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
         createLibToDesugarAndGetClasses();
         GradleBuildResult result = getProjectExecutor().expectFailure().run("assembleDebug");
@@ -180,7 +178,7 @@ public class DesugarAppTest {
                                 + "android.buildTypes.debug.testCoverageEnabled true\n"
                                 + "android.defaultConfig.minSdkVersion %d\n"
                                 + "dependencies {\n"
-                                + "    compile 'com.android.support:support-v4:%s'\n"
+                                + "    api 'com.android.support:support-v4:%s'\n"
                                 + "}",
                         TestVersions.SUPPORT_LIB_MIN_SDK,
                         TestVersions.SUPPORT_LIB_VERSION));
@@ -257,9 +255,7 @@ public class DesugarAppTest {
         enableJava8();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "dependencies {\n"
-                        + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
-                        + "}");
+                "dependencies {\n" + "    api fileTree(dir: 'libs', include: ['*.jar'])\n" + "}");
 
         TestFileUtils.addMethod(
                 FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/HelloWorld.java"),

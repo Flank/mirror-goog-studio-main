@@ -15,13 +15,13 @@ dependencies {
     implementation project(':base:sdk-common')
     implementation project(':base:common')
     implementation project(':base:sdklib')
-    implementation project(':base:testutils')
     implementation project(':base:builder-model')
     implementation libs.junit
     implementation libs.asm
     implementation libs.groovy
     implementation libs.mockito_core
 
+    testImplementation project(':base:testutils')
     testImplementation project(':analytics-library:shared')
     testImplementation project(':analytics-library:protos')
     testImplementation project(':analytics-library:tracker')

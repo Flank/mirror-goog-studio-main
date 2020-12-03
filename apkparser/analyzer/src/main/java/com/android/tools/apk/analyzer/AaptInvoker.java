@@ -102,6 +102,6 @@ public class AaptInvoker {
         if (latestBuildTool == null) {
             throw new IllegalStateException("Cannot locate latest build tools");
         }
-        return latestBuildTool.getLocation().toPath().resolve(SdkConstants.FN_AAPT);
+        return latestBuildTool.getLocation().resolve(SdkConstants.FN_AAPT);
     }
 }

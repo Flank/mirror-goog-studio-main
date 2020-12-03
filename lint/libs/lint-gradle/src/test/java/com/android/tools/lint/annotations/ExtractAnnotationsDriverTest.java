@@ -17,7 +17,6 @@
 package com.android.tools.lint.annotations;
 
 import static com.android.testutils.AssumeUtil.assumeNotWindows;
-import static com.android.testutils.TestUtils.deleteFile;
 import static com.android.tools.lint.checks.infrastructure.LintDetectorTest.base64gzip;
 import static com.android.utils.SdkUtils.fileToUrlString;
 import static java.io.File.pathSeparator;
@@ -32,6 +31,7 @@ import com.android.tools.lint.checks.infrastructure.KotlinClasspathKt;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
+import com.android.utils.PathUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class ExtractAnnotationsDriverTest {
 
     @Test
     public void testProGuard() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project = createProject(keepTest, SUPPORT_ANNOTATIONS_JAR);
         File supportLib = new File(project, SUPPORT_JAR_PATH);
@@ -69,7 +70,7 @@ public class ExtractAnnotationsDriverTest {
                         "--sources",
                         new File(project, "src").getPath(),
                         "--classpath",
-                        androidJar.getPath() + pathSeparator + supportLib,
+                        androidJar + pathSeparator + supportLib,
                         "--quiet",
                         "--proguard",
                         output.getPath());
@@ -100,12 +101,12 @@ public class ExtractAnnotationsDriverTest {
                         + "}\n"
                         + "\n",
                 Files.toString(output, Charsets.UTF_8));
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
     public void testIncludeClassRetention() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project =
                 createProject(
@@ -125,7 +126,7 @@ public class ExtractAnnotationsDriverTest {
                         "--sources",
                         new File(project, "src").getPath(),
                         "--classpath",
-                        androidJar.getPath() + pathSeparator + supportLib,
+                        androidJar + pathSeparator + supportLib,
                         "--quiet",
                         "--output",
                         output.getPath(),
@@ -211,12 +212,12 @@ public class ExtractAnnotationsDriverTest {
                         + "\n",
                 Files.toString(proguard, Charsets.UTF_8));
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
     public void testSkipClassRetention() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        Path androidJar = TestUtils.resolvePlatformPath("android.jar");
 
         File project =
                 createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);
@@ -230,7 +231,7 @@ public class ExtractAnnotationsDriverTest {
                         "--sources",
                         new File(project, "src").getPath(),
                         "--classpath",
-                        androidJar.getPath() + pathSeparator + supportLib,
+                        androidJar + pathSeparator + supportLib,
                         "--quiet",
                         "--skip-class-retention",
                         "--output",
@@ -271,13 +272,13 @@ public class ExtractAnnotationsDriverTest {
                         + "  </item>\n"
                         + "</root>\n\n");
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
     public void testKotlin() throws Exception {
         assumeNotWindows();
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        File androidJar = TestUtils.resolvePlatformPath("android.jar").toFile();
 
         File project =
                 createProject(
@@ -341,12 +342,12 @@ public class ExtractAnnotationsDriverTest {
                         + "  </item>\n"
                         + "</root>\n\n");
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     @Test
     public void testWriteJarRecipeFile() throws Exception {
-        File androidJar = TestUtils.getPlatformFile("android.jar");
+        File androidJar = TestUtils.resolvePlatformPath("android.jar").toFile();
 
         File project =
                 createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);
@@ -379,7 +380,7 @@ public class ExtractAnnotationsDriverTest {
                 "D test/pkg/IntDefTest$DialogFlags\nD test/pkg/IntDefTest$DialogStyle\n",
                 Files.toString(typedefFile, Charsets.UTF_8));
 
-        deleteFile(project);
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
     }
 
     private File createProject(@NonNull TestFile... files) throws IOException {

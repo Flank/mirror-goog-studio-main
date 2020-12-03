@@ -207,7 +207,7 @@ public class AndroidSdkHandlerTest extends TestCase {
         Locale.setDefault(new Locale("hi", "IN"));
         try {
             Set<RepositorySourceProvider> providers =
-                    AndroidSdkHandler.getInstance(TestUtils.getSdk().toPath())
+                    AndroidSdkHandler.getInstance(TestUtils.getSdk())
                             .getSdkManager(new FakeProgressIndicator())
                             .getSourceProviders();
             boolean found = false;

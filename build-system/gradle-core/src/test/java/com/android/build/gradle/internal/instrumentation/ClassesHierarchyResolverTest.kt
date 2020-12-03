@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.instrumentation
 
 import com.android.testutils.TestInputsGenerator
-import com.android.testutils.TestUtils
+import com.android.testutils.TestUtils.resolvePlatformPath
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -47,7 +47,7 @@ class ClassesHierarchyResolverTest(private val testMode: TestMode) {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    private val androidJar = TestUtils.getPlatformFile("android.jar")
+    private val androidJar = resolvePlatformPath("android.jar").toFile()
 
     private lateinit var classesHierarchyResolver: ClassesHierarchyResolver
 

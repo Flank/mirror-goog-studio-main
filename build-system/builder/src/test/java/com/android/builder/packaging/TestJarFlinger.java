@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.builder.packaging;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -22,7 +21,6 @@ import com.android.zipflinger.Entry;
 import com.android.zipflinger.ZipArchive;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +70,7 @@ public class TestJarFlinger {
             flinger.addJar(createJar("j.jar", 1));
         }
 
-        Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
+        Map<String, Entry> entries = ZipArchive.listEntries(path);
         for (String name : entries.keySet()) {
             Assert.assertTrue("Found !.class entry:" + name, predicate.test(name));
         }
@@ -87,7 +85,7 @@ public class TestJarFlinger {
             flinger.addJar(createJar("j.jar", 1));
         }
 
-        Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
+        Map<String, Entry> entries = ZipArchive.listEntries(path);
         for (String name : entries.keySet()) {
             Assert.assertTrue("Found .class entry:" + name, predicate.test(name));
         }
@@ -104,7 +102,7 @@ public class TestJarFlinger {
             flinger.addJar(jar2Path);
         }
 
-        Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
+        Map<String, Entry> entries = ZipArchive.listEntries(path);
         Assert.assertEquals("Archive should have seven entries", 7, entries.size());
     }
 
@@ -118,7 +116,7 @@ public class TestJarFlinger {
             flinger.addFile("file2", contentJar);
         }
 
-        Map<String, Entry> entries = ZipArchive.listEntries(path.toFile());
+        Map<String, Entry> entries = ZipArchive.listEntries(path);
         Assert.assertEquals("Archive should have two entries", 2, entries.size());
         Assert.assertTrue("Archive should contain entry 'file1", entries.containsKey("file1"));
         Assert.assertTrue("Archive should contain entry 'file2", entries.containsKey("file2"));
@@ -133,7 +131,7 @@ public class TestJarFlinger {
             flinger.addDirectory(dir);
         }
 
-        assertThat(ZipArchive.listEntries(path.toFile()).keySet())
+        assertThat(ZipArchive.listEntries(path).keySet())
                 .containsExactly("linked/file.txt", "regular.txt", "regular.txt.link");
     }
 

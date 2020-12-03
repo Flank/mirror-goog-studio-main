@@ -70,14 +70,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
-import com.android.repository.io.FileOp;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -220,23 +221,20 @@ public class BuildToolInfo {
      */
     @NonNull
     public static BuildToolInfo fromStandardDirectoryLayout(
-            @NonNull Revision revision,
-            @NonNull File path) {
+            @NonNull Revision revision, @NonNull Path path) {
         return new BuildToolInfo(revision, path);
     }
 
     /** Creates a {@link BuildToolInfo} from a {@link LocalPackage}. */
     @NonNull
-    public static BuildToolInfo fromLocalPackage(
-            @NonNull LocalPackage localPackage, @NonNull FileOp fop) {
+    public static BuildToolInfo fromLocalPackage(@NonNull LocalPackage localPackage) {
         checkNotNull(localPackage, "localPackage");
         checkArgument(
                 localPackage.getPath().contains(SdkConstants.FD_BUILD_TOOLS),
                 "%s package required.",
                 SdkConstants.FD_BUILD_TOOLS);
 
-        return fromStandardDirectoryLayout(
-                localPackage.getVersion(), fop.toFile(localPackage.getLocation()));
+        return fromStandardDirectoryLayout(localPackage.getVersion(), localPackage.getLocation());
     }
 
     /**
@@ -248,23 +246,23 @@ public class BuildToolInfo {
     @NonNull
     public static BuildToolInfo modifiedLayout(
             @NonNull Revision revision,
-            @NonNull File mainPath,
-            @NonNull File aapt,
-            @NonNull File aidl,
-            @NonNull File dx,
-            @NonNull File dxJar,
-            @NonNull File llmvRsCc,
-            @NonNull File androidRs,
-            @NonNull File androidRsClang,
-            @Nullable File bccCompat,
-            @Nullable File ldArm,
-            @Nullable File ldArm64,
-            @Nullable File ldX86,
-            @Nullable File ldX86_64,
-            @Nullable File ldMips,
-            @Nullable File lld,
-            @NonNull File zipAlign,
-            @Nullable File aapt2) {
+            @NonNull Path mainPath,
+            @NonNull Path aapt,
+            @NonNull Path aidl,
+            @NonNull Path dx,
+            @NonNull Path dxJar,
+            @NonNull Path llmvRsCc,
+            @NonNull Path androidRs,
+            @NonNull Path androidRsClang,
+            @Nullable Path bccCompat,
+            @Nullable Path ldArm,
+            @Nullable Path ldArm64,
+            @Nullable Path ldX86,
+            @Nullable Path ldX86_64,
+            @Nullable Path ldMips,
+            @Nullable Path lld,
+            @NonNull Path zipAlign,
+            @Nullable Path aapt2) {
         BuildToolInfo result = new BuildToolInfo(revision, mainPath);
 
         result.add(AAPT, aapt);
@@ -333,9 +331,7 @@ public class BuildToolInfo {
      */
     @NonNull
     public static BuildToolInfo partial(
-            @NonNull Revision revision,
-            @NonNull File location,
-            @NonNull Map<PathId, File> paths) {
+            @NonNull Revision revision, @NonNull Path location, @NonNull Map<PathId, Path> paths) {
         BuildToolInfo result = new BuildToolInfo(revision, location);
 
         paths.forEach(result::add);
@@ -348,12 +344,11 @@ public class BuildToolInfo {
     private final Revision mRevision;
 
     /** The path to the build-tool folder specific to this revision. */
-    @NonNull
-    private final File mPath;
+    @NonNull private final Path mPath;
 
     private final Map<PathId, String> mPaths = Maps.newEnumMap(PathId.class);
 
-    private BuildToolInfo(@NonNull Revision revision, @NonNull File path) {
+    private BuildToolInfo(@NonNull Revision revision, @NonNull Path path) {
         mRevision = revision;
         mPath = path;
 
@@ -384,12 +379,13 @@ public class BuildToolInfo {
     }
 
     private void add(PathId id, String leaf) {
-        add(id, new File(mPath, leaf));
+        add(id, mPath.resolve(leaf));
     }
 
-    private void add(PathId id, File path) {
-        String str = path.getAbsolutePath();
-        if (path.isDirectory() && str.charAt(str.length() - 1) != File.separatorChar) {
+    private void add(PathId id, Path path) {
+        String str = path.toAbsolutePath().toString();
+        if (CancellableFileIo.isDirectory(path)
+                && str.charAt(str.length() - 1) != File.separatorChar) {
             str += File.separatorChar;
         }
         mPaths.put(id, str);
@@ -405,12 +401,12 @@ public class BuildToolInfo {
 
     /**
      * Returns the build-tool revision-specific folder.
-     * <p>
-     * For compatibility reasons, use {@link #getPath(PathId)} if you need the path to a
-     * specific tool.
+     *
+     * <p>For compatibility reasons, use {@link #getPath(PathId)} if you need the path to a specific
+     * tool.
      */
     @NonNull
-    public File getLocation() {
+    public Path getLocation() {
         return mPath;
     }
 

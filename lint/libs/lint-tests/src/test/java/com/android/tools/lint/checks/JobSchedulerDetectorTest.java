@@ -118,7 +118,9 @@ public class JobSchedulerDetectorTest extends AbstractCheckTest {
                         + "        ComponentName componentName = new ComponentName(this, MyJobService.class);\n"
                         + "                                                              ~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:5: Service declaration here\n"
-                        + "0 errors, 1 warnings\n";
+                        + "        <service android:name=\".MyJobService\"\n"
+                        + "        ^\n"
+                        + "0 errors, 1 warnings";
 
         //noinspection all // Sample code
         lint().files(

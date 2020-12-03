@@ -60,7 +60,7 @@ public class InjectedDensityTest {
                         + "        minSdkVersion 15"
                         + "    }\n"
                         + "    dependencies {\n"
-                        + "        compile 'com.android.support:appcompat-v7:"
+                        + "        api 'com.android.support:appcompat-v7:"
                         + TestVersions.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "    }"

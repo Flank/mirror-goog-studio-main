@@ -27,12 +27,13 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
 import com.android.repository.io.FileOp;
+import com.android.repository.io.FileOpUtils;
 import com.android.resources.Density;
 import com.android.resources.ScreenSize;
-import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.OptionalLibrary;
+import com.android.sdklib.PathFileWrapper;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
@@ -51,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -295,7 +297,7 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             if (mOsSdkFolder == null) {
-                String cmdName = "avdmanager" + (mSdkHandler.getFileOp().isWindows() ? ".bat" : "");
+                String cmdName = "avdmanager" + (FileOpUtils.isWindows() ? ".bat" : "");
 
                 errorAndExit(
                         "The tools directory property is not set, please make sure you are "
@@ -572,7 +574,7 @@ class AvdManagerCli extends CommandLineParser {
                 }
             }
             // get the target tags & ABIs
-            File targetLocation = new File(target.getLocation());
+            Path targetLocation = mSdkHandler.getFileOp().toPath(target.getLocation());
             ISystemImage image =
                     mSdkHandler.getSystemImageManager(progress).getImageAt(targetLocation);
             if (image != null) {
@@ -698,13 +700,19 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             String paramFolderPath = getParamLocationPath();
-            File avdFolder;
+            Path avdFolder;
             if (paramFolderPath != null) {
-                avdFolder = new File(paramFolderPath);
+                avdFolder = mSdkHandler.getFileOp().toPath(paramFolderPath);
             } else {
                 avdFolder =
-                        AvdInfo.getDefaultAvdFolder(
-                                avdManager, avdName, mSdkHandler.getFileOp(), false);
+                        mSdkHandler
+                                .getFileOp()
+                                .toPath(
+                                        AvdInfo.getDefaultAvdFolder(
+                                                avdManager,
+                                                avdName,
+                                                mSdkHandler.getFileOp(),
+                                                false));
             }
 
             IdDisplay tag = SystemImage.DEFAULT_TAG;
@@ -1019,11 +1027,11 @@ class AvdManagerCli extends CommandLineParser {
             errorAndExit("\"emulator\" package must be installed!");
         }
         FileOp fop = mSdkHandler.getFileOp();
-        File libDir = fop.toFile(emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB));
-        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
-        Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
-          .parseHardwareDefinitions(
-            new FileOpFileWrapper(hardwareDefs, fop, false), mSdkLog);
+        Path libDir = emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB);
+        Path hardwareDefs = libDir.resolve(SdkConstants.FN_HARDWARE_INI);
+        Map<String, HardwareProperties.HardwareProperty> hwMap =
+                HardwareProperties.parseHardwareDefinitions(
+                        new PathFileWrapper(hardwareDefs), mSdkLog);
 
         // Get the generic default values
         Map<String, String> hwConfigMap = defaultEmulatorPropertiesMap();
@@ -1083,15 +1091,11 @@ class AvdManagerCli extends CommandLineParser {
         if (emulatorPackage == null) {
             errorAndExit("\"emulator\" package must be installed!");
         }
-        File libDir =
-                mSdkHandler
-                        .getFileOp()
-                        .toFile(emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB));
-        File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
-        FileOp fop = mSdkHandler.getFileOp();
-        Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
-                .parseHardwareDefinitions(
-                        new FileOpFileWrapper(hardwareDefs, fop, false), mSdkLog);
+        Path libDir = emulatorPackage.getLocation().resolve(SdkConstants.FD_LIB);
+        Path hardwareDefs = libDir.resolve(SdkConstants.FN_HARDWARE_INI);
+        Map<String, HardwareProperties.HardwareProperty> hwMap =
+                HardwareProperties.parseHardwareDefinitions(
+                        new PathFileWrapper(hardwareDefs), mSdkLog);
 
         HashMap<String, String> map = new HashMap<>();
 

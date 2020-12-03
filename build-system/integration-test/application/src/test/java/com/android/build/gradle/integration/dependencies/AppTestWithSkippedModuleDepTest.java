@@ -43,9 +43,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for app with a sub-module as both a compile and androidTestCompile dependency.
- */
+/** test for app with a sub-module as both a compile and androidTestImplementation dependency. */
 public class AppTestWithSkippedModuleDepTest {
 
     @ClassRule

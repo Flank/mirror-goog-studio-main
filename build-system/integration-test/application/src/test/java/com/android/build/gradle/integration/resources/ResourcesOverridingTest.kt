@@ -97,7 +97,7 @@ class ResourcesOverridingTest(private val precompileDependenciesResources: Boole
             project.getSubproject("app").buildFile,
             """
                 repositories {flatDir { dirs rootProject.file('publishedLib/build/outputs/aar/') } }
-                dependencies { compile project(':localLib') }
+                dependencies { api project(':localLib') }
             """.trimIndent()
         )
 

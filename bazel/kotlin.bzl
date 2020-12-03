@@ -149,6 +149,7 @@ def kotlin_library(
         lint_baseline = None,
         lint_classpath = [],
         lint_is_test_sources = False,
+        lint_timeout = None,
         module_name = None):
     """Compiles a library jar from Java and Kotlin sources"""
     kotlins = [src for src in srcs if src.endswith(".kt")]
@@ -228,6 +229,11 @@ def kotlin_library(
     if lint_baseline:
         if not lint_srcs:
             fail("lint_baseline set for iml_module that has no sources")
+
+        kwargs = {}
+        if lint_timeout:
+            kwargs["timeout"] = lint_timeout
+
         lint_test(
             name = name + "_lint_test",
             srcs = lint_srcs,
@@ -236,6 +242,7 @@ def kotlin_library(
             custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
             tags = ["no_windows"],
             is_test_sources = lint_is_test_sources,
+            **kwargs
         )
 
 def kotlin_test(

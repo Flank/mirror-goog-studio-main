@@ -85,12 +85,12 @@ public class AppWithNonExistentResolutionStrategyForAarTest {
                 "}\n" +
                 "\n");
 
-        TestFileUtils.appendToFile(project.getSubproject("library").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile \"org.jdeferred:jdeferred-android-aar:1.2.3\"\n" +
-                "}\n");
-
+        TestFileUtils.appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    api \"org.jdeferred:jdeferred-android-aar:1.2.3\"\n"
+                        + "}\n");
     }
 
     @AfterClass

@@ -146,7 +146,7 @@ public class TestProjects {
 
         @NonNull
         public Project build() throws IOException {
-            SdkLocator.setSdkTestDirectory(TestUtils.getSdk());
+            SdkLocator.setSdkTestDirectory(TestUtils.getSdk().toFile());
 
             Path manifest = projectDir.resolve("src/main/AndroidManifest.xml");
 

@@ -273,7 +273,7 @@ class SdkParsingUtilsTest {
     }
 
     private fun populateBuildToolDirectory(buildToolDir: File, buildToolRevision: Revision, skipSet: Set<BuildToolInfo.PathId> = emptySet()) {
-        val buildToolInfo = BuildToolInfo.fromStandardDirectoryLayout(buildToolRevision, buildToolDir)
+        val buildToolInfo = BuildToolInfo.fromStandardDirectoryLayout(buildToolRevision, buildToolDir.toPath())
         for (id in BuildToolInfo.PathId.values()) {
             if (!id.isPresentIn(buildToolRevision) || skipSet.contains(id)) {
                 continue

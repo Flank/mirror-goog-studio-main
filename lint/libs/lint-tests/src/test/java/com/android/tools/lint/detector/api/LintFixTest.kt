@@ -93,7 +93,7 @@ class LintFixTest : TestCase() {
             )
         )
             .detector(SampleTestDetector())
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 "src/test/pkg/Test.java:5: Warning: Sample test message [TestIssueId]\n" +

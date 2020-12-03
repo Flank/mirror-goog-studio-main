@@ -279,6 +279,6 @@ class D8MainDexListTaskTest {
     }
 
     private fun getBootClasspath(): FakeConfigurableFileCollection {
-        return FakeConfigurableFileCollection(TestUtils.getPlatformFile("android.jar"))
+        return FakeConfigurableFileCollection(TestUtils.resolvePlatformPath("android.jar").toFile())
     }
 }

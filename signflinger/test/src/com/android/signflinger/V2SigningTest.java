@@ -75,7 +75,7 @@ public class V2SigningTest {
 
         long start = System.nanoTime();
         try (SignedApk signedApk = new SignedApk(file, options)) {
-            signedApk.add(new BytesSource(workspace.getResourceFile("test1.txt"), "test1", 1));
+            signedApk.add(new BytesSource(workspace.getResourcePath("test1.txt"), "test1", 1));
         }
         long totalTime = (System.nanoTime() - start) / 1000000;
         Utils.verifyApk(file);
@@ -99,7 +99,7 @@ public class V2SigningTest {
         SignedApkOptions options = builder.build();
 
         try (SignedApk signedApk = new SignedApk(file, options)) {
-            signedApk.add(new BytesSource(workspace.getResourceFile("test1.txt"), "test1", 1));
+            signedApk.add(new BytesSource(workspace.getResourcePath("test1.txt"), "test1", 1));
         }
         Utils.verifyApk(file);
         Utils.verifySdkDependencyBlock(file);

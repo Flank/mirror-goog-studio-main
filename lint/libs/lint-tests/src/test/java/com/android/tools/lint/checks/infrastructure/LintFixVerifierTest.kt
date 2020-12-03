@@ -51,7 +51,7 @@ class LintFixVerifierTest {
             .allowCompilationErrors()
             .files(kotlin("import org.assertj.core.api.Assertions"))
             .issues(AssertjDetector.ISSUE_ASSERTJ_IMPORT)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -85,7 +85,7 @@ class LintFixVerifierTest {
                       """
                 ).indented()
             )
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .issues(AssertjDetector.ISSUE_ASSERTJ_IMPORT)
             .run()
             .expect(
@@ -122,7 +122,7 @@ class LintFixVerifierTest {
                       """
                 ).indented()
             )
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .issues(AssertjDetector.ISSUE_ASSERTJ_IMPORT)
             .run()
             .expectClean()
@@ -157,7 +157,7 @@ class LintFixVerifierTest {
                     """
                 ).indented()
             )
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .issues(*LintFixVerifierRegistry().issues.toTypedArray())
             .run()
             .expect(

@@ -223,7 +223,7 @@ public class Gradle implements Closeable {
         if (!Files.isDirectory(profiles)) {
             return;
         }
-        Path destination = TestUtils.getTestOutputDir().toPath().resolve("gradle_profiles");
+        Path destination = TestUtils.getTestOutputDir().resolve("gradle_profiles");
         copyDirectory(profiles, destination);
     }
 
@@ -287,9 +287,7 @@ public class Gradle implements Closeable {
                         + "}\n"
                         + "rootProject {\n"
                         + "    task cleanLocalCaches(type: Delete) {\n"
-                        + "       delete fileTree(gradle.gradleUserHomeDir.toString() + '/caches/transforms-2') { "
-                        + "           exclude '*.lock'\n"
-                        + "        }\n"
+                        + "       delete gradle.gradleUserHomeDir.toString() + '/transforms-3'\n"
                         + "       delete System.env['ANDROID_PREFS_ROOT'] + '/build-cache'\n"
                         + "    }\n"
                         + "}\n";

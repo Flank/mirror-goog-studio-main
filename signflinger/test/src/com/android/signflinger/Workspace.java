@@ -38,7 +38,7 @@ public class Workspace extends TemporaryFolder {
         if (prospect.exists()) {
             return prospect;
         }
-        return TestUtils.getWorkspaceFile(fullPath);
+        return TestUtils.resolveWorkspacePath(fullPath).toFile();
     }
 
     public Path getResourcePath(String path) {

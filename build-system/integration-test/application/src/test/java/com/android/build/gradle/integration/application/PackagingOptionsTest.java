@@ -126,8 +126,8 @@ public class PackagingOptionsTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile files('jar1.jar')\n"
-                        + "    compile files('jar2.jar')\n"
+                        + "    api files('jar1.jar')\n"
+                        + "    api files('jar2.jar')\n"
                         + "}\n");
 
         project.execute("clean", "assembleDebug");
@@ -146,8 +146,8 @@ public class PackagingOptionsTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile files('jar1.jar')\n"
-                        + "    compile files('jar2.jar')\n"
+                        + "    api files('jar1.jar')\n"
+                        + "    api files('jar2.jar')\n"
                         + "}\n");
 
         project.execute("clean", "assembleDebug");
@@ -182,8 +182,8 @@ public class PackagingOptionsTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile files('jar1.jar')\n"
-                        + "    compile files('jar2.jar')\n"
+                        + "    api files('jar1.jar')\n"
+                        + "    api files('jar2.jar')\n"
                         + "}\n");
 
         project.execute("clean", "assembleDebug");
@@ -214,7 +214,7 @@ public class PackagingOptionsTest {
     public void checkMergeOnADirectFileAndAJarEntry() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "\n" + "dependencies {\n" + "    compile files('jar1.jar')\n" + "}\n");
+                "\n" + "dependencies {\n" + "    api files('jar1.jar')\n" + "}\n");
 
         TestFileUtils.appendToFile(createFile("src/main/resources/conflict.txt"), "project-foo");
 
@@ -231,7 +231,7 @@ public class PackagingOptionsTest {
                 project.getBuildFile(),
                 "\n"
                         + "dependencies {\n"
-                        + "    compile files('jar1.jar')\n"
+                        + "    api files('jar1.jar')\n"
                         + "}\n"
                         + "\n"
                         + "android{\n"
@@ -255,8 +255,8 @@ public class PackagingOptionsTest {
                 project.getBuildFile(),
                 "\n"
                         + "dependencies {\n"
-                        + "    compile files('jar1.jar')\n"
-                        + "    compile files('jar2.jar')\n"
+                        + "    api files('jar1.jar')\n"
+                        + "    api files('jar2.jar')\n"
                         + "}\n");
 
         GradleBuildResult result = project.executor().expectFailure().run("clean", "assembleDebug");

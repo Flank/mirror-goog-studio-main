@@ -32,7 +32,7 @@ class FileNormalizerTest {
     private val normalizer = FileNormalizerImpl(
         buildId = BuildIdentifierImpl(File("/path/to/Project")),
         gradleUserHome = File("/path/to/Gradle"),
-        gradleCacheDir = File("/path/to/Gradle/caches/transforms-2/files-2.1"),
+        gradleCacheDir = File("/path/to/Gradle/caches/transforms-3/"),
         androidSdkDir = File("/path/to/Sdk"),
         androidPrefsDir = File("/path/to/Home"),
         androidNdkSxSRoot = File("/path/to/ndkSxSRoot"),
@@ -66,9 +66,9 @@ class FileNormalizerTest {
     @Test
     fun `Test Gradle Transform Cache`() {
         Truth.assertThat(normalizer.normalize(
-            File("/path/to/Gradle/caches/transforms-2/files-2.1/12345678901234567890123456789012/foo")
+            File("/path/to/Gradle/caches/transforms-3/12345678901234567890123456789012/transformed/foo")
         ))
-            .isEqualTo("{GRADLE_CACHE}/{CHECKSUM}/foo{!}")
+            .isEqualTo("{GRADLE_CACHE}/{CHECKSUM}/transformed/foo{!}")
     }
 
     @Test
@@ -133,7 +133,7 @@ class FileNormalizerTest {
         val normalizer = FileNormalizerImpl(
             buildId = BuildIdentifierImpl(File("C:\\path\\to\\Project")),
             gradleUserHome = File("C:\\path\\to\\Gradle"),
-            gradleCacheDir = File("C:\\path\\to\\Gradle\\caches\\transforms-2\\files-2.1"),
+            gradleCacheDir = File("C:\\path\\to\\Gradle\\caches\\transforms-3"),
             androidSdkDir = File("C:\\path\\to\\Sdk"),
             androidPrefsDir = File("C:\\path\\to\\Home"),
             androidNdkSxSRoot = File("C:\\path\\to\\ndkSxSRoot"),

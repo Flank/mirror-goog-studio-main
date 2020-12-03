@@ -127,9 +127,9 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
 #endif
   }
 
-  void didConcat(const SkMatrix& matrix) override;
+  void didConcat44(const SkM44& matrix) override;
 
-  void didSetMatrix(const SkMatrix& matrix) override;
+  void didSetM44(const SkM44& matrix) override;
 
   void didTranslate(SkScalar dx, SkScalar dy) override;
 

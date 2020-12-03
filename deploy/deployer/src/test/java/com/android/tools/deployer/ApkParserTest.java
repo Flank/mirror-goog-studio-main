@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
+import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,7 +31,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -45,8 +45,8 @@ public class ApkParserTest {
 
     @Test
     public void testCentralDirectoryParse() throws IOException {
-        File file = TestUtils.getWorkspaceFile(BASE + "base.apk.remotecd");
-        byte[] fileContent = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
+        Path file = TestUtils.resolveWorkspacePath(BASE + "base.apk.remotecd");
+        byte[] fileContent = Files.readAllBytes(file);
         Map<String, ZipUtils.ZipEntry> entries = ZipUtils.readZipEntries(fileContent);
         assertEquals(1007, entries.size());
         long manifestCrc = entries.get("AndroidManifest.xml").crc;
@@ -55,9 +55,9 @@ public class ApkParserTest {
 
     @Test
     public void testApkId() throws Exception {
-        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
         Map<String, ApkEntry> files =
-                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
+                new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0).apkEntries;
         Map<String, Long> expected = new HashMap<>();
         expected.put("META-INF/CERT.SF", 0x45E32198L);
         expected.put("AndroidManifest.xml", 0x7BF3141DL);
@@ -76,9 +76,9 @@ public class ApkParserTest {
 
     @Test
     public void testApkArchiveV2Map() throws Exception {
-        File file = TestUtils.getWorkspaceFile(BASE + "v2_signed.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "v2_signed.apk");
         Map<String, ApkEntry> files =
-                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
+                new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0).apkEntries;
         Map<String, Long> expected = new HashMap<>();
         expected.put(
                 "res/drawable/abc_list_selector_background_transition_holo_light.xml", 0x29EE1C29L);
@@ -94,9 +94,9 @@ public class ApkParserTest {
 
     @Test
     public void testApkArchiveApkDumpdMatchCrcs() throws Exception {
-        File file = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "signed_app/base.apk");
         Map<String, ApkEntry> files =
-                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
+                new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0).apkEntries;
         Map<String, Long> expected = new HashMap<>();
         expected.put("res/drawable-nodpi-v4/frantic.jpg", 0x492381F1L);
         expected.put(
@@ -113,9 +113,9 @@ public class ApkParserTest {
 
     @Test
     public void testApkArchiveApkNonV2SignedDumpdMatchDigest() throws Exception {
-        File file = TestUtils.getWorkspaceFile(BASE + "nonsigned_app/base.apk");
+        Path file = TestUtils.resolveWorkspacePath(BASE + "nonsigned_app/base.apk");
         Map<String, ApkEntry> files =
-                new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0).apkEntries;
+                new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0).apkEntries;
         Map<String, Long> expected = new HashMap<>();
         expected.put(
                 "res/drawable/abc_list_selector_background_transition_holo_light.xml", 0x29EE1C29L);
@@ -131,8 +131,8 @@ public class ApkParserTest {
 
     @Test
     public void testGetApkInstrumentation() throws Exception {
-        File file = TestUtils.getWorkspaceFile(BASE + "instrument.apk");
-        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0);
+        Path file = TestUtils.resolveWorkspacePath(BASE + "instrument.apk");
+        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0);
         assertEquals("com.example.android.basicgesturedetect.test", apk.packageName);
         assertEquals(1, apk.targetPackages.size());
         assertEquals("com.example.android.basicgesturedetect", apk.targetPackages.get(0));
@@ -140,8 +140,8 @@ public class ApkParserTest {
 
     @Test
     public void testGetApkNativeLibs() throws Exception {
-        File file = TestUtils.getWorkspaceFile(BASE + "native_libs.apk");
-        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.getPath())).get(0);
+        Path file = TestUtils.resolveWorkspacePath(BASE + "native_libs.apk");
+        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0);
         assertEquals(4, apk.libraryAbis.size());
 
         String[] allExpected = new String[] {"x86", "x86_64", "armeabi-v7a", "arm64-v8a"};
@@ -212,19 +212,24 @@ public class ApkParserTest {
 
     @Test
     public void testParsingBigZip() throws Exception {
-        Path zipArchive = Paths.get(TestUtils.getTestOutputDir().getAbsolutePath() + "big.zip");
-        int numFiles = 3;
-        int sizePerFile = 1_000_000_000;
-        createZip(numFiles, sizePerFile, zipArchive.toFile());
-        Assert.assertTrue(
-                "Zip is less than 3GiB", zipArchive.toFile().length() > numFiles * sizePerFile);
-        ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
-        try (RandomAccessFile file = new RandomAccessFile(zipArchive.toFile(), "r")) {
-            ApkParser.findCDLocation(file.getChannel(), map);
-            assertEquals(
-                    "Central directory offset found",
-                    true,
-                    map.cdOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
+        Path tempDirectory = Files.createTempDirectory("");
+        try {
+            Path zipArchive = tempDirectory.resolve("big.zip");
+            int numFiles = 3;
+            int sizePerFile = 1_000_000_000;
+            createZip(numFiles, sizePerFile, zipArchive.toFile());
+            Assert.assertTrue(
+                    "Zip is less than 3GiB", Files.size(zipArchive) > numFiles * sizePerFile);
+            ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
+            try (RandomAccessFile file = new RandomAccessFile(zipArchive.toFile(), "r")) {
+                ApkParser.findCDLocation(file.getChannel(), map);
+                assertEquals(
+                        "Central directory offset found",
+                        true,
+                        map.cdOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
+            }
+        } finally {
+            PathUtils.deleteRecursivelyIfExists(tempDirectory);
         }
     }
 

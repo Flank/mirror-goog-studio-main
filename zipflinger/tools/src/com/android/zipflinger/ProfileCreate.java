@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import static com.android.zipflinger.Profiler.WARM_UP_ITERATION;
@@ -21,7 +20,6 @@ import static com.android.zipflinger.Profiler.displayParameters;
 import static com.android.zipflinger.Profiler.prettyPrint;
 
 import com.android.tools.tracer.Trace;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,18 +28,18 @@ public class ProfileCreate {
 
     public static void main(String[] args) throws IOException {
         Path src = Files.createTempDirectory("tmp" + System.nanoTime());
-        src.toFile().mkdirs();
+        Files.createDirectories(src);
 
         for (int i = 0; i < WARM_UP_ITERATION; i++) {
-            File zipFile = new File(src.toFile(), "profileCreate" + i + ".zip");
-            zipFile.deleteOnExit();
+            Path zipFile = src.resolve("profileCreate" + i + ".zip");
+            zipFile.toFile().deleteOnExit();
             createArchive(zipFile);
         }
 
         displayParameters();
 
-        File zipFile = new File(src.toFile(), "profileCreate.zip");
-        zipFile.deleteOnExit();
+        Path zipFile = src.resolve("profileCreate.zip");
+        zipFile.toFile().deleteOnExit();
         Trace.start();
         long start = System.nanoTime();
         try (Trace trace = Trace.begin("Creating archive")) {
@@ -52,8 +50,8 @@ public class ProfileCreate {
         prettyPrint("Create time (ms)", (int) ((end - start) / 1_000_000L));
     }
 
-    static void createArchive(File src) throws IOException {
-        File zipFile = new File(src, "profileCreate.zip");
+    static void createArchive(Path src) throws IOException {
+        Path zipFile = src.resolve("profileCreate.zip");
         try (ZipArchive archive = new ZipArchive(zipFile)) {
             ApkMaker.createArchive(archive);
         }

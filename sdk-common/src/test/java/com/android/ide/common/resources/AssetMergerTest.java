@@ -133,10 +133,10 @@ public class AssetMergerTest extends BaseTestCase {
     public void testMergeBlob() throws Exception {
         AssetMerger merger = getAssetMerger();
 
-        File folder = TestUtils.createTempDirDeletedOnExit();
+        File folder = TestUtils.createTempDirDeletedOnExit().toFile();
         merger.writeBlobTo(
                 folder,
-                new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit(), facade),
+                new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit().toFile(), facade),
                 false);
 
         AssetMerger loadedMerger = new AssetMerger();
@@ -299,10 +299,10 @@ public class AssetMergerTest extends BaseTestCase {
         assertTrue(merger1.checkValidUpdate(merger2.getDataSets()));
 
         // write merger1 on disk to test writing empty AssetSets.
-        File folder = TestUtils.createTempDirDeletedOnExit();
+        File folder = TestUtils.createTempDirDeletedOnExit().toFile();
         merger1.writeBlobTo(
                 folder,
-                new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit(), facade),
+                new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit().toFile(), facade),
                 false);
 
         // reload it
@@ -451,7 +451,7 @@ public class AssetMergerTest extends BaseTestCase {
     private static File getWrittenResources() throws MergingException, IOException {
         AssetMerger assetMerger = getAssetMerger();
 
-        File folder = TestUtils.createTempDirDeletedOnExit();
+        File folder = TestUtils.createTempDirDeletedOnExit().toFile();
 
         MergedAssetWriter writer = new MergedAssetWriter(folder, facade);
         assetMerger.mergeData(writer, false /*doCleanUp*/);
@@ -466,7 +466,7 @@ public class AssetMergerTest extends BaseTestCase {
     }
 
     private static File getFolderCopy(File folder) throws IOException {
-        File dest = TestUtils.createTempDirDeletedOnExit();
+        File dest = TestUtils.createTempDirDeletedOnExit().toFile();
         copyFolder(folder, dest);
         return dest;
     }

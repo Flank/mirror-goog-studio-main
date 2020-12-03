@@ -641,7 +641,8 @@ public final class EmulatorConsole {
 
     public synchronized String sendAuthentication() throws IOException, AndroidLocation.AndroidLocationException {
         File emulatorConsoleAuthTokenFile = new File(AndroidLocation.getUserHomeFolder(), EMULATOR_CONSOLE_AUTH_TOKEN);
-        String authToken = Files.toString(emulatorConsoleAuthTokenFile, Charsets.UTF_8).trim();
+        String authToken =
+                Files.asCharSource(emulatorConsoleAuthTokenFile, Charsets.UTF_8).read().trim();
         String command = String.format(COMMAND_AUTH, authToken);
 
         return processCommand(command);

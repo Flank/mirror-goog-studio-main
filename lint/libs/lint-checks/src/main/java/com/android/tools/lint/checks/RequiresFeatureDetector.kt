@@ -64,7 +64,8 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
 class RequiresFeatureDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
         "android.support.annotation.RequiresFeature",
-        "androidx.annotation.RequiresFeature"
+        "androidx.annotation.RequiresFeature",
+        "android.annotation.RequiresFeature"
     )
 
     override fun visitAnnotationUsage(

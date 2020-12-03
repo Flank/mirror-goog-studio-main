@@ -19,22 +19,12 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 
-const val stdlibBaseArtifact = "org.jetbrains.kotlin:kotlin-stdlib"
-
-fun RecipeExecutor.setKotlinVersion(kotlinVersion: String) {
-    setExtVar("kotlin_version", kotlinVersion)
-    addClasspathDependency("org.jetbrains.kotlin:kotlin-gradle-plugin:\$kotlin_version")
-}
 
 fun RecipeExecutor.addAllKotlinDependencies(data: ModuleTemplateData) {
   val projectData = data.projectTemplateData
   if (!data.isNewModule && projectData.language == Language.Kotlin) {
     applyPlugin("kotlin-android")
-    if (!hasKotlinStdlib()) {
-      // Make sure to add the extra variable before using it as injection within the dependency.
-      setKotlinVersion(projectData.kotlinVersion)
-      addDependency("$stdlibBaseArtifact:\$kotlin_version")
-    }
+    addClasspathDependency("org.jetbrains.kotlin:kotlin-gradle-plugin:${projectData.kotlinVersion}")
   }
 }
 
@@ -48,9 +38,4 @@ fun RecipeExecutor.addSupportWearableDependency() {
   addDependency("com.google.android.support:wearable:+", minRev = "2.8.1")
   // This is needed for the com.google.android.support:wearable as a provided dependency otherwise it's warned by lint
   addDependency("com.google.android.wearable:wearable:+", "provided", minRev = "2.8.1")
-}
-
-private fun RecipeExecutor.hasKotlinStdlib(): Boolean {
-  val stdlibSuffixes = setOf("", "-jdk7", "-jdk8")
-  return stdlibSuffixes.any { hasDependency(stdlibBaseArtifact + it) }
 }

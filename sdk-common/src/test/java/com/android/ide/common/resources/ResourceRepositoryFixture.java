@@ -64,7 +64,7 @@ public class ResourceRepositoryFixture {
     @NonNull
     public TestResourceRepository createTestResources(
             @NonNull ResourceNamespace namespace, @NonNull Object[] data) throws IOException {
-        File dir = TestUtils.createTempDirDeletedOnExit();
+        File dir = TestUtils.createTempDirDeletedOnExit().toFile();
         createdDirectories.add(dir);
         File res = new File(dir, FD_RES);
         res.mkdirs();

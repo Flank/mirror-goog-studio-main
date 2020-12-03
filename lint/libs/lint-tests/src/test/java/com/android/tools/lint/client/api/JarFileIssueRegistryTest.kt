@@ -35,7 +35,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
     }
 
     fun testCached() {
-        val targetDir = TestUtils.createTempDirDeletedOnExit()
+        val targetDir = TestUtils.createTempDirDeletedOnExit().toFile()
         val file1 = base64gzip(
             "lint.jar",
             CustomRuleTest.LINT_JAR_BASE64_GZIP
@@ -84,7 +84,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
     }
 
     fun testDeduplicate() {
-        val targetDir = TestUtils.createTempDirDeletedOnExit()
+        val targetDir = TestUtils.createTempDirDeletedOnExit().toFile()
         val file1 = base64gzip(
             "lint1.jar",
             CustomRuleTest.LINT_JAR_BASE64_GZIP
@@ -106,7 +106,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
     }
 
     fun testGetDefaultIdentifier() {
-        val targetDir = TestUtils.createTempDirDeletedOnExit()
+        val targetDir = TestUtils.createTempDirDeletedOnExit().toFile()
         val file1 = base64gzip(
             "lint1.jar",
             CustomRuleTest.LINT_JAR_BASE64_GZIP

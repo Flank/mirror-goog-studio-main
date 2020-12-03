@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -25,10 +25,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ParsingTest extends AbstractZipflingerTest {
-
     @Test
     public void testMapWithoutDataDescriptors() throws Exception {
-        ZipMap map = ZipMap.from(getFile("zip_no_fd.zip"), true);
+        ZipMap map = ZipMap.from(getPath("zip_no_fd.zip"), true);
         Map<String, Entry> entries = map.getEntries();
 
         Entry entry = entries.get("empty.txt");
@@ -40,7 +39,7 @@ public class ParsingTest extends AbstractZipflingerTest {
 
     @Test
     public void testZipWithDataDescriptors() throws Exception {
-        ZipMap map = ZipMap.from(getFile("zip_with_fd.zip"), true);
+        ZipMap map = ZipMap.from(getPath("zip_with_fd.zip"), true);
         Map<String, Entry> entries = map.getEntries();
         Entry entry = entries.get("empty.txt");
         Assert.assertEquals("First entry location", new Location(0, 67 + 16), entry.getLocation());
@@ -55,9 +54,9 @@ public class ParsingTest extends AbstractZipflingerTest {
     // archive.
     @Test
     public void testZipWithDataDescriptorEditing() throws Exception {
-        File archiveFile = getTestFile("testZipWithDDEditing.zip");
+        Path archiveFile = getTestPath("testZipWithDDEditing.zip");
         byte[] resourceBytes = new byte[1000];
-        try (FileOutputStream f = new FileOutputStream(archiveFile);
+        try (OutputStream f = Files.newOutputStream(archiveFile);
                 ZipOutputStream s = new ZipOutputStream(f)) {
             for (int i = 0; i < 4; i++) {
                 ZipEntry entry = new ZipEntry("file" + i);
@@ -81,7 +80,7 @@ public class ParsingTest extends AbstractZipflingerTest {
 
     @Test
     public void testDataDescriptorInvalideLocation() throws Exception {
-        ZipMap map = ZipMap.from(getFile("zip_with_fd.zip"), false);
+        ZipMap map = ZipMap.from(getPath("zip_with_fd.zip"), false);
         Map<String, Entry> entries = map.getEntries();
         Entry entry = entries.get("empty.txt");
         Assert.assertEquals("Entry is valid", entry.getLocation(), Location.INVALID);
@@ -89,7 +88,7 @@ public class ParsingTest extends AbstractZipflingerTest {
 
     @Test
     public void testZipWithLargeEntriesAndDataDescriptors() throws Exception {
-        File target = getTestFile("largeEntriesDD.zip");
+        Path target = getTestPath("largeEntriesDD.zip");
         createZip(42, 1_000_000, target);
         ZipMap map = ZipMap.from(target, true);
         map.getEntries();
@@ -99,6 +98,6 @@ public class ParsingTest extends AbstractZipflingerTest {
     // Namely, they do not feature a valid ID-size-payload combination.
     @Test
     public void testStripped() throws Exception {
-        ZipMap map = ZipMap.from(getFile("stripped.ap_"), true);
+        ZipMap map = ZipMap.from(getPath("stripped.ap_"), true);
     }
 }

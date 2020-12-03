@@ -57,7 +57,7 @@ void TreeBuildingCanvas::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
   real_canvas->clipRegion(deviceRgn, op);
 }
 
-void TreeBuildingCanvas::didConcat(const SkMatrix& matrix) {
+void TreeBuildingCanvas::didConcat44(const SkM44& matrix) {
   real_canvas->concat(matrix);
 #ifdef TREEBUILDINGCANVAS_DEBUG
   printDebug("didConcat\n");
@@ -66,21 +66,20 @@ void TreeBuildingCanvas::didConcat(const SkMatrix& matrix) {
 }
 
 void TreeBuildingCanvas::didTranslate(SkScalar dx, SkScalar dy) {
-  this->didConcat(SkMatrix::Translate(dx, dy));
+  this->didConcat44(SkM44::Translate(dx, dy));
 }
 
 void TreeBuildingCanvas::didScale(SkScalar sx, SkScalar sy) {
-  this->didConcat(SkMatrix::Scale(sx, sy));
+  this->didConcat44(SkM44::Scale(sx, sy));
 }
 
-void TreeBuildingCanvas::didSetMatrix(const SkMatrix& matrix) {
+void TreeBuildingCanvas::didSetM44(const SkM44& matrix) {
 #ifdef TREEBUILDINGCANVAS_DEBUG
   printDebug("orig was\n", request_scale);
   matrix.dump();
 #endif
 
-  SkMatrix scaled =
-      SkMatrix::Concat(SkMatrix::Scale(request_scale, request_scale), matrix);
+  SkM44 scaled = SkM44::Scale(request_scale, request_scale).postConcat(matrix);
   real_canvas->setMatrix(scaled);
 #ifdef TREEBUILDINGCANVAS_DEBUG
   printDebug("didSetMatrix\n");

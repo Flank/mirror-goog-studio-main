@@ -17,6 +17,7 @@ package com.android.repository.impl.sources;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import com.android.annotations.NonNull;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepositorySource;
+import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SchemaModule;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.SimpleRepositorySource;
@@ -36,9 +38,12 @@ import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.InMemoryFileSystemUtilsKt;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -50,9 +55,9 @@ import org.junit.Test;
 public class LocalSourceProviderTest {
     @Test
     public void loadSources() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile(
-                "/sources",
+        FileSystem fs = InMemoryFileSystemUtilsKt.createFileSystem();
+        InMemoryFileSystemUtilsKt.recordExistingFile(
+                fs.getPath(InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/sources")),
                 "#A comment"
                         + "enabled00=true\n"
                         + "enabled01=false\n"
@@ -62,9 +67,8 @@ public class LocalSourceProviderTest {
                         + "count=2");
         LocalSourceProvider provider =
                 new LocalSourceProvider(
-                        new File("/sources"),
-                        ImmutableList.of(RepoManager.getGenericModule()),
-                        fop);
+                        fs.getPath(InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/sources")),
+                        ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         Iterator<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false).iterator();
@@ -75,28 +79,42 @@ public class LocalSourceProviderTest {
 
         source = sources.next();
         assertFalse(source.isEnabled());
-        assertEquals(null, source.getDisplayName());
+        assertNull(source.getDisplayName());
         assertEquals("http://example.com/foo2", source.getUrl());
         assertFalse(sources.hasNext());
     }
 
     @Test
-    public void forceRefresh() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile(
-                "/sources", "enabled00=true\n" + "src00=http\\://example.com/foo\n" + "count=1");
+    public void configFileDoesntExistDoesntWarn() {
+        FileSystem fs = InMemoryFileSystemUtilsKt.createFileSystem();
         LocalSourceProvider provider =
                 new LocalSourceProvider(
-                        new File("/sources"),
-                        ImmutableList.of(RepoManager.getGenericModule()),
-                        fop);
+                        fs.getPath(
+                                InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/doesntExist")),
+                        ImmutableList.of(RepoManager.getGenericModule()));
+        provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
+        FakeProgressIndicator logger = new FakeProgressIndicator();
+        provider.getSources(null, logger, false).iterator();
+        logger.assertNoErrorsOrWarnings();
+    }
+
+    @Test
+    public void forceRefresh() {
+        FileSystem fs = InMemoryFileSystemUtilsKt.createFileSystem();
+        Path sourcesPath =
+                fs.getPath(InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/sources"));
+        InMemoryFileSystemUtilsKt.recordExistingFile(
+                sourcesPath, "enabled00=true\n" + "src00=http\\://example.com/foo\n" + "count=1");
+        LocalSourceProvider provider =
+                new LocalSourceProvider(
+                        sourcesPath, ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         List<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false);
         assertEquals(1, sources.size());
 
-        fop.recordExistingFile(
-                "/sources",
+        InMemoryFileSystemUtilsKt.recordExistingFile(
+                sourcesPath,
                 "enabled00=true\n"
                         + "enabled01=false\n"
                         + "src00=http\\://example.com/foo\n"
@@ -110,11 +128,10 @@ public class LocalSourceProviderTest {
 
     @Test
     public void modifySources() throws Exception {
-        MockFileOp fop = new MockFileOp();
-        File file = new File("/sources");
+        FileSystem fs = InMemoryFileSystemUtilsKt.createFileSystem();
+        Path file = fs.getPath(InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/sources"));
         LocalSourceProvider provider =
-                new LocalSourceProvider(
-                        file, ImmutableList.of(RepoManager.getGenericModule()), fop);
+                new LocalSourceProvider(file, ImmutableList.of(RepoManager.getGenericModule()));
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         provider.getSources(null, progress, false);
@@ -125,7 +142,7 @@ public class LocalSourceProviderTest {
                         true,
                         ImmutableList.of(RepoManager.getGenericModule()),
                         provider));
-        assertFalse(fop.exists(file));
+        assertFalse(Files.exists(file));
         provider.save(progress);
         Properties expected = new Properties();
         expected.setProperty("enabled00", "true");
@@ -134,7 +151,7 @@ public class LocalSourceProviderTest {
         expected.setProperty("count", "1");
 
         Properties actual = new Properties();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected, actual);
         SimpleRepositorySource source2 =
                 new SimpleRepositorySource(
@@ -145,7 +162,7 @@ public class LocalSourceProviderTest {
                         provider);
         provider.addSource(source2);
         actual.clear();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected, actual);
         provider.save(progress);
         Properties expected2 = new Properties();
@@ -155,25 +172,27 @@ public class LocalSourceProviderTest {
         expected2.setProperty("src01", "http://example.com/foo2");
         expected2.setProperty("count", "2");
         actual.clear();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected2, actual);
 
         assertTrue(provider.removeSource(source2));
         assertFalse(provider.removeSource(source2));
         provider.save(progress);
         actual.clear();
-        actual.load(fop.newFileInputStream(file));
+        actual.load(Files.newInputStream(file));
         assertEquals(expected, actual);
     }
 
     @Test
-    public void allowedModules() throws Exception {
+    public void allowedModules() {
         @SuppressWarnings("unchecked")
         SchemaModule<Object> dummy = mock(SchemaModule.class);
 
-        MockFileOp fop = new MockFileOp();
-        fop.recordExistingFile(
-                "/sources",
+        FileSystem fs = InMemoryFileSystemUtilsKt.createFileSystem();
+        Path sourcesPath =
+                fs.getPath(InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/sources"));
+        InMemoryFileSystemUtilsKt.recordExistingFile(
+                sourcesPath,
                 "#A comment"
                         + "enabled00=true\n"
                         + "enabled01=false\n"
@@ -182,7 +201,7 @@ public class LocalSourceProviderTest {
                         + "src01=http\\://example.com/foo2\n"
                         + "count=2");
         ImmutableList<SchemaModule<?>> modules = ImmutableList.of(dummy);
-        LocalSourceProvider provider = new LocalSourceProvider(new File("/sources"), modules, fop);
+        LocalSourceProvider provider = new LocalSourceProvider(sourcesPath, modules);
         provider.setRepoManager(new FakeRepoManager(new RepositoryPackages()));
         List<RepositorySource> sources =
                 provider.getSources(null, new FakeProgressIndicator(), false);
@@ -199,7 +218,7 @@ public class LocalSourceProviderTest {
                         "Source UI Name",
                         true,
                         ImmutableSet.of(RepoManager.getGenericModule()),
-                        null) {
+                        mock(RepositorySourceProvider.class)) {
                     @NonNull
                     @Override
                     public String getUrl() {
@@ -213,8 +232,11 @@ public class LocalSourceProviderTest {
                     }
                 };
         RepositorySource source2 = mock(RepositorySource.class);
+        FileSystem fs = InMemoryFileSystemUtilsKt.createFileSystem();
         LocalSourceProvider provider =
-                new LocalSourceProvider(new File("/sources"), ImmutableList.of(), new MockFileOp());
+                new LocalSourceProvider(
+                        fs.getPath(InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/sources")),
+                        ImmutableList.of());
         provider.setRepoManager(mock(RepoManager.class));
         provider.getSources(null, new FakeProgressIndicator(), false);
         provider.addSource(source);

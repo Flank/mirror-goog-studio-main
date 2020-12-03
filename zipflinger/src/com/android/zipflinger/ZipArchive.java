@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
@@ -23,15 +22,15 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ZipArchive implements Archive {
-
     private final FreeStore freestore;
     private boolean closed;
-    private final File file;
+    private final Path file;
     private final CentralDirectory cd;
     private final ZipWriter writer;
     private final ZipReader reader;
@@ -39,7 +38,7 @@ public class ZipArchive implements Archive {
     private ZipInfo zipInfo;
     private boolean modified;
 
-    public ZipArchive(@NonNull File file) throws IOException {
+    public ZipArchive(@NonNull Path file) throws IOException {
         this(file, Zip64.Policy.ALLOW);
     }
 
@@ -47,12 +46,11 @@ public class ZipArchive implements Archive {
      * The object used to manipulate a zip archive.
      *
      * @param file the file object
-     * @throws IOException
      */
-    public ZipArchive(@NonNull File file, Zip64.Policy policy) throws IOException {
+    public ZipArchive(@NonNull Path file, Zip64.Policy policy) throws IOException {
         this.file = file;
         this.policy = policy;
-        if (Files.exists(file.toPath())) {
+        if (Files.exists(file)) {
             ZipMap map = ZipMap.from(file, true, policy);
             zipInfo = new ZipInfo(map.getPayloadLocation(), map.getCdLoc(), map.getEocdLoc());
             cd = map.getCentralDirectory();
@@ -70,6 +68,18 @@ public class ZipArchive implements Archive {
         modified = false;
     }
 
+    /** @deprecated Use ZipArchive(Path) instead. */
+    @Deprecated
+    public ZipArchive(@NonNull File file) throws IOException {
+        this(file.toPath());
+    }
+
+    /** @deprecated Use {@link #ZipArchive(Path, Zip64.Policy)} instead. */
+    @Deprecated
+    public ZipArchive(@NonNull File file, Zip64.Policy policy) throws IOException {
+        this(file.toPath(), policy);
+    }
+
     /**
      * Returns the list of zip entries found in the archive. Note that these are the entries found
      * in the central directory via bottom-up parsing, not all entries present in the payload as a
@@ -77,11 +87,16 @@ public class ZipArchive implements Archive {
      *
      * @param file the zip archive to list.
      * @return the list of entries in the archive, parsed bottom-up (via the Central Directory).
-     * @throws IOException
      */
     @NonNull
-    public static Map<String, Entry> listEntries(@NonNull File file) throws IOException {
+    public static Map<String, Entry> listEntries(@NonNull Path file) throws IOException {
         return ZipMap.from(file, false).getEntries();
+    }
+
+    /** @deprecated Use {@link #listEntries(Path)} instead. */
+    @Deprecated
+    public static Map<String, Entry> listEntries(@NonNull File file) throws IOException {
+        return listEntries(file.toPath());
     }
 
     @NonNull
@@ -150,8 +165,6 @@ public class ZipArchive implements Archive {
     /**
      * Carry all write operations to the storage system to reflect the delete/add operations
      * requested via add/delete methods.
-     *
-     * @throws IOException
      */
     // TODO: Zip64 -> Add boolean allowZip64
     @Override
@@ -173,7 +186,7 @@ public class ZipArchive implements Archive {
     }
 
     @NonNull
-    public File getFile() {
+    public Path getPath() {
         return file;
     }
 
@@ -331,7 +344,7 @@ public class ZipArchive implements Archive {
 
         if (cd.contains(name)) {
             String template = "Zip file '%s' already contains entry '%s', cannot overwrite";
-            String msg = String.format(template, file.getAbsolutePath(), name);
+            String msg = String.format(template, file.toAbsolutePath().toString(), name);
             throw new IllegalStateException(msg);
         }
     }

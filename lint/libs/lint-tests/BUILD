@@ -24,7 +24,6 @@ kotlin_library(
         "//tools/base/lint/cli",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",

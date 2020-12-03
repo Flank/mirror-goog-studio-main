@@ -90,7 +90,7 @@ class SkiaParserTest {
 
     private fun assertImagesSimilar(root: SkiaViewNode, id: Long, instance: Int, fileName: String) {
         ImageDiffUtil.assertImageSimilar(
-            File(TestUtils.getWorkspaceRoot(), "$TEST_DATA_PATH/$fileName"),
+            TestUtils.getWorkspaceRoot().resolve("$TEST_DATA_PATH/$fileName"),
             findImage(id, AtomicInteger(instance), root) ?: fail("No image for id $id"),
             DIFF_THRESHOLD
         )

@@ -144,7 +144,7 @@ public class FakeDevice {
     }
 
     private File getBin(String path) {
-        File root = TestUtils.getWorkspaceRoot();
+        File root = TestUtils.getWorkspaceRoot().toFile();
         File file = new File(root, path);
         if (!file.exists()) {
             // Running from IJ

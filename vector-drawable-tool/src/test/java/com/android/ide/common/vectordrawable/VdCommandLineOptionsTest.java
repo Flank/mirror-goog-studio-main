@@ -13,26 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
-
+import java.nio.file.Path;
 import junit.framework.TestCase;
-
-import java.io.File;
 
 public class VdCommandLineOptionsTest extends TestCase {
     @NonNull
-    private String getTestFolderPath() {
-        File testFolder = TestUtils.getRoot("vectordrawable");
-        return testFolder.getAbsolutePath();
+    private static String getTestFolderPath() {
+        Path testFolder =
+                TestUtils.resolveWorkspacePath(
+                        "tools/base/vector-drawable-tool/src/test/resources/testData/vectordrawable");
+        return testFolder.toString();
     }
 
-    private String getInvalidFolderPath() {
-        File testFolder = TestUtils.getRoot("vectordrawable");
-        return testFolder.getAbsolutePath() + File.separator + "_NOT_EXIST_FOLDER";
+    private static String getInvalidFolderPath() {
+        Path testFolder =
+                TestUtils.getWorkspaceRoot()
+                        .resolve(
+                                "tools/base/vector-drawable-tool/src/test/resources/testData/vectordrawable/_NOT_EXIST_FOLDER");
+        return testFolder.toString();
     }
 
     public void testCommandlineOptionsFull() {

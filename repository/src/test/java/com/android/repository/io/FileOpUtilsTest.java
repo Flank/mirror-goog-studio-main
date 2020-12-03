@@ -23,13 +23,10 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import org.junit.Assume;
 import org.junit.Test;
 
 /**
@@ -38,57 +35,52 @@ import org.junit.Test;
 public class FileOpUtilsTest {
 
     @Test
-    public void makeRelative() throws Exception {
-        assertEquals("dir3",
-                FileOpUtils.makeRelativeImpl("/dir1/dir2",
-                        "/dir1/dir2/dir3",
-                        false, "/"));
+    public void makeRelativeNonWindows() throws Exception {
+        Assume.assumeFalse(FileOpUtils.isWindows());
+        assertEquals("dir3", FileOpUtils.makeRelativeImpl("/dir1/dir2", "/dir1/dir2/dir3", "/"));
 
-        assertEquals("../../../dir3",
-                FileOpUtils.makeRelativeImpl("/dir1/dir2/dir4/dir5/dir6",
-                        "/dir1/dir2/dir3",
-                        false, "/"));
+        assertEquals(
+                "../../../dir3",
+                FileOpUtils.makeRelativeImpl("/dir1/dir2/dir4/dir5/dir6", "/dir1/dir2/dir3", "/"));
 
-        assertEquals("dir3/dir4/dir5/dir6",
-                FileOpUtils.makeRelativeImpl("/dir1/dir2/",
-                        "/dir1/dir2/dir3/dir4/dir5/dir6",
-                        false, "/"));
+        assertEquals(
+                "dir3/dir4/dir5/dir6",
+                FileOpUtils.makeRelativeImpl("/dir1/dir2/", "/dir1/dir2/dir3/dir4/dir5/dir6", "/"));
 
         // case-sensitive on non-Windows.
-        assertEquals("../DIR2/dir3/DIR4/dir5/DIR6",
-                FileOpUtils.makeRelativeImpl("/dir1/dir2/",
-                        "/dir1/DIR2/dir3/DIR4/dir5/DIR6",
-                        false, "/"));
+        assertEquals(
+                "../DIR2/dir3/DIR4/dir5/DIR6",
+                FileOpUtils.makeRelativeImpl("/dir1/dir2/", "/dir1/DIR2/dir3/DIR4/dir5/DIR6", "/"));
 
         // same path: empty result.
-        assertEquals("",
-                FileOpUtils.makeRelativeImpl("/dir1/dir2/dir3",
-                        "/dir1/dir2/dir3",
-                        false, "/"));
+        assertEquals("", FileOpUtils.makeRelativeImpl("/dir1/dir2/dir3", "/dir1/dir2/dir3", "/"));
+    }
 
-        // same drive letters on Windows
-        assertEquals("..\\..\\..\\dir3",
-                FileOpUtils.makeRelativeImpl("C:\\dir1\\dir2\\dir4\\dir5\\dir6",
-                        "C:\\dir1\\dir2\\dir3",
-                        true, "\\"));
+    @Test
+    public void makeRelativeWindows() throws Exception {
+        Assume.assumeTrue(FileOpUtils.isWindows());
+        assertEquals(
+                "..\\..\\..\\dir3",
+                FileOpUtils.makeRelativeImpl(
+                        "C:\\dir1\\dir2\\dir4\\dir5\\dir6", "C:\\dir1\\dir2\\dir3", "\\"));
 
         // not case-sensitive on Windows, results will be mixed.
-        assertEquals("dir3/DIR4/dir5/DIR6",
-                FileOpUtils.makeRelativeImpl("/DIR1/dir2/",
-                        "/dir1/DIR2/dir3/DIR4/dir5/DIR6",
-                        true, "/"));
+        assertEquals(
+                "dir3/DIR4/dir5/DIR6",
+                FileOpUtils.makeRelativeImpl("/DIR1/dir2/", "/dir1/DIR2/dir3/DIR4/dir5/DIR6", "/"));
 
         // UNC path on Windows
-        assertEquals("..\\..\\..\\dir3",
-                FileOpUtils.makeRelativeImpl("\\\\myserver.domain\\dir1\\dir2\\dir4\\dir5\\dir6",
+        assertEquals(
+                "..\\..\\..\\dir3",
+                FileOpUtils.makeRelativeImpl(
+                        "\\\\myserver.domain\\dir1\\dir2\\dir4\\dir5\\dir6",
                         "\\\\myserver.domain\\dir1\\dir2\\dir3",
-                        true, "\\"));
+                        "\\"));
 
         // different drive letters are not supported
         try {
-            FileOpUtils.makeRelativeImpl("C:\\dir1\\dir2\\dir4\\dir5\\dir6",
-                    "D:\\dir1\\dir2\\dir3",
-                    true, "\\");
+            FileOpUtils.makeRelativeImpl(
+                    "C:\\dir1\\dir2\\dir4\\dir5\\dir6", "D:\\dir1\\dir2\\dir3", "\\");
             fail("Expected: IOException. Actual: no exception.");
         } catch (IOException e) {
             assertEquals("makeRelative: incompatible drive letters", e.getMessage());

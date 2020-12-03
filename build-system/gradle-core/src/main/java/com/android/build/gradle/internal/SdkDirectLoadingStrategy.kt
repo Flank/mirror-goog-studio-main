@@ -197,15 +197,15 @@ class SdkDirectLoadingStrategy(
     fun getSplitSelectExecutable() = getFileFromBuildTool(BuildToolInfo.PathId.SPLIT_SELECT)
 
     fun getRenderScriptSupportJar() = getBuildToolsInfo()?.let {
-        RenderScriptProcessor.getSupportJar(it.location, useAndroidX)
+        RenderScriptProcessor.getSupportJar(it.location.toFile(), useAndroidX)
     }
 
     fun getSupportNativeLibFolder() = getBuildToolsInfo()?.let {
-        RenderScriptProcessor.getSupportNativeLibFolder(it.location)
+        RenderScriptProcessor.getSupportNativeLibFolder(it.location.toFile())
     }
 
     fun getSupportBlasLibFolder() = getBuildToolsInfo()?.let {
-        RenderScriptProcessor.getSupportBlasLibFolder(it.location)
+        RenderScriptProcessor.getSupportBlasLibFolder(it.location.toFile())
     }
 
     fun getSystemImageLibFolder(imageHash: String) =

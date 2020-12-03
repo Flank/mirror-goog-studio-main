@@ -32,10 +32,14 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                         + "    <declare-styleable name=\"ContentFrame\">\n"
                         + "                       ~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/customattr.xml:2: Previously defined here\n"
+                        + "    <declare-styleable name=\"ContentFrame\">\n"
+                        + "                       ~~~~~~~~~~~~~~~~~~~\n"
                         + "res/values/strings2.xml:19: Error: wallpaper_instructions has already been defined in this folder [DuplicateDefinition]\n"
                         + "    <string name=\"wallpaper_instructions\">Tap image to set landscape wallpaper</string>\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/strings.xml:29: Previously defined here\n"
+                        + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n";
         lint().files(strings, strings2, strings3, customattr, customattr2).run().expect(expected);
     }
@@ -47,6 +51,8 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                         + "    <string name=\"app.name\">App Name 1</string>\n"
                         + "            ~~~~~~~~~~~~~~~\n"
                         + "    res/values/duplicate-strings2.xml:4: Previously defined here\n"
+                        + "    <string name=\"app_name\">App Name</string>\n"
+                        + "            ~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
@@ -72,6 +78,8 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                         + "    <string name=\"app_name\">App Name 1</string>\n"
                         + "            ~~~~~~~~~~~~~~~\n"
                         + "    res/values/duplicate-strings.xml:4: Previously defined here\n"
+                        + "    <string name=\"app_name\">App Name</string>\n"
+                        + "            ~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
@@ -99,10 +107,14 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                         + "        <item name=\"android:textColor\">#ff0000</item>\n"
                         + "              ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/duplicate-items.xml:5: Previously defined here\n"
+                        + "        <item name=\"android:textColor\">@color/buy_button</item>\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/values/duplicate-items.xml:13: Error: contentId has already been defined in this <declare-styleable> [DuplicateDefinition]\n"
                         + "        <attr name=\"contentId\" format=\"integer\" />\n"
                         + "              ~~~~~~~~~~~~~~~~\n"
                         + "    res/values/duplicate-items.xml:11: Previously defined here\n"
+                        + "        <attr name=\"content\" format=\"reference\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "2 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(

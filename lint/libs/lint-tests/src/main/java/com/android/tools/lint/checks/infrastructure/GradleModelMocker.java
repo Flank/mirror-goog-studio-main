@@ -169,6 +169,7 @@ public class GradleModelMocker {
     private IdeLintOptions lintOptions;
     private final HashMap<String, Integer> severityOverrides = new HashMap<>();
     private final LintCliFlags flags = new LintCliFlags();
+    public boolean primary = true;
     private File projectDir = new File("");
     private final List<IdeProductFlavor> productFlavors = Lists.newArrayList();
     private final Multimap<String, String> splits = ArrayListMultimap.create();

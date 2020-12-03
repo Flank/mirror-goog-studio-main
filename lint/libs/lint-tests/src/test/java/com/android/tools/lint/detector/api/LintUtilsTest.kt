@@ -834,7 +834,7 @@ class LintUtilsTest : TestCase() {
                 }
 
                 override fun getSdkHome(): File {
-                    return TestUtils.getSdk()
+                    return TestUtils.getSdk().toFile()
                 }
 
                 override fun getJavaLanguageLevel(project: Project): LanguageLevel {
@@ -912,7 +912,7 @@ class LintUtilsTest : TestCase() {
                 }
 
                 override fun getSdkHome(): File {
-                    return TestUtils.getSdk()
+                    return TestUtils.getSdk().toFile()
                 }
 
                 override fun getJavaLibraries(

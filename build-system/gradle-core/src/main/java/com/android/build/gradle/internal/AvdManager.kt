@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
-import com.android.sdklib.FileOpFileWrapper
+import com.android.sdklib.PathFileWrapper
 import com.android.sdklib.devices.DeviceManager
 import com.android.sdklib.internal.avd.AvdCamera
 import com.android.sdklib.internal.avd.AvdInfo
@@ -74,7 +74,8 @@ class AvdManager(
             throw RuntimeException("Failed to find system image for hash: $imageHash")
         }
 
-        val imageLocation = imageProvider.get().asFile
+        val fileOp = sdkHandler.fileOp
+        val imageLocation = fileOp.toPath(imageProvider.get().asFile)
         val systemImage = sdkHandler.getSystemImageManager(
             LoggerProgressIndicatorWrapper(StdLogger(StdLogger.Level.VERBOSE))
         ).getImageAt(imageLocation)
@@ -89,11 +90,10 @@ class AvdManager(
         hardwareConfig.putAll(DeviceManager.getHardwareProperties(device))
         EmulatedProperties.restrictDefaultRamSize(hardwareConfig)
 
-        val deviceFolder = AvdInfo.getDefaultAvdFolder(
-            avdManager, deviceName, sdkHandler.fileOp, false)
+        val deviceFolder = AvdInfo.getDefaultAvdFolder(avdManager, deviceName, fileOp, false)
 
         val newInfo = avdManager.createAvd(
-            deviceFolder,
+            fileOp.toPath(deviceFolder),
             deviceName,
             systemImage,
             null,
@@ -161,7 +161,7 @@ class AvdManager(
         val hardwareDefs = File(libDirectory, SdkConstants.FN_HARDWARE_INI)
         val hwMap =
             HardwareProperties.parseHardwareDefinitions(
-                FileOpFileWrapper(hardwareDefs, sdkHandler.fileOp, false), logger)?:
+                PathFileWrapper(sdkHandler.fileOp.toPath(hardwareDefs)), logger)?:
                     error("Failed to find hardware definitions for emulator.")
 
         val hwConfigMap = defaultEmulatorPropertiesMap.toMutableMap()

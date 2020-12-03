@@ -26,7 +26,6 @@ import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +34,6 @@ import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -69,7 +67,7 @@ public class MavenInstallListener implements PackageOperation.StatusChangeListen
             @NonNull ProgressIndicator progress)
             throws PackageOperation.StatusChangeListenerException {
         if (installer.getInstallStatus() == PackageOperation.InstallStatus.COMPLETE) {
-            File dir = installer.getLocation(progress);
+            File dir = mSdkHandler.getFileOp().toFile(installer.getLocation(progress));
             if (!updateMetadata(dir.getParentFile(), progress)) {
                 throw new PackageOperation.StatusChangeListenerException(
                         "Failed to update maven metadata for " +

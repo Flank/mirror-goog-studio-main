@@ -25,6 +25,7 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/adt/idea/.idea/libraries:mockito[test]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
     ],
 )
 
@@ -80,10 +81,10 @@ java_library(
     ]),
     resources = glob(["src/test/resources/**"]),
     visibility = ["//visibility:public"],  # contains com.android.repository.testframework
-    runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
         ":tools.repository",
         "//tools/base/annotations",
+        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",

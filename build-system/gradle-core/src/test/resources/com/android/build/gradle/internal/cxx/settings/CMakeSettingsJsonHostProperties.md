@@ -52,7 +52,7 @@ True if Android Gradle Plugin is hosting this CMakeSettings.json.
 
 ## ${ndk.buildRoot}
 The default CMake build root that gradle uses.
-- example: ${ndk.moduleDir}/.cxx/cmake/debug/x86_64
+- example: ${ndk.moduleDir}/.cxx/Debug/${ndk.configurationHash}/x86_64
 - environment: android-gradle
 
 ## ${ndk.cmakeToolchain}
@@ -82,7 +82,7 @@ The minimum Android platform supported by the current Android NDK.
 
 ## ${ndk.moduleBuildIntermediatesDir}
 The module level build intermediates folder.
-- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates
+- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates/cxx
 - environment: android-gradle
 
 ## ${ndk.moduleBuildRoot}
@@ -152,7 +152,7 @@ The currently targeted Android system version, suitable for passing to CMake in 
 
 ## ${ndk.prefabPath}
 The CMAKE_FIND_ROOT_PATH to be used by Prefab for the current configuration.
-- example: $PROJECTS/MyProject/Source/Android/app1/.cxx/cmake/debug/prefab/x86_64
+- example: $PROJECTS/MyProject/Source/Android/app1/.cxx/Debug/${ndk.configurationHash}/prefab/x86_64
 - environment: android-gradle
 
 ## ${ndk.projectSdkDir}
@@ -162,7 +162,7 @@ Folder of the current Android SDK.
 
 ## ${ndk.soOutputDir}
 The ABI-level folder where .so files are written.
-- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
+- example: ${ndk.moduleDir}/build/intermediates/cxx/Debug/${ndk.configurationHash}/obj/x86_64
 - environment: android-gradle
 
 ## ${ndk.stlLibraryFile}
@@ -172,12 +172,12 @@ If present, the STL .so file that needs to be distributed with the libraries bui
 
 ## ${ndk.variantBuildIntermediatesDir}
 The variant level build intermediates folder.
-- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates/cmake/debug
+- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates/cxx/Debug/${ndk.configurationHash}
 - environment: android-gradle
 
 ## ${ndk.variantBuildRoot}
 The default variant-level CMake build root that gradle uses.
-- example: ${ndk.moduleDir}/.cxx/cmake/debug
+- example: ${ndk.moduleDir}/.cxx/Debug/${ndk.configurationHash}
 - environment: android-gradle
 
 ## ${ndk.variantCFlags}
@@ -202,7 +202,7 @@ The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. May be Debu
 
 ## ${ndk.variantSoOutputDir}
 The variant-level folder where .so files are written.
-- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj
+- example: ${ndk.moduleDir}/build/intermediates/cxx/Debug/${ndk.configurationHash}/obj
 - environment: android-gradle
 
 ## ${ndk.variantStlType}

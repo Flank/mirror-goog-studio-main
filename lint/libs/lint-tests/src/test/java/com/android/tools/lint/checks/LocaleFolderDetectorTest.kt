@@ -107,7 +107,7 @@ res/values-no-rNOR: Error: Invalid resource folder; did you mean b+no+NO ? [Inva
         ).run().expect(
             """
 res/values-b+en+Scr1: Error: Multiple locale folders for language en map to a single folder in versions < API 21: values-b+en+Scr2, values-b+en+Scr1 [InvalidResourceFolder]
-    res/values-b+en+Scr2: <No location-specific message
+    res/values-b+en+Scr2: <No location-specific message>
 1 errors, 0 warnings
 """
         )

@@ -46,6 +46,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -65,7 +69,6 @@ import org.objectweb.asm.Opcodes;
  * string literal, and copy into a target directory
  */
 public class TestFile {
-    // TODO: Make this a top level class
     public String sourceRelativePath;
     public String targetRelativePath;
     public String contents;
@@ -753,6 +756,34 @@ public class TestFile {
         public File createFile(@NonNull File targetDir) throws IOException {
             getContents(); // lazy init
             return super.createFile(targetDir);
+        }
+    }
+
+    @NonNull
+    public static File createTempDirectory() {
+        try {
+            return java.nio.file.Files.createTempDirectory("").toFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Deletes all files in a directory tree but preserves all directories. */
+    public static void deleteFilesRecursively(@NonNull File dir) {
+        Path path = dir.toPath();
+        try {
+            java.nio.file.Files.walkFileTree(
+                    path,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                                throws IOException {
+                            java.nio.file.Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

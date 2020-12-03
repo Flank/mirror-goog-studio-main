@@ -25,7 +25,7 @@ import org.junit.Test
 
 class IgnoreWithoutReasonDetectorTest {
     private fun lint(): TestLintTask {
-        return TestLintTask().sdkHome(TestUtils.getSdk())
+        return TestLintTask().sdkHome(TestUtils.getSdk().toFile())
     }
 
     private val stubJUnitTest: TestFile = java(

@@ -57,14 +57,13 @@ class PropertyFileDetectorTest : AbstractCheckTest() {
             )
         ).run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for local.properties line 10: Escape:\n" +
+                "Fix for local.properties line 11: Escape:\n" +
                 "@@ -11 +11\n" +
                 "- windows.dir=C:\\my\\path\\to\\sdk\n" +
                 "+ windows.dir=C\\:\\\\my\\\\path\\\\to\\\\sdk\n" +
-                "Fix for local.properties line 13: Escape:\n" +
+                "Fix for local.properties line 14: Escape:\n" +
                 "@@ -14 +14\n" +
                 "- ok.sdk.dir=C:\\\\Documents and Settings\\\\UserName\\\\Local Settings\\\\Application Data\\\\Android\\\\android-studio\\\\sdk\n" +
-                "@@ -15 +14\n" +
                 "+ ok.sdk.dir=C\\:\\\\Documents and Settings\\\\UserName\\\\Local Settings\\\\Application Data\\\\Android\\\\android-studio\\\\sdk\n"
         )
     }
@@ -90,10 +89,9 @@ class PropertyFileDetectorTest : AbstractCheckTest() {
             )
         ).run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for gradle/wrapper/gradle-wrapper.properties line 4: Replace with https:\n" +
+                "Fix for gradle/wrapper/gradle-wrapper.properties line 5: Replace with https:\n" +
                 "@@ -5 +5\n" +
                 "- distributionUrl=http\\://services.gradle.org/distributions/gradle-2.1-all.zip\n" +
-                "@@ -6 +5\n" +
                 "+ distributionUrl=https\\://services.gradle.org/distributions/gradle-2.1-all.zip\n"
         )
     }
@@ -116,10 +114,9 @@ class PropertyFileDetectorTest : AbstractCheckTest() {
             )
         ).run().expect(expected).expectFixDiffs(
             "" +
-                "Fix for local.properties line 0: Escape:\n" +
+                "Fix for local.properties line 1: Escape:\n" +
                 "@@ -1 +1\n" +
                 "- sdk.dir=D:\\\\development\\\\android-sdks\n" +
-                "@@ -2 +1\n" +
                 "+ sdk.dir=D\\:\\\\development\\\\android-sdks\n"
         )
     }

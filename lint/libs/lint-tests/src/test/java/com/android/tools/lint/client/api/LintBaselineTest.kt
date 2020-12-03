@@ -49,7 +49,7 @@ class LintBaselineTest {
      */
     protected inner class ToolsBaseTestLintClient : TestLintClient() {
         override fun getSdkHome(): File? {
-            return TestUtils.getSdk()
+            return TestUtils.getSdk().toFile()
         }
     }
 

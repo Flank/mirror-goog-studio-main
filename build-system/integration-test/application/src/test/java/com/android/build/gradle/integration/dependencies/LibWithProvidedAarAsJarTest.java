@@ -37,9 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for provided jar in library where the jar comes from a library project.
- */
+/** test for compileOnly jar in library where the jar comes from a library project. */
 public class LibWithProvidedAarAsJarTest {
 
     @ClassRule

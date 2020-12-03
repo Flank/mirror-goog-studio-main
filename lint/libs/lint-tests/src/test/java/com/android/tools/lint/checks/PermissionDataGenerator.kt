@@ -471,7 +471,7 @@ class PermissionDataGenerator {
     private fun getApiLookup(): ApiLookup? {
         return get(object : TestLintClient() {
             override fun getSdkHome(): File? {
-                return TestUtils.getSdk()
+                return TestUtils.getSdk().toFile()
             }
         }) ?: run {
             println("Couldn't find API database")

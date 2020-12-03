@@ -19,7 +19,9 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_GRADLE;
 
+import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
 import org.intellij.lang.annotations.Language;
 
@@ -240,8 +242,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         lint().files(
                         // Main project
                         manifest().pkg("foo.Main").minSdk(14),
-                        projectProperties()
-                                .property("android.library.reference.1", "../LibraryProject"),
                         java(
                                 ""
                                         + "package foo.main;\n"
@@ -257,9 +257,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 .pkg("foo.library")
                                 .minSdk(14)
                                 .to("../LibraryProject/AndroidManifest.xml"),
-                        source(
-                                "../LibraryProject/project.properties",
-                                "target=android-14\nandroid.library=true\n"),
                         mLibraryCode,
                         xml(
                                 "../LibraryProject/res/values/strings.xml",
@@ -274,10 +271,17 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</resources>\n"))
                 .run()
-                .expectClean();
+                .expect(
+                        ""
+                                + "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
+                                + "    <string name=\"string3\">String 3</string>\n"
+                                + "            ~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
     }
 
     public void testMultiProject() {
+        // Library defines string1 and string2, but only references string1.
+        // Main references string2.
         ProjectDescription library =
                 project(
                                 // Library project
@@ -285,7 +289,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         .type(LIBRARY)
                         .name("LibraryProject");
 
-        ProjectDescription main = project(mMainCode).name("App").dependsOn(library);
+        ProjectDescription main =
+                project(mMainCode, manifest().minSdk(15)).name("App").dependsOn(library);
 
         lint().projects(main, library).run().expectClean();
     }
@@ -754,46 +759,60 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testDynamicResources() {
         String expected =
                 ""
-                        + "build.gradle: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
-                        + "build.gradle: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
-                        + "build.gradle: Warning: The resource R.string.foo appears to be unused [UnusedResources]\n"
+                        + "app/build.gradle: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
+                        + "app/build.gradle: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
+                        + "app/build.gradle: Warning: The resource R.string.foo appears to be unused [UnusedResources]\n"
                         + "0 errors, 3 warnings\n";
 
-        lint().files(
-                        xml("src/main/" + mLayout1.targetRelativePath, mLayout1.contents),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import android.app.Activity;\n"
-                                        + "import android.os.Bundle;\n"
-                                        + "import android.support.design.widget.Snackbar;\n"
-                                        + "\n"
-                                        + "public class UnusedReferenceDynamic extends Activity {\n"
-                                        + "    @Override\n"
-                                        + "    public void onCreate(Bundle savedInstanceState) {\n"
-                                        + "        super.onCreate(savedInstanceState);\n"
-                                        + "        setContentView(test.pkg.R.layout.main);\n"
-                                        + "        Snackbar.make(view, R.string.xyz, Snackbar.LENGTH_LONG);\n"
-                                        + "    }\n"
-                                        + "}\n"),
-                        manifest().minSdk(14),
-                        gradle(
-                                ""
-                                        + "android {\n"
-                                        + "    defaultConfig {\n"
-                                        + "        resValue \"string\", \"cat\", \"Some Data\"\n"
-                                        + "    }\n"
-                                        + "    buildTypes {\n"
-                                        + "        debug {\n"
-                                        + "            resValue \"string\", \"foo\", \"Some Data\"\n"
-                                        + "        }\n"
-                                        + "        release {\n"
-                                        + "            resValue \"string\", \"xyz\", \"Some Data\"\n"
-                                        + "            resValue \"string\", \"dog\", \"Some Data\"\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "}\n"))
+        ProjectDescription lib =
+                project(
+                                xml("src/main/" + mLayout1.targetRelativePath, mLayout1.contents),
+                                java(
+                                        ""
+                                                + "package test.pkg;\n"
+                                                + "\n"
+                                                + "import android.app.Activity;\n"
+                                                + "import android.os.Bundle;\n"
+                                                + "import android.support.design.widget.Snackbar;\n"
+                                                + "\n"
+                                                + "public class UnusedReferenceDynamic extends Activity {\n"
+                                                + "    @Override\n"
+                                                + "    public void onCreate(Bundle savedInstanceState) {\n"
+                                                + "        super.onCreate(savedInstanceState);\n"
+                                                + "        setContentView(test.pkg.R.layout.main);\n"
+                                                + "        Snackbar.make(view, R.string.xyz, Snackbar.LENGTH_LONG);\n"
+                                                + "    }\n"
+                                                + "}\n"),
+                                manifest().minSdk(14),
+                                gradle("" + "// dummy"))
+                        .type(LIBRARY)
+                        .name("library");
+
+        ProjectDescription app =
+                project(
+                                manifest().minSdk(14),
+                                gradle(
+                                        ""
+                                                + "android {\n"
+                                                + "    defaultConfig {\n"
+                                                + "        resValue \"string\", \"cat\", \"Some Data\"\n"
+                                                + "    }\n"
+                                                + "    buildTypes {\n"
+                                                + "        debug {\n"
+                                                + "            resValue \"string\", \"foo\", \"Some Data\"\n"
+                                                + "        }\n"
+                                                + "        release {\n"
+                                                + "            resValue \"string\", \"xyz\", \"Some Data\"\n"
+                                                + "            resValue \"string\", \"dog\", \"Some Data\"\n"
+                                                + "        }\n"
+                                                + "    }\n"
+                                                + "}\n"))
+                        .name("app")
+                        .type(ProjectDescription.Type.APP);
+
+        app.dependsOn(lib);
+
+        lint().projects(app, lib)
                 .variant("release")
                 .issues(UnusedResourceDetector.ISSUE) // skip UnusedResourceDetector.ISSUE_IDS
                 .allowCompilationErrors()
@@ -810,7 +829,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    package=\"test.pkg\"\n"
                                         + "    android:versionCode=\"1\"\n"
                                         + "    android:versionName=\"1.0\" >\n"
-                                        + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                                        + "    <uses-sdk android:minSdkVersion=\"14\"\n"
+                                        + "              android:targetSdkVersion=\"25\"/>"
                                         + "    <meta-data android:name=\"account_type\" android:value=\"${account_type}\" />\n"
                                         + "</manifest>\n"),
                         gradle(
@@ -1526,9 +1546,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "package androidx.viewbinding;\n"
                                         + "public interface ViewBinding {\n"
                                         + "}"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .run()
                 .expect(
                         "src/main/res/layout/activity_ignored.xml:2: Warning: The resource R.layout.activity_ignored appears to be unused [UnusedResources]\n"
@@ -1624,9 +1642,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "package androidx.viewbinding;\n"
                                         + "public interface ViewBinding {\n"
                                         + "}"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .run()
                 .expectClean();
     }
@@ -1740,9 +1756,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
                                         + "    <string name=\"hello\">Hello</string>\n"
                                         + "</resources>\n"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .issues(UnusedResourceDetector.ISSUE)
                 .run()
                 .expectClean();
@@ -1786,9 +1800,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                         + "    <item name=\"fab4\" type=\"id\"/>\n"
                                         + "    <item name=\"fab5\" type=\"id\"/>\n"
                                         + "</resources>\n"))
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient(
-                                CLIENT_GRADLE))
+                .clientFactory(gradleClientFactory)
                 .issues(UnusedResourceDetector.ISSUE_IDS)
                 .run()
                 .expectClean();
@@ -2158,4 +2170,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                             + "    <string name=\"hello\">Hello</string>\n"
                             + "</resources>\n"
                             + "\n");
+
+    private static final TestLintTask.ClientFactory gradleClientFactory =
+            new TestLintTask.ClientFactory() {
+                @NonNull
+                @Override
+                public com.android.tools.lint.checks.infrastructure.TestLintClient create() {
+                    return new com.android.tools.lint.checks.infrastructure.TestLintClient(
+                            CLIENT_GRADLE);
+                }
+            };
 }

@@ -73,7 +73,7 @@ import org.junit.Test;
 public class SdkManagerCliTest {
 
     private final MockFileOp mFileOp = new MockFileOp();
-    private final String mSdkLocation = mFileOp.getPlatformSpecificPath("/sdk");
+    private final Path mSdkLocation = mFileOp.toPath("/sdk");
 
     private AndroidSdkHandler mSdkHandler;
     private FakeDownloader mDownloader;
@@ -87,38 +87,35 @@ public class SdkManagerCliTest {
         RemoteRepoLoader loader = createRemoteRepo();
 
         RepoManager repoManager = new RepoManagerImpl(null, progress -> loader);
-        repoManager.setLocalPath(mFileOp.toPath(mSdkLocation));
+        repoManager.setLocalPath(mSdkLocation);
 
         createLocalRepo(repoManager);
 
-        mSdkHandler =
-                new AndroidSdkHandler(mFileOp.toPath(mSdkLocation), null, mFileOp, repoManager);
+        mSdkHandler = new AndroidSdkHandler(mSdkLocation, null, mFileOp, repoManager);
 
         // Doesn't actually need to provide anything, since the remote loader gets them directly.
         repoManager.registerSourceProvider(new FakeRepositorySourceProvider(null));
     }
 
     private void createLocalRepo(@NonNull RepoManager repoManager) throws IOException {
-        Path root = mFileSystem.getPath(mFileOp.getPlatformSpecificPath(mSdkLocation));
         ProgressIndicator progress = new FakeProgressIndicator();
-        Files.createDirectories(root);
+        Files.createDirectories(mSdkLocation);
         FakeRemotePackage installed = new FakeRemotePackage("test;p1");
         installed.setDisplayName("package 1");
-        Path p1Path = root.resolve("test/p1");
+        Path p1Path = mSdkLocation.resolve("test/p1");
         Files.createDirectories(p1Path);
-        InstallerUtil.writePackageXml(installed, new File(p1Path.toString()), repoManager, mFileOp,
-                progress);
+        InstallerUtil.writePackageXml(installed, p1Path, repoManager, progress);
         installed = new FakeRemotePackage("upgrade");
         installed.setDisplayName("upgrade v1");
-        Files.createDirectories(root.resolve("upgrade"));
+        Files.createDirectories(mSdkLocation.resolve("upgrade"));
         InstallerUtil.writePackageXml(
-                installed, new File(mSdkLocation, "upgrade"), repoManager, mFileOp, progress);
+                installed, mSdkLocation.resolve("upgrade"), repoManager, progress);
         installed = new FakeRemotePackage("obsolete");
         installed.setDisplayName("obsolete local");
         installed.setObsolete(true);
-        Files.createDirectories(root.resolve("obsolete"));
+        Files.createDirectories(mSdkLocation.resolve("obsolete"));
         InstallerUtil.writePackageXml(
-                installed, new File(mSdkLocation, "obsolete"), repoManager, mFileOp, progress);
+                installed, mSdkLocation.resolve("obsolete"), repoManager, progress);
     }
 
     @NonNull
@@ -179,7 +176,7 @@ public class SdkManagerCliTest {
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--list"), mFileOp.getFileSystem());
-        assertEquals(mSdkLocation, settings.getLocalPath().toString());
+        assertEquals(mSdkLocation, settings.getLocalPath());
 
         System.setProperty(
                 "com.android.sdklib.toolsdir", mFileOp.getPlatformSpecificPath("/sdk/foo/bar"));
@@ -284,18 +281,11 @@ public class SdkManagerCliTest {
                         "test;p2;which;has;a;really;long;name;which;should;still;be;displayed");
         installed.setDisplayName(
                 "package 2 has a long display name that should still be displayed");
-        Path p2Path =
-                mFileSystem
-                        .getPath(mSdkLocation)
-                        .resolve("test/p2/is-also/installed-in-a/path-with-a-long-name/");
+        Path p2Path = mSdkLocation.resolve("test/p2/is-also/installed-in-a/path-with-a-long-name/");
         Files.createDirectories(p2Path);
         ProgressIndicator progress = new FakeProgressIndicator();
         InstallerUtil.writePackageXml(
-                installed,
-                new File(p2Path.toString()),
-                mSdkHandler.getSdkManager(progress),
-                mFileOp,
-                progress);
+                installed, p2Path, mSdkHandler.getSdkManager(progress), progress);
 
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
@@ -575,12 +565,11 @@ public class SdkManagerCliTest {
      */
     @Test
     public void basicInstallBroken() throws Exception {
-        Path sdk = mFileSystem.getPath(mSdkLocation);
         // Move a valid package to the containing directory that the other package will
         // try to be installed in.
-        Files.move(sdk.resolve("test/p1"), sdk.resolve("test2"));
-        Files.delete(sdk.resolve("test"));
-        Files.move(sdk.resolve("test2"), sdk.resolve("test"));
+        Files.move(mSdkLocation.resolve("test/p1"), mSdkLocation.resolve("test2"));
+        Files.delete(mSdkLocation.resolve("test"));
+        Files.move(mSdkLocation.resolve("test2"), mSdkLocation.resolve("test"));
 
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
@@ -998,8 +987,7 @@ public class SdkManagerCliTest {
                         ImmutableList.of("--sdk_root=" + mSdkLocation, "--version"),
                         mFileOp.getFileSystem());
 
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(mFileOp.toPath(mSdkLocation), null, mFileOp);
+        AndroidSdkHandler handler = new AndroidSdkHandler(mSdkLocation, null, mFileOp);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli sdkmanager =
                 new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, handler);

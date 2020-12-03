@@ -92,8 +92,7 @@ public class AidlProcessor {
 
         String relativeInputFile =
                 FileUtils.toSystemIndependentPath(
-                        FileOpUtils.makeRelative(
-                                startDir.toFile(), inputFilePath.toFile(), FileOpUtils.create()));
+                        FileOpUtils.makeRelative(startDir.toFile(), inputFilePath.toFile()));
 
         // send the dependency file to the processor.
         DependencyData data = dependencyFileProcessor.processFile(depFile);

@@ -32,10 +32,19 @@ import java.nio.file.Path;
  * <p>Instances should be obtained through {@link FileOpUtils#create()}
  */
 public class FileOpImpl extends FileOp {
+    private final FileSystem fileSystem;
+
+    public FileOpImpl() {
+        this(FileSystems.getDefault());
+    }
+
+    public FileOpImpl(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
+    }
 
     @Override
     public FileSystem getFileSystem() {
-        return FileSystems.getDefault();
+        return fileSystem;
     }
 
     @Override

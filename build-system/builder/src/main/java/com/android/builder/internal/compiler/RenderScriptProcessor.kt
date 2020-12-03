@@ -15,18 +15,17 @@
  */
 package com.android.builder.internal.compiler
 
+import com.android.SdkConstants
 import com.android.SdkConstants.EXT_BC
 import com.android.SdkConstants.FN_ANDROIDX_RENDERSCRIPT_PACKAGE
 import com.android.SdkConstants.FN_ANDROIDX_RS_JAR
 import com.android.SdkConstants.FN_RENDERSCRIPT_V8_JAR
 import com.android.SdkConstants.FN_RENDERSCRIPT_V8_PACKAGE
-
-import com.android.SdkConstants
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.process.ProcessOutputHandler
-import com.android.repository.Revision
+import com.android.io.CancellableFileIo
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.BuildToolInfo.PathId
 import com.android.utils.FileUtils
@@ -34,6 +33,8 @@ import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
 import java.io.IOException
+import java.nio.file.Path
+import java.nio.file.Paths
 
 private const val LIBCLCORE_BC = "libclcore.bc"
 
@@ -60,8 +61,8 @@ class RenderScriptProcessor(
     private val is32Bit: Boolean
     private val is64Bit: Boolean
 
-    private val rsLib: File?
-    private val libClCore = mutableMapOf<String, File>()
+    private val rsLib: Path?
+    private val libClCore = mutableMapOf<String, Path>()
 
     private val abis32: Array<Abi>
     private val abis64: Array<Abi>
@@ -95,18 +96,18 @@ class RenderScriptProcessor(
         abis64 = getAbis(AbiType.BIT_64)
 
         if (supportMode) {
-            val rs = File(buildToolInfo.location, "renderscript")
-            rsLib = File(rs, "lib")
-            val bcFolder = File(rsLib, "bc")
+            val rs = buildToolInfo.location.resolve("renderscript")
+            rsLib = rs.resolve("lib")
+            val bcFolder = rsLib.resolve("bc")
             for (abi in abis32) {
-                val rsClCoreFile = File(bcFolder, abi.device + File.separatorChar + LIBCLCORE_BC)
-                if (rsClCoreFile.exists()) {
+                val rsClCoreFile = bcFolder.resolve(abi.device + '/' + LIBCLCORE_BC)
+                if (CancellableFileIo.exists(rsClCoreFile)) {
                     libClCore[abi.device] = rsClCoreFile
                 }
             }
             for (abi in abis64) {
-                val rsClCoreFile = File(bcFolder, abi.device + File.separatorChar + LIBCLCORE_BC)
-                if (rsClCoreFile.exists()) {
+                val rsClCoreFile = bcFolder.resolve(abi.device + '/' + LIBCLCORE_BC)
+                if (CancellableFileIo.exists(rsClCoreFile)) {
                     libClCore[abi.device] = rsClCoreFile
                 }
             }
@@ -155,9 +156,9 @@ class RenderScriptProcessor(
         // get the env var
         val env = mutableMapOf<String, String>()
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-            env["DYLD_LIBRARY_PATH"] = buildToolInfo.location.absolutePath
+            env["DYLD_LIBRARY_PATH"] = buildToolInfo.location.toAbsolutePath().toString()
         } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
-            env["LD_LIBRARY_PATH"] = buildToolInfo.location.absolutePath
+            env["LD_LIBRARY_PATH"] = buildToolInfo.location.toAbsolutePath().toString()
         }
 
         doMainCompilation(renderscriptFiles, processExecutor, processOutputHandler, env)
@@ -404,7 +405,7 @@ class RenderScriptProcessor(
         builder.addArgs("-fPIC")
         builder.addArgs("-shared")
 
-        builder.addArgs("-rt-path", libClCore.getValue(abi.device).absolutePath)
+        builder.addArgs("-rt-path", libClCore.getValue(abi.device).toAbsolutePath().toString())
 
         builder.addArgs("-mtriple", abi.toolchain)
         builder.addArgs(bcFile.absolutePath)
@@ -426,10 +427,11 @@ class RenderScriptProcessor(
         processOutputHandler: ProcessOutputHandler,
         env: Map<String, String>
     ) {
-        val intermediatesFolder = File(rsLib, "intermediates")
-        val intermediatesAbiFolder = File(intermediatesFolder, abi.device)
-        val packagedFolder = File(rsLib, "packaged")
-        val packagedAbiFolder = File(packagedFolder, abi.device)
+        val root = rsLib ?: Paths.get("")
+        val intermediatesFolder = root.resolve("intermediates")
+        val intermediatesAbiFolder = intermediatesFolder.resolve(abi.device)
+        val packagedFolder = root.resolve("packaged")
+        val packagedAbiFolder = packagedFolder.resolve(abi.device)
         val builder = ProcessInfoBuilder()
         builder.setExecutable(buildToolInfo.getPath(abi.linker))
         builder.addEnvironments(env)
@@ -443,12 +445,12 @@ class RenderScriptProcessor(
         builder.addArgs("-o", outFile.absolutePath)
 
         builder.addArgs(
-            "-L${intermediatesAbiFolder.absolutePath}",
-            "-L${packagedAbiFolder.absolutePath}",
+            "-L${intermediatesAbiFolder.toAbsolutePath()}",
+            "-L${packagedAbiFolder.toAbsolutePath()}",
             "-soname",
             soName,
             objFile.absolutePath,
-            File(intermediatesAbiFolder, "libcompiler_rt.a").absolutePath,
+            intermediatesAbiFolder.resolve("libcompiler_rt.a").toAbsolutePath().toString(),
             "-lRSSupport",
             "-lm",
             "-lc"

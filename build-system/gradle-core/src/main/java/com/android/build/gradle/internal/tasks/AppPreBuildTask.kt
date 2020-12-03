@@ -66,7 +66,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
                 truncated = "... (Total: ${compileDeps.size})"
             )
             throw RuntimeException(
-                "The following Android dependencies are set to compileOnly/provided which is not supported:\n$formattedDependencies"
+                "The following Android dependencies are set to compileOnly which is not supported:\n$formattedDependencies"
             )
         }
     }

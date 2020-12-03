@@ -61,7 +61,7 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -111,7 +111,7 @@ class SuppressLintTest {
                 )
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expectClean()
     }
@@ -130,7 +130,7 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -169,7 +169,7 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -212,7 +212,7 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -247,7 +247,7 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -296,7 +296,7 @@ class SuppressLintTest {
             """
                 ).indented()
             )
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -346,7 +346,7 @@ class SuppressLintTest {
                 """
                 ).indented()
             )
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """
@@ -383,7 +383,7 @@ class SuppressLintTest {
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
-            .sdkHome(TestUtils.getSdk())
+            .sdkHome(TestUtils.getSdk().toFile())
             .run()
             .expect(
                 """

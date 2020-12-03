@@ -30,7 +30,6 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -394,7 +393,7 @@ public class InstallerUtilTest extends TestCase {
         mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertFalse(InstallerUtil.checkValidPath(new File("/sdk/foo/bar"), mgr, progress));
+        assertFalse(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo/bar"), mgr, progress));
         assertFalse(progress.getWarnings().isEmpty());
     }
 
@@ -416,7 +415,7 @@ public class InstallerUtilTest extends TestCase {
         mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertFalse(InstallerUtil.checkValidPath(new File("/sdk/foo"), mgr, progress));
+        assertFalse(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo"), mgr, progress));
         assertFalse(progress.getWarnings().isEmpty());
     }
 
@@ -438,9 +437,7 @@ public class InstallerUtilTest extends TestCase {
         mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertTrue(
-                InstallerUtil.checkValidPath(
-                        new File("/sdk/foo").getAbsoluteFile(), mgr, progress));
+        assertTrue(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo"), mgr, progress));
         progress.assertNoErrorsOrWarnings();
     }
 
@@ -462,14 +459,12 @@ public class InstallerUtilTest extends TestCase {
         mgr.setLocalPath(fop.toPath("/sdk"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mgr.loadSynchronously(0, progress, null, null);
-        assertTrue(
-                InstallerUtil.checkValidPath(
-                        new File("/sdk/foo2").getAbsoluteFile(), mgr, progress));
+        assertTrue(InstallerUtil.checkValidPath(fop.toPath("/sdk/foo2"), mgr, progress));
         progress.assertNoErrorsOrWarnings();
     }
 
     public void testUnzip() throws Exception {
-        if (new MockFileOp().isWindows()) {
+        if (FileOpUtils.isWindows()) {
             // can't run on windows.
             return;
         }

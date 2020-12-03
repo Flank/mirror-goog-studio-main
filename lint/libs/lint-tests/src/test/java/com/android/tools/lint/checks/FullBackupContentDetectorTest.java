@@ -150,6 +150,8 @@ public class FullBackupContentDetectorTest extends AbstractCheckTest {
                         + "     <exclude domain=\"external\" path=\"dd\"/>\n"
                         + "                                      ~~\n"
                         + "    res/xml/backup.xml:10: Unnecessary/conflicting <include>\n"
+                        + "     <include domain=\"external\" path=\"dd\"/>\n"
+                        + "                                ~~~~~~~~~\n"
                         + "res/xml/backup.xml:12: Error: Unexpected domain unknown-domain, expected one of root, file, database, sharedpref, external [FullBackupContent]\n"
                         + "     <exclude domain=\"unknown-domain\" path=\"dd\"/>\n"
                         + "                      ~~~~~~~~~~~~~~\n"

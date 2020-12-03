@@ -485,6 +485,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                 public Integer getError4() { return 0; }
                                ~~~~~~~~~
                 src/test/pkg/GetterSetter.java:41: Setter here
+                public void setError4(String s) { }
+                            ~~~~~~~~~
             src/test/pkg/GetterSetter.java:46: Warning: This getter should be public such that error5 can be accessed as a property from Kotlin; see https://android.github.io/kotlin-guides/interop.html#property-prefixes [KotlinPropertyAccess]
                 protected String getError5() { return ""; }
                                  ~~~~~~~~~
@@ -495,6 +497,8 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
                     @Override public Float getNumber3() { return 0.0f; } // ERROR (even though we have corresponding setter)
                                            ~~~~~~~~~~
                 src/test/pkg/GetterSetter.java:71: Setter here
+                    public void setNumber3(Float number) { } // OK
+                                ~~~~~~~~~~
             0 errors, 7 warnings
             """
         )

@@ -13,42 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 
 public class ZipRepo implements Closeable {
-
     private final ZipMap zipMap;
     private final FileChannel channel;
-    private final File file;
+    private final Path file;
 
     public ZipRepo(@NonNull String filePath) throws IOException {
-        this(ZipMap.from(new File(filePath), false, Zip64.Policy.ALLOW));
-    }
-
-    public ZipRepo(@NonNull File file) throws IOException {
-        this(ZipMap.from(file, false, Zip64.Policy.ALLOW));
+        this(ZipMap.from(Paths.get(filePath), false, Zip64.Policy.ALLOW));
     }
 
     public ZipRepo(@NonNull Path path) throws IOException {
-        this(ZipMap.from(path.toFile(), false, Zip64.Policy.ALLOW));
+        this(ZipMap.from(path, false, Zip64.Policy.ALLOW));
     }
 
     public ZipRepo(@NonNull ZipMap zipMap) throws IOException {
         this.zipMap = zipMap;
-        this.channel = FileChannel.open(zipMap.getFile().toPath(), StandardOpenOption.READ);
-        this.file = zipMap.getFile();
+        this.channel = FileChannel.open(zipMap.getPath(), StandardOpenOption.READ);
+        this.file = zipMap.getPath();
     }
 
     @NonNull

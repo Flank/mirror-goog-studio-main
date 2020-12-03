@@ -84,7 +84,7 @@ public class JarsInLibraries {
         // Add the libs dependency in the library build file.
         TestFileUtils.appendToFile(
                 project.file("lib/build.gradle"),
-                "\ndependencies {\ncompile fileTree(dir: 'libs', include: '*.jar')\n}\n"
+                "\ndependencies {\napi fileTree(dir: 'libs', include: '*.jar')\n}\n"
                         .replaceAll("\n", System.getProperty("line.separator")));
 
         // Create some jars.

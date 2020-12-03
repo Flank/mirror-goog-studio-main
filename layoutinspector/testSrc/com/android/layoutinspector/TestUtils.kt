@@ -15,8 +15,8 @@
  */
 package com.android.layoutinspector
 
-import com.android.testutils.TestUtils
+import com.android.testutils.TestUtils.resolveWorkspacePath
 import java.io.File
 
 fun getTestFile(fileName: String) : File =
-    TestUtils.getWorkspaceFile("tools/base/layoutinspector/testData/$fileName")
+    resolveWorkspacePath("tools/base/layoutinspector/testData/$fileName").toFile()

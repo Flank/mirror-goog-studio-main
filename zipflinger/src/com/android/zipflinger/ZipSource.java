@@ -16,9 +16,9 @@
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
-import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ public class ZipSource {
         this.map = map;
     }
 
-    public ZipSource(@NonNull File file) throws IOException {
+    public ZipSource(@NonNull Path file) throws IOException {
         this(ZipMap.from(file, false));
     }
 
@@ -69,7 +69,7 @@ public class ZipSource {
         Entry entry = map.getEntries().get(entryName);
         if (entry == null) {
             throw new IllegalStateException(
-                    String.format("Cannot find '%s' in archive '%s'", entryName, map.getFile()));
+                    String.format("Cannot find '%s' in archive '%s'", entryName, map.getPath()));
         }
         Source entrySource = newZipSourceEntryFor(newName, entry, compressionLevel);
         entrySource.align(alignment);
@@ -82,7 +82,7 @@ public class ZipSource {
         return map.getEntries();
     }
 
-    public static ZipSource selectAll(@NonNull File file) throws IOException {
+    public static ZipSource selectAll(@NonNull Path file) throws IOException {
         ZipSource source = new ZipSource(file);
         for (Entry e : source.entries().values()) {
             source.select(e.getName(), e.getName(), COMPRESSION_NO_CHANGE, Source.NO_ALIGNMENT);
@@ -91,7 +91,7 @@ public class ZipSource {
     }
 
     void open() throws IOException {
-        channel = FileChannel.open(map.getFile().toPath(), StandardOpenOption.READ);
+        channel = FileChannel.open(map.getPath(), StandardOpenOption.READ);
     }
 
     void close() throws IOException {
@@ -128,6 +128,6 @@ public class ZipSource {
     }
 
     String getName() {
-        return map.getFile().getAbsolutePath();
+        return map.getPath().toString();
     }
 }

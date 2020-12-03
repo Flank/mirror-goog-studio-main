@@ -142,7 +142,7 @@ class XmlReporterTest {
                                 errorLine1="    &lt;uses-sdk android:minSdkVersion=&quot;10&quot; />"
                                 errorLine2="     ~~~~~~~~">
                                 <location
-                                    file="TESTROOT/project0/AndroidManifest.xml"
+                                    file="TESTROOT/app/AndroidManifest.xml"
                                     line="3"
                                     column="6"/>
                             </issue>
@@ -158,7 +158,7 @@ class XmlReporterTest {
                                 errorLine1="        android:text=&quot;Fooo&quot; />"
                                 errorLine2="        ~~~~~~~~~~~~~~~~~~~">
                                 <location
-                                    file="TESTROOT/project0/res/layout/main.xml"
+                                    file="TESTROOT/app/res/layout/main.xml"
                                     line="3"
                                     column="9"/>
                             </issue>
@@ -482,6 +482,6 @@ class XmlReporterTest {
     }
 
     private fun lint(): TestLintTask {
-        return TestLintTask.lint().sdkHome(TestUtils.getSdk())
+        return TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
     }
 }

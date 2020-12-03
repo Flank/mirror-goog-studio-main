@@ -88,7 +88,7 @@ class CompileLibraryResourcesTest {
 
     private val app = MinimalSubProject.app("com.example.app")
         .appendToBuild(
-            """dependencies { compile project(':library') }
+            """dependencies { api project(':library') }
                 android {
                     buildTypes {
                         release {

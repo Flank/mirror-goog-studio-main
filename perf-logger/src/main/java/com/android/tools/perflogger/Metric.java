@@ -23,6 +23,7 @@ import com.google.gson.stream.JsonWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -97,7 +98,11 @@ public class Metric {
                             metricName));
         }
         myMetricName = metricName;
-        myOutputDirectory = TestUtils.getTestOutputDir();
+        try {
+            myOutputDirectory = TestUtils.getTestOutputDir().toFile();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
         // Preserve insertion order - mostly for test purposes.
         mySamples = new LinkedHashMap<>();

@@ -64,7 +64,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          */
         TestFileUtils.appendToFile(
             project.getSubproject("app").buildFile,
-            "dependencies { compile project(':library') }${System.lineSeparator()}"
+            "dependencies { api project(':library') }${System.lineSeparator()}"
         )
 
         project.executor().run(":app:assembleDebug")
@@ -439,7 +439,7 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
          */
         TestFileUtils.appendToFile(
             project.getSubproject("app").buildFile,
-            "dependencies { compile project(':library') }${System.lineSeparator()}"
+            "dependencies { api project(':library') }${System.lineSeparator()}"
         )
 
         val libraryValues = FileUtils.join(project.projectDir, "library", "src", "main", "res", "values")

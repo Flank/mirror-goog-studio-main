@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import com.android.annotations.NonNull;
@@ -26,7 +25,6 @@ import java.nio.file.Path;
 import java.util.zip.Deflater;
 
 public class BytesSource extends Source {
-
     // Bytes to be written in the zip, after the Local File Header.
     private ByteBuffer zipEntryPayload;
 
@@ -52,6 +50,8 @@ public class BytesSource extends Source {
         build(bytes, bytes.length, compressionLevel);
     }
 
+    /** @deprecated Use {@link #BytesSource(Path, String, int)} instead. */
+    @Deprecated
     public BytesSource(@NonNull File file, @NonNull String name, int compressionLevel)
             throws IOException {
         this(file.toPath(), name, compressionLevel);

@@ -69,7 +69,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/drawable-mdpi/sample_icon.gif: Warning: Using the .gif format for bitmaps is discouraged [GifUsage]\n"
                         + "res/drawable/ic_launcher.png: Warning: The ic_launcher.png icon has identical contents in the following configuration folders: drawable-mdpi, drawable [IconDuplicatesConfig]\n"
-                        + "    res/drawable-mdpi/ic_launcher.png: <No location-specific message\n"
+                        + "    res/drawable-mdpi/ic_launcher.png: <No location-specific message>\n"
                         + "res/drawable/ic_launcher.png: Warning: Found bitmap drawable res/drawable/ic_launcher.png in densityless folder [IconLocation]\n"
                         + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi) [IconDensities]\n"
                         + "res: Warning: Missing density variation folders in res: drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
@@ -98,8 +98,8 @@ public class IconDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "res/drawable/background.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-mdpi/background.png, res/drawable/background.xml [IconXmlAndPng]\n"
-                        + "    res/drawable-mdpi/background.png: <No location-specific message\n"
-                        + "0 errors, 1 warnings\n";
+                        + "    res/drawable-mdpi/background.png: <No location-specific message>\n"
+                        + "0 errors, 1 warnings";
         lint().files(
                         manifest().minSdk(4),
                         xml("res/drawable/background.xml", "<tag/>"),
@@ -140,9 +140,9 @@ public class IconDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "res/drawable-hdpi/other.9.png: Warning: The following unrelated icon files have identical contents: appwidget_bg.9.png, other.9.png [IconDuplicates]\n"
-                        + "    res/drawable-hdpi/appwidget_bg.9.png: <No location-specific message\n"
+                        + "    res/drawable-hdpi/appwidget_bg.9.png: <No location-specific message>\n"
                         + "res/drawable-hdpi/unrelated.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, unrelated.png [IconDuplicates]\n"
-                        + "    res/drawable-hdpi/ic_launcher.png: <No location-specific message\n"
+                        + "    res/drawable-hdpi/ic_launcher.png: <No location-specific message>\n"
                         + "res: Warning: Missing density variation folders in res: drawable-mdpi, drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
                         + "0 errors, 3 warnings\n";
         lint().files(
@@ -164,8 +164,8 @@ public class IconDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/drawable-mdpi/frame.png: Warning: The following images appear in both -nodpi and in a density folder: frame.png [IconNoDpi]\n"
                         + "res/drawable-xlarge-nodpi-v11/frame.png: Warning: The frame.png icon has identical contents in the following configuration folders: drawable-mdpi, drawable-nodpi, drawable-xlarge-nodpi-v11 [IconDuplicatesConfig]\n"
-                        + "    res/drawable-nodpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
+                        + "    res/drawable-nodpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-mdpi/frame.png: <No location-specific message>\n"
                         + "res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
                         + "0 errors, 3 warnings\n";
         lint().files(
@@ -188,19 +188,19 @@ public class IconDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "res/drawable-xxxhdpi/frame.png: Warning: The image frame.png varies significantly in its density-independent (dip) size across the various density versions: drawable-hdpi/frame.png: 315x193 dp (472x290 px), drawable-ldpi/frame.png: 629x387 dp (472x290 px), drawable-mdpi/frame.png: 472x290 dp (472x290 px), drawable-xhdpi/frame.png: 236x145 dp (472x290 px), drawable-xxhdpi/frame.png: 157x97 dp (472x290 px), drawable-xxxhdpi/frame.png: 118x73 dp (472x290 px) [IconDipSize]\n"
-                        + "    res/drawable-xxhdpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-xhdpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-hdpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-ldpi/frame.png: <No location-specific message\n"
+                        + "    res/drawable-xxhdpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-xhdpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-hdpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-mdpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-ldpi/frame.png: <No location-specific message>\n"
                         + "res/drawable-xxxhdpi/frame.png: Warning: The following unrelated icon files have identical contents: frame.png, frame.png, frame.png, file1.png, file2.png, frame.png, frame.png, frame.png [IconDuplicates]\n"
-                        + "    res/drawable-xxhdpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-xhdpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-nodpi/file2.png: <No location-specific message\n"
-                        + "    res/drawable-nodpi/file1.png: <No location-specific message\n"
-                        + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-ldpi/frame.png: <No location-specific message\n"
-                        + "    res/drawable-hdpi/frame.png: <No location-specific message\n"
+                        + "    res/drawable-xxhdpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-xhdpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-nodpi/file2.png: <No location-specific message>\n"
+                        + "    res/drawable-nodpi/file1.png: <No location-specific message>\n"
+                        + "    res/drawable-mdpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-ldpi/frame.png: <No location-specific message>\n"
+                        + "    res/drawable-hdpi/frame.png: <No location-specific message>\n"
                         + "0 errors, 2 warnings\n";
         lint().files(
                         image("res/drawable-mdpi/frame.png", 472, 290)
@@ -236,9 +236,9 @@ public class IconDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "res/drawable-mdpi/frame.xml: Warning: The following images appear in both -nodpi and in a density folder: frame.png, frame.xml [IconNoDpi]\n"
-                        + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
+                        + "    res/drawable-mdpi/frame.png: <No location-specific message>\n"
                         + "res/drawable-nodpi/frame.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-mdpi/frame.png, res/drawable-nodpi/frame.xml [IconXmlAndPng]\n"
-                        + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
+                        + "    res/drawable-mdpi/frame.png: <No location-specific message>\n"
                         + "res: Warning: Missing density variation folders in res: drawable-hdpi, drawable-xhdpi, drawable-xxhdpi [IconMissingDensityFolder]\n"
                         + "0 errors, 3 warnings\n";
         lint().files(
@@ -288,10 +288,10 @@ public class IconDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "res/drawable-xxxhdpi/f.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-hdpi/f.xml, res/drawable-mdpi/f.png [IconXmlAndPng]\n"
-                        + "    res/drawable-xxhdpi/f.xml: <No location-specific message\n"
-                        + "    res/drawable-xhdpi/f.xml: <No location-specific message\n"
-                        + "    res/drawable-mdpi/f.png: <No location-specific message\n"
-                        + "    res/drawable-hdpi/f.xml: <No location-specific message\n"
+                        + "    res/drawable-xxhdpi/f.xml: <No location-specific message>\n"
+                        + "    res/drawable-xhdpi/f.xml: <No location-specific message>\n"
+                        + "    res/drawable-mdpi/f.png: <No location-specific message>\n"
+                        + "    res/drawable-hdpi/f.xml: <No location-specific message>\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
                         image("res/drawable-mdpi/f.png", 472, 290)
@@ -487,15 +487,25 @@ public class IconDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/drawable-mdpi/icon1.png: Warning: Notification icons must be entirely white [IconColors]\n"
                         + "    src/test/pkg/NotificationTest.java:11: Icon used in notification here\n"
+                        + "        Notification notification = new Notification(R.drawable.icon1, \"Test1\", 0);\n"
+                        + "                                                     ~~~~~~~~~~~~~~~~\n"
                         + "res/drawable-mdpi/icon2.png: Warning: Notification icons must be entirely white [IconColors]\n"
                         + "    src/test/pkg/NotificationTest.java:16: Icon used in notification here\n"
+                        + "        Notification notification = new Notification(resource, \"Test1\", 0);\n"
+                        + "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/drawable-mdpi/icon3.png: Warning: Notification icons must be entirely white [IconColors]\n"
                         + "    src/test/pkg/NotificationTest.java:23: Icon used in notification here\n"
+                        + "        Notification notification = new Notification(icon, tickerText, when);\n"
+                        + "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "res/drawable-mdpi/icon4.png: Warning: Notification icons must be entirely white [IconColors]\n"
                         + "    src/test/pkg/NotificationTest.java:29: Icon used in notification here\n"
+                        + "                .setContentText(subject).setSmallIcon(R.drawable.icon4)\n"
+                        + "                                                      ~~~~~~~~~~~~~~~~\n"
                         + "res/drawable-mdpi/icon5.png: Warning: Notification icons must be entirely white [IconColors]\n"
                         + "    src/test/pkg/NotificationTest.java:36: Icon used in notification here\n"
-                        + "0 errors, 5 warnings\n";
+                        + "                .setContentText(subject).setSmallIcon(R.drawable.icon5)\n"
+                        + "                                                      ~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 5 warnings";
         lint().files(
                         manifest().minSdk(14),
                         mNotificationTest,
@@ -850,8 +860,8 @@ public class IconDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "res/drawable-mdpi/ic_launcher_filled.png: Warning: The files ic_launcher_filled.png and ic_launcher_filled.9.png clash; both will map to @drawable/ic_launcher_filled [IconMixedNinePatch]\n"
-                        + "    res/drawable-hdpi/ic_launcher_filled.png: <No location-specific message\n"
-                        + "    res/drawable-hdpi/ic_launcher_filled.9.png: <No location-specific message\n"
+                        + "    res/drawable-hdpi/ic_launcher_filled.png: <No location-specific message>\n"
+                        + "    res/drawable-hdpi/ic_launcher_filled.9.png: <No location-specific message>\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
                         manifest().minSdk(4),

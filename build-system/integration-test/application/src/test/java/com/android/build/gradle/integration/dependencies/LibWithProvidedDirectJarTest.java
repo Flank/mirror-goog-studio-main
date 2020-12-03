@@ -37,9 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * test for provided jar in library
- */
+/** test for compileOnly jar in library */
 public class LibWithProvidedDirectJarTest {
 
     @ClassRule

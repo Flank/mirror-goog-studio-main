@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,21 @@ package com.android.build.gradle.integration.connected.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
-import java.io.IOException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExternalResource;
 
-public class BasicConnectedTest2 {
+import java.io.IOException;
 
-    @ClassRule public static final ExternalResource emulator = EmulatorUtils.getEmulator();
+public class Overlay3ConnectedTest {
+
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("basic").create();
+            GradleTestProject.builder().fromTestProject("overlay3").create();
 
     @Before
     public void setUp() throws IOException {
@@ -43,14 +44,7 @@ public class BasicConnectedTest2 {
     }
 
     @Test
-    public void install() throws Exception {
-        project.execute("assembleDebug");
-        project.execute("installDebug");
-        project.execute("uninstallAll");
-    }
-
-    @Test
-    public void connectedCheck() throws Exception {
-        project.executor().run("connectedAndroidTest");
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executor().run("connectedCheck");
     }
 }

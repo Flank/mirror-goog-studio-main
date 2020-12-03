@@ -44,7 +44,7 @@ class AnnotationProcessorCompileClasspathTest {
             project.buildFile,
             """
             dependencies {
-                compile 'com.jakewharton:butterknife:7.0.1'
+                api 'com.jakewharton:butterknife:7.0.1'
             }
             """.trimIndent())
         var result = project.executor().run("help")

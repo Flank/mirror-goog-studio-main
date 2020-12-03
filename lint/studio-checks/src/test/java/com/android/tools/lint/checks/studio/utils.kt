@@ -19,7 +19,6 @@ package com.android.tools.lint.checks.studio
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestLintTask
-import java.io.File
 
 /**
  * Returns a [TestLintTask] to be used by checks that run on Studio source code.
@@ -36,24 +35,9 @@ internal fun studioLint(): TestLintTask {
          * current JVM classes.
          */
         override fun files(vararg files: TestFile): TestLintTask {
-            // ensurePreRun() is private, so let's call super and overwrite this.projects
-            super.files(*files)
             val description = ProjectDescription(*files).type(ProjectDescription.Type.JAVA)
-            this.projects = arrayOf(description)
+            super.projects(description)
             return this
-        }
-
-        /**
-         * Creates a fake build.gradle file in the project directory, to convince
-         * [com.android.tools.lint.client.api.LintDriver#computeProjects] there is a project at all.
-         */
-        override fun populateProjectDirectory(
-            project: ProjectDescription,
-            projectDir: File,
-            vararg testFiles: TestFile?
-        ) {
-            super.populateProjectDirectory(project, projectDir, *testFiles)
-            File(projectDir, "build.gradle").createNewFile()
         }
     }
     task.allowMissingSdk()

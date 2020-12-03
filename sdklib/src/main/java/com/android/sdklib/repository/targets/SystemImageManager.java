@@ -3,10 +3,10 @@ package com.android.sdklib.repository.targets;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.IdDisplay;
@@ -16,21 +16,22 @@ import com.android.sdklib.repository.meta.SysImgFactory;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
  * {@code SystemImageManager} finds {@link SystemImage}s in the sdk, using a {@link RepoManager}
  */
 public class SystemImageManager {
-
-    private final FileOp mFop;
 
     private final RepoManager mRepoManager;
 
@@ -52,10 +53,8 @@ public class SystemImageManager {
      */
     private Multimap<LocalPackage, SystemImage> mPackageToImage;
 
-    /**
-     * Map of directories containing {@code system.img} files to {@link SystemImage}s.
-     */
-    private Map<File, SystemImage> mPathToImage;
+    /** Map of directories containing {@code system.img} files to {@link SystemImage}s. */
+    private Map<Path, SystemImage> mPathToImage;
 
     /**
      * Map of tag, version, and vendor to set of system image, for convenient lookup.
@@ -63,12 +62,10 @@ public class SystemImageManager {
     private Table<IdDisplay, AndroidVersion, Multimap<IdDisplay, SystemImage>> mValuesToImage;
 
     /**
-     * Create a new {@link SystemImageManager} using the given {@link RepoManager}.<br> {@code
-     * factory} is used to enable validation.
+     * Create a new {@link SystemImageManager} using the given {@link RepoManager}.<br>
+     * {@code factory} is used to enable validation.
      */
-    public SystemImageManager(@NonNull RepoManager mgr, @NonNull SysImgFactory factory,
-            @NonNull FileOp fop) {
-        mFop = fop;
+    public SystemImageManager(@NonNull RepoManager mgr, @NonNull SysImgFactory factory) {
         mRepoManager = mgr;
         mValidator = factory.createSysImgDetailsType();
     }
@@ -111,7 +108,7 @@ public class SystemImageManager {
         Multimap<LocalPackage, SystemImage> images = buildImageMap();
         Table<IdDisplay, AndroidVersion, Multimap<IdDisplay, SystemImage>> valuesToImage =
                 HashBasedTable.create();
-        Map<File, SystemImage> pathToImages = Maps.newHashMap();
+        Map<Path, SystemImage> pathToImages = Maps.newHashMap();
         for (SystemImage img : images.values()) {
             IdDisplay vendor = img.getAddonVendor();
             IdDisplay tag = img.getTag();
@@ -132,13 +129,13 @@ public class SystemImageManager {
     @NonNull
     private Multimap<LocalPackage, SystemImage> buildImageMap() {
         Multimap<LocalPackage, SystemImage> result = HashMultimap.create();
-        Map<AndroidVersion, File> platformSkins = Maps.newHashMap();
+        Map<AndroidVersion, Path> platformSkins = Maps.newHashMap();
         Collection<? extends LocalPackage> packages =
                 mRepoManager.getPackages().getLocalPackages().values();
         for (LocalPackage p : packages) {
             if (p.getTypeDetails() instanceof DetailsTypes.PlatformDetailsType) {
-                File skinDir = mFop.toFile(p.getLocation().resolve(SdkConstants.FD_SKINS));
-                if (mFop.exists(skinDir)) {
+                Path skinDir = p.getLocation().resolve(SdkConstants.FD_SKINS);
+                if (CancellableFileIo.exists(skinDir)) {
                     platformSkins.put(((DetailsTypes.PlatformDetailsType) p.getTypeDetails())
                             .getAndroidVersion(), skinDir);
                 }
@@ -149,38 +146,56 @@ public class SystemImageManager {
             if (typeDetails instanceof DetailsTypes.SysImgDetailsType ||
                     typeDetails instanceof DetailsTypes.PlatformDetailsType ||
                     typeDetails instanceof DetailsTypes.AddonDetailsType) {
-                collectImages(mFop.toFile(p.getLocation()), p, 0, platformSkins, result);
+                collectImages(p.getLocation(), p, platformSkins, result);
             }
         }
         return result;
     }
 
-    private void collectImages(File dir, LocalPackage p, int depth,
-            Map<AndroidVersion, File> platformSkins,
+    private void collectImages(
+            Path dir,
+            LocalPackage p,
+            Map<AndroidVersion, Path> platformSkins,
             Multimap<LocalPackage, SystemImage> collector) {
-        for (File f : mFop.listFiles(dir)) {
-            // Instead of just f.getName().equals, we first check f.getPath().endsWith,
-            // because getPath() is a simpler getter whereas getName() computes a new
-            // string on each call
-            if (f.getPath().endsWith(SYS_IMG_NAME) && f.getName().equals(SYS_IMG_NAME)) {
-                collector.put(p, createSysImg(p, dir, platformSkins));
-            }
-            if (depth < MAX_DEPTH && mFop.isDirectory(f)) {
-                String name = f.getName();
-                if (name.equals(SdkConstants.FD_DATA) ||
-                       name.equals(SdkConstants.FD_SAMPLES) ||
-                       name.equals(SdkConstants.FD_SKINS)) {
-                    // Not containers for system images, but have a lot of files
-                    continue;
-                }
-                collectImages(f, p, depth + 1, platformSkins, collector);
-            }
+        try {
+            CancellableFileIo.walkFileTree(
+                    dir,
+                    ImmutableSet.of(),
+                    MAX_DEPTH,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult preVisitDirectory(
+                                Path dir, BasicFileAttributes attrs) {
+                            String name = dir.getFileName().toString();
+                            if (name.equals(SdkConstants.FD_DATA)
+                                    || name.equals(SdkConstants.FD_SAMPLES)
+                                    || name.equals(SdkConstants.FD_SKINS)) {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                            // Instead of just f.getName().equals, we first check
+                            // f.getPath().endsWith,
+                            // because getPath() is a simpler getter whereas getName() computes a
+                            // new
+                            // string on each call
+                            if (file.toString().endsWith(SYS_IMG_NAME)
+                                    && file.getFileName().toString().equals(SYS_IMG_NAME)) {
+                                collector.put(p, createSysImg(p, file.getParent(), platformSkins));
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException ignore) {
         }
     }
 
-    private SystemImage createSysImg(LocalPackage p, File dir,
-            Map<AndroidVersion, File> platformSkins) {
-        String containingDir = dir.getName();
+    private SystemImage createSysImg(
+            LocalPackage p, Path dir, Map<AndroidVersion, Path> platformSkins) {
+        String containingDir = dir.getFileName().toString();
         String abi;
         TypeDetails details = p.getTypeDetails();
         AndroidVersion version = null;
@@ -211,22 +226,21 @@ public class SystemImageManager {
             tag = SystemImage.DEFAULT_TAG;
         }
 
-        File skinDir = new File(dir, SdkConstants.FD_SKINS);
-        if (!mFop.exists(skinDir) && version != null) {
+        Path skinDir = dir.resolve(SdkConstants.FD_SKINS);
+        if (CancellableFileIo.notExists(skinDir) && version != null) {
             skinDir = platformSkins.get(version);
         }
-        File[] skins;
+        Path[] skins;
         if (skinDir != null) {
-            List<Path> skinList = PackageParserUtils.parseSkinFolder(mFop.toPath(skinDir));
-            skins = skinList.stream().map(mFop::toFile).toArray(File[]::new);
+            skins = PackageParserUtils.parseSkinFolder(skinDir).toArray(new Path[0]);
         } else {
-            skins = new File[0];
+            skins = new Path[0];
         }
         return new SystemImage(dir, tag, vendor, abi, skins, p);
     }
 
     @Nullable
-    public ISystemImage getImageAt(@NonNull File imageDir) {
+    public ISystemImage getImageAt(@NonNull Path imageDir) {
         if (mPathToImage == null) {
             init();
         }

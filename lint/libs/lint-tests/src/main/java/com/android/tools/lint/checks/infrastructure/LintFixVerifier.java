@@ -32,7 +32,6 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.xml.XmlPrettyPrinter;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.LintFix;
@@ -72,9 +71,9 @@ public class LintFixVerifier {
     private Boolean reformat;
     private boolean robot = false;
 
-    LintFixVerifier(TestLintTask task, List<Incident> incidents) {
+    public LintFixVerifier(@NonNull TestLintTask task, @NonNull TestResultState state) {
         this.task = task;
-        this.incidents = incidents;
+        this.incidents = state.incidents;
     }
 
     /** Sets up 2 lines of context in the diffs */
@@ -135,9 +134,21 @@ public class LintFixVerifier {
         String actual =
                 StringsKt.trimIndent(diff.toString().replace("\r\n", "\n")).replace('$', '＄');
         expected = StringsKt.trimIndent(expected).replace('$', '＄');
-        if (!expected.equals(actual)) {
+        if (!expected.equals(actual)
+                &&
+                // Also allow trailing spaces in embedded lines since the old differ
+                // included that
+                !actual.replaceAll("\\s+\n", "\n")
+                        .trim()
+                        .equals(expected.replaceAll("\\s+\n", "\n").trim())) {
             // Until 3.2 canary 10 the line numbers were off by one; try adjusting
-            if (!bumpFixLineNumbers(expected).trim().equals(actual.trim())) {
+            if (!bumpFixLineNumbers(expected.replaceAll("\\s+\n", "\n"))
+                    .trim()
+                    .equals(actual.replaceAll("\\s+\n", "\n").trim())) {
+                // If not implicitly matching with whitespace cleanup and number adjustments
+                // just assert that they're equal -- this will never be true but we want
+                // the test failure output to show the original comparison such that updated
+                // test copying from the diff includes the new normalized output.
                 assertEquals(expected, actual);
             }
         }
@@ -174,12 +185,21 @@ public class LintFixVerifier {
         path = path.replace(File.separatorChar, '/');
         for (ProjectDescription project : task.projects) {
             for (TestFile file : project.getFiles()) {
-                if (file.getTargetPath().equals(path)) {
+                String targetPath = file.getTargetPath();
+                if (targetPath.equals(path)) {
                     return file;
                 }
             }
         }
 
+        for (ProjectDescription project : task.projects) {
+            for (TestFile file : project.getFiles()) {
+                String targetPath = file.getTargetPath();
+                if (path.endsWith(targetPath)) {
+                    return file;
+                }
+            }
+        }
         return null;
     }
 
@@ -191,7 +211,7 @@ public class LintFixVerifier {
         List<String> names = Lists.newArrayList();
         for (Incident incident : incidents) {
             LintFix data = incident.getFix();
-            if (robot && !data.robot) {
+            if (data != null && robot && !data.robot) {
                 // Fix requires human intervention
                 continue;
             }
@@ -279,7 +299,7 @@ public class LintFixVerifier {
     }
 
     @Nullable
-    private static String applyFix(
+    private String applyFix(
             @NonNull Incident incident, @NonNull LintFix lintFix, @NonNull String before) {
         if (lintFix instanceof ReplaceString) {
             ReplaceString replaceFix = (ReplaceString) lintFix;
@@ -315,7 +335,7 @@ public class LintFixVerifier {
         return false;
     }
 
-    private static String checkSetAttribute(
+    private String checkSetAttribute(
             @NonNull SetAttribute setFix, @NonNull String contents, @NonNull Incident incident) {
         Location location = setFix.range != null ? setFix.range : incident.getLocation();
         Position start = location.getStart();
@@ -618,7 +638,7 @@ public class LintFixVerifier {
             @NonNull String before,
             @NonNull String after,
             @NonNull StringBuilder diffs) {
-        String diff = TestUtils.getDiff(before, after, diffWindow);
+        String diff = TestLintResult.Companion.getDiff(before, after, diffWindow);
         if (!diff.isEmpty()) {
             String targetPath = incident.getDisplayPath().replace(File.separatorChar, '/');
             diffs.append("Fix for ")
@@ -628,12 +648,14 @@ public class LintFixVerifier {
                     .append(": ");
             if (fixDescription != null) {
                 diffs.append(fixDescription).append(":\n");
+            } else {
+                diffs.append("\n");
             }
-            diffs.append(diff);
+            diffs.append(diff).append("\n");
         }
     }
 
-    private static void appendShowUrl(
+    private void appendShowUrl(
             @NonNull Incident incident, @NonNull ShowUrl fix, @NonNull StringBuilder diffs) {
         String targetPath = incident.getDisplayPath();
         diffs.append("Show URL for ")

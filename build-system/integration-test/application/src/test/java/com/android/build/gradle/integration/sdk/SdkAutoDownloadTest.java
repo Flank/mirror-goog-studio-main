@@ -132,7 +132,6 @@ public class SdkAutoDownloadTest {
     private void installPlatforms() throws IOException {
         FileUtils.copyDirectoryToDirectory(
                 TestUtils.getSdk()
-                        .toPath()
                         .resolve(SdkConstants.FD_PLATFORMS)
                         .resolve("android-" + PLATFORM_VERSION)
                         .toFile(),
@@ -142,7 +141,6 @@ public class SdkAutoDownloadTest {
     private void installBuildTools() throws IOException {
         FileUtils.copyDirectoryToDirectory(
                 TestUtils.getSdk()
-                        .toPath()
                         .resolve(SdkConstants.FD_BUILD_TOOLS)
                         .resolve(BUILD_TOOLS_VERSION)
                         .toFile(),
@@ -151,15 +149,13 @@ public class SdkAutoDownloadTest {
 
     private void installPlatformTools() throws IOException {
         FileUtils.copyDirectoryToDirectory(
-                FileUtils.join(
-                        TestUtils.getSdk().toPath().toFile(), SdkConstants.FD_PLATFORM_TOOLS),
-                FileUtils.join(mSdkHome));
+                TestUtils.getSdk().resolve(SdkConstants.FD_PLATFORM_TOOLS).toFile(), mSdkHome);
     }
 
     private void installNdk() throws IOException {
         FileUtils.copyDirectoryToDirectory(
                 FileUtils.join(
-                        TestUtils.getSdk().toPath().toFile(),
+                        TestUtils.getSdk().toFile(),
                         SdkConstants.FD_NDK_SIDE_BY_SIDE,
                         ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
                 FileUtils.join(mSdkHome, SdkConstants.FD_NDK_SIDE_BY_SIDE));
@@ -489,7 +485,7 @@ public class SdkAutoDownloadTest {
                         + BUILD_TOOLS_VERSION
                         + "\""
                         + System.lineSeparator()
-                        + "dependencies { compile 'foo:bar:baz' }");
+                        + "dependencies { api 'foo:bar:baz' }");
 
         GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
         assertNotNull(result.getException());

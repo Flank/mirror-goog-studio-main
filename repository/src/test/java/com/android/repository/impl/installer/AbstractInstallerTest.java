@@ -33,7 +33,8 @@ import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.Test;
 
 /**
@@ -95,7 +96,7 @@ public class AbstractInstallerTest {
         TestInstaller installer = new TestInstaller(remote, mgr, downloader, fop);
         // Install will still work, but in a different directory
         assertTrue(installer.prepare(progress));
-        assertEquals(new File("/sdk/foo-2").getAbsoluteFile(), installer.getLocation(progress));
+        assertEquals(fop.toPath("/sdk/foo-2"), installer.getLocation(progress));
     }
 
     @Test
@@ -128,7 +129,7 @@ public class AbstractInstallerTest {
         assertTrue(
                 progress.getWarnings().stream()
                         .anyMatch(warning -> warning.contains("(foo;notbar)")));
-        assertEquals(new File("/sdk/foo/bar-2").getAbsoluteFile(), installer.getLocation(progress));
+        assertEquals(fop.toPath("/sdk/foo/bar-2"), installer.getLocation(progress));
     }
 
     @Test
@@ -172,13 +173,16 @@ public class AbstractInstallerTest {
         remote.setCompleteUrl("http://www.example.com/package.zip");
         FakeDownloader downloader = new FakeDownloader(fop);
         // Consume temp dir 1
-        AbstractPackageOperation.getNewPackageOperationTempDir(mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
+        AbstractPackageOperation.getNewPackageOperationTempDir(
+                mgr, AbstractPackageOperation.TEMP_DIR_PREFIX);
         // prepare() will create an keep a reference to temp dir 2
         new TestInstaller(remote, mgr, downloader, fop).prepare(new FakeProgressIndicator(true));
-        File tempDir;
+        Path tempDir;
         // Create the remaining temp dirs
         do {
-            tempDir = AbstractPackageOperation.getNewPackageOperationTempDir(mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, fop);
+            tempDir =
+                    AbstractPackageOperation.getNewPackageOperationTempDir(
+                            mgr, AbstractPackageOperation.TEMP_DIR_PREFIX);
         } while (tempDir != null);
         FakeRemotePackage remote2 = new FakeRemotePackage("foo;baz");
         TestInstaller installer = new TestInstaller(remote2, mgr, downloader, fop);
@@ -187,11 +191,11 @@ public class AbstractInstallerTest {
         // This will cause the newly created temp dir to be deleted.
         installer.complete(new FakeProgressIndicator(true));
         for (int i = 1; i < AbstractPackageOperation.MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
-            File dir =
+            Path dir =
                     AbstractPackageOperation.getPackageOperationTempDir(
-                            mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, i, fop);
+                            mgr, AbstractPackageOperation.TEMP_DIR_PREFIX, i);
             // Only temp dir 2 should remain, since it's still referenced by the incomplete install.
-            assertEquals(fop.exists(dir), i == 2);
+            assertEquals(i == 2, Files.exists(dir));
         }
     }
 
@@ -220,14 +224,14 @@ public class AbstractInstallerTest {
         }
 
         @Override
-        protected boolean doComplete(@Nullable File installTemp,
-                @NonNull ProgressIndicator progress) {
+        protected boolean doComplete(
+                @Nullable Path installTemp, @NonNull ProgressIndicator progress) {
             return true;
         }
 
         @Override
-        protected boolean doPrepare(@NonNull File installTempPath,
-                @NonNull ProgressIndicator progress) {
+        protected boolean doPrepare(
+                @NonNull Path installTempPath, @NonNull ProgressIndicator progress) {
             return true;
         }
     }

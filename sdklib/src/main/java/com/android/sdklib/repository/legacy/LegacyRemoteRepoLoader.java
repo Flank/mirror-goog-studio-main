@@ -35,7 +35,6 @@ import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.RemotePackageImpl;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.LayoutlibVersion;
 import com.android.sdklib.OptionalLibrary;
@@ -53,7 +52,6 @@ import com.android.sdklib.repository.targets.OptionalLibraryImpl;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -294,13 +292,10 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
 
         @NonNull
         @Override
-        public File getInstallDir(
-                @NonNull RepoManager manager,
-                @NonNull ProgressIndicator progress,
-                @NonNull FileOp fop) {
+        public Path getInstallDir(
+                @NonNull RepoManager manager, @NonNull ProgressIndicator progress) {
             Path path = manager.getLocalPath();
-            File localPath = path == null ? null : fop.toFile(path);
-            return mWrapped.getPkgDesc().getCanonicalInstallFolder(localPath);
+            return mWrapped.getPkgDesc().getCanonicalInstallFolder(path);
         }
 
         @Override

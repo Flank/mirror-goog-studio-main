@@ -18,14 +18,10 @@ package com.android.repository.testframework;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.repository.io.impl.FileOpImpl;
+import com.android.testutils.InMemoryFileSystemUtilsKt;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,9 +30,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Mock version of {@link FileOpImpl} that wraps some common {@link File} operations on files and
@@ -49,27 +42,15 @@ import java.util.List;
  * rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3". When processing {@link File},
  * you can convert them using {@link #getPlatformSpecificPath(File)}.
  *
- * @deprecated Use {@link com.google.common.jimfs.Jimfs} and {@code
- *     com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs}/{@link InMemoryFileSystemUtilsKt} and
+ *     {@code com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
 @Deprecated
 public class MockFileOp extends FileOp {
     private FileSystem mFileSystem;
 
     public MockFileOp() {
-        mIsWindows = FileOpUtils.create().isWindows();
-        mFileSystem = createFileSystem();
-    }
-
-    private FileSystem createFileSystem() {
-        Configuration config = Configuration.forCurrentPlatform();
-        config =
-                config.toBuilder()
-                        .setRoots((new File("/")).getAbsolutePath())
-                        .setWorkingDirectory((new File("/")).getAbsolutePath())
-                        .setAttributeViews("posix")
-                        .build();
-        return Jimfs.newFileSystem(config);
+        mFileSystem = InMemoryFileSystemUtilsKt.createFileSystem();
     }
 
     @Override
@@ -79,7 +60,7 @@ public class MockFileOp extends FileOp {
 
     /** Resets the internal state, as if the object had been newly created. */
     public void reset() {
-        mFileSystem = createFileSystem();
+        mFileSystem = InMemoryFileSystemUtilsKt.createFileSystem();
     }
 
     @Override
@@ -89,18 +70,7 @@ public class MockFileOp extends FileOp {
 
     @Override
     public boolean canWrite(@NonNull File file) {
-        try {
-            return !Sets.intersection(
-                            Files.getPosixFilePermissions(toPath(file)),
-                            ImmutableSet.of(
-                                    PosixFilePermission.OTHERS_WRITE,
-                                    PosixFilePermission.GROUP_WRITE,
-                                    PosixFilePermission.OWNER_WRITE))
-                    .isEmpty();
-        }
-        catch (IOException e) {
-            return false;
-        }
+        return InMemoryFileSystemUtilsKt.canWrite(toPath(file));
     }
 
     @NonNull
@@ -110,13 +80,7 @@ public class MockFileOp extends FileOp {
 
     @NonNull
     public String getPlatformSpecificPath(@NonNull String path) {
-        if (mIsWindows && (path.startsWith("/") || path.startsWith("\\"))) {
-            return (new File(path)).getAbsolutePath()
-                    + (path.length() > 1 && ((path.endsWith("/") || path.endsWith("\\")))
-                            ? File.separator
-                            : "");
-        }
-        return path;
+        return InMemoryFileSystemUtilsKt.getPlatformSpecificPath(path);
     }
 
     /**
@@ -242,20 +206,7 @@ public class MockFileOp extends FileOp {
      */
     @NonNull
     public String[] getExistingFiles() {
-        List<String> result = new ArrayList<>();
-        mFileSystem
-                .getRootDirectories()
-                .forEach(
-                        path -> {
-                            try {
-                                Files.find(path, 100, (p, a) -> true)
-                                        .filter(Files::isRegularFile)
-                                        .forEach(p -> result.add(p.toString()));
-                            } catch (IOException e) {
-                                assert false : e.getMessage();
-                            }
-                        });
-        return result.toArray(new String[0]);
+        return InMemoryFileSystemUtilsKt.getExistingFiles(mFileSystem);
     }
 
     /**
@@ -266,20 +217,7 @@ public class MockFileOp extends FileOp {
      */
     @NonNull
     public String[] getExistingFolders() {
-        List<String> result = new ArrayList<>();
-        mFileSystem
-                .getRootDirectories()
-                .forEach(
-                        path -> {
-                            try {
-                                Files.find(path, 100, (p, a) -> true)
-                                        .filter(Files::isDirectory)
-                                        .forEach(p -> result.add(p.toString()));
-                            } catch (IOException e) {
-                                assert false : e.getMessage();
-                            }
-                        });
-        return result.toArray(new String[0]);
+        return InMemoryFileSystemUtilsKt.getExistingFolders(mFileSystem);
     }
 
     @Override

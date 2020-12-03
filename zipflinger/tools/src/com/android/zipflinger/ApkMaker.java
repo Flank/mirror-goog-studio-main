@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import static com.android.zipflinger.Profiler.DEX_SIZE;
@@ -21,9 +20,10 @@ import static com.android.zipflinger.Profiler.NUM_DEX;
 import static com.android.zipflinger.Profiler.NUM_RES;
 import static com.android.zipflinger.Profiler.RES_SIZE;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Random;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -34,7 +34,7 @@ public class ApkMaker {
     public static void createWithDescriptors(
             long numRes, int resSize, int numDex, int dexSize, String path) throws IOException {
         Random r = new Random(1);
-        try (FileOutputStream f = new FileOutputStream(new File(path));
+        try (OutputStream f = Files.newOutputStream(Paths.get(path));
                 ZipOutputStream s = new ZipOutputStream(f)) {
             byte[] resourceBytes = new byte[resSize];
             for (int i = 0; i < numRes; i++) {

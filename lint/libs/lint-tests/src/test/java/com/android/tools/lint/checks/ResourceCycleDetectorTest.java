@@ -192,7 +192,11 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <color name=\"test1\">@color/test2</color>\n"
                         + "                        ^\n"
                         + "    res/values/colorcycle4.xml:2: Reference from @color/test3 to color/test1 here\n"
+                        + "    <color name=\"test3\">@color/test1</color>\n"
+                        + "                        ^\n"
                         + "    res/values/colorcycle3.xml:2: Reference from @color/test2 to color/test3 here\n"
+                        + "    <color name=\"test2\">@color/test3</color>\n"
+                        + "                        ^\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         colorcycle2,
@@ -220,6 +224,8 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <color name=\"test1\">@color/test2</color>\n"
                         + "                        ^\n"
                         + "    res/values/colorcycle5.xml:3: Reference from @color/test2 to color/test1 here\n"
+                        + "    <color name=\"test2\">@color/test1</color>\n"
+                        + "                        ^\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -240,6 +246,8 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <style name=\"ButtonStyle\" parent=\"ButtonStyle.Base\">\n"
                         + "                              ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/stylecycle1.xml:3: Reference from @style/ButtonStyle.Base to style/ButtonStyle here\n"
+                        + "    <style name=\"ButtonStyle.Base\">\n"
+                        + "           ~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -265,7 +273,11 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <style name=\"mystyle1\" parent=\"@style/mystyle2\">\n"
                         + "                           ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/stylecycle2.xml:9: Reference from @style/mystyle3 to style/mystyle1 here\n"
+                        + "    <style name=\"mystyle3\" parent=\"@style/mystyle1\">\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/stylecycle2.xml:6: Reference from @style/mystyle2 to style/mystyle3 here\n"
+                        + "    <style name=\"mystyle2\" parent=\"@style/mystyle3\">\n"
+                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -325,7 +337,11 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "        layout=\"@layout/layout2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout/layout4.xml:16: Reference from @layout/layout4 to layout/layout1 here\n"
+                        + "        layout=\"@layout/layout1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/layout/layout2.xml:16: Reference from @layout/layout2 to layout/layout4 here\n"
+                        + "        layout=\"@layout/layout3\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         layout1,
@@ -363,16 +379,26 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <item name=\"layout10\" type=\"layout\">@layout/layout20</item>\n"
                         + "                                        ^\n"
                         + "    res/values/aliases.xml:4: Reference from @layout/layout30 to layout/layout10 here\n"
+                        + "    <item name=\"layout30\" type=\"layout\">@layout/layout10</item>\n"
+                        + "                                        ^\n"
                         + "    res/values/aliases.xml:3: Reference from @layout/layout20 to layout/layout30 here\n"
+                        + "    <item name=\"layout20\" type=\"layout\">@layout/layout30</item>\n"
+                        + "                                        ^\n"
                         + "res/values/colorcycle2.xml:2: Error: Color Resource definition cycle: test1 => test2 => test1 [ResourceCycle]\n"
                         + "    <color name=\"test1\">@color/test2</color>\n"
                         + "                        ^\n"
                         + "    res/values/aliases.xml:5: Reference from @color/test2 to color/test1 here\n"
+                        + "    <item name=\"test2\" type=\"color\">@color/test1</item>\n"
+                        + "                                    ^\n"
                         + "res/layout/layout1.xml:10: Error: Layout Resource definition cycle: layout1 => layout2 => layout4 => layout1 [ResourceCycle]\n"
                         + "        layout=\"@layout/layout2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/values/aliases.xml:6: Reference from @layout/layout4 to layout/layout1 here\n"
+                        + "    <item name=\"layout4\" type=\"layout\">@layout/layout1</item>\n"
+                        + "                                       ^\n"
                         + "    res/layout/layout2.xml:16: Reference from @layout/layout2 to layout/layout4 here\n"
+                        + "        layout=\"@layout/layout3\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "3 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -401,6 +427,8 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <item name=\"bright_foreground_dark\" type=\"color\">@color/color1</item>\n"
                         + "                                                     ^\n"
                         + "    res/color/color1.xml:3: Reference from @color/color1 to color/bright_foreground_dark here\n"
+                        + "    <item android:state_enabled=\"false\" android:color=\"@color/bright_foreground_dark_disabled\"/>\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -423,7 +451,11 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <item android:state_window_focused=\"false\" android:state_enabled=\"true\"\n"
                         + "    ^\n"
                         + "    res/values/aliases2.xml:4: Reference from @drawable/drawable2 to drawable/drawable1 here\n"
+                        + "    <item name=\"drawable2\" type=\"drawable\">@drawable/drawable1</item>\n"
+                        + "                                           ^\n"
                         + "    res/values/aliases2.xml:3: Reference from @drawable/textfield_search_pressed to drawable/drawable2 here\n"
+                        + "    <item name=\"textfield_search_pressed\" type=\"drawable\">@drawable/drawable2</item>\n"
+                        + "                                                          ^\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -456,6 +488,8 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "        android:font=\"@font/font2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/font/font2.xml:6: Reference from @font/font2 to font/font1 here\n"
+                        + "        android:font=\"@font/font1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -491,7 +525,11 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "        android:font=\"@font/font2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/font/font3.xml:6: Reference from @font/font3 to font/font1 here\n"
+                        + "        android:font=\"@font/font1\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    res/font/font2.xml:6: Reference from @font/font2 to font/font3 here\n"
+                        + "        android:font=\"@font/font3\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
         lint().files(
                         xml(
@@ -619,12 +657,20 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                         + "    <string name=\"string3\">@string/string4</string> <!-- ERROR: cycle 3-4-5-3 -->\n"
                         + "                           ^\n"
                         + "    res/values/aliases3.xml:6: Reference from @string/string5 to string/string3 here\n"
+                        + "    <string name=\"string5\">@string/string3</string>\n"
+                        + "                           ^\n"
                         + "    res/values/aliases3.xml:5: Reference from @string/string4 to string/string5 here\n"
+                        + "    <string name=\"string4\">@string/string5</string>\n"
+                        + "                           ^\n"
                         + "res/values/aliases3.xml:8: Error: Dimension Resource definition cycle: dimen1 => dimen2 => dimen3 => dimen1 [ResourceCycle]\n"
                         + "    <dimen name=\"dimen1\">@dimen/dimen2</dimen> <!-- ERROR: Cycle 1-2-3-1 -->\n"
                         + "                         ^\n"
                         + "    res/values/aliases3.xml:10: Reference from @dimen/dimen3 to dimen/dimen1 here\n"
+                        + "    <dimen name=\"dimen3\">@dimen/dimen1</dimen>\n"
+                        + "                         ^\n"
                         + "    res/values/aliases3.xml:9: Reference from @dimen/dimen2 to dimen/dimen3 here\n"
+                        + "    <item name=\"dimen2\" type=\"dimen\">@dimen/dimen3</item>\n"
+                        + "                                     ^\n"
                         + "3 errors, 0 warnings";
         lint().files(
                         xml(

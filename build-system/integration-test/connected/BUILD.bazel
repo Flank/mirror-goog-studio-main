@@ -100,16 +100,25 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
-    name = "BasicConnectedTest",
-    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
-    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
+    name = "ApplibtestConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/applibtest"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
 
 gradle_connected_test(
-    name = "BasicConnectedTest2",
+    name = "AttrOrderConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/attrOrder"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "BasicConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/basic"],
     flaky = True,  # b/148626301 flaky emulator connectivity
@@ -167,6 +176,24 @@ gradle_connected_test(
     name = "FlavoredConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavored"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "FlavoredlibConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavoredlib"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "FlavorlibConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/flavorlib"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
@@ -252,9 +279,36 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "Overlay2ConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/overlay2"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "Overlay3ConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/overlay3"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "ParentLibsConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/parentLibsTest"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "ShardingConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/appWithTests"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,

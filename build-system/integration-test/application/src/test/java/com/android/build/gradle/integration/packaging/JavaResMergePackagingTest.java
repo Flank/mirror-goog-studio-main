@@ -57,9 +57,9 @@ public class JavaResMergePackagingTest {
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),
                 "dependencies{\n"
-                        + "    compile project (':lib1')\n"
-                        + "    compile project (':lib2')\n"
-                        + "    compile 'org.bouncycastle:bcprov-jdk16:1.46'\n"
+                        + "    api project (':lib1')\n"
+                        + "    api project (':lib2')\n"
+                        + "    api 'org.bouncycastle:bcprov-jdk16:1.46'\n"
                         + "}\n");
 
         FileUtils.createFile(appProject.file("src/main/resources/" + META_INF_SERVICES), APP_IMPL);

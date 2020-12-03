@@ -67,7 +67,9 @@ class GoldenFile(
     }
 
     @JvmOverloads
-    fun update(print: (String) -> Unit = { kotlin.io.print(it) }, getWorkspaceRoot: () -> Path = {TestUtils.getWorkspaceRoot().toPath()}) {
+    fun update(
+            print: (String) -> Unit = { kotlin.io.print(it) },
+            getWorkspaceRoot: () -> Path = { TestUtils.getWorkspaceRoot() }) {
         getState().apply {
             if (expected == actual) {
                 print("No diff to apply to $resourceRootWorkspacePath/$resourcePath")

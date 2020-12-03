@@ -30,6 +30,7 @@ import com.android.tools.lint.checks.SecureRandomGeneratorDetector
 import com.android.tools.lint.checks.TooManyViewsDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Context
@@ -939,40 +940,40 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             gradle("")
         ).run().expect(
             """
-            lint.xml:2: Warning: lintJar can only be specified for lint.xml files at the module level or higher [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:2: Warning: lintJar can only be specified for lint.xml files at the module level or higher [LintWarning]
             <lint lintJars='notallowed.jar'>
             ^
-            lint.xml:3: Warning: Failed parsing lint.xml: name expected [LintWarning]
+            src/main/kotlin/test/lint.xml:3: Warning: Failed parsing lint.xml: name expected [LintWarning]
                 <issue id="SdCardPath" severity="ignore" />
                 ^
-            lint.xml:4: Warning: Missing required issue id attribute [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:4: Warning: Missing required issue id attribute [LintWarning]
                 <issue severity="error">
                 ^
-            lint.xml:5: Warning: Missing required attribute path or regexp [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:5: Warning: Missing required attribute path or regexp [LintWarning]
                     <ignore enabled='false' />
                     ^
-            lint.xml:5: Warning: Unexpected attribute enabled, expected path or regexp [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:5: Warning: Unexpected attribute enabled, expected path or regexp [LintWarning]
                     <ignore enabled='false' />
                     ^
-            lint.xml:6: Warning: Unsupported tag <unsupported>, expected one of lint, issue, ignore or option [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:6: Warning: Unsupported tag <unsupported>, expected one of lint, issue, ignore or option [LintWarning]
                     <unsupported />
                     ^
-            lint.xml:7: Warning: Must specify both name and value in <option> [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:7: Warning: Must specify both name and value in <option> [LintWarning]
                     <option name="only_name" desc="desc" />
                     ^
-            lint.xml:7: Warning: Unexpected attribute desc, expected name or value [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:7: Warning: Unexpected attribute desc, expected name or value [LintWarning]
                     <option name="only_name" desc="desc" />
                     ^
-            lint.xml:10: Warning: Unknown severity warrning [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:10: Warning: Unknown severity warrning [LintWarning]
                 <issue id="SdCardPath" severity="warrning" />
                 ^
-            lint.xml:11: Warning: <ignore> tag should be nested within <issue> [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:11: Warning: <ignore> tag should be nested within <issue> [LintWarning]
                 <ignore />
                 ^
-            lint.xml:12: Warning: <option> tag should be nested within <issue> [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:12: Warning: <option> tag should be nested within <issue> [LintWarning]
                 <option />
                 ^
-            lint.xml:13: Warning: Unexpected attribute other, expected id, in or severity [LintWarning]
+            src/main/kotlin/test/pkg1/lint.xml:13: Warning: Unexpected attribute other, expected id, in or severity [LintWarning]
                 <issue id="NonexistentId" severity="fatal" other="other" />
                 ^
             src/main/kotlin/test/pkg1/subpkg1/MyTest.kt:4: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
@@ -1191,6 +1192,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
                     check(driver, project, configuration)
                 }
             })
+            .testModes(TestMode.DEFAULT)
             .run()
             .expect(expected)
     }

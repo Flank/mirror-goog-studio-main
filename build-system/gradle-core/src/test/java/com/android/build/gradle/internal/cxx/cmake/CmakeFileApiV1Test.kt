@@ -31,7 +31,7 @@ class CmakeFileApiV1Test {
     private val bazelFolderBase = "tools/base/build-system/gradle-core/src/test/data/cmake-file-api-samples"
 
     private fun prepareReplyFolder(subFolder : String) : File {
-        val base = TestUtils.getWorkspaceFile(bazelFolderBase)
+        val base = TestUtils.resolveWorkspacePath(bazelFolderBase).toFile()
 
         val result = base.resolve(subFolder)
         if (!result.isDirectory) {

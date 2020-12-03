@@ -186,7 +186,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                             return new ShardedTestRunner(
                                     getSplitSelectExec().getOrNull(),
                                     gradleProcessExecutor,
-                                    getNumShards().get(),
+                                    getNumShards().getOrNull(),
                                     executorServiceAdapter);
                         } else {
 

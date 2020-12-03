@@ -348,6 +348,8 @@ class SliceDetectorTest : AbstractCheckTest() {
                     rowBuilder.addEndItem(sliceAction2)
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/SliceTest.kt:24: Earlier icon here
+                    rowBuilder.addEndItem(icon, 0)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/SliceTest.kt:37: Warning: A slice should have a primary action set on one of its rows [Slices]
                     val listBuilder = ListBuilder(context, uri, ttl)
                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -355,6 +357,8 @@ class SliceDetectorTest : AbstractCheckTest() {
                     rowBuilder.addEndItem(defaultToggle)
                                           ~~~~~~~~~~~~~
                 src/test/pkg/SliceTest.kt:66: Conflicting action type here
+                    rowBuilder.addEndItem(customToggle)
+                                          ~~~~~~~~~~~~
             0 errors, 3 warnings
             """
         )
@@ -403,6 +407,8 @@ class SliceDetectorTest : AbstractCheckTest() {
                     rb.addEndItem(timestamp2);
                     ~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/SliceTest.java:24: Earlier timestamp here
+                    rb.setTitleItem(timeStamp);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         )
@@ -478,10 +484,14 @@ class SliceDetectorTest : AbstractCheckTest() {
                     rb.addEndItem(sliceAction2);
                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/SliceTest.java:29: Earlier icon here
+                    rb.addEndItem(icon, 0);
+                    ~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/SliceTest.java:44: Warning: RowBuilder cannot have a mixture of icons and slice actions added to the end items [Slices]
                     rb2.addEndItem(icon, 0);
                     ~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/SliceTest.java:41: Earlier slice action here
+                    rb2.addEndItem(sliceAction2);
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 2 warnings
             """
         )
@@ -545,6 +555,8 @@ class SliceDetectorTest : AbstractCheckTest() {
                     rb.addEndItem(defaultToggle);
                                   ~~~~~~~~~~~~~
                 src/test/pkg/SliceTest.java:43: Conflicting action type here
+                    rb.addEndItem(customToggle);
+                                  ~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         )
@@ -865,6 +877,8 @@ class SliceDetectorTest : AbstractCheckTest() {
                         <intent-filter>
                         ^
                 src/test/pkg/MyProvider.java:4: SliceProvider declaration
+            public class MyProvider extends DefaultSliceProvider {
+                         ~~~~~~~~~~
             0 errors, 1 warnings
             """
         )
@@ -903,7 +917,9 @@ class SliceDetectorTest : AbstractCheckTest() {
             src/test/pkg/MyProvider.java:4: Warning: Implement SliceProvider#onMapIntentToUri to handle the intents defined on your slice <provider> in your manifest [Slices]
             public class MyProvider extends DefaultSliceProvider {
                          ~~~~~~~~~~
-                AndroidManifest.xml:8: <No location-specific message
+                AndroidManifest.xml:8: <No location-specific message>
+                            <category android:name="android.app.slice.category.SLICE" />
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
             """
         )

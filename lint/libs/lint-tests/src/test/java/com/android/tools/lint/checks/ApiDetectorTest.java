@@ -28,6 +28,7 @@ import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -3503,16 +3504,24 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "3 errors, 0 warnings\n";
         lint().files(manifest().minSdk(4), mPadding_start)
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                .clientFactory(
+                        new TestLintTask.ClientFactory() {
                             @NonNull
                             @Override
-                            protected Project createProject(
-                                    @NonNull File dir, @NonNull File referenceDir) {
-                                Project fromSuper = super.createProject(dir, referenceDir);
-                                Project spy = spy(fromSuper);
-                                when(spy.getBuildToolsRevision()).thenReturn(null);
-                                return spy;
+                            public com.android.tools.lint.checks.infrastructure.TestLintClient
+                                    create() {
+                                return new com.android.tools.lint.checks.infrastructure
+                                        .TestLintClient() {
+                                    @NonNull
+                                    @Override
+                                    protected Project createProject(
+                                            @NonNull File dir, @NonNull File referenceDir) {
+                                        Project fromSuper = super.createProject(dir, referenceDir);
+                                        Project spy = spy(fromSuper);
+                                        when(spy.getBuildToolsRevision()).thenReturn(null);
+                                        return spy;
+                                    }
+                                };
                             }
                         })
                 .checkMessage(this::checkReportedError)
@@ -3541,17 +3550,25 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "3 errors, 0 warnings\n";
         lint().files(manifest().minSdk(4), mPadding_start)
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                .clientFactory(
+                        new TestLintTask.ClientFactory() {
                             @NonNull
                             @Override
-                            protected Project createProject(
-                                    @NonNull File dir, @NonNull File referenceDir) {
-                                Revision revision = new Revision(22, 2, 1);
-                                Project fromSuper = super.createProject(dir, referenceDir);
-                                Project spy = spy(fromSuper);
-                                when(spy.getBuildToolsRevision()).thenReturn(revision);
-                                return spy;
+                            public com.android.tools.lint.checks.infrastructure.TestLintClient
+                                    create() {
+                                return new com.android.tools.lint.checks.infrastructure
+                                        .TestLintClient() {
+                                    @NonNull
+                                    @Override
+                                    protected Project createProject(
+                                            @NonNull File dir, @NonNull File referenceDir) {
+                                        Revision revision = new Revision(22, 2, 1);
+                                        Project fromSuper = super.createProject(dir, referenceDir);
+                                        Project spy = spy(fromSuper);
+                                        when(spy.getBuildToolsRevision()).thenReturn(revision);
+                                        return spy;
+                                    }
+                                };
                             }
                         })
                 .checkMessage(this::checkReportedError)
@@ -3561,17 +3578,25 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testPaddingStartWithNewBuildTools() {
         lint().files(manifest().minSdk(4), mPadding_start)
-                .client(
-                        new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                .clientFactory(
+                        new TestLintTask.ClientFactory() {
                             @NonNull
                             @Override
-                            protected Project createProject(
-                                    @NonNull File dir, @NonNull File referenceDir) {
-                                Revision revision = new Revision(23, 0, 2);
-                                Project fromSuper = super.createProject(dir, referenceDir);
-                                Project spy = spy(fromSuper);
-                                when(spy.getBuildToolsRevision()).thenReturn(revision);
-                                return spy;
+                            public com.android.tools.lint.checks.infrastructure.TestLintClient
+                                    create() {
+                                return new com.android.tools.lint.checks.infrastructure
+                                        .TestLintClient() {
+                                    @NonNull
+                                    @Override
+                                    protected Project createProject(
+                                            @NonNull File dir, @NonNull File referenceDir) {
+                                        Revision revision = new Revision(23, 0, 2);
+                                        Project fromSuper = super.createProject(dir, referenceDir);
+                                        Project spy = spy(fromSuper);
+                                        when(spy.getBuildToolsRevision()).thenReturn(revision);
+                                        return spy;
+                                    }
+                                };
                             }
                         })
                 .checkMessage(this::checkReportedError)
@@ -3695,7 +3720,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // 97006: Gradle lint does not recognize Context.getDrawable() as API 21+
         String expected =
                 ""
-                        + "src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.content.Context#getDrawable [NewApi]\n"
+                        + "app/src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.content.Context#getDrawable [NewApi]\n"
                         + "        getActivity().getDrawable(R.color.my_color);\n"
                         + "                      ~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";

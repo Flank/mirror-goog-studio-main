@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class ZipMap {
     // if zip entries are deleted/added.
     private final boolean accountDataDescriptors;
 
-    private File file;
+    private final Path zipFile;
     private long fileSize;
 
     private Location payloadLocation;
@@ -45,25 +46,32 @@ public class ZipMap {
             "The provided zip (%s) is invalid. Entry '%s' name field is %d bytes"
                     + " in the Central Directory but %d in the Local File Header";
 
-    private ZipMap(@NonNull File file, boolean accountDataDescriptors) {
-        this.file = file;
+    private ZipMap(@NonNull Path zipFile, boolean accountDataDescriptors) {
+        this.zipFile = zipFile;
         this.accountDataDescriptors = accountDataDescriptors;
     }
 
     @NonNull
-    public static ZipMap from(@NonNull File zipFile) throws IOException {
+    public static ZipMap from(@NonNull Path zipFile) throws IOException {
         return from(zipFile, false);
     }
 
+    /** @deprecated Use {@link #from(Path)} instead. */
+    @Deprecated
     @NonNull
-    public static ZipMap from(@NonNull File zipFile, boolean accountDataDescriptors)
+    public static ZipMap from(@NonNull File zipFile) throws IOException {
+        return from(zipFile.toPath(), false);
+    }
+
+    @NonNull
+    public static ZipMap from(@NonNull Path zipFile, boolean accountDataDescriptors)
             throws IOException {
         return from(zipFile, accountDataDescriptors, Zip64.Policy.ALLOW);
     }
 
     @NonNull
     public static ZipMap from(
-            @NonNull File zipFile, boolean accountDataDescriptors, Zip64.Policy policy)
+            @NonNull Path zipFile, boolean accountDataDescriptors, Zip64.Policy policy)
             throws IOException {
         ZipMap map = new ZipMap(zipFile, accountDataDescriptors);
         map.parse(policy);
@@ -86,13 +94,13 @@ public class ZipMap {
     }
 
     private void parse(Zip64.Policy policy) throws IOException {
-        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
-
+        try (FileChannel channel = FileChannel.open(zipFile, StandardOpenOption.READ)) {
             fileSize = channel.size();
 
             EndOfCentralDirectory eocd = EndOfCentralDirectory.find(channel);
             if (!eocd.getLocation().isValid()) {
-                throw new IllegalStateException(String.format("Could not find EOCD in '%s'", file));
+                throw new IllegalStateException(
+                        String.format("Could not find EOCD in '%s'", zipFile));
             }
             eocdLocation = eocd.getLocation();
             cdLocation = eocd.getCdLocation();
@@ -101,19 +109,21 @@ public class ZipMap {
             Zip64Locator locator = Zip64Locator.find(channel, eocd);
             if (locator.getLocation().isValid()) {
                 if (policy == Zip64.Policy.FORBID) {
-                    String message = String.format("Cannot parse forbidden zip64 archive %s", file);
+                    String message =
+                            String.format("Cannot parse forbidden zip64 archive %s", zipFile);
                     throw new IllegalStateException(message);
                 }
                 Zip64Eocd zip64EOCD = Zip64Eocd.parse(channel, locator.getOffsetToEOCD64());
                 cdLocation = zip64EOCD.getCdLocation();
                 if (!cdLocation.isValid()) {
-                    String message = String.format("Zip64Locator led to bad EOCD64 in %s", file);
+                    String message = String.format("Zip64Locator led to bad EOCD64 in %s", zipFile);
                     throw new IllegalStateException(message);
                 }
             }
 
             if (!cdLocation.isValid()) {
-                throw new IllegalStateException(String.format("Could not find CD in '%s'", file));
+                throw new IllegalStateException(
+                        String.format("Could not find CD in '%s'", zipFile));
             }
 
             parseCentralDirectory(channel, cdLocation, policy);
@@ -255,7 +265,7 @@ public class ZipMap {
         int localPathLength = Ints.ushortToInt(localFieldBuffer.getShort());
         int localExtraLength = Ints.ushortToInt(localFieldBuffer.getShort());
         if (pathLength != localPathLength) {
-            String path = file.getAbsolutePath();
+            String path = this.zipFile.toAbsolutePath().toString();
             String entryName = entry.getName();
             String msg = LFH_LENGTH_ERROR;
             String message = String.format(msg, path, entryName, localPathLength, pathLength);
@@ -380,7 +390,15 @@ public class ZipMap {
         entry.setLocation(adjustedLocation);
     }
 
+    @NonNull
+    public Path getPath() {
+        return zipFile;
+    }
+
+    /** @deprecated Use {@link #getPath()} instead. */
+    @Deprecated
+    @NonNull
     public File getFile() {
-        return file;
+        return zipFile.toFile();
     }
 }

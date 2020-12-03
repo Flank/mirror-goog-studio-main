@@ -57,9 +57,9 @@ class MlModelBindingInLibTest {
     @Test
     fun testModelClassGenerated() {
         FileUtils.copyFile(
-            TestUtils.getWorkspaceFile(
+            TestUtils.resolveWorkspacePath(
                 "prebuilts/tools/common/mlkit/testData/models/mobilenet_quant_metadata.tflite"
-            ),
+            ).toFile(),
             project.file("src/main/ml/model.tflite")
         )
 

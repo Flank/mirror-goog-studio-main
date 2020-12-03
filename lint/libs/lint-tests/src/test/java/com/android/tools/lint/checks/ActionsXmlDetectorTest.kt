@@ -494,6 +494,8 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
                     <parameter name="name1" type="mytype" />
                                ~~~~~~~~~~~~
                 res/xml/actions.xml:3: <No location-specific message>
+                    <parameter name="name1" type="mytype" />
+                               ~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )
@@ -574,7 +576,9 @@ class ActionsXmlDetectorTest : AbstractCheckTest() {
             res/xml/actions.xml:11: Error: <fulfillment> contains two <parameter-mapping> elements with the same intentParameter, destination.longitude [ValidActionsXml]
                             intentParameter="destination.longitude"
                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/xml/actions.xml:5: <No location-specific message
+                res/xml/actions.xml:5: <No location-specific message>
+                            intentParameter="destination.longitude"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             1 errors, 0 warnings
             """
         )

@@ -170,7 +170,7 @@ class SarifReporterTest {
                             },
                             "originalUriBaseIds": {
                                 "%SRCROOT%": {
-                                    "uri": "file://TESTROOT/project0/"
+                                    "uri": "file://TESTROOT/app/"
                                 }
                             },
                             "results": [
@@ -462,7 +462,7 @@ class SarifReporterTest {
                         },
                         "originalUriBaseIds": {
                             "%SRCROOT%": {
-                                "uri": "file://TESTROOT/project0/"
+                                "uri": "file://TESTROOT/app/"
                             }
                         },
                         "results": [
@@ -695,7 +695,7 @@ class SarifReporterTest {
                         },
                         "originalUriBaseIds": {
                             "%SRCROOT%": {
-                                "uri": "file://TESTROOT/project0/"
+                                "uri": "file://TESTROOT/app/"
                             }
                         },
                         "results": [
@@ -787,6 +787,6 @@ class SarifReporterTest {
     }
 
     private fun lint(): TestLintTask {
-        return TestLintTask.lint().sdkHome(TestUtils.getSdk())
+        return TestLintTask.lint().sdkHome(TestUtils.getSdk().toFile())
     }
 }

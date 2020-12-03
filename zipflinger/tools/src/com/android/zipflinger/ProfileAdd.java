@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.zipflinger;
 
 import static com.android.zipflinger.Profiler.DEX_SIZE;
@@ -25,7 +24,6 @@ import static com.android.zipflinger.Profiler.displayParameters;
 import static com.android.zipflinger.Profiler.prettyPrint;
 
 import com.android.tools.tracer.Trace;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,11 +32,10 @@ import java.util.zip.Deflater;
 public class ProfileAdd {
 
     public static void main(String[] args) throws IOException {
-
         Path src = Files.createTempDirectory("tmp" + System.nanoTime());
-        src.toFile().mkdirs();
-        File zipFile = new File(src.toFile(), "profileAdd.zip");
-        zipFile.deleteOnExit();
+        Files.createDirectories(src);
+        Path zipFile = src.resolve("profileAdd.zip");
+        zipFile.toFile().deleteOnExit();
 
         // Fake 32 MiB aapt2 like zip archive.
         ApkMaker.createWithDescriptors(NUM_RES, RES_SIZE, NUM_DEX, DEX_SIZE, zipFile.toString());
@@ -60,8 +57,8 @@ public class ProfileAdd {
         prettyPrint("Edit time (ms)", (int) ((end - start) / 1_000_000L));
     }
 
-    private static void editArchive(int i, File File, byte[] data) throws IOException {
-        try (ZipArchive archive = new ZipArchive(File)) {
+    private static void editArchive(int i, Path file, byte[] data) throws IOException {
+        try (ZipArchive archive = new ZipArchive(file)) {
             String entry = String.format("classes%d.dex", i);
             archive.delete(entry);
             BytesSource s = new BytesSource(data, entry, Deflater.NO_COMPRESSION);

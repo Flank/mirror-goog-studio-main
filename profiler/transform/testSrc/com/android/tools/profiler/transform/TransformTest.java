@@ -35,8 +35,9 @@ public final class TransformTest {
         // Verify a class file of a CONSTANT_Module can be processed.
         // It's introduced in Java 9 (class file format 53.0).
         File input =
-                TestUtils.getWorkspaceFile(
-                        "tools/base/profiler/transform/testData/module-info.class");
+                TestUtils.resolveWorkspacePath(
+                                "tools/base/profiler/transform/testData/module-info.class")
+                        .toFile();
         File output = new File("output.class");
         ProfilerTransform transform = new ProfilerTransform();
         transform.accept(new FileInputStream(input), new FileOutputStream(output));

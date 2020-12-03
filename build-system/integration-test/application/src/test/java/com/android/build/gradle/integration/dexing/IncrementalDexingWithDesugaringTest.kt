@@ -338,19 +338,19 @@ class IncrementalDexingWithDesugaringTest(
                 }
                 ANDROID_LIB -> { classFullName ->
                     if (withIncrementalDexingTransform && withMinSdk24Plus) {
-                        findDexTransformDir(androidLib).resolve("debug/$classFullName.dex")
+                        findDexTransformDir(androidLib).resolve("transformed/debug/$classFullName.dex")
                     } else {
-                        findDexTransformDir(androidLib).resolve("classes/classes.dex")
+                        findDexTransformDir(androidLib).resolve("transformed/classes/classes.dex")
                     }
                 }
                 ANDROID_LIB_WITH_POST_JAVAC_CLASSES -> { _ ->
-                    findDexTransformDir(androidLib).resolve("classes/classes.dex")
+                    findDexTransformDir(androidLib).resolve("transformed/classes/classes.dex")
                 }
                 JAVA_LIB -> { classFullName ->
                     if (withIncrementalDexingTransform && withMinSdk24Plus) {
-                        findDexTransformDir(javaLib).resolve("main/$classFullName.dex")
+                        findDexTransformDir(javaLib).resolve("transformed/main/$classFullName.dex")
                     } else {
-                        findDexTransformDir(javaLib).resolve("jetified-javalib/classes.dex")
+                        findDexTransformDir(javaLib).resolve("transformed/jetified-javalib/classes.dex")
                     }
                 }
             }
@@ -367,7 +367,7 @@ class IncrementalDexingWithDesugaringTest(
      * `<project>/build/.transforms/<hash>` where `<hash>` is not known in advance.
      *
      * For example, if the given project contains
-     * `<project>/build/.transforms/16e674a220d3c8cee4f318266cc44626/classes/classes.dex`, this
+     * `<project>/build/.transforms/16e674a220d3c8cee4f318266cc44626/transformed/classes/classes.dex`, this
      * method returns `<project>/build/.transforms/16e674a220d3c8cee4f318266cc44626`.
      */
     private fun findDexTransformDir(project: GradleTestProject): File {

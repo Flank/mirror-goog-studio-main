@@ -76,7 +76,7 @@ public class DataSetTest {
 
         // Don't match on non-directory
         assertFalse(dataSet.isIgnored(new File("_test")));
-        File dir = new File(TestUtils.createTempDirDeletedOnExit(), "_test");
+        File dir = TestUtils.createTempDirDeletedOnExit().resolve("_test").toFile();
         assertTrue(dir.mkdirs());
         assertTrue(dataSet.isIgnored(dir));
     }

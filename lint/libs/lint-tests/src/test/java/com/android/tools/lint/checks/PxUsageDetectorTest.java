@@ -324,6 +324,8 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                         + "    <dimen name=\"bottom_bar_portrait_button_font_size\">16dp</dimen>\n"
                         + "                                                       ^\n"
                         + "    res/layout/textsize2.xml:9: Dimension used as a text size here\n"
+                        + "        android:textSize=\"@dimen/bottom_bar_portrait_button_font_size\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
         lint().files(dimens, textsize2).run().expect(expected);
     }

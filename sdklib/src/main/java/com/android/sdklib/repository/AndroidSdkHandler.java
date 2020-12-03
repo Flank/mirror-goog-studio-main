@@ -316,8 +316,8 @@ public final class AndroidSdkHandler {
     public SystemImageManager getSystemImageManager(@NonNull ProgressIndicator progress) {
         if (mSystemImageManager == null) {
             getSdkManager(progress);
-            mSystemImageManager = new SystemImageManager(mRepoManager,
-                    getSysImgModule().createLatestFactory(), mFop);
+            mSystemImageManager =
+                    new SystemImageManager(mRepoManager, getSysImgModule().createLatestFactory());
         }
         return mSystemImageManager;
     }
@@ -640,9 +640,8 @@ public final class AndroidSdkHandler {
         public static LocalSourceProvider createUserSourceProvider(
                 @NonNull FileOp fileOp, @NonNull Path androidFolder) {
             return new LocalSourceProvider(
-                    fileOp.toFile(androidFolder.resolve(LOCAL_ADDONS_FILENAME)),
-                    ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE),
-                    fileOp);
+                    androidFolder.resolve(LOCAL_ADDONS_FILENAME),
+                    ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE));
         }
 
         @NonNull
@@ -794,8 +793,7 @@ public final class AndroidSdkHandler {
             return null;
         }
 
-        BuildToolInfo latestBuildTool =
-                BuildToolInfo.fromLocalPackage(latestBuildToolPackage, mFop);
+        BuildToolInfo latestBuildTool = BuildToolInfo.fromLocalPackage(latestBuildToolPackage);
 
         // Don't cache if preview.
         if (!latestBuildToolPackage.getVersion().isPreview()) {
@@ -823,12 +821,14 @@ public final class AndroidSdkHandler {
         if (p == null) {
             return null;
         }
-        return BuildToolInfo.fromLocalPackage(p, mFop);
+        return BuildToolInfo.fromLocalPackage(p);
     }
 
     /**
      * Gets our {@link FileOp}. Useful so both the sdk handler and file op don't both have to be
      * injected everywhere.
+     *
+     * @deprecated
      */
     @NonNull
     public FileOp getFileOp() {
