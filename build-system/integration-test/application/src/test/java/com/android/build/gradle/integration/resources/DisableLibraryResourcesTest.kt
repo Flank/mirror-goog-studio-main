@@ -227,4 +227,12 @@ class DisableLibraryResourcesTest {
         assertThat(project.file("leafLib/build/reports/tests/testDebugUnitTest/classes/com.example.MyTest.html").readText())
             .contains("ExampleTest has some output")
     }
+
+    /** Regression test for b/173134919. */
+    @Test
+    fun testAndroidAndUnitTestsSync() {
+        project.model()
+                .with(BooleanOption.BUILD_FEATURE_ANDROID_RESOURCES, false)
+                .fetchAndroidProjects()
+    }
 }

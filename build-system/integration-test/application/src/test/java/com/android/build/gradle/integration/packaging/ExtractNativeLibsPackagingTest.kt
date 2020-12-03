@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.packaging
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject
@@ -84,7 +85,7 @@ class ExtractNativeLibsPackagingTest(
     }
 
     @get:Rule
-    val project = GradleTestProject.builder()
+    val app = GradleTestProject.builder()
         .fromTestApp(
             MinimalSubProject.app("com.test")
                 .withFile(
@@ -105,18 +106,78 @@ class ExtractNativeLibsPackagingTest(
                     """
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                             xmlns:dist="http://schemas.android.com/apk/distribution"
-                            package="com.test">
+                            package="com.example">
                             <application $extractNativeLibsAttribute/>
                         </manifest>
                         """.trimIndent()
                 )
-                .withFile("src/main/jniLibs/x86/dummy.so", "foo".repeat(100))
+                .withFile(
+                    "src/androidTest/AndroidManifest.xml",
+                    """
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:dist="http://schemas.android.com/apk/distribution"
+                            package="com.example">
+                            <application $extractNativeLibsAttribute/>
+                        </manifest>
+                        """.trimIndent()
+                )
+                .withFile("src/main/jniLibs/x86/fake.so", "foo".repeat(100))
+                .withFile("src/androidTest/jniLibs/x86/fake.so", "foo".repeat(100))
+        )
+        .create()
+
+    @get:Rule
+    val testModule = GradleTestProject.builder()
+        .fromTestApp(
+            MinimalSubProject.test("com.test")
+                .withFile(
+                    "build.gradle",
+                    """
+                        apply plugin: 'com.android.test'
+                        android {
+                            compileSdk = 30
+                            defaultConfig {
+                                minSdk = $minSdk
+                            }
+                        }
+                        $useLegacyPackagingString
+                        """.trimIndent()
+                )
+                .withFile(
+                    "src/main/AndroidManifest.xml",
+                    """
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:dist="http://schemas.android.com/apk/distribution"
+                            package="com.example">
+                            <application $extractNativeLibsAttribute/>
+                        </manifest>
+                        """.trimIndent()
+                )
+                .withFile("src/main/jniLibs/x86/fake.so", "foo".repeat(100))
         )
         .create()
 
     @Test
-    fun testNativeLibPackagedCorrectly() {
-        project.executor().run("assembleDebug").stdout.use {
+    fun testNativeLibPackagedCorrectly_app() {
+        checkNativeLibPackagedCorrectly(app, "assembleDebug", ApkType.DEBUG)
+    }
+
+    @Test
+    fun testNativeLibPackagedCorrectly_androidTest() {
+        checkNativeLibPackagedCorrectly(app, "assembleAndroidTest", ApkType.ANDROIDTEST_DEBUG)
+    }
+
+    @Test
+    fun testNativeLibPackagedCorrectly_testModule() {
+        checkNativeLibPackagedCorrectly(testModule, "assembleDebug", ApkType.DEBUG)
+    }
+
+    private fun checkNativeLibPackagedCorrectly(
+        project: GradleTestProject,
+        task: String,
+        apkType: ApkType
+    ) {
+        project.executor().run(task).stdout.use {
             val resolvedUseLegacyPackaging: Boolean = useLegacyPackaging ?: (minSdk < 23)
             when {
                 resolvedUseLegacyPackaging && expectedCompression == ZipEntry.STORED -> {
@@ -132,7 +193,7 @@ class ExtractNativeLibsPackagingTest(
                 else -> assertThat(it).doesNotContain("PackagingOptions.jniLibs.useLegacyPackaging")
             }
         }
-        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        val apk = project.getApk(apkType)
 
         // check merged manifest
         val mergedManifestContents = ApkSubject.getManifestContent(apk.file)
@@ -158,7 +219,7 @@ class ExtractNativeLibsPackagingTest(
 
         // check compression
         ZipFile(apk.file.toFile()).use {
-            val nativeLibEntry = it.getEntry("lib/x86/dummy.so")
+            val nativeLibEntry = it.getEntry("lib/x86/fake.so")
             assertThat(nativeLibEntry).isNotNull()
             assertThat(nativeLibEntry.method).isEqualTo(expectedCompression)
         }

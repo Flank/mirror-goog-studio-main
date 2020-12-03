@@ -270,4 +270,6 @@ abstract class CommonExtensionImpl<
     override fun useLibrary(name: String, required: Boolean) {
         libraryRequests.add(LibraryRequest(name, required))
     }
+
+    override var packageName: String? = null
 }

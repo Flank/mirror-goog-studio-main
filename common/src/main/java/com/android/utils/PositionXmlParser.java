@@ -17,6 +17,7 @@ package com.android.utils;
 
 import static com.android.SdkConstants.UTF_8;
 
+import com.android.ProgressManagerAdapter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
@@ -64,7 +65,7 @@ public class PositionXmlParser {
             Pattern.compile("encoding=['\"](\\S*)['\"]");
 
     /**
-     * Parses the XML content from the given input stream.
+     * Parses the XML content from the given input stream and closes the stream.
      *
      * @param input the input stream containing the XML to be parsed
      * @param namespaceAware whether the parser should be namespace aware
@@ -81,7 +82,7 @@ public class PositionXmlParser {
     }
 
     /**
-     * Parses the XML content from the given input stream.
+     * Parses the XML content from the given input stream and closes the stream.
      *
      * <p>If a non-recoverable parser error is encountered, parsing stops, an error message is
      * added to the {@code parseErrors} list, and the returned document contains the elements up
@@ -252,17 +253,25 @@ public class PositionXmlParser {
         parser.parse(createSource(xml), handler);
     }
 
+    /**
+     * Reads all bytes from the given stream and closes it.
+     *
+     * @param input the stream to read from
+     * @return the contents of the stream as a byte array
+     */
     private static byte[] readAllBytes(@NonNull InputStream input) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];
-        while (true) {
-            int r = input.read(buf);
-            if (r == -1) {
-                break;
+        try (InputStream stream = input) {
+            while (true) {
+                ProgressManagerAdapter.checkCanceled();
+                int r = stream.read(buf);
+                if (r == -1) {
+                    break;
+                }
+                out.write(buf, 0, r);
             }
-            out.write(buf, 0, r);
         }
-        input.close();
         return out.toByteArray();
     }
 

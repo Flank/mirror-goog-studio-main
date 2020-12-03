@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.plugins.runAfterEvaluate
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.services.getBuildServiceName
+import com.android.builder.profile.NameAnonymizer
+import com.android.builder.profile.NameAnonymizerSerializer
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.PathSubject.assertThat
@@ -88,6 +90,7 @@ class LintModelDependenciesWriterTaskTest {
         serviceRegistration.parameters.let {
             val profile = GradleBuildProfile.newBuilder().build().toByteArray()
             it.profile.set(Base64.getEncoder().encodeToString(profile))
+            it.anonymizer.set(NameAnonymizerSerializer().toJson(NameAnonymizer()))
             it.projects.set(mutableMapOf())
             it.enableProfileJson.set(true)
             it.taskMetadata.set(mutableMapOf())

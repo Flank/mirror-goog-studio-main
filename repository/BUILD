@@ -20,6 +20,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:commons-compress",
@@ -62,6 +63,7 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:jakarta.xml.bind_jakarta.xml.bind-api",
         "//tools/base/third_party:org.apache.commons_commons-compress",

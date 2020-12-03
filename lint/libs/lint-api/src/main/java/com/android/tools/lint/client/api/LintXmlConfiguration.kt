@@ -349,7 +349,11 @@ open class LintXmlConfiguration protected constructor(
             return false
         }
         val file = location.file
-        val relativePath = context.project.getRelativePath(file)
+        val parentFile = configFile.parentFile
+        val relativePath = if (parentFile != null)
+            client.getRelativePath(parentFile, file) ?: return false
+        else
+            file.path
         for (suppressedPath in paths) {
             if (suppressedPath == relativePath) {
                 return true

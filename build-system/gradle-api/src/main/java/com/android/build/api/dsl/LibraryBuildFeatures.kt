@@ -30,7 +30,7 @@ interface LibraryBuildFeatures : BuildFeatures {
      * Default value is 'true'.
      *
      * You can override the default for this for all projects in your build by adding the line
-     *     `android.defaults.buildfeatures.androidresources=false`
+     *     `android.library.defaults.buildfeatures.androidresources=false`
      * in the gradle.properties file at the root project of your build.
      *
      * More information about this feature at: TBD

@@ -20,6 +20,8 @@ import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProjectData
 import com.android.build.gradle.internal.profile.TaskMetadata
 import com.android.build.gradle.internal.profile.TaskProfilingRecord
+import com.android.builder.profile.NameAnonymizer
+import com.android.builder.profile.NameAnonymizerSerializer
 import com.android.builder.profile.Recorder
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
@@ -49,6 +51,8 @@ class FakeNoOpAnalyticsService : AnalyticsService() {
                     val profile = GradleBuildProfile.newBuilder().build().toByteArray()
                     return FakeGradleProperty(Base64.getEncoder().encodeToString(profile))
                 }
+            override val anonymizer: Property<String>
+                get() = FakeGradleProperty(NameAnonymizerSerializer().toJson(NameAnonymizer()))
             override val projects: MapProperty<String, ProjectData>
                 get() = FakeObjectFactory.factory.mapProperty(
                     String::class.java, ProjectData::class.java)
