@@ -104,10 +104,14 @@ class UtpTestRunner @JvmOverloads constructor(
             }
 
             createTestReportXml(resultsProto, deviceConnector.name, projectName, variantName, logger, resultsDir)
-            val testFailed = resultsProto.testResultList.any { testCaseResult ->
-                testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
-                        || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
+            if (resultsProto.hasPlatformError()) {
+                logger.error(null, "Platform error occurred when running the UTP test suite")
             }
+            val testFailed = resultsProto.hasPlatformError() ||
+                    resultsProto.testResultList.any { testCaseResult ->
+                        testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
+                                || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
+                    }
             TestResult().apply {
                 testResult = if (testFailed) {
                     TestResult.Result.FAILED
