@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.deployer;
 
-public class Sites {
+package com.android.tools;
 
-    public static String AppData(String pkg) {
-        return "/data/data/" + pkg + "/";
-    }
+import com.android.tools.deployer.Sites;
+import org.junit.Test;
 
-    public static String AppCodeCache(String pkg) {
-        return AppData(pkg) + "code_cache/";
-    }
+public class TestSites {
+    @Test
+    public void testSites() {
+        String pkg = "foo";
 
-    public static String AppStudio(String pkg) {
-        return AppCodeCache(pkg) + ".studio/";
+        String appDate = Sites.appData(pkg);
+        String codeCache = Sites.appCodeCache(pkg);
+        String studio = Sites.appStudio(pkg);
+        String logs = Sites.appLog(pkg);
+        String startup = Sites.appStartupAgent(pkg);
+        String overlays = Sites.appOverlays(pkg);
     }
 }

@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef DEPLOY_SITES_H
-#define DEPLOY_SITES_H
+#include <gtest/gtest.h>
 
 #include <string>
 
-namespace deploy {
-namespace Sites {
+#include "tools/base/deploy/sites/sites.h"
 
-// Centralize path building management.
-// All paths refering to a directory are / terminated.
-std::string AppCodeCache(const std::string pkg);
-std::string AppStudio(const std::string pkg);
-std::string AppLog(const std::string pkg);
-std::string AppStartupAgent(const std::string pkg);
-std::string AppOverlays(const std::string pkg);
-}  // namespace Sites
+namespace deploy {
+
+class SitesTest : public ::testing::Test {};
+
+TEST_F(SitesTest, TestSitesMethods) {
+  std::string pkg = "foo";
+
+  std::string appDate = Sites::AppData(pkg);
+  std::string codeCache = Sites::AppCodeCache(pkg);
+  std::string studio = Sites::AppStudio(pkg);
+  std::string logs = Sites::AppLog(pkg);
+  std::string startup = Sites::AppStartupAgent(pkg);
+  std::string overlays = Sites::AppOverlays(pkg);
+}
+
 }  // namespace deploy
-#endif

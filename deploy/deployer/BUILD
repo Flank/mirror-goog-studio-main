@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test", "coverage_java_library")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_library", "coverage_java_test")
 
 # managed by go/iml_to_build
 iml_module(
@@ -9,6 +9,7 @@ iml_module(
         "//tools/base/deploy/deployer:deploy_java_proto",
         "//prebuilts/r8",
         "//tools/base/deploy/deployer:libjava_version",
+        "//tools/base/deploy/deployer:libjava_sites",
     ],
     iml_files = ["android.sdktools.deployer.iml"],
     lint_baseline = "lint_baseline.xml",
@@ -51,6 +52,7 @@ iml_module(
         "//tools/base/deploy/deployer:fake_device_proto[test]",
         "//tools/adt/idea/.idea/libraries:studio-grpc[test]",
         "//tools/base/zipflinger:studio.android.sdktools.zipflinger[module]",
+        "//tools/base/deploy/deployer:libjava_sites",
     ],
 )
 
@@ -106,7 +108,9 @@ filegroup(
 coverage_java_test(
     name = "deployer.tests",
     size = "medium",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = glob(["src/test/java/**/*.java"]) + [
+        "//tools/base/deploy/sites:Sites.java",
+    ],
     data = glob(["src/test/resource/**"]) + select({
         "//tools/base/bazel:windows": [],
         "//conditions:default": [
@@ -167,5 +171,12 @@ java_import(
 java_import(
     name = "fake_device_proto",
     jars = ["//tools/base/deploy/installer/tests:fake_device_proto.jar"],
+    visibility = ["//visibility:public"],
+)
+
+# managed by go/iml_to_build
+java_import(
+    name = "libjava_sites",
+    jars = ["//tools/base/deploy/sites:libjava_sites.jar"],
     visibility = ["//visibility:public"],
 )

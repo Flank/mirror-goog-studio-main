@@ -24,8 +24,8 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
-#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
 

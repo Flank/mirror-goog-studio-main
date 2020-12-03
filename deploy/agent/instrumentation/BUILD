@@ -3,7 +3,9 @@ load("//tools/base/bazel:coverage.bzl", "coverage_java_library")
 
 coverage_java_library(
     name = "instrumentation_java",
-    srcs = glob([
+    srcs = [
+        "//tools/base/deploy/sites:Sites.java",
+    ] + glob([
         "src/**/*.java",
     ]),
     deps = [

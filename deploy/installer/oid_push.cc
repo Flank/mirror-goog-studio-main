@@ -20,12 +20,12 @@
 
 #include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/server/install_server.h"
+#include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
 
