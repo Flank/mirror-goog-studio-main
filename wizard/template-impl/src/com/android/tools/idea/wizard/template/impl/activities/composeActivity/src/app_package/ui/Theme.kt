@@ -22,7 +22,7 @@ fun themeKt(
   packageName: String,
   themeName: String
 ) = """
-package ${escapeKotlinIdentifier(packageName)}.ui
+package ${escapeKotlinIdentifier(packageName)}.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme

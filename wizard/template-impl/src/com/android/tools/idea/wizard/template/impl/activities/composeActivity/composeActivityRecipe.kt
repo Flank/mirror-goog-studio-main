@@ -37,7 +37,6 @@ fun RecipeExecutor.composeActivityRecipe(
   greeting: String,
   defaultPreview: String
 ) {
-
   val (_, srcOut, resOut, _) = moduleData
   addAllKotlinDependencies(moduleData)
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
@@ -57,10 +56,11 @@ fun RecipeExecutor.composeActivityRecipe(
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
   val themeName = "${moduleData.themesData.appName}Theme"
   save(mainActivityKt(activityClass, defaultPreview, greeting, packageName, themeName), srcOut.resolve("${activityClass}.kt"))
-  save(colorKt(packageName), srcOut.resolve("ui/Color.kt"))
-  save(shapeKt(packageName), srcOut.resolve("ui/Shape.kt"))
-  save(themeKt(packageName, themeName), srcOut.resolve("ui/Theme.kt"))
-  save(typeKt(packageName), srcOut.resolve("ui/Type.kt"))
+  val uiThemeFolder = "ui/theme"
+  save(colorKt(packageName), srcOut.resolve("$uiThemeFolder/Color.kt"))
+  save(shapeKt(packageName), srcOut.resolve("$uiThemeFolder/Shape.kt"))
+  save(themeKt(packageName, themeName), srcOut.resolve("$uiThemeFolder/Theme.kt"))
+  save(typeKt(packageName), srcOut.resolve("$uiThemeFolder/Type.kt"))
 
   requireJavaVersion("1.8", true)
   setBuildFeature("compose", true)

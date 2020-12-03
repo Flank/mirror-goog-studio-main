@@ -22,7 +22,7 @@ import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 fun colorKt(
   packageName: String
 ) = """
-package ${escapeKotlinIdentifier(packageName)}.ui
+package ${escapeKotlinIdentifier(packageName)}.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

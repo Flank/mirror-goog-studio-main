@@ -21,7 +21,7 @@ import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 fun typeKt(
   packageName: String
 ) = """
-package ${escapeKotlinIdentifier(packageName)}.ui
+package ${escapeKotlinIdentifier(packageName)}.ui.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle
