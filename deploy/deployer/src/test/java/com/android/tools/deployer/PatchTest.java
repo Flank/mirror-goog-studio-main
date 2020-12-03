@@ -21,6 +21,7 @@ import static java.util.Collections.singletonList;
 import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
 import com.android.utils.NullLogger;
+import com.android.utils.PathUtils;
 import com.android.zipflinger.BytesSource;
 import com.android.zipflinger.ZipArchive;
 import java.io.IOException;
@@ -29,11 +30,28 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Deflater;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class PatchTest {
     private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
+
+    private Path tempDirectory;
+
+    @Before
+    public void setUp() throws Exception {
+        tempDirectory = Files.createTempDirectory("");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (tempDirectory != null) {
+            PathUtils.deleteRecursivelyIfExists(tempDirectory);
+            tempDirectory = null;
+        }
+    }
 
     private static void createSimpleZip(Path file, byte[] bytes, String entryName)
             throws IOException {
@@ -52,15 +70,14 @@ public class PatchTest {
         PatchSetGenerator patchSetGenerator =
                 new PatchSetGenerator(
                         PatchSetGenerator.WhenNoChanges.GENERATE_EMPTY_PATCH, new NullLogger());
-        Path testOutputDir = TestUtils.getTestOutputDir();
         ApkParser apkParser = new ApkParser();
 
         int fileSize = PatchSetGenerator.MAX_PATCHSET_SIZE - 1;
         byte[] bytes = new byte[fileSize];
 
-        Path remoteApk1 = testOutputDir.resolve("remoteApk1.apk");
+        Path remoteApk1 = tempDirectory.resolve("remoteApk1.apk");
         createSimpleZip(remoteApk1, bytes, "f");
-        Path remoteApk2 = testOutputDir.resolve("remoteApk2.apk");
+        Path remoteApk2 = tempDirectory.resolve("remoteApk2.apk");
         createSimpleZip(remoteApk2, bytes, "f");
 
         List<String> remoteApksString = new ArrayList<>();
@@ -68,9 +85,9 @@ public class PatchTest {
         remoteApksString.add(remoteApk2.toAbsolutePath().toString());
 
         bytes[0] = 1;
-        Path localApk1 = testOutputDir.resolve("localApk1.apk");
+        Path localApk1 = tempDirectory.resolve("localApk1.apk");
         createSimpleZip(localApk1, bytes, "f");
-        Path localApk2 = testOutputDir.resolve("localApk2.apk");
+        Path localApk2 = tempDirectory.resolve("localApk2.apk");
         createSimpleZip(localApk2, bytes, "f");
 
         List<String> localApksString = new ArrayList<>();
@@ -87,16 +104,15 @@ public class PatchTest {
     @Test
     public void testPatchTooBig() throws IOException, DeployerException {
         PatchGenerator patchGenerator = new PatchGenerator(new NullLogger());
-        Path testOutputDir = TestUtils.getTestOutputDir();
 
         int fileSize = PatchSetGenerator.MAX_PATCHSET_SIZE + 1;
 
         byte[] bytes = new byte[fileSize];
-        Path remote = testOutputDir.resolve("local.apk");
+        Path remote = tempDirectory.resolve("local.apk");
         createSimpleZip(remote, bytes, "f");
 
         bytes[0] = 1;
-        Path local = testOutputDir.resolve("remote.apk");
+        Path local = tempDirectory.resolve("remote.apk");
         createSimpleZip(local, bytes, "f");
 
         ApkParser apkParser = new ApkParser();
