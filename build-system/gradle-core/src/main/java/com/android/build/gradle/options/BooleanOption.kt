@@ -76,6 +76,9 @@ enum class BooleanOption(
 
     DEBUG_OBSOLETE_API("android.debug.obsoleteApi", false, ApiStage.Stable),
 
+    // Disabled by default due to low usage.
+    GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, ApiStage.Stable),
+
     /* ------------------
      * SUPPORTED FEATURES
      */
@@ -126,7 +129,6 @@ enum class BooleanOption(
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER("android.experimental.enableNewResourceShrinker", false, FeatureStage.Experimental),
     ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
-    GENERATE_MANIFEST_CLASS("android.generateManifestClass", false, FeatureStage.Experimental),
     ENABLE_LOCAL_TESTING("android.bundletool.enableLocalTesting", false, FeatureStage.Experimental),
 
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */

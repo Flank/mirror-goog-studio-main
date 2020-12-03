@@ -646,16 +646,12 @@ abstract class ComponentImpl(
     }
 
     private fun getCompiledManifest(): FileCollection {
-        val isAndroidTest = variantDslInfo.variantType == VariantTypeImpl.ANDROID_TEST
-        val isUnitTest = variantDslInfo.variantType == VariantTypeImpl.UNIT_TEST
-        val isTest = variantDslInfo.variantType.isForTesting || isUnitTest || isAndroidTest
-        val manifestRequired = variantDslInfo.variantType.requiresManifest &&
+        val manifestClassRequired = variantDslInfo.variantType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
-        val isLibrary = variantDslInfo.variantType.isAar
-        return if (manifestRequired && !isLibrary && !isTest && testedConfig == null) {
-            internalServices.fileCollection(
-                    artifacts.get(InternalArtifactType.COMPILE_MANIFEST_JAR)
-            )
+        val isTest = variantDslInfo.variantType.isForTesting
+        val isAar = variantDslInfo.variantType.isAar
+        return if (manifestClassRequired && !isAar && !isTest && testedConfig == null) {
+            internalServices.fileCollection(artifacts.get(COMPILE_MANIFEST_JAR))
         } else {
             internalServices.fileCollection()
         }
