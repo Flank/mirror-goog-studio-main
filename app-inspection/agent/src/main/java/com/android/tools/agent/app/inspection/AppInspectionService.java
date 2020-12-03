@@ -256,10 +256,6 @@ public class AppInspectionService {
         } else if (versionResult.status == CompatibilityCheckerResult.Status.ERROR) {
             sendCreateInspectorResponseError(commandId, versionResult.message);
             return false;
-        } else if ("androidx.work".equals(libraryCoordinate.groupId)) {
-            // TODO: Temporary. Remove it once 'androidx.work:work-runtime:2.5.0-beta02'
-            // is released
-            return true;
         } else if (versionResult.status == CompatibilityCheckerResult.Status.PROGUARDED) {
             sendCreateInspectorResponseAppProguarded(commandId, versionResult.message);
             return false;
