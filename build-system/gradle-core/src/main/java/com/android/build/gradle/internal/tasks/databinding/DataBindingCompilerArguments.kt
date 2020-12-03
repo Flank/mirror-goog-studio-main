@@ -158,7 +158,7 @@ class DataBindingCompilerArguments constructor(
                 incremental = creationConfig.services.projectOptions
                     .get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING),
                 artifactType = getModuleType(creationConfig),
-                packageName = creationConfig.packageName,
+                packageName = creationConfig.namespace,
                 minApi = creationConfig.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkComponents.flatMap { it.sdkDirectoryProvider },
                 dependencyArtifactsDir = artifacts.get(DATA_BINDING_DEPENDENCY_ARTIFACTS),

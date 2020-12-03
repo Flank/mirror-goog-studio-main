@@ -333,7 +333,7 @@ abstract class VariantInputs {
         manifestMergeReport.setDisallowChanges(
             creationConfig.artifacts.get(InternalArtifactType.MANIFEST_MERGE_REPORT)
         )
-        packageName.setDisallowChanges(creationConfig.packageName)
+        packageName.setDisallowChanges(creationConfig.namespace)
 
         minSdkVersion.initialize(creationConfig.minSdkVersion)
 

@@ -106,7 +106,7 @@ abstract class ComponentImpl(
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
-    override val packageName: Provider<String> =
+    override val namespace: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.packageName)
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(

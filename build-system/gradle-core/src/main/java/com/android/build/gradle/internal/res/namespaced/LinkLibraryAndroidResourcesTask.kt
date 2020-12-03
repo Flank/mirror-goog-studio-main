@@ -159,7 +159,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
                     FileUtils.join(
                             creationConfig.globalScope.intermediatesDir, "res-link-intermediate", creationConfig.variantDslInfo.dirName)
 
-            task.packageForR.setDisallowChanges(creationConfig.packageName)
+            task.packageForR.setDisallowChanges(creationConfig.namespace)
 
             creationConfig.services.initializeAapt2Input(task.aapt2)
 

@@ -92,15 +92,15 @@ class AnalyticsEnabledAndroidTestTest {
 
     @Test
     fun getPackageName() {
-        Mockito.`when`(delegate.packageName).thenReturn(FakeGradleProvider("package.name"))
-        Truth.assertThat(proxy.packageName.get()).isEqualTo("package.name")
+        Mockito.`when`(delegate.namespace).thenReturn(FakeGradleProvider("package.name"))
+        Truth.assertThat(proxy.namespace.get()).isEqualTo("package.name")
 
         Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.PACKAGE_NAME_VALUE)
+        ).isEqualTo(VariantPropertiesMethodType.NAMESPACE_VALUE)
         Mockito.verify(delegate, Mockito.times(1))
-            .packageName
+            .namespace
     }
 
     @Test

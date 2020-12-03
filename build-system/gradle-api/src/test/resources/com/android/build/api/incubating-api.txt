@@ -945,7 +945,7 @@ com.android.build.api.variant.Variant.getBuildConfigFields: org.gradle.api.provi
 com.android.build.api.variant.Variant.getExternalCmake: com.android.build.api.variant.ExternalCmake ()
 com.android.build.api.variant.Variant.getExternalNdkBuild: com.android.build.api.variant.ExternalNdkBuild ()
 com.android.build.api.variant.Variant.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
-com.android.build.api.variant.Variant.getPackageName: org.gradle.api.provider.Provider<java.lang.String> ()
+com.android.build.api.variant.Variant.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackaging: com.android.build.api.variant.Packaging ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.VariantBuilder.getMaxSdkVersion: java.lang.Integer ()

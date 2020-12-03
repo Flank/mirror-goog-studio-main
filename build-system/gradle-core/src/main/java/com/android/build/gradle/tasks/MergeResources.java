@@ -874,7 +874,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             GlobalScope globalScope = creationConfig.getGlobalScope();
             VariantPathHelper paths = creationConfig.getPaths();
 
-            task.getPackageName().set(creationConfig.getPackageName());
+            task.getPackageName().set(creationConfig.getNamespace());
             task.getMinSdk()
                     .set(
                             task.getProject()
@@ -919,7 +919,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 HasConfigurableValuesKt.setDisallowChanges(
-                        task.getPackageName(), creationConfig.getPackageName());
+                        task.getPackageName(), creationConfig.getNamespace());
                 HasConfigurableValuesKt.setDisallowChanges(
                         task.getUseAndroidX(),
                         creationConfig

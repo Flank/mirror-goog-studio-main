@@ -92,7 +92,7 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
                             ArtifactType.MERGED_MANIFEST,
                             task.mergedManifests
                     )
-            task.packageName.setDisallowChanges(creationConfig.packageName)
+            task.packageName.setDisallowChanges(creationConfig.namespace)
         }
     }
 }

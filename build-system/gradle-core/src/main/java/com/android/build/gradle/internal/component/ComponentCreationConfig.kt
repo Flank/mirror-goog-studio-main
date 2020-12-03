@@ -68,7 +68,7 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     // needed by resource compilation/link
     val applicationId: Provider<String>
-    val packageName: Provider<String>
+    val namespace: Provider<String>
     val resourceConfigurations: ImmutableSet<String>
     val isPrecompileDependenciesResourcesEnabled: Boolean
     val asmApiVersion: Int

@@ -35,9 +35,14 @@ interface Variant : Component {
     val applicationId: Provider<String>
 
     /**
-     * The package name into which some classes are generated
+     * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
+     * any relative class names that are declared in the AndroidManifest.xml.
+     *
+     * This value supersedes any value specified by the `package` attribute in the source
+     * AndroidManifest.xml, but doing a 'get' on this property will not retrieve the value specified
+     * in the AndroidManifest.xml.
      */
-    val packageName: Provider<String>
+    val namespace: Provider<String>
 
     /**
      * Variant's [BuildConfigField] which will be generated in the BuildConfig class.

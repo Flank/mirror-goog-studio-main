@@ -106,7 +106,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                     aapt.forUseAtConfigurationTime().orNull)
             task.dependsOn(creationConfig.services.fileCollection(resourceSourceSets))
             task.resourcePaths.setDisallowChanges(resourceSourceSets.map(File::getAbsolutePath))
-            task.packageName.setDisallowChanges(creationConfig.packageName)
+            task.packageName.setDisallowChanges(creationConfig.namespace)
             if (mergeResourcesTask.isPresent) {
                 val mergeResources = mergeResourcesTask.get()
                 if (mergeResources.outputDir.isPresent) {

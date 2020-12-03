@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -326,7 +325,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 task.typedefRecipe
             )
 
-            task.packageName.setDisallowChanges(creationConfig.packageName)
+            task.packageName.setDisallowChanges(creationConfig.namespace)
             task.jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
             task.debugBuild.setDisallowChanges(creationConfig.debuggable)
 

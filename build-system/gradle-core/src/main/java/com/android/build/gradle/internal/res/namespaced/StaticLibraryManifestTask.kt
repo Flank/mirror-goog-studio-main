@@ -77,7 +77,7 @@ abstract class StaticLibraryManifestTask : NonIncrementalTask() {
             task: StaticLibraryManifestTask
         ) {
             super.configure(task)
-            task.packageName.setDisallowChanges(creationConfig.packageName)
+            task.packageName.setDisallowChanges(creationConfig.namespace)
         }
     }
 }

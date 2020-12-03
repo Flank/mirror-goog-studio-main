@@ -101,7 +101,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
                 .setTaskInputToFinalProduct(
                     MERGED_ML_MODELS, task.modelFileDir
                 )
-            task.packageName.setDisallowChanges(creationConfig.packageName)
+            task.packageName.setDisallowChanges(creationConfig.namespace)
         }
     }
 }
