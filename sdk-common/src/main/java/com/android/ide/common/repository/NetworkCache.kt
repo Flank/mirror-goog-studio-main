@@ -16,60 +16,59 @@
 package com.android.ide.common.repository
 
 import com.android.annotations.concurrency.Slow
-import com.google.common.io.Files
-import java.io.BufferedInputStream
+import com.android.io.CancellableFileIo
 import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileInputStream
 import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 
 /**
- * Provides a basic network cache with local disk fallback for data read
- * from a URL.
+ * Provides a basic network cache with local disk fallback for data read from a URL.
  */
 abstract class NetworkCache constructor(
     private val baseUrl: String,
 
-    /** Key used in cache directories to locate the network cache */
+    /** Key used in cache directories to locate the network cache. */
     private val cacheKey: String,
 
-    /** Location to search for cached repository content files */
-    val cacheDir: File? = null,
+    /** Location to search for cached repository content files. */
+    val cacheDir: Path? = null,
 
     /**
-     * Number of milliseconds to wait until timing out attempting to access the remote
-     * repository
+     * Number of milliseconds to wait until timing out attempting to access the remote repository.
      */
     private val networkTimeoutMs: Int = 3000,
 
-    /** Maximum allowed age of cached data; default is 7 days */
+    /** Maximum allowed age of cached data; default is 7 days. */
     private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt(),
 
     /**
-     * If false, this repository won't make any network requests - Make sure you make another call, maybe in a background thread,
-     * with enabled network if you want the cache to update properly
+     * If false, this repository won't make any network requests - Make sure you make another call,
+     * maybe in a background thread, with enabled network if you want the cache to update properly.
      * */
     private val networkEnabled: Boolean = true
 ) {
 
-    /** Reads the given query URL in, with the given time out, and returns the bytes found */
+    /** Reads the given query URL in, with the given time out, and returns the bytes found. */
     @Slow
     protected abstract fun readUrlData(url: String, timeout: Int): ByteArray?
 
-    /** Provides the data from offline/local storage, if possible */
+    /** Provides the data from offline/local storage, if possible. */
     protected abstract fun readDefaultData(relative: String): InputStream?
 
-    /** Reports an error found during I/O */
+    /** Reports an error found during I/O. */
     protected abstract fun error(throwable: Throwable, message: String?)
 
     /** Reads the given data relative to the base URL. */
+    @Slow
     protected open fun findData(relative: String): InputStream? {
         if (cacheDir != null) {
             synchronized(cacheDir) {
-                val file = File(cacheDir, if (relative.isNotEmpty()) relative else cacheKey)
-                if (file.exists()) {
-                    val lastModified = file.lastModified()
+                val file = cacheDir.resolve(if (relative.isNotEmpty()) relative else cacheKey)
+                try {
+                    val lastModified = CancellableFileIo.getLastModifiedTime(file).toMillis()
                     val now = System.currentTimeMillis()
                     val expiryMs = TimeUnit.HOURS.toMillis(cacheExpiryHours.toLong())
 
@@ -79,20 +78,17 @@ abstract class NetworkCache constructor(
                         // - Outside the "cache expiry interval" if a network connection is allowed we always try to download the
                         // latest version (code bellow). If a network connection is not allowed, we assume the cache only exists
                         // because it was (or will be) updated on a background task where a network connection is allowed.
-                        return BufferedInputStream(FileInputStream(file))
+                        return CancellableFileIo.newInputStream(file)
                     }
+                } catch (ignore: NoSuchFileException) {
                 }
 
                 if (networkEnabled) {
                     try {
-                        val data = readUrlData(
-                          "$baseUrl$relative",
-                          networkTimeoutMs
-                        )
+                        val data = readUrlData("$baseUrl$relative", networkTimeoutMs)
                         if (data != null) {
-                            val parent = file.parentFile
-                            parent?.mkdirs()
-                            Files.write(data, file)
+                            file.parent?.let { Files.createDirectories(it) }
+                            Files.write(file, data)
                             return ByteArrayInputStream(data)
                         }
                     }
@@ -102,8 +98,9 @@ abstract class NetworkCache constructor(
                     }
                     catch (e: Throwable) {
                         // timeouts etc: fall through to use "expired" data, if available, otherwise use the Builtin index
-                        if (file.exists()) {
-                            return BufferedInputStream(FileInputStream(file))
+                        try {
+                            return CancellableFileIo.newInputStream(file)
+                        } catch (ignore: NoSuchFileException) {
                         }
                     }
                 }

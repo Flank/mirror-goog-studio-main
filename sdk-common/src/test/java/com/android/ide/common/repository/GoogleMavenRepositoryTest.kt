@@ -239,7 +239,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
     @Test
     fun testReadingFromUrl() {
         val repo = StubGoogleMavenRepository(
-            cacheDir = temp.root,
+            cacheDir = temp.root.toPath(),
             urls = mapOf(
                 "https://maven.google.com/master-index.xml" to """
                  <?xml version='1.0' encoding='UTF-8'?>
@@ -275,7 +275,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
     fun testReadingFromHostileNetwork() {
         // Regression test for b/129362597
         val repo = StubGoogleMavenRepository(
-            cacheDir = temp.newFolder(),
+            cacheDir = temp.newFolder().toPath(),
             urls = mapOf(
                 "https://maven.google.com/master-index.xml" to """
                 <!DOCTYPE html>

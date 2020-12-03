@@ -20,11 +20,12 @@ import com.android.ide.common.repository.GradleCoordinate.parseCoordinateString
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import java.io.File
+import java.nio.file.Path
 
 private class StubDeprecatedSdkRegistry @JvmOverloads constructor(
     private val builtInData: Map<String, String> = emptyMap(),
     private val urls: Map<String, String> = emptyMap(),
-    cacheDir: File? = null
+    cacheDir: Path? = null
 ) : DeprecatedSdkRegistry(cacheDir = cacheDir) {
     override fun readUrlData(url: String, timeout: Int): ByteArray? = urls[url]?.toByteArray()
     override fun error(throwable: Throwable, message: String?) = throw throwable

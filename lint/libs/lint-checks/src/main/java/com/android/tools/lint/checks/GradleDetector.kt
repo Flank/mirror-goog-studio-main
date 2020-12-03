@@ -2127,7 +2127,7 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun getGoogleMavenRepository(client: LintClient): GoogleMavenRepository {
         return googleMavenRepository ?: run {
             val cacheDir = client.getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
-            val repository = object : GoogleMavenRepository(cacheDir) {
+            val repository = object : GoogleMavenRepository(cacheDir?.toPath()) {
 
                 public override fun readUrlData(url: String, timeout: Int): ByteArray? =
                     readUrlData(client, url, timeout)
@@ -2144,7 +2144,7 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun getDeprecatedLibraryLookup(client: LintClient): DeprecatedSdkRegistry {
         return deprecatedSdkRegistry ?: run {
             val cacheDir = client.getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
-            val repository = object : DeprecatedSdkRegistry(cacheDir) {
+            val repository = object : DeprecatedSdkRegistry(cacheDir?.toPath()) {
 
                 public override fun readUrlData(url: String, timeout: Int) =
                     readUrlData(client, url, timeout)

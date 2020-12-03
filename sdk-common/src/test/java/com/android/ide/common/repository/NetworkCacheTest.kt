@@ -15,24 +15,12 @@
  */
 package com.android.ide.common.repository
 
-import com.google.common.io.Files
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
-import java.io.File
 import java.io.InputStream
-
-abstract class TestCache(cacheDir: File = Files.createTempDir(), networkEnabled: Boolean) :
-    NetworkCache("", "cacheKey", cacheDir, networkEnabled = networkEnabled) {
-    fun loadArtifact() {
-        findData("/artifact.xml")
-    }
-
-    override fun readDefaultData(relative: String): InputStream? = null
-
-    override fun error(throwable: Throwable, message: String?) =
-        fail("No error calls expected")
-}
+import java.nio.file.Files
+import java.nio.file.Path
 
 class NetworkCacheTest {
     @Test
@@ -56,6 +44,20 @@ class NetworkCacheTest {
 
         networkEnabledCache.loadArtifact()
         assertEquals(1, networkCalls)
+    }
+
+    private abstract class TestCache(
+            cacheDir: Path = Files.createTempDirectory(""),
+            networkEnabled: Boolean
+    ) : NetworkCache("", "cacheKey", cacheDir, networkEnabled = networkEnabled) {
+        fun loadArtifact() {
+            findData("/artifact.xml")
+        }
+
+        override fun readDefaultData(relative: String): InputStream? = null
+
+        override fun error(throwable: Throwable, message: String?) =
+                fail("No error calls expected")
     }
 }
 
