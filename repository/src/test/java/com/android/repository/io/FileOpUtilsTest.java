@@ -16,6 +16,7 @@
 
 package com.android.repository.io;
 
+import static com.android.testutils.InMemoryFileSystemUtilsKt.getPlatformSpecificPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -349,12 +350,17 @@ public class FileOpUtilsTest {
 
     @Test
     public void safeRecursiveOverwriteCantDeleteDestPartial() throws Exception {
+        File s1 = new File(getPlatformSpecificPath("/root/src/a"));
+        File s2 = new File(getPlatformSpecificPath("/root/src/foo/a"));
+        File d1 = new File(getPlatformSpecificPath("/root/dest/b"));
+        File d2 = new File(getPlatformSpecificPath("/root/dest/bar/b"));
+
         AtomicBoolean deletedSomething = new AtomicBoolean(false);
         MockFileOp fop =
                 new MockFileOp() {
                     @Override
                     public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                        if (oldFile.getPath().equals(getPlatformSpecificPath("/root/dest"))) {
+                        if (oldFile.equals(d1.getParentFile())) {
                             return false;
                         }
                         return super.renameTo(oldFile, newFile);
@@ -371,10 +377,6 @@ public class FileOpUtilsTest {
                         return super.delete(oldFile);
                     }
                 };
-        File s1 = new File("/root/src/a").getAbsoluteFile();
-        File s2 = new File("/root/src/foo/a").getAbsoluteFile();
-        File d1 = new File("/root/dest/b").getAbsoluteFile();
-        File d2 = new File("/root/dest/bar/b").getAbsoluteFile();
 
         fop.recordExistingFile(s1.getPath(), "content1");
         fop.recordExistingFile(s2.getPath(), "content2");
@@ -383,10 +385,7 @@ public class FileOpUtilsTest {
 
         try {
             FileOpUtils.safeRecursiveOverwrite(
-                    new File("/root/src/").getAbsoluteFile(),
-                    new File("/root/dest").getAbsoluteFile(),
-                    fop,
-                    new FakeProgressIndicator());
+                    s1.getParentFile(), d1.getParentFile(), fop, new FakeProgressIndicator());
             fail("Expected exception");
         }
         catch (IOException expected) {}
@@ -404,9 +403,9 @@ public class FileOpUtilsTest {
 
     @Test
     public void safeRecursiveOverwriteCantWrite() throws Exception {
-        File s1 = new File("/root/src/a").getAbsoluteFile();
-        File s2 = new File("/root/src/foo/a").getAbsoluteFile();
-        File d1 = new File("/root/dest/a").getAbsoluteFile();
+        File s1 = new File(getPlatformSpecificPath("/root/src/a"));
+        File s2 = new File(getPlatformSpecificPath("/root/src/foo/a"));
+        File d1 = new File(getPlatformSpecificPath("/root/dest/a"));
 
         MockFileOp fop =
                 new MockFileOp() {
@@ -421,9 +420,8 @@ public class FileOpUtilsTest {
 
                     @Override
                     public boolean renameTo(@NonNull File oldFile, @NonNull File newFile) {
-                        if (oldFile.getPath().equals(getPlatformSpecificPath("/root/src"))
-                                && newFile.getPath()
-                                        .equals(getPlatformSpecificPath("/root/dest"))) {
+                        if (oldFile.equals(s1.getParentFile())
+                                && newFile.equals(d1.getParentFile())) {
                             return false;
                         }
                         return super.renameTo(oldFile, newFile);
@@ -436,10 +434,7 @@ public class FileOpUtilsTest {
 
         try {
             FileOpUtils.safeRecursiveOverwrite(
-                    new File("/root/src/").getAbsoluteFile(),
-                    new File("/root/dest").getAbsoluteFile(),
-                    fop,
-                    new FakeProgressIndicator());
+                    s1.getParentFile(), d1.getParentFile(), fop, new FakeProgressIndicator());
             fail("Expected exception");
         }
         catch (IOException expected) {}

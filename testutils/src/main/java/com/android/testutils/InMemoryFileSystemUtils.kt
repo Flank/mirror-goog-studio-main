@@ -60,8 +60,8 @@ fun canWrite(path: Path): Boolean {
 fun getPlatformSpecificPath(path: String): String {
     return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
         && (path.startsWith("/") || path.startsWith("\\"))) {
-        (File(path).absolutePath
-                + if (path.length > 1 && (path.endsWith("/") || path.endsWith("\\"))) File.separator else "")
+        (if (OsType.getHostOs() == OsType.WINDOWS) "c:" else "") +
+        path.replace('/', File.separatorChar)
     } else path
 }
 
