@@ -16,6 +16,7 @@
 
 package com.android.repository.impl.manager;
 
+import com.android.ProgressManagerAdapter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.io.CancellableFileIo;
@@ -156,6 +157,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                     p = parsePackage(packageXml, progress);
                 }
                 catch (Exception e) {
+                    ProgressManagerAdapter.throwIfCancellation(e);
                     // There was a problem parsing the package. Try the fallback loader.
                     progress.logWarning("Found corrupted package.xml at " + packageXml);
                 }
