@@ -15,6 +15,7 @@
  */
 package com.android.testutils.file
 
+import java.io.IOException
 import java.lang.UnsupportedOperationException
 import java.net.URI
 import java.nio.channels.SeekableByteChannel
@@ -52,6 +53,7 @@ open class DelegatingFileSystemProvider(delegateFileSystem: FileSystem) : FileSy
         return scheme
     }
 
+    @Throws(IOException::class)
     override fun newFileSystem(uri: URI, env: MutableMap<String, *>): FileSystem {
         return DelegatingFileSystem(delegate.newFileSystem(uri, env))
     }
@@ -64,12 +66,14 @@ open class DelegatingFileSystemProvider(delegateFileSystem: FileSystem) : FileSy
         return delegate.getPath(delegateUri(uri))
     }
 
+    @Throws(IOException::class)
     override fun newByteChannel(
             path: Path, options: Set<OpenOption>, vararg attrs: FileAttribute<*>
     ) : SeekableByteChannel {
         return delegate.newByteChannel(delegate(path), options, *attrs)
     }
 
+    @Throws(IOException::class)
     override fun newDirectoryStream(
             dir: Path, filter: DirectoryStream.Filter<in Path>): DirectoryStream<Path> {
         val delegateStream = delegate.newDirectoryStream(delegate(dir)) { true }
@@ -88,53 +92,64 @@ open class DelegatingFileSystemProvider(delegateFileSystem: FileSystem) : FileSy
         }
     }
 
+    @Throws(IOException::class)
     override fun createDirectory(dir: Path, vararg attrs: FileAttribute<*>) {
         delegate.createDirectory(delegate(dir), *attrs)
     }
 
+    @Throws(IOException::class)
     override fun delete(path: Path) {
         return delegate.delete(delegate(path))
     }
 
+    @Throws(IOException::class)
     override fun copy(source: Path, target: Path, vararg options: CopyOption) {
         delegate.copy(delegate(source), delegate(target))
     }
 
+    @Throws(IOException::class)
     override fun move(source: Path, target: Path, vararg options: CopyOption) {
         delegate.move(delegate(source), delegate(target))
     }
 
+    @Throws(IOException::class)
     override fun isSameFile(path1: Path, path2: Path): Boolean {
         return delegate.isSameFile(delegate(path1), delegate(path2))
     }
 
+    @Throws(IOException::class)
     override fun isHidden(path: Path): Boolean {
         return delegate.isHidden(delegate(path))
     }
 
+    @Throws(IOException::class)
     override fun getFileStore(path: Path): FileStore {
         return delegate.getFileStore(delegate(path))
     }
 
+    @Throws(IOException::class)
     override fun checkAccess(path: Path, vararg modes: AccessMode) {
         return delegate.checkAccess(delegate(path), *modes)
     }
 
     override fun <V : FileAttributeView> getFileAttributeView(
-            path: Path, type: Class<V>, vararg options: LinkOption): V {
+            path: Path, type: Class<V>, vararg options: LinkOption): V? {
         return delegate.getFileAttributeView(delegate(path), type, *options)
     }
 
+    @Throws(IOException::class)
     override fun <A : BasicFileAttributes> readAttributes(
             path: Path, type: Class<A>, vararg options: LinkOption): A {
         return delegate.readAttributes(delegate(path), type, *options)
     }
 
+    @Throws(IOException::class)
     override fun readAttributes(
             path: Path, attributes: String, vararg options: LinkOption): MutableMap<String, Any> {
         return delegate.readAttributes(delegate(path), attributes, *options)
     }
 
+    @Throws(IOException::class)
     override fun setAttribute(
             path: Path, attribute: String, value: Any, vararg options: LinkOption) {
         delegate.setAttribute(delegate(path), attribute, value, *options)
@@ -278,6 +293,24 @@ open class DelegatingFileSystemProvider(delegateFileSystem: FileSystem) : FileSy
             return DelegatingPath(delegate.relativize(delegate(other)))
         }
 
+        override fun endsWith(other: Path): Boolean {
+            if (other !is DelegatingPath) {
+                return false
+            }
+            return delegate.endsWith(other.delegate)
+        }
+
+        override fun startsWith(other: Path): Boolean {
+            if (other !is DelegatingPath) {
+                return false
+            }
+            return delegate.startsWith(other.delegate)
+        }
+
+        override fun compareTo(other: Path?): Int {
+            return delegate.compareTo((other as DelegatingPath).delegate)
+        }
+
         override fun toUri(): URI {
             val uri = delegate.toUri()
             return URI(scheme, uri.authority, uri.path, uri.query, uri.fragment)
@@ -294,6 +327,14 @@ open class DelegatingFileSystemProvider(delegateFileSystem: FileSystem) : FileSy
         override fun iterator(): MutableIterator<Path> {
             return DelegatingPathIterator(delegate.iterator())
         }
+
+        override fun toString() = delegate.toString()
+
+        override fun equals(other: Any?): Boolean {
+            return other is DelegatingPath && delegate == other.delegate
+        }
+
+        override fun hashCode() = delegate.hashCode()
     }
 
     private inner class DelegatingPathIterator(
