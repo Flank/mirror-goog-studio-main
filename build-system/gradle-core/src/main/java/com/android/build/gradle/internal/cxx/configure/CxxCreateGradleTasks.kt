@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.tasks.createCxxConfigureTask
+import com.android.build.gradle.tasks.createNopCxxBuildTask
 import com.android.build.gradle.tasks.createVariantCxxCleanTask
 import com.android.build.gradle.tasks.createWorkingCxxBuildTask
 import com.android.builder.errors.IssueReporter
@@ -63,11 +64,14 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
     if (variants.isEmpty()) return
     IssueReporterLoggingEnvironment(issueReporter).use {
         PassThroughDeduplicatingLoggingEnvironment().use {
-            val configurationParameters =
-                    variants.mapNotNull { tryCreateConfigurationParameters(it.variant) }
+            val configurationParameters = variants
+                    .mapNotNull { tryCreateConfigurationParameters(it.variant) }
             if (configurationParameters.isEmpty()) return
             val abis = createInitialCxxModel(sdkComponents, configurationParameters)
-            val taskModel = createCxxTaskDependencyModel(abis)
+            val enableFolding = configurationParameters.first().isConfigurationFoldingEnabled
+            val taskModel =
+                    if (enableFolding) createFoldedCxxTaskDependencyModel(abis)
+                    else createCxxTaskDependencyModel(abis)
 
             val global = variants.first().variant.globalScope
 
@@ -86,16 +90,16 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                     is Build -> {
                         taskFactory.register(createWorkingCxxBuildTask(
                                 global,
-                                task.representative.toConfigurationModel(),
+                                task.representatives.toConfigurationModel(),
                                 name))
                     }
                     is VariantBuild -> {
                         val variant = variantMap.getValue(task.variantName)
                         val configuration = task.representatives.toConfigurationModel()
-                        val buildTask = taskFactory.register(createWorkingCxxBuildTask(
-                                global,
-                                task.representatives.toConfigurationModel(),
-                                name))
+                        val task =
+                                if (task.isNop) createNopCxxBuildTask(task.representatives.toConfigurationModel(), variant, name)
+                                else createWorkingCxxBuildTask(global, task.representatives.toConfigurationModel(), name)
+                        val buildTask = taskFactory.register(task)
                         variant.taskContainer.cxxConfigurationModel = configuration
                         variant.taskContainer.externalNativeBuildTask = buildTask
                         variant.taskContainer.compileTask.dependsOn(buildTask)
@@ -153,6 +157,10 @@ fun createPrefabTasks(taskFactory: TaskFactory, libraryVariant: LibraryVariantIm
     }
 }
 
+/**
+ * Create the non-folded task dependency model. Each variant is built in its own separate
+ * folder even if two variants share the same C/C++ configuration.
+ */
 fun createCxxTaskDependencyModel(abis: List<CxxAbiModel>) : CxxTaskDependencyModel {
     val tasks = mutableMapOf<String, CxxGradleTaskModel>()
     val edges = mutableListOf<Pair<String, String>>()
@@ -163,10 +171,51 @@ fun createCxxTaskDependencyModel(abis: List<CxxAbiModel>) : CxxTaskDependencyMod
                     val configureName = "generateJsonModel".appendCapitalized(variantName)
                     val buildName = "externalNativeBuild".appendCapitalized(variantName)
                     tasks[configureName] = Configure(abis)
-                    tasks[buildName] = VariantBuild(variantName, abis)
+                    tasks[buildName] = VariantBuild(variantName, false, abis)
                     edges += buildName to configureName
                 }
             }
+
+    return CxxTaskDependencyModel(
+            tasks = tasks,
+            edges = edges.distinct()
+    )
+}
+
+/**
+ * Create the folded task dependency model. C/C++ build outputs are placed in a folder that is
+ * unique for the given C++ configuration. If two tasks map to the same configuration then they
+ * will have the same task name and duplicates are automatically removed.
+ *
+ * The logic that actually determines the output folder names is in
+ * [CxxAbiModel::getAndroidGradleSettings].
+ */
+fun createFoldedCxxTaskDependencyModel(globalAbis: List<CxxAbiModel>) : CxxTaskDependencyModel {
+    if (globalAbis.isEmpty()) return CxxTaskDependencyModel(tasks = mapOf(), edges=listOf())
+    val tasks = mutableMapOf<String, CxxGradleTaskModel>()
+    val edges = mutableListOf<Pair<String, String>>()
+    val namer = CxxConfigurationFolding(globalAbis)
+
+    val variantAbis = globalAbis
+            .groupBy { it.variant.variantName }
+
+    namer.configureAbis.forEach { (taskName, abis) ->
+        tasks[taskName] = Configure(abis)
+    }
+    namer.buildAbis.forEach { (taskName, abis) ->
+        tasks[taskName] = Build(abis)
+    }
+    namer.variantToConfiguration.forEach { (variantName, configureTasks) ->
+        val taskName = "generateJsonModel".appendCapitalized(variantName)
+        tasks[taskName] = Anchor(variantName)
+        edges += configureTasks.map { configureTask -> taskName to configureTask }
+    }
+    namer.variantToBuild.forEach { (variantName, buildTasks) ->
+        val taskName = "externalNativeBuild".appendCapitalized(variantName)
+        tasks[taskName] = VariantBuild(variantName, true, variantAbis.getValue(variantName))
+        edges += buildTasks.map { buildTask -> taskName to buildTask }
+    }
+    edges += namer.buildConfigureEdges
 
     return CxxTaskDependencyModel(
             tasks = tasks,

@@ -298,3 +298,18 @@ fun filterByVariantName(vararg names: String) : (NativeModule) -> NativeModule =
         override val variants = nativeModule.variants.filter { names.contains(it.name) }
     }
 }
+
+/**
+ * Produce all combinations of elements from c1 and c2.
+ */
+fun cartesianOf(c1:Array<*>, c2:Array<*>) : Array<Array<*>> =
+        c1.flatMap { e1 -> c2.map { e2 -> arrayOf(e1, e2) } }.toTypedArray()
+
+/**
+ * Produce all combinations of elements from c1, c2, and c3.
+ */
+fun cartesianOf(c1:Array<*>, c2:Array<*>, c3:Array<*>) : Array<Array<*>> =
+        cartesianOf(c1, c2).flatMap { outer ->
+            c3.map { e3 -> arrayOf(outer[0], outer[1], e3)}
+        }.toTypedArray()
+

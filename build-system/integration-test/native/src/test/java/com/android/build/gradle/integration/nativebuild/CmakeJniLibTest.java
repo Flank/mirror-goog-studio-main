@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -74,7 +75,11 @@ public class CmakeJniLibTest {
         TestFileUtils.searchAndReplace(lib.getBuildFile(), "Android.mk", "CMakeLists.txt");
         project.execute(
                 "clean", "assembleDebug", "generateJsonModelDebug", "generateJsonModelRelease");
-        assertThat(project.getSubproject("lib").file("build/intermediates/cmake")).exists();
+        if (ENABLE_NATIVE_CONFIGURATION_FOLDING.getDefaultValue()) {
+            assertThat(project.getSubproject("lib").file("build/intermediates/cxx")).exists();
+        } else {
+            assertThat(project.getSubproject("lib").file("build/intermediates/cmake")).exists();
+        }
     }
 
     @After
