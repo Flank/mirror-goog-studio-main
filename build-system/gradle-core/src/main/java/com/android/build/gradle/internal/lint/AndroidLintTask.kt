@@ -374,7 +374,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.checkOnly.setDisallowChanges(project.provider { lintOptions.checkOnly })
         this.lintClasspath.fromDisallowChanges(project.configurations.getByName("lintClassPath"))
         this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
-        this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, customLintChecksConfig, lintOptions)
+        // Do not support check dependencies in the standalone lint plugin
+        this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, customLintChecksConfig, lintOptions, checkDependencies=false)
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(project.layout.buildDirectory.dir("intermediates/android-lint-model"))
         this.outputs.upToDateWhen { task ->

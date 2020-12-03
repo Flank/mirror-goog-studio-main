@@ -77,7 +77,8 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
         this.variantName = ""
         this.analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         this.projectInputs.initializeForStandalone(project, javaConvention, lintOptions)
-        this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, customLintChecks, lintOptions)
+        // The artifact produced is only used by lint tasks with checkDependencies=true
+        this.variantInputs.initializeForStandalone(project, javaConvention, projectOptions, customLintChecks, lintOptions, checkDependencies=true)
     }
 
     class CreationAction(

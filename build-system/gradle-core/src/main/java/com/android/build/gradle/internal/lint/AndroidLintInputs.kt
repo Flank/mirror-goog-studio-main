@@ -235,6 +235,9 @@ abstract class VariantInputs {
     abstract val name: Property<String>
 
     @get:Input
+    abstract val checkDependencies: Property<Boolean>
+
+    @get:Input
     abstract val minifiedEnabled: Property<Boolean>
 
     @get:Nested
@@ -308,6 +311,7 @@ abstract class VariantInputs {
     fun initialize(variantWithTests: VariantWithTests, checkDependencies: Boolean) {
         val creationConfig = variantWithTests.main
         name.setDisallowChanges(creationConfig.name)
+        this.checkDependencies.setDisallowChanges(checkDependencies)
         minifiedEnabled.setDisallowChanges(creationConfig.codeShrinker != null)
         mainArtifact.initialize(creationConfig as ComponentImpl, checkDependencies)
 
@@ -361,11 +365,12 @@ abstract class VariantInputs {
         mavenCoordinatesCache.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
     }
 
-    internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, projectOptions: ProjectOptions, customLintChecks: FileCollection, dslLintOptions: LintOptions) {
+    internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, projectOptions: ProjectOptions, customLintChecks: FileCollection, dslLintOptions: LintOptions,  checkDependencies: Boolean) {
         val mainSourceSet = javaConvention.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
         val testSourceSet = javaConvention.sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
 
         name.setDisallowChanges(mainSourceSet.name)
+        this.checkDependencies.setDisallowChanges(checkDependencies)
         mainArtifact.initializeForStandalone(project, projectOptions, mainSourceSet)
         testArtifact.setDisallowChanges(project.objects.newInstance(JavaArtifactInput::class.java).initializeForStandalone(project, projectOptions, mainSourceSet))
         androidTestArtifact.disallowChanges()
@@ -396,14 +401,13 @@ abstract class VariantInputs {
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get().cache)
 
-        val checkDependencies = module.lintOptions.checkDependencies
         return DefaultLintModelVariant(
             module,
             name.get(),
             useSupportLibraryVectorDrawables = false,
-            mainArtifact = mainArtifact.toLintModel(dependencyCaches, checkDependencies),
-            testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches, checkDependencies),
-            androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches, checkDependencies),
+            mainArtifact = mainArtifact.toLintModel(dependencyCaches, checkDependencies.get()),
+            testArtifact = testArtifact.orNull?.toLintModel(dependencyCaches, checkDependencies.get()),
+            androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches, checkDependencies.get()),
             mergedManifest = mergedManifest.orNull?.asFile,
             manifestMergeReport = manifestMergeReport.orNull?.asFile,
             `package` = packageName.get(),
