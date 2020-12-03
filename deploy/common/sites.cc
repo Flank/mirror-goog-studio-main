@@ -38,7 +38,7 @@ std::string AppStartupAgent(const std::string pkg) {
 }
 
 std::string AppOverlays(const std::string pkg) {
-  return AppCodeCache(pkg) + ".overlays/";
+  return AppCodeCache(pkg) + ".overlay/";
 }
 
 }  // namespace Sites
