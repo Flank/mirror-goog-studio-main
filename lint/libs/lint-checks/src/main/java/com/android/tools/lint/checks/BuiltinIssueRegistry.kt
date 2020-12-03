@@ -258,6 +258,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ManifestResourceDetector.ISSUE,
                 ManifestTypoDetector.ISSUE,
                 MediaBrowserServiceCompatVersionDetector.ISSUE,
+                MediaCapabilitiesMetadataDetector.ISSUE,
                 MergeMarkerDetector.ISSUE,
                 MergeRootFrameLayoutDetector.ISSUE,
                 MissingClassDetector.INNERCLASS,
