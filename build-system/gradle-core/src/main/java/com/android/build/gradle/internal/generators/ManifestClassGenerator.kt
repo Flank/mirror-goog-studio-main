@@ -43,18 +43,19 @@ class ManifestClassGenerator(private val manifestClassData: ManifestClassData) :
         else "${manifestClassData.manifestPackage.replace('.', '/')}/Manifest"
     }
 
+    val customPermissions by lazy { getCustomPermissions(manifestClassData.manifestFile) }
+
     override fun generate() = generateManifestJar(
-        manifestClassData.manifestFile,
-        manifestClassData.manifestPackage,
+        customPermissions,
         manifestClassData.outputFilePath
     )
 
-    private fun generateManifestJar(manifest: File, manifestPackage: String, outputJar: File) {
+    private fun generateManifestJar(permissions: List<String>, outputJar: File) {
         JarFlinger(outputJar.toPath()).use {
             it.setCompressionLevel(Deflater.NO_COMPRESSION)
             it.addEntry(
                 "$fullyQualifiedManifestClassName\$permission${SdkConstants.DOT_CLASS}",
-                generateManifestPermissionClass(manifest).inputStream()
+                generateManifestPermissionClass(permissions).inputStream()
             )
             it.addEntry(
                 "$fullyQualifiedManifestClassName${SdkConstants.DOT_CLASS}",
@@ -63,17 +64,13 @@ class ManifestClassGenerator(private val manifestClassData: ManifestClassData) :
         }
     }
 
-    private fun getCustomPermissions(manifest: File): ImmutableList<String> {
-        return parseManifest(manifest).customPermissions
-    }
-
-    private fun generateManifestPermissionClass(manifest: File): ByteArray {
+    private fun generateManifestPermissionClass(permissions: List<String>): ByteArray {
         // Currently when permissions' names clash, AAPT2 chooses the LAST one to appear in the
         // manifest. For now copy this behaviour, but in the future we should use the full name to
         // avoid more clashes (however, if we normalise them to java names they might still clash, e.g.
         // "com.custom.permission" and "com_custom.permission").
         val permissionsMap = TreeMap<String, String>()
-        getCustomPermissions(manifest).forEach {
+        permissions.forEach {
             // last one wins
             permissionsMap[getPermissionName(it)] = it
         }
@@ -152,6 +149,10 @@ class ManifestClassGenerator(private val manifestClassData: ManifestClassData) :
             }
             visitEnd()
         }.toByteArray()
+    }
+
+    private fun getCustomPermissions(manifest: File): ImmutableList<String> {
+        return parseManifest(manifest).customPermissions
     }
 }
 

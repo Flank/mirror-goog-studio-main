@@ -60,7 +60,11 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
                         manifestPackage = packageName.get(),
                         outputFilePath = outputJar.get().asFile
                 )
-        ).generate()
+        ).apply {
+            if (customPermissions.any()) {
+                generate()
+            }
+        }
     }
 
     class CreationAction(
