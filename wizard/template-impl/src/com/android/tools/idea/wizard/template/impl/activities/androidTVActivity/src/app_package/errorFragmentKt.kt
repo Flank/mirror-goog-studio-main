@@ -24,18 +24,19 @@ fun errorFragmentKt(
   packageName: String,
   useAndroidX: Boolean
 ): String {
-  val getDrawableArgBlock = if (minApiLevel >= 23) "context" else "activity"
+  val getDrawableArgBlock = if (minApiLevel >= 23) "context!!" else "activity!!"
   return """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)}
 import android.view.View
 
+import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)}
+
 /**
- * This class demonstrates how to extend [${getMaterialComponentName("android.support.v17.leanback.app.ErrorFragment", useAndroidX)}].
+ * This class demonstrates how to extend [${getMaterialComponentName("android.support.v17.leanback.app.ErrorSupportFragment", useAndroidX)}].
  */
-class ErrorFragment : ${getMaterialComponentName("android.support.v17.leanback.app.ErrorFragment", useAndroidX)}() {
+class ErrorFragment : ${getMaterialComponentName("android.support.v17.leanback.app.ErrorSupportFragment", useAndroidX)}() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +50,7 @@ class ErrorFragment : ${getMaterialComponentName("android.support.v17.leanback.a
 
         buttonText = resources.getString(R.string.dismiss_error)
         buttonClickListener = View.OnClickListener {
-            fragmentManager.beginTransaction().remove(this@ErrorFragment).commit()
+            fragmentManager!!.beginTransaction().remove(this@ErrorFragment).commit()
         }
     }
 

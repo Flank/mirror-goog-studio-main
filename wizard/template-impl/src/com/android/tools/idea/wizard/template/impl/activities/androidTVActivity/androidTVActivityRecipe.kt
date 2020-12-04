@@ -78,12 +78,12 @@ fun RecipeExecutor.androidTVActivityRecipe(
   copy(File("app_icon_your_company.png"), resOut.resolve("drawable/app_icon_your_company.png"))
   copy(File("default_background.xml"), resOut.resolve("drawable/default_background.xml"))
   copy(File("movie.png"), resOut.resolve("drawable/movie.png"))
-  save(activityMainXml(activityClass, mainFragmentClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
-  save(activityDetailsXml(detailsActivityClass, detailsFragmentClass, packageName), resOut.resolve("layout/${detailsLayoutName}.xml"))
+  save(activityMainXml(activityClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
+  save(activityDetailsXml(detailsActivityClass, packageName), resOut.resolve("layout/${detailsLayoutName}.xml"))
 
   val mainActivity = when (projectData.language) {
-    Language.Java -> mainActivityJava(activityClass, layoutName, mainFragmentClass, packageName)
-    Language.Kotlin -> mainActivityKt(activityClass, layoutName, mainFragmentClass, packageName)
+    Language.Java -> mainActivityJava(activityClass, layoutName, mainFragmentClass, packageName, useAndroidX)
+    Language.Kotlin -> mainActivityKt(activityClass, layoutName, mainFragmentClass, packageName, useAndroidX)
   }
   save(mainActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 
@@ -94,8 +94,8 @@ fun RecipeExecutor.androidTVActivityRecipe(
   save(mainFragment, srcOut.resolve("${mainFragmentClass}.${ktOrJavaExt}"))
 
   val detailsActivity = when (projectData.language) {
-    Language.Java -> detailsActivityJava(detailsActivityClass, detailsLayoutName, packageName)
-    Language.Kotlin -> detailsActivityKt(detailsActivityClass, detailsLayoutName, packageName)
+    Language.Java -> detailsActivityJava(detailsActivityClass, detailsFragmentClass, detailsLayoutName, packageName, useAndroidX)
+    Language.Kotlin -> detailsActivityKt(detailsActivityClass, detailsFragmentClass, detailsLayoutName, packageName, useAndroidX)
   }
   save(detailsActivity, srcOut.resolve("${detailsActivityClass}.${ktOrJavaExt}"))
 
@@ -144,8 +144,8 @@ fun RecipeExecutor.androidTVActivityRecipe(
   save(playbackVideoFragment, srcOut.resolve("PlaybackVideoFragment.${ktOrJavaExt}"))
 
   val browseErrorActivity = when (projectData.language) {
-    Language.Java -> browseErrorActivityJava(layoutName, packageName)
-    Language.Kotlin -> browseErrorActivityKt(layoutName, packageName)
+    Language.Java -> browseErrorActivityJava(layoutName, packageName, mainFragmentClass, useAndroidX)
+    Language.Kotlin -> browseErrorActivityKt(layoutName, packageName, mainFragmentClass, useAndroidX)
   }
   save(browseErrorActivity, srcOut.resolve("BrowseErrorActivity.${ktOrJavaExt}"))
 
