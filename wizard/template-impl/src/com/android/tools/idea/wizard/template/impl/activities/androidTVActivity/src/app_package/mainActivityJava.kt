@@ -16,27 +16,34 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun mainActivityJava(
   activityClass: String,
   layoutName: String,
   mainFragment: String,
-  packageName: String
+  packageName: String,
+  useAndroidX: Boolean
 ) = """
 package ${packageName};
 
-import android.app.Activity;
 import android.os.Bundle;
+import ${getMaterialComponentName("android.support.v4.app.FragmentActivity", useAndroidX)};
 
 /*
  * Main Activity class that loads {@link ${mainFragment}}.
  */
-public class ${activityClass} extends Activity {
+public class ${activityClass} extends FragmentActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.main_browse_fragment, new ${mainFragment}())
+                .commitNow();
+        }
     }
 }
 """

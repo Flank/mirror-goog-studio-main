@@ -28,14 +28,15 @@ fun errorFragmentJava(
 package ${packageName};
 
 import android.os.Bundle;
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)};
 import android.util.Log;
 import android.view.View;
+
+import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)};
 
 /*
  * This class demonstrates how to extend ErrorFragment
  */
-public class ErrorFragment extends ${getMaterialComponentName("android.support.v17.leanback.app.ErrorFragment", useAndroidX)} {
+public class ErrorFragment extends ${getMaterialComponentName("android.support.v17.leanback.app.ErrorSupportFragment", useAndroidX)} {
     private static final String TAG = "ErrorFragment";
     private static final boolean TRANSLUCENT = true;
 

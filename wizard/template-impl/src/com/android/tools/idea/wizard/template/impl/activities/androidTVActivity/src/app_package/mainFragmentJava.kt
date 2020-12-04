@@ -37,7 +37,7 @@ import android.os.Handler;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
 import ${getMaterialComponentName("android.support.v17.leanback.app.BackgroundManager", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.app.BrowseFragment", useAndroidX)};
+import ${getMaterialComponentName("android.support.v17.leanback.app.BrowseSupportFragment", useAndroidX)};
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ArrayObjectAdapter", useAndroidX)};
 import ${getMaterialComponentName("android.support.v17.leanback.widget.HeaderItem", useAndroidX)};
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ImageCardView", useAndroidX)};
@@ -67,7 +67,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class ${mainFragment} extends BrowseFragment {
+public class ${mainFragment} extends BrowseSupportFragment {
     private static final String TAG = "${mainFragment.take(23)}";
 
     private static final int BACKGROUND_UPDATE_DELAY = 300;

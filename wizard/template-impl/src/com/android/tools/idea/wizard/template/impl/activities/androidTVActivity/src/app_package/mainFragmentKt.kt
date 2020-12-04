@@ -26,7 +26,7 @@ fun mainFragmentKt(
   packageName: String,
   useAndroidX: Boolean
 ): String {
-  val contextArgBlock = if (minApiLevel >= 23) "context" else "activity"
+  val contextArgBlock = if (minApiLevel >= 23) "context!!" else "activity!!"
   return """
 package ${escapeKotlinIdentifier(packageName)}
 
@@ -40,7 +40,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.os.Handler
 import ${getMaterialComponentName("android.support.v17.leanback.app.BackgroundManager", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.app.BrowseFragment", useAndroidX)}
+import ${getMaterialComponentName("android.support.v17.leanback.app.BrowseSupportFragment", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ArrayObjectAdapter", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.widget.HeaderItem", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ImageCardView", useAndroidX)}
@@ -67,7 +67,7 @@ import com.bumptech.glide.request.transition.Transition
 /**
  * Loads a grid of cards with movies to browse.
  */
-class ${mainFragment} : BrowseFragment() {
+class ${mainFragment} : BrowseSupportFragment() {
 
     private val mHandler = Handler()
     private lateinit var mBackgroundManager: BackgroundManager
@@ -98,16 +98,16 @@ class ${mainFragment} : BrowseFragment() {
     private fun prepareBackgroundManager() {
 
         mBackgroundManager = BackgroundManager.getInstance(activity)
-        mBackgroundManager.attach(activity.window)
+        mBackgroundManager.attach(activity!!.window)
         mDefaultBackground = ContextCompat.getDrawable($contextArgBlock, R.drawable.default_background)
         mMetrics = DisplayMetrics()
-        activity.windowManager.defaultDisplay.getMetrics(mMetrics)
+        activity!!.windowManager.defaultDisplay.getMetrics(mMetrics)
     }
 
     private fun setupUIElements() {
         title = getString(R.string.browse_title)
         // over title
-        headersState = BrowseFragment.HEADERS_ENABLED
+        headersState = BrowseSupportFragment.HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true
 
         // set fastLane (or headers) background color
@@ -169,11 +169,11 @@ class ${mainFragment} : BrowseFragment() {
                 intent.putExtra(${detailsActivity}.MOVIE, item)
 
                 val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                                                activity,
+                                                activity!!,
                                                 (itemViewHolder.view as ImageCardView).mainImageView,
                                                 ${detailsActivity}.SHARED_ELEMENT_NAME)
                                         .toBundle()
-                activity.startActivity(intent, bundle)
+                startActivity(intent, bundle)
             } else if (item is String) {
                 if (item.contains(getString(R.string.error_fragment))) {
                     val intent = Intent($contextArgBlock, BrowseErrorActivity::class.java)
