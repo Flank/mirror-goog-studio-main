@@ -609,7 +609,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Previous permission here\n"
                         + "    <permission android:name=\"foo.permission.SEND_SMS\"\n"
-                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "                              ~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
         lint().files(
                         xml(
@@ -650,7 +650,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Previous permission group here\n"
                         + "    <permission-group android:name=\"foo.permissiongroup.STORAGE\"\n"
-                        + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings";
         lint().files(
                         xml(
@@ -748,7 +748,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "    AndroidManifest.xml:9: Previous permission here\n"
                                 + "    <permission android:name=\"foo.permission.SEND_SMS\"\n"
-                                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "                              ~~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");
     }
 
@@ -812,9 +812,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                                 + "../Library/AndroidManifest.xml:8: Error: Permission name PERMISSION_NAME_1 is not unique (appears in both pkg2.PERMISSION_NAME_1 and pkg1.PERMISSION_NAME_1) [UniquePermission]\n"
                                 + "    <permission android:name=\"pkg1.PERMISSION_NAME_1\"/>\n"
                                 + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "    AndroidManifest.xml:6: Previous permission here\n"
-                                + "        android:name=\"a.b.c.SHARED_ACCESS\"\n"
-                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "    AndroidManifest.xml:8: Previous permission here\n"
+                                + "    <permission android:name=\"pkg2.PERMISSION_NAME_1\"/>\n"
+                                + "                              ~~~~~~~~~~~~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");
     }
 

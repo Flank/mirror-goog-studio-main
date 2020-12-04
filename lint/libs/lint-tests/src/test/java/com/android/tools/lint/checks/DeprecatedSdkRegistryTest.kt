@@ -19,7 +19,6 @@ package com.android.tools.lint.checks
 import com.android.ide.common.repository.GradleCoordinate.parseCoordinateString
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
-import java.io.File
 import java.nio.file.Path
 
 private class StubDeprecatedSdkRegistry @JvmOverloads constructor(
