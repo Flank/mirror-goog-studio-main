@@ -33,7 +33,7 @@ message ComponentTreeEvent {
     UNKNOWN = 0;
     NONE = 1;
     SKP = 2;
-    PNG_AS_REQUESTED = 3;
+    BITMAP_AS_REQUESTED = 3;
   }
   PayloadType payload_type = 2;
   View root = 3;

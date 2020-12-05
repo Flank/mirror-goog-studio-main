@@ -18,7 +18,6 @@ package com.android.tools.agent.layoutinspector;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Picture;
 import android.util.Log;
 import android.view.View;
 import android.view.inspector.WindowInspector;
@@ -29,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,12 +36,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.Deflater;
 
 /**
  * This (singleton) class can register a callback to, whenever a view is updated, send the current
@@ -77,7 +76,7 @@ public class LayoutInspectorService {
         UNKNOWN,
         NONE,
         SKP,
-        PNG_AS_REQUESTED
+        BITMAP_AS_REQUESTED
     }
 
     @NonNull
@@ -339,11 +338,11 @@ public class LayoutInspectorService {
         try {
             request = allocateSendRequest();
             ImageType type = ImageType.SKP;
-            if (mUseScreenshotMode) {
+            if (mUseScreenshotMode && root != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 capture(baos, root);
                 image = baos.toByteArray();
-                type = ImageType.PNG_AS_REQUESTED;
+                type = ImageType.BITMAP_AS_REQUESTED;
             }
             int index = 0;
             long[] rootViewIds = getRootViewIds();
@@ -374,54 +373,48 @@ public class LayoutInspectorService {
         }
     }
 
-    // Copied from ViewDebug
     private static void capture(@NonNull OutputStream clientStream, @NonNull View captureView)
             throws IOException {
-        Bitmap b = performViewCapture(captureView);
+        // TODO: get desired scale from Studio
+        Bitmap b = performViewCapture(captureView, 1.0f);
         if (b == null) {
             return;
         }
         try (BufferedOutputStream out = new BufferedOutputStream(clientStream, 32 * 1024)) {
-            b.compress(Bitmap.CompressFormat.PNG, 100, out);
+            byte[] bytes = new byte[b.getByteCount()];
+            ByteBuffer buf = ByteBuffer.wrap(bytes);
+            b.copyPixelsToBuffer(buf);
+            Deflater deflater = new Deflater(Deflater.BEST_SPEED);
+            deflater.setInput(bytes);
+            deflater.finish();
+            byte[] buffer = new byte[1024 * 100];
+            int total = 0;
+            while (!deflater.finished()) {
+                int count = deflater.deflate(buffer);
+                total += count;
+                if (count <= 0) {
+                    break;
+                }
+                out.write(buffer, 0, count);
+            }
             out.flush();
-        } finally {
-            b.recycle();
         }
     }
 
-    // Copied from ViewDebug
-    private static Bitmap performViewCapture(final View captureView) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final Bitmap[] cache = new Bitmap[1];
-
-        captureView.post(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Picture picture = new Picture();
-                            Canvas canvas =
-                                    picture.beginRecording(
-                                            captureView.getWidth(), captureView.getHeight());
-                            captureView.draw(canvas);
-                            picture.endRecording();
-                            cache[0] = Bitmap.createBitmap(picture);
-                        } catch (OutOfMemoryError e) {
-                            Log.w("View", "Out of memory for bitmap");
-                        } finally {
-                            latch.countDown();
-                        }
-                    }
-                });
-
+    private static Bitmap performViewCapture(final View captureView, float scale) {
+        Bitmap bitmap =
+                Bitmap.createBitmap(
+                        (int) (captureView.getWidth() * scale),
+                        (int) (captureView.getHeight() * scale),
+                        Bitmap.Config.RGB_565);
         try {
-            latch.await(CAPTURE_TIMEOUT, TimeUnit.MILLISECONDS);
-            return cache[0];
-        } catch (InterruptedException e) {
-            Log.w("View", "Could not complete the capture of the view " + captureView);
-            Thread.currentThread().interrupt();
+            Canvas canvas = new Canvas(bitmap);
+            canvas.scale(scale, scale);
+            captureView.draw(canvas);
+            return bitmap;
+        } catch (OutOfMemoryError e) {
+            Log.w("LayoutInspectorService", "Out of memory for bitmap");
         }
-
         return null;
     }
 

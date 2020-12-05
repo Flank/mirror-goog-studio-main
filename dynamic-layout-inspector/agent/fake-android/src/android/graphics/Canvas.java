@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,13 @@
 
 package android.graphics;
 
-import androidx.annotation.NonNull;
-import java.io.IOException;
-import java.io.OutputStream;
-
 /**
  * This class is included for testing of LayoutInspectorService.
  *
  * <p>Only the methods needed for LayoutInspectorService is included.
  */
-public class Picture {
-    private byte[] mBytes;
+public class Canvas {
+    public Canvas(Bitmap bitmap) {}
 
-    public Picture() {
-    }
-
-    public void setImage(@NonNull byte[] bytes) {
-        mBytes = bytes;
-    }
-
-    public void writeToStream(@NonNull OutputStream stream) throws IOException {
-        stream.write(mBytes);
-    }
+    public void scale(float x, float y) {}
 }
