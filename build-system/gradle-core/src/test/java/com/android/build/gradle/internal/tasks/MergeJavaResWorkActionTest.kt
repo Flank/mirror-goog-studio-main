@@ -41,6 +41,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.nio.file.Paths
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import kotlin.test.assertFailsWith
@@ -125,8 +126,9 @@ class MergeJavaResWorkActionTest {
         }
 
         // Check that the zip entries are not extracted (regression test for bug 65337573)
-        assertThat(File(outputFile, "fileEndingWithDot.")).doesNotExist()
-        assertThat(File(outputFile, "fileNotEndingWithDot")).doesNotExist()
+        // TODO(b/174890604): Fix the invalid assertions.
+        //assertThat(File(outputFile, "fileEndingWithDot.")).doesNotExist()
+        //assertThat(File(outputFile, "fileNotEndingWithDot")).doesNotExist()
 
         // Check that the zip entries' timestamps are erased (regression test for bug 142890134)
         ZipFile(outputFile).use {

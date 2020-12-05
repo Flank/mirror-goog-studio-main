@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.testutils.truth;
+
+import static com.google.common.truth.Fact.simpleFact;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
-import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
@@ -58,31 +58,43 @@ public class PathSubject extends Subject<PathSubject, Path> {
 
     public void exists() {
         if (!Files.exists(actual())) {
-            fail("exists");
+            failWithActual(simpleFact("expected to exist"));
         }
     }
 
     public void doesNotExist() {
-        if (Files.exists(actual())) {
-            fail("does not exist");
+        if (!Files.notExists(actual())) {
+            failWithActual(simpleFact("expected to not exist"));
         }
     }
 
     public void isFile() {
         if (!Files.isRegularFile(actual())) {
-            fail("is a file");
+            failWithActual(simpleFact("expected to be a regular file"));
         }
     }
 
     public void isDirectory() {
         if (!Files.isDirectory(actual())) {
-            fail("is a directory");
+            failWithActual(simpleFact("expected to be a directory"));
+        }
+    }
+
+    public void isReadable() {
+        if (!Files.isReadable(actual())) {
+            failWithActual(simpleFact("expected to be readable"));
+        }
+    }
+
+    public void isWritable() {
+        if (!Files.isWritable(actual())) {
+            failWithActual(simpleFact("expected to be writable"));
         }
     }
 
     public void isExecutable() {
         if (!Files.isExecutable(actual())) {
-            fail("is not executable");
+            failWithActual(simpleFact("expected to be executable"));
         }
     }
 
@@ -98,7 +110,7 @@ public class PathSubject extends Subject<PathSubject, Path> {
                         "byte[" + contents.length + "]");
             }
         } catch (IOException e) {
-            failWithoutActual(Fact.simpleFact(String.format("Unable to read %s", actual())));
+            failWithoutActual(simpleFact(String.format("Unable to read %s", actual())));
         }
     }
 
@@ -114,7 +126,7 @@ public class PathSubject extends Subject<PathSubject, Path> {
                         Joiner.on('\n').join(contents));
             }
         } catch (IOException e) {
-            failWithoutActual(Fact.simpleFact(String.format("Unable to read %s", actual())));
+            failWithoutActual(simpleFact(String.format("Unable to read %s", actual())));
         }
     }
 
