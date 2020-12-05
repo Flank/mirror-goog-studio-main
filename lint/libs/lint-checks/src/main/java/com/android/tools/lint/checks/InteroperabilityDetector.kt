@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.utils.usLocaleCapitalize
 import com.android.utils.usLocaleDecapitalize
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiDocCommentOwner
@@ -590,6 +591,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             type: PsiType
         ) {
             if (type is PsiPrimitiveType) {
+                return
+            }
+            if (type is PsiClassType && type.resolve() is PsiTypeParameter) {
+                // The nullability of generic type parameters is often only known by the caller.
                 return
             }
             if (node is UField &&
