@@ -350,4 +350,35 @@ class PrefabPublishingTest(
             .getIntermediateFile("prefab_package", variant, "prefab")
         verifyModule(packageDir, gradleModuleName, true, "libfoo_static")
     }
+
+    @Test
+    fun `modules with hyphenated names that are prefixes of other modules match appropriately`() {
+        val subproject = project.getSubproject(gradleModuleName)
+
+        subproject.getMainSrcDir("cpp").resolve("CMakeLists.txt").appendText(
+            """
+
+            add_library(foo-jni SHARED foo.cpp)
+            target_include_directories(foo-jni PUBLIC include)
+            """.trimIndent()
+        )
+        subproject.getMainSrcDir("cpp").resolve("Android.mk").appendText(
+            """
+
+            include $(CLEAR_VARS)
+            LOCAL_MODULE := foo-jni
+            LOCAL_SRC_FILES := foo.cpp
+            LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
+            LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+            include $(BUILD_SHARED_LIBRARY)
+            """.trimIndent()
+        )
+
+        project.execute("assemble$variant")
+
+        val packageDir = project.getSubproject(gradleModuleName)
+            .getIntermediateFile("prefab_package", variant, "prefab")
+
+        verifyModule(packageDir, gradleModuleName, static = false)
+    }
 }
