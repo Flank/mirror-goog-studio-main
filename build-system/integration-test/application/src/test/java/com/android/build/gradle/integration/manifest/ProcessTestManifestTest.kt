@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.manifest
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ApkSubject.getManifestContent
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assert.fail
 import org.junit.Rule
@@ -197,11 +197,11 @@ class ProcessTestManifestTest {
         project.executor().run("assembleFlavor1Flavor2DebugAndroidTest")
         val manifestContent = project.file("build/intermediates/packaged_manifests/flavor1Flavor2DebugAndroidTest/AndroidManifest.xml")
         // merged from androidTestDebug
-        FileSubject.assertThat(manifestContent).contains("android:isGame=\"false\"")
+        assertThat(manifestContent).contains("android:isGame=\"false\"")
         // merged from androidTestFlavor2
-        FileSubject.assertThat(manifestContent).contains("android:supportsRtl=\"true\"")
+        assertThat(manifestContent).contains("android:supportsRtl=\"true\"")
         // merged from androidTestFlavor1
-        FileSubject.assertThat(manifestContent).contains("android:allowBackup=\"true\"")
+        assertThat(manifestContent).contains("android:allowBackup=\"true\"")
     }
 
     fun assertManifestContent(manifestContent: Iterable<String>, stringToAssert: String) {

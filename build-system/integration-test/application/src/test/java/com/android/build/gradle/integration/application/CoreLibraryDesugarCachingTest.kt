@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
@@ -65,7 +65,7 @@ class CoreLibraryDesugarCachingTest {
         executor
             .withArgument("--build-cache")
             .run("clean", ASSEMBLE_RELEASE)
-        FileSubject.assertThat(buildCacheDir).exists()
+        assertThat(buildCacheDir).exists()
 
         val result = executor
             .withArgument("--build-cache")

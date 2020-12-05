@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
@@ -55,6 +55,6 @@ class BundleAllClassesTest {
             }
         }.execute()
 
-        FileSubject.assertThat(outputJar).exists()
+        assertThat(outputJar).exists()
     }
 }

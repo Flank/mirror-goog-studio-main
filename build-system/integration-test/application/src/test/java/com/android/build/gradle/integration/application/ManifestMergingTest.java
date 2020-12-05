@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.build.api.artifact.ArtifactType;

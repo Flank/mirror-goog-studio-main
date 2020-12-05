@@ -28,7 +28,7 @@ import com.android.ide.common.process.ProcessOutputHandler
 import com.android.ide.common.process.ProcessResult
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.testutils.MockitoKt.any
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.ILogger
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
@@ -36,7 +36,6 @@ import com.google.protobuf.TextFormat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerConfig
-import org.gradle.api.file.ConfigurableFileCollection
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -147,7 +146,7 @@ class UtpTestRunnerTest {
 
     @Test
     fun runTests() {
-        val resultDir = temporaryFolderRule.newFolder("results")
+        val resultDir = temporaryFolderRule.newFolder("results").toPath()
         val runner = UtpTestRunner(
                 null,
                 mockProcessExecutor,
@@ -167,7 +166,7 @@ class UtpTestRunnerTest {
                 listOf(mockDevice),
                 0,
                 setOf(),
-                resultDir,
+                resultDir.toFile(),
                 false,
                 null,
                 mockCoverageDir,
@@ -184,8 +183,9 @@ class UtpTestRunnerTest {
         assertThat(captor.value.args[1]).startsWith("--proto_config=")
         assertThat(captor.value.args[2]).startsWith("--proto_server_config=")
 
-        assertThat(resultDir).containsFile("TEST-mockDeviceName-projectName-variantName.xml")
-        assertThat(File(resultDir, "TEST-mockDeviceName-projectName-variantName.xml")).containsAllOf(
+        val variant = resultDir.resolve("TEST-mockDeviceName-projectName-variantName.xml")
+        assertThat(variant).exists()
+        assertThat(variant).containsAllOf(
                 """name="com.example.application.ExampleInstrumentedTest"""",
                 """tests="1" failures="0" errors="0" skipped="0" time="82.584"""",
                 """<property name="device" value="mockDeviceName" />""",

@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test

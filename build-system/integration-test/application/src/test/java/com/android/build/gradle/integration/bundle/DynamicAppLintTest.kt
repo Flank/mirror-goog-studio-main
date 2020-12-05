@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.bundle
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -39,20 +39,20 @@ class DynamicAppLintTest {
         project.execute("clean", "lint")
 
         val file = project.file("app/lint-results.txt")
-        FileSubject.assertThat(file).containsAllOf(
+        assertThat(file).containsAllOf(
             "The resource R.string.unused_from_feature1 appears to be unused",
             "The resource R.string.feature1_title appears to be unused",
             "The resource R.string.feature2_title appears to be unused",
             "The resource R.string.unused_from_app appears to be unused"
         )
 
-        FileSubject.assertThat(file).doesNotContain(
+        assertThat(file).doesNotContain(
             "The resource R.string.used_from_app appears to be unused"
         )
-        FileSubject.assertThat(file).doesNotContain(
+        assertThat(file).doesNotContain(
             "The resource R.string.used_from_feature1 appears to be unused"
         )
-        FileSubject.assertThat(file).doesNotContain(
+        assertThat(file).doesNotContain(
             "The resource R.string.used_from_feature2 appears to be unused"
         )
     }

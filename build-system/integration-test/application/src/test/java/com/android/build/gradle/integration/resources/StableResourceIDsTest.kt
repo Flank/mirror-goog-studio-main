@@ -21,7 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +45,7 @@ class StableResourceIDsTest {
                     <attr name="attr_a" type="string"/>
                     <attr name="attr_b" type="string"/>
                     <attr name="attr_c" type="string"/>
-                    
+
                     <declare-styleable name="ds">
                         <attr name="attr_a"/>
                         <attr name="attr_b"/>
@@ -73,9 +73,9 @@ class StableResourceIDsTest {
 
         val stableIdsTxt =
            appProject.getIntermediateFile("stable_resource_ids_file", "debug", "stableIds.txt")
-        FileSubject.assertThat(stableIdsTxt).exists()
+        assertThat(stableIdsTxt).exists()
 
-        FileSubject.assertThat(stableIdsTxt).containsAllOf(
+        assertThat(stableIdsTxt).containsAllOf(
             "com.example.app:color/my_color_a = 0x7f020000",
             "com.example.app:color/my_color_b = 0x7f020001",
             "com.example.app:color/my_color_c = 0x7f020002",
@@ -87,8 +87,8 @@ class StableResourceIDsTest {
 
         val rDotTxt =
             appProject.getIntermediateFile("runtime_symbol_list", "debug", "R.txt")
-        FileSubject.assertThat(rDotTxt).exists()
-        FileSubject.assertThat(rDotTxt).containsAllOf(
+        assertThat(rDotTxt).exists()
+        assertThat(rDotTxt).containsAllOf(
             "my_color_a 0x7f020000",
             "my_color_b 0x7f020001",
             "my_color_c 0x7f020002",
@@ -112,7 +112,7 @@ class StableResourceIDsTest {
             .with(BooleanOption.ENABLE_STABLE_IDS, true)
             .run(":app:assembleDebug")
 
-        FileSubject.assertThat(stableIdsTxt).containsAllOf(
+        assertThat(stableIdsTxt).containsAllOf(
             "com.example.app:color/my_color_a = 0x7f020000", // should use old ID
             "com.example.app:color/my_color_b = 0x7f020001", // kept from previous run
             "com.example.app:color/my_color_c = 0x7f020002", // should use old ID
@@ -125,7 +125,7 @@ class StableResourceIDsTest {
         // Removed resource should not be present, and the res IDs should match the stable IDs file.
         // Since the resources are still ordered alphabetically in the file, and the newly added
         // resources cannot re-use old IDs this means that the IDs will NOT BE IN ORDER ANYMORE.
-        FileSubject.assertThat(rDotTxt).containsAllOf(
+        assertThat(rDotTxt).containsAllOf(
             "my_color_a 0x7f020000",
             "my_color_bb 0x7f020003", // should not contain b, only the newly added bb
             "my_color_c 0x7f020002",
@@ -148,12 +148,12 @@ class StableResourceIDsTest {
 
         val stableIdsTxt =
             appProject.getIntermediateFile("stable_resource_ids_file", "debug", "stableIds.txt")
-        FileSubject.assertThat(stableIdsTxt).doesNotExist()
+        assertThat(stableIdsTxt).doesNotExist()
 
         val rDotTxt =
             appProject.getIntermediateFile("runtime_symbol_list", "debug", "R.txt")
-        FileSubject.assertThat(rDotTxt).exists()
-        FileSubject.assertThat(rDotTxt).containsAllOf(
+        assertThat(rDotTxt).exists()
+        assertThat(rDotTxt).containsAllOf(
             "my_color_a 0x7f020000",
             "my_color_b 0x7f020001",
             "my_color_c 0x7f020002",
@@ -177,10 +177,10 @@ class StableResourceIDsTest {
             .with(BooleanOption.ENABLE_STABLE_IDS, false)
             .run(":app:assembleDebug")
 
-        FileSubject.assertThat(stableIdsTxt).doesNotExist()
+        assertThat(stableIdsTxt).doesNotExist()
 
         // IDs should be assigned from scratch
-        FileSubject.assertThat(rDotTxt).containsAllOf(
+        assertThat(rDotTxt).containsAllOf(
             "my_color_a 0x7f020000",
             "my_color_bb 0x7f020001",
             "my_color_c 0x7f020002",

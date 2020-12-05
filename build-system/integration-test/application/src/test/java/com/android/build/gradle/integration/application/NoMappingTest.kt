@@ -24,7 +24,7 @@ import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

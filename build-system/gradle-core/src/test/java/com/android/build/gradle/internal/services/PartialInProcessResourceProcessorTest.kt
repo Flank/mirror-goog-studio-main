@@ -26,7 +26,7 @@ import com.android.ide.common.resources.CompileResourceRequest
 import com.android.testutils.MockitoKt.eq
 import com.android.testutils.MockitoKt.mock
 import com.android.testutils.NoErrorsOrWarningsLogger
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder

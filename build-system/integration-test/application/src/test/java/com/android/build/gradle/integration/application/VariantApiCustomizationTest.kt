@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -107,7 +107,7 @@ androidComponents {
         val appProject = project.getSubproject(":app")
         // now check that resulting merged manifest has the right 123 version.
         val manifestFile = File(appProject.buildDir, "intermediates/packaged_manifests/debug/AndroidManifest.xml")
-        FileSubject.assertThat(manifestFile).exists()
+        assertThat(manifestFile).exists()
         assertThat(manifestFile.readText()).contains("android:versionCode=\"123\"")
         assertThat(manifestFile.readText()).contains("android:versionName=\"foo\"")
     }

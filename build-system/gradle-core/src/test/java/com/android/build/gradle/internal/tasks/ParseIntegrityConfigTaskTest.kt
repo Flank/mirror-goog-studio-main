@@ -38,7 +38,7 @@ import com.android.bundle.AppIntegrityConfigOuterClass.EmulatorCheck
 import com.android.bundle.AppIntegrityConfigOuterClass.InstallerCheck
 import com.android.bundle.AppIntegrityConfigOuterClass.LicenseCheck
 import com.android.bundle.AppIntegrityConfigOuterClass.Policy
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth.assertThat
@@ -105,7 +105,7 @@ class ParseIntegrityConfigTaskTest {
             }
         }.execute()
 
-        FileSubject.assertThat(appIntegrityConfigProto).exists()
+        assertThat(appIntegrityConfigProto).exists()
         val config = AppIntegrityConfig.parseFrom(
             FileInputStream(appIntegrityConfigProto)
         )
@@ -151,7 +151,7 @@ class ParseIntegrityConfigTaskTest {
             }
         }.execute()
 
-        FileSubject.assertThat(appIntegrityConfigProto).exists()
+        assertThat(appIntegrityConfigProto).exists()
         val config = AppIntegrityConfig.parseFrom(
             FileInputStream(appIntegrityConfigProto)
         )
@@ -178,10 +178,10 @@ class ParseIntegrityConfigTaskTest {
 
         assertThat(task.integrityConfigDir.isPresent)
         val configDir = task.integrityConfigDir.asFile.get()
-        FileSubject.assertThat(configDir).exists()
+        assertThat(configDir).exists()
         val configFile = configDir.resolve(configFileName)
-        FileSubject.assertThat(configFile).exists()
-        FileSubject.assertThat(configFile).contains("<IntegrityConfig/>")
+        assertThat(configFile).exists()
+        assertThat(configFile).contains("<IntegrityConfig/>")
     }
 
     private fun createScopeFromBundleOptions(bundleOptions: BundleOptions): VariantCreationConfig {

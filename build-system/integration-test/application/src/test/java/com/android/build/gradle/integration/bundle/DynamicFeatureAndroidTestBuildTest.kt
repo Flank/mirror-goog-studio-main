@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import org.junit.Rule
 import org.junit.Test

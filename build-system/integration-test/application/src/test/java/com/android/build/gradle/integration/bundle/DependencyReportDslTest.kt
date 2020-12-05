@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.google.common.collect.ImmutableList.toImmutableList
@@ -79,7 +79,7 @@ class DependenciesReportDslTest {
         project.addUseAndroidXProperty()
         project.executor().run(":app:bundleRelease")
         val bundle = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundle).exists()
+        assertThat(bundle).exists()
         ZipFile(bundle).use {
             val dependenciesFile = it.getEntry("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
             val deps = AppDependencies.parseFrom(it.getInputStream(dependenciesFile))
@@ -108,7 +108,7 @@ class DependenciesReportDslTest {
         project.addUseAndroidXProperty()
         project.executor().run(":app:bundleRelease")
         val bundle = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundle).exists()
+        assertThat(bundle).exists()
         ZipFile(bundle).use {
             val dependenciesFile = it.getEntry("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
             val deps = AppDependencies.parseFrom(it.getInputStream(dependenciesFile))
@@ -137,7 +137,7 @@ class DependenciesReportDslTest {
         project.addUseAndroidXProperty()
         project.executor().run(":app:bundleRelease")
         val bundle = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundle).exists()
+        assertThat(bundle).exists()
         Zip(bundle).use {
             ZipFileSubject.assertThat(it).doesNotContain("BUNDLE-METADATA/com.android.tools.build.libraries/dependencies.pb")
         }

@@ -22,7 +22,7 @@ import static com.android.build.gradle.integration.common.fixture.model.NativeUt
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
 import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;

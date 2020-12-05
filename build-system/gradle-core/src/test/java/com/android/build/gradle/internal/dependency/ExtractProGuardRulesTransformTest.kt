@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Property
@@ -66,7 +66,7 @@ class ExtractProGuardRulesTransformTest {
         createTransform(jarFile).transform(transformOutputs)
 
         assertThat(getProducedFileNames(transformOutputs.outputDirectory)).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.txt")
-        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
+        assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
     }
 
     @Test
@@ -76,7 +76,7 @@ class ExtractProGuardRulesTransformTest {
         createTransform(jarFile).transform(transformOutputs)
 
         assertThat(getProducedFileNames(transformOutputs.outputDirectory)).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.txt")
-        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
+        assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.txt")).hasContents("bar")
     }
 
     @Test
@@ -88,8 +88,8 @@ class ExtractProGuardRulesTransformTest {
         createTransform(jarFile).transform(transformOutputs)
 
         assertThat(getProducedFileNames(transformOutputs.outputDirectory)).containsExactly("lib${slash}META-INF${slash}proguard${slash}foo.pro", "lib${slash}META-INF${slash}proguard${slash}bar.txt")
-        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.pro")).hasContents("goodbye")
-        FileSubject.assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}bar.txt")).hasContents("hello")
+        assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}foo.pro")).hasContents("goodbye")
+        assertThat(transformOutputs.outputDirectory.resolve("lib${slash}META-INF${slash}proguard${slash}bar.txt")).hasContents("hello")
     }
 
     private fun getProducedFileNames(rootDir: File): List<String> = rootDir

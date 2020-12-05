@@ -19,7 +19,7 @@ import com.android.Version
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.gradle_project.ProjectLocation
 import com.android.testutils.TestUtils
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.io.Resources
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule

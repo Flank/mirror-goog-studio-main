@@ -4,7 +4,7 @@ import static com.android.build.gradle.integration.common.fixture.TestVersions.S
 import static com.android.build.gradle.integration.common.fixture.TestVersions.TEST_SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;

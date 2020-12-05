@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
@@ -304,7 +304,7 @@ public class VectorDrawableTest_Library {
                         "drawable-anydpi-v21",
                         "my_vector.xml");
 
-        assertThat(generatedXmlApp).isNotSameAs(generatedXmlLib);
+        assertThat(generatedXmlApp).isNotEqualTo(generatedXmlLib.toPath());
 
         // Library color should be red and should be overridden in the app by the color blue.
         assertThat(generatedXmlApp).contains(blue);
@@ -335,6 +335,6 @@ public class VectorDrawableTest_Library {
                         "my_vector.png");
 
         // Check the generated PNGs too, just to be safe.
-        assertThat(generatedPngApp).isNotSameAs(generatedPngLib);
+        assertThat(generatedPngApp).isNotEqualTo(generatedPngLib.toPath());
     }
 }

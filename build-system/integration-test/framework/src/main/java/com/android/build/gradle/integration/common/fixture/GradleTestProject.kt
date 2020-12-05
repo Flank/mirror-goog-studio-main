@@ -41,7 +41,7 @@ import com.android.testutils.apk.Aab
 import com.android.testutils.apk.Aar
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.android.utils.combineAsCamelCase
@@ -383,7 +383,7 @@ class GradleTestProject @JvmOverloads internal constructor(
         val distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion)
         val distributionZip =
             File(gradleDistributionDirectory, distributionName)
-        PathSubject.assertThat(distributionZip).isFile()
+        assertThat(distributionZip).isFile()
         val connection = connector
             .useDistribution(distributionZip.toURI())
             .useGradleUserHomeDir(location.testLocation.gradleUserHome.toFile())

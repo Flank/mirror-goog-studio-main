@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.nio.file.Paths

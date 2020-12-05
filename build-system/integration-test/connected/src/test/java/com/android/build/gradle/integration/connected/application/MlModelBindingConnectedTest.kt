@@ -19,7 +19,7 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.TestUtils
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import org.apache.commons.io.FileUtils
 import org.junit.Before
 import org.junit.Rule
@@ -88,6 +88,6 @@ class MlModelBindingConnectedTest {
         project.executor().run("connectedAndroidTest")
         val htmlResults =
             project.file("build/reports/androidTests/connected/com.example.app.ModelTest.html")
-        FileSubject.assertThat(htmlResults).isFile()
+        assertThat(htmlResults).isFile()
     }
 }

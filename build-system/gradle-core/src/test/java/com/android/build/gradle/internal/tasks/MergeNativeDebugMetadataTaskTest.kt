@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
 import org.junit.Before

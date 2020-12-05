@@ -24,7 +24,7 @@ import com.android.build.gradle.integration.common.fixture.model.recoverExisting
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.buildCommandFile
-import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -75,7 +75,7 @@ class CmakeVariantApiTest {
 
         project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
         val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
-        PathSubject.assertThat(cmakeLists).isFile()
+        assertThat(cmakeLists).isFile()
         cmakeLists.writeText("""
             cmake_minimum_required(VERSION 3.7)
 
@@ -86,14 +86,14 @@ class CmakeVariantApiTest {
 
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).isNull()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
+        assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).isNull()
+        assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
         project.recoverExistingCxxAbiModels().forEach { abi ->
             val buildCommandFile = abi.buildCommandFile
-            PathSubject.assertThat(buildCommandFile).exists()
+            assertThat(buildCommandFile).exists()
             val buildCommand = buildCommandFile.readText()
 
             Truth.assertThat(buildCommand).contains("-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG")
@@ -138,7 +138,7 @@ class CmakeVariantApiTest {
 
         project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
         val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
-        PathSubject.assertThat(cmakeLists).isFile()
+        assertThat(cmakeLists).isFile()
         cmakeLists.writeText("""
             cmake_minimum_required(VERSION 3.7)
 
@@ -149,14 +149,14 @@ class CmakeVariantApiTest {
 
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).exists()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
+        assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).exists()
+        assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
         project.recoverExistingCxxAbiModels().forEach { abi ->
             val buildCommandFile = abi.buildCommandFile
-            PathSubject.assertThat(buildCommandFile).exists()
+            assertThat(buildCommandFile).exists()
             val buildCommand = buildCommandFile.readText()
 
             Truth.assertThat(buildCommand)
@@ -200,7 +200,7 @@ class CmakeVariantApiTest {
 
         project.buildFile.resolveSibling("foo.cpp").writeText("void foo() {}")
         val cmakeLists = project.buildFile.resolveSibling("CMakeLists.txt")
-        PathSubject.assertThat(cmakeLists).isFile()
+        assertThat(cmakeLists).isFile()
         cmakeLists.writeText("""
             cmake_minimum_required(VERSION 3.7)
 
@@ -211,14 +211,14 @@ class CmakeVariantApiTest {
 
         project.execute("assembleDebug")
 
-        PathSubject.assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.X86)).isNull()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).exists()
-        PathSubject.assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
+        assertThat(project.getSoFolderFor(Abi.ARM64_V8A)).isNull()
+        assertThat(project.getSoFolderFor(Abi.X86)).isNull()
+        assertThat(project.getSoFolderFor(Abi.ARMEABI_V7A)).exists()
+        assertThat(project.getSoFolderFor(Abi.X86_64)).exists()
 
         project.recoverExistingCxxAbiModels().forEach { abi ->
             val buildCommandFile = abi.buildCommandFile
-            PathSubject.assertThat(buildCommandFile).exists()
+            assertThat(buildCommandFile).exists()
             val buildCommand = buildCommandFile.readText()
 
             Truth.assertThat(buildCommand).contains("-DANDROID_ARM_NEON=TRUE")

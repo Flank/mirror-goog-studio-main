@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.api.variant.impl.ResValue
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.generators.ResValueGenerator
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
 import org.junit.Test

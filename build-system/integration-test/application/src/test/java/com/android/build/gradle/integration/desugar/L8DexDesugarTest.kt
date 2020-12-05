@@ -30,7 +30,7 @@ import com.android.testutils.apk.AndroidArchive.checkValidClassName
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -90,7 +90,7 @@ class L8DexDesugarTest {
         val outputModels = project.model().fetchContainer(AppBundleProjectBuildOutput::class.java)
         val outputAppModel = outputModels.rootBuildModelMap[":"] ?: fail("Failed to get app model")
         val bundleFile = outputAppModel.getOutputByName("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
         Zip(bundleFile).use {
             val dex1 = Dex(it.getEntry("base/dex/classes.dex")!!)
             val dex2 = Dex(it.getEntry("base/dex/classes2.dex")!!)

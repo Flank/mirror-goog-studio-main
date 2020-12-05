@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test

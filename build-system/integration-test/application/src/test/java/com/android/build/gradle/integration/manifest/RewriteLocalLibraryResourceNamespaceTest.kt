@@ -20,7 +20,7 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files

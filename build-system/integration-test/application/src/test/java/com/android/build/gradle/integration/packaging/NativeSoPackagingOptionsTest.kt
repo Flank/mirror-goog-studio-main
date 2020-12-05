@@ -26,7 +26,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -125,7 +125,7 @@ class NativeSoPackagingOptionsTest {
         libSubProject.execute("assembleDebug", "assembleDebugAndroidTest")
 
         val debugApkFile = appSubProject.getApk(DEBUG).file.toFile()
-        FileSubject.assertThat(debugApkFile).exists()
+        assertThat(debugApkFile).exists()
         val debugApk = TruthHelper.assertThat(appSubProject.getApk(DEBUG))
         debugApk.doesNotContainJavaResource("lib/x86/dslExclude.so")
         debugApk.doesNotContainJavaResource("lib/x86/debugExclude.so")
@@ -146,7 +146,7 @@ class NativeSoPackagingOptionsTest {
         ).isTrue()
 
         val releaseApkFile = appSubProject.getApk(RELEASE).file.toFile()
-        FileSubject.assertThat(releaseApkFile).exists()
+        assertThat(releaseApkFile).exists()
         val releaseApk = TruthHelper.assertThat(appSubProject.getApk(RELEASE))
         releaseApk.doesNotContainJavaResource("lib/x86/dslExclude.so")
         releaseApk.doesNotContainJavaResource("lib/x86/releaseExclude.so")
@@ -168,7 +168,7 @@ class NativeSoPackagingOptionsTest {
                 }
         ).isTrue()
 
-        FileSubject.assertThat(appSubProject.getApk(ANDROIDTEST_DEBUG).file.toFile()).exists()
+        assertThat(appSubProject.getApk(ANDROIDTEST_DEBUG).file).exists()
         val androidTestApk = TruthHelper.assertThat(appSubProject.getApk(ANDROIDTEST_DEBUG))
         androidTestApk.doesNotContainJavaResource("lib/x86/testExclude.so")
         androidTestApk.containsJavaResourceWithContent("lib/x86/testKeep.so", "foo")
@@ -179,7 +179,7 @@ class NativeSoPackagingOptionsTest {
             this.contains("jni/x86/libKeep.so")
         }
 
-        FileSubject.assertThat(libSubProject.getApk(ANDROIDTEST_DEBUG).file.toFile()).exists()
+        assertThat(libSubProject.getApk(ANDROIDTEST_DEBUG).file).exists()
         val libAndroidTestApk = TruthHelper.assertThat(libSubProject.getApk(ANDROIDTEST_DEBUG))
         libAndroidTestApk.doesNotContainJavaResource("lib/x86/testExclude.so")
         libAndroidTestApk.containsJavaResourceWithContent("lib/x86/testKeep.so", "bar")

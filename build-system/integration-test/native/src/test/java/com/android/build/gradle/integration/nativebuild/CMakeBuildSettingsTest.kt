@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
-import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
@@ -58,8 +58,8 @@ class CMakeBuildSettingsTest(
 
     @Before
     fun setUp() {
-        PathSubject.assertThat(project.buildFile).isNotNull()
-        PathSubject.assertThat(project.buildFile).isFile()
+        assertThat(project.buildFile).isNotNull()
+        assertThat(project.buildFile).isFile()
 
         TestFileUtils.appendToFile(
             project.buildFile,

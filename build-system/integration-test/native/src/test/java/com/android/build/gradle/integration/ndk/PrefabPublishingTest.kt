@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.ndk
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
 import org.junit.Assume
 import org.junit.Before

@@ -30,7 +30,7 @@ import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
 import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat

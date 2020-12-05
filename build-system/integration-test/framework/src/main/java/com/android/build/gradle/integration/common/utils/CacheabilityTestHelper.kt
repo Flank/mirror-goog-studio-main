@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.common.utils
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TaskStateList
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import java.io.File
 
 /** Utility to write tests for cacheable tasks. */

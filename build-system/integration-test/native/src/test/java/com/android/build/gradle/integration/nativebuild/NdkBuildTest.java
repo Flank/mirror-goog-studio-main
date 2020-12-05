@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.*;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;

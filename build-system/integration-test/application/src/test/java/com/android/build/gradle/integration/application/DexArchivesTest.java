@@ -18,7 +18,8 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
 import static com.android.testutils.truth.DexSubject.assertThat;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -34,7 +35,6 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
-import com.android.testutils.truth.PathSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -295,7 +295,7 @@ public class DexArchivesTest {
                                 throw new RuntimeException(e);
                             }
                         } else {
-                            PathSubject.assertThat(f)
+                            assertThat(f)
                                     .named("dexing output that is not dex nor jar")
                                     .isDirectory();
                         }

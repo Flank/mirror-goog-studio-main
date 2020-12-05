@@ -39,8 +39,7 @@ import com.android.testutils.apk.Aab
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
-import com.android.testutils.truth.FileSubject
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.truth.Truth
@@ -167,8 +166,8 @@ class DynamicAppTest {
                     "instant_app_manifest",
                     "debug",
                     "AndroidManifest.xml")
-            FileSubject.assertThat(manifestFile).isFile()
-            FileSubject.assertThat(manifestFile).contains("android:targetSandboxVersion=\"2\"")
+            assertThat(manifestFile).isFile()
+            assertThat(manifestFile).contains("android:targetSandboxVersion=\"2\"")
         }
     }
 
@@ -182,43 +181,43 @@ class DynamicAppTest {
         project.execute("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         val manifestFile = FileUtils.join(project.getSubproject("feature1").buildDir,
             "intermediates",
             "packaged_manifests",
             "debug",
             "AndroidManifest.xml")
-        FileSubject.assertThat(manifestFile).isFile()
-        FileSubject.assertThat(manifestFile).doesNotContain("splitName")
-        FileSubject.assertThat(manifestFile).contains("minSdkVersion=\"21\"")
+        assertThat(manifestFile).isFile()
+        assertThat(manifestFile).doesNotContain("splitName")
+        assertThat(manifestFile).contains("minSdkVersion=\"21\"")
 
         val bundleManifest = FileUtils.join(project.getSubproject("feature1").buildDir,
             "intermediates",
             "bundle_manifest",
             "debug",
             "AndroidManifest.xml")
-        FileSubject.assertThat(bundleManifest).isFile()
-        FileSubject.assertThat(bundleManifest).contains("android:splitName=\"feature1\"")
-        FileSubject.assertThat(bundleManifest).contains("minSdkVersion=\"21\"")
+        assertThat(bundleManifest).isFile()
+        assertThat(bundleManifest).contains("android:splitName=\"feature1\"")
+        assertThat(bundleManifest).contains("minSdkVersion=\"21\"")
 
         val baseManifest = FileUtils.join(project.getSubproject("app").buildDir,
             "intermediates",
             "packaged_manifests",
             "debug",
             "AndroidManifest.xml")
-        FileSubject.assertThat(baseManifest).isFile()
-        FileSubject.assertThat(baseManifest).doesNotContain("splitName")
-        FileSubject.assertThat(baseManifest).contains("minSdkVersion=\"18\"")
+        assertThat(baseManifest).isFile()
+        assertThat(baseManifest).doesNotContain("splitName")
+        assertThat(baseManifest).contains("minSdkVersion=\"18\"")
 
         val baseBundleManifest = FileUtils.join(project.getSubproject("app").buildDir,
             "intermediates",
             "bundle_manifest",
             "debug",
             "AndroidManifest.xml")
-        FileSubject.assertThat(baseBundleManifest).isFile()
-        FileSubject.assertThat(baseBundleManifest).contains("android:splitName=\"feature1\"")
-        FileSubject.assertThat(baseBundleManifest).contains("minSdkVersion=\"18\"")
+        assertThat(baseBundleManifest).isFile()
+        assertThat(baseBundleManifest).contains("android:splitName=\"feature1\"")
+        assertThat(baseBundleManifest).contains("minSdkVersion=\"18\"")
     }
 
     @Test
@@ -227,7 +226,7 @@ class DynamicAppTest {
         project.execute("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         Aab(bundleFile).use { aab ->
             assertThat(aab.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
@@ -263,20 +262,20 @@ class DynamicAppTest {
             "packaged_manifests",
             "debug",
             "AndroidManifest.xml")
-        FileSubject.assertThat(manifestFile).isFile()
-        FileSubject.assertThat(manifestFile).doesNotContain("splitName")
-        FileSubject.assertThat(manifestFile).contains("featureSplit=\"feature1\"")
+        assertThat(manifestFile).isFile()
+        assertThat(manifestFile).doesNotContain("splitName")
+        assertThat(manifestFile).contains("featureSplit=\"feature1\"")
 
         // check that the feature1 source manifest has not been changed so we can verify that
         // it is automatically reset to the base module value.
         val originalManifestFile = FileUtils.join(
             project.getSubproject("feature1").getMainSrcDir(""),
             "AndroidManifest.xml")
-        FileSubject.assertThat(originalManifestFile).doesNotContain("android:versionCode=\"11\"")
+        assertThat(originalManifestFile).doesNotContain("android:versionCode=\"11\"")
 
         // and finally check that the resulting manifest has had its versionCode changed from the
         // base module value
-        FileSubject.assertThat(manifestFile).contains("android:versionCode=\"11\"")
+        assertThat(manifestFile).contains("android:versionCode=\"11\"")
 
         // Check that neither splitName or featureSplit are merged back to the base.
         val baseManifest = FileUtils.join(project.getSubproject("app").buildDir,
@@ -319,7 +318,7 @@ class DynamicAppTest {
         project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, false).run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
             assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
@@ -334,7 +333,7 @@ class DynamicAppTest {
         project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
             assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
@@ -351,7 +350,7 @@ class DynamicAppTest {
         project.executor().with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true).run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
             assertThat(it.entries.map { it.toString() }).containsExactly(*releaseUnsignedContent)
@@ -378,7 +377,7 @@ class DynamicAppTest {
         project.execute("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
             Truth.assertThat(it.entries.map { it.toString() }).containsExactly(*debugUnsignedContent)
@@ -409,7 +408,7 @@ class DynamicAppTest {
         project.execute("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         val bundleContentWithAbis = debugUnsignedContent.plus(
             listOf(
@@ -444,7 +443,7 @@ class DynamicAppTest {
         project.execute("assembleDebug")
 
         val baseApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(baseApk.file.toFile()).exists()
+        assertThat(baseApk.file).exists()
         ApkSubject.assertThat(baseApk).contains(
             "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so"
         )
@@ -453,7 +452,7 @@ class DynamicAppTest {
         )
 
         val feature1Apk = project.getSubproject(":feature1").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(feature1Apk.file.toFile()).exists()
+        assertThat(feature1Apk.file).exists()
         ApkSubject.assertThat(feature1Apk).contains(
             "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"
         )
@@ -478,7 +477,7 @@ class DynamicAppTest {
             .run("assembleDebug")
 
         val baseApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(baseApk.file.toFile()).exists()
+        assertThat(baseApk.file).exists()
         ApkSubject.assertThat(baseApk).contains(
             "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libbase.so"
         )
@@ -487,7 +486,7 @@ class DynamicAppTest {
         )
 
         val feature1Apk = project.getSubproject(":feature1").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(feature1Apk.file.toFile()).exists()
+        assertThat(feature1Apk.file).exists()
         ApkSubject.assertThat(feature1Apk).contains(
             "/lib/${SdkConstants.ABI_ARMEABI_V7A}/libfeature1.so"
         )
@@ -534,7 +533,7 @@ class DynamicAppTest {
 
         // fetch the build output model
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List for API 27")
@@ -598,7 +597,7 @@ class DynamicAppTest {
 
         // fetch the build output model
         apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List for API 18")
@@ -662,7 +661,7 @@ class DynamicAppTest {
 
         // fetch the build output model
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is false")
@@ -681,7 +680,7 @@ class DynamicAppTest {
 
         // fetch the build output model
         apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
@@ -736,11 +735,11 @@ class DynamicAppTest {
 
         // fetch the build output model
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         // fetch the build output model
         apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
@@ -761,7 +760,7 @@ class DynamicAppTest {
 
         // fetch the build output model
         apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
@@ -801,7 +800,7 @@ class DynamicAppTest {
 
         for (flavor in listOf("red", "blue")) {
             val bundleFile = getApkFolderOutput("${flavor}Debug").bundleFile
-            FileSubject.assertThat(
+            assertThat(
                 FileUtils.join(
                     project.getSubproject(":app").projectDir,
                     "out",
@@ -822,7 +821,7 @@ class DynamicAppTest {
 
         for (flavor in listOf("red", "blue")) {
             val bundleFile = getApkFolderOutput("${flavor}Debug").bundleFile
-            FileSubject.assertThat(
+            assertThat(
                 FileUtils.join(File(absolutePath), flavor, "debug", bundleFile.name))
                 .exists()
         }
@@ -835,14 +834,14 @@ class DynamicAppTest {
         project.execute("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         project.getSubproject(":app").buildFile.appendText("\narchivesBaseName ='foo'")
 
         project.execute("app:$bundleTaskName")
 
         val newBundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(newBundleFile).exists()
+        assertThat(newBundleFile).exists()
 
         // test the folder is the same as the previous one.
         Truth.assertThat(bundleFile.parentFile).isEqualTo(newBundleFile.parentFile)
@@ -913,7 +912,7 @@ class DynamicAppTest {
         // First check without resConfigs.
         project.executor().run("app:$apkFromBundleTaskName")
         val bundleFile = getApkFolderOutput("debug").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
             val entries = it.entries.map { it.toString() }
@@ -932,7 +931,7 @@ class DynamicAppTest {
         project.executor().run("app:$apkFromBundleTaskName")
 
         // Check that unwanted configs were filtered out.
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
         Zip(bundleFile).use {
             val entries = it.entries.map { it.toString() }
             Truth.assertThat(entries).contains("/base/res/drawable-mdpi-v21/density.xml")
@@ -969,9 +968,9 @@ class DynamicAppTest {
                 "base_module_metadata",
                 "debug",
                 "application-metadata.json")
-        FileSubject.assertThat(appMetadataFile).isFile()
-        FileSubject.assertThat(appMetadataFile).contains("\"versionCode\":\"12\"")
-        FileSubject.assertThat(appMetadataFile).contains("\"versionName\":\"12.0\"")
+        assertThat(appMetadataFile).isFile()
+        assertThat(appMetadataFile).contains("\"versionCode\":\"12\"")
+        assertThat(appMetadataFile).contains("\"versionName\":\"12.0\"")
 
 
         // then check that overridden values were incorporated into all of the merged manifests.
@@ -983,9 +982,9 @@ class DynamicAppTest {
                     "packaged_manifests",
                     "debug",
                     "AndroidManifest.xml")
-            FileSubject.assertThat(manifestFile).isFile()
-            FileSubject.assertThat(manifestFile).contains("android:versionCode=\"12\"")
-            FileSubject.assertThat(manifestFile).contains("android:versionName=\"12.0\"")
+            assertThat(manifestFile).isFile()
+            assertThat(manifestFile).contains("android:versionCode=\"12\"")
+            assertThat(manifestFile).contains("android:versionName=\"12.0\"")
         }
     }
 
@@ -1014,7 +1013,7 @@ class DynamicAppTest {
             .run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         Zip(bundleFile).use {
             val entries = it.entries.map { it.toString() }
@@ -1051,7 +1050,7 @@ class DynamicAppTest {
             .run("app:$bundleTaskName")
 
         val bundleFile = getApkFolderOutput("release").bundleFile
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
 
         val bundleTimestamp = bundleFile.lastModified()
 
@@ -1071,7 +1070,7 @@ class DynamicAppTest {
             .run("app:$bundleTaskName")
 
         // Make sure that the file exists and that it was updated
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
         assertThat(bundleFile.lastModified()).isNotEqualTo(bundleTimestamp)
 
         // Make sure the resources.pb files are smaller.
@@ -1103,7 +1102,7 @@ class DynamicAppTest {
 
         // fetch the build output model
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
@@ -1133,7 +1132,7 @@ class DynamicAppTest {
             .run("app:$apkFromBundleTaskName")
 
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         var apkFileArray = apkFolder.list() ?: fail("No files at $apkFolder")
         Truth.assertThat(apkFileArray.toList()).named("APK List when extract instant is true")
