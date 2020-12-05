@@ -5,6 +5,6 @@
     </CLASSES>
     <JAVADOC />
     <SOURCES />
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.2o" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.20" recursive="false" />
   </library>
 </component>
