@@ -117,7 +117,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         object : BundleLibraryClassesWorkAction() {
             override fun getParameters(): Params {
                 return object : Params() {
-                    override val packageName = FakeGradleProperty("")
+                    override val namespace = FakeGradleProperty("")
                     override val toIgnore =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val input = FakeConfigurableFileCollection(input)
@@ -158,7 +158,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         object : BundleLibraryClassesWorkAction() {
             override fun getParameters(): Params {
                 return object : Params() {
-                    override val packageName = FakeGradleProperty("com.example")
+                    override val namespace = FakeGradleProperty("com.example")
                     override val toIgnore =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val input = FakeConfigurableFileCollection(input)
@@ -199,7 +199,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         object : BundleLibraryClassesWorkAction() {
             override fun getParameters(): Params {
                 return object : Params() {
-                    override val packageName = FakeGradleProperty("com.example")
+                    override val namespace = FakeGradleProperty("com.example")
                     override val toIgnore =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val input = FakeConfigurableFileCollection(input)
@@ -243,7 +243,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         object : BundleLibraryClassesWorkAction() {
             override fun getParameters(): Params {
                 return object : Params() {
-                    override val packageName = FakeGradleProperty("")
+                    override val namespace = FakeGradleProperty("")
                     override val toIgnore =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val input = FakeConfigurableFileCollection(inputJar)
@@ -288,7 +288,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         object : BundleLibraryClassesWorkAction() {
             override fun getParameters(): Params {
                 return object : Params() {
-                    override val packageName = FakeGradleProperty("")
+                    override val namespace = FakeGradleProperty("")
                     override val toIgnore =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                             .value(listOf(".*A\\.class$"))
@@ -332,7 +332,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         object : BundleLibraryClassesWorkAction() {
             override fun getParameters(): Params {
                 return object: Params() {
-                    override val packageName = FakeGradleProperty("")
+                    override val namespace = FakeGradleProperty("")
                     override val toIgnore = FakeObjectFactory.factory.listProperty(String::class.java)
                     override val input = FakeConfigurableFileCollection(inputDir)
                     override val output = FakeGradleProperty(outputFile)
@@ -372,7 +372,7 @@ class BundleLibraryClassesWorkActionTest(private val outputType: AndroidArtifact
         object : BundleLibraryClassesWorkAction() {
             override fun getParameters(): Params {
                 return object : Params() {
-                    override val packageName = FakeGradleProperty("")
+                    override val namespace = FakeGradleProperty("")
                     override val toIgnore =
                         FakeObjectFactory.factory.listProperty(String::class.java)
                     override val input = FakeConfigurableFileCollection(inputDir)

@@ -27,7 +27,7 @@ import java.io.File
 abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val namespace: Property<String>
 
     @get:Input
     @get:Optional
@@ -67,7 +67,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                 resourcePaths.getOrElse(emptyList()).map(::File) + uncreatedSourceSets.map(::File)
         writeIdentifiedSourceSetsFile(
                 resourceSourceSets = resourceSourceSetFolders,
-                packageName = packageName.get(),
+                namespace = namespace.get(),
                 projectName = projectName,
                 output = filepathMappingFile.get().asFile
         )
@@ -106,7 +106,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                     aapt.forUseAtConfigurationTime().orNull)
             task.dependsOn(creationConfig.services.fileCollection(resourceSourceSets))
             task.resourcePaths.setDisallowChanges(resourceSourceSets.map(File::getAbsolutePath))
-            task.packageName.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
             if (mergeResourcesTask.isPresent) {
                 val mergeResources = mergeResourcesTask.get()
                 if (mergeResources.outputDir.isPresent) {

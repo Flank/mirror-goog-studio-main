@@ -84,7 +84,7 @@ internal class BuildConfigByteCodeGeneratorTest {
     private fun getSampleByteCodeData(packageFolder: Path): BuildConfigData =
             BuildConfigData.Builder()
                     .setOutputPath(packageFolder)
-                    .setBuildConfigPackageName(packageFolder.toFile().name)
+                    .setNamespace(packageFolder.toFile().name)
                     .setBuildConfigName("BuildConfig")
                     .addStringField("APPLICATION_ID", "my.app.pkg")
                     .addStringField("BUILD_TYPE", "debug")

@@ -262,7 +262,7 @@ abstract class VariantInputs {
     abstract val manifestMergeReport: RegularFileProperty
 
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val namespace: Property<String>
 
     @get:Nested
     @get:Optional
@@ -333,7 +333,7 @@ abstract class VariantInputs {
         manifestMergeReport.setDisallowChanges(
             creationConfig.artifacts.get(InternalArtifactType.MANIFEST_MERGE_REPORT)
         )
-        packageName.setDisallowChanges(creationConfig.namespace)
+        namespace.setDisallowChanges(creationConfig.namespace)
 
         minSdkVersion.initialize(creationConfig.minSdkVersion)
 
@@ -374,7 +374,7 @@ abstract class VariantInputs {
         mainArtifact.initializeForStandalone(project, projectOptions, mainSourceSet)
         testArtifact.setDisallowChanges(project.objects.newInstance(JavaArtifactInput::class.java).initializeForStandalone(project, projectOptions, mainSourceSet))
         androidTestArtifact.disallowChanges()
-        packageName.setDisallowChanges("")
+        namespace.setDisallowChanges("")
         minSdkVersion.initializeEmpty()
         targetSdkVersion.initializeEmpty()
         manifestPlaceholders.disallowChanges()
@@ -410,7 +410,7 @@ abstract class VariantInputs {
             androidTestArtifact = androidTestArtifact.orNull?.toLintModel(dependencyCaches, checkDependencies.get()),
             mergedManifest = mergedManifest.orNull?.asFile,
             manifestMergeReport = manifestMergeReport.orNull?.asFile,
-            `package` = packageName.get(),
+            `package` = namespace.get(),
             minSdkVersion = minSdkVersion.toLintModel(),
             targetSdkVersion = targetSdkVersion.toLintModel(),
             resValues = resValues.get().associateBy { it.name },

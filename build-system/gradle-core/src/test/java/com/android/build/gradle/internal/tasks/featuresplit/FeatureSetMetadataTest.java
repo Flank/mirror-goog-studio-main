@@ -108,8 +108,8 @@ public class FeatureSetMetadataTest {
                 .named("getFeatureNameFor :three")
                 .isEqualTo("three");
 
-        assertThat(loaded.getFeatureNameToPackageNameMap()).containsExactly(
-                "one", "example.one", "two", "example.two", "three", "example.three");
-
+        assertThat(loaded.getFeatureNameToNamespaceMap())
+                .containsExactly(
+                        "one", "example.one", "two", "example.two", "three", "example.three");
     }
 }

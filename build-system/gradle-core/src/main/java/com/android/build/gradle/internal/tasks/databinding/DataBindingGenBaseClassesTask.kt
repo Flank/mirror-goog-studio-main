@@ -68,7 +68,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
 
     // the package name for the module / app
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val namespace: Property<String>
 
     // list of artifacts from dependencies
     @get:InputFiles
@@ -154,7 +154,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 dependencyClassesFolder = mergedArtifactsFromDependencies.get().asFile,
                 logFolder = logOutFolder,
                 incremental = inputs.isIncremental,
-                packageName = packageName.get(),
+                packageName = namespace.get(),
                 artifactFolder = classInfoBundleDir.get().asFile,
                 v1ArtifactsFolder = v1Artifacts.orNull?.asFile,
                 useAndroidX = useAndroidX,
@@ -197,7 +197,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 DataBindingCompilerArguments.getLayoutInfoArtifactType(creationConfig),
                 task.layoutInfoDirectory)
 
-            task.packageName.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
 
             artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,

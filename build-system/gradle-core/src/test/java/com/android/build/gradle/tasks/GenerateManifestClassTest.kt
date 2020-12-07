@@ -43,7 +43,7 @@ class GenerateManifestClassTest {
     fun testSimplePermission() {
         val manifestTestConfig = ManifestClassData(
                 manifestFile = createManifest(listOf(PERMISSION_ONE)),
-                manifestPackage = "test",
+                namespace = "test",
                 outputFilePath = temporaryFolder.newFile("manifest.jar"))
 
         ManifestClassGenerator(manifestTestConfig).generate()
@@ -65,7 +65,7 @@ class GenerateManifestClassTest {
     fun testClashingPermission() {
         val manifestClashingPermission = ManifestClassData(
                 manifestFile = createManifest(listOf(PERMISSION_ONE, CLASHING_PERMISSION)),
-                manifestPackage = "test",
+                namespace = "test",
                 outputFilePath = temporaryFolder.newFile("manifest.jar")
         )
 
@@ -95,7 +95,7 @@ class GenerateManifestClassTest {
     fun testAllPermissions() {
         val manifestTestConfig = ManifestClassData(
                 manifestFile = createManifest(listOf(PERMISSION_ONE, PERMISSION_TWO, CLASHING_PERMISSION)),
-                manifestPackage = "com.example.app",
+                namespace = "com.example.app",
                 outputFilePath = temporaryFolder.newFile("manifest.jar")
         )
         ManifestClassGenerator(manifestTestConfig).generate()
@@ -114,7 +114,7 @@ class GenerateManifestClassTest {
     fun testNoPermissionsEmptyClass() {
         val manifestTestConfig = ManifestClassData(
                 manifestFile = createManifest(listOf()),
-                manifestPackage = "test",
+                namespace = "test",
                 outputFilePath = temporaryFolder.newFile("manifest.jar")
         )
 
@@ -130,19 +130,19 @@ class GenerateManifestClassTest {
     fun testGetFullyQualifiedClassName() {
         val manifestTestConfig = ManifestClassData(
                 manifestFile = createManifest(listOf()),
-                manifestPackage = "",
+                namespace = "",
                 outputFilePath = temporaryFolder.newFile("manifest.jar")
         )
         var manifestClassGenerator = ManifestClassGenerator(manifestTestConfig)
         assertThat(manifestClassGenerator.fullyQualifiedManifestClassName).isEqualTo("Manifest")
 
         manifestClassGenerator = ManifestClassGenerator(
-                manifestTestConfig.copy(manifestPackage = "test"))
+                manifestTestConfig.copy(namespace = "test"))
         assertThat(manifestClassGenerator.fullyQualifiedManifestClassName)
                 .isEqualTo("test/Manifest")
 
         manifestClassGenerator = ManifestClassGenerator(
-                manifestTestConfig.copy(manifestPackage = "com.example.app"))
+                manifestTestConfig.copy(namespace = "com.example.app"))
         assertThat(manifestClassGenerator.fullyQualifiedManifestClassName)
                 .isEqualTo("com/example/app/Manifest")
     }

@@ -272,13 +272,13 @@ open class VariantDslInfoImpl internal constructor(
     }
 
     // use lazy mechanism as this is referenced by other properties, like applicationId or itself
-    override val packageName: Provider<String> by lazy {
+    override val namespace: Provider<String> by lazy {
         when {
             // -------------
             // Special case for test components
-            // The package name is the tested component package name + .test
+            // The namespace is the tested component namespace + .test
             testedVariantImpl != null -> {
-                testedVariantImpl.packageName.map { "$it.test" }
+                testedVariantImpl.namespace.map { "$it.test" }
             }
 
             // -------------
@@ -313,8 +313,8 @@ open class VariantDslInfoImpl internal constructor(
         }
     }
 
-    // The packageName as specified by the user, either via the DSL or the `package` attribute of
-    // the source AndroidManifest.xml
+    // The namespace as specified by the user, either via the DSL or the `package` attribute of the
+    // source AndroidManifest.xml
     private val dslOrManifestNamespace: Provider<String> by lazy {
         if (dslNamespace != null) {
             services.provider { dslNamespace }
@@ -355,7 +355,7 @@ open class VariantDslInfoImpl internal constructor(
                 return if (testAppIdFromFlavors == null) {
                     testedVariantImpl?.applicationId?.map {
                         "$it.test"
-                    } ?: packageName
+                    } ?: namespace
                 } else {
                     // needed to make nullability work in kotlinc
                     val finalTestAppIdFromFlavors: String = testAppIdFromFlavors
@@ -372,7 +372,7 @@ open class VariantDslInfoImpl internal constructor(
                     ?: defaultConfig.applicationId
 
             return if (appIdFromFlavors == null) {
-                // No appId value set from DSL, rely on package name value from DSL or manifest.
+                // No appId value set from DSL; use the namespace value from the DSL or manifest.
                 // using map will allow us to keep task dependency should the manifest be generated
                 // or transformed via a task.
                 dslOrManifestNamespace.map { "$it${computeApplicationIdSuffix()}" }

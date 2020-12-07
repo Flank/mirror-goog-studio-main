@@ -65,7 +65,7 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
     abstract val originalBundle: RegularFileProperty
 
     @get:Input
-    abstract val basePackageName: Property<String>
+    abstract val baseNamespace: Property<String>
 
     @get:Input
     abstract val usePreciseShrinking: Property<Boolean>
@@ -76,7 +76,7 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 
     override fun doTaskAction() {
         val modules = FeatureSetMetadata.load(featureSetMetadata.get().asFile)
-            .featureNameToPackageNameMap + ("base" to basePackageName.get())
+            .featureNameToNamespaceMap + ("base" to baseNamespace.get())
 
         workerExecutor.noIsolation().submit(ShrinkAppBundleResourcesAction::class.java) {
             it.originalBundle.set(originalBundle)
@@ -108,7 +108,7 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
             super.configure(task)
             task.usePreciseShrinking.set(creationConfig.services.projectOptions.get(
               BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER_PRECISE))
-            task.basePackageName.set(creationConfig.namespace)
+            task.baseNamespace.set(creationConfig.namespace)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FEATURE_SET_METADATA,

@@ -40,11 +40,11 @@ import java.io.File
 import java.io.FileNotFoundException
 
 /**
- * This task collects the feature information and exports their ids into a file which can be
+ * This task collects the feature information and exports their namespaces into a file which can be
  * read by the DataBindingAnnotationProcessor.
  */
 @CacheableTask
-abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask() {
+abstract class DataBindingExportFeatureNamespacesTask : NonIncrementalTask() {
     // where to keep the log of the task
     @get:OutputDirectory abstract val packageListOutFolder: DirectoryProperty
 
@@ -54,7 +54,7 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
         private set
 
     override fun doTaskAction() {
-        workerExecutor.noIsolation().submit(ExportApplicationIdsRunnable::class.java) {
+        workerExecutor.noIsolation().submit(ExportNamespacesRunnable::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.featureDeclarations.set(featureDeclarations.asFileTree.files)
             it.packageListOutFolder.set(packageListOutFolder.get().asFile)
@@ -64,27 +64,27 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
     class CreationAction(
         creationConfig: VariantCreationConfig
     ) :
-        VariantTaskCreationAction<DataBindingExportFeatureApplicationIdsTask, VariantCreationConfig>(
+        VariantTaskCreationAction<DataBindingExportFeatureNamespacesTask, VariantCreationConfig>(
             creationConfig
         ) {
 
         override val name: String
-            get() = computeTaskName("dataBindingExportFeaturePackageIds")
-        override val type: Class<DataBindingExportFeatureApplicationIdsTask>
-            get() = DataBindingExportFeatureApplicationIdsTask::class.java
+            get() = computeTaskName("dataBindingExportFeatureNamespaces")
+        override val type: Class<DataBindingExportFeatureNamespacesTask>
+            get() = DataBindingExportFeatureNamespacesTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<DataBindingExportFeatureApplicationIdsTask>
+            taskProvider: TaskProvider<DataBindingExportFeatureNamespacesTask>
         ) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                DataBindingExportFeatureApplicationIdsTask::packageListOutFolder
+                DataBindingExportFeatureNamespacesTask::packageListOutFolder
             ).on(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
         }
 
         override fun configure(
-            task: DataBindingExportFeatureApplicationIdsTask
+            task: DataBindingExportFeatureNamespacesTask
         ) {
             super.configure(task)
 
@@ -97,18 +97,18 @@ abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask()
     }
 }
 
-abstract class ExportApplicationIdsParams : ProfileAwareWorkAction.Parameters() {
+abstract class ExportNamespacesParams : ProfileAwareWorkAction.Parameters() {
     abstract val featureDeclarations: SetProperty<File>
     abstract val packageListOutFolder: DirectoryProperty
 }
 
-abstract class ExportApplicationIdsRunnable: ProfileAwareWorkAction<ExportApplicationIdsParams>() {
+abstract class ExportNamespacesRunnable: ProfileAwareWorkAction<ExportNamespacesParams>() {
     override fun run() {
         val packages = mutableSetOf<String>()
         for (featureSplitDeclaration in parameters.featureDeclarations.get()) {
             try {
                 val loaded = FeatureSplitDeclaration.load(featureSplitDeclaration)
-                packages.add(loaded.applicationId)
+                packages.add(loaded.namespace)
             } catch (e: FileNotFoundException) {
                 throw BuildException("Cannot read features split declaration file", e)
             }

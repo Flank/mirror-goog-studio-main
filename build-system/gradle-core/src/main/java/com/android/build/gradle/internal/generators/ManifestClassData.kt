@@ -20,7 +20,7 @@ import java.io.File
 
 data class ManifestClassData(
     val manifestFile: File,
-    val manifestPackage : String,
+    val namespace : String,
     val outputFilePath: File
 )
 

@@ -56,7 +56,7 @@ public class FeatureSplitDeclarationWriterTaskTest {
     @Test
     public void testTask() throws IOException {
         task.uniqueIdentifier = "unique_split";
-        task.getApplicationId().set("");
+        task.getNamespace().set("");
         task.doTaskAction();
         File[] files = outputDirectory.listFiles();
         assertThat(files).hasLength(1);

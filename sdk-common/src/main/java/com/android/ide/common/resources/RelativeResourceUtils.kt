@@ -93,12 +93,12 @@ fun readFromSourceSetPathsFile(artifactFile: File) : Map<String, String> {
  */
 fun writeIdentifiedSourceSetsFile(
         resourceSourceSets: List<File>,
-        packageName: String,
+        namespace: String,
         projectName: String,
         output: File
 ) {
     output.bufferedWriter().use { bw ->
-        getIdentifiedSourceSetMap(resourceSourceSets, packageName, projectName).forEach {
+        getIdentifiedSourceSetMap(resourceSourceSets, namespace, projectName).forEach {
             bw.write("${it.key} ${it.value}\n")
         }
     }
@@ -106,7 +106,7 @@ fun writeIdentifiedSourceSetsFile(
 
 fun getIdentifiedSourceSetMap(
         resourceSourceSets: List<File>,
-        packageName: String,
+        namespace: String,
         projectName: String) : Map<String, String> {
     var i = 0
     return resourceSourceSets
@@ -117,8 +117,8 @@ fun getIdentifiedSourceSetMap(
             .associate { sourceSet ->
                 val sourceSetFolderName = sourceSet.parentFile.name
                 val appendProjectName =
-                        if (packageName.endsWith(projectName)) "" else ".$projectName"
-                val appId = "$packageName$appendProjectName-$sourceSetFolderName-${i++}"
+                        if (namespace.endsWith(projectName)) "" else ".$projectName"
+                val appId = "$namespace$appendProjectName-$sourceSetFolderName-${i++}"
                 appId to sourceSet.absolutePath
             }
 }

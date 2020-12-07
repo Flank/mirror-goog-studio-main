@@ -39,8 +39,8 @@ class ManifestClassGenerator(private val manifestClassData: ManifestClassData) :
         get() = manifestClassData.outputFilePath
 
     val fullyQualifiedManifestClassName by lazy {
-        if (manifestClassData.manifestPackage.isEmpty()) "Manifest"
-        else "${manifestClassData.manifestPackage.replace('.', '/')}/Manifest"
+        if (manifestClassData.namespace.isEmpty()) "Manifest"
+        else "${manifestClassData.namespace.replace('.', '/')}/Manifest"
     }
 
     val customPermissions by lazy { getCustomPermissions(manifestClassData.manifestFile) }

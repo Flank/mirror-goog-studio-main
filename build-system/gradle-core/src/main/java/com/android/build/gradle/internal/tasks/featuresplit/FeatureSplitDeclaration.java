@@ -37,11 +37,11 @@ public class FeatureSplitDeclaration {
     @VisibleForTesting static final String PERSISTED_FILE_NAME = "feature-split.json";
 
     @NonNull private final String modulePath;
-    @NonNull private final String applicationId;
+    @NonNull private final String namespace;
 
-    public FeatureSplitDeclaration(@NonNull String modulePath, @NonNull String applicationId) {
+    public FeatureSplitDeclaration(@NonNull String modulePath, @NonNull String namespace) {
         this.modulePath = modulePath;
-        this.applicationId = applicationId;
+        this.namespace = namespace;
     }
 
     @NonNull
@@ -50,8 +50,8 @@ public class FeatureSplitDeclaration {
     }
 
     @NonNull
-    public String getApplicationId() {
-        return applicationId;
+    public String getNamespace() {
+        return namespace;
     }
 
     public void save(@NonNull File outputDirectory) throws IOException {
