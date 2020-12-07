@@ -107,54 +107,151 @@ data class AndroidGradlePluginAttributionData(
 
     internal object AttributionDataAdapter : TypeAdapter<AndroidGradlePluginAttributionData>() {
 
+        private fun <A> JsonWriter.writeList(name: String, list: Collection<A>, valueWriter: (value: A) -> Unit) {
+            name(name).beginArray()
+            list.forEach { valueWriter(it) }
+            endArray()
+        }
+
+        private fun <A> JsonReader.readList(valueReader: () -> A): List<A> {
+            val list = arrayListOf<A>()
+            beginArray()
+            while (hasNext()) {
+                list.add(valueReader())
+            }
+            endArray()
+            return list
+        }
+
+        private fun JsonWriter.writeTaskToClassEntry(entry: Map.Entry<String, String>) {
+            beginObject()
+            name("taskName").value(entry.key)
+            name("className").value(entry.value)
+            endObject()
+        }
+
+        private fun JsonReader.readTaskToClassEntry(): Pair<String, String> {
+            beginObject()
+            var taskName: String? = null
+            var className: String? = null
+            while (hasNext()) {
+                when (nextName()) {
+                    "taskName" -> taskName = nextString()
+                    "className" -> className = nextString()
+                }
+            }
+            endObject()
+            return taskName!! to className!!
+        }
+
+        private fun JsonWriter.writeTasksSharingOutputEntry(entry: Map.Entry<String, List<String>>) {
+            beginObject()
+            name("filePath").value(entry.key)
+            name("tasksList").beginArray()
+            entry.value.forEach { taskName ->
+                value(taskName)
+            }
+            endArray()
+            endObject()
+        }
+
+        private fun JsonReader.readTasksSharingOutputEntry(): Pair<String, List<String>> {
+            beginObject()
+            var filePath: String? = null
+            val tasksList = ArrayList<String>()
+            while (hasNext()) {
+                when (nextName()) {
+                    "filePath" -> filePath = nextString()
+                    "tasksList" -> {
+                        beginArray()
+                        while (hasNext()) {
+                            tasksList.add(nextString())
+                        }
+                        endArray()
+                    }
+                }
+            }
+            endObject()
+            return filePath!! to tasksList
+        }
+
+        private fun JsonWriter.writeGCEntry(entry: Map.Entry<String, Long>) {
+            beginObject()
+            name("gcName").value(entry.key)
+            name("duration").value(entry.value)
+            endObject()
+        }
+
+        private fun JsonReader.readGCEntry(): Pair<String, Long> {
+            beginObject()
+            var gcName: String? = null
+            var duration: Long? = null
+            while (hasNext()) {
+                when (nextName()) {
+                    "gcName" -> gcName = nextString()
+                    "duration" -> duration = nextLong()
+                }
+            }
+            endObject()
+            return gcName!! to duration!!
+        }
+
+        private fun JsonWriter.writeJavaInfo(javaInfo: JavaInfo) {
+            name("javaInfo").beginObject()
+            name("javaVersion").value(javaInfo.version)
+            name("javaVendor").value(javaInfo.vendor)
+            name("javaHome").value(javaInfo.home)
+            name("vmArguments").beginArray()
+            javaInfo.vmArguments.forEach { value(it) }
+            endArray()
+            endObject()
+        }
+
+        private fun JsonReader.readJavaInfo(): JavaInfo {
+            beginObject()
+            var version = ""
+            var vendor = ""
+            var home = ""
+            val vmArguments = ArrayList<String>()
+            while (hasNext()) {
+                when (nextName()) {
+                    "javaVersion" -> version = nextString()
+                    "javaVendor" -> vendor = nextString()
+                    "javaHome" -> home = nextString()
+                    "vmArguments" -> {
+                        beginArray()
+                        while (hasNext()) {
+                            vmArguments.add(nextString())
+                        }
+                        endArray()
+                    }
+                }
+            }
+            endObject()
+            return JavaInfo(version, vendor, home, vmArguments)
+        }
+
         override fun write(writer: JsonWriter, data: AndroidGradlePluginAttributionData) {
             writer.beginObject()
-            writer.name("taskNameToClassNameMap").beginArray()
-            data.taskNameToClassNameMap.forEach { (taskName, className) ->
-                writer.beginObject()
-                writer.name("taskName").value(taskName)
-                writer.name("className").value(className)
-                writer.endObject()
-            }
-            writer.endArray()
 
-            writer.name("tasksSharingOutput").beginArray()
-            data.tasksSharingOutput.forEach { (filePath, tasksList) ->
-                writer.beginObject()
-                writer.name("filePath").value(filePath)
-                writer.name("tasksList").beginArray()
-                tasksList.forEach { taskName ->
-                    writer.value(taskName)
-                }
-                writer.endArray()
-                writer.endObject()
+            writer.writeList("taskNameToClassNameMap", data.taskNameToClassNameMap.entries) {
+                writer.writeTaskToClassEntry(it)
             }
-            writer.endArray()
 
-            writer.name("garbageCollectionData").beginArray()
-            data.garbageCollectionData.forEach { (gcName, duration) ->
-                writer.beginObject()
-                writer.name("gcName").value(gcName)
-                writer.name("duration").value(duration)
-                writer.endObject()
+            writer.writeList("tasksSharingOutput", data.tasksSharingOutput.entries) {
+                writer.writeTasksSharingOutputEntry(it)
             }
-            writer.endArray()
 
-            writer.name("buildSrcPlugins").beginArray()
-            data.buildSrcPlugins.forEach { plugin ->
+            writer.writeList("garbageCollectionData", data.garbageCollectionData.entries) {
+                writer.writeGCEntry(it)
+            }
+
+            writer.writeList("buildSrcPlugins", data.buildSrcPlugins) { plugin ->
                 writer.value(plugin)
             }
-            writer.endArray()
-            writer.name("javaInfo").run {
-                beginObject()
-                name("javaVersion").value(data.javaInfo.version)
-                name("javaVendor").value(data.javaInfo.vendor)
-                name("javaHome").value(data.javaInfo.home)
-                name("vmArguments").beginArray()
-                data.javaInfo.vmArguments.forEach { value(it) }
-                endArray()
-                endObject()
-            }
+
+            writer.writeJavaInfo(data.javaInfo)
+
             writer.endObject()
         }
 
@@ -169,97 +266,21 @@ data class AndroidGradlePluginAttributionData(
 
             while (reader.hasNext()) {
                 when (reader.nextName()) {
-                    "taskNameToClassNameMap" -> {
-                        reader.beginArray()
-                        while (reader.hasNext()) {
-                            reader.beginObject()
-                            var taskName: String? = null
-                            var className: String? = null
-                            while (reader.hasNext()) {
-                                when (reader.nextName()) {
-                                    "taskName" -> taskName = reader.nextString()
-                                    "className" -> className = reader.nextString()
-                                }
-                            }
-                            taskNameToClassNameMap[taskName!!] = className!!
-                            reader.endObject()
-                        }
-                        reader.endArray()
-                    }
+                    "taskNameToClassNameMap" -> taskNameToClassNameMap.putAll(
+                            reader.readList { reader.readTaskToClassEntry() }
+                    )
 
-                    "tasksSharingOutput" -> {
-                        reader.beginArray()
-                        while (reader.hasNext()) {
-                            reader.beginObject()
-                            var filePath: String? = null
-                            val tasksList = ArrayList<String>()
-                            while (reader.hasNext()) {
-                                when (reader.nextName()) {
-                                    "filePath" -> filePath = reader.nextString()
-                                    "tasksList" -> {
-                                        reader.beginArray()
-                                        while (reader.hasNext()) {
-                                            tasksList.add(reader.nextString())
-                                        }
-                                        reader.endArray()
-                                    }
-                                }
-                            }
-                            tasksSharingOutput[filePath!!] = tasksList
-                            reader.endObject()
-                        }
-                        reader.endArray()
-                    }
+                    "tasksSharingOutput" -> tasksSharingOutput.putAll(
+                            reader.readList { reader.readTasksSharingOutputEntry() }
+                    )
 
-                    "garbageCollectionData" -> {
-                        reader.beginArray()
-                        while (reader.hasNext()) {
-                            reader.beginObject()
-                            var gcName: String? = null
-                            var duration: Long? = null
-                            while (reader.hasNext()) {
-                                when (reader.nextName()) {
-                                    "gcName" -> gcName = reader.nextString()
-                                    "duration" -> duration = reader.nextLong()
-                                }
-                            }
-                            garbageCollectionData[gcName!!] = duration!!
-                            reader.endObject()
-                        }
-                        reader.endArray()
-                    }
+                    "garbageCollectionData" -> garbageCollectionData.putAll(
+                            reader.readList { reader.readGCEntry() }
+                    )
 
-                    "buildSrcPlugins" -> {
-                        reader.beginArray()
-                        while (reader.hasNext()) {
-                            buildSrcPlugins.add(reader.nextString())
-                        }
-                        reader.endArray()
-                    }
+                    "buildSrcPlugins" -> buildSrcPlugins.addAll(reader.readList { reader.nextString() })
 
-                    "javaInfo" -> {
-                        reader.beginObject()
-                        var version: String = ""
-                        var vendor: String = ""
-                        var home: String = ""
-                        val vmArguments = ArrayList<String>()
-                        while (reader.hasNext()) {
-                            when (reader.nextName()) {
-                                "javaVersion" -> version = reader.nextString()
-                                "javaVendor" -> vendor = reader.nextString()
-                                "javaHome" -> home = reader.nextString()
-                                "vmArguments" -> {
-                                    reader.beginArray()
-                                    while (reader.hasNext()) {
-                                        vmArguments.add(reader.nextString())
-                                    }
-                                    reader.endArray()
-                                }
-                            }
-                        }
-                        javaInfo = JavaInfo(version, vendor, home, vmArguments)
-                        reader.endObject()
-                    }
+                    "javaInfo" -> javaInfo = reader.readJavaInfo()
 
                     else -> {
                         reader.skipValue()

@@ -51,27 +51,40 @@ class AndroidGradlePluginAttributionDataTest {
             SdkConstants.FD_BUILD_ATTRIBUTION,
             SdkConstants.FN_AGP_ATTRIBUTION_DATA
         )
-        assertThat(file.readLines()[0]).isEqualTo(
-            """{"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],"garbageCollectionData":[{"gcName":"gc","duration":100}],"buildSrcPlugins":["h","i"],"javaInfo":{"javaVersion":"11.0.8","javaVendor":"JetBrains s.r.o","javaHome":"/tmp/test/java/home","vmArguments":["-Xmx8G","-XX:+UseSerialGC"]}}"""
+        assertThat(file.readLines()[0]).isEqualTo("""
+|{
+|"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],
+|"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],
+|"garbageCollectionData":[{"gcName":"gc","duration":100}],
+|"buildSrcPlugins":["h","i"],
+|"javaInfo":{
+    |"javaVersion":"11.0.8",
+    |"javaVendor":"JetBrains s.r.o",
+    |"javaHome":"/tmp/test/java/home",
+    |"vmArguments":["-Xmx8G","-XX:+UseSerialGC"]
+|}
+|}
+""".trimMargin().replace("\n", "")
         )
     }
 
     @Test
     fun testDeserializationOfOldAgpData() {
         val outputDir = temporaryFolder.newFolder()
-        AndroidGradlePluginAttributionData.save(outputDir, data)
-
-        // modify the file to delete the garbage collection data
+        // Create file of old format with some data missing.
         val file = FileUtils.join(
             outputDir,
             SdkConstants.FD_BUILD_ATTRIBUTION,
             SdkConstants.FN_AGP_ATTRIBUTION_DATA
         )
-        file.writeText(
-            file.readLines()[0].replace(
-                ",\"garbageCollectionData\":[{\"gcName\":\"gc\",\"duration\":100}]",
-                ""
-            )
+        file.parentFile.mkdirs()
+        file.writeText("""
+|{
+|"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],
+|"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],
+|"buildSrcPlugins":["h","i"]
+|}
+""".trimMargin().replace("\n", "")
         )
 
         val deserializedData = AndroidGradlePluginAttributionData.load(outputDir)!!
@@ -96,11 +109,23 @@ class AndroidGradlePluginAttributionDataTest {
             SdkConstants.FD_BUILD_ATTRIBUTION,
             SdkConstants.FN_AGP_ATTRIBUTION_DATA
         )
-        val fileContents = file.readLines()[0]
-        file.writeText(
-            """{"newUndefinedData":{"temp":"test"},""" +
-                    fileContents.substring(1, fileContents.length - 1) +
-                    ""","newerUndefinedData":{"temp":"test"}}"""
+        file.parentFile.mkdirs()
+        file.writeText("""
+|{
+|"newUndefinedData":{"temp":"test"},
+|"taskNameToClassNameMap":[{"taskName":"a","className":"b"},{"taskName":"c","className":"d"}],
+|"tasksSharingOutput":[{"filePath":"e","tasksList":["f","g"]}],
+|"garbageCollectionData":[{"gcName":"gc","duration":100}],
+|"buildSrcPlugins":["h","i"],
+|"javaInfo":{
+    |"javaVersion":"11.0.8",
+    |"javaVendor":"JetBrains s.r.o",
+    |"javaHome":"/tmp/test/java/home",
+    |"vmArguments":["-Xmx8G","-XX:+UseSerialGC"]
+|},
+|"newerUndefinedData":{"temp":"test"}
+|}
+""".trimMargin().replace("\n", "")
         )
 
         val deserializedData = AndroidGradlePluginAttributionData.load(outputDir)!!
