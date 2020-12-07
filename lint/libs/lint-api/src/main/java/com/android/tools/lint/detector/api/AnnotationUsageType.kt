@@ -29,6 +29,9 @@ enum class AnnotationUsageType {
     /** An argument to a method call where the corresponding parameter was annotated */
     METHOD_CALL_PARAMETER,
 
+    /** A method reference (e.g. Class::method) where the corresponding method was annotated. */
+    METHOD_REFERENCE,
+
     /** An argument to an annotation where the annotation parameter has been annotated */
     ANNOTATION_REFERENCE,
 
