@@ -131,7 +131,7 @@ public class PxUsageDetector extends LayoutDetector {
             Issue.create(
                     "SmallSp",
                     "Text size is too small",
-                    "Avoid using sizes smaller than 12sp.",
+                    "Avoid using sizes smaller than 11sp.",
                     Category.USABILITY,
                     4,
                     Severity.WARNING,
@@ -238,12 +238,12 @@ public class PxUsageDetector extends LayoutDetector {
                         || ATTR_LAYOUT_HEIGHT.equals(attribute.getLocalName()))
                 && value.matches("\\d+(\\.\\d+)?sp")) {
             int size = getTruncatedSize(value);
-            if (size > 0 && size < 12) {
+            if (size > 0 && size < 11) {
                 context.report(
                         SMALL_SP_ISSUE,
                         attribute,
                         context.getLocation(attribute),
-                        String.format("Avoid using sizes smaller than `12sp`: `%1$s`", value));
+                        String.format("Avoid using sizes smaller than `11sp`: `%1$s`", value));
             }
         } else if (ATTR_TEXT_SIZE.equals(attribute.getLocalName())) {
             if (isDpUnit(value)) {
@@ -430,13 +430,13 @@ public class PxUsageDetector extends LayoutDetector {
                         if (text.matches("\\d+(\\.\\d+)?" + unit)) {
                             if (context.isEnabled(SMALL_SP_ISSUE)) {
                                 int size = getTruncatedSize(text);
-                                if (size > 0 && size < 12) {
+                                if (size > 0 && size < 11) {
                                     context.report(
                                             SMALL_SP_ISSUE,
                                             item,
                                             context.getLocation(textNode),
                                             String.format(
-                                                    "Avoid using sizes smaller than `12sp`: `%1$s`",
+                                                    "Avoid using sizes smaller than `11sp`: `%1$s`",
                                                     text));
                                 }
                             }
