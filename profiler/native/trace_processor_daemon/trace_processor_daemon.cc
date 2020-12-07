@@ -73,10 +73,9 @@ void check_last_activity(grpc::Server* server,
   }
 }
 
-void RunServer() {
-  auto time_point = std::chrono::steady_clock::now();
-  GRPC_GlobalCallback callback(&time_point);
-  grpc_impl::Server::SetGlobalCallbacks(&callback);
+void RunServer(GRPC_GlobalCallback* callback,
+               std::chrono::steady_clock::time_point* start_time) {
+  grpc_impl::Server::SetGlobalCallbacks(callback);
 
   ServerBuilder builder;
 
@@ -104,7 +103,7 @@ void RunServer() {
   // are using.
   std::cout << "Server listening on 127.0.0.1:" << port << std::endl;
 
-  std::thread activity_checker(&check_last_activity, server.get(), &time_point);
+  std::thread activity_checker(&check_last_activity, server.get(), start_time);
   server->Wait();
   activity_checker.join();
 }
@@ -113,6 +112,12 @@ int main(int argc, char** argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   absl::ParseCommandLine(argc, argv);
 
-  RunServer();
+  // We create the callback here, so the GRPC server goes out of scope first
+  // (since it's built inside RunServer). This avoid the server invoking the
+  // callback after it has been disposed.
+  auto time_point = std::chrono::steady_clock::now();
+  GRPC_GlobalCallback callback(&time_point);
+  RunServer(&callback, &time_point);
+
   return 0;
 }
