@@ -207,7 +207,7 @@ public class Gradle implements Closeable {
                         + "  buildscript {\n"
                         + "    dependencies {\n"
                         + "      classpath(files(\""
-                        + classpathJar.getAbsolutePath()
+                        + FileUtils.toSystemIndependentPath(classpathJar.getAbsolutePath())
                         + "\"))\n"
                         + "    }\n"
                         + "  }\n"
