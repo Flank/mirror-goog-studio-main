@@ -40,13 +40,13 @@ import java.util.List;
  */
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")  // Functions do not return.
 public class PathSubject extends Subject<PathSubject, Path> {
-    private static final Joiner NEW_LINE_JOINER = Joiner.on('\n');
+    private static final Joiner LINE_JOINER = Joiner.on('\n');
 
     public static Subject.Factory<PathSubject, Path> paths() {
         return PathSubject::new;
     }
 
-    public PathSubject(FailureMetadata failureMetadata, Path subject) {
+    public PathSubject(@NonNull FailureMetadata failureMetadata, @Nullable Path subject) {
         super(failureMetadata, subject);
     }
 
@@ -66,7 +66,7 @@ public class PathSubject extends Subject<PathSubject, Path> {
         return assertThat(file == null ? null : file.toPath());
     }
 
-    public void hasName(String name) {
+    public void hasName(@NonNull String name) {
         check().that(actual().getFileName().toString()).named(actualAsString()).isEqualTo(name);
     }
 
@@ -133,48 +133,27 @@ public class PathSubject extends Subject<PathSubject, Path> {
         isFile();
 
         try {
-            if (expectedContents.length == 1) {
-                String contents = new String(Files.readAllBytes(actual()), UTF_8);
-                if (!contents.equals(expectedContents[0]) &&
-                        !equalsWithoutLineSeparator(contents, expectedContents[0], "\r\n") &&
-                        !equalsWithoutLineSeparator(contents, expectedContents[0], "\n")) {
-                    if (contents.endsWith("\r\n")) {
-                        contents = contents.substring(0, contents.length() - 2);
-                    } else if (contents.endsWith("\n")) {
-                        contents = contents.substring(0, contents.length() - 1);
-                    }
-                    failWithBadResults(
-                            "contains",
-                            Joiner.on('\n').join(expectedContents),
-                            "is",
-                            contents);
-                }
-            } else {
-                List<String> contents = Files.readAllLines(actual());
-                if (!Arrays.asList(expectedContents).equals(contents)) {
-                    failWithBadResults(
-                            "contains",
-                            Joiner.on('\n').join(expectedContents),
-                            "is",
-                            Joiner.on('\n').join(contents));
-                }
+            List<String> contents = Files.readAllLines(actual());
+            if (!Arrays.asList(expectedContents).equals(contents)
+                    && !(expectedContents.length == 1
+                            && contents.size() != 1
+                            && expectedContents[0].equals(LINE_JOINER.join(contents)))) {
+                failWithBadResults(
+                        "contains",
+                        LINE_JOINER.join(expectedContents),
+                        "is",
+                        LINE_JOINER.join(contents));
             }
         } catch (IOException e) {
             failWithoutActual(simpleFact("Unable to read " + actual()));
         }
     }
 
-    private boolean equalsWithoutLineSeparator(
-            @NonNull String actual, @NonNull String expected, @NonNull String lineSeparator) {
-        return actual.endsWith(lineSeparator) &&
-                actual.substring(0, actual.length() - lineSeparator.length()).equals(expected);
-    }
-
     public void contentWithUnixLineSeparatorsIsExactly(@NonNull String expected) {
         isFile();
 
         try {
-            String contents = NEW_LINE_JOINER.join(Files.readAllLines(actual()));
+            String contents = LINE_JOINER.join(Files.readAllLines(actual()));
             Truth.assertThat(contents).isEqualTo(expected);
         } catch (IOException e) {
             failWithoutActual(simpleFact("Unable to read " + actual()));

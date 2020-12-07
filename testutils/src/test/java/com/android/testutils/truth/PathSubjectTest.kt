@@ -20,7 +20,6 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.lang.System.lineSeparator
 import java.nio.file.Files
 import java.nio.file.attribute.FileTime
 import java.time.Instant
@@ -70,12 +69,14 @@ class PathSubjectTest {
 
         Files.write(file, listOf("line 1", "line 2"))
         assertThat(file).hasContents("line 1", "line 2")
-        assertThat(file).hasContents("line 1${lineSeparator()}line 2")
-        assertThat(file).hasContents("line 1${lineSeparator()}line 2${lineSeparator()}")
+        assertThat(file).hasContents("line 1\nline 2")
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file).hasContents("line 1", "other")
         }.message).isEqualTo(
                 "Not true that </test/file> contains <line 1\nother>. It is <line 1\nline 2>")
+
+        Files.write(file, emptyList<String>())
+        assertThat(file).hasContents("")
     }
 
     @Test
