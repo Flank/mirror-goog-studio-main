@@ -61,7 +61,13 @@ data class AndroidGradlePluginAttributionData(
     /**
      * Contains information about java used to run this build.
      */
-    val javaInfo: JavaInfo = JavaInfo()
+    val javaInfo: JavaInfo = JavaInfo(),
+
+    /**
+     * Buildscript classpath dependencies list.
+     * Dependency is encoded by a string in "group:name:version" format.
+     */
+    val buildscriptDependenciesInfo: Set<String> = emptySet()
 ) : Serializable {
 
     /**
@@ -252,6 +258,10 @@ data class AndroidGradlePluginAttributionData(
 
             writer.writeJavaInfo(data.javaInfo)
 
+            writer.writeList("buildscriptDependencies", data.buildscriptDependenciesInfo) {
+                writer.value(it)
+            }
+
             writer.endObject()
         }
 
@@ -261,6 +271,7 @@ data class AndroidGradlePluginAttributionData(
             val garbageCollectionData = HashMap<String, Long>()
             val buildSrcPlugins = HashSet<String>()
             var javaInfo = JavaInfo()
+            val buildscriptDependenciesInfo = HashSet<String>()
 
             reader.beginObject()
 
@@ -282,6 +293,10 @@ data class AndroidGradlePluginAttributionData(
 
                     "javaInfo" -> javaInfo = reader.readJavaInfo()
 
+                    "buildscriptDependencies" -> buildscriptDependenciesInfo.addAll(
+                            reader.readList { reader.nextString() }
+                    )
+
                     else -> {
                         reader.skipValue()
                     }
@@ -295,7 +310,8 @@ data class AndroidGradlePluginAttributionData(
                 tasksSharingOutput = tasksSharingOutput,
                 garbageCollectionData = garbageCollectionData,
                 buildSrcPlugins = buildSrcPlugins,
-                javaInfo = javaInfo
+                javaInfo = javaInfo,
+                buildscriptDependenciesInfo = buildscriptDependenciesInfo
             )
         }
     }
