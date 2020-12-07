@@ -1089,7 +1089,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
             ).indented(),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/Test.java:19: Error: Method uiMethod must be called from the main thread, currently inferred thread is worker thread [WrongThread]
                     test(() -> { uiMethod(); }); // ERROR
                                  ~~~~~~~~~~
@@ -1097,7 +1098,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     test(this::uiMethod); // ERROR
                          ~~~~~~~~~~~~~~
             2 errors, 0 warnings
-        """)
+        """
+        )
     }
 
     fun testFunctionalInterfacesKotlin() {
@@ -1132,7 +1134,8 @@ class ThreadDetectorTest : AbstractCheckTest() {
             ).indented(),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/Test.kt:18: Error: Method uiMethod must be called from the main thread, currently inferred thread is worker thread [WrongThread]
                     test { uiMethod() } // ERROR
                            ~~~~~~~~~~
@@ -1140,6 +1143,7 @@ class ThreadDetectorTest : AbstractCheckTest() {
                     test(this::uiMethod) // ERROR
                          ~~~~~~~~~~~~~~
             2 errors, 0 warnings
-        """)
+        """
+        )
     }
 }
