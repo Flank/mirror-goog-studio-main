@@ -42,7 +42,7 @@ class ProcessTestManifestTest {
                     variant.maxSdkVersion = 29
                     variant.targetSdkVersion = new AndroidVersion(22, null)
                 })
-                androidTest(selector().all(), { androidTest ->
+                androidTests(selector().all(), { androidTest ->
                     androidTest.packaging.jniLibs.useLegacyPackaging.set(false)
                 })
             }

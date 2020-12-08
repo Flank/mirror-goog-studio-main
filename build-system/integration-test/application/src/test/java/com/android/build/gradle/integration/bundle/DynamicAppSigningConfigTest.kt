@@ -127,7 +127,7 @@ class DynamicAppSigningConfigTest {
                         signingConfig.enableV3Signing.set(true)
                         signingConfig.enableV4Signing.set(true)
                     })
-                    androidTest(selector().all(), {
+                    androidTests(selector().all(), {
                         signingConfig.enableV1Signing.set(true)
                         signingConfig.enableV2Signing.set(true)
                         signingConfig.enableV3Signing.set(true)
