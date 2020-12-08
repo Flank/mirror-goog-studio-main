@@ -39,20 +39,21 @@ TEST_DEPS = [
     "//tools/base/zipflinger",
 ]
 
-#keep sorted
-TEST_DATA = [
-    "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
-    "//prebuilts/studio/sdk:build-tools/27.0.3",
-    "//prebuilts/studio/sdk:build-tools/latest",
-    "//prebuilts/studio/sdk:platform-tools",
+OLD_SDKS = [
     "//prebuilts/studio/sdk:platforms/android-19_build_only",
     "//prebuilts/studio/sdk:platforms/android-21_build_only",
     "//prebuilts/studio/sdk:platforms/android-23_build_only",
     "//prebuilts/studio/sdk:platforms/android-24_build_only",
+]
+
+#keep sorted
+TEST_DATA = [
+    "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
+    "//prebuilts/studio/sdk:build-tools/latest",
+    "//prebuilts/studio/sdk:platform-tools",
     "//prebuilts/studio/sdk:platforms/latest",
     "//prebuilts/studio/sdk:platforms/latest-preview",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
-    "//prebuilts/tools/common/mlkit/testData",
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
     "//tools/base/build-system/integration-test:test-projects/BasicRenderScript",
@@ -192,7 +193,7 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/vulkan",
 ]
 
-AUTOMATIC_TEST_DATA = TEST_DATA + [
+AUTOMATIC_TEST_DATA = TEST_DATA + OLD_SDKS + [
     #keep sorted
     "//prebuilts/studio/sdk:cmake",
     "//prebuilts/studio/sdk:ndk",
@@ -239,6 +240,14 @@ CONNECTED_TESTS = [
 
 CHECK_ALL_SOURCES = ["src/test/java/**/CheckAll.java"]
 
+# Group all the test targets that are not :coupled_tests or :automatic-tests.
+# Note: For coverage to work on this suite (:tests), targets in the suite must
+# match :tests__<name>
+test_suite(
+    name = "tests",
+    tags = ["split-tests"],
+)
+
 # Creates separate target for each source
 single_gradle_integration_test_per_source(
     name = "tests",
@@ -248,9 +257,17 @@ single_gradle_integration_test_per_source(
             "src/test/java/**/*.java",
             "src/test/java/**/*.kt",
         ],
-        exclude = SOURCES_TO_COMPILE_TOGETHER + CONNECTED_TESTS + CHECK_ALL_SOURCES,
+        exclude = SOURCES_TO_COMPILE_TOGETHER + CONNECTED_TESTS + CHECK_ALL_SOURCES + [
+            # These subpackages have their own target definitions.
+            "src/test/java/com/android/build/gradle/integration/packaging/**",
+            "src/test/java/com/android/build/gradle/integration/library/**",
+            "src/test/java/com/android/build/gradle/integration/mlkit/**",
+            "src/test/java/com/android/build/gradle/integration/testing/**",
+            "src/test/java/com/android/build/gradle/integration/resources/**",
+            "src/test/java/com/android/build/gradle/integration/dependencies/**",
+        ],
     ),
-    data = TEST_DATA,
+    data = TEST_DATA + OLD_SDKS,
     flaky_targets = [
         "GradlePluginMemoryLeakTest",  # b/153972155
     ],
@@ -265,6 +282,151 @@ single_gradle_integration_test_per_source(
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
+    tags = ["split-tests"],
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "tests__packaging",
+    timeout = "long",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/packaging/*.java",
+            "src/test/java/com/android/build/gradle/integration/packaging/*.kt",
+        ],
+        exclude = CONNECTED_TESTS,
+    ),
+    data = TEST_DATA,
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+    ],
+    resources = glob(["src/test/resources/**"]),
+    shard_count = 5,
+    tags = ["split-tests"],
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "tests__dependencies",
+    timeout = "long",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/dependencies/*.java",
+            "src/test/java/com/android/build/gradle/integration/dependencies/*.kt",
+        ],
+        exclude = CONNECTED_TESTS,
+    ),
+    data = TEST_DATA,
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+    ],
+    resources = glob(["src/test/resources/**"]),
+    shard_count = 4,
+    tags = ["split-tests"],
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "tests__library",
+    timeout = "long",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/library/*.java",
+            "src/test/java/com/android/build/gradle/integration/library/*.kt",
+        ],
+        exclude = CONNECTED_TESTS,
+    ),
+    data = TEST_DATA,
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+    ],
+    resources = glob(["src/test/resources/**"]),
+    shard_count = 4,
+    tags = ["split-tests"],
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "tests__testing",
+    timeout = "long",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/testing/*.java",
+            "src/test/java/com/android/build/gradle/integration/testing/*.kt",
+        ],
+        exclude = CONNECTED_TESTS,
+    ),
+    data = TEST_DATA,
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+    ],
+    resources = glob(["src/test/resources/**"]),
+    shard_count = 3,
+    tags = ["split-tests"],
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "tests__mlkit",
+    timeout = "long",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/mlkit/*.java",
+            "src/test/java/com/android/build/gradle/integration/mlkit/*.kt",
+        ],
+        exclude = CONNECTED_TESTS,
+    ),
+    data = TEST_DATA + [
+        "//prebuilts/tools/common/mlkit/testData",
+    ],
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+    ],
+    resources = glob(["src/test/resources/**"]),
+    tags = ["split-tests"],
+    deps = TEST_DEPS,
+)
+
+# These tests are split into a target per source due to b/175148611.
+# It still helps to define these tests separately to use fewer dependencies.
+single_gradle_integration_test_per_source(
+    name = "tests",
+    package_name = "tools/base/build-system/integration-test/application",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/resources/*.java",
+            "src/test/java/com/android/build/gradle/integration/resources/*.kt",
+        ],
+    ),
+    data = TEST_DATA,
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system/integration-test:dagger_prebuilts",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+    ],
+    resources = glob(["src/test/resources/**"]),
+    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 
