@@ -34,7 +34,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     fun `before-unit-test filtering via new api using buildtype callback`() {
         given {
             """
-                |    beforeUnitTest(selector().withBuildType("debug")) {
+                |    beforeUnitTests(selector().withBuildType("debug")) {
                 |        enabled = false
                 |    }
             """
@@ -56,7 +56,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     fun `before-android-test filtering via new api using buildtype callback`() {
         given {
             """
-                |    beforeAndroidTest(selector().withBuildType("debug")) {
+                |    beforeAndroidTests(selector().withBuildType("debug")) {
                 |        enabled = false
                 |    }
             """
@@ -92,7 +92,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
 
         given {
             """
-                |    beforeUnitTest(
+                |    beforeUnitTests(
                 |            selector()
                 |               .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |               .withBuildType("debug")) {
@@ -138,7 +138,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
 
         given {
             """
-                |    beforeAndroidTest(
+                |    beforeAndroidTests(
                 |            selector()
                 |               .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |               .withBuildType("debug")) {

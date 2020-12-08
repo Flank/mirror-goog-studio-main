@@ -42,18 +42,18 @@ class VariantFilterTest:  VariantApiBaseTest(
                             override fun apply(project: Project) {
                                 project.plugins.withType(AppPlugin::class.java) {
                                     val extension = project.extensions.getByName("androidComponents") as ApplicationAndroidComponentsExtension
-                                    extension.beforeUnitTest {
+                                    extension.beforeUnitTests {
                                         // disable all unit tests for apps (only using instrumentation tests)
                                         it.enabled = false
                                     }
                                 }
                                 project.plugins.withType(LibraryPlugin::class.java) {
                                     val extension = project.extensions.getByName("androidComponents") as LibraryAndroidComponentsExtension
-                                    extension.beforeAndroidTest(extension.selector().withBuildType("debug")) {
+                                    extension.beforeAndroidTests(extension.selector().withBuildType("debug")) {
                                         // Disable instrumentation for debug
                                         it.enabled = false
                                     }
-                                    extension.beforeUnitTest(extension.selector().withBuildType("release")) {
+                                    extension.beforeUnitTests(extension.selector().withBuildType("release")) {
                                         // disable all unit tests for apps (only using instrumentation tests)
                                         it.enabled = false
                                     }                                }
