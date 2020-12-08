@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.testutils
 
 import com.android.SdkConstants
@@ -30,15 +29,32 @@ import java.nio.file.attribute.FileTime
 import java.nio.file.attribute.PosixFilePermission
 import kotlin.streams.toList
 
+/**
+ * Creates an in-memory file system with a configuration appropriate for the current platform.
+ */
 fun createFileSystem(): FileSystem {
     var config = Configuration.forCurrentPlatform()
-    val root = if (OsType.getHostOs() == OsType.WINDOWS) "c:\\" else "/"
-    config = config.toBuilder()
-        .setRoots(root)
-        .setWorkingDirectory(root)
-        .setAttributeViews("posix")
-        .build()
+    config = config.toBuilder().apply {
+        if (OsType.getHostOs() == OsType.WINDOWS) {
+            setRoots("C:\\")
+            setWorkingDirectory("C:\\")
+        } else {
+            setRoots("/")
+            setWorkingDirectory("/")
+        }
+        setAttributeViews("posix")
+    }.build()
     return Jimfs.newFileSystem(config)
+}
+
+/**
+ * Creates an in-memory file system with a configuration appropriate for the current platform and
+ * a folder with the given name on that file system.
+ */
+fun createFileSystemAndFolder(folderName: String): Path {
+    val fileSystem = createFileSystem()
+    // On Windows the folder is created on the last drive.
+    return Files.createDirectory(fileSystem.rootDirectories.last().resolve(folderName))
 }
 
 fun canWrite(path: Path): Boolean {
@@ -58,10 +74,9 @@ fun canWrite(path: Path): Boolean {
 }
 
 fun getPlatformSpecificPath(path: String): String {
-    return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
-        && (path.startsWith("/") || path.startsWith("\\"))) {
-        (if (OsType.getHostOs() == OsType.WINDOWS) "c:" else "") +
-        path.replace('/', File.separatorChar)
+    return if (OsType.getHostOs() == OsType.WINDOWS) {
+        (if (path.startsWith('/') || path.startsWith('\\')) "C:" else "") +
+                path.replace('/', File.separatorChar)
     } else path
 }
 

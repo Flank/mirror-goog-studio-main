@@ -15,9 +15,8 @@
  */
 package com.android.testutils.truth
 
+import com.android.testutils.createFileSystemAndFolder
 import com.android.testutils.truth.PathSubject.assertThat
-import com.google.common.jimfs.Configuration
-import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.nio.file.Files
@@ -30,8 +29,7 @@ import kotlin.test.assertFailsWith
  * Tests for [PathSubject].
  */
 class PathSubjectTest {
-    private val fileSystem = Jimfs.newFileSystem(Configuration.unix())
-    private val rootDir = fileSystem.getPath("/test").let { Files.createDirectories(it) }
+    private val rootDir = createFileSystemAndFolder("test")
 
     @Test
     fun testExists() {
@@ -42,7 +40,7 @@ class PathSubjectTest {
         val file2 = rootDir.resolve("file2")
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file2).exists()
-        }.message).isEqualTo("/test/file2 expected to exist")
+        }.message).isEqualTo("$file2 expected to exist")
     }
 
     @Test
@@ -51,7 +49,7 @@ class PathSubjectTest {
         Files.write(file1, listOf("Test content"))
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file1).doesNotExist()
-        }.message).isEqualTo("/test/file1 is not expected to exist")
+        }.message).isEqualTo("$file1 is not expected to exist")
 
         val file2 = rootDir.resolve("file2")
         assertThat(file2).doesNotExist()
@@ -65,7 +63,7 @@ class PathSubjectTest {
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file).hasContents("something else")
         }.message).isEqualTo(
-                "Not true that </test/file> contains <something else>. It is <single line>")
+                "Not true that <$file> contains <something else>. It is <single line>")
 
         Files.write(file, listOf("line 1", "line 2"))
         assertThat(file).hasContents("line 1", "line 2")
@@ -73,7 +71,7 @@ class PathSubjectTest {
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file).hasContents("line 1", "other")
         }.message).isEqualTo(
-                "Not true that </test/file> contains <line 1\nother>. It is <line 1\nline 2>")
+                "Not true that <$file> contains <line 1\nother>. It is <line 1\nline 2>")
 
         Files.write(file, emptyList<String>())
         assertThat(file).hasContents("")
@@ -98,7 +96,7 @@ class PathSubjectTest {
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(rootDir).doesNotContainFile("file1")
         }.message).isEqualTo(
-                "Directory tree with root at $rootDir is not expected to contain /test/file1")
+                "Directory tree with root at $rootDir is not expected to contain $file1")
 
         assertThat(rootDir).doesNotContainFile("file2")
     }
@@ -118,14 +116,14 @@ class PathSubjectTest {
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file).wasModifiedAt(tenMinutesAgo)
         }.message).isEqualTo(
-                "Not true that </test/myFile> was last modified at " +
+                "Not true that <$file> was last modified at " +
                         "<2018-01-11T12:36:00Z>. " +
                         "It was last modified at <2018-01-11T12:46:00Z>")
         assertThat(file).isNewerThan(tenMinutesAgo)
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file).isNewerThan(now)
         }.message).isEqualTo(
-                "Not true that </test/myFile> was modified after " +
+                "Not true that <$file> was modified after " +
                         "<2018-01-11T12:46:00Z>. " +
                         "It was last modified at <2018-01-11T12:46:00Z>")
 
@@ -133,13 +131,13 @@ class PathSubjectTest {
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file).wasModifiedAt(now)
         }.message).isEqualTo(
-                "Not true that </test/myFile> was last modified at " +
+                "Not true that <$file> was last modified at " +
                         "<2018-01-11T12:46:00Z>. " +
                         "It was last modified at <2018-01-11T12:36:00Z>")
         assertThat(assertFailsWith(AssertionError::class) {
             assertThat(file).isNewerThan(now)
         }.message).isEqualTo(
-                "Not true that </test/myFile> was modified after " +
+                "Not true that <$file> was modified after " +
                         "<2018-01-11T12:46:00Z>. " +
                         "It was last modified at <2018-01-11T12:36:00Z>")
     }
