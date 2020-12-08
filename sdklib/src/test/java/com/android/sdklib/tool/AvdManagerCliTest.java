@@ -59,9 +59,11 @@ import org.junit.Test;
  * <p>TODO: tests for command-line input
  */
 public class AvdManagerCliTest {
-    private static final String EMU_LIB_LOCATION = "/sdk/emulator/lib";
-    private static final String SDK_LOCATION = "/sdk";
-    private static final String AVD_LOCATION = "/avd";
+
+    private static final String EMU_LIB_LOCATION =
+            InMemoryFileSystems.getPlatformSpecificPath("/sdk/emulator/lib");
+    private static final String SDK_LOCATION = InMemoryFileSystems.getPlatformSpecificPath("/sdk");
+    private static final String AVD_LOCATION = InMemoryFileSystems.getPlatformSpecificPath("/avd");
 
     private MockFileOp mFileOp;
     private AndroidSdkHandler mSdkHandler;

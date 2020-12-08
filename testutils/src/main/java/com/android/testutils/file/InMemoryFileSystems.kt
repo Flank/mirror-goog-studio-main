@@ -26,9 +26,13 @@ import java.io.IOException
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.attribute.DosFileAttributeView
+import java.nio.file.attribute.DosFileAttributes
 import java.nio.file.attribute.FileTime
 import java.nio.file.attribute.PosixFilePermission
 import kotlin.streams.toList
+
+val defaultWorkingDirectory = if (OsType.getHostOs() == OsType.WINDOWS) "D:\\work" else "/work"
 
 /**
  * Creates an in-memory file system with a configuration appropriate for the current platform.
@@ -37,13 +41,12 @@ fun createInMemoryFileSystem(): FileSystem {
     var config = Configuration.forCurrentPlatform()
     config = config.toBuilder().apply {
         if (OsType.getHostOs() == OsType.WINDOWS) {
-            setRoots("C:\\")
-            setWorkingDirectory("C:\\")
+            setRoots("C:\\", "D:\\", "E:\\")
+            setAttributeViews("dos")
         } else {
-            setRoots("/")
-            setWorkingDirectory("/")
+            setAttributeViews("posix")
         }
-        setAttributeViews("posix")
+        setWorkingDirectory(defaultWorkingDirectory)
     }.build()
     return Jimfs.newFileSystem(config)
 }
@@ -67,15 +70,20 @@ val FileSystem.someRoot: Path
 
 fun canWrite(path: Path): Boolean {
     return try {
-        !Sets.intersection(
-            Files.getPosixFilePermissions(path),
-            ImmutableSet.of(
-                PosixFilePermission.OTHERS_WRITE,
-                PosixFilePermission.GROUP_WRITE,
-                PosixFilePermission.OWNER_WRITE
+        if (OsType.getHostOs() == OsType.WINDOWS) {
+            !Files.readAttributes(path, DosFileAttributes::class.java).isReadOnly
+        }
+        else {
+            !Sets.intersection(
+                Files.getPosixFilePermissions(path),
+                ImmutableSet.of(
+                    PosixFilePermission.OTHERS_WRITE,
+                    PosixFilePermission.GROUP_WRITE,
+                    PosixFilePermission.OWNER_WRITE
+                )
             )
-        )
-            .isEmpty()
+                .isEmpty()
+        }
     } catch (e: IOException) {
         false
     }
@@ -83,7 +91,7 @@ fun canWrite(path: Path): Boolean {
 
 fun getPlatformSpecificPath(path: String): String {
     return if (OsType.getHostOs() == OsType.WINDOWS) {
-        (if (path.startsWith('/') || path.startsWith('\\')) "C:" else "") +
+        (if (path.startsWith('/') || path.startsWith('\\')) "E:" else "") +
                 path.replace('/', File.separatorChar)
     } else path
 }
@@ -92,7 +100,8 @@ fun getPlatformSpecificPath(path: String): String {
  * Records a new absolute file path.
  * Parent folders are automatically created.
  */
-fun Path.recordExistingFile(contents: String?) =
+@JvmOverloads
+fun Path.recordExistingFile(contents: String? = "") =
         recordExistingFile(0, contents?.toByteArray())
 
 /**
