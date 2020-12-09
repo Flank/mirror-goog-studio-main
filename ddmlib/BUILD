@@ -111,6 +111,7 @@ iml_module(
         ":avd",
         "//prebuilts/studio/sdk:platform-tools",
     ],
+    test_flaky = True,  # b/175217297
     test_srcs = ["src/integration/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

@@ -59,6 +59,7 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:AndroidTestResourcesConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:UtpConnectedTest",  # b/148626301
     "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",  # b/172521726
+    "//tools/base/ddmlib:studio.android.sdktools.ddmlib.integration.tests_tests",  # b/175217297
 ]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.
