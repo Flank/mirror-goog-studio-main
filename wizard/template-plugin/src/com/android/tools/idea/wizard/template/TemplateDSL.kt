@@ -40,7 +40,6 @@ fun template(block: TemplateBuilder.() -> Unit): Template = TemplateBuilder().ap
 
 @TemplateDSL
 class TemplateBuilder {
-  var revision: Int? = null
   var name: String? = null
   var description: String? = null
   var documentationUrl: String? = null
