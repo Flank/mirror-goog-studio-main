@@ -63,7 +63,8 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
         return roots;
     }
 
-    public void updateAnnotationRoots(@NonNull LintClient client, @Nullable IAndroidTarget target) {
+    public void updateAnnotationRoots(
+            @NonNull LintClient client, @Nullable IAndroidTarget target, boolean nonAndroid) {
         Collection<Project> projects = client.getKnownProjects();
         if (Project.isAospBuildEnvironment()) {
             for (Project project : projects) {
@@ -75,14 +76,14 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             }
         }
 
-        File sdkAnnotations = findSdkAnnotations(client, target);
+        File sdkAnnotations = findSdkAnnotations(client, target, nonAndroid);
         List<File> libraryAnnotations = client.getExternalAnnotations(projects);
         updateAnnotationRoots(sdkAnnotations, libraryAnnotations);
     }
 
     @Nullable
     private static File findSdkAnnotations(
-            @NonNull LintClient client, @Nullable IAndroidTarget target) {
+            @NonNull LintClient client, @Nullable IAndroidTarget target, boolean nonAndroid) {
         // Until the SDK annotations are bundled in platform tools, provide
         // a fallback for Gradle builds to point to a locally installed version.
         // This is also done first to allow build setups to hardcode exactly where
@@ -94,6 +95,11 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             if (sdkAnnotations.exists()) {
                 return sdkAnnotations;
             }
+        }
+
+        if (nonAndroid) {
+            // Not an Android project: don't try to attach Android SDK annotations
+            return null;
         }
 
         if (target != null

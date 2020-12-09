@@ -37,7 +37,8 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.util.PathString
 import com.android.manifmerger.Actions
-import com.android.prefs.AndroidLocation
+import com.android.prefs.AndroidLocationsException
+import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.api.ProgressIndicator
 import com.android.repository.api.ProgressIndicatorAdapter
 import com.android.repository.io.FileOpUtils
@@ -1147,8 +1148,7 @@ abstract class LintClient {
         // (2) via jar files in the .android/lint directory
         var files: MutableList<File>? = null
         try {
-            val androidHome = AndroidLocation.getFolder()
-            val lint = File(androidHome + File.separator + "lint")
+            val lint = File(AndroidLocationsSingleton.prefsLocation, "lint")
             if (lint.exists()) {
                 val list = lint.listFiles()
                 if (list != null) {
@@ -1158,11 +1158,18 @@ abstract class LintClient {
                                 files = ArrayList()
                             }
                             files.add(jarFile)
+                            log(
+                                Severity.WARNING, null,
+                                "Loaded lint jar file from %1\$s (%2\$s); this will stop " +
+                                    "working soon. If you need to push lint rules into a " +
+                                    "build, use the ANDROID_LINT_JARS environment variable.",
+                                jarFile.parent, jarFile.name
+                            )
                         }
                     }
                 }
             }
-        } catch (ignore: AndroidLocation.AndroidLocationException) {
+        } catch (ignore: AndroidLocationsException) {
             // Ignore -- no android dir, so no rules to load.
         }
 
