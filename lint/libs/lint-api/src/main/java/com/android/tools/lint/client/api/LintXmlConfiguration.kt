@@ -58,8 +58,8 @@ import org.w3c.dom.Element
  * XML Syntax
  * ===========
  *
- * The root tag is always `&lt;lint>`, and it can contain one or more `&lt;issue>` elements. Each
- * &lt;issue> can specify the following attributes:
+ * The root tag is always `<lint>`, and it can contain one or more `<issue>` elements. Each
+ * <issue> can specify the following attributes:
  *  `id`: The issue id the following configuration applies to. Note that this
  *    can be a comma separated list of multiple id's, in which case the configuration
  *    applies to all of them. It can also be the special value "all", which will match
@@ -76,17 +76,17 @@ import org.w3c.dom.Element
  *    in front of each host to negate the check. For example, to enable a check anywhere
  *    except when running in Studio, use {@code in="!studio"}.
  *
- * In addition, the &lt;issue> element can specify one or more children:
+ * In addition, the <issue> element can specify one or more children:
  *
- *  `&lt;ignore path="...">`: Specifies a path to ignore. Can contain the globbing
+ *  `<ignore path="...">`: Specifies a path to ignore. Can contain the globbing
  *    character "*" to match any substring in the path.
- *  `&lt;ignore regexp="...">`: Specifies either a regular expression to ignore. The
+ *  `<ignore regexp="...">`: Specifies either a regular expression to ignore. The
  *    regular expression is matched against both the location of the error and the
  *    error message itself.
- *  `&lt;option name="..." value="...">`: Specifies an option value. This can be used
+ *  `<option name="..." value="...">`: Specifies an option value. This can be used
  *    to configure some lint checks with options.
  *
- * Finally, on the root &lt;lint> element you can specify a number of attributes,
+ * Finally, on the root <lint> element you can specify a number of attributes,
  * such as `lintJars` (a list of jar files containing custom lint checks, separated
  * by a semicolon as a path separator), and flags like warningsAsErrors, checkTestSources,
  * etc (matching most of the flags offered via the lintOptions block in Gradle files.)
@@ -95,8 +95,8 @@ import org.w3c.dom.Element
  * ======================
  *
  * You can specify configurations for "all", but these will be matched after an
- * exact match has been done. E.g. if we have both `&lt;issue id="all" severity="ignore">`
- * and `&lt;issue id="MyId" severity="error">`, the severity for `MyId` will be "error""
+ * exact match has been done. E.g. if we have both `<issue id="all" severity="ignore">`
+ * and `<issue id="MyId" severity="error">`, the severity for `MyId` will be "error""
  * since that's a more exact match.
  *
  * The lint.xml files can be nested in a directory structure, and when lint reports
@@ -108,9 +108,9 @@ import org.w3c.dom.Element
  * closest `lint.xml` all match will be used.
  *
  * When there are configurations which specify a host, lint will search in this order:
- * 1. An exact host match. E.g. if you're running in Studio and there is an `&lt;issue>`
+ * 1. An exact host match. E.g. if you're running in Studio and there is an `<issue>`
  *   configuration which specifies `in="studio"`, then that configuration will be used.
- * 2. A match which does not specify a host. Usually `&lt;issue>` configurations do not
+ * 2. A match which does not specify a host. Usually `<issue>` configurations do not
  *   specify a host, and these will be consulted next.
  * 3. A match which specifies other hosts. For example, if you're running in Studio
  *   and a configuration specifies "!gradle", this will match after the other attempts.
