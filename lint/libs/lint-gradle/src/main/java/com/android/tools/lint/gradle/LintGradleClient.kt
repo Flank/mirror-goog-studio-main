@@ -16,7 +16,6 @@
 package com.android.tools.lint.gradle
 
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
-import com.android.repository.Revision
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.LintCliFlags
@@ -55,14 +54,12 @@ class LintGradleClient(
     private val sdkHome: File?,
     variantName: String?,
     private val variantInputs: VariantInputs,
-    buildToolInfoRevision: Revision?,
     resolver: KotlinSourceFoldersResolver,
     isAndroid: Boolean,
     override val baselineVariantName: String?
 ) : LintCliClient(flags, CLIENT_GRADLE) {
     /** Variant to run the client on, if any  */
     private val variantName: String?
-    private val buildToolInfoRevision: Revision?
     private val isAndroid: Boolean
     private val resolver: KotlinSourceFoldersResolver
 
@@ -75,7 +72,7 @@ class LintGradleClient(
         return resolver.getKotlinSourceFolders(variantName, project)
     }
 
-    override fun getClientRevision(): String? = version
+    override fun getClientRevision(): String = version
 
     override fun getClientDisplayName(): String {
         return "Gradle"
@@ -250,10 +247,6 @@ class LintGradleClient(
         // do not really do that, even for long-running jobs.
     }
 
-    override fun getBuildToolsRevision(project: Project): Revision? {
-        return buildToolInfoRevision
-    }
-
     override fun report(
         context: Context,
         issue: Issue,
@@ -296,7 +289,6 @@ class LintGradleClient(
 
     init {
         this.registry = registry
-        this.buildToolInfoRevision = buildToolInfoRevision
         this.resolver = resolver
         this.variantName = variantName
         this.isAndroid = isAndroid

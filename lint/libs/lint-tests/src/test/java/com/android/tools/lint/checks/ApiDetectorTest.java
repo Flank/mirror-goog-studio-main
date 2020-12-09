@@ -20,15 +20,11 @@ import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOT
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.Revision;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
-import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -36,7 +32,6 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
-import java.io.File;
 import org.intellij.lang.annotations.Language;
 
 public class ApiDetectorTest extends AbstractCheckTest {
@@ -3491,114 +3486,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testPaddingStart() {
-        String expected =
-                ""
-                        + "res/layout/padding_start.xml:14: Error: Attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
-                        + "            android:paddingStart=\"20dp\"\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/padding_start.xml:21: Error: Attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
-                        + "            android:paddingStart=\"20dp\"\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/padding_start.xml:28: Error: Attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
-                        + "            android:paddingStart=\"20dp\"\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n";
         lint().files(manifest().minSdk(4), mPadding_start)
-                .clientFactory(
-                        new TestLintTask.ClientFactory() {
-                            @NonNull
-                            @Override
-                            public com.android.tools.lint.checks.infrastructure.TestLintClient
-                                    create() {
-                                return new com.android.tools.lint.checks.infrastructure
-                                        .TestLintClient() {
-                                    @NonNull
-                                    @Override
-                                    protected Project createProject(
-                                            @NonNull File dir, @NonNull File referenceDir) {
-                                        Project fromSuper = super.createProject(dir, referenceDir);
-                                        Project spy = spy(fromSuper);
-                                        when(spy.getBuildToolsRevision()).thenReturn(null);
-                                        return spy;
-                                    }
-                                };
-                            }
-                        })
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expect(expected);
-    }
-
-    public void testPaddingStartNotApplicable() {
-        lint().files(manifest().minSdk(4), mPadding_start2)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
     }
 
-    public void testPaddingStartWithOldBuildTools() {
-        String expected =
-                ""
-                        + "res/layout/padding_start.xml:14: Error: Upgrade buildToolsVersion from 22.2.1 to at least 23.0.1; if not, attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
-                        + "            android:paddingStart=\"20dp\"\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/padding_start.xml:21: Error: Upgrade buildToolsVersion from 22.2.1 to at least 23.0.1; if not, attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
-                        + "            android:paddingStart=\"20dp\"\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/padding_start.xml:28: Error: Upgrade buildToolsVersion from 22.2.1 to at least 23.0.1; if not, attribute paddingStart referenced here can result in a crash on some specific devices older than API 17 (current min is 4) [NewApi]\n"
-                        + "            android:paddingStart=\"20dp\"\n"
-                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(4), mPadding_start)
-                .clientFactory(
-                        new TestLintTask.ClientFactory() {
-                            @NonNull
-                            @Override
-                            public com.android.tools.lint.checks.infrastructure.TestLintClient
-                                    create() {
-                                return new com.android.tools.lint.checks.infrastructure
-                                        .TestLintClient() {
-                                    @NonNull
-                                    @Override
-                                    protected Project createProject(
-                                            @NonNull File dir, @NonNull File referenceDir) {
-                                        Revision revision = new Revision(22, 2, 1);
-                                        Project fromSuper = super.createProject(dir, referenceDir);
-                                        Project spy = spy(fromSuper);
-                                        when(spy.getBuildToolsRevision()).thenReturn(revision);
-                                        return spy;
-                                    }
-                                };
-                            }
-                        })
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expect(expected);
-    }
-
-    public void testPaddingStartWithNewBuildTools() {
-        lint().files(manifest().minSdk(4), mPadding_start)
-                .clientFactory(
-                        new TestLintTask.ClientFactory() {
-                            @NonNull
-                            @Override
-                            public com.android.tools.lint.checks.infrastructure.TestLintClient
-                                    create() {
-                                return new com.android.tools.lint.checks.infrastructure
-                                        .TestLintClient() {
-                                    @NonNull
-                                    @Override
-                                    protected Project createProject(
-                                            @NonNull File dir, @NonNull File referenceDir) {
-                                        Revision revision = new Revision(23, 0, 2);
-                                        Project fromSuper = super.createProject(dir, referenceDir);
-                                        Project spy = spy(fromSuper);
-                                        when(spy.getBuildToolsRevision()).thenReturn(revision);
-                                        return spy;
-                                    }
-                                };
-                            }
-                        })
+    public void testPaddingStartNotApplicable() {
+        lint().files(manifest().minSdk(4), mPadding_start2)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();

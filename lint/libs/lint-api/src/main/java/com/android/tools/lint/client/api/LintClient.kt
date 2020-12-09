@@ -38,7 +38,6 @@ import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.util.PathString
 import com.android.manifmerger.Actions
 import com.android.prefs.AndroidLocation
-import com.android.repository.Revision
 import com.android.repository.api.ProgressIndicator
 import com.android.repository.api.ProgressIndicatorAdapter
 import com.android.repository.io.FileOpUtils
@@ -1031,31 +1030,6 @@ abstract class LintClient {
     /** Returns the expected language level for Kotlin source files in the given project */
     open fun getKotlinLanguageLevel(project: Project): LanguageVersionSettings {
         return LanguageVersionSettingsImpl.DEFAULT
-    }
-
-    /**
-     * Returns the specific version of the build tools being used for the given project, if known
-     *
-     * @param project the project in question
-     *
-     *
-     * @return the build tools version in use by the project, or null if not known
-     */
-    open fun getBuildToolsRevision(project: Project): Revision? {
-        val sdk = getSdk()
-        // Build systems like Eclipse and ant just use the latest available
-        // build tools, regardless of project metadata. In Gradle, this
-        // method is overridden to use the actual build tools specified in the
-        // project.
-        if (sdk != null) {
-            val compileTarget = getCompileTarget(project)
-            if (compileTarget != null) {
-                return compileTarget.buildToolInfo?.revision
-            }
-            return sdk.getLatestBuildTool(getRepositoryLogger(), false)?.revision
-        }
-
-        return null
     }
 
     /** Returns the set of desugaring operations in effect for the given project. */

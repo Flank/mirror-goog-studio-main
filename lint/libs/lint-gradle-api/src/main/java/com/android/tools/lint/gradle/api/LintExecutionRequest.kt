@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.gradle.api
 
-import com.android.repository.Revision
 import com.android.tools.lint.model.LintModelLintOptions
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
@@ -47,9 +46,6 @@ abstract class LintExecutionRequest {
     open var android = true
 
     // Android specific lint request data below
-
-    /** Version of the Android build tools to use, if specified */
-    abstract val buildToolsRevision: Revision?
 
     /** Android SDK root directory */
     abstract val sdkHome: File?

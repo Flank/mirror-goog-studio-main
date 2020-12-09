@@ -51,7 +51,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
-import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.AndroidTargetHash;
@@ -160,7 +159,6 @@ public class Project {
     protected Set<Desugaring> desugaring;
     private Map<String, String> superClassMap;
     private ResourceVisibilityLookup resourceVisibility;
-    private Revision buildToolsRevision;
     private Document mergedManifest;
     private com.intellij.openapi.project.Project ideaProject;
 
@@ -892,20 +890,6 @@ public class Project {
         } else {
             client.log(Severity.WARNING, null, "Unexpected build target format: %1$s", target);
         }
-    }
-
-    /**
-     * Returns the specific version of the build tools being used, if known
-     *
-     * @return the build tools version in use, or null if not known
-     */
-    @Nullable
-    public Revision getBuildToolsRevision() {
-        if (buildToolsRevision == null) {
-            buildToolsRevision = client.getBuildToolsRevision(this);
-        }
-
-        return buildToolsRevision;
     }
 
     /**

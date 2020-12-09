@@ -184,7 +184,6 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
             descriptor.sdkHome,
             variantName,
             variantInputs,
-            descriptor.buildToolsRevision,
             KotlinSourceFoldersResolver { name: String, project: Project? ->
                 descriptor.getKotlinSourceFolders(name, project)
             },
@@ -399,7 +398,6 @@ class LintGradleExecution(private val descriptor: LintExecutionRequest) {
                 sdkHome,
                 variantName,
                 variantInputs,
-                descriptor.buildToolsRevision,
                 KotlinSourceFoldersResolver { name: String, project: Project? ->
                     descriptor.getKotlinSourceFolders(name, project)
                 },
