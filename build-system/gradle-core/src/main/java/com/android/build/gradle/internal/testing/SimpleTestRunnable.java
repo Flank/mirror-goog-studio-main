@@ -292,7 +292,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
 
     @NonNull
     private static String cleanUpDir(@NonNull String path) {
-        return String.format("if [ -d %s ]; then rm -r %s; fi && mkdir %s", path, path, path);
+        return String.format("if [ -d %s ]; then rm -rf %s; fi && mkdir -p %s", path, path, path);
     }
 
     private Path queryAdditionalTestOutputLocation()
@@ -380,7 +380,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 };
 
         return testData.getInstrumentationRunnerArguments()
-                .getOrDefault("coverageFile", defaultDir.get());
+                .getOrDefault("coverageFilePath", defaultDir.get());
     }
 
     @NonNull
