@@ -28,6 +28,9 @@ using profiler::perfetto::TraceProcessorServiceImpl;
 
 ABSL_FLAG(absl::Duration, server_timeout, absl::Hours(1),
           "How long to keep the server alive when inactive");
+ABSL_FLAG(std::string, llvm_symbolizer_path, "",
+          "Path to llvm symbolizer, used to symbolize traces that contain "
+          "callstacks");
 
 class GRPC_GlobalCallback : public grpc_impl::Server::GlobalCallbacks {
  public:
@@ -79,8 +82,16 @@ void RunServer(GRPC_GlobalCallback* callback,
 
   ServerBuilder builder;
 
+  std::string llvm_path = absl::GetFlag(FLAGS_llvm_symbolizer_path);
+  if (llvm_path.empty()) {
+    std::cout << "Expected llvm path but it was empty. "
+                 "Please launch with --llvm_symbolizer_path set."
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
   // Register the handler for TraceProcessorService.
-  TraceProcessorServiceImpl service;
+  TraceProcessorServiceImpl service(llvm_path);
   builder.RegisterService(&service);
 
   // Bind to to loopback only, as we will only communicate with localhost.

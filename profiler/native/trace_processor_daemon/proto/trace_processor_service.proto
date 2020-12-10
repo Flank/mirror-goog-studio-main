@@ -35,6 +35,10 @@ message LoadTraceRequest {
 
   // Absolute file path for the .trace file to be loaded and parsed.
   string trace_path = 2;
+
+  // Optional paths to symbol root. If this is provided the trace is
+  // symbolized on load.
+  repeated string symbol_path = 3;
 }
 
 message LoadTraceResponse {

@@ -29,6 +29,10 @@ long GetLongOrDefault(SqlValue value, long defaultValue) {
   return value.is_null() ? defaultValue : value.long_value;
 }
 
+const char* GetStringOrNull(SqlValue value) {
+  return value.is_null() ? nullptr : value.string_value;
+}
+
 void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
   if (batch == nullptr) {
     return;
@@ -47,36 +51,39 @@ void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
   }
 
   auto frames = processor_->ExecuteQuery(
-      "select spf.id, spf.name, spm.name, spf.rel_pc "
+      "select spf.id, spf.name, spm.name, sps.name, sps.source_file, "
+      "sps.line_number, sps.id as SymbolId "
       "from stack_profile_frame spf join stack_profile_mapping spm "
-      "on spf.mapping = spm.id");
+      "on spf.mapping = spm.id LEFT join stack_profile_symbol sps on "
+      "sps.symbol_set_id = spf.symbol_set_id order by SymbolId asc");
   while (frames.Next()) {
     auto id = frames.Get(0).long_value;
-    auto frame_name_field = frames.Get(1);
-    auto frame_name =
-        frame_name_field.is_null() ? nullptr : frame_name_field.string_value;
-    auto module_name_field = frames.Get(2);
-    auto module_name =
-        module_name_field.is_null() ? nullptr : module_name_field.string_value;
-    auto rel_pc = GetLongOrDefault(frames.Get(3), -1);
+    auto frame_name = GetStringOrNull(frames.Get(1));
+    auto module_name = GetStringOrNull(frames.Get(2));
+    auto symbol_name = GetStringOrNull(frames.Get(3));
+    auto source_file = GetStringOrNull(frames.Get(4));
+    auto line_number = GetLongOrDefault(frames.Get(5), 0);
     auto frame = batch->add_frames();
     char* demangled_name = nullptr;
     // TODO (b/151081845): Enable demangling support on windows.
+    if (symbol_name != nullptr) {
+      frame_name = symbol_name;
+    } else if (frame_name != nullptr) {
 #ifndef _MSC_VER
-    // Demangle stack pointer frame to human readable c++ frame.
-    if (frame_name != nullptr) {
+      // Demangle stack pointer frame to human readable c++ frame.
       int ignored;
       demangled_name =
           abi::__cxa_demangle(frame_name, nullptr, nullptr, &ignored);
       if (demangled_name != nullptr) {
         frame_name = demangled_name;
       }
-    }
 #endif
+    }
+    frame->set_id(id);
+    // Due to a bug in utf-8 conversion between java and c++ with proto we
+    // encode our strings to base64 and decode them in java.
+    // https://github.com/protocolbuffers/protobuf/issues/4691
     if (frame_name != nullptr) {
-      // Due to a bug in utf-8 conversion between java and c++ with proto we
-      // encode our strings to base64 and decode them in java.
-      // https://github.com/protocolbuffers/protobuf/issues/4691
       std::string converted;
       absl::Base64Escape(frame_name, &converted);
       frame->set_name(converted);
@@ -84,16 +91,17 @@ void MemoryRequestHandler::PopulateEvents(NativeAllocationContext* batch) {
         delete demangled_name;
       }
     }
-    frame->set_id(id);
     if (module_name != nullptr) {
-      // Due to a bug in utf-8 conversion between java and c++ with proto we
-      // encode our strings to base64 and decode them in java.
-      // https://github.com/protocolbuffers/protobuf/issues/4691
       std::string converted;
       absl::Base64Escape(module_name, &converted);
       frame->set_module(converted);
     }
-    frame->set_rel_pc(rel_pc);
+    if (source_file != nullptr) {
+      std::string converted;
+      absl::Base64Escape(source_file, &converted);
+      frame->set_source_file(converted);
+    }
+    frame->set_line_number(line_number);
   }
 
   auto alloc = processor_->ExecuteQuery(

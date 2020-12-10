@@ -41,6 +41,7 @@ cc_library(
         "//tools/base/profiler/native/trace_processor_daemon/proto:cc_trace_processor_service_proto",
         "@com_google_absl//absl/strings",
         "@perfetto//:trace_processor",
+        "@perfetto//:libpprofbuilder",
     ],
 )
 

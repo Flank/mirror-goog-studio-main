@@ -44,10 +44,17 @@ message StackFrame {
     string name = 2;
     // Path to the module (so) used for this frame.
     string module = 3;
-    // The relative program counter offset for this
-    // frame. To desymbolize this,module and symbols
-    // can be passed to llvm.
-    int64 rel_pc = 4;
+    // Source file this frame maps to. This field is unset if unable
+    // to find llvmsymbolizer or unable to find symbol files. "??" is
+    // returned if the stack frame was passed to llvmsymbolizer, but
+    // the symbolizer was unable to find a valid mapping for this
+    // stack frame.
+    // The source file is populated by the symbolizer returns an
+    // absolute path.
+    string source_file = 4;
+    // Line number this frame maps to, 0 if not set or unable to map.
+    int32 line_number = 5;
+
 }
 
 // Allocation stats for each sampled StackPointer.
