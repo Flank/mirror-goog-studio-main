@@ -81,7 +81,7 @@ public class CardPresenter extends Presenter {
         // Both background colors should be set because the view"s background is temporarily visible
         // during animations.
         view.setBackgroundColor(color);
-        view.findViewById(R.id.info_field).setBackgroundColor(color);
+        view.setInfoAreaBackgroundColor(color);
     }
 
     @Override

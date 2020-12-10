@@ -48,7 +48,7 @@ public class ErrorFragment extends ${getMaterialComponentName("android.support.v
     }
 
     void setErrorContent() {
-        setImageDrawable(ContextCompat.getDrawable($getDrawableArgBlock, R.drawable.lb_ic_sad_cloud));
+        setImageDrawable(ContextCompat.getDrawable($getDrawableArgBlock, androidx.leanback.R.drawable.lb_ic_sad_cloud));
         setMessage(getResources().getString(R.string.error_fragment_message));
         setDefaultBackground(TRANSLUCENT);
 

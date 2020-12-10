@@ -44,7 +44,7 @@ class ErrorFragment : ${getMaterialComponentName("android.support.v17.leanback.a
     }
 
     internal fun setErrorContent() {
-        imageDrawable = ContextCompat.getDrawable($getDrawableArgBlock, R.drawable.lb_ic_sad_cloud)
+        imageDrawable = ContextCompat.getDrawable($getDrawableArgBlock, androidx.leanback.R.drawable.lb_ic_sad_cloud)
         message = resources.getString(R.string.error_fragment_message)
         setDefaultBackground(TRANSLUCENT)
 
