@@ -32,6 +32,13 @@ import java.util.concurrent.TimeUnit
  * Rule that sets up and tears down a FakeAdbServer, and provides some convenience methods for interacting with it.
  */
 class FakeAdbRule : ExternalResource() {
+  /**
+   * An [AndroidDebugBridge] that will be initialized unless [initAdbBridgeDuringSetup] is set to false, in which
+   * case trying to access this value will throw an exception.
+   */
+  lateinit var bridge: AndroidDebugBridge
+    private set
+
   private var initAdbBridgeDuringSetup = true
   private var closeFakeAdbServerDuringCleanUp = true
   private lateinit var fakeAdbServer: FakeAdbServer
@@ -101,7 +108,7 @@ class FakeAdbRule : ExternalResource() {
     if (initAdbBridgeDuringSetup) {
       AndroidDebugBridge.enableFakeAdbServerMode(fakeAdbServer.port)
       AndroidDebugBridge.initIfNeeded(true)
-      val bridge = AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS) ?: error("Could not create ADB bridge")
+      bridge = AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS) ?: error("Could not create ADB bridge")
       val startTime = System.currentTimeMillis()
       while ((!bridge.isConnected || !bridge.hasInitialDeviceList()) &&
              System.currentTimeMillis() - startTime < TimeUnit.SECONDS.toMillis(10)) {
