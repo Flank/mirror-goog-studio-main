@@ -18,7 +18,6 @@ package com.android.tools.build.test.multidevice;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Joiner;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.connected.application;
 
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
@@ -24,9 +24,7 @@ import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
 import static java.lang.Math.max;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -34,6 +32,7 @@ import com.android.build.gradle.integration.common.utils.AbiMatcher;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.ddmlib.IDevice;
@@ -45,9 +44,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -72,11 +73,10 @@ public class SigningConnectedTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.noBuildFile())
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Rule public Adb adb = new Adb();
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
     @Parameterized.Parameters(name = "{0}, {3}")
     public static Collection<Object[]> data() {
@@ -165,13 +165,19 @@ public class SigningConnectedTest {
                         + "  androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
                         + "}\n"
                         + "");
+
+        // fail fast if no response
+        project.addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
     private static void createKeystoreFile(@NonNull String resourceName, @NonNull File keystore)
             throws Exception {
         byte[] keystoreBytes =
                 Resources.toByteArray(
-                        Resources.getResource(SigningTest.class, "SigningTest/" + resourceName));
+                        Resources.getResource(SigningConnectedTest.class, resourceName));
         Files.write(keystore.toPath(), keystoreBytes);
     }
 
@@ -185,7 +191,7 @@ public class SigningConnectedTest {
      * that will report as skipped if the device is not available.
      */
     @Test
-    @Category(DeviceTests.class)
+    @Ignore("b/165341811, b/175333004")
     public void shaAlgorithmChange_OnDevice() throws Exception {
 
         // Check APK with minimum SDK 21.
@@ -224,7 +230,7 @@ public class SigningConnectedTest {
      * <p>This will be ignored, rather than fail, if no api 17 device is connected.
      */
     @Test
-    @Category(DeviceTests.class)
+    @Ignore("b/165341811, b/175333004")
     public void deployOnApi17() throws Exception {
         if (minSdkVersion >= DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
             // if min SDK is higher than the device, we cannot deploy.
@@ -239,6 +245,11 @@ public class SigningConnectedTest {
                         });
         assert device17 != null;
         checkOnDevice(device17);
+    }
+
+    @Test
+    public void connectedCheck() throws Exception {
+        project.executor().run("connectedCheck");
     }
 
     private void checkOnDevice(@NonNull IDevice device) throws Exception {

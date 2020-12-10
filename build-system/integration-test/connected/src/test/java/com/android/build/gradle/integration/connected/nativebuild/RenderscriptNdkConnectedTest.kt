@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.nativebuild
+package com.android.build.gradle.integration.connected.nativebuild
 
-import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
-import org.junit.experimental.categories.Category
-
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.AbiMatcher
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.options.StringOption
 import com.android.ddmlib.IDevice
 import org.hamcrest.Matcher
 import org.junit.After
+import org.junit.Before
+import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -39,6 +39,12 @@ import org.junit.Test
 class RenderscriptNdkConnectedTest {
     private var testDevice: IDevice? = null
     private var targetAbi: String? = null
+
+    companion object {
+        @ClassRule
+        @JvmField
+        val emulator = getEmulator()
+    }
 
     @get:Rule
     var adb = Adb()
@@ -73,6 +79,17 @@ class RenderscriptNdkConnectedTest {
             .executeConnectedCheck()
     }
 
+    @Before
+    fun setup() {
+        // fail fast if no response
+        project.addAdbTimeout()
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll")
+    }
+
     @After
     fun cleanup() {
         targetAbi = null
@@ -81,7 +98,7 @@ class RenderscriptNdkConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests::class)
+    @Ignore("b/165341811, b/175333004")
     fun testSeparateAbisFor32Bit() {
         getDevice(AbiMatcher.thirtyTwoBit())
 
@@ -106,12 +123,10 @@ class RenderscriptNdkConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests::class)
     fun testSeparateAbisFor64Bit() {
-        getDevice(AbiMatcher.sixtyFourBit())
+        // TODO(b/165341811, b/175333004): change this back to using abi filters
 
-        // abi should not be null
-        assertThat(targetAbi).isNotNull()
+        targetAbi = "x86_64"
 
         TestFileUtils.appendToFile(
             project.buildFile,
@@ -124,13 +139,11 @@ class RenderscriptNdkConnectedTest {
             |    }
             |}""".trimMargin("|"))
 
-        project.execute("clean", "assembleDebug")
-
-        testApk(testDevice!!, targetAbi!!)
+        project.executor().run("connectedAndroidTest")
     }
 
     @Test
-    @Category(DeviceTests::class)
+    @Ignore("b/165341811, b/175333004")
     fun testOnly32BitAbi() {
         getDevice(AbiMatcher.thirtyTwoBit())
 
@@ -154,12 +167,10 @@ class RenderscriptNdkConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests::class)
     fun testOnly64BitAbi() {
-        getDevice(AbiMatcher.sixtyFourBit())
+        // TODO(b/165341811, b/175333004): change this back to using abi filters
 
-        // abi should not be null
-        assertThat(targetAbi).isNotNull()
+        targetAbi = "x86_64"
 
         TestFileUtils.appendToFile(
             project.buildFile,
@@ -172,14 +183,11 @@ class RenderscriptNdkConnectedTest {
             |    }
             |}""".trimMargin("|"))
 
-
-        project.execute("clean", "assembleDebug")
-
-        testApk(testDevice!!, targetAbi!!)
+        project.executor().run("connectedAndroidTest")
     }
 
     @Test
-    @Category(DeviceTests::class)
+    @Ignore("b/165341811, b/175333004")
     fun testOldVersionApi() {
         getDevice(AbiMatcher.thirtyTwoBit())
 

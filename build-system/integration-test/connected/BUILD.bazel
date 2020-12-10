@@ -306,11 +306,34 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "RenderscriptNdkConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/nativebuild/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+        "//tools/base/build-system/integration-test:test-projects/renderscriptNdk",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "ShardingConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/appWithTests"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SigningConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
     deps = TEST_DEPS,
 )
 
