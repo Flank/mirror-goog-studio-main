@@ -62,6 +62,11 @@ if [[ -d "${dist_dir}" ]]; then
     -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
+
+  if [[ $? -ne 0 ]]; then
+    echo "Bazel logs-collector failed!"
+    exit 1
+  fi
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3
