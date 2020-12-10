@@ -80,6 +80,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         project.getSubproject(":app").buildFile.appendText(
             """
                 android.buildTypes.release.ndk.debugSymbolLevel '$debugSymbolLevel'
+
                 """.trimIndent()
         )
     }
@@ -135,22 +136,20 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
             "feature2/lib/$ABI_INTEL_ATOM64/feature2.so"
         )
         val entryMap = ZipArchive.listEntries(bundleFile)
+        assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
         when (debugSymbolLevel) {
             null -> {
                 assertThat(entryMap.keys).containsNoneIn(expectedFullEntries)
                 // the default debugSymbolLevel for release build is SYMBOL_TABLE
                 assertThat(entryMap.keys).containsAtLeastElementsIn(expectedSymbolTableEntries)
-                assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
             }
             NONE -> {
                 assertThat(entryMap.keys).containsNoneIn(expectedFullEntries)
                 assertThat(entryMap.keys).containsNoneIn(expectedSymbolTableEntries)
-                assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
             }
             SYMBOL_TABLE -> {
                 assertThat(entryMap.keys).containsNoneIn(expectedFullEntries)
                 assertThat(entryMap.keys).containsAtLeastElementsIn(expectedSymbolTableEntries)
-                assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
                 // check that the .so.sym entries are larger than the .so entries.
                 for (i in expectedNativeLibEntries.indices) {
                     assertThat(entryMap[expectedSymbolTableEntries[i]]?.uncompressedSize)
@@ -160,12 +159,101 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
             FULL -> {
                 assertThat(entryMap.keys).containsAtLeastElementsIn(expectedFullEntries)
                 assertThat(entryMap.keys).containsNoneIn(expectedSymbolTableEntries)
-                assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
                 // check that the .so.dbg entries are larger than the .so entries.
                 for (i in expectedNativeLibEntries.indices) {
                     assertThat(entryMap[expectedFullEntries[i]]?.uncompressedSize)
                         .isGreaterThan(entryMap[expectedNativeLibEntries[i]]?.uncompressedSize)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun testNativeDebugMetadataInBundleWithAbiFilters() {
+        // add native libs to app and feature modules
+        listOf("app", "feature1", "feature2").forEach {
+            val subProject = project.getSubproject(":$it")
+            createAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
+            createAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
+            createAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
+        }
+
+        // Add abiFilters
+        project.getSubproject(":app").buildFile.appendText(
+            """
+                android.defaultConfig.ndk.abiFilters "$ABI_INTEL_ATOM"
+
+                """.trimIndent()
+        )
+
+        val bundleTaskName = getBundleTaskName("release")
+        project.executor().run("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("release").bundleFile
+        assertThat(bundleFile).exists()
+
+        val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
+        val expectedFullEntries = listOf(
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.dbg",
+        )
+        val expectedExcludedFullEntries = listOf(
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.dbg"
+        )
+        val expectedSymbolTableEntries = listOf(
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.sym",
+        )
+        val expectedExcludedSymbolTableEntries = listOf(
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.sym"
+        )
+        val expectedNativeLibEntries = listOf(
+            "base/lib/$ABI_INTEL_ATOM/app.so",
+            "feature1/lib/$ABI_INTEL_ATOM/feature1.so",
+            "feature2/lib/$ABI_INTEL_ATOM/feature2.so",
+        )
+        val expectedExcludedNativeLibEntries = listOf(
+            "base/lib/$ABI_ARMEABI_V7A/app.so",
+            "feature1/lib/$ABI_ARMEABI_V7A/feature1.so",
+            "feature2/lib/$ABI_ARMEABI_V7A/feature2.so",
+            "base/lib/$ABI_INTEL_ATOM64/app.so",
+            "feature1/lib/$ABI_INTEL_ATOM64/feature1.so",
+            "feature2/lib/$ABI_INTEL_ATOM64/feature2.so"
+        )
+        val entryMap = ZipArchive.listEntries(bundleFile)
+        assertThat(entryMap.keys).containsNoneIn(expectedExcludedFullEntries)
+        assertThat(entryMap.keys).containsNoneIn(expectedExcludedSymbolTableEntries)
+        assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
+        assertThat(entryMap.keys).containsNoneIn(expectedExcludedNativeLibEntries)
+        when (debugSymbolLevel) {
+            null -> {
+                assertThat(entryMap.keys).containsNoneIn(expectedFullEntries)
+                // the default debugSymbolLevel for release build is SYMBOL_TABLE
+                assertThat(entryMap.keys).containsAtLeastElementsIn(expectedSymbolTableEntries)
+            }
+            NONE -> {
+                assertThat(entryMap.keys).containsNoneIn(expectedFullEntries)
+                assertThat(entryMap.keys).containsNoneIn(expectedSymbolTableEntries)
+            }
+            SYMBOL_TABLE -> {
+                assertThat(entryMap.keys).containsNoneIn(expectedFullEntries)
+                assertThat(entryMap.keys).containsAtLeastElementsIn(expectedSymbolTableEntries)
+            }
+            FULL -> {
+                assertThat(entryMap.keys).containsAtLeastElementsIn(expectedFullEntries)
+                assertThat(entryMap.keys).containsNoneIn(expectedSymbolTableEntries)
             }
         }
     }

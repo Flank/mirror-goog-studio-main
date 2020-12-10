@@ -40,6 +40,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -96,6 +97,9 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val nativeDebugMetadataFiles: ConfigurableFileCollection
 
+    @get:Input
+    abstract val abiFilters: SetProperty<String>
+
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val appMetadata: RegularFileProperty
@@ -144,6 +148,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             it.bundleDeps.set(bundleDeps)
             it.bundleNeedsFusedStandaloneConfig.set(bundleNeedsFusedStandaloneConfig)
             it.appMetadata.set(appMetadata)
+            it.abiFilters.set(abiFilters)
         }
     }
 
@@ -162,6 +167,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         abstract val bundleDeps: RegularFileProperty
         abstract val bundleNeedsFusedStandaloneConfig: Property<Boolean>
         abstract val appMetadata: RegularFileProperty
+        abstract val abiFilters: SetProperty<String>
     }
 
     abstract class BundleToolWorkAction : ProfileAwareWorkAction<Params>() {
@@ -292,12 +298,16 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 }
             }
 
+            val abiFilters = parameters.abiFilters.get()
             parameters.nativeDebugMetadataFiles.forEach { file ->
-                command.addMetadataFile(
-                    "com.android.tools.build.debugsymbols",
-                    "${file.parentFile.name}/${file.name}",
-                    file.toPath()
-                )
+                val abi = file.parentFile.name
+                if (abiFilters.isEmpty() || abiFilters.contains(abi)) {
+                    command.addMetadataFile(
+                        "com.android.tools.build.debugsymbols",
+                        "$abi/${file.name}",
+                        file.toPath()
+                    )
+                }
             }
 
             command.addMetadataFile(
@@ -405,6 +415,8 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             task.nativeDebugMetadataFiles.fromDisallowChanges(
                 MergeNativeDebugMetadataTask.getNativeDebugMetadataFiles(creationConfig)
             )
+
+            task.abiFilters.setDisallowChanges(creationConfig.variantDslInfo.supportedAbis)
 
             task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.globalScope.extension.aaptOptions.noCompress)
 
