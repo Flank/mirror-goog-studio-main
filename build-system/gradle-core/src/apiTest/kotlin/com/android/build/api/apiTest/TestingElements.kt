@@ -581,6 +581,7 @@ fun getManifestProducerTask() =
                 }
 
                 void execute() {
+                    workItemParameters.getOutputApkFile().get().getAsFile().delete()
                     Files.copy(
                         workItemParameters.getInputApkFile().getAsFile().get().toPath(),
                         workItemParameters.getOutputApkFile().get().getAsFile().toPath())
@@ -635,6 +636,7 @@ fun getManifestProducerTask() =
             abstract class WorkItem @Inject constructor(private val workItemParameters: WorkItemParameters)
                 : WorkAction<WorkItemParameters> {
                 override fun execute() {
+                    workItemParameters.outputApkFile.get().asFile.delete()
                     workItemParameters.inputApkFile.asFile.get().copyTo(
                         workItemParameters.outputApkFile.get().asFile)
                 }

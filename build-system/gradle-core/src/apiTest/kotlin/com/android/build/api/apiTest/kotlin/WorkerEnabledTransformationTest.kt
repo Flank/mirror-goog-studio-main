@@ -27,7 +27,6 @@ import kotlin.test.assertNotNull
 class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script) {
     @Test
     fun workerEnabledTransformation() {
-        val outFolderForApk = File(testProjectDir.root, "${testName.methodName}/build/acme_apks")
         given {
             tasksToInvoke.add(":app:copyDebugApks")
             addModule(":app") {
@@ -68,7 +67,6 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script) {
 
                     copyApksProvider.configure {
                         this.transformationRequest.set(transformationRequest)
-                        this.outFolder.set(File("${outFolderForApk.absolutePath}"))
                     }
                 }
             }
@@ -82,7 +80,8 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script) {
             val task = task(":app:copydebugApks")
             assertNotNull(task)
             Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
-            Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
+            val outFolder = File(testProjectDir.root, "${testName.methodName}/app/build/intermediates/apk/copydebugApks")
+            Truth.assertThat(outFolder.listFiles()?.asList()?.map { it.name }).containsExactly(
                 "app-debug.apk", BuiltArtifactsImpl.METADATA_FILE_NAME
             )
         }
