@@ -16,15 +16,12 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
-
 fun detailsDescriptionPresenterJava(
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${packageName};
 
-import ${getMaterialComponentName("android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter", useAndroidX)};
+import androidx.leanback.widget.AbstractDetailsDescriptionPresenter;
 
 public class DetailsDescriptionPresenter extends AbstractDetailsDescriptionPresenter {
 

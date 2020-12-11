@@ -16,16 +16,14 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun detailsDescriptionPresenterKt(
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
-import ${getMaterialComponentName("android.support.v17.leanback.widget.AbstractDetailsDescriptionPresenter", useAndroidX)}
+import androidx.leanback.widget.AbstractDetailsDescriptionPresenter
 
 class DetailsDescriptionPresenter : AbstractDetailsDescriptionPresenter() {
 

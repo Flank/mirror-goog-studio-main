@@ -16,13 +16,10 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
-
 fun browseErrorActivityJava(
   layoutName: String,
   packageName: String,
-  mainFragment: String,
-  useAndroidX: Boolean
+  mainFragment: String
 ) = """
 package ${packageName};
 
@@ -34,8 +31,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
-import ${getMaterialComponentName("android.support.v4.app.FragmentActivity", useAndroidX)};
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 /*
  * BrowseErrorActivity shows how to use ErrorFragment

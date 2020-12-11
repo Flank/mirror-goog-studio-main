@@ -16,13 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun errorFragmentKt(
   minApiLevel: Int,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ): String {
   val getDrawableArgBlock = if (minApiLevel >= 23) "context!!" else "activity!!"
   return """
@@ -31,12 +29,13 @@ package ${escapeKotlinIdentifier(packageName)}
 import android.os.Bundle
 import android.view.View
 
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)}
+import androidx.core.content.ContextCompat
+import androidx.leanback.app.ErrorSupportFragment
 
 /**
- * This class demonstrates how to extend [${getMaterialComponentName("android.support.v17.leanback.app.ErrorSupportFragment", useAndroidX)}].
+ * This class demonstrates how to extend [ErrorSupportFragment].
  */
-class ErrorFragment : ${getMaterialComponentName("android.support.v17.leanback.app.ErrorSupportFragment", useAndroidX)}() {
+class ErrorFragment : ErrorSupportFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

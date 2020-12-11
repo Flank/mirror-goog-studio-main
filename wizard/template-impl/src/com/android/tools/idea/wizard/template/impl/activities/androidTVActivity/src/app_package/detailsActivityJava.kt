@@ -16,20 +16,16 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
-
 fun detailsActivityJava(
   detailsActivity: String,
   detailsFragmentClass: String,
   detailsLayoutName: String,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${packageName};
 
-import android.app.Activity;
 import android.os.Bundle;
-import ${getMaterialComponentName("android.support.v4.app.FragmentActivity", useAndroidX)};
+import androidx.fragment.app.FragmentActivity;
 
 /*
  * Details activity class that loads LeanbackDetailsFragment class

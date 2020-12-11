@@ -16,19 +16,17 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun cardPresenterKt(
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.graphics.drawable.Drawable
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ImageCardView", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.Presenter", useAndroidX)}
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)}
+import androidx.leanback.widget.ImageCardView
+import androidx.leanback.widget.Presenter
+import androidx.core.content.ContextCompat
 import android.util.Log
 import android.view.ViewGroup
 

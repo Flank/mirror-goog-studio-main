@@ -16,13 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun playbackVideoFragmentKt(
   minApiLevel: Int,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ): String {
   val contextArgBlock = if (minApiLevel >= 23) "context" else "activity"
   return """
@@ -30,11 +28,11 @@ package ${escapeKotlinIdentifier(packageName)}
 
 import android.net.Uri
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.v17.leanback.app.VideoSupportFragment", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.app.VideoSupportFragmentGlueHost", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.media.MediaPlayerAdapter", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.media.PlaybackTransportControlGlue", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.PlaybackControlsRow", useAndroidX)}
+import androidx.leanback.app.VideoSupportFragment
+import androidx.leanback.app.VideoSupportFragmentGlueHost
+import androidx.leanback.media.MediaPlayerAdapter
+import androidx.leanback.media.PlaybackTransportControlGlue
+import androidx.leanback.widget.PlaybackControlsRow
 
 /** Handles video playback with media controls. */
 class PlaybackVideoFragment : VideoSupportFragment() {
