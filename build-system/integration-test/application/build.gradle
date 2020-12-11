@@ -186,7 +186,7 @@ DevicePool devicePool = new DevicePool();
 
 task('startDevicePool').doLast {
     // This port number needs to be kept in sync with DevicePoolClient.
-    devicePool.start(3431)
+    devicePool.start(5554)
 }
 
 task('stopDevicePool').doLast {
