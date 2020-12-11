@@ -61,7 +61,7 @@ private fun compareVersions(
     firstVersion: String,
     projectToCheck: Project
 ) {
-    projectToCheck.plugins.withId("com.android.base") {
+    projectToCheck.plugins.withId(ANDROID_GRADLE_PLUGIN_ID) {
         val versionValue = try {
             val versionClass = try {
                 it::class.java.classLoader.loadClass(com.android.Version::class.java.name)
@@ -91,4 +91,5 @@ Using multiple versions of the Android Gradle plugin in the same build is not al
     }
 }
 
+const val ANDROID_GRADLE_PLUGIN_ID = "com.android.base"
 private const val CHECK_PERFORMED = "android.agp.version.check.performed"
