@@ -78,11 +78,34 @@ internal data class DependencyInfo(
  * Enforces minimum versions of certain plugins.
  */
 fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: IssueReporter) {
-    // Apply this check only to current subproject, other subprojects that do not apply the Android
-    // Gradle plugin should not be impacted by this check (see bug 148776286).
-    project.afterEvaluate {
-        for (plugin in pluginList) {
-            enforceMinimumVersionOfPlugin(it, plugin, issueReporter)
+    // Run only once per build
+    val extraProperties = project.rootProject.extensions.extraProperties
+    if (extraProperties.has(AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED)) {
+        return
+    }
+    extraProperties.set(AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED, true)
+
+    project.gradle.projectsEvaluated { gradle ->
+        val projectsToCheck = mutableSetOf<Project>()
+        gradle.allprojects {
+            // Check only projects that have AGP applied (see bug 148776286).
+            // Also check their parent projects recursively because the buildscript classpath(s) of
+            // parent projects are available to child projects.
+            if (it.pluginManager.hasPlugin(ANDROID_GRADLE_PLUGIN_ID)) {
+                var current: Project? = it
+                while (current != null && projectsToCheck.add(current)) {
+                    current = current.parent
+                }
+            }
+        }
+        // Calling allprojects again is needed as Gradle doesn't allow cross-project resolution of
+        // buildscript classpath
+        gradle.allprojects {
+            if (it in projectsToCheck) {
+                for (pluginToCheck in pluginList) {
+                    enforceMinimumVersionOfPlugin(it, pluginToCheck, issueReporter)
+                }
+            }
         }
     }
 }
@@ -211,3 +234,5 @@ fun getBuildSrcPlugins(classLoader: ClassLoader): Set<String> {
     }
     return buildSrcPlugins
 }
+
+private const val AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED = "AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED"
