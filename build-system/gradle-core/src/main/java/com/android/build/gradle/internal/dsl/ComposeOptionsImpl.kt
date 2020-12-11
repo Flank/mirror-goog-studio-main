@@ -17,9 +17,14 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.ComposeOptions
+import com.android.build.gradle.internal.services.DslServices
+import javax.inject.Inject
 
-open class ComposeOptionsImpl : ComposeOptions {
-    override var kotlinCompilerVersion: String? = null
+open class ComposeOptionsImpl @Inject constructor(private val dslServices: DslServices) :
+        ComposeOptions {
+    override var kotlinCompilerVersion: String?
+        get() = null
+        set(s: String?) { dslServices.logger.warn("ComposeOptions.kotlinCompilerVersion is deprecated. Compose now uses the kotlin compiler defined in your buildscript.") }
     override var kotlinCompilerExtensionVersion: String? = null
     override var useLiveLiterals: Boolean = true
 }

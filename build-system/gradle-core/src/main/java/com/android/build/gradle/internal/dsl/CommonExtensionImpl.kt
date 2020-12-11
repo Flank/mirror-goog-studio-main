@@ -137,7 +137,7 @@ abstract class CommonExtensionImpl<
     }
 
     override val composeOptions: ComposeOptionsImpl =
-        dslServices.newInstance(ComposeOptionsImpl::class.java)
+        dslServices.newInstance(ComposeOptionsImpl::class.java, dslServices)
 
     override fun composeOptions(action: ComposeOptions.() -> Unit) {
         action.invoke(composeOptions)

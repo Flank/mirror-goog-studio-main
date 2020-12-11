@@ -458,21 +458,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
 
         // any override coming from the DSL.
-        val kotlinCompilerVersionInDsl = globalScope.extension.composeOptions.kotlinCompilerVersion
         val kotlinCompilerExtensionVersionInDsl =
                 globalScope.extension.composeOptions.kotlinCompilerExtensionVersion
-        val kotlinCompilerDependency = ("org.jetbrains.kotlin:kotlin-compiler-embeddable:"
-                + (kotlinCompilerVersionInDsl ?: COMPOSE_KOTLIN_COMPILER_VERSION))
 
         val useLiveLiterals = globalScope.extension.composeOptions.useLiveLiterals
-
-        project.configurations
-                .maybeCreate(KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME)
-                .withDependencies { configuration: DependencySet ->
-                    configuration.add(
-                            project.dependencies.create(kotlinCompilerDependency))
-                }
-                .resolutionStrategy.force(kotlinCompilerDependency)
 
         // record in our metrics that compose is enabled.
         getBuildService(
@@ -2898,7 +2887,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // Temporary static variables for Kotlin+Compose configuration
         const val KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
         const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-alpha08"
-        const val COMPOSE_KOTLIN_COMPILER_VERSION = "1.4.21"
         const val CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar"
 
         /**
