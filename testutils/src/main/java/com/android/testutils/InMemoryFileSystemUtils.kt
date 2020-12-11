@@ -15,7 +15,6 @@
  */
 package com.android.testutils
 
-import com.android.SdkConstants
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
 import com.google.common.jimfs.Configuration
@@ -54,8 +53,15 @@ fun createFileSystem(): FileSystem {
 fun createFileSystemAndFolder(folderName: String): Path {
     val fileSystem = createFileSystem()
     // On Windows the folder is created on the last drive.
-    return Files.createDirectory(fileSystem.rootDirectories.last().resolve(folderName))
+    return Files.createDirectory(fileSystem.someRoot.resolve(folderName))
 }
+
+/**
+ * Some root of the file system. On Windows it is the root directory of the last drive, on Linux and
+ * Mac it is "/".
+ */
+val FileSystem.someRoot: Path
+  get() = rootDirectories.last()
 
 fun canWrite(path: Path): Boolean {
     return try {
