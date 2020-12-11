@@ -107,7 +107,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
         while (rootBuild.parent != null) {
             rootBuild = rootBuild.parent!!
         }
-        if (rootBuild.startParameter.taskRequests.isEmpty()) {
+        if (rootBuild.startParameter.taskNames.isEmpty()) {
             project.gradle.projectsEvaluated {
                 resourcesManager.recordGlobalProperties(project)
                 resourcesManager.configureAnalyticsService(serviceRegistration.parameters)
