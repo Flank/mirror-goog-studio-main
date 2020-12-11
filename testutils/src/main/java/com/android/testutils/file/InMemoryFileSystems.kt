@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.testutils
+@file:JvmName("InMemoryFileSystems")
+package com.android.testutils.file
 
+import com.android.testutils.OsType
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
 import com.google.common.jimfs.Configuration

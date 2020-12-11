@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.io.FileOpUtils;
-import com.android.testutils.InMemoryFileSystemUtilsKt;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
@@ -91,7 +91,7 @@ public class FakeDownloader implements Downloader {
             @Nullable String checksum,
             @NonNull ProgressIndicator indicator)
             throws IOException {
-        InMemoryFileSystemUtilsKt.recordExistingFile(target, 0, mRegisteredFiles.get(url));
+        InMemoryFileSystems.recordExistingFile(target, 0, mRegisteredFiles.get(url));
     }
 
     /**

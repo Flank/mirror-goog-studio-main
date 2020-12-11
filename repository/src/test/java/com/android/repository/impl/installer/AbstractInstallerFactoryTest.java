@@ -16,7 +16,8 @@
 
 package com.android.repository.impl.installer;
 
-import static com.android.testutils.InMemoryFileSystemUtilsKt.*;
+import static com.android.testutils.file.InMemoryFileSystems.createFileSystem;
+import static com.android.testutils.file.InMemoryFileSystems.getPlatformSpecificPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

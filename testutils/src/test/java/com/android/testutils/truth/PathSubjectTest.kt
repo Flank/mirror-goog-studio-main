@@ -15,7 +15,7 @@
  */
 package com.android.testutils.truth
 
-import com.android.testutils.createFileSystemAndFolder
+import com.android.testutils.file.createFileSystemAndFolder
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test

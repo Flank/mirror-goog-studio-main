@@ -41,8 +41,8 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImageManager;
-import com.android.testutils.InMemoryFileSystemUtilsKt;
 import com.android.testutils.MockLog;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -224,7 +224,7 @@ public class AvdManagerCliTest {
                         + "P     Name: testGapiAvd\n"
                         + "P   Device: Nexus 6PP  (Google)P \n"
                         + "P     Path: "
-                        + InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/avd/testGapiAvd.avd")
+                        + InMemoryFileSystems.getPlatformSpecificPath("/avd/testGapiAvd.avd")
                         + "\n"
                         + "P   Target: Google APIs (Google)\n"
                         + "P           Based on: Android 7.1.1 (Nougat)P  Tag/ABI: google_apis/x86\n"
@@ -233,7 +233,7 @@ public class AvdManagerCliTest {
                         + "P     Name: testWearApi\n"
                         + "P   Device: wear_roundP  (Google)P \n"
                         + "P     Path: "
-                        + InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/avd/testWearApi.avd")
+                        + InMemoryFileSystems.getPlatformSpecificPath("/avd/testWearApi.avd")
                         + "\n"
                         + "P   Target: Google APIs\n"
                         + "P           Based on: Android 8.0 (Oreo)P  Tag/ABI: android-wear/armeabi-v7a\n"

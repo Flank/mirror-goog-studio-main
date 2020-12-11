@@ -19,7 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.impl.FileOpImpl;
-import com.android.testutils.InMemoryFileSystemUtilsKt;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import java.io.File;
@@ -42,7 +42,7 @@ import java.nio.file.attribute.FileTime;
  * rooted (aka absolute) unix-looking paths, e.g. "/dir1/dir2/file3". When processing {@link File},
  * you can convert them using {@link #getPlatformSpecificPath(File)}.
  *
- * @deprecated Use {@link com.google.common.jimfs.Jimfs}/{@link InMemoryFileSystemUtilsKt} and
+ * @deprecated Use {@link com.google.common.jimfs.Jimfs}/{@link InMemoryFileSystems} and
  *     {@code com.android.testutils.file.DelegatingFileSystemProvider} for mocking file system.
  */
 @Deprecated
@@ -50,7 +50,7 @@ public class MockFileOp extends FileOp {
     private FileSystem mFileSystem;
 
     public MockFileOp() {
-        mFileSystem = InMemoryFileSystemUtilsKt.createFileSystem();
+        mFileSystem = InMemoryFileSystems.createFileSystem();
     }
 
     @Override
@@ -60,7 +60,7 @@ public class MockFileOp extends FileOp {
 
     /** Resets the internal state, as if the object had been newly created. */
     public void reset() {
-        mFileSystem = InMemoryFileSystemUtilsKt.createFileSystem();
+        mFileSystem = InMemoryFileSystems.createFileSystem();
     }
 
     @Override
@@ -70,7 +70,7 @@ public class MockFileOp extends FileOp {
 
     @Override
     public boolean canWrite(@NonNull File file) {
-        return InMemoryFileSystemUtilsKt.canWrite(toPath(file));
+        return InMemoryFileSystems.canWrite(toPath(file));
     }
 
     @NonNull
@@ -80,7 +80,7 @@ public class MockFileOp extends FileOp {
 
     @NonNull
     public String getPlatformSpecificPath(@NonNull String path) {
-        return InMemoryFileSystemUtilsKt.getPlatformSpecificPath(path);
+        return InMemoryFileSystems.getPlatformSpecificPath(path);
     }
 
     /**
@@ -206,7 +206,7 @@ public class MockFileOp extends FileOp {
      */
     @NonNull
     public String[] getExistingFiles() {
-        return InMemoryFileSystemUtilsKt.getExistingFiles(mFileSystem);
+        return InMemoryFileSystems.getExistingFiles(mFileSystem);
     }
 
     /**
@@ -217,7 +217,7 @@ public class MockFileOp extends FileOp {
      */
     @NonNull
     public String[] getExistingFolders() {
-        return InMemoryFileSystemUtilsKt.getExistingFolders(mFileSystem);
+        return InMemoryFileSystems.getExistingFolders(mFileSystem);
     }
 
     @Override

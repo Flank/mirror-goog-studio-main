@@ -16,8 +16,10 @@
 
 package com.android.repository.io;
 
-import static com.android.testutils.InMemoryFileSystemUtilsKt.*;
-import static com.android.testutils.InMemoryFileSystemUtilsKt.getPlatformSpecificPath;
+import static com.android.testutils.file.InMemoryFileSystems.createFileSystem;
+import static com.android.testutils.file.InMemoryFileSystems.getExistingFiles;
+import static com.android.testutils.file.InMemoryFileSystems.getPlatformSpecificPath;
+import static com.android.testutils.file.InMemoryFileSystems.recordExistingFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
