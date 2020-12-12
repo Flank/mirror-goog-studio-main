@@ -17,6 +17,7 @@
 #ifndef INSTALL_CLIENT_H
 #define INSTALL_CLIENT_H
 
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -32,16 +33,16 @@ class InstallClient {
   InstallClient(int server_pid, int input_fd, int output_fd)
       : server_pid_(server_pid), input_(input_fd), output_(output_fd) {}
 
-  // Writes a serialized protobuf message to the connected client.
-  bool Write(const proto::InstallServerRequest& request) {
-    return output_.Write(request);
-  }
-
-  // Waits up for a message to be available from the client, then attempts to
-  // parse the data read into the specified proto.
-  bool Read(proto::InstallServerResponse* response) {
-    return input_.Read(kDefaultTimeoutMs, response);
-  }
+  std::unique_ptr<proto::CheckSetupResponse> CheckSetup(
+      const proto::CheckSetupRequest& req);
+  std::unique_ptr<proto::OverlayUpdateResponse> UpdateOverlay(
+      const proto::OverlayUpdateRequest& req);
+  std::unique_ptr<proto::GetAgentExceptionLogResponse> GetAgentExceptionLog(
+      const proto::GetAgentExceptionLogRequest& req);
+  std::unique_ptr<proto::OpenAgentSocketResponse> OpenAgentSocket(
+      const proto::OpenAgentSocketRequest& req);
+  std::unique_ptr<proto::SendAgentMessageResponse> SendAgentMessage(
+      const proto::SendAgentMessageRequest& req);
 
   // Waits indefinitely for the server to start.
   bool WaitForStart() {
@@ -58,6 +59,19 @@ class InstallClient {
   const int kDefaultTimeoutMs = 5000;
 
   bool WaitForStatus(proto::InstallServerResponse::Status status);
+  std::unique_ptr<proto::InstallServerResponse> Send(
+      proto::InstallServerRequest& req);
+
+  // Writes a serialized protobuf message to the connected client.
+  bool Write(const proto::InstallServerRequest& request) {
+    return output_.Write(request);
+  }
+
+  // Waits up for a message to be available from the client, then attempts to
+  // parse the data read into the specified proto.
+  bool Read(proto::InstallServerResponse* response) {
+    return input_.Read(kDefaultTimeoutMs, response);
+  }
 };
 
 }  // namespace deploy

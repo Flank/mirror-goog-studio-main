@@ -53,4 +53,86 @@ bool InstallClient::KillServerAndWait(proto::InstallServerResponse* response) {
   return Read(response);
 }
 
+// TODO: This is where we will retry with install_serverd
+std::unique_ptr<proto::InstallServerResponse> InstallClient::Send(
+    proto::InstallServerRequest& req) {
+  req.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  if (!Write(req)) {
+    return nullptr;
+  }
+
+  std::unique_ptr<proto::InstallServerResponse> resp(
+      new proto::InstallServerResponse);
+  if (!Read(resp.get())) {
+    return nullptr;
+  }
+
+  if (resp->status() != proto::InstallServerResponse::REQUEST_COMPLETED) {
+    return nullptr;
+  }
+
+  return resp;
+}
+
+std::unique_ptr<proto::CheckSetupResponse> InstallClient::CheckSetup(
+    const proto::CheckSetupRequest& req) {
+  proto::InstallServerRequest request;
+  *request.mutable_check_request() = req;
+  auto resp = Send(request);
+  if (resp == nullptr || !resp->has_check_response()) {
+    return nullptr;
+  }
+  return std::unique_ptr<proto::CheckSetupResponse>(
+      resp->release_check_response());
+}
+
+std::unique_ptr<proto::OverlayUpdateResponse> InstallClient::UpdateOverlay(
+    const proto::OverlayUpdateRequest& req) {
+  proto::InstallServerRequest request;
+  *request.mutable_overlay_request() = req;
+  auto resp = Send(request);
+  if (resp == nullptr || !resp->has_overlay_response()) {
+    return nullptr;
+  }
+  return std::unique_ptr<proto::OverlayUpdateResponse>(
+      resp->release_overlay_response());
+}
+
+std::unique_ptr<proto::GetAgentExceptionLogResponse>
+InstallClient::GetAgentExceptionLog(
+    const proto::GetAgentExceptionLogRequest& req) {
+  proto::InstallServerRequest request;
+  *request.mutable_log_request() = req;
+  auto resp = Send(request);
+  if (resp == nullptr || !resp->has_log_response()) {
+    return nullptr;
+  }
+  return std::unique_ptr<proto::GetAgentExceptionLogResponse>(
+      resp->release_log_response());
+}
+
+std::unique_ptr<proto::OpenAgentSocketResponse> InstallClient::OpenAgentSocket(
+    const proto::OpenAgentSocketRequest& req) {
+  proto::InstallServerRequest request;
+  *request.mutable_socket_request() = req;
+  auto resp = Send(request);
+  if (resp == nullptr || !resp->has_socket_response()) {
+    return nullptr;
+  }
+  return std::unique_ptr<proto::OpenAgentSocketResponse>(
+      resp->release_socket_response());
+}
+
+std::unique_ptr<proto::SendAgentMessageResponse>
+InstallClient::SendAgentMessage(const proto::SendAgentMessageRequest& req) {
+  proto::InstallServerRequest request;
+  *request.mutable_send_request() = req;
+  auto resp = Send(request);
+  if (resp == nullptr || !resp->has_send_response()) {
+    return nullptr;
+  }
+  return std::unique_ptr<proto::SendAgentMessageResponse>(
+      resp->release_send_response());
+}
+
 }  // namespace deploy

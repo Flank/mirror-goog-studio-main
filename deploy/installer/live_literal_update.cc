@@ -102,18 +102,17 @@ void LiveLiteralUpdateCommand::Run(proto::InstallerResponse* response) {
 bool LiveLiteralUpdateCommand::CheckFilesExist(
     const std::vector<std::string>& files,
     std::unordered_set<std::string>* missing_files) {
-  proto::InstallServerRequest request;
-  request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  proto::CheckSetupRequest req;
   for (const std::string& file : files) {
-    request.mutable_check_request()->add_files(file);
+    req.add_files(file);
   }
-  proto::InstallServerResponse response;
-  if (!client_->Write(request) || !client_->Read(&response)) {
+  auto resp = client_->CheckSetup(req);
+  if (!resp) {
     return false;
   }
 
-  missing_files->insert(response.check_response().missing_files().begin(),
-                        response.check_response().missing_files().end());
+  missing_files->insert(resp->missing_files().begin(),
+                        resp->missing_files().end());
   return true;
 }
 
@@ -173,25 +172,18 @@ void LiveLiteralUpdateCommand::PrepareAndBuildRequest(
 void LiveLiteralUpdateCommand::GetAgentLogs(
     proto::LiveLiteralUpdateResponse* response) {
   Phase p("GetAgentLogs");
-  proto::InstallServerRequest install_request;
-  install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-  install_request.mutable_log_request()->set_package_name(
-      request_.package_name());
+  proto::GetAgentExceptionLogRequest req;
+  req.set_package_name(request_.package_name());
 
   // If this fails, we don't really care - it's a best-effort situation; don't
   // break the deployment because of it. Just log and move on.
-  if (!client_->Write(install_request)) {
+  auto resp = client_->GetAgentExceptionLog(req);
+  if (!resp) {
     Log::W("Could not write to server to retrieve agent logs.");
     return;
   }
 
-  proto::InstallServerResponse install_response;
-  if (!client_->Read(&install_response)) {
-    Log::W("Could not read from server while retrieving agent logs.");
-    return;
-  }
-
-  for (const auto& log : install_response.log_response().logs()) {
+  for (const auto& log : resp->logs()) {
     auto added = response->add_agent_logs();
     *added = log;
   }
@@ -210,7 +202,7 @@ void LiveLiteralUpdateCommand::ProcessResponse(
   proto::InstallServerResponse install_response;
   if (!client_->KillServerAndWait(&install_response)) {
     response->set_status(
-        proto::LiveLiteralUpdateResponse::READ_FROM_SERVER_FAILED);
+        proto::LiveLiteralUpdateResponse::INSTALL_SERVER_COM_ERR);
     return;
   }
 
@@ -246,25 +238,15 @@ void LiveLiteralUpdateCommand::FilterProcessIds(std::vector<int>* process_ids) {
 proto::LiveLiteralUpdateResponse::Status
 LiveLiteralUpdateCommand::ListenForAgents() const {
   Phase("ListenForAgents");
-  proto::InstallServerRequest server_request;
-  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  proto::OpenAgentSocketRequest req;
+  req.set_socket_name(Socket::kDefaultAddress);
 
-  auto socket_request = server_request.mutable_socket_request();
-  socket_request->set_socket_name(Socket::kDefaultAddress);
-
-  if (!client_->Write(server_request)) {
-    return proto::LiveLiteralUpdateResponse::WRITE_TO_SERVER_FAILED;
+  auto resp = client_->OpenAgentSocket(req);
+  if (!resp) {
+    return proto::LiveLiteralUpdateResponse::INSTALL_SERVER_COM_ERR;
   }
 
-  proto::InstallServerResponse server_response;
-  if (!client_->Read(&server_response)) {
-    return proto::LiveLiteralUpdateResponse::READ_FROM_SERVER_FAILED;
-  }
-
-  if (server_response.status() !=
-          proto::InstallServerResponse::REQUEST_COMPLETED ||
-      server_response.socket_response().status() !=
-          proto::OpenAgentSocketResponse::OK) {
+  if (resp->status() != proto::OpenAgentSocketResponse::OK) {
     return proto::LiveLiteralUpdateResponse::READY_FOR_AGENTS_NOT_RECEIVED;
   }
 
@@ -306,31 +288,19 @@ void LiveLiteralUpdateCommand::Update(
   // Request for the install-server to accept a connection for each agent
   // attached. The install-server will forward the specified swap request to
   // every agent, then return an aggregate list of each agent's response.
-  proto::InstallServerRequest server_request;
-  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
 
-  auto send_request = server_request.mutable_send_request();
-  send_request->set_agent_count(process_ids_.size() + extra_agents_count_);
-  *send_request->mutable_agent_request()->mutable_live_literal_request() =
-      request;
+  proto::SendAgentMessageRequest req;
+  req.set_agent_count(process_ids_.size() + extra_agents_count_);
+  *req.mutable_agent_request()->mutable_live_literal_request() = request;
 
-  if (!client_->Write(server_request)) {
+  auto resp = client_->SendAgentMessage(req);
+  if (!resp) {
     response->set_status(
-        proto::LiveLiteralUpdateResponse::WRITE_TO_SERVER_FAILED);
+        proto::LiveLiteralUpdateResponse::INSTALL_SERVER_COM_ERR);
     return;
   }
 
-  proto::InstallServerResponse server_response;
-  if (!client_->Read(&server_response) ||
-      server_response.status() !=
-          proto::InstallServerResponse::REQUEST_COMPLETED) {
-    response->set_status(
-        proto::LiveLiteralUpdateResponse::READ_FROM_SERVER_FAILED);
-    return;
-  }
-
-  const auto& agent_server_response = server_response.send_response();
-  for (const auto& agent_response : agent_server_response.agent_responses()) {
+  for (const auto& agent_response : resp->agent_responses()) {
     ConvertProtoEventsToEvents(agent_response.events());
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = response->add_failed_agents();
@@ -338,7 +308,7 @@ void LiveLiteralUpdateCommand::Update(
     }
   }
 
-  if (agent_server_response.status() == proto::SendAgentMessageResponse::OK) {
+  if (resp->status() == proto::SendAgentMessageResponse::OK) {
     if (response->failed_agents_size() == 0) {
       response->set_status(proto::LiveLiteralUpdateResponse::OK);
     } else {
