@@ -16,18 +16,17 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.FD_DATA;
+import static com.android.SdkConstants.FD_PLATFORM_TOOLS;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.api.LocalPackage;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.LintClient;
-import com.android.tools.lint.detector.api.Lint;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
@@ -37,6 +36,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import kotlin.text.Charsets;
+import kotlin.text.StringsKt;
 
 /**
  * Database for API checking: Allows quick lookup of a given class, method or field to see in which
@@ -61,6 +62,8 @@ import java.util.Map;
  * </ul>
  */
 public class ApiLookup extends ApiDatabase {
+    // This is really a name, not a path, but it's used externally (such as in metalava)
+    // so we won't change it.
     public static final String XML_FILE_PATH = "api-versions.xml"; // relative to the SDK data/ dir
     /** Database moved from platform-tools to SDK in API level 26 */
     public static final int SDK_DATABASE_MIN_VERSION = 26;
@@ -75,8 +78,6 @@ public class ApiLookup extends ApiDatabase {
     @VisibleForTesting static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
 
     private static final Map<AndroidVersion, SoftReference<ApiLookup>> instances = new HashMap<>();
-
-    private final IAndroidTarget target;
 
     /**
      * Returns an instance of the API database
@@ -109,6 +110,7 @@ public class ApiLookup extends ApiDatabase {
             SoftReference<ApiLookup> reference = instances.get(version);
             ApiLookup db = reference != null ? reference.get() : null;
             if (db == null) {
+                String versionKey = null;
                 // Fallbacks: Allow the API database to be read from a custom location
                 String env = System.getProperty("LINT_API_DATABASE");
                 File file = null;
@@ -118,26 +120,106 @@ public class ApiLookup extends ApiDatabase {
                         file = null;
                     }
                 } else {
-                    if (target != null && version.getFeatureLevel() >= SDK_DATABASE_MIN_VERSION) {
-                        FileOp fop = client.getSdk().getFileOp();
-                        file =
-                                fop.toFile(
-                                        target.getPath(IAndroidTarget.DATA).resolve(XML_FILE_PATH));
-                        if (!file.isFile()) {
-                            file = null;
+                    // Look for annotations.zip or api-versions.xml: these used to ship with the
+                    // platform-tools, but were (in API 26) moved over to the API platform.
+                    // Look for the most recent version, falling back to platform-tools if
+                    // necessary.
+
+                    target =
+                            target != null
+                                    ? target
+                                    : client.getLatestSdkTarget(SDK_DATABASE_MIN_VERSION, true);
+                    if (target != null) {
+                        File folder = new File(target.getLocation());
+                        File database = new File(folder, FD_DATA + File.separator + XML_FILE_PATH);
+                        if (database.isFile()) {
+                            // compileSdkVersion 26 and later
+                            file = database;
+                            version = target.getVersion();
+                            versionKey = version.getApiString();
+                            int revision = target.getRevision();
+                            if (revision != 1) {
+                                versionKey = versionKey + "rev" + revision;
+                            }
                         }
                     }
 
                     if (file == null) {
-                        target = null; // The API database will no longer be tied to this target
-                        file = client.findResource(XML_FILE_PATH);
+                        // Fallback to looking in the old location: platform-tools/api/<name>
+                        // under the SDK
+                        // Look in platform-tools instead, where it historically was located.
+
+                        File database =
+                                new File(
+                                        client.getSdkHome(),
+                                        FD_PLATFORM_TOOLS
+                                                + File.separator
+                                                + "api"
+                                                + File.separator
+                                                + XML_FILE_PATH);
+                        if (database.exists()) {
+                            file = database;
+                            // Which version of the platform is installed. Here we used to look up
+                            // which exact version of platform-tools is installed, in order to
+                            // properly
+                            // version databases based on changes to the api-versions.xml file under
+                            // platform-tools. However, doing this is actually pointless, because
+                            // for
+                            // several years now, the api-version.xml files have been bundled with
+                            // the platform,
+                            // not the platform-tools, and we have not updated the fallback
+                            // api-versions.xml
+                            // in platform-tools, so we might as well continue using the exact same
+                            // database
+                            // forever.
+                            versionKey = "old-30.0.5"; // platform-versions
+                        }
+
+                        if (file == null) {
+                            // AOSP build environment?
+                            String build = System.getenv("ANDROID_BUILD_TOP");
+                            if (build != null) {
+                                database =
+                                        new File(
+                                                build,
+                                                "development/sdk/api-versions.xml"
+                                                        .replace('/', File.separatorChar));
+                                if (database.exists()) {
+                                    file = database;
+                                }
+                            }
+                        }
+
+                        // Fallback for compatibility reasons; metalava for example
+                        // locates the file by providing a custom lint client which
+                        // overrides findResource to point to the right file
+                        if (file == null) {
+                            file = client.findResource(XML_FILE_PATH);
+                        }
                     }
                 }
 
                 if (file == null) {
                     return null;
                 } else {
-                    db = get(client, file, target);
+                    if (versionKey == null) {
+                        // We don't know the version for files coming out of a platform
+                        // build or a custom file pointed to by an environment variable;
+                        // in that case just use a hash of the path and the timestamp to
+                        // make sure the database is updated if the file changes (and the
+                        // path has to prevent the unlikely scenario of two different
+                        // databases having the same timestamp
+                        HashFunction hashFunction = Hashing.farmHashFingerprint64();
+                        versionKey =
+                                hashFunction
+                                        .newHasher()
+                                        .putLong(file.lastModified())
+                                        .putString(file.getPath(), Charsets.UTF_8)
+                                        .hash()
+                                        .toString();
+                    }
+
+                    db = get(client, file, versionKey);
                 }
                 instances.put(version, new SoftReference<>(db));
             }
@@ -146,51 +228,17 @@ public class ApiLookup extends ApiDatabase {
         }
     }
 
-    /**
-     * Returns the associated Android target, if known
-     *
-     * @return the target, if known
-     */
-    @Nullable
-    public IAndroidTarget getTarget() {
-        return target;
-    }
-
-    @VisibleForTesting
-    @Nullable
-    static String getPlatformVersion(@NonNull LintClient client) {
-        AndroidSdkHandler sdk = client.getSdk();
-        if (sdk != null) {
-            LocalPackage pkgInfo =
-                    sdk.getLocalPackage(
-                            SdkConstants.FD_PLATFORM_TOOLS, client.getRepositoryLogger());
-            if (pkgInfo != null) {
-                return pkgInfo.getVersion().toShortString();
-            }
-        }
-        return null;
-    }
-
     @VisibleForTesting
     @NonNull
-    static String getCacheFileName(@NonNull String xmlFileName, @Nullable String platformVersion) {
-        if (Lint.endsWith(xmlFileName, DOT_XML)) {
-            xmlFileName = xmlFileName.substring(0, xmlFileName.length() - DOT_XML.length());
-        }
-
-        StringBuilder sb = new StringBuilder(100);
-        sb.append(xmlFileName);
-
+    static String getCacheFileName(@NonNull String xmlFileName, @NonNull String platformVersion) {
         // Incorporate version number in the filename to avoid upgrade filename
         // conflicts on Windows (such as issue #26663)
-        sb.append('-').append(getBinaryFormatVersion(API_LOOKUP_BINARY_FORMAT_VERSION));
-
-        if (platformVersion != null) {
-            sb.append('-').append(platformVersion.replace(' ', '_'));
-        }
-
-        sb.append(".bin");
-        return sb.toString();
+        return StringsKt.removeSuffix(xmlFileName, DOT_XML)
+                + '-'
+                + getBinaryFormatVersion(API_LOOKUP_BINARY_FORMAT_VERSION)
+                + '-'
+                + platformVersion.replace(' ', '_')
+                + ".bin";
     }
 
     /**
@@ -198,11 +246,11 @@ public class ApiLookup extends ApiDatabase {
      *
      * @param client the client to associate with this database - used only for logging
      * @param xmlFile the XML file containing configuration data to use for this database
-     * @param target the associated Android target, if known
+     * @param version the version of the Android platform this API database is associated with
      * @return a (possibly shared) instance of the API database, or null if its data can't be found
      */
     private static ApiLookup get(
-            @NonNull LintClient client, @NonNull File xmlFile, @Nullable IAndroidTarget target) {
+            @NonNull LintClient client, @NonNull File xmlFile, @NonNull String version) {
         if (!xmlFile.exists()) {
             client.log(null, "The API database file %1$s does not exist", xmlFile);
             return null;
@@ -213,8 +261,7 @@ public class ApiLookup extends ApiDatabase {
             cacheDir = xmlFile.getParentFile();
         }
 
-        String platformVersion = getPlatformVersion(client);
-        File binaryData = new File(cacheDir, getCacheFileName(xmlFile.getName(), platformVersion));
+        File binaryData = new File(cacheDir, getCacheFileName(xmlFile.getName(), version));
 
         if (DEBUG_FORCE_REGENERATE_BINARY) {
             System.err.println(
@@ -238,7 +285,7 @@ public class ApiLookup extends ApiDatabase {
             return null;
         }
 
-        return new ApiLookup(client, xmlFile, binaryData, target);
+        return new ApiLookup(client, xmlFile, binaryData);
     }
 
     private static CacheCreator cacheCreator(File xmlFile) {
@@ -271,11 +318,7 @@ public class ApiLookup extends ApiDatabase {
 
     /** Use one of the {@link #get} factory methods instead. */
     private ApiLookup(
-            @NonNull LintClient client,
-            @NonNull File xmlFile,
-            @Nullable File binaryFile,
-            @Nullable IAndroidTarget target) {
-        this.target = target;
+            @NonNull LintClient client, @NonNull File xmlFile, @Nullable File binaryFile) {
 
         if (binaryFile != null) {
             readData(client, binaryFile, cacheCreator(xmlFile), API_LOOKUP_BINARY_FORMAT_VERSION);

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.Pair;
@@ -26,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.util.Collection;
+import org.junit.Assert;
 
 @SuppressWarnings({"javadoc", "ConstantConditions"})
 public class ApiLookupTest extends AbstractCheckTest {
@@ -329,7 +331,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         ApiLookup.dispose();
 
         // Custom cache dir: should also work
-        mCacheDir = new File(getTempDir(), "test-cache");
+        mCacheDir = new File(getTempDir(), "testcache");
         mCacheDir.mkdirs();
         mLogBuffer.setLength(0);
         lookup = ApiLookup.get(new LookupTestClient());
@@ -339,12 +341,14 @@ public class ApiLookupTest extends AbstractCheckTest {
         ApiLookup.dispose();
 
         // Now truncate cache file
-        File cacheFile =
-                new File(
-                        mCacheDir,
-                        ApiLookup.getCacheFileName(
-                                "api-versions.xml",
-                                ApiLookup.getPlatformVersion(new LookupTestClient())));
+        IAndroidTarget target = new LookupTestClient().getLatestSdkTarget(1, true);
+        Assert.assertNotNull(target);
+        String key = target.getVersion().getApiString();
+        int revision = target.getRevision();
+        if (revision != 1) {
+            key = key + "rev" + revision;
+        }
+        File cacheFile = new File(mCacheDir, ApiLookup.getCacheFileName("api-versions.xml", key));
         mLogBuffer.setLength(0);
         assertTrue(cacheFile.exists());
         RandomAccessFile raf = new RandomAccessFile(cacheFile, "rw");

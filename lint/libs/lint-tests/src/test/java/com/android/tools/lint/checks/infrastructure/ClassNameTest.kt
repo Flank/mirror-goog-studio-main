@@ -79,6 +79,33 @@ class ClassNameTest {
     }
 
     @Test
+    fun testImportInPackage() {
+        // http://b/119884022 ClassName#CLASS_PATTERN invalid regexp
+        assertEquals(
+            "foo",
+            getPackage(
+                """
+                package foo;
+                import foo.interfaces.ThisIsNotClassName;
+                public class NavigationView extends View {
+                }
+                """.trimIndent()
+            )
+        )
+        assertEquals(
+            "NavigationView",
+            getClassName(
+                """
+                package foo;
+                import foo.interfaces.ThisIsNotClassName;
+                public class NavigationView extends View {
+                }
+                """.trimIndent()
+            )
+        )
+    }
+
+    @Test
     fun testAnnotations() {
         assertEquals(
             "Asdf",

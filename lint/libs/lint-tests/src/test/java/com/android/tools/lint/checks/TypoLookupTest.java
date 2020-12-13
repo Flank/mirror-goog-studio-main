@@ -18,7 +18,6 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
-import com.android.tools.lint.LintExternalAnnotationsManager;
 import com.android.tools.lint.checks.infrastructure.TestLintClient;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
@@ -304,21 +303,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     private class TypoTestClient extends ToolsBaseTestLintClient {
         @Override
         public File findResource(@NonNull String relativePath) {
-            if (relativePath.equals(LintExternalAnnotationsManager.SDK_ANNOTATIONS_PATH)) {
-                try {
-                    if (true) throw new RuntimeException();
-                    File rootDir = TestUtils.getWorkspaceRoot().toFile();
-                    File file = new File(rootDir, "tools/adt/idea/android/annotations");
-                    if (!file.exists()) {
-                        throw new RuntimeException("File " + file + " not found");
-                    }
-                    return file;
-                } catch (Throwable ignore) {
-                    // Lint checks not running inside a tools build -- typically
-                    // a third party lint check.
-                    return super.findResource(relativePath);
-                }
-            } else if (relativePath.startsWith("tools/support/")) {
+            if (relativePath.startsWith("tools/support/")) {
                 try {
                     File rootDir = TestUtils.getWorkspaceRoot().toFile();
                     String base = relativePath.substring("tools/support/".length());
@@ -332,18 +317,8 @@ public class TypoLookupTest extends AbstractCheckTest {
                     // a third party lint check.
                     return super.findResource(relativePath);
                 }
-            } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
-                if (true) throw new RuntimeException();
-                File file = super.findResource(relativePath);
-                if (file == null || !file.exists()) {
-                    throw new RuntimeException(
-                            "File "
-                                    + (file == null ? relativePath : file.getPath())
-                                    + " not found");
-                }
-                return file;
             }
-            throw new RuntimeException("Resource " + relativePath + " not found.");
+            return super.findResource(relativePath);
         }
     }
 

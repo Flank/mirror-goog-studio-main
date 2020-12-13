@@ -39,12 +39,8 @@ import com.android.ide.common.util.PathString
 import com.android.manifmerger.Actions
 import com.android.prefs.AndroidLocationsException
 import com.android.prefs.AndroidLocationsSingleton
-import com.android.repository.api.ProgressIndicator
-import com.android.repository.api.ProgressIndicatorAdapter
-import com.android.repository.io.FileOpUtils
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
-import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Desugaring
 import com.android.tools.lint.detector.api.Issue
@@ -89,12 +85,12 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.net.URLConnection
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.Locale
 import java.util.function.Predicate
+import kotlin.math.max
 
 /**
  * Information about the tool embedding the lint analyzer. IDEs and other tools
@@ -502,6 +498,14 @@ abstract class LintClient {
     }
 
     /**
+     * Returns the most recent platform (e.g. something like the target for
+     * $ANDROID_HOME/platforms/android-30)
+     */
+    open fun getLatestSdkTarget(minApi: Int = 1, includePreviews: Boolean = true): IAndroidTarget? {
+        return getPlatformLookup()?.getLatestSdkTarget(minApi, includePreviews)
+    }
+
+    /**
      * Locates an SDK resource (relative to the SDK root directory).
      *
      * TODO: Consider switching to a [URL] return type instead.
@@ -521,58 +525,33 @@ abstract class LintClient {
             }
         }
 
-        // Files looked up by ExternalAnnotationRepository and ApiLookup, respectively
-        val isAnnotationZip = "annotations.zip" == relativePath
-        val isApiDatabase = "api-versions.xml" == relativePath
-        if (isAnnotationZip || isApiDatabase) {
-            if (isAnnotationZip) {
-                // Allow Gradle builds etc to point to a specific location
-                val path = System.getenv("SDK_ANNOTATIONS")
-                if (path != null) {
-                    val file = File(path)
-                    if (file.exists()) {
-                        return file
-                    }
+        // Looked up by ExternalAnnotationRepository
+        if ("annotations.zip" == relativePath) {
+            // Allow Gradle builds etc to point to a specific location
+            val path = System.getenv("SDK_ANNOTATIONS")
+            if (path != null) {
+                val file = File(path)
+                if (file.exists()) {
+                    return file
                 }
             }
 
-            // Look for annotations.zip or api-versions.xml: these used to ship with the
-            // platform-tools, but were (in API 26) moved over to the API platform.
-            // Look for the most recent version, falling back to platform-tools if necessary.
-            val targets = getTargets()
-            for (i in targets.indices.reversed()) {
-                val target = targets[i]
-                if (target.isPlatform && target.version.featureLevel >= SDK_DATABASE_MIN_VERSION) {
-                    val path = target.getPath(IAndroidTarget.DATA).resolve(relativePath)
-                    if (Files.isRegularFile(path)) {
-                        return getSdk()?.fileOp?.toFile(path) ?: FileOpUtils.toFileUnsafe(path)
-                    }
+            val latestPlatform = getLatestSdkTarget(minApi = SDK_DATABASE_MIN_VERSION)
+            if (latestPlatform != null) {
+                val file = File(latestPlatform.location, relativePath)
+                if (file.isFile) {
+                    return file
                 }
             }
 
             // Fallback to looking in the old location: platform-tools/api/<name> under the SDK
-            var file = File(
+            val file = File(
                 top,
                 "platform-tools" + File.separator + "api" +
                     File.separator + relativePath
             )
             if (file.exists()) {
                 return file
-            }
-
-            if (isApiDatabase) {
-                // AOSP build environment?
-                val build = System.getenv("ANDROID_BUILD_TOP")
-                if (build != null) {
-                    file = File(
-                        build,
-                        "development/sdk/api-versions.xml"
-                            .replace('/', File.separatorChar)
-                    )
-                    if (file.exists()) {
-                        return file
-                    }
-                }
             }
 
             return null
@@ -919,38 +898,34 @@ abstract class LintClient {
      */
     open fun getProjectName(project: Project): String = project.dir.name
 
-    private var targets: Array<IAndroidTarget>? = null
-
     /**
      * Returns all the [IAndroidTarget] versions installed in the user's SDK install
      * area.
      *
      * @return all the installed targets
      */
-    open fun getTargets(): Array<IAndroidTarget> {
-        if (targets == null) {
-            val sdkHandler = getSdk()
-            if (sdkHandler != null) {
-                val logger = getRepositoryLogger()
-                val targets = sdkHandler.getAndroidTargetManager(logger)
-                    .getTargets(logger)
-                this.targets = targets.toTypedArray()
-            } else {
-                targets = emptyArray()
+    open fun getTargets(): List<IAndroidTarget> = getPlatformLookup()?.getTargets() ?: emptyList()
+
+    /** Cache for [getPlatformLookup] */
+    private var platformLookup: PlatformLookup? = null
+
+    /**
+     * Returns a service to look up [IAndroidTarget] instances by criteria like
+     * specific API levels, compileSdkVersions, hash strings and "most recent"
+     */
+    open fun getPlatformLookup(): PlatformLookup? {
+        // Use cheaper implementation than the full AndroidSdkHandler
+        // when running outside of the IDE, where there isn't a live
+        // instance already; this is overridden in the IDE client
+        return platformLookup
+            ?: run {
+                val sdkHome = getSdkHome()
+                if (sdkHome != null) {
+                    SimplePlatformLookup(sdkHome).also { platformLookup = it }
+                } else {
+                    null
+                }
             }
-        }
-
-        return targets as Array<IAndroidTarget>
-    }
-
-    private var sdk: AndroidSdkHandler? = null
-
-    open fun getSdk(): AndroidSdkHandler? {
-        if (sdk == null) {
-            sdk = AndroidSdkHandler.getInstance(getSdkHome()?.toPath())
-        }
-
-        return sdk
     }
 
     /**
@@ -964,35 +939,27 @@ abstract class LintClient {
             return null
         }
 
-        val compileSdkVersion = project.buildTargetHash
-        if (compileSdkVersion != null) {
-            val handler = getSdk()
-            if (handler != null) {
-                val logger = getRepositoryLogger()
-                val manager = handler.getAndroidTargetManager(logger)
-                val target = manager.getTargetFromHashString(
-                    compileSdkVersion,
-                    logger
-                )
-                if (target != null) {
-                    return target
-                }
+        val lookup = getPlatformLookup() ?: return null
+        val buildTargetHash = project.buildTargetHash
+        if (buildTargetHash != null) {
+            val target = lookup.getTarget(buildTargetHash)
+            if (target != null) {
+                return target
             }
         }
 
+        // Match by API level instead
         val buildSdk = project.buildSdk
-        val targets = getTargets()
-        for (i in targets.indices.reversed()) {
-            val target = targets[i]
-            if (target.isPlatform && target.version.apiLevel == buildSdk) {
-                return target
-            }
+        val target = lookup.getTarget(buildSdk)
+        if (target != null) {
+            return target
         }
 
         // Pick the highest compilation target we can find; the build API level
         // is not known or not found, but having *any* SDK is better than not (without
         // it, most symbol resolution will fail.)
-        return targets.findLast { it.isPlatform }
+        return lookup.getLatestSdkTarget(includePreviews = false) // prefer stable
+            ?: lookup.getLatestSdkTarget(includePreviews = true)
     }
 
     /**
@@ -1000,18 +967,9 @@ abstract class LintClient {
      */
     val highestKnownApiLevel: Int
         get() {
-            var max = SdkVersionInfo.HIGHEST_KNOWN_STABLE_API
-
-            for (target in getTargets()) {
-                if (target.isPlatform) {
-                    val api = target.version.apiLevel
-                    if (api > max && !target.version.isPreview) {
-                        max = api
-                    }
-                }
-            }
-
-            return max
+            val maxTarget = getLatestSdkTarget()
+            val maxTargetApi = maxTarget?.version?.apiLevel ?: 1
+            return max(maxTargetApi, SdkVersionInfo.HIGHEST_KNOWN_STABLE_API)
         }
 
     /** Returns the expected language level for Java source files in the given project */
@@ -1246,9 +1204,7 @@ abstract class LintClient {
         libraries: Collection<LintModelLibrary>
     ) {
         for (library in libraries) {
-            if (library is LintModelLibrary) {
-                addLintJarsFromDependency(lintJars, library)
-            }
+            addLintJarsFromDependency(lintJars, library)
         }
     }
 
@@ -1670,9 +1626,6 @@ abstract class LintClient {
      */
     open fun <T> runReadAction(computable: Computable<T>): T = computable.compute()
 
-    /** Returns a repository logger used by this client.  */
-    open fun getRepositoryLogger(): ProgressIndicator = RepoLogger()
-
     /**
      * Returns the external annotation zip files for the given projects (transitively), if any.
      */
@@ -1807,24 +1760,6 @@ abstract class LintClient {
         }
 
         return root
-    }
-
-    private class RepoLogger : ProgressIndicatorAdapter() {
-        // Intentionally not logging these: the SDK manager is
-        // logging events such as package.xml parsing
-        //   Parsing /path/to/sdk//build-tools/19.1.0/package.xml
-        //   Parsing /path/to/sdk//build-tools/20.0.0/package.xml
-        //   Parsing /path/to/sdk//build-tools/21.0.0/package.xml
-        // which we don't want to spam on the console.
-        // It's also warning about packages that it's encountering
-        // multiple times etc; that's not something we should include
-        // in lint command line output.
-
-        override fun logError(s: String, e: Throwable?) = Unit
-
-        override fun logInfo(s: String) = Unit
-
-        override fun logWarning(s: String, e: Throwable?) = Unit
     }
 
     companion object {
