@@ -41,7 +41,13 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
     val warn = projectOptions[BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
     val fail = projectOptions[BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
     val isProjectEvaluated = AtomicBoolean(false)
-    project.gradle.projectsEvaluated { isProjectEvaluated.set(true) }
+    if (project.gradle.startParameter.isConfigureOnDemand && project.gradle.includedBuilds.isNotEmpty()) {
+        // If configuration-on-demand is enabled and there are included builds, configurations may
+        // be resolved before all projects are evaluated, see http://b/154948828.
+        project.afterEvaluate { isProjectEvaluated.set(true) }
+    } else {
+        project.gradle.projectsEvaluated { isProjectEvaluated.set(true) }
+    }
 
     project.configurations.all { configuration ->
         configuration.incoming.beforeResolve {

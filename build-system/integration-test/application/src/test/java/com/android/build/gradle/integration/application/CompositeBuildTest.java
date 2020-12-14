@@ -44,7 +44,6 @@ public class CompositeBuildTest {
                     .withName("app")
                     // composite builds are not supported
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .withDependencyChecker(false)
                     .create();
 
     @Rule
@@ -139,6 +138,12 @@ public class CompositeBuildTest {
     @Test
     public void assembleDebug() throws Exception {
         app.execute(":assembleDebug");
+        assertThat(app.getApk(GradleTestProject.ApkType.DEBUG)).exists();
+    }
+
+    @Test
+    public void assembleDebugWithConfigureOnDemand() throws Exception {
+        app.executor().withArgument("--configure-on-demand").run(":assembleDebug");
         assertThat(app.getApk(GradleTestProject.ApkType.DEBUG)).exists();
     }
 
