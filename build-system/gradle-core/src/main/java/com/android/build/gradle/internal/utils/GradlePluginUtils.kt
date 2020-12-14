@@ -22,7 +22,7 @@ import com.android.builder.errors.IssueReporter
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
-import org.gradle.api.artifacts.result.ResolvedComponentResult
+import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.initialization.dsl.ScriptHandler.CLASSPATH_CONFIGURATION
 import java.net.JarURLConnection
 import java.util.regex.Pattern
@@ -114,10 +114,10 @@ private fun enforceMinimumVersionOfPlugin(
     issueReporter: IssueReporter
 ) {
     // Traverse the dependency graph to collect violating plugins
-    val pathsToViolatingPlugins = mutableListOf<String>()
     val buildScriptClasspath = project.buildscript.configurations.getByName(CLASSPATH_CONFIGURATION)
-    ViolatingPluginDetector(pluginInfo, project.displayName, pathsToViolatingPlugins)
-            .visit(buildScriptClasspath.incoming.resolutionResult)
+    val pathsToViolatingPlugins = ViolatingPluginDetector(
+            buildScriptClasspath.incoming.resolutionResult, pluginInfo, project.displayName
+    ).detect()
 
     // Report violating plugins
     if (pathsToViolatingPlugins.isNotEmpty()) {
@@ -139,33 +139,29 @@ private fun enforceMinimumVersionOfPlugin(
 
 @VisibleForTesting
 internal class ViolatingPluginDetector(
+        private val buildscriptClasspath: ResolutionResult,
         private val pluginToSearch: DependencyInfo,
-        private val projectDisplayName: String,
-        private val pathsToViolatingPlugins: MutableList<String>
-) : PathAwareDependencyGraphVisitor(visitOnlyOnce = true) {
+        private val projectDisplayName: String
+) {
 
-    override fun visitDependency(dependency: ResolvedComponentResult, parentPath: List<ResolvedComponentResult>) {
-        val moduleVersion = dependency.moduleVersion ?: return
-        if (moduleVersion.group == pluginToSearch.dependencyGroup
-                && moduleVersion.name == pluginToSearch.dependencyName) {
-            // Use GradleVersion to parse the version since the format accepted by GradleVersion is
-            // general enough. In the unlikely event that the version cannot be parsed, ignore the
-            // error.
-            val parsedVersion = GradleVersion.tryParse(moduleVersion.version)
-            if (parsedVersion != null && parsedVersion < pluginToSearch.minimumVersion) {
-                val dependencyPath = (parentPath + dependency).map { dep ->
-                    dep.moduleVersion?.let { "${it.group}:${it.name}:${it.version}" }
-                            ?: dep.toString()
-                }
+    /** Returns the paths to violating plugins. */
+    fun detect(): List<String> {
+        val violatingPlugins = buildscriptClasspath.getModuleComponents { moduleComponentId ->
+            if (moduleComponentId.group == pluginToSearch.dependencyGroup
+                    && moduleComponentId.module == pluginToSearch.dependencyName) {
+                // Use GradleVersion to parse the version since the format accepted by GradleVersion
+                // is general enough. In the unlikely event that the version cannot be parsed,
+                // ignore the error.
+                val parsedVersion = GradleVersion.tryParse(moduleComponentId.version)
+                (parsedVersion != null) && (parsedVersion < pluginToSearch.minimumVersion)
+            } else {
+                false
+            }
+        }
+        return violatingPlugins.mapNotNull { component ->
+            component.getPathFromRoot(projectDisplayName).takeIf {
                 // Ignore Safe-args plugin for now (bug 175379963).
-                if (dependencyPath.contains("androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1")) {
-                    return
-                }
-                // The root of the dependency graph (the start of the dependency path) in this case
-                // is not in a user-friendly format (e.g., ":<project-name>:unspecified"), so we use
-                // `project.displayName` instead (e.g., "root project '<project-name>'").
-                val adjustedPath = listOf(projectDisplayName) + dependencyPath.drop(1)
-                pathsToViolatingPlugins.add(adjustedPath.joinToString(" -> "))
+                !it.contains("androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1")
             }
         }
     }
