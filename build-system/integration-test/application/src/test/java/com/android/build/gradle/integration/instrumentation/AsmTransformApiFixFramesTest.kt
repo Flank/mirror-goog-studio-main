@@ -164,19 +164,17 @@ class AsmTransformApiFixFramesTest {
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":buildSrc")
                         .file("src/main/java/com/example/buildsrc/plugin/InstrumentationPlugin.kt"),
-                "val androidExt = project.extensions.getByType(CommonExtension::class.java)",
+                "val androidComponentsExt = project.extensions.getByType(AndroidComponentsExtension::class.java)",
                 // language=kotlin
                 """
-            val androidExt = project.extensions.getByType(CommonExtension::class.java)
-            androidExt.onVariants {
-                unitTestProperties {
-                    transformClassesWith(
+            val androidComponentsExt = project.extensions.getByType(AndroidComponentsExtension::class.java)
+            androidComponentsExt.unitTest {
+                    it.transformClassesWith(
                             FramesBreakingClassVisitorFactory::class.java,
                             InstrumentationScope.PROJECT
                     ) {}
-                    setAsmFramesComputationMode($framesMode)
+                    it.setAsmFramesComputationMode($framesMode)
                 }
-            }
                 """.trimIndent()
 
         )

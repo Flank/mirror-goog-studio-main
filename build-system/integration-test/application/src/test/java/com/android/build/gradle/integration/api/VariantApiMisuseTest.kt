@@ -56,11 +56,13 @@ abstract class SomeTask extends DefaultTask {
     void taskAction() {}
 }
 
-android.onVariantProperties {
-  TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
-    task.getVariantName().set(it.getName())
-  }
-  artifacts.use(outputTask)
+androidComponents {
+    onVariants(selector().all(), {
+      TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
+        task.getVariantName().set(it.getName())
+      }
+      artifacts.use(outputTask)
+    })
 }
 """)
         val result = project.executor().expectFailure().run("clean", "debugSomeTask")
@@ -96,11 +98,13 @@ abstract class SomeTask extends DefaultTask {
     void taskAction() { }
 }
 
-android.onVariantProperties {
-  TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
-    task.getVariantName().set(it.getName())
-  }
-  artifacts.use(outputTask).wiredWith({ it.getOutputDir })
+androidComponents {
+    onVariants(selector().all(), {
+          TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
+            task.getVariantName().set(it.getName())
+          }
+          artifacts.use(outputTask).wiredWith({ it.getOutputDir })
+    })
 }
 """)
         val result = project.executor().expectFailure().run("clean", "debugSomeTask")
@@ -138,11 +142,13 @@ abstract class SomeTask extends DefaultTask {
     void taskAction() {}
 }
 
-android.onVariantProperties {
-  TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
-    task.getVariantName().set(it.getName())
-  }
-  artifacts.use(outputTask).wiredWithDirectories({ it.getInputDir }, { it.getOutputDir })
+androidComponents {
+    onVariants(selector().all(), {
+          TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
+            task.getVariantName().set(it.getName())
+          }
+          artifacts.use(outputTask).wiredWithDirectories({ it.getInputDir }, { it.getOutputDir })
+    })
 }
 """)
         val result = project.executor().expectFailure().run("clean", "debugSomeTask")
@@ -180,11 +186,13 @@ abstract class SomeTask extends DefaultTask {
     void taskAction() { }
 }
 
-android.onVariantProperties {
-  TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
-    task.getVariantName().set(it.getName())
-  }
-  artifacts.use(outputTask).wiredWithFiles({ it.getInputFile }, { it.getOutputFile })
+androidComponents {
+    onVariants(selector().all(), {
+      TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
+        task.getVariantName().set(it.getName())
+      }
+      artifacts.use(outputTask).wiredWithFiles({ it.getInputFile }, { it.getOutputFile })
+    })
 }
 """)
         val result = project.executor().expectFailure().run("clean", "debugSomeTask")
@@ -222,11 +230,13 @@ abstract class SomeTask extends DefaultTask {
     void taskAction() { }
 }
 
-android.onVariantProperties {
-  TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
-    task.getVariantName().set(it.getName())
-  }
-  artifacts.use(outputTask).wiredWith({ it.getInputDirs }, { it.getOutputDir })
+androidComponents {
+    onVariants(selector().all(), {
+          TaskProvider outputTask = tasks.register(it.getName() + 'SomeTask', SomeTask) { task ->
+            task.getVariantName().set(it.getName())
+          }
+          artifacts.use(outputTask).wiredWith({ it.getInputDirs }, { it.getOutputDir })
+    })
 }
 """)
         val result = project.executor().expectFailure().run("clean", "debugSomeTask")
@@ -239,7 +249,7 @@ android.onVariantProperties {
     }
 
     @Test
-    fun onVariantActionAddedFromOldVariantApiBlock() {
+    fun beforeVariantsActionAddedFromOldVariantApiBlock() {
         TestFileUtils.appendToFile(
             project.buildFile,
             """
@@ -257,9 +267,9 @@ android {
 
 android {
     applicationVariants.all {
-        onVariants {
+        androidComponents.beforeVariants(androidComponents.selector().all(), {
             System.out.println("This should not execute !")
-        }
+        })
     }
 }
 """)
@@ -290,9 +300,9 @@ android {
 
 android {
     applicationVariants.all {
-        onVariantProperties {
+        androidComponents.onVariants(androidComponents.selector().all(), {
             System.out.println("This should not execute !")
-        }
+        })
     }
 }
 """)

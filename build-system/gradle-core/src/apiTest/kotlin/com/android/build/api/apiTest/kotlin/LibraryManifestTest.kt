@@ -53,16 +53,17 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
             ${testingElements.getSimpleManifestTransformerTask()}
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
-
-                onVariantProperties {
-                    val manifestUpdater = tasks.register<ManifestTransformerTask>("${'$'}{name}ManifestUpdater") {
+            }
+            androidComponents {
+                onVariants { variant ->
+                    val manifestUpdater = tasks.register<ManifestTransformerTask>("${'$'}{variant.name}ManifestUpdater") {
                         activityName.set("ManuallyAdded")
                     }
-                    artifacts.use(manifestUpdater)
+                    variant.artifacts.use(manifestUpdater)
                         .wiredWithFiles(
                             ManifestTransformerTask::mergedManifest,
                             ManifestTransformerTask::updatedManifest)
-                        .toTransform(com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST)  
+                        .toTransform(com.android.build.api.artifact.ArtifactType.MERGED_MANIFEST)
                 }
             }
             """.trimIndent()

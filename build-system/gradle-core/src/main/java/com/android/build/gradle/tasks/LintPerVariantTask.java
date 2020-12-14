@@ -26,17 +26,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 
 public abstract class LintPerVariantTask extends LintBaseTask implements VariantAwareTask {
 
     private VariantInputs variantInputs;
-    private ConfigurableFileCollection allInputs;
     private boolean fatalOnly;
 
     private String variantName;
@@ -51,13 +45,6 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
     @Override
     public void setVariantName(String variantName) {
         this.variantName = variantName;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.ABSOLUTE)
-    @Optional
-    public FileCollection getAllInputs() {
-        return allInputs;
     }
 
     @Override
@@ -120,14 +107,15 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
             super.configure(lint);
 
             lint.setVariantName(variant.getName());
-            lint.allInputs = globalScope.getProject().files();
+            ConfigurableFileCollection allInputs = globalScope.getProject().files();
 
             lint.variantInputs = new VariantInputs(variant);
-            lint.allInputs.from(lint.variantInputs.getAllInputs());
+            allInputs.from(lint.variantInputs.getAllInputs());
 
             for (VariantImpl variant : allVariants) {
-                addModelArtifactsToInputs(lint.allInputs, variant);
+                addModelArtifactsToInputs(allInputs, variant);
             }
+            lint.dependsOn(allInputs);
 
             lint.setDescription(
                     StringHelper.appendCapitalized(
@@ -165,14 +153,15 @@ public abstract class LintPerVariantTask extends LintBaseTask implements Variant
             super.configure(task);
 
             task.setVariantName(component.getName());
-            task.allInputs = globalScope.getProject().files();
+            ConfigurableFileCollection allInputs = globalScope.getProject().files();
 
             task.variantInputs = new VariantInputs(component);
-            task.allInputs.from(task.variantInputs.getAllInputs());
+            allInputs.from(task.variantInputs.getAllInputs());
 
             for (ComponentImpl component : allComponentsWithLint) {
-                addModelArtifactsToInputs(task.allInputs, component);
+                addModelArtifactsToInputs(allInputs, component);
             }
+            task.dependsOn(allInputs);
 
             task.fatalOnly = true;
             task.setDescription(

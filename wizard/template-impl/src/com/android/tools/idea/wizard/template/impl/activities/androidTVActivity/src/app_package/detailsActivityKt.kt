@@ -17,25 +17,34 @@
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
+import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun detailsActivityKt(
   detailsActivity: String,
+  detailsFragmentClass: String,
   detailsLayoutName: String,
-  packageName: String
+  packageName: String,
+  useAndroidX: Boolean
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.app.Activity
 import android.os.Bundle
+import ${getMaterialComponentName("android.support.v4.app.FragmentActivity", useAndroidX)}
 
 /**
  * Details activity class that loads [VideoDetailsFragment] class.
  */
-class ${detailsActivity} : Activity() {
+class ${detailsActivity} : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.${detailsLayoutName})
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.details_fragment, ${detailsFragmentClass}())
+                .commitNow();
+        }
     }
 
     companion object {

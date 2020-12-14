@@ -42,8 +42,6 @@ import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
-import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
@@ -682,13 +680,13 @@ public class SigningTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + "android {\n"
-                        + "   onVariantProperties.withName('debug') {\n"
+                        + "androidComponents {\n"
+                        + "   onVariants(selector().withName('debug'), {\n"
                         + "       signingConfig.enableV1Signing.set(true)\n"
                         + "       signingConfig.enableV2Signing.set(true)\n"
                         + "       signingConfig.enableV3Signing.set(true)\n"
                         + "       signingConfig.enableV4Signing.set(true)\n"
-                        + "   }\n"
+                        + "   })\n"
                         + "}\n");
 
         project.executor()
@@ -719,13 +717,13 @@ public class SigningTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + "android {\n"
-                        + "   onVariantProperties.withName('debug') {\n"
+                        + "androidComponents {\n"
+                        + "   onVariants(selector().withName('debug'), {\n"
                         + "       signingConfig.enableV1Signing.set(false)\n"
                         + "       signingConfig.enableV2Signing.set(false)\n"
                         + "       signingConfig.enableV3Signing.set(true)\n"
                         + "       signingConfig.enableV4Signing.set(true)\n"
-                        + "   }\n"
+                        + "   })\n"
                         + "}\n");
 
         project.executor()

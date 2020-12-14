@@ -206,7 +206,7 @@ abstract class VerifierTask extends DefaultTask {
     }
 }
 
-android.onVariantProperties {
+androidComponents.onVariants(androidComponents.selector().all(), {
   TaskProvider outputTask = tasks.register(it.getName() + 'ProducerTask', ProducerTask) { task ->
     task.getVariantName().set(it.getName())
   }
@@ -235,7 +235,7 @@ android.onVariantProperties {
     )
     task.getArtifactsLoader().set(it.artifacts.getBuiltArtifactsLoader())
   }
-}
+})
         """.trimIndent()
         )
         val model = project.executeAndReturnModel("clean")

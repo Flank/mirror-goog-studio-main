@@ -66,7 +66,7 @@ fun RecipeExecutor.composeActivityRecipe(
   setBuildFeature("compose", true)
   setUseKotlinIrCompiler()
   // Note: kotlinCompilerVersion default is declared in TaskManager.COMPOSE_KOTLIN_COMPILER_VERSION
-  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName", kotlinCompilerVersion = "1.4.20")
+  setComposeOptions(kotlinCompilerExtensionVersion = "\$$composeVersionVarName", kotlinCompilerVersion = "1.4.21")
 
   open(srcOut.resolve("${activityClass}.kt"))
 }

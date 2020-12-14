@@ -35,7 +35,6 @@ public class PseudoApiChangesTest {
 
     private static final ImmutableSet<String> EXCLUDED_IMPL_CLASSES =
             ImmutableSet.of(
-                    "ActionableVariantObjectOperationsExecutor",
                     "AndroidSourceSetFactory",
                     "DslVariableFactory",
                     "NoOpDeprecationReporter",

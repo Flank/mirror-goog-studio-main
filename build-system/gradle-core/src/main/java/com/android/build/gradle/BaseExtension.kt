@@ -504,5 +504,5 @@ abstract class BaseExtension protected constructor(
     // these are indirectly implemented by extensions when they implement the new public
     // extension interfaces via delegates.
     abstract val buildFeatures: BuildFeatures
-    abstract var packageName: String?
+    abstract var namespace: String?
 }

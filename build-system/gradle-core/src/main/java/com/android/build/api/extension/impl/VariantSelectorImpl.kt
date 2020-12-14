@@ -52,4 +52,12 @@ open class VariantSelectorImpl : VariantSelector {
             }
         }
     }
+
+    override fun withName(name: String): VariantSelector {
+        return object : VariantSelectorImpl() {
+            override fun appliesTo(variant: ComponentIdentity): Boolean {
+                return variant.name == name && this@VariantSelectorImpl.appliesTo(variant)
+            }
+        }
+    }
 }

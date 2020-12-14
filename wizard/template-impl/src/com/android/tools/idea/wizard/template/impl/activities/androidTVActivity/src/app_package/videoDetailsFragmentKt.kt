@@ -27,7 +27,7 @@ fun videoDetailsFragmentKt(
   packageName: String,
   useAndroidX: Boolean
 ): String {
-  val contextArgBlock = if (minApiLevel >= 23) "context" else "activity"
+  val contextArgBlock = if (minApiLevel >= 23) "context!!" else "activity!!"
   return """
 package ${escapeKotlinIdentifier(packageName)}
 
@@ -36,8 +36,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.graphics.drawable.Drawable
-import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsFragment", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsFragmentBackgroundController", useAndroidX)}
+import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsSupportFragment", useAndroidX)}
+import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsSupportFragmentBackgroundController", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.widget.Action", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ArrayObjectAdapter", useAndroidX)}
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ClassPresenterSelector", useAndroidX)}
@@ -68,11 +68,11 @@ import java.util.Collections
  * A wrapper fragment for leanback details screens.
  * It shows a detailed view of video and its metadata plus related videos.
  */
-class ${detailsFragment} : DetailsFragment() {
+class ${detailsFragment} : DetailsSupportFragment() {
 
     private var mSelectedMovie: Movie? = null
 
-    private lateinit var mDetailsBackground: DetailsFragmentBackgroundController
+    private lateinit var mDetailsBackground: DetailsSupportFragmentBackgroundController
     private lateinit var mPresenterSelector: ClassPresenterSelector
     private lateinit var mAdapter: ArrayObjectAdapter
 
@@ -80,9 +80,9 @@ class ${detailsFragment} : DetailsFragment() {
         Log.d(TAG, "onCreate DetailsFragment")
         super.onCreate(savedInstanceState)
 
-        mDetailsBackground = DetailsFragmentBackgroundController(this)
+        mDetailsBackground = DetailsSupportFragmentBackgroundController(this)
 
-        mSelectedMovie = activity.intent.getSerializableExtra(${detailsActivity}.MOVIE) as Movie
+        mSelectedMovie = activity!!.intent.getSerializableExtra(${detailsActivity}.MOVIE) as Movie
         if (mSelectedMovie != null) {
             mPresenterSelector = ClassPresenterSelector()
             mAdapter = ArrayObjectAdapter(mPresenterSelector)
@@ -213,11 +213,11 @@ class ${detailsFragment} : DetailsFragment() {
 
                 val bundle =
                         ActivityOptionsCompat.makeSceneTransitionAnimation(
-                            activity,
+                            activity!!,
                             (itemViewHolder?.view as ImageCardView).mainImageView,
                             ${detailsActivity}.SHARED_ELEMENT_NAME)
                         .toBundle()
-                activity.startActivity(intent, bundle)
+                startActivity(intent, bundle)
             }
         }
     }

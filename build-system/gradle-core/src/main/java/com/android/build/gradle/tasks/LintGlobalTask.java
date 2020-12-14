@@ -27,23 +27,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 
 public abstract class LintGlobalTask extends LintBaseTask {
 
     private Map<String, VariantInputs> variantInputMap;
-    private ConfigurableFileCollection allInputs;
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.ABSOLUTE)
-    @Optional
-    public FileCollection getAllInputs() {
-        return allInputs;
-    }
 
     @Override
     protected void doTaskAction() {
@@ -102,16 +89,17 @@ public abstract class LintGlobalTask extends LintBaseTask {
 
             lintTask.setDescription("Runs lint on all variants.");
 
-            lintTask.allInputs = getGlobalScope().getProject().files();
+            ConfigurableFileCollection allInputs = getGlobalScope().getProject().files();
             lintTask.variantInputMap =
                     variants.stream()
                             .map(
                                     variantProperties -> {
                                         VariantInputs inputs = new VariantInputs(variantProperties);
-                                        lintTask.allInputs.from(inputs.getAllInputs());
+                                        allInputs.from(inputs.getAllInputs());
                                         return inputs;
                                     })
                             .collect(Collectors.toMap(VariantInputs::getName, Function.identity()));
+            lintTask.dependsOn(allInputs);
         }
     }
 }

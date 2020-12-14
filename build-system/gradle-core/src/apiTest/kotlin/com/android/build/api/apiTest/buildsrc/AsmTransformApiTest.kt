@@ -31,7 +31,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
                     "src/main/kotlin/ExamplePlugin.kt",
                     // language=kotlin
                     """
-                import com.android.build.api.dsl.CommonExtension
+                import com.android.build.api.extension.AndroidComponentsExtension
                 import com.android.build.api.instrumentation.AsmClassVisitorFactory
                 import com.android.build.api.instrumentation.ClassContext
                 import com.android.build.api.instrumentation.ClassData
@@ -51,14 +51,14 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
 
                     override fun apply(project: Project) {
 
-                        val android = project.extensions.getByType(CommonExtension::class.java)
+                        val androidComponents = project.extensions.getByType(AndroidComponentsExtension::class.java)
 
-                        android.onVariantProperties {
-                            transformClassesWith(ExampleClassVisitorFactory::class.java,
+                        androidComponents.onVariants { variant ->
+                            variant.transformClassesWith(ExampleClassVisitorFactory::class.java,
                                                  InstrumentationScope.ALL) {
                                 it.writeToStdout.set(true)
                             }
-                            setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
+                            variant.setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
                         }
                     }
 
