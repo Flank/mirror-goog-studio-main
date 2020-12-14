@@ -58,12 +58,12 @@ public class LayoutInspectorService {
     private static final long[] EMPTY_ROOT_VIEW_IDS = new long[0];
 
     private final Properties mProperties = new Properties();
+    private final ComponentTree mComponentTree = new ComponentTree(mProperties);
     private final Object mLock = new Object();
     private final AtomicReference<DetectRootViewChange> mDetectRootChange =
             new AtomicReference<>(null);
     private final Map<View, AutoCloseable> mCaptureClosables = new HashMap<>();
 
-    private boolean mShowComposeNodes = false;
     private boolean mUseScreenshotMode = false;
     private boolean mCaptureOnlyOnce = false;
 
@@ -97,7 +97,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onStartLayoutInspectorCommand(boolean showComposeNodes) {
         mCaptureOnlyOnce = false;
-        mShowComposeNodes = showComposeNodes;
+        mComponentTree.setShowComposeNodes(showComposeNodes);
         List<View> roots = getRootViews();
         for (View root : roots) {
             startLayoutInspector(root);
@@ -205,7 +205,7 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onRefreshLayoutInspectorCommand(boolean showComposeNodes) {
         mCaptureOnlyOnce = true;
-        mShowComposeNodes = showComposeNodes;
+        mComponentTree.setShowComposeNodes(showComposeNodes);
         mGeneration++;
 
         // Start the root view detector here because:
@@ -359,8 +359,7 @@ public class LayoutInspectorService {
             int index = 0;
             long[] rootViewIds = getRootViewIds();
             // The offset of the root view from the origin of the surface. Will always be 0,0 for
-            // the
-            // main window, but can be positive for floating windows (e.g. dialogs).
+            // the main window, but can be positive for floating windows (e.g. dialogs).
             int[] rootOffset = new int[2];
             if (root != null) {
                 root.getLocationInSurface(rootOffset);
@@ -368,22 +367,8 @@ public class LayoutInspectorService {
 
             long event = initComponentTree(request, rootViewIds, rootOffset[0], rootOffset[1]);
             if (root != null) {
-                // The compose API must run on the UI thread.
-                // For now: Build the entire component tree on the UI thread.
-                ComponentTreeBuilder builder =
-                        new ComponentTreeBuilder(event, root, mProperties, mShowComposeNodes);
-                root.post(builder);
-                //noinspection SynchronizationOnLocalVariableOrMethodParameter
-                synchronized (builder) {
-                    if (!builder.isDone()) {
-                        builder.wait(5000);
-                    }
-                }
-                Throwable ex = builder.getException();
-                if (ex != null) {
-                    throw ex;
-                }
-                if (mShowComposeNodes && mCaptureOnlyOnce) {
+                mComponentTree.writeTree(event, root);
+                if (mComponentTree.showComposeNodes() && mCaptureOnlyOnce) {
                     mProperties.saveAllComposeParameters(mGeneration);
                 }
             }
@@ -485,49 +470,5 @@ public class LayoutInspectorService {
         ByteArrayOutputStream error = new ByteArrayOutputStream();
         e.printStackTrace(new PrintStream(error));
         sendErrorMessage(error.toString());
-    }
-
-    private static class ComponentTreeBuilder implements Runnable {
-        private final long mEvent;
-        private final View mRoot;
-        private final Properties mProperties;
-        private final boolean mShowComposeNodes;
-        private boolean mDone;
-        private Throwable mException;
-
-        private ComponentTreeBuilder(
-                long event,
-                @NonNull View root,
-                @NonNull Properties properties,
-                boolean showComposeNodes) {
-            mEvent = event;
-            mRoot = root;
-            mProperties = properties;
-            mShowComposeNodes = showComposeNodes;
-        }
-
-        public boolean isDone() {
-            return mDone;
-        }
-
-        @Nullable
-        public Throwable getException() {
-            return mException;
-        }
-
-        @Override
-        public void run() {
-            try {
-                ComponentTree tree = new ComponentTree(mProperties, mShowComposeNodes);
-                tree.writeTree(mEvent, mRoot);
-            } catch (Throwable ex) {
-                mException = ex;
-            } finally {
-                synchronized (this) {
-                    mDone = true;
-                    notify();
-                }
-            }
-        }
     }
 }

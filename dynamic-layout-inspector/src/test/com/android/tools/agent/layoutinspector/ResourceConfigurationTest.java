@@ -33,7 +33,7 @@ public class ResourceConfigurationTest {
         long event = ComponentTreeTest.allocateEvent();
 
         Properties properties = new Properties();
-        ComponentTree treeBuilder = new ComponentTree(properties, false);
+        ComponentTree treeBuilder = new ComponentTree(properties);
         treeBuilder.writeTree(event, StandardView.createLinearLayoutWithTextView());
 
         ComponentTreeEvent proto =

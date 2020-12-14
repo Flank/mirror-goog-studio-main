@@ -33,13 +33,21 @@ class ComponentTree {
     private static final String COMPOSE_VIEW = "androidx.compose.ui.platform.AndroidComposeView";
     private final StringTable mStringTable = new StringTable();
     private final ResourceConfiguration mConfiguration = new ResourceConfiguration(mStringTable);
-    private final boolean mShowComposeNodes;
     private final Properties mProperties;
+    private final Object mComposeLock = new Object();
+    private boolean mShowComposeNodes;
     private ComposeTree mComposeTree;
 
-    public ComponentTree(@NonNull Properties properties, boolean showComposeNodes) {
+    public ComponentTree(@NonNull Properties properties) {
         mProperties = properties;
+    }
+
+    public void setShowComposeNodes(boolean showComposeNodes) {
         mShowComposeNodes = showComposeNodes;
+    }
+
+    public boolean showComposeNodes() {
+        return mShowComposeNodes;
     }
 
     /**
@@ -48,10 +56,9 @@ class ComponentTree {
      * @param view the root of the tree to load the component tree for
      * @param event a handle to a ComponentTreeEvent protobuf to pass back in native calls
      */
-    public void writeTree(long event, @NonNull View view)
+    public synchronized void writeTree(long event, @NonNull View view)
             throws LayoutInspectorService.LayoutModifiedException {
-        // We shouldn't come in here more than once.
-        assert !mStringTable.entries().iterator().hasNext();
+        mStringTable.clear();
         if (mComposeTree != null) {
             mComposeTree.resetGeneratedId();
         }
@@ -136,15 +143,33 @@ class ComponentTree {
                     toInt(layout.getName()));
         }
         if (mShowComposeNodes && COMPOSE_VIEW.equals(klass.getCanonicalName())) {
-            try {
-                if (mComposeTree == null) {
+            if (mComposeTree == null) {
+                try {
                     ClassLoader classLoader = view.getClass().getClassLoader();
-                    // TODO(b/172470469) Keep this mComposeTree instance around (optimization)
                     mComposeTree = new ComposeTree(classLoader, mStringTable);
+                } catch (Throwable ex) {
+                    Log.w("Compose", "ComposeTree creation failed: ", ex);
                 }
-                mComposeTree.loadComposeTree(view, viewBuffer);
-            } catch (Throwable ex) {
-                Log.w("Compose", "loadComposeTree failed: ", ex);
+            }
+            if (mComposeTree != null) {
+                synchronized (mComposeLock) {
+                    view.post(
+                            () -> {
+                                try {
+                                    mComposeTree.loadComposeTree(view, viewBuffer);
+                                } catch (Throwable ex) {
+                                    Log.w("Compose", "loadComposeTree failed: ", ex);
+                                } finally {
+                                    synchronized (mComposeLock) {
+                                        mComposeLock.notify();
+                                    }
+                                }
+                            });
+                    try {
+                        mComposeLock.wait();
+                    } catch (InterruptedException ignored) {
+                    }
+                }
             }
         }
         if (viewBuffer == 0 || !(view instanceof ViewGroup)) {
@@ -165,6 +190,7 @@ class ComponentTree {
         for (Map.Entry<String, Integer> entry : mStringTable.entries()) {
             addString(event, entry.getValue(), entry.getKey());
         }
+        mStringTable.clear();
     }
 
     @Nullable

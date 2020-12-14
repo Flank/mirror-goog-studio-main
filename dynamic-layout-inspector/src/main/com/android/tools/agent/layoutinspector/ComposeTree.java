@@ -34,7 +34,7 @@ class ComposeTree {
     private Map<Long, InspectorNodeWrapper> mNodeMap;
 
     ComposeTree(@NonNull ClassLoader classLoader, @NonNull StringTable stringTable)
-            throws Exception {
+            throws ReflectiveOperationException {
         mTreeBuilder = new TreeBuilderWrapper(classLoader);
         mStringTable = stringTable;
     }

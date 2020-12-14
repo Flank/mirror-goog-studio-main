@@ -26,11 +26,18 @@ import com.android.tools.agent.layoutinspector.testing.StringTable
 import com.android.tools.layoutinspector.proto.LayoutInspectorProto
 import com.android.tools.layoutinspector.proto.LayoutInspectorProto.ComponentTreeEvent
 import com.google.common.truth.Truth.assertThat
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doAnswer
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class ComposeTreeTest {
+    private var edt: ExecutorService? = null
 
     private val root: InspectorNode =
         InspectorNode(
@@ -77,16 +84,30 @@ class ComposeTreeTest {
             )
         )
 
+    @Before
+    fun before() {
+        edt = Executors.newFixedThreadPool(1)
+    }
+
+    @After
+    fun after() {
+        edt!!.shutdownNow()
+        edt = null
+    }
+
     @Test
     fun testSimpleComposeExample() {
         val linearLayout = StandardView.createLinearLayoutWithComposeView()
         val androidComposeView = linearLayout.getChildAt(0)
         `when`(androidComposeView.getTag(eq(TREE_ENTRY))).thenReturn(listOf(root))
+        doAnswer { invocation -> edt!!.submit(invocation.getArgument(0)); true }
+            .`when`(androidComposeView).post(any())
 
         System.loadLibrary("jni-test")
         val event = ComponentTreeTest.allocateEvent()
         val properties = Properties()
-        val treeBuilder = ComponentTree(properties, true)
+        val treeBuilder = ComponentTree(properties)
+        treeBuilder.setShowComposeNodes(true)
         treeBuilder.writeTree(event, linearLayout)
 
         val proto = ComponentTreeEvent.parseFrom(ComponentTreeTest.toByteArray(event))
