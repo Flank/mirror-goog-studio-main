@@ -109,8 +109,8 @@ proto::AgentSwapResponse Swapper::Swap(jvmtiEnv* jvmti, JNIEnv* jni,
   if (response.status() == proto::AgentSwapResponse::OK) {
     JniClass instrument(
         jni, "com/android/tools/deploy/instrument/InstrumentationHooks");
-    jvalue arg{.z = request.restart_activity()};
-    instrument.CallStaticMethod<void>("setRestart", "(Z)V", &arg);
+    instrument.CallStaticVoidMethod("setRestart", "(Z)V",
+                                    request.restart_activity());
   }
 
   return response;

@@ -145,10 +145,8 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
   }
 
   // Call Support the support class enable() first.
-  jvalue enable_args[1];
-  enable_args[0].l = klass;
   JniClass support(jni_, kSupportClass);
-  support.CallStaticMethod<void>("enable", "(Ljava/lang/Class;)V", enable_args);
+  support.CallStaticVoidMethod("enable", "(Ljava/lang/Class;)V", klass);
 
   JniClass live_literal_kt(jni_, klass);
 
@@ -163,17 +161,12 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
       jkey = jni_->NewStringUTF(key.c_str());
     }
 
-    jvalue args[2];
-    args[0].l = jkey;
-
     if (update.type() == "Ljava/lang/String;") {
       Log::V("Live Literal Update with String");
       jobject value = jni_->NewStringUTF(update.value().c_str());
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "C") {
       Log::V("Live Literal Update with Character");
       jclass string_class = jni_->FindClass("java/lang/String");
@@ -185,11 +178,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
       jmethodID parse = jni_->GetStaticMethodID(char_class, "valueOf",
                                                 "(C)Ljava/lang/Character;");
       jobject value = jni_->CallStaticObjectMethod(char_class, parse, result);
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "B") {
       Log::V("Live Literal Update with Byte");
       jclass byte_class = jni_->FindClass("java/lang/Byte");
@@ -197,11 +188,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           byte_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Byte;");
       jobject value = jni_->CallStaticObjectMethod(
           byte_class, parse, jni_->NewStringUTF(update.value().c_str()));
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "I") {
       Log::V("Live Literal Update with Integer");
       jclass int_class = jni_->FindClass("java/lang/Integer");
@@ -209,11 +198,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           int_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Integer;");
       jobject value = jni_->CallStaticObjectMethod(
           int_class, parse, jni_->NewStringUTF(update.value().c_str()));
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "J") {
       Log::V("Live Literal Update with Long");
       jclass long_class = jni_->FindClass("java/lang/Long");
@@ -221,11 +208,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           long_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Long;");
       jobject value = jni_->CallStaticObjectMethod(
           long_class, parse, jni_->NewStringUTF(update.value().c_str()));
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "S") {
       Log::V("Live Literal Update with Short");
       jclass short_class = jni_->FindClass("java/lang/Short");
@@ -233,11 +218,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           short_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Short;");
       jobject value = jni_->CallStaticObjectMethod(
           short_class, parse, jni_->NewStringUTF(update.value().c_str()));
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "F") {
       Log::V("Live Literal Update with Float");
       jclass float_class = jni_->FindClass("java/lang/Float");
@@ -245,11 +228,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           float_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Float;");
       jobject value = jni_->CallStaticObjectMethod(
           float_class, parse, jni_->NewStringUTF(update.value().c_str()));
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "D") {
       Log::V("Live Literal Update with Double");
       jclass double_class = jni_->FindClass("java/lang/Double");
@@ -257,11 +238,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           double_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Double;");
       jobject value = jni_->CallStaticObjectMethod(
           double_class, parse, jni_->NewStringUTF(update.value().c_str()));
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else if (update.type() == "Z") {
       Log::V("Live Literal Update with Boolean");
       jclass bool_class = jni_->FindClass("java/lang/Boolean");
@@ -269,11 +248,9 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           bool_class, "valueOf", "(Ljava/lang/String;)Ljava/lang/Boolean;");
       jobject value = jni_->CallStaticObjectMethod(
           bool_class, parse, jni_->NewStringUTF(update.value().c_str()));
-      args[1].l = value;
-      live_literal_kt.CallStaticMethod<void>(
+      live_literal_kt.CallStaticVoidMethod(
           "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
-          args);
-
+          jkey, value);
     } else {
       // TODO: Error Handling.
       Log::E("Live Literal Update with Unknown Type: %s",

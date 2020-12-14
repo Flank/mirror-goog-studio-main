@@ -49,16 +49,14 @@ class FakeJNIEnv : public JNIEnv {
 
   static void DeleteLocalRef(JNIEnv* env, jobject obj);
 
-  static jboolean CallStaticBooleanMethodA(JNIEnv* env, jclass clazz,
-                                           jmethodID methodID,
-                                           const jvalue* args);
+  static jboolean CallStaticBooleanMethodV(JNIEnv* env, jclass clazz,
+                                           jmethodID methodID, va_list args);
 
-  static jobject CallStaticObjectMethodA(JNIEnv* env, jclass clazz,
-                                         jmethodID methodID,
-                                         const jvalue* args);
+  static jobject CallStaticObjectMethodV(JNIEnv* env, jclass clazz,
+                                         jmethodID methodID, va_list args);
 
-  static void CallStaticVoidMethodA(JNIEnv* env, jclass cls, jmethodID methodID,
-                                    const jvalue* args);
+  static void CallStaticVoidMethodV(JNIEnv* env, jclass cls, jmethodID methodID,
+                                    va_list args);
 
   static jmethodID GetStaticMethodID(JNIEnv* env, jclass clazz,
                                      const char* name, const char* sig);
@@ -76,11 +74,11 @@ class FakeJNIEnv : public JNIEnv {
   static void SetObjectArrayElement(JNIEnv* env, jobjectArray array,
                                     jsize index, jobject val);
 
-  static jobject CallObjectMethodA(JNIEnv* env, jobject obj, jmethodID methodID,
-                                   const jvalue* args);
+  static jobject CallObjectMethodV(JNIEnv* env, jobject obj, jmethodID methodID,
+                                   va_list args);
 
-  static void CallVoidMethodA(JNIEnv* env, jobject obj, jmethodID methodID,
-                              const jvalue* args);
+  static void CallVoidMethodV(JNIEnv* env, jobject obj, jmethodID methodID,
+                              va_list args);
 
   static jobject GetObjectField(JNIEnv* env, jobject obj, jfieldID fid);
 

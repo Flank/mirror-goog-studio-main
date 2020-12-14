@@ -42,11 +42,11 @@ std::string GetTypeFromSignature(const std::string& sig) {
 }  // namespace
 
 FakeJNIEnv::FakeJNIEnv() : functions_{0} {
-  functions_.CallObjectMethodA = &CallObjectMethodA;
-  functions_.CallStaticBooleanMethodA = &CallStaticBooleanMethodA;
-  functions_.CallStaticObjectMethodA = &CallStaticObjectMethodA;
-  functions_.CallStaticVoidMethodA = &CallStaticVoidMethodA;
-  functions_.CallVoidMethodA = &CallVoidMethodA;
+  functions_.CallObjectMethodV = &CallObjectMethodV;
+  functions_.CallStaticBooleanMethodV = &CallStaticBooleanMethodV;
+  functions_.CallStaticObjectMethodV = &CallStaticObjectMethodV;
+  functions_.CallStaticVoidMethodV = &CallStaticVoidMethodV;
+  functions_.CallVoidMethodV = &CallVoidMethodV;
   functions_.DeleteLocalRef = &DeleteLocalRef;
   functions_.ExceptionCheck = &ExceptionCheck;
   functions_.ExceptionClear = &ExceptionClear;
@@ -111,10 +111,10 @@ void FakeJNIEnv::DeleteLocalRef(JNIEnv* env, jobject obj) {
   Log::I("JNI::DeleteLocalRef");
 }
 
-jboolean FakeJNIEnv::CallStaticBooleanMethodA(JNIEnv* env, jclass clazz,
+jboolean FakeJNIEnv::CallStaticBooleanMethodV(JNIEnv* env, jclass clazz,
                                               jmethodID methodID,
-                                              const jvalue* args) {
-  MEMBER_ACCESS(CallStaticBooleanMethodA, methodID)
+                                              va_list args) {
+  MEMBER_ACCESS(CallStaticBooleanMethodV, methodID)
   // Always force the agent to instrument.
   if (member->clazz == "com.android.tools.deploy.instrument.Breadcrumb" &&
       member->name == "isFinishedInstrumenting") {
@@ -123,16 +123,15 @@ jboolean FakeJNIEnv::CallStaticBooleanMethodA(JNIEnv* env, jclass clazz,
   return true;
 }
 
-jobject FakeJNIEnv::CallStaticObjectMethodA(JNIEnv* env, jclass clazz,
-                                            jmethodID methodID,
-                                            const jvalue* args) {
-  MEMBER_ACCESS(CallStaticObjectMethodA, methodID)
+jobject FakeJNIEnv::CallStaticObjectMethodV(JNIEnv* env, jclass clazz,
+                                            jmethodID methodID, va_list args) {
+  MEMBER_ACCESS(CallStaticObjectMethodV, methodID)
   return (jobject) new FakeObject(member->type);
 }
 
-void FakeJNIEnv::CallStaticVoidMethodA(JNIEnv* env, jclass cls,
-                                       jmethodID methodID, const jvalue* args) {
-  MEMBER_ACCESS(CallStaticVoidMethodA, methodID)
+void FakeJNIEnv::CallStaticVoidMethodV(JNIEnv* env, jclass cls,
+                                       jmethodID methodID, va_list args) {
+  MEMBER_ACCESS(CallStaticVoidMethodV, methodID)
 }
 
 void FakeJNIEnv::ExceptionDescribe(JNIEnv* env) {
@@ -160,11 +159,11 @@ void FakeJNIEnv::SetObjectArrayElement(JNIEnv* env, jobjectArray array,
   Log::I("JNI::SetObjectArrayElement");
 }
 
-jobject FakeJNIEnv::CallObjectMethodA(JNIEnv* env, jobject obj,
-                                      jmethodID methodID, const jvalue* args) {
-  MEMBER_ACCESS(CallObjectMethodA, methodID)
+jobject FakeJNIEnv::CallObjectMethodV(JNIEnv* env, jobject obj,
+                                      jmethodID methodID, va_list args) {
+  MEMBER_ACCESS(CallObjectMethodV, methodID)
   if (member->name == "findClass") {
-    FakeString* str = (FakeString*)args[0].l;
+    FakeString* str = va_arg(args, FakeString*);
     // Behaves like the app is non-JetPack Compose app.
     // There is test coverage with FakeAndroid / Host ART for those.
     if (str->value == "androidx/compose/Compose$HotReloader") {
@@ -175,9 +174,9 @@ jobject FakeJNIEnv::CallObjectMethodA(JNIEnv* env, jobject obj,
   return (jobject) new FakeObject(member->type);
 }
 
-void FakeJNIEnv::CallVoidMethodA(JNIEnv* env, jobject obj, jmethodID methodID,
-                                 const jvalue* args) {
-  MEMBER_ACCESS(CallVoidMethodA, methodID)
+void FakeJNIEnv::CallVoidMethodV(JNIEnv* env, jobject obj, jmethodID methodID,
+                                 va_list args) {
+  MEMBER_ACCESS(CallVoidMethodV, methodID)
   return;
 }
 

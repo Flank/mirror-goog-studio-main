@@ -22,10 +22,6 @@
 
 #include <string>
 
-#include "tools/base/deploy/agent/native/jni/jni_util.h"
-
-#define NO_DEFAULT_SPECIALIZATION(T) static_assert(sizeof(T) == 0, "");
-
 namespace deploy {
 
 class JniObject {
@@ -40,35 +36,33 @@ class JniObject {
   JniObject(JniObject&&) = default;
   JniObject& operator=(JniObject&&) = default;
 
-  std::string ToString() {
-    jstring value =
-        (jstring)this->CallMethod<jobject>("toString", "()Ljava/lang/String;");
-    std::string copy = JStringToString(jni_, value);
-    jni_->DeleteLocalRef(value);
-    return copy;
-  }
+  std::string ToString();
 
-  template <typename T>
-  T CallMethod(const std::string& name, const std::string& signature) {
-    return CallMethod<T>(name, signature, nullptr);
-  }
+  jboolean CallBooleanMethod(const char* name, const char* signature, ...);
+  jbyte CallByteMethod(const char* name, const char* signature, ...);
+  jchar CallCharMethod(const char* name, const char* signature, ...);
+  jshort CallShortMethod(const char* name, const char* signature, ...);
+  jint CallIntMethod(const char* name, const char* signature, ...);
+  jlong CallLongMethod(const char* name, const char* signature, ...);
+  jfloat CallFloatMethod(const char* name, const char* signature, ...);
+  jdouble CallDoubleMethod(const char* name, const char* signature, ...);
+  jobject CallObjectMethod(const char* name, const char* signature, ...);
+  void CallVoidMethod(const char* name, const char* signature, ...);
+  JniObject CallJniObjectMethod(const char* name, const char* signature, ...);
 
-  template <typename T>
-  T CallMethod(const std::string& name, const std::string& signature,
-               jvalue* args) {
-    NO_DEFAULT_SPECIALIZATION(T)
-  }
+  jboolean GetBooleanField(const char* name, const char* signature);
+  jbyte GetByteField(const char* name, const char* type);
+  jchar GetCharField(const char* name, const char* type);
+  jshort GetShortField(const char* name, const char* type);
+  jint GetIntField(const char* name, const char* type);
+  jlong GetLongField(const char* name, const char* type);
+  jfloat GetFloatField(const char* name, const char* type);
+  jdouble GetDoubleField(const char* name, const char* type);
+  jobject GetObjectField(const char* name, const char* type);
+  void GetVoidField(const char* name, const char* type);
+  JniObject GetJniObjectField(const char* name, const char* type);
 
-  template <typename T>
-  T GetField(const std::string& name, const std::string& type) {
-    NO_DEFAULT_SPECIALIZATION(T)
-  }
-
-  void SetField(const std::string& name, const std::string& type,
-                jobject value) {
-    jfieldID id = jni_->GetFieldID(class_, name.c_str(), type.c_str());
-    jni_->SetObjectField(object_, id, value);
-  }
+  void SetField(const char* name, const char* type, jobject value);
 
  private:
   JNIEnv* jni_;
@@ -78,44 +72,6 @@ class JniObject {
   JniObject(const JniObject&) = delete;
   JniObject& operator=(const JniObject&) = delete;
 };
-
-template <>
-inline void JniObject::CallMethod(const std::string& name,
-                                  const std::string& signature, jvalue* args) {
-  jmethodID id = jni_->GetMethodID(class_, name.c_str(), signature.c_str());
-  jni_->CallVoidMethodA(object_, id, args);
-}
-
-template <>
-inline jobject JniObject::CallMethod(const std::string& name,
-                                     const std::string& signature,
-                                     jvalue* args) {
-  jmethodID id = jni_->GetMethodID(class_, name.c_str(), signature.c_str());
-  return jni_->CallObjectMethodA(object_, id, args);
-}
-
-template <>
-inline JniObject JniObject::CallMethod(const std::string& name,
-                                       const std::string& signature,
-                                       jvalue* args) {
-  jobject object = CallMethod<jobject>(name, signature, args);
-  return JniObject(jni_, object);
-}
-
-template <>
-inline jobject JniObject::GetField(const std::string& name,
-                                   const std::string& type) {
-  jfieldID id = jni_->GetFieldID(class_, name.c_str(), type.c_str());
-  return jni_->GetObjectField(object_, id);
-}
-
-template <>
-inline JniObject JniObject::GetField(const std::string& name,
-                                     const std::string& type) {
-  jfieldID id = jni_->GetFieldID(class_, name.c_str(), type.c_str());
-  jobject object = jni_->GetObjectField(object_, id);
-  return JniObject(jni_, object);
-}
 
 }  // namespace deploy
 
