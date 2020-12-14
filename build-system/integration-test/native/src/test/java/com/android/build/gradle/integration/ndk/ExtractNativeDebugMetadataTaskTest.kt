@@ -90,9 +90,9 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         // add native libs to app and feature modules
         listOf("app", "feature1", "feature2").forEach {
             val subProject = project.getSubproject(":$it")
-            createAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
-            createAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
-            createAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
         }
 
         val bundleTaskName = getBundleTaskName("release")
@@ -173,9 +173,9 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         // add native libs to app and feature modules
         listOf("app", "feature1", "feature2").forEach {
             val subProject = project.getSubproject(":$it")
-            createAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
-            createAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
-            createAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
         }
 
         // Add abiFilters
@@ -259,12 +259,65 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
     }
 
     @Test
+    fun testNoNativeDebugMetadataInBundleIfAlreadyStripped() {
+        // add native libs to app and feature modules
+        listOf("app", "feature1", "feature2").forEach {
+            val subProject = project.getSubproject(":$it")
+            createStrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
+            createStrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
+            createStrippedAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
+        }
+
+        val bundleTaskName = getBundleTaskName("release")
+        project.executor().run("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("release").bundleFile
+        assertThat(bundleFile).exists()
+
+        val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
+        val expectedExcludedEntries = listOf(
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.dbg",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.dbg",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/app.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature1.so.sym",
+            "$bundleEntryPrefix/$ABI_ARMEABI_V7A/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/app.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature1.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM/feature2.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/app.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature1.so.sym",
+            "$bundleEntryPrefix/$ABI_INTEL_ATOM64/feature2.so.sym"
+        )
+        val expectedNativeLibEntries = listOf(
+            "base/lib/$ABI_ARMEABI_V7A/app.so",
+            "feature1/lib/$ABI_ARMEABI_V7A/feature1.so",
+            "feature2/lib/$ABI_ARMEABI_V7A/feature2.so",
+            "base/lib/$ABI_INTEL_ATOM/app.so",
+            "feature1/lib/$ABI_INTEL_ATOM/feature1.so",
+            "feature2/lib/$ABI_INTEL_ATOM/feature2.so",
+            "base/lib/$ABI_INTEL_ATOM64/app.so",
+            "feature1/lib/$ABI_INTEL_ATOM64/feature1.so",
+            "feature2/lib/$ABI_INTEL_ATOM64/feature2.so"
+        )
+        val entryMap = ZipArchive.listEntries(bundleFile.toPath())
+        assertThat(entryMap.keys).containsAtLeastElementsIn(expectedNativeLibEntries)
+        assertThat(entryMap.keys).containsNoneIn(expectedExcludedEntries)
+    }
+
+    @Test
     fun testErrorIfCollidingNativeLibs() {
         Assume.assumeTrue(debugSymbolLevel != NONE)
         // add native libs to app and feature modules
         listOf("app", "feature1").forEach {
             val subProject = project.getSubproject(":$it")
-            createAbiFile(subProject, ABI_ARMEABI_V7A, "collide.so")
+            createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "collide.so")
         }
 
         val bundleTaskName = getBundleTaskName("release")
@@ -309,7 +362,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
             listOf(":app:$taskName", ":feature1:$taskName", ":feature2:$taskName")
         )
         // then test that the task only does work for modules with native libraries.
-        createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
+        createUnstrippedAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
         val result2 = project.executor().run("app:$bundleTaskName")
         assertThat(result2.skippedTasks).containsAtLeastElementsIn(
             listOf(":app:$taskName", ":feature2:$taskName")
@@ -344,7 +397,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         // assert that debug build does not have a default debugSymbolLevel
         Assume.assumeTrue(debugSymbolLevel == null)
         val bundleTaskName = getBundleTaskName("debug")
-        createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
+        createUnstrippedAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "feature1.so")
         val result = project.executor().run("app:$bundleTaskName")
         val bundleFile = getApkFolderOutput("debug").bundleFile
         assertThat(bundleFile).exists()
@@ -382,7 +435,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         return outputAppModel.getOutputByName(variantName)
     }
 
-    private fun createAbiFile(
+    private fun createUnstrippedAbiFile(
         project: GradleTestProject,
         abiName: String,
         libName: String
@@ -391,6 +444,22 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         FileUtils.mkdirs(abiFolder)
         ExtractNativeDebugMetadataTaskTest::class.java.getResourceAsStream(
             "/nativeLibs/unstripped.so"
+        ).use { inputStream ->
+            File(abiFolder, libName).outputStream().use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+    }
+
+    private fun createStrippedAbiFile(
+        project: GradleTestProject,
+        abiName: String,
+        libName: String
+    ) {
+        val abiFolder = File(project.getMainSrcDir("jniLibs"), abiName)
+        FileUtils.mkdirs(abiFolder)
+        ExtractNativeDebugMetadataTaskTest::class.java.getResourceAsStream(
+            "/nativeLibs/libhello-jni.so"
         ).use { inputStream ->
             File(abiFolder, libName).outputStream().use { outputStream ->
                 inputStream.copyTo(outputStream)
