@@ -54,24 +54,24 @@ jobject Native_FixAppContext(JNIEnv* jni, jobject object,
   JniObject thread_wrapper(jni, activity_thread);
 
   jobject app = thread_wrapper.CallMethod<jobject>(
-      {"getApplication", "()Landroid/app/Application;"});
+      "getApplication", "()Landroid/app/Application;");
   JniObject app_wrapper(jni, app);
 
-  JniObject loaded_apk = app_wrapper.GetField<JniObject>(
-      {"mLoadedApk", "Landroid/app/LoadedApk;"});
+  JniObject loaded_apk =
+      app_wrapper.GetField<JniObject>("mLoadedApk", "Landroid/app/LoadedApk;");
 
   JniObject new_resources = loaded_apk.CallMethod<JniObject>(
-      {"getResources", "()Landroid/content/res/Resources;"});
+      "getResources", "()Landroid/content/res/Resources;");
 
   jobject new_resources_impl = new_resources.CallMethod<jobject>(
-      {"getImpl", "()Landroid/content/res/ResourcesImpl;"});
+      "getImpl", "()Landroid/content/res/ResourcesImpl;");
 
   JniObject old_resources = app_wrapper.CallMethod<JniObject>(
-      {"getResources", "()Landroid/content/res/Resources;"});
+      "getResources", "()Landroid/content/res/Resources;");
 
   jvalue arg{.l = new_resources_impl};
   old_resources.CallMethod<void>(
-      {"setImpl", "(Landroid/content/res/ResourcesImpl;)V"}, &arg);
+      "setImpl", "(Landroid/content/res/ResourcesImpl;)V", &arg);
 
   return new_resources_impl;
 }
@@ -85,10 +85,10 @@ jobject Native_GetActivityClientRecords(JNIEnv* jni, jobject object,
 
   JniObject thread_wrapper(jni, activity_thread);
 
-  JniObject map = thread_wrapper.GetField<JniObject>(
-      {"mActivities", "Landroid/util/ArrayMap;"});
+  JniObject map = thread_wrapper.GetField<JniObject>("mActivities",
+                                                     "Landroid/util/ArrayMap;");
 
-  return map.CallMethod<jobject>({"values", "()Ljava/util/Collection;"});
+  return map.CallMethod<jobject>("values", "()Ljava/util/Collection;");
 }
 
 // Given an ActivityRecord, replace the resource implementation of the activity
@@ -102,15 +102,15 @@ void Native_FixActivityContext(JNIEnv* jni, jobject object,
 
   JniObject record_wrapper(jni, activity_record);
 
-  JniObject activity = record_wrapper.GetField<JniObject>(
-      {"activity", "Landroid/app/Activity;"});
+  JniObject activity =
+      record_wrapper.GetField<JniObject>("activity", "Landroid/app/Activity;");
 
   JniObject old_resources = activity.CallMethod<JniObject>(
-      {"getResources", "()Landroid/content/res/Resources;"});
+      "getResources", "()Landroid/content/res/Resources;");
 
   jvalue arg{.l = new_resources_impl};
   old_resources.CallMethod<void>(
-      {"setImpl", "(Landroid/content/res/ResourcesImpl;)V"}, &arg);
+      "setImpl", "(Landroid/content/res/ResourcesImpl;)V", &arg);
 }
 
 // Call handleUpdateApplicationInfo changed on the current activity thread,
@@ -125,18 +125,18 @@ void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
   JniObject thread_wrapper(jni, activity_thread);
 
   jobject app = thread_wrapper.CallMethod<jobject>(
-      {"getApplication", "()Landroid/app/Application;"});
+      "getApplication", "()Landroid/app/Application;");
   JniObject app_wrapper(jni, app);
 
-  JniObject loaded_apk = app_wrapper.GetField<JniObject>(
-      {"mLoadedApk", "Landroid/app/LoadedApk;"});
+  JniObject loaded_apk =
+      app_wrapper.GetField<JniObject>("mLoadedApk", "Landroid/app/LoadedApk;");
 
   jobject app_info = loaded_apk.CallMethod<jobject>(
-      {"getApplicationInfo", "()Landroid/content/pm/ApplicationInfo;"});
+      "getApplicationInfo", "()Landroid/content/pm/ApplicationInfo;");
 
   jvalue arg{.l = app_info};
-  thread_wrapper.CallMethod<void>({"handleApplicationInfoChanged",
-                                   "(Landroid/content/pm/ApplicationInfo;)V"},
+  thread_wrapper.CallMethod<void>("handleApplicationInfoChanged",
+                                  "(Landroid/content/pm/ApplicationInfo;)V",
                                   &arg);
 }
 
@@ -150,9 +150,9 @@ jarray Native_MakeInMemoryDexElements(JNIEnv* jni, jobject object,
   args[0].l = dex_files;
   args[1].l = suppressed_exceptions;
   return (jarray)dex_path_list.CallStaticMethod<jobject>(
-      {"makeInMemoryDexElements",
-       "([Ljava/nio/ByteBuffer;Ljava/util/List;)[Ldalvik/system/"
-       "DexPathList$Element;"},
+      "makeInMemoryDexElements",
+      "([Ljava/nio/ByteBuffer;Ljava/util/List;)[Ldalvik/system/"
+      "DexPathList$Element;",
       args);
 }
 

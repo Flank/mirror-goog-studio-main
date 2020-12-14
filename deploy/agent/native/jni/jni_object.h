@@ -18,11 +18,10 @@
 #ifndef JNI_OBJECT_H
 #define JNI_OBJECT_H
 
-#include <string>
-
 #include <jni.h>
 
-#include "tools/base/deploy/agent/native/jni/jni_signature.h"
+#include <string>
+
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
 
 #define NO_DEFAULT_SPECIALIZATION(T) static_assert(sizeof(T) == 0, "");
@@ -42,30 +41,32 @@ class JniObject {
   JniObject& operator=(JniObject&&) = default;
 
   std::string ToString() {
-    jstring value = (jstring)this->CallMethod<jobject>(
-        {"toString", "()Ljava/lang/String;"});
+    jstring value =
+        (jstring)this->CallMethod<jobject>("toString", "()Ljava/lang/String;");
     std::string copy = JStringToString(jni_, value);
     jni_->DeleteLocalRef(value);
     return copy;
   }
 
   template <typename T>
-  T CallMethod(const JniSignature& method) {
-    return CallMethod<T>(method, nullptr);
+  T CallMethod(const std::string& name, const std::string& signature) {
+    return CallMethod<T>(name, signature, nullptr);
   }
 
   template <typename T>
-  T CallMethod(const JniSignature& method, jvalue* args) {
+  T CallMethod(const std::string& name, const std::string& signature,
+               jvalue* args) {
     NO_DEFAULT_SPECIALIZATION(T)
   }
 
   template <typename T>
-  T GetField(const JniSignature& field) {
+  T GetField(const std::string& name, const std::string& type) {
     NO_DEFAULT_SPECIALIZATION(T)
   }
 
-  void SetField(const JniSignature& field, jobject value) {
-    jfieldID id = jni_->GetFieldID(class_, field.name, field.signature);
+  void SetField(const std::string& name, const std::string& type,
+                jobject value) {
+    jfieldID id = jni_->GetFieldID(class_, name.c_str(), type.c_str());
     jni_->SetObjectField(object_, id, value);
   }
 
@@ -79,33 +80,39 @@ class JniObject {
 };
 
 template <>
-inline void JniObject::CallMethod(const JniSignature& method, jvalue* args) {
-  jmethodID id = jni_->GetMethodID(class_, method.name, method.signature);
+inline void JniObject::CallMethod(const std::string& name,
+                                  const std::string& signature, jvalue* args) {
+  jmethodID id = jni_->GetMethodID(class_, name.c_str(), signature.c_str());
   jni_->CallVoidMethodA(object_, id, args);
 }
 
 template <>
-inline jobject JniObject::CallMethod(const JniSignature& method, jvalue* args) {
-  jmethodID id = jni_->GetMethodID(class_, method.name, method.signature);
+inline jobject JniObject::CallMethod(const std::string& name,
+                                     const std::string& signature,
+                                     jvalue* args) {
+  jmethodID id = jni_->GetMethodID(class_, name.c_str(), signature.c_str());
   return jni_->CallObjectMethodA(object_, id, args);
 }
 
 template <>
-inline JniObject JniObject::CallMethod(const JniSignature& method,
+inline JniObject JniObject::CallMethod(const std::string& name,
+                                       const std::string& signature,
                                        jvalue* args) {
-  jobject object = CallMethod<jobject>(method, args);
+  jobject object = CallMethod<jobject>(name, signature, args);
   return JniObject(jni_, object);
 }
 
 template <>
-inline jobject JniObject::GetField(const JniSignature& field) {
-  jfieldID id = jni_->GetFieldID(class_, field.name, field.signature);
+inline jobject JniObject::GetField(const std::string& name,
+                                   const std::string& type) {
+  jfieldID id = jni_->GetFieldID(class_, name.c_str(), type.c_str());
   return jni_->GetObjectField(object_, id);
 }
 
 template <>
-inline JniObject JniObject::GetField(const JniSignature& field) {
-  jfieldID id = jni_->GetFieldID(class_, field.name, field.signature);
+inline JniObject JniObject::GetField(const std::string& name,
+                                     const std::string& type) {
+  jfieldID id = jni_->GetFieldID(class_, name.c_str(), type.c_str());
   jobject object = jni_->GetObjectField(object_, id);
   return JniObject(jni_, object);
 }

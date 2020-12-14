@@ -10,7 +10,6 @@ cc_library(
     hdrs = [
         "jni_class.h",
         "jni_object.h",
-        "jni_signature.h",
         "jni_util.h",
     ],
     copts = select_android(

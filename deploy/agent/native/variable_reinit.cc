@@ -382,9 +382,8 @@ bool VariableReinitializer::TriggerClassInitialize(jclass clazz) {
 
   // The reflective method Class#forName() can be used to initialize the class.
   java_class.CallStaticMethod<jobject>(
-      {"forName",
-       "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;"},
-      params);
+      "forName",
+      "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", params);
   jvmti_->Deallocate((unsigned char*)class_sig);
   if (jni_->ExceptionCheck()) {
     jni_->ExceptionDescribe();

@@ -148,8 +148,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
   jvalue enable_args[1];
   enable_args[0].l = klass;
   JniClass support(jni_, kSupportClass);
-  support.CallStaticMethod<void>({"enable", "(Ljava/lang/Class;)V"},
-                                 enable_args);
+  support.CallStaticMethod<void>("enable", "(Ljava/lang/Class;)V", enable_args);
 
   JniClass live_literal_kt(jni_, klass);
 
@@ -172,7 +171,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
       jobject value = jni_->NewStringUTF(update.value().c_str());
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "C") {
@@ -188,7 +187,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
       jobject value = jni_->CallStaticObjectMethod(char_class, parse, result);
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "B") {
@@ -200,7 +199,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           byte_class, parse, jni_->NewStringUTF(update.value().c_str()));
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "I") {
@@ -212,7 +211,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           int_class, parse, jni_->NewStringUTF(update.value().c_str()));
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "J") {
@@ -224,7 +223,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           long_class, parse, jni_->NewStringUTF(update.value().c_str()));
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "S") {
@@ -236,7 +235,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           short_class, parse, jni_->NewStringUTF(update.value().c_str()));
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "F") {
@@ -248,7 +247,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           float_class, parse, jni_->NewStringUTF(update.value().c_str()));
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "D") {
@@ -260,7 +259,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           double_class, parse, jni_->NewStringUTF(update.value().c_str()));
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else if (update.type() == "Z") {
@@ -272,7 +271,7 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
           bool_class, parse, jni_->NewStringUTF(update.value().c_str()));
       args[1].l = value;
       live_literal_kt.CallStaticMethod<void>(
-          {"updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V"},
+          "updateLiveLiteralValue", "(Ljava/lang/String;Ljava/lang/Object;)V",
           args);
 
     } else {

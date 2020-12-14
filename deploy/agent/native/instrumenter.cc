@@ -213,7 +213,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
   // would likely cause silent failures.
   jvalue jar_hash = {.l = jni->NewStringUTF(instrumentation_jar_hash)};
   jboolean matches = breadcrumb.CallStaticMethod<jboolean>(
-      {"checkHash", "(Ljava/lang/String;)Z"}, &jar_hash);
+      "checkHash", "(Ljava/lang/String;)Z", &jar_hash);
   jni->DeleteLocalRef(jar_hash.l);
 
   if (!matches) {
@@ -225,8 +225,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
   }
 
   // Check if we need to instrument, or if a previous agent successfully did.
-  if (breadcrumb.CallStaticMethod<jboolean>(
-          {"isFinishedInstrumenting", "()Z"})) {
+  if (breadcrumb.CallStaticMethod<jboolean>("isFinishedInstrumenting", "()Z")) {
     return true;
   }
 
@@ -304,7 +303,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
              "Could not disable class file load hook event");
 
   if (success) {
-    breadcrumb.CallStaticMethod<void>({"setFinishedInstrumenting", "()V"});
+    breadcrumb.CallStaticMethod<void>("setFinishedInstrumenting", "()V");
     LogEvent("Finished instrumenting");
   }
 
