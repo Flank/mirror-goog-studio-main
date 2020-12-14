@@ -48,12 +48,9 @@ enum class ColumnCount {
 
 val listFragmentTemplate
   get() = template {
-    revision = 1
     name = "Fragment (List)"
     description = "Creates a new empty fragment containing a list that can be rendered as a grid. Compatible back to API level $MIN_API"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.Fragment
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)

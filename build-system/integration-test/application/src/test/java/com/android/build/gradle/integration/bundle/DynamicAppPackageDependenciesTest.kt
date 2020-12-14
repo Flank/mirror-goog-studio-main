@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -42,12 +42,12 @@ class DynamicAppPackageDependenciesTest {
             InternalArtifactType.PACKAGED_DEPENDENCIES.getFolderName(),
             "debug/deps.txt"
         )
-        FileSubject.assertThat(feature1Dependencies).contains("feature1::debug")
+        assertThat(feature1Dependencies).contains("feature1::debug")
 
         val feature2Dependencies = project.getSubproject("feature2").getIntermediateFile(
             InternalArtifactType.PACKAGED_DEPENDENCIES.getFolderName(),
             "debug/deps.txt"
         )
-        FileSubject.assertThat(feature2Dependencies).contains("feature2::debug")
+        assertThat(feature2Dependencies).contains("feature2::debug")
     }
 }

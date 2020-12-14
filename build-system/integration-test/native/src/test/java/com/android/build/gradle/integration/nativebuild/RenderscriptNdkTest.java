@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
@@ -29,6 +29,8 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -75,18 +77,20 @@ public class RenderscriptNdkTest {
             }
         }
 
-        File rawDir = FileUtils.join(project.getBuildDir(), "generated/res/rs/debug/raw");
+        Path rawDir = project.getBuildDir().toPath().resolve("generated/res/rs/debug/raw");
+        Path bc32 = rawDir.resolve("bc32");
+        Path bc64 = rawDir.resolve("bc64");
 
         if (is32Bit) {
-            assertThat(FileUtils.join(rawDir, "bc32")).containsFile("addint.bc");
+            assertThat(bc32.resolve("addint.bc")).exists();
         } else {
-            assertThat(FileUtils.join(rawDir, "bc32")).doesNotExist();
+            assertThat(bc32).doesNotExist();
         }
 
         if (is64Bit) {
-            assertThat(FileUtils.join(rawDir, "bc64")).containsFile("addint.bc");
+            assertThat(bc64.resolve("addint.bc")).exists();
         } else {
-            assertThat(FileUtils.join(rawDir, "bc64")).doesNotExist();
+            assertThat(bc64).doesNotExist();
         }
     }
 
@@ -174,7 +178,7 @@ public class RenderscriptNdkTest {
 
         checkPackagedFiles(false, false, false);
 
-        assertThat(FileUtils.join(project.getBuildDir(), "generated/res/rs/debug/raw"))
-                .containsFile("addint.bc");
+        Path raw = project.getBuildDir().toPath().resolve("generated/res/rs/debug/raw");
+        assertThat(raw.resolve("addint.bc")).exists();
     }
 }

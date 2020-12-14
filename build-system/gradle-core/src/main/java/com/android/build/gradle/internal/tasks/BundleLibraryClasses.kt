@@ -88,7 +88,7 @@ private fun BundleLibraryClassesInputs.configure(
     inputs: FileCollection,
     packageRClass: Boolean
 ) {
-    packageName.setDisallowChanges(creationConfig.packageName)
+    packageName.setDisallowChanges(creationConfig.namespace)
     classes.from(inputs)
     this.packageRClass.set(packageRClass)
     if (packageRClass) {

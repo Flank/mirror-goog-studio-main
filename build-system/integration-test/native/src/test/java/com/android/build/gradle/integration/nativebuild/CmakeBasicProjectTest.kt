@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_NDK_SIDE_BY_SIDE_VERSION
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.findAbiSegment
 import com.android.build.gradle.integration.common.fixture.model.findConfigurationSegment
@@ -35,12 +36,13 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatA
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING
 import com.android.build.gradle.options.StringOption
 import com.android.builder.model.v2.models.ndk.NativeModule
 import com.android.testutils.truth.PathSubject.assertThat
@@ -60,6 +62,7 @@ import java.util.zip.GZIPInputStream
 @RunWith(Parameterized::class)
 class CmakeBasicProjectTest(
     private val cmakeVersionInDsl: String,
+    enableConfigurationFolding: Boolean
 ) {
     @Rule
     @JvmField
@@ -68,15 +71,15 @@ class CmakeBasicProjectTest(
         // TODO(b/159233213) Turn to ON when release configuration is cacheable
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .addGradleProperties("${ENABLE_NATIVE_CONFIGURATION_FOLDING.propertyName}=$enableConfigurationFolding")
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "version={0}")
+        @Parameterized.Parameters(name = "version={0} enableConfigurationFolding={1}")
         @JvmStatic
-        fun data() = arrayOf(
-          arrayOf("3.6.0"),
-          arrayOf(OFF_STAGE_CMAKE_VERSION),
-          arrayOf(DEFAULT_CMAKE_VERSION)
+        fun data() = cartesianOf(
+            arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
+            arrayOf(true, false)
         )
     }
 
@@ -576,6 +579,10 @@ apply plugin: 'com.android.application'
         assertThat(abiSegment).named(abiSegment).isEqualTo("armeabi-v7a")
         assertThat(cxxSegment).named(cxxSegment).isEqualTo(".cxx")
         assertThat(configurationSegment).named(configurationSegment).isEqualTo(join("cmake/debug"))
+        val cartesian = cartesianOf(arrayOf(1,2), arrayOf("b", "c"), arrayOf(1.1, 1.2))
+        assertThat(cartesian[0]).isEqualTo(arrayOf(1, "b", 1.1))
+        assertThat(cartesian[7]).isEqualTo(arrayOf(2, "c", 1.2))
+        assertThat(cartesian).hasLength(8)
     }
 
     @Test

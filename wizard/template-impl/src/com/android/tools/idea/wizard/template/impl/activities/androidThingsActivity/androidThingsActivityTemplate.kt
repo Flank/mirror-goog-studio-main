@@ -40,10 +40,8 @@ import java.io.File
 
 val androidThingsActivityTemplate
   get() = template {
-    revision = 1
     name = "Android Things Empty Activity"
     minApi = 24
-    minBuildApi = 24
     description = "Creates a new empty activity for Android Things"
 
     category = Category.Activity

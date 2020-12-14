@@ -76,7 +76,12 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  SetUpAgent(agent, overlay_response);
+  if (!SetUpAgent(agent, overlay_response)) {
+    overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
+    ErrEvent("OverlayInstall: SetupAgent failed");
+    return;
+  }
+
   UpdateOverlay(overlay_response);
   GetAgentLogs(overlay_response);
 
@@ -90,7 +95,7 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
   ConvertProtoEventsToEvents(install_response.events());
 }
 
-void OverlayInstallCommand::SetUpAgent(
+bool OverlayInstallCommand::SetUpAgent(
     const std::string& agent, proto::OverlayInstallResponse* overlay_response) {
   Phase p("SetUpAgent");
 
@@ -101,7 +106,11 @@ void OverlayInstallCommand::SetUpAgent(
   std::string agent_path = startup_path + version + agent;
 
   std::unordered_set<std::string> missing_files;
-  CheckFilesExist({startup_path, studio_path, agent_path}, &missing_files);
+  if (!CheckFilesExist({startup_path, studio_path, agent_path},
+                       &missing_files)) {
+    ErrEvent("LiveLiteral: CheckFilesExist failed");
+    return false;
+  }
 
   RunasExecutor run_as(request_.package_name());
   std::string error;
@@ -118,7 +127,7 @@ void OverlayInstallCommand::SetUpAgent(
     if (!run_as.Run("rm", {"-f", "-r", startup_path}, nullptr, &error)) {
       ErrEvent("Could not remove old agents: " + error);
       overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-      return;
+      return false;
     }
     missing_startup = true;
   }
@@ -127,14 +136,14 @@ void OverlayInstallCommand::SetUpAgent(
       !run_as.Run("mkdir", {startup_path}, nullptr, &error)) {
     ErrEvent("Could not create startup agent directory: " + error);
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    return;
+    return false;
   }
 
   if (missing_files.find(studio_path) != missing_files.end() &&
       !run_as.Run("mkdir", {studio_path}, nullptr, &error)) {
     ErrEvent("Could not create studio directory: " + error);
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    return;
+    return false;
   }
 
   std::string tmp_agent = workspace_.GetTmpFolder() + agent;
@@ -142,8 +151,10 @@ void OverlayInstallCommand::SetUpAgent(
       !run_as.Run("cp", {"-F", tmp_agent, agent_path}, nullptr, &error)) {
     ErrEvent("Could not copy binaries: " + error);
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
-    return;
+    return false;
   }
+
+  return true;
 }
 
 void OverlayInstallCommand::UpdateOverlay(

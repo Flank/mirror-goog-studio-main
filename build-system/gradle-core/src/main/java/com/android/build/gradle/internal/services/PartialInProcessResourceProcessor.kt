@@ -39,7 +39,7 @@ class PartialInProcessResourceProcessor (val delegate: Aapt2):
             val options = ResourceCompilerOptions(
                     pseudolocalize = request.isPseudoLocalize,
                     legacyMode = true,
-                    sourcePath = request.sourcePath
+                    sourcePath = request.sourcePath,
             )
             val blameLogger = blameLoggerFor(request, LoggerWrapper.getLogger(this::class.java))
             compileResource(request.inputFile, request.outputDirectory, options, blameLogger)

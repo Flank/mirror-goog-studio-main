@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.AndroidProjectTypes;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -40,7 +41,6 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildInformation;
-import com.android.testutils.truth.FileSubject;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -172,11 +172,11 @@ public class FlavorsTest {
 
         project.executor().run("assembleDebug");
 
-        FileSubject.assertThat(
+        assertThat(
                         project.file(
                                 "build/generated/source/buildConfig/f1Fa/debug/com/android/tests/flavors/BuildConfig.java"))
                 .contains("// From flavor dimension foo.bar");
-        FileSubject.assertThat(
+        assertThat(
                         project.file(
                                 "build/generated/source/buildConfig/f1Fa/debug/com/android/tests/flavors/BuildConfig.java"))
                 .doesNotContain("// From flavor dimension group2");

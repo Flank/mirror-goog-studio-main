@@ -28,7 +28,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.io.FileOp;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
@@ -58,8 +57,7 @@ public class AbstractPackageOperationTest {
         RepoManager mgr = new FakeRepoManager(fop.toPath("/sdk"), packages);
         AtomicReference<PackageOperation.InstallStatus> status = new AtomicReference<>(
                 InstallStatus.NOT_STARTED);
-        TestOperation op = new TestOperation(remotePackage, mgr, new FakeDownloader(fop), fop,
-                status);
+        TestOperation op = new TestOperation(remotePackage, mgr, new FakeDownloader(fop), status);
         op.registerStateChangeListener((operation, progress) -> {
             if (operation.getInstallStatus() == InstallStatus.PREPARED) {
                 assertTrue(status.compareAndSet(InstallStatus.PREPARING,
@@ -111,10 +109,12 @@ public class AbstractPackageOperationTest {
 
         private final AtomicReference<PackageOperation.InstallStatus> mStatus;
 
-        public TestOperation(@NonNull RemotePackage p,
-                @NonNull RepoManager manager, @NonNull Downloader downloader,
-                @NonNull FileOp fop, @NonNull AtomicReference<InstallStatus> status) {
-            super(p, manager, downloader, fop);
+        public TestOperation(
+                @NonNull RemotePackage p,
+                @NonNull RepoManager manager,
+                @NonNull Downloader downloader,
+                @NonNull AtomicReference<InstallStatus> status) {
+            super(p, manager, downloader);
             mStatus = status;
         }
 

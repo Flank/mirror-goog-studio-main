@@ -1098,6 +1098,11 @@ internal class UElementVisitor constructor(
             }
         }
 
+        override fun visitCallableReferenceExpression(node: UCallableReferenceExpression): Boolean {
+            annotationHandler?.visitCallableReferenceExpression(mContext, node)
+            return super.visitCallableReferenceExpression(node)
+        }
+
         private fun visitNewExpression(node: UCallExpression) {
             if (mVisitConstructors) {
                 val method = node.resolve() ?: return

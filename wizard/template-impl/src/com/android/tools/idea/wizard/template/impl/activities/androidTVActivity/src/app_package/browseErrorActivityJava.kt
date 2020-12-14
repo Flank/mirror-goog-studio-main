@@ -16,15 +16,16 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun browseErrorActivityJava(
   layoutName: String,
-  packageName: String
+  packageName: String,
+  mainFragment: String,
+  useAndroidX: Boolean
 ) = """
 package ${packageName};
 
-import android.app.Activity;
-import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
@@ -33,11 +34,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
+import ${getMaterialComponentName("android.support.v4.app.FragmentActivity", useAndroidX)};
 
 /*
  * BrowseErrorActivity shows how to use ErrorFragment
  */
-public class BrowseErrorActivity extends Activity {
+public class BrowseErrorActivity extends FragmentActivity {
     private static final int TIMER_DELAY = 3000;
     private static final int SPINNER_WIDTH = 100;
     private static final int SPINNER_HEIGHT = 100;
@@ -52,19 +55,23 @@ public class BrowseErrorActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${layoutName});
-
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.main_browse_fragment, new ${mainFragment}())
+                .commitNow();
+        }
         testError();
     }
 
     private void testError() {
         mErrorFragment = new ErrorFragment();
-        getFragmentManager()
+        getSupportFragmentManager()
                 .beginTransaction()
                 .add(R.id.main_browse_fragment, mErrorFragment)
                 .commit();
 
         mSpinnerFragment = new SpinnerFragment();
-        getFragmentManager()
+        getSupportFragmentManager()
                 .beginTransaction()
                 .add(R.id.main_browse_fragment, mSpinnerFragment)
                 .commit();
@@ -73,7 +80,7 @@ public class BrowseErrorActivity extends Activity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                getFragmentManager()
+                getSupportFragmentManager()
                         .beginTransaction()
                         .remove(mSpinnerFragment)
                         .commit();

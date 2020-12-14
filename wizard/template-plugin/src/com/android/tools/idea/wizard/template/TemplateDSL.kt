@@ -18,12 +18,10 @@ package com.android.tools.idea.wizard.template
 import java.io.File
 
 internal data class TemplateImpl(
-  override val revision: Int,
   override val name: String,
   override val description: String,
   override val documentationUrl: String?,
   override val minSdk: Int,
-  override val minCompileSdk: Int,
   override val category: Category,
   override val formFactor: FormFactor,
   override val widgets: Collection<Widget<*>>,
@@ -47,7 +45,6 @@ class TemplateBuilder {
   var description: String? = null
   var documentationUrl: String? = null
   var minApi: Int = 1
-  var minBuildApi: Int = 1
   var category: Category? = null
   var formFactor: FormFactor? = null
   @Suppress("RedundantCompanionReference")
@@ -71,7 +68,6 @@ class TemplateBuilder {
   }
 
   internal fun build(): Template {
-    checkNotNull(revision) { "Template must have a revision." }
     checkNotNull(name) { "Template must have a name." }
     checkNotNull(description) { "Template must have a description." }
     checkNotNull(category) { "Template have to specify category." }
@@ -79,12 +75,10 @@ class TemplateBuilder {
     checkNotNull(recipe) { "Template must have a recipe to run." }
 
     return TemplateImpl(
-      revision!!,
       name!!,
       description!!,
       documentationUrl,
       minApi,
-      minBuildApi,
       category!!,
       formFactor!!,
       widgets,

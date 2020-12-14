@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PARAMETER
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_REFERENCE
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
@@ -36,6 +37,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.intellij.psi.LambdaUtil
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
@@ -67,8 +69,10 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         ANY_THREAD_ANNOTATION.newName()
     )
 
-    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =
-        type == METHOD_CALL || type == METHOD_CALL_CLASS || type == METHOD_CALL_PARAMETER
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean = when (type) {
+        METHOD_CALL, METHOD_CALL_CLASS, METHOD_CALL_PARAMETER, METHOD_REFERENCE -> true
+        else -> false
+    }
 
     /**
      * Keeps track of which UAST nodes have already been visited by [visitAnnotationUsage].
@@ -124,15 +128,15 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     getThreadsFromMethod(context, method) ?: return
                 )
             }
-            METHOD_CALL_PARAMETER -> {
+            METHOD_CALL_PARAMETER, METHOD_REFERENCE -> {
                 val reference = usage as? UCallableReferenceExpression ?: return
                 val referencedMethod = reference.resolve() as? PsiMethod ?: return
                 checkThreading(
                     context,
                     usage,
                     referencedMethod,
-                    annotations.mapNotNull { it.qualifiedName },
-                    getThreadsFromMethod(context, referencedMethod) ?: return
+                    getThreadsFromExpressionContext(context, reference) ?: return,
+                    getThreadsFromMethod(context, referencedMethod) ?: return,
                 )
             }
             else -> {
@@ -330,8 +334,12 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             .filter { it.isThreadingAnnotation() }
             .mapNotNull { it.qualifiedName }
             .toList()
+        if (annotations.isNotEmpty()) {
+            return annotations
+        }
 
-        return if (annotations.isEmpty()) null else annotations
+        val functionalInterfaceMethod = LambdaUtil.getFunctionalInterfaceMethod(lambdaArgument.type)
+        return getThreadsFromMethod(context, functionalInterfaceMethod)
     }
 
     /** Attempts to infer the current thread context at the site of the given method call  */

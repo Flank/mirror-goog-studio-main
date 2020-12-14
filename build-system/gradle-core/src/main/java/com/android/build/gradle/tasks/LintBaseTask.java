@@ -51,7 +51,6 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.DefaultIssueReporter;
-import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.tools.lint.model.LintModelFactory;
 import com.android.utils.Pair;
@@ -123,12 +122,6 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
         }
     }
 
-    // No influence on output, this is to give access to the build tools version.
-    @NonNull
-    private Revision getBuildToolsRevision() {
-        return getSdkBuildService().get().getBuildToolsRevisionProvider().get();
-    }
-
     @Internal
     public abstract Property<SdkComponentsBuildService> getSdkBuildService();
 
@@ -167,12 +160,6 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
         @Override
         public Project getProject() {
             return LintBaseTask.this.getProject();
-        }
-
-        @NonNull
-        @Override
-        public Revision getBuildToolsRevision() {
-            return LintBaseTask.this.getBuildToolsRevision();
         }
 
         @Override

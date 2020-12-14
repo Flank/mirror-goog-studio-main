@@ -38,11 +38,9 @@ import java.io.File
 
 val composeActivityTemplate
   get() = template {
-    revision = 1
     name = "Empty Compose Activity"
     description = "Create a new empty activity with Jetpack Compose"
     minApi = 21
-    minBuildApi = 21
     constraints = listOf(TemplateConstraint.AndroidX, TemplateConstraint.Kotlin)
 
     category = Category.Compose

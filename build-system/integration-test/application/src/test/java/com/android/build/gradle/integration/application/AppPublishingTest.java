@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.integration.application;
 
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Zip;
-import com.android.testutils.truth.FileSubject;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -87,15 +87,15 @@ public class AppPublishingTest {
         project.execute("publishBundlePublicationToMavenRepository");
 
         // manually check that the app publishing worked.
-        File testRepo = new File(project.getProjectDir(), "testrepo");
-        File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
+        Path testRepo = project.getProjectDir().toPath().resolve("testrepo");
+        Path groupIdFolder = testRepo.resolve("test/densitysplit");
 
-        File aabFile = FileUtils.join(groupIdFolder, "bundle", "1.0", "bundle-1.0.aab");
-        FileSubject.assertThat(aabFile).isFile();
+        Path aabFile = groupIdFolder.resolve("bundle/1.0/bundle-1.0.aab");
+        assertThat(aabFile).isFile();
 
-        File pomFile = FileUtils.join(groupIdFolder, "bundle", "1.0", "bundle-1.0.pom");
-        FileSubject.assertThat(pomFile).isFile();
-        FileSubject.assertThat(pomFile).contains("<packaging>aab</packaging>");
+        Path pomFile = groupIdFolder.resolve("bundle/1.0/bundle-1.0.pom");
+        assertThat(pomFile).isFile();
+        assertThat(pomFile).contains("<packaging>aab</packaging>");
     }
 
     @Test
@@ -108,15 +108,15 @@ public class AppPublishingTest {
         File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
 
         File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
-        FileSubject.assertThat(aabFile).isFile();
+        assertThat(aabFile).isFile();
 
         try (Zip it = new Zip(aabFile)) {
             assertThat(it).contains("mapping.txt");
         }
 
         File pomFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.pom");
-        FileSubject.assertThat(pomFile).isFile();
-        FileSubject.assertThat(pomFile).contains("<packaging>zip</packaging>");
+        assertThat(pomFile).isFile();
+        assertThat(pomFile).contains("<packaging>zip</packaging>");
     }
 
     @Test
@@ -133,13 +133,13 @@ public class AppPublishingTest {
         File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
 
         File aabFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
-        FileSubject.assertThat(aabFile).isFile();
+        assertThat(aabFile).isFile();
         try (Zip it = new Zip(aabFile)) {
             assertThat(it).doesNotContain("mapping.txt");
         }
 
         File pomFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.pom");
-        FileSubject.assertThat(pomFile).isFile();
-        FileSubject.assertThat(pomFile).contains("<packaging>zip</packaging>");
+        assertThat(pomFile).isFile();
+        assertThat(pomFile).contains("<packaging>zip</packaging>");
     }
 }

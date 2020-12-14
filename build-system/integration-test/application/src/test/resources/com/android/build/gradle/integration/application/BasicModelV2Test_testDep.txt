@@ -157,7 +157,7 @@
              * requestedCoordinates = (null)
              * dependencies         = []
           * GraphItem:
-             * artifactAddress      = "org.jacoco:org.jacoco.agent:0.7.9:runtime@jar"
+             * artifactAddress      = "org.jacoco:org.jacoco.agent:0.8.6:runtime@jar"
              * requestedCoordinates = (null)
              * dependencies         = []
           * GraphItem:
@@ -649,7 +649,7 @@
              * requestedCoordinates = (null)
              * dependencies         = []
           * GraphItem:
-             * artifactAddress      = "org.jacoco:org.jacoco.agent:0.7.9:runtime@jar"
+             * artifactAddress      = "org.jacoco:org.jacoco.agent:0.8.6:runtime@jar"
              * requestedCoordinates = (null)
              * dependencies         = []
           * GraphItem:
@@ -1677,8 +1677,8 @@
        < library
        > library:
           - type                = 2
-          - artifactAddress     = "org.jacoco:org.jacoco.agent:0.7.9:runtime@jar"
-          - artifact            = {LOCAL_REPO}/org/jacoco/org.jacoco.agent/0.7.9/org.jacoco.agent-0.7.9-runtime.jar{F}
+          - artifactAddress     = "org.jacoco:org.jacoco.agent:0.8.6:runtime@jar"
+          - artifact            = {LOCAL_REPO}/org/jacoco/org.jacoco.agent/0.8.6/org.jacoco.agent-0.8.6-runtime.jar{F}
           - buildId             = (null)
           - projectPath         = (null)
           - variant             = (null)

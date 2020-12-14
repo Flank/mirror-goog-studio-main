@@ -38,8 +38,8 @@ import android.os.Bundle;
 import android.graphics.drawable.Drawable;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsFragment", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsFragmentBackgroundController", useAndroidX)};
+import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsSupportFragment", useAndroidX)};
+import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsSupportFragmentBackgroundController", useAndroidX)};
 import ${getMaterialComponentName("android.support.v17.leanback.widget.Action", useAndroidX)};
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ArrayObjectAdapter", useAndroidX)};
 import ${getMaterialComponentName("android.support.v17.leanback.widget.ClassPresenterSelector", useAndroidX)};
@@ -71,7 +71,7 @@ import java.util.List;
  * LeanbackDetailsFragment extends DetailsFragment, a Wrapper fragment for leanback details screens.
  * It shows a detailed view of video and its meta plus related videos.
  */
-public class ${detailsFragment} extends DetailsFragment {
+public class ${detailsFragment} extends DetailsSupportFragment {
     private static final String TAG = "${detailsFragment.take(23)}";
 
     private static final int ACTION_WATCH_TRAILER = 1;
@@ -88,14 +88,14 @@ public class ${detailsFragment} extends DetailsFragment {
     private ArrayObjectAdapter mAdapter;
     private ClassPresenterSelector mPresenterSelector;
 
-    private DetailsFragmentBackgroundController mDetailsBackground;
+    private DetailsSupportFragmentBackgroundController mDetailsBackground;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate DetailsFragment");
         super.onCreate(savedInstanceState);
 
-        mDetailsBackground = new DetailsFragmentBackgroundController(this);
+        mDetailsBackground = new DetailsSupportFragmentBackgroundController(this);
 
         mSelectedMovie =
                 (Movie) getActivity().getIntent() .getSerializableExtra(${detailsActivity}.MOVIE);

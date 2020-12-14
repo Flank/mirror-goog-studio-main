@@ -7,11 +7,13 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
+import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 import kotlin.test.assertEquals
 
 /**
@@ -70,18 +72,18 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
                 "ManifestClassTest.java"),
                 //language=java
                 """package com.example.helloworld;
-                    
+
                     import android.app.Activity;
                     import android.os.Bundle;
                     import java.lang.AssertionError;
 
                     public class ManifestClassTest extends Activity {
-                    
+
                         @Override
                         protected void onCreate(Bundle savedInstanceState) {
                             testManifestClassContainsPermission();
                         }
-                        
+
                         public static void testManifestClassContainsPermission() {
                             String permissionOne = Manifest.permission.PERMISSION_ONE;
                             if (!permissionOne.equals(
@@ -102,11 +104,11 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
                     import com.example.helloworld.ManifestClassTest;
                     import org.junit.Test;import org.junit.runner.RunWith;
                     import org.junit.runners.JUnit4;
-                    
+
                     @RunWith(JUnit4.class)
                     public class ManifestClassUnitTest {
-                        
-                        @Test 
+
+                        @Test
                         public void testPermissionOneValue() {
                             ManifestClassTest.testManifestClassContainsPermission();
                         }
@@ -123,11 +125,31 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
             project.executeExpectingFailure("assembleDebug", "assembleRelease")
         }
 
-        val manifestJarExists = project.getIntermediateFile(
-                InternalArtifactType.COMPILE_MANIFEST_JAR.getFolderName()).exists()
-
-        assertEquals(manifestJarExists, enableManifestClass)
+        val manifestJarExists = getManifestJarArtifact()
+            .walkBottomUp().filter(File::isFile).map(File::getName).toList()
+        if (enableManifestClass) {
+            // Contains two manifest jars (for debug and release)
+            Truth.assertThat(manifestJarExists).containsExactly("Manifest.jar", "Manifest.jar")
+        } else {
+            Truth.assertThat(manifestJarExists).isEmpty()
+        }
     }
+
+    @Test
+    fun `test builds with no manifest custom permissions`() {
+        project.executor()
+            .with(BooleanOption.GENERATE_MANIFEST_CLASS, enableManifestClass)
+            .run("clean", "assembleDebug")
+
+        // Check Manifest JAR has not been created.
+        val intermediateCompiledManifest = getManifestJarArtifact()
+            .walkBottomUp().filter(File::isFile).toList()
+        Truth.assertThat(intermediateCompiledManifest).isEmpty()
+    }
+
+    private fun getManifestJarArtifact() = project.getIntermediateFile(
+        InternalArtifactType.COMPILE_MANIFEST_JAR.getFolderName()
+    )
 
     companion object {
         @Parameterized.Parameters(name = "enableManifestClass_{0}")

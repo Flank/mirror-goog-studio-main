@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.truth.AarSubject
 import com.android.build.gradle.integration.common.utils.getDebugVariant
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.AndroidProject
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -178,10 +178,10 @@ class NamespacedAarTest {
                 """
                     <?xml version="1.0" encoding="utf-8"?>
                     <resources>
-                
+
                         <string name="foo">publishedLib</string>
                         <string name="my_version_name">1.0</string>
-                
+
                     </resources>
                     """.trimIndent()
             )

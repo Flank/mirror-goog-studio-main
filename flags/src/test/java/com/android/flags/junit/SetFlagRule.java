@@ -44,6 +44,9 @@ import org.junit.Rule;
  *     }
  *   }
  * </pre>
+ *
+ * <p>For Studio tests consider using the {@code Flag.override(T, Disposable)} Kotlin extension
+ * method defined in {@code com.android.tools.idea.testing.flags.FlagUtils}.
  */
 public class SetFlagRule<T> extends RestoreFlagRule<T> {
     private final Flag<T> myFlag;

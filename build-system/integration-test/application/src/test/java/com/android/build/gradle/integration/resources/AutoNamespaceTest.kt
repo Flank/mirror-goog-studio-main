@@ -25,7 +25,7 @@ import com.android.build.gradle.integration.common.utils.getDebugGenerateSources
 import com.android.build.gradle.integration.common.utils.getDebugVariant
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.AndroidProject
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat

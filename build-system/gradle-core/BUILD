@@ -173,7 +173,7 @@ kotlin_test(
         ":gradle-core",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.0.9:jar",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.4.10:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.4.21:jar",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/apkzlib",

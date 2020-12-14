@@ -42,10 +42,8 @@ import java.io.File
 
 val tabbedActivityTemplate
   get() = template {
-    revision = 1
     name = "Tabbed Activity"
     minApi = MIN_API
-    minBuildApi = MIN_API
     description = "Creates a new blank activity with tabs"
 
     category = Category.Activity

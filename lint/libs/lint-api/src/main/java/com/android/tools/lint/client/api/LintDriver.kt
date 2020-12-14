@@ -40,7 +40,6 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
 import com.android.ide.common.util.PathString
-import com.android.repository.Revision
 import com.android.repository.api.ProgressIndicator
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
@@ -2252,9 +2251,6 @@ class LintDriver(
 
         override fun getTestSourceFolders(project: Project): List<File> =
             delegate.getTestSourceFolders(project)
-
-        override fun getBuildToolsRevision(project: Project): Revision? =
-            delegate.getBuildToolsRevision(project)
 
         override fun createSuperClassMap(project: Project): Map<String, String> =
             delegate.createSuperClassMap(project)

@@ -16,21 +16,25 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
+import com.android.tools.idea.wizard.template.getMaterialComponentName
 
 fun detailsActivityJava(
   detailsActivity: String,
+  detailsFragmentClass: String,
   detailsLayoutName: String,
-  packageName: String
+  packageName: String,
+  useAndroidX: Boolean
 ) = """
 package ${packageName};
 
 import android.app.Activity;
 import android.os.Bundle;
+import ${getMaterialComponentName("android.support.v4.app.FragmentActivity", useAndroidX)};
 
 /*
  * Details activity class that loads LeanbackDetailsFragment class
  */
-public class ${detailsActivity} extends Activity {
+public class ${detailsActivity} extends FragmentActivity {
     public static final String SHARED_ELEMENT_NAME = "hero";
     public static final String MOVIE = "Movie";
 
@@ -41,6 +45,11 @@ public class ${detailsActivity} extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.${detailsLayoutName});
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.details_fragment, new ${detailsFragmentClass}())
+                .commitNow();
+        }
     }
 
 }

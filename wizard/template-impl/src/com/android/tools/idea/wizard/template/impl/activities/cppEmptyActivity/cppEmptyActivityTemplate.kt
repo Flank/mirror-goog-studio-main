@@ -47,10 +47,8 @@ const val DOCUMENTATION_URL = "https://developer.android.com/ndk/guides/cpp-supp
 
 val cppEmptyActivityTemplate
   get() = template {
-    revision = 1
     name = "Native C++"
     minApi = MIN_API
-    minBuildApi = MIN_API
     description = "Creates a new project with an Empty Activity configured to use JNI"
     documentationUrl = DOCUMENTATION_URL
 

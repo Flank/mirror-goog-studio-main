@@ -25,9 +25,9 @@ import com.android.utils.iterator
 import org.w3c.dom.Element
 import org.xml.sax.SAXException
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.nio.file.Path
 import kotlin.text.Charsets.UTF_8
 
 /** Remote URL for current SDK metadata */
@@ -55,7 +55,7 @@ private const val ATTR_DESCRIPTION = "description"
  */
 abstract class DeprecatedSdkRegistry(
     /** Location to search for cached repository content files */
-    cacheDir: File? = null
+    cacheDir: Path? = null
 ) : NetworkCache(
     SDK_REGISTRY_URL,
     DEPRECATED_SDK_CACHE_DIR_KEY,

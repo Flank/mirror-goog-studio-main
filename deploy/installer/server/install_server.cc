@@ -43,8 +43,12 @@ namespace {
 // Attempts to start the server and connect an InstallClient to it. If this
 // operation sets the value of result to SUCCESS, returns a unique_ptr to an
 // InstallClient; otherwise the pointer is nullptr.
+//
+// If the return value is nullptr, error_message points to a string describing
+// the failure.
 std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
-                                              const std::string& exec_path) {
+                                              const std::string& exec_path,
+                                              std::string* error_message) {
   int stdin_fd;
   int stdout_fd;
   int stderr_fd;
@@ -52,7 +56,7 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
   if (!executor.ForkAndExec(exec_path, {}, &stdin_fd, &stdout_fd, &stderr_fd,
                             &pid)) {
     // ForkAndExec only returns false if the pipe creation fails.
-    ErrEvent("Could not ForkAndExec when starting server");
+    *error_message = "Could not ForkAndExec when starting server";
     return nullptr;
   }
 
@@ -77,9 +81,7 @@ std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
   close(stderr_fd);
 
   if (count > 0) {
-    std::string error_message(err_buffer, 0, count);
-    ErrEvent("Unable to startup install-server, output: '" + error_message +
-             "'");
+    *error_message = err_buffer;
   }
 
   return nullptr;
@@ -363,16 +365,19 @@ std::unique_ptr<InstallClient> StartInstallServer(
   Phase p("InstallServer::StartServer");
   const std::string exec_path = Sites::AppCodeCache(package_name);
   const RunasExecutor run_as(package_name, executor);
+  std::string error_message;
 
-  auto client = TryStartServer(run_as, exec_path + exec_name);
+  auto client = TryStartServer(run_as, exec_path + exec_name, &error_message);
   if (client != nullptr) {
     return client;
   }
 
+  LogEvent("Copying install-server to " + exec_path);
   if (TryCopyServer(run_as, server_path, exec_path, exec_name)) {
-    return TryStartServer(run_as, exec_path + exec_name);
+    return TryStartServer(run_as, exec_path + exec_name, &error_message);
   }
 
+  ErrEvent("Could not start install server: " + error_message);
   return nullptr;
 }
 

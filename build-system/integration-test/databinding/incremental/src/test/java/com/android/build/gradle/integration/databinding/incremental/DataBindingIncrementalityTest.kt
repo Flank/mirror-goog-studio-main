@@ -33,7 +33,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils.searchAnd
 import com.android.build.gradle.options.BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING
 import com.android.build.gradle.options.BooleanOption.USE_ANDROID_X
 import com.android.testutils.TestUtils.waitForFileSystemTick
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Expect
 import org.junit.Before
 import org.junit.Rule

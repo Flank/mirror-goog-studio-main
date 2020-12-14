@@ -592,6 +592,10 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             if (type is PsiPrimitiveType) {
                 return
             }
+            if (type is PsiClassType && type.resolve() is PsiTypeParameter) {
+                // The nullability of generic type parameters is often only known by the caller.
+                return
+            }
             if (node is UField &&
                 node.modifierList?.hasModifierProperty(PsiModifier.FINAL) == true
             ) {

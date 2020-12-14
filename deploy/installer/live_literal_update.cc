@@ -118,6 +118,8 @@ bool LiveLiteralUpdateCommand::CheckFilesExist(
 }
 
 // TODO: Refactor. Taken partly from OverlaySwapCOmmand::PrepareAndBuildRequest.
+// TODO: This function should return a bool and its return value should be
+//       checked.
 void LiveLiteralUpdateCommand::PrepareAndBuildRequest(
     proto::LiveLiteralUpdateResponse* response) {
   std::string version = workspace_.GetVersion() + "-";
@@ -135,8 +137,11 @@ void LiveLiteralUpdateCommand::PrepareAndBuildRequest(
   std::string agent_path = startup_path + version + agent;
 
   std::unordered_set<std::string> missing_files;
-  // TODO: Error checking
-  CheckFilesExist({startup_path, studio_path, agent_path}, &missing_files);
+  if (!CheckFilesExist({startup_path, studio_path, agent_path},
+                       &missing_files)) {
+    ErrEvent("LiveLiteral: CheckFilesExist failed");
+    return;
+  }
 
   RunasExecutor run_as(package_name_);
   std::string error;

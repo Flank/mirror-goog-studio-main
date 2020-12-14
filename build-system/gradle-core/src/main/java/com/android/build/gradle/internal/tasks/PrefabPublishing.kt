@@ -281,18 +281,7 @@ abstract class PrefabPackageTask : NonIncrementalTask() {
         val config =
             AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi.nativeBuildJson, null)
 
-        // The libraries are keyed by $name-$config-$abi. For example, the debug, arm64 variant
-        // of gtestjni would be gtestjni-Debug-arm64-v8a. The config here is the CMake build
-        // variant of the library, not the name of the gradle build variant. Fortunately the
-        // JSON file here only exposes the variant we're building, so we don't need to determine
-        // what CMake build variant is used here. We also want to copy the libraries for every
-        // ABI that's supported by this library, so no need to filter by ABI.
-        val matchingLibs = config
-                .libraries
-                .filterKeys {
-                    it.startsWith("$moduleName-") ||
-                    it.startsWith("$moduleName::")
-                }.values
+        val matchingLibs = config.libraries.filterValues { it.artifactName == moduleName }.values
         if (matchingLibs.isEmpty()) {
             errorln("No libraries found for $moduleName")
         }

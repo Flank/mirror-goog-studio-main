@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.build.api.artifact.ArtifactType;
@@ -431,10 +431,10 @@ public class ManifestMergingTest {
     }
 
     @Test
-    public void checkPackageNameFromDsl() throws Exception {
+    public void checkNamespaceFromDsl() throws Exception {
         TestFileUtils.appendToFile(
                 flavors.getBuildFile(),
-                "android {\n    packageName \"com.android.tests.flavors\"\n}\n");
+                "android {\n    namespace \"com.android.tests.flavors\"\n}\n");
         File appManifest = new File(flavors.getMainSrcDir().getParent(), "AndroidManifest.xml");
         TestFileUtils.searchAndReplace(appManifest, "package=\"com.android.tests.flavors\">", ">");
         GradleBuildResult buildResult = flavors.executor().run("clean", "assembleF1FaDebug");

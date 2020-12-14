@@ -35,12 +35,9 @@ import java.io.File
 
 val intentServiceTemplate
   get() = template {
-    revision = 1
     name = "Service (IntentService)"
     description = "Creates a new intent service class"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     formFactor = FormFactor.Mobile
     category = Category.Service
     screens = listOf(WizardUiContext.MenuEntry)

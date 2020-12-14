@@ -45,6 +45,9 @@ import org.junit.rules.ExternalResource;
  *     }
  *   }
  * </pre>
+ *
+ * <p>For Studio tests consider using the {@code Flag.override(T, Disposable)} Kotlin extension
+ * method defined in {@code com.android.tools.idea.testing.flags.FlagUtils}.
  */
 public class RestoreFlagRule<T> extends ExternalResource {
     private final Flag<T> myFlag;

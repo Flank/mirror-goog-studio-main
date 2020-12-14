@@ -34,7 +34,6 @@ import java.io.File
 
 val broadcastReceiverTemplate
   get() = template {
-    revision = 1
     name = "Broadcast Receiver"
     description = "Creates a new broadcast receiver component and adds it to your Android manifest"
 

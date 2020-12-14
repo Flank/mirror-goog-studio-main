@@ -17,13 +17,13 @@
 package com.android.builder.dexing
 
 import com.android.testutils.TestUtils
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Files
 import java.nio.file.Path
-import com.android.testutils.truth.FileSubject.assertThat
 
 /**
  * Sanity test to make sure we can invoke L8 successfully
@@ -45,7 +45,7 @@ class L8ToolTest {
             true
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
-        assertThat(output.toFile().resolve("classes1000.dex")).exists()
+        assertThat(output.resolve("classes1000.dex")).exists()
     }
 
     private fun getDexFileCount(dir: Path): Long =

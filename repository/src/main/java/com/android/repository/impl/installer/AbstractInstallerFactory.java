@@ -27,7 +27,6 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.Uninstaller;
-import com.android.repository.io.FileOp;
 
 /**
  * Framework for an actually {@link InstallerFactory}, with support for adding the listeners
@@ -58,15 +57,17 @@ public abstract class AbstractInstallerFactory implements InstallerFactory {
 
     @NonNull
     @Override
-    public final Installer createInstaller(@NonNull RemotePackage remote, @NonNull RepoManager mgr,
-            @NonNull Downloader downloader, @NonNull FileOp fop) {
+    public final Installer createInstaller(
+            @NonNull RemotePackage remote,
+            @NonNull RepoManager mgr,
+            @NonNull Downloader downloader) {
         if (!canHandlePackage(remote, mgr) && mFallbackFactory != null) {
-            return mFallbackFactory.createInstaller(remote, mgr, downloader, fop);
+            return mFallbackFactory.createInstaller(remote, mgr, downloader);
         }
-        Installer installer = doCreateInstaller(remote, mgr, downloader, fop);
+        Installer installer = doCreateInstaller(remote, mgr, downloader);
         if (mFallbackFactory != null) {
             installer.setFallbackOperation(
-                    mFallbackFactory.createInstaller(remote, mgr, downloader, fop));
+                    mFallbackFactory.createInstaller(remote, mgr, downloader));
         }
         registerListeners(installer);
         return installer;
@@ -81,34 +82,30 @@ public abstract class AbstractInstallerFactory implements InstallerFactory {
         }
     }
 
-    /**
-     * Subclasses should override this to do the actual creation of an {@link Installer}.
-     */
+    /** Subclasses should override this to do the actual creation of an {@link Installer}. */
     @NonNull
-    protected abstract Installer doCreateInstaller(@NonNull RemotePackage p,
-            @NonNull RepoManager mgr, @NonNull Downloader downloader, @NonNull FileOp fop);
+    protected abstract Installer doCreateInstaller(
+            @NonNull RemotePackage p, @NonNull RepoManager mgr, @NonNull Downloader downloader);
 
     @NonNull
     @Override
-    public final Uninstaller createUninstaller(@NonNull LocalPackage local,
-            @NonNull RepoManager mgr, @NonNull FileOp fop) {
+    public final Uninstaller createUninstaller(
+            @NonNull LocalPackage local, @NonNull RepoManager mgr) {
         if (!canHandlePackage(local, mgr) && mFallbackFactory != null) {
-            return mFallbackFactory.createUninstaller(local, mgr, fop);
+            return mFallbackFactory.createUninstaller(local, mgr);
         }
-        Uninstaller uninstaller = doCreateUninstaller(local, mgr, fop);
+        Uninstaller uninstaller = doCreateUninstaller(local, mgr);
         if (mFallbackFactory != null) {
-            uninstaller.setFallbackOperation(mFallbackFactory.createUninstaller(local, mgr, fop));
+            uninstaller.setFallbackOperation(mFallbackFactory.createUninstaller(local, mgr));
         }
         registerListeners(uninstaller);
         return uninstaller;
     }
 
-    /**
-     * Subclasses should override this to do the actual creation of an {@link Uninstaller}.
-     */
+    /** Subclasses should override this to do the actual creation of an {@link Uninstaller}. */
     @NonNull
-    protected abstract Uninstaller doCreateUninstaller(@NonNull LocalPackage p,
-            @NonNull RepoManager mgr, @NonNull FileOp fop);
+    protected abstract Uninstaller doCreateUninstaller(
+            @NonNull LocalPackage p, @NonNull RepoManager mgr);
 
     /**
      * Subclasses should override this to indicate whether they can generate installers/uninstallers

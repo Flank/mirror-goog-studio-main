@@ -38,11 +38,9 @@ import java.io.File
 
 val settingsActivityTemplate
   get() = template {
-    revision = 1
     name = "Settings Activity"
     description = "Creates a new activity that allows a user to configure application settings"
     minApi = MIN_API
-    minBuildApi = MIN_API
     constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Activity

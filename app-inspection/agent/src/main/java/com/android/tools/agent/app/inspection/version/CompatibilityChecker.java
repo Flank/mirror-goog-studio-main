@@ -88,16 +88,6 @@ public final class CompatibilityChecker {
                     readResult.versionString);
         }
 
-        // TODO: Temporary. Remove it once 'androidx.work:work-runtime:2.5.0-beta02'
-        // is released
-        if ("androidx.work".equals(artifactCoordinate.groupId)) {
-            return new CompatibilityCheckerResult(
-                    CompatibilityCheckerResult.Status.COMPATIBLE,
-                    null,
-                    artifactCoordinate,
-                    readResult.versionString);
-        }
-
         if (isProguarded(artifactCoordinate)) {
             return new CompatibilityCheckerResult(
                     CompatibilityCheckerResult.Status.PROGUARDED,

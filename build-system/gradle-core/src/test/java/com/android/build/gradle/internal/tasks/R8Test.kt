@@ -32,7 +32,7 @@ import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThat
 
@@ -372,7 +372,7 @@ class R8Test(val r8OutputType: R8OutputType) {
 
         // Check feature java resource output
         val featureJavaResOutput = featureJavaResourceOutputDir.resolve("feature.jar")
-        FileSubject.assertThat(featureJavaResOutput).exists()
+        assertThat(featureJavaResOutput).exists()
         ZipArchive(featureJavaResOutput.toPath()).use {
             assertThat(it.listEntries()).containsExactly("foo.txt")
         }
@@ -409,7 +409,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             .doesNotHaveAnnotations()
 
         // Check feature java resource output
-        FileSubject.assertThat(featureJavaResOutput).exists()
+        assertThat(featureJavaResOutput).exists()
         ZipArchive(featureJavaResOutput.toPath()).use {
             assertThat(it.listEntries()).containsExactly("foo.txt")
         }
@@ -433,12 +433,12 @@ class R8Test(val r8OutputType: R8OutputType) {
 
         // there are no classes for the feature, but we expect the empty parent directory
         val featureDexParent = featureDexDir.resolve("feature")
-        FileSubject.assertThat(featureDexParent).exists()
-        FileSubject.assertThat(featureDexParent).isDirectory()
+        assertThat(featureDexParent).exists()
+        assertThat(featureDexParent).isDirectory()
         assertThat(featureDexParent.listFiles()).hasLength(0)
 
         // Check feature java resource output
-        FileSubject.assertThat(featureJavaResOutput).exists()
+        assertThat(featureJavaResOutput).exists()
         ZipArchive(featureJavaResOutput.toPath()).use {
             assertThat(it.listEntries()).containsExactly("foo.txt")
         }
@@ -634,7 +634,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
                 "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
                 "}$lineSeparator"
-        FileSubject.assertThat(outputKeepRulesDir.resolve("output")).contains(expectedKeepRules)
+        assertThat(outputKeepRulesDir.resolve("output")).contains(expectedKeepRules)
     }
 
     /** Regression test for b/151605314. */

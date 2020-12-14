@@ -32,12 +32,9 @@ import java.io.File
 
 val valueResourceFileTemplate
   get() = template {
-    revision = 1
     name = "Values XML File"
     description = "Creates a new XML values file"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.XML
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.MenuEntry)

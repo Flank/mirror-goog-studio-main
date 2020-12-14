@@ -21,7 +21,7 @@ import com.android.SdkConstants.APP_METADATA_VERSION_PROPERTY
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_ENTRY_PATH
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.workers.WorkerExecutor

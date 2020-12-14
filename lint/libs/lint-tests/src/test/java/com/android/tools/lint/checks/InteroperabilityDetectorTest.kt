@@ -1024,4 +1024,19 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testUnknownNullnessForTypeParameters() {
+        // Regression test for https://issuetracker.google.com/169691664.
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    public class Foo<T> {
+                        public T foo() { return null; }
+                    }
+                """
+            ).indented(),
+        ).run().expectClean()
+    }
 }

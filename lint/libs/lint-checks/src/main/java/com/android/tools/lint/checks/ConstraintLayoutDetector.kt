@@ -15,7 +15,6 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT
 import com.android.SdkConstants.ATTR_CONSTRAINT_LAYOUT_DESCRIPTION
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
@@ -27,17 +26,9 @@ import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_FLOW
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP
 import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE
 import com.android.SdkConstants.CONSTRAINT_LAYOUT
-import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT
-import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID
-import com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID
-import com.android.SdkConstants.LATEST_CONSTRAINT_LAYOUT_VERSION
 import com.android.SdkConstants.MOTION_LAYOUT
 import com.android.SdkConstants.TAG_INCLUDE
 import com.android.SdkConstants.VALUE_MATCH_PARENT
-import com.android.ide.common.repository.GradleCoordinate
-import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER
-import com.android.ide.common.repository.GradleVersion
-import com.android.ide.common.repository.SdkMavenRepository
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -46,7 +37,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.isLayoutMarkerTag
-import com.android.tools.lint.model.LintModelExternalLibrary
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
@@ -55,7 +45,7 @@ import org.w3c.dom.Node
  * specifying constraints
  */
 class ConstraintLayoutDetector : LayoutDetector() {
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return setOf(
             CONSTRAINT_LAYOUT.oldName(),
             CONSTRAINT_LAYOUT.newName(),
@@ -68,38 +58,6 @@ class ConstraintLayoutDetector : LayoutDetector() {
         context: XmlContext,
         element: Element
     ) {
-        // Make sure we're using the current version
-        val variant = context.mainProject.buildVariant
-        var latestAvailable: GradleCoordinate? = null
-        if (variant != null) {
-            val dependencies = variant.mainArtifact.dependencies.compileDependencies
-            val library = dependencies.findLibrary(CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
-                ?: dependencies.findLibrary(ANDROIDX_CONSTRAINT_LAYOUT_LIB_ARTIFACT, true)
-            if (library != null && library is LintModelExternalLibrary) {
-                val rc = library.resolvedCoordinates
-                if (CONSTRAINT_LAYOUT_LIB_GROUP_ID == rc.groupId &&
-                    CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID == rc.artifactId
-                ) {
-                    if (latestAvailable == null) {
-                        latestAvailable = getLatestVersion(context)
-                    }
-                    val version = GradleCoordinate(rc.groupId, rc.artifactId, rc.version)
-                    if (COMPARE_PLUS_LOWER.compare(latestAvailable, version) > 0) {
-                        val message =
-                            "Using version ${version.revision} of the constraint library, which is obsolete"
-                        val fix = fix().data(KEY_UPGRADE_CONSTRAINT_LAYOUT, true)
-                        context.report(
-                            GradleDetector.DEPENDENCY,
-                            element,
-                            context.getLocation(element),
-                            message,
-                            fix
-                        )
-                    }
-                }
-            }
-        }
-
         // In MotionLayouts you can specify the constraints elsewhere.
         // Note that MotionLayoutDetector performs additional validation.
         if (element.hasAttributeNS(AUTO_URI, ATTR_CONSTRAINT_LAYOUT_DESCRIPTION)) {
@@ -220,8 +178,6 @@ class ConstraintLayoutDetector : LayoutDetector() {
     }
 
     companion object {
-        const val KEY_UPGRADE_CONSTRAINT_LAYOUT = "constraint-layout"
-
         @JvmField
         val ISSUE =
             Issue.create(
@@ -247,15 +203,6 @@ class ConstraintLayoutDetector : LayoutDetector() {
                 androidSpecific = true
             )
 
-        /** Latest known version of the ConstraintLayout library (as a [GradleVersion]  */
-        @Suppress("MemberVisibilityCanBePrivate") // used in tools/adt/idea
-        @JvmField
-        val LATEST_KNOWN_VERSION = GradleCoordinate(
-            CONSTRAINT_LAYOUT_LIB_GROUP_ID,
-            CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID,
-            LATEST_CONSTRAINT_LAYOUT_VERSION
-        )
-
         /**
          * @param element to scan
          * @return true if barrier specific constraint is set. False otherwise.
@@ -270,30 +217,6 @@ class ConstraintLayoutDetector : LayoutDetector() {
                 }
             }
             return false
-        }
-
-        private fun getLatestVersion(context: XmlContext): GradleCoordinate {
-            var latestAvailable = LATEST_KNOWN_VERSION
-            val sdkHandler = context.client.getSdk()
-            if (sdkHandler != null) {
-                val progress = context.client.getRepositoryLogger()
-                val latestPackage = SdkMavenRepository.findLatestVersion(
-                    LATEST_KNOWN_VERSION,
-                    sdkHandler,
-                    null,
-                    progress
-                )
-                if (latestPackage != null) {
-                    val fromPackage =
-                        SdkMavenRepository.getCoordinateFromSdkPath(latestPackage.path)
-                    if (fromPackage != null &&
-                        COMPARE_PLUS_LOWER.compare(latestAvailable, fromPackage) < 0
-                    ) {
-                        latestAvailable = fromPackage
-                    }
-                }
-            }
-            return latestAvailable
         }
     }
 }

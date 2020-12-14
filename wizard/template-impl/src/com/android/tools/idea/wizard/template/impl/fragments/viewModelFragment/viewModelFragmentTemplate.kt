@@ -36,12 +36,9 @@ import java.io.File
 
 val viewModelFragmentTemplate
   get() = template {
-    revision = 1
     name = "Fragment (with ViewModel)"
     description = "Creates a Fragment with a ViewModel"
     minApi = MIN_API
-    minBuildApi = MIN_API
-
     category = Category.Fragment
     formFactor = FormFactor.Mobile
     screens = listOf(WizardUiContext.FragmentGallery, WizardUiContext.MenuEntry)

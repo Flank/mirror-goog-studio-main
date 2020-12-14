@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.buildCommandFile
 import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -145,7 +145,7 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     fun `dependencies are copied to the APK`() {
         project.execute("clean", "assembleDebug")
         val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk.file.toFile()).exists()
+        assertThat(apk.file).exists()
         for (abi in expectedAbis) {
             assertThatApk(apk).contains("lib/${abi.tag}/libapp.so")
             assertThatApk(apk).contains("lib/${abi.tag}/libcrypto.so")

@@ -38,7 +38,7 @@ import com.android.builder.model.SyncIssue
 import com.android.testutils.AssumeUtil
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Aab
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.truth.Truth
@@ -610,7 +610,7 @@ class MinifyFeaturesTest(
             .contains("-keep class com.example.lib2.FooView")
 
         project.getSubproject("baseModule").getApk(apkType).use { apk ->
-            assertThat(apk.file.toFile()).exists()
+            assertThat(apk.file).exists()
             assertThat(apk).containsClass("Lcom/example/baseModule/Main;")
             assertThat(apk).containsClass("Lcom/example/baseModule/a;")
             assertThat(apk).containsClass("Lcom/example/baseModule/EmptyClassToKeep;")
@@ -641,7 +641,7 @@ class MinifyFeaturesTest(
         }
 
         project.getSubproject(":foo:otherFeature1").getApk(apkType).use { apk ->
-            assertThat(apk.file.toFile()).exists()
+            assertThat(apk.file).exists()
             assertThat(apk).containsClass("Lcom/example/otherFeature1/Main;")
             assertThat(apk).containsClass(
                 "Lcom/example/otherFeature1/EmptyClassToKeep;"
@@ -672,7 +672,7 @@ class MinifyFeaturesTest(
         }
 
         project.getSubproject(otherFeature2GradlePath).getApk(apkType).use { apk ->
-            assertThat(apk.file.toFile()).exists()
+            assertThat(apk.file).exists()
             assertThat(apk).containsClass("Lcom/example/otherFeature2/Main;")
             assertThat(apk).doesNotContainClass("Lcom/example/lib1/EmptyClassToKeep;")
             assertThat(apk).doesNotContainClass("Lcom/example/lib2/EmptyClassToKeep;")

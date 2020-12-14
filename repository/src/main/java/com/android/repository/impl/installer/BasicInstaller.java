@@ -25,7 +25,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.meta.Archive;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.google.common.base.Strings;
@@ -47,9 +46,9 @@ class BasicInstaller extends AbstractInstaller {
     static final String FN_UNZIP_DIR = "unzip";
     private Path myUnzipDir;
 
-    BasicInstaller(@NonNull RemotePackage p, @NonNull RepoManager mgr,
-      @NonNull Downloader downloader, @NonNull FileOp fop) {
-        super(p, mgr, downloader, fop);
+    BasicInstaller(
+            @NonNull RemotePackage p, @NonNull RepoManager mgr, @NonNull Downloader downloader) {
+        super(p, mgr, downloader);
     }
 
     /**
@@ -74,10 +73,7 @@ class BasicInstaller extends AbstractInstaller {
             String checksum = archive.getComplete().getChecksum();
             getDownloader()
                     .downloadFullyWithCaching(
-                            url,
-                            mFop.toFile(downloadLocation),
-                            checksum,
-                            progress.createSubProgress(0.5));
+                            url, downloadLocation, checksum, progress.createSubProgress(0.5));
             if (progress.isCanceled()) {
                 progress.setFraction(1);
                 return false;
@@ -90,9 +86,8 @@ class BasicInstaller extends AbstractInstaller {
             myUnzipDir = installTempPath.resolve(FN_UNZIP_DIR);
             Files.createDirectories(myUnzipDir);
             InstallerUtil.unzip(
-                    mFop.toFile(downloadLocation),
-                    mFop.toFile(myUnzipDir),
-                    mFop,
+                    downloadLocation,
+                    myUnzipDir,
                     archive.getComplete().getSize(),
                     progress.createSubProgress(1));
             progress.setFraction(1);
@@ -160,8 +155,7 @@ class BasicInstaller extends AbstractInstaller {
                             getPackage().getDisplayName(), getLocation(progress)));
 
             // Move the final unzipped archive into place.
-            FileOpUtils.safeRecursiveOverwrite(
-                    mFop.toFile(packageRoot), mFop.toFile(getLocation(progress)), mFop, progress);
+            FileOpUtils.safeRecursiveOverwrite(packageRoot, getLocation(progress), progress);
             return true;
         } catch (IOException e) {
             String message = e.getMessage();

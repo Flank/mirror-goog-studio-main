@@ -28,8 +28,8 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
  */
 sealed class CxxGradleTaskModel {
     data class Configure(val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
-    data class Build(val representative: CxxAbiModel) : CxxGradleTaskModel()
-    data class VariantBuild(val variantName: String, val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
+    data class Build(val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
+    data class VariantBuild(val variantName: String, val isNop:Boolean, val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
     data class Anchor(val variantName: String) : CxxGradleTaskModel()
 }
 

@@ -43,10 +43,8 @@ import com.android.tools.idea.wizard.template.template
 import java.io.File
 
 val basicActivityTemplate get() = template {
-  revision = 1
   name = "Basic Activity"
   minApi = MIN_API
-  minBuildApi = MIN_API
   description = "Creates a new basic activity with the Navigation component"
 
   category = Category.Activity

@@ -41,10 +41,8 @@ import java.io.File
 
 val androidTVActivityTemplate
   get() = template {
-    revision = 1
     name = "Android TV Blank Activity"
     minApi = 21
-    minBuildApi = 21
     description = "Creates a new Android TV activity using Leanback Support library"
 
     category = Category.Activity

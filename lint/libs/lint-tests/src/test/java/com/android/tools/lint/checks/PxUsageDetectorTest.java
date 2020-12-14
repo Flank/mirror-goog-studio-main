@@ -110,10 +110,10 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                         + "res/layout/textsize.xml:16: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n"
                         + "        android:textSize=\"14dip\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/textsize.xml:33: Warning: Avoid using sizes smaller than 12sp: 11sp [SmallSp]\n"
-                        + "        android:textSize=\"11sp\" />\n"
+                        + "res/layout/textsize.xml:33: Warning: Avoid using sizes smaller than 11sp: 10sp [SmallSp]\n"
+                        + "        android:textSize=\"10sp\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/textsize.xml:37: Warning: Avoid using sizes smaller than 12sp: 6.5sp [SmallSp]\n"
+                        + "res/layout/textsize.xml:37: Warning: Avoid using sizes smaller than 11sp: 6.5sp [SmallSp]\n"
                         + "        android:layout_height=\"6.5sp\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 4 warnings";
@@ -154,7 +154,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                                         + "    <TextView\n"
                                         + "        android:layout_width=\"wrap_content\"\n"
                                         + "        android:layout_height=\"wrap_content\"\n"
-                                        + "        android:textSize=\"11sp\" />\n"
+                                        + "        android:textSize=\"10sp\" />\n"
                                         + "\n"
                                         + "    <ImageView\n"
                                         + "        android:layout_width=\"wrap_content\"\n"
@@ -171,6 +171,12 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                                         + "        android:layout_width=\"wrap_content\"\n"
                                         + "        android:layout_height=\"wrap_content\"\n"
                                         + "        android:marginTop=\"5sp\" />\n"
+                                        + "\n"
+                                        + "    <TextView\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\"\n"
+                                        // 11 is ok
+                                        + "        android:textSize=\"11sp\" />\n"
                                         + "\n"
                                         + "</LinearLayout>\n"))
                 .run()

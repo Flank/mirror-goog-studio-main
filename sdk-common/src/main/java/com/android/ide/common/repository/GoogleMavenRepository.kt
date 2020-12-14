@@ -23,6 +23,7 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.nio.file.Path
 import java.util.HashMap
 import java.util.concurrent.TimeUnit
 import java.util.function.Predicate
@@ -37,7 +38,7 @@ val GMAVEN_BASE_URL = System.getenv(GMAVEN_TEST_BASE_URL_ENV_VAR) ?: DEFAULT_GMA
  */
 abstract class GoogleMavenRepository @JvmOverloads constructor(
     /** Location to search for cached repository content files */
-    cacheDir: File? = null,
+    cacheDir: Path? = null,
 
     /**
      * Number of milliseconds to wait until timing out attempting to access the remote

@@ -21,8 +21,9 @@ import static java.io.File.separatorChar;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.io.FileOp;
-import java.io.File;
+import com.android.io.CancellableFileIo;
+import com.android.repository.io.FileOpUtils;
+import java.nio.file.Path;
 import java.util.function.Predicate;
 
 /**
@@ -37,10 +38,10 @@ public class MavenRepositories {
     /**
      * Finds the best matching {@link GradleCoordinate}.
      *
-     * @param groupId      the artifact group id
-     * @param artifactId   the artifact id
-     * @param repository   the path to the m2repository directory
-     * @param filter       an optional version filter that has to be satisfied by the matched coordinate
+     * @param groupId the artifact group id
+     * @param artifactId the artifact id
+     * @param repository the path to the m2repository directory
+     * @param filter an optional version filter that has to be satisfied by the matched coordinate
      * @param allowPreview whether preview versions are allowed to match
      * @return the best (highest version) matching coordinate, or null if none were found
      */
@@ -48,19 +49,19 @@ public class MavenRepositories {
     public static GradleCoordinate getHighestInstalledVersion(
             @NonNull String groupId,
             @NonNull String artifactId,
-            @NonNull File repository,
+            @NonNull Path repository,
             @Nullable Predicate<GradleVersion> filter,
-            boolean allowPreview,
-            @NonNull FileOp fileOp) {
-        File versionDir = getArtifactIdDirectory(repository, groupId, artifactId);
-        File[] versions = fileOp.listFiles(versionDir);
+            boolean allowPreview) {
+        Path versionDir = getArtifactIdDirectory(repository, groupId, artifactId);
+        Path[] versions = FileOpUtils.listFiles(versionDir);
         GradleCoordinate maxVersion = null;
-        for (File dir : versions) {
-            if (!fileOp.isDirectory(dir)) {
+        for (Path dir : versions) {
+            if (!CancellableFileIo.isDirectory(dir)) {
                 continue;
             }
-            GradleCoordinate gc = GradleCoordinate.parseCoordinateString(
-                    groupId + ":" + artifactId + ":" + dir.getName());
+            GradleCoordinate gc =
+                    GradleCoordinate.parseCoordinateString(
+                            groupId + ":" + artifactId + ":" + dir.getFileName());
 
             if (gc != null && (allowPreview || !isPreview(gc))
                     && (maxVersion == null || COMPARE_PLUS_HIGHER.compare(gc, maxVersion) > 0)
@@ -82,52 +83,49 @@ public class MavenRepositories {
     }
 
     /**
-     * Finds the best matching {@link GradleVersion}. Like
-     * {@link #getHighestInstalledVersion(String, String, File, Predicate, boolean, FileOp)} but
-     * operates on {@link GradleVersion} instead of {@link GradleCoordinate}.
+     * Finds the best matching {@link GradleVersion}. Like {@link
+     * #getHighestInstalledVersion(String, String, Path, Predicate, boolean)} but operates on {@link
+     * GradleVersion} instead of {@link GradleCoordinate}.
      *
-     * @param groupId      the artifact group id
-     * @param artifactId   the artifact id
-     * @param repository   the path to the m2repository directory
-     * @param filter       an optional filter which the matched version must satisfy
+     * @param groupId the artifact group id
+     * @param artifactId the artifact id
+     * @param repository the path to the m2repository directory
+     * @param filter an optional filter which the matched version must satisfy
      * @param allowPreview whether preview versions are allowed to match
-     * @param fileOp       file operator to use for file access
      * @return the best (highest version) matching version, or null if none were found
      */
     @Nullable
     public static GradleVersion getHighestInstalledVersionNumber(
             @NonNull String groupId,
             @NonNull String artifactId,
-            @NonNull File repository,
+            @NonNull Path repository,
             @Nullable Predicate<GradleVersion> filter,
-            boolean allowPreview,
-            @NonNull FileOp fileOp) {
-        File versionDir = getArtifactIdDirectory(repository, groupId, artifactId);
-        return getHighestVersion(versionDir, filter, allowPreview, fileOp);
+            boolean allowPreview) {
+        Path versionDir = getArtifactIdDirectory(repository, groupId, artifactId);
+        return getHighestVersion(versionDir, filter, allowPreview);
     }
 
     /**
-     * Given a directory containing version numbers returns the highest version number
-     * matching the given filter
+     * Given a directory containing version numbers returns the highest version number matching the
+     * given filter
      *
-     * @param versionDir   the directory containing version numbers
-     * @param filter       an optional filter which the matched version must satisfy
+     * @param versionDir the directory containing version numbers
+     * @param filter an optional filter which the matched version must satisfy
      * @param allowPreview whether preview versions are allowed to match
-     * @param fileOp       file operator to use for file access
      * @return the best (highest version), or null if none were found
      */
     @Nullable
     public static GradleVersion getHighestVersion(
-            @NonNull File versionDir,
+            @NonNull Path versionDir,
             @Nullable Predicate<GradleVersion> filter,
-            boolean allowPreview, @NonNull FileOp fileOp) {
-        File[] versionDirs = fileOp.listFiles(versionDir);
+            boolean allowPreview) {
+        Path[] versionDirs = FileOpUtils.listFiles(versionDir);
         GradleVersion maxVersion = null;
-        for (File dir : versionDirs) {
-            if (!fileOp.isDirectory(dir)) {
+        for (Path dir : versionDirs) {
+            if (!CancellableFileIo.isDirectory(dir)) {
                 continue;
             }
-            String name = dir.getName();
+            String name = dir.getFileName().toString();
             if (name.isEmpty() || !Character.isDigit(name.charAt(0))) {
                 continue;
             }
@@ -161,35 +159,28 @@ public class MavenRepositories {
 
     /**
      * Returns true if the group is an AndroidX group.
-     *
-     * @param groupId
      */
     public static boolean isAndroidX(@NonNull String groupId) {
         return groupId.startsWith("androidx.");
     }
 
-    public static File getArtifactIdDirectory(
-            @NonNull File repository,
-            @NonNull String groupId,
-            @NonNull String artifactId) {
-        return new File(repository,
-                groupId.replace('.', separatorChar) + separator + artifactId);
+    public static Path getArtifactIdDirectory(
+            @NonNull Path repository, @NonNull String groupId, @NonNull String artifactId) {
+        return repository.resolve(groupId.replace('.', separatorChar) + separator + artifactId);
     }
 
-    public static File getArtifactDirectory(
-            @NonNull File repository,
-            @NonNull GradleCoordinate coordinate) {
-        File artifactIdDirectory = getArtifactIdDirectory(
-                repository, coordinate.getGroupId(), coordinate.getArtifactId());
+    public static Path getArtifactDirectory(
+            @NonNull Path repository, @NonNull GradleCoordinate coordinate) {
+        Path artifactIdDirectory =
+                getArtifactIdDirectory(
+                        repository, coordinate.getGroupId(), coordinate.getArtifactId());
 
-        return new File(artifactIdDirectory, coordinate.getRevision());
+        return artifactIdDirectory.resolve(coordinate.getRevision());
     }
 
-    public static File getMavenMetadataFile(
-            @NonNull File repository,
-            @NonNull String groupId,
-            @NonNull String artifactId) {
-        return new File(getArtifactIdDirectory(repository, groupId, artifactId),
-                MAVEN_METADATA_FILE_NAME);
+    public static Path getMavenMetadataFile(
+            @NonNull Path repository, @NonNull String groupId, @NonNull String artifactId) {
+        return getArtifactIdDirectory(repository, groupId, artifactId)
+                .resolve(MAVEN_METADATA_FILE_NAME);
     }
 }

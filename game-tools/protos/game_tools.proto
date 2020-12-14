@@ -41,6 +41,7 @@ message Window {
   enum WindowType {
     UNSPECIFIED_GAME_TOOLS_WINDOW_TYPE = 0;
     PROFILER = 1;
+    SDK_MANAGER = 2;
   }
 }
 

@@ -21,7 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -122,7 +122,7 @@ class DynamicFeatureJavaResTest {
     fun testJavaResourcePackaging() {
         project.executor().run("assembleMinified")
         project.getSubproject("dynamicFeature").getApk(apkType).use { apk ->
-            FileSubject.assertThat(apk.file.toFile()).exists()
+            assertThat(apk.file).exists()
             assertThat(apk).containsJavaResourceWithContent("pickFirst.txt", "dynamicFeature")
             assertThat(apk).doesNotContainJavaResource("META-INF/services/com.example.Service")
             assertThat(apk).doesNotContainJavaResource(
@@ -130,7 +130,7 @@ class DynamicFeatureJavaResTest {
             )
         }
         project.getSubproject("baseModule").getApk(apkType).use { apk ->
-            FileSubject.assertThat(apk.file.toFile()).exists()
+            assertThat(apk.file).exists()
             assertThat(apk).containsJavaResourceWithContent("collide.txt", "base")
             assertThat(apk).containsJavaResourceWithContent(
                 "META-INF/services/com.example.Service",

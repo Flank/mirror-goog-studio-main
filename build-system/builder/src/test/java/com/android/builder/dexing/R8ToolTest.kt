@@ -24,7 +24,7 @@ import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.DexSubject.assertThatDex
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.Pair
 import com.android.utils.FileUtils
@@ -570,7 +570,7 @@ class R8ToolTest {
 
         val emptyFeatureClassesJar = tmp.newFolder().toPath().resolve("feature2.jar")
         JarFlinger(emptyFeatureClassesJar).use {}
-        assertThat(emptyFeatureClassesJar.toFile()).exists()
+        assertThat(emptyFeatureClassesJar).exists()
 
         val javaResJar = tmp.newFolder().toPath().resolve("base.jar")
         TestInputsGenerator.writeJarWithTextEntries(javaResJar, Pair.of("foo.txt", "foo"))
@@ -580,7 +580,7 @@ class R8ToolTest {
 
         val emptyFeatureJavaResJar = tmp.newFolder().toPath().resolve("feature2.jar")
         JarFlinger(emptyFeatureJavaResJar).use {}
-        assertThat(emptyFeatureJavaResJar.toFile()).exists()
+        assertThat(emptyFeatureJavaResJar).exists()
 
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
@@ -604,17 +604,17 @@ class R8ToolTest {
         )
         assertThat(getDexFileCount(output)).isEqualTo(1)
         val feature1DexOutput = featureDexDir.resolve("feature1")
-        assertThat(feature1DexOutput.toFile()).exists()
+        assertThat(feature1DexOutput).exists()
         assertThat(getDexFileCount(feature1DexOutput)).isEqualTo(1)
         val feature2DexOutput = featureDexDir.resolve("feature2")
-        assertThat(feature2DexOutput.toFile()).exists()
+        assertThat(feature2DexOutput).exists()
         assertThat(getDexFileCount(feature2DexOutput)).isEqualTo(0)
-        assertThat(javaRes.toFile()).exists()
-        assertThat(ZipArchive.listEntries(javaRes.toFile()).keys).containsExactly("foo.txt")
-        val feature1JavaResOutput = featureJavaResourceOutputDir.resolve("feature1.jar").toFile()
+        assertThat(javaRes).exists()
+        assertThat(ZipArchive.listEntries(javaRes).keys).containsExactly("foo.txt")
+        val feature1JavaResOutput = featureJavaResourceOutputDir.resolve("feature1.jar")
         assertThat(feature1JavaResOutput).exists()
         assertThat(ZipArchive.listEntries(feature1JavaResOutput).keys).containsExactly("bar.txt")
-        val feature2JavaResOutput = featureJavaResourceOutputDir.resolve("feature2.jar").toFile()
+        val feature2JavaResOutput = featureJavaResourceOutputDir.resolve("feature2.jar")
         assertThat(feature2JavaResOutput).exists()
         assertThat(ZipArchive.listEntries(feature2JavaResOutput)).isEmpty()
     }

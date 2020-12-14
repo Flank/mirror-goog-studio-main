@@ -25,7 +25,6 @@ import com.android.ide.common.xml.XmlFormatStyle
 import com.android.ide.common.xml.XmlPrettyPrinter
 import com.android.resources.ResourceType
 import com.android.testutils.TestResources
-import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
@@ -666,7 +665,7 @@ class NamespaceRewriterTest {
         Files.createDirectories(emptyRes)
         val outputDir = fileSystem.getPath("/tmp/rewrittenAar")
         rewriteAarResources(namespaceRewriter, emptyRes, outputDir)
-        PathSubject.assertThat(outputDir).isDirectory()
+        assertThat(outputDir).isDirectory()
         val rewrittenEmpty = Files.list(outputDir).use { it.collect(Collectors.toList()) }
         assertThat(rewrittenEmpty).isEmpty()
     }

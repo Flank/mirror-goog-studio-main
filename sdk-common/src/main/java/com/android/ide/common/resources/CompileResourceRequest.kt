@@ -45,11 +45,14 @@ class CompileResourceRequest @JvmOverloads constructor(
      */
     val mergeBlameFolder: File? = null,
     /** Map of source set identifier to absolute path Used for determining relative sourcePath. */
-    var identifiedSourceSetMap: Map<String, String>? = null
+    var identifiedSourceSetMap: Map<String, String> = emptyMap()
 ) : Serializable {
     val sourcePath : String by lazy {
-        identifiedSourceSetMap?.let { getRelativeSourceSetPath(inputFile, it) }
-                ?: inputFile.absolutePath
+         if (identifiedSourceSetMap.any()) {
+             getRelativeSourceSetPath(inputFile, identifiedSourceSetMap)
+         } else {
+             inputFile.absolutePath
+         }
     }
 
     fun useRelativeSourcePath(moduleIdentifiedSourceSets: Map<String, String>) {

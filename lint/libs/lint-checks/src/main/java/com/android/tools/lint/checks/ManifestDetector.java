@@ -59,8 +59,6 @@ import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.ide.common.resources.ResourceRepository;
-import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.resources.ResourceUrl;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.detector.api.Category;
@@ -84,6 +82,7 @@ import com.android.utils.StringHelper;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -816,10 +815,9 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 // It's possible they are using an older version of play services so
                 // check the build version and report an error if compileSdkVersion >= 24
                 if (project.getBuildSdk() >= 24) {
-                    File sdkHome = context.getClient().getSdkHome();
-                    FileOp fileOp = FileOpUtils.create();
-                    File repository =
-                            SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true, fileOp);
+                    Path sdkHome = context.getClient().getSdkHome().toPath();
+                    Path repository =
+                            SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true);
                     String message =
                             "The `com.google.android.gms.wearable.BIND_LISTENER`"
                                     + " action is deprecated. Please upgrade to the latest version"
@@ -831,8 +829,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                                         "play-services-wearable",
                                         repository,
                                         null,
-                                        false,
-                                        fileOp);
+                                        false);
                         if (max != null
                                 && COMPARE_PLUS_HIGHER.compare(max, MIN_WEARABLE_GMS_VERSION) > 0) {
                             message =
@@ -1135,12 +1132,10 @@ public class ManifestDetector extends Detector implements XmlScanner {
                         break;
                     } else if (node.getNodeType() == Node.ELEMENT_NODE) {
                         Element sibling = (Element) node;
-                        String suffix = '.' + base;
                         if (sibling.getTagName().equals(tagName)) {
-                            String b = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                            if (b.endsWith(suffix)) {
+                            if (prevName.equals(sibling.getAttributeNS(ANDROID_URI, ATTR_NAME))) {
                                 Attr no = sibling.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
-                                Location prevLocation = context.getLocation(no);
+                                Location prevLocation = context.getValueLocation(no);
                                 prevLocation.setMessage("Previous " + humanReadableName + " here");
                                 location.setSecondary(prevLocation);
                                 break;

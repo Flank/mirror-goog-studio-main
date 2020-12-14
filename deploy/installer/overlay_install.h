@@ -38,7 +38,7 @@ class OverlayInstallCommand : public Command {
   proto::OverlayInstallRequest request_;
   std::unique_ptr<InstallClient> client_;
 
-  void SetUpAgent(const std::string& agent,
+  bool SetUpAgent(const std::string& agent,
                   proto::OverlayInstallResponse* overlay_response);
   void UpdateOverlay(proto::OverlayInstallResponse* overlay_response);
   void GetAgentLogs(proto::OverlayInstallResponse* overlay_response);

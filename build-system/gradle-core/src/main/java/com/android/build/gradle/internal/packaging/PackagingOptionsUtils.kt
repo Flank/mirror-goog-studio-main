@@ -66,4 +66,4 @@ val defaultExcludes: Set<String> = setOf(
 )
 
 // ATTENTION - keep this in sync with com.android.build.gradle.internal.dsl.PackagingOptions JavaDoc
-val defaultMerges: Set<String> = setOf("/META-INF/services/**")
+val defaultMerges: Set<String> = setOf("/META-INF/services/**", "jacoco-agent.properties")

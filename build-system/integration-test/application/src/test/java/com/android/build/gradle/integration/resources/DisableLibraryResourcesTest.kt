@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.truth.PathSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test

@@ -2878,6 +2878,8 @@ public final class SdkConstants {
             "androidx.databinding:databinding-compiler";
     public static final String DATA_BINDING_ADAPTER_LIB_ARTIFACT =
             "com.android.databinding:adapters";
+    public static final String DATA_BINDING_KTX_LIB_ARTIFACT =
+            "androidx.databinding:databinding-ktx";
     public static final String ANDROIDX_DATA_BINDING_LIB_ARTIFACT =
             "androidx.databinding:databinding-runtime";
     public static final String DATA_BINDING_BASELIB_ARTIFACT =
@@ -2939,6 +2941,8 @@ public final class SdkConstants {
     public static final AndroidxName CLASS_OBSERVABLE_PARCELABLE =
             AndroidxName.of("android.databinding.", "ObservableParcelable");
 
+    public static final String CLASS_FLOW = "kotlinx.coroutines.flow.Flow";
+    public static final String CLASS_STATE_FLOW = "kotlinx.coroutines.flow.StateFlow";
 
     /** Name of keep attribute in XML */
     public static final String ATTR_KEEP = "keep";

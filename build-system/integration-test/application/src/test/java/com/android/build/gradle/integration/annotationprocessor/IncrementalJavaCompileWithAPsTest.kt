@@ -33,7 +33,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.TestUtils
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule

@@ -21,7 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_TRIGGER;
 import static com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTaskKt.DATA_BINDING_TRIGGER_CLASS;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
@@ -484,7 +484,7 @@ public class DataBindingIncrementalTest {
         assertThat(activity3DataBindingInfo).exists();
         assertThat(activity3DataBindingInfo.lastModified())
                 .isNotEqualTo(dataBindingInfoLastModified);
-        
+
         assertThat(project.getApk(DEBUG)).doesNotContainClass(activity3ClassName);
         assertThat(project.getApk(DEBUG)).doesNotContainClass(activity3ClassNameImpl);
 

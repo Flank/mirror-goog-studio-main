@@ -22,8 +22,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -191,6 +193,30 @@ public class Gradle implements Closeable {
         }
     }
 
+    /** Creates a unique jar and adds it to buildscript classpath. */
+    public void modifyBuildscriptClasspath() throws IOException {
+        File classpathJar = new File(project, "_changing_buildscript_classpath.jar");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(classpathJar))) {
+            zos.putNextEntry(new ZipEntry("resource.txt"));
+            UUID uuid = UUID.randomUUID();
+            zos.write(uuid.toString().getBytes());
+            zos.closeEntry();
+        }
+        String toAppend =
+                "\nallprojects {\n"
+                        + "  buildscript {\n"
+                        + "    dependencies {\n"
+                        + "      classpath(files(\""
+                        + FileUtils.toSystemIndependentPath(classpathJar.getAbsolutePath())
+                        + "\"))\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n";
+        try (FileWriter writer = new FileWriter(getInitScript().getAbsoluteFile(), true)) {
+            writer.append(toAppend);
+        }
+    }
+
     private static void putIfNotNull(HashMap<String, String> env, String key, String val) {
         if (val != null) {
             env.put(key, val);
@@ -284,12 +310,6 @@ public class Gradle implements Closeable {
                         + "      }\n"
                         + "    }\n"
                         + "  }\n"
-                        + "}\n"
-                        + "rootProject {\n"
-                        + "    task cleanLocalCaches(type: Delete) {\n"
-                        + "       delete gradle.gradleUserHomeDir.toString() + '/transforms-3'\n"
-                        + "       delete System.env['ANDROID_PREFS_ROOT'] + '/build-cache'\n"
-                        + "    }\n"
                         + "}\n";
 
         try (FileWriter writer = new FileWriter(initScript)) {

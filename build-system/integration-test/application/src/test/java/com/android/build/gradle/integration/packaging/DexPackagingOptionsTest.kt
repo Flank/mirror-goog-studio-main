@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Apk
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -73,7 +73,7 @@ class DexPackagingOptionsTest {
         appSubProject.execute("assemble")
 
         val debugApkFile = appSubProject.getApk(DEBUG).file.toFile()
-        FileSubject.assertThat(debugApkFile).exists()
+        assertThat(debugApkFile).exists()
         ZipFile(debugApkFile).use {
             val classesDotDex = it.getEntry("classes.dex")
             assertThat(classesDotDex).isNotNull()
@@ -81,7 +81,7 @@ class DexPackagingOptionsTest {
         }
 
         val releaseApkFile = appSubProject.getApk(RELEASE).file.toFile()
-        FileSubject.assertThat(releaseApkFile).exists()
+        assertThat(releaseApkFile).exists()
         ZipFile(releaseApkFile).use {
             val classesDotDex = it.getEntry("classes.dex")
             assertThat(classesDotDex).isNotNull()

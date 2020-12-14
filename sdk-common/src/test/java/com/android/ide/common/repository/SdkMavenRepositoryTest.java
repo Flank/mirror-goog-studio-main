@@ -30,31 +30,30 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;
 
 public class SdkMavenRepositoryTest extends TestCase {
-    private static final File SDK_HOME = new File("/sdk");
+    private final MockFileOp mFileOp = new MockFileOp();
+    private final Path SDK_HOME = mFileOp.toPath("/sdk");
 
-    private MockFileOp mFileOp;
     private AndroidSdkHandler mSdkHandler;
     private final RepositoryPackages mRepositoryPackages = new RepositoryPackages();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mFileOp = new MockFileOp();
         mSdkHandler =
                 new AndroidSdkHandler(
-                        mFileOp.toPath(SDK_HOME),
+                        SDK_HOME,
                         null,
                         mFileOp,
-                        new FakeRepoManager(mFileOp.toPath(SDK_HOME), mRepositoryPackages));
+                        new FakeRepoManager(SDK_HOME, mRepositoryPackages));
     }
 
     private void registerRepo(@NonNull String vendor) throws IOException {
@@ -82,18 +81,18 @@ public class SdkMavenRepositoryTest extends TestCase {
     public void testGetLocation() throws IOException {
         registerGoogleRepo();
         registerAndroidRepo();
-        assertNull(SdkMavenRepository.ANDROID.getRepositoryLocation(null, false, mFileOp));
+        assertNull(SdkMavenRepository.ANDROID.getRepositoryLocation(null, false));
 
-        File android = SdkMavenRepository.ANDROID.getRepositoryLocation(SDK_HOME, true, mFileOp);
+        Path android = SdkMavenRepository.ANDROID.getRepositoryLocation(SDK_HOME, true);
         assertNotNull(android);
 
-        File google = SdkMavenRepository.GOOGLE.getRepositoryLocation(SDK_HOME, true, mFileOp);
+        Path google = SdkMavenRepository.GOOGLE.getRepositoryLocation(SDK_HOME, true);
         assertNotNull(google);
     }
 
     public void testIsInstalled() throws IOException {
-        assertFalse(SdkMavenRepository.ANDROID.isInstalled(null, mFileOp));
-        assertFalse(SdkMavenRepository.ANDROID.isInstalled(null));
+        assertFalse(SdkMavenRepository.ANDROID.isInstalled((Path) null));
+        assertFalse(SdkMavenRepository.ANDROID.isInstalled((AndroidSdkHandler) null));
         assertFalse(SdkMavenRepository.ANDROID.isInstalled(mSdkHandler));
         assertFalse(SdkMavenRepository.GOOGLE.isInstalled(mSdkHandler));
 
@@ -121,13 +120,11 @@ public class SdkMavenRepositoryTest extends TestCase {
 
         assertSame(
                 SdkMavenRepository.ANDROID,
-                SdkMavenRepository.find(SDK_HOME, "com.android.support", "appcompat-v7", mFileOp));
+                SdkMavenRepository.find(SDK_HOME, "com.android.support", "appcompat-v7"));
         assertSame(
                 SdkMavenRepository.GOOGLE,
-                SdkMavenRepository.find(
-                        SDK_HOME, "com.google.android.gms", "play-services", mFileOp));
-        assertNull(
-                SdkMavenRepository.find(SDK_HOME, "com.google.guava", "guava", mFileOp));
+                SdkMavenRepository.find(SDK_HOME, "com.google.android.gms", "play-services"));
+        assertNull(SdkMavenRepository.find(SDK_HOME, "com.google.guava", "guava"));
     }
 
     public void testGetSdkPath() {

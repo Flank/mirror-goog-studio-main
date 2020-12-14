@@ -17,6 +17,7 @@ package com.android.build.gradle.internal
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
+import com.android.SdkConstants.DATA_BINDING_KTX_LIB_ARTIFACT
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.artifact.Artifact.SingleArtifact
 import com.android.build.api.artifact.ArtifactType
@@ -41,6 +42,7 @@ import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
+import com.android.build.gradle.internal.coverage.JacocoPropertiesTask
 import com.android.build.gradle.internal.coverage.JacocoReportTask
 import com.android.build.gradle.internal.cxx.configure.createCxxTasks
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -1939,19 +1941,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun handleJacocoDependencies(creationConfig: ComponentCreationConfig) {
-        val variantDslInfo = creationConfig.variantDslInfo
-        // we add the jacoco jar if coverage is enabled, but we don't add it
-        // for test apps as it's already part of the tested app.
-        // For library project, since we cannot use the local jars of the library,
-        // we add it as well.
-        val isTestCoverageEnabled = (variantDslInfo.isTestCoverageEnabled
-                && (!creationConfig.variantType.isTestComponent
-                || (variantDslInfo.testedVariant != null
-                && variantDslInfo
-                .testedVariant!!
-                .variantType
-                .isAar)))
-        if (isTestCoverageEnabled) {
+        if (creationConfig.packageJacocoRuntime) {
             val jacocoAgentRuntimeDependency = JacocoConfigurations.getAgentRuntimeDependency(
                     JacocoTask.getJacocoVersion(creationConfig))
             project.dependencies
@@ -1966,6 +1956,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .resolutionStrategy { r: ResolutionStrategy ->
                         r.force(jacocoAgentRuntimeDependency)
                     }
+            taskFactory.register(JacocoPropertiesTask.CreationAction(creationConfig))
         }
     }
 
@@ -2662,10 +2653,53 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                         + ":"
                                         + dataBindingBuilder.getBaseAdaptersVersion(version))
             }
+
+            addDataBindingKtxIfNecessary(project, dataBindingOptions, dataBindingBuilder, version,
+                useAndroidX)
+
             project.pluginManager
                     .withPlugin(KOTLIN_KAPT_PLUGIN_ID) {
                         configureKotlinKaptTasksForDataBinding(project, version)
                     }
+        }
+    }
+
+    private fun addDataBindingKtxIfNecessary(
+        project: Project,
+        dataBindingOptions: DataBindingOptions,
+        dataBindingBuilder: DataBindingBuilder,
+        version: String,
+        useAndroidX: Boolean
+    ) {
+        val ktxDataBindingDslValue: Boolean? = dataBindingOptions.addKtx
+        val ktxGradlePropertyValue = globalScope.dslServices.projectOptions
+            .get(BooleanOption.ENABLE_DATABINDING_KTX)
+
+        val enableKtx = ktxDataBindingDslValue ?: ktxGradlePropertyValue
+        if (enableKtx) {
+            // Add Ktx dependency if AndroidX and Kotlin is used
+            if (useAndroidX && isKotlinPluginApplied(project)) {
+                project.dependencies
+                    .add(
+                        "api",
+                        DATA_BINDING_KTX_LIB_ARTIFACT
+                                + ":"
+                                + dataBindingBuilder.getLibraryVersion(version))
+            } else {
+                // Warn if user manually enabled Ktx via the DSL option and
+                // it's not a Kotlin or AndroidX project.
+                if (ktxDataBindingDslValue == true) {
+                    globalScope
+                        .dslServices
+                        .issueReporter
+                        .reportWarning(
+                            IssueReporter.Type.GENERIC,
+                            "The `android.dataBinding.addKtx` DSL option has no effect because " +
+                                    "the `android.useAndroidX` property is not enabled or " +
+                                    "the project does not use Kotlin."
+                        )
+                }
+            }
         }
     }
 
@@ -2864,7 +2898,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // Temporary static variables for Kotlin+Compose configuration
         const val KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
         const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.0.0-alpha08"
-        const val COMPOSE_KOTLIN_COMPILER_VERSION = "1.4.20"
+        const val COMPOSE_KOTLIN_COMPILER_VERSION = "1.4.21"
         const val CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar"
 
         /**

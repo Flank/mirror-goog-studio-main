@@ -19,14 +19,19 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
+import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
-import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.PathSubject
+import com.android.utils.FileUtils.join
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +42,8 @@ import java.io.File
 @RunWith(Parameterized::class)
 class CMakeBuildSettingsTest(
     private val cmakeVersionInDsl: String,
+    private val hasFoldableVariants: Boolean,
+    enableConfigurationFolding: Boolean
 ) {
     @Rule
     @JvmField
@@ -45,21 +52,24 @@ class CMakeBuildSettingsTest(
             HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build()
         )
         .setSideBySideNdkVersion(GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+        .addGradleProperties("${BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING.propertyName}=$enableConfigurationFolding")
         .create()
 
     companion object {
-        @Parameterized.Parameters(name = "version={0}")
+        @Parameterized.Parameters(name = "version={0} hasFoldableVariants={1} enableConfigurationFolding={2}")
         @JvmStatic
-        fun data() = arrayOf(
-            arrayOf("3.6.0"),
-            arrayOf(DEFAULT_CMAKE_VERSION)
-        )
+        fun data() =
+                cartesianOf(
+                        arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
+                        arrayOf(true, false),
+                        arrayOf(true, false)
+                )
     }
 
     @Before
     fun setUp() {
-        PathSubject.assertThat(project.buildFile).isNotNull()
-        PathSubject.assertThat(project.buildFile).isFile()
+        assertThat(project.buildFile).isNotNull()
+        assertThat(project.buildFile).isFile()
 
         TestFileUtils.appendToFile(
             project.buildFile,
@@ -96,6 +106,15 @@ class CMakeBuildSettingsTest(
 
             """.trimIndent()
         )
+        if (hasFoldableVariants) {
+            TestFileUtils.appendToFile(project.buildFile, """
+            android {
+                buildTypes {
+                    secondRelease {}
+                }
+            }
+            """.trimIndent())
+        }
         setupTestLauncher()
     }
 
@@ -110,18 +129,18 @@ class CMakeBuildSettingsTest(
         wrapper.setExecutable(true)
 
         TestFileUtils.appendToFile(
-            FileUtils.join(project.buildFile.parentFile, "CMakeLists.txt"),
+            join(project.buildFile.parentFile, "CMakeLists.txt"),
             "set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE \"${wrapper.path.replace("\\", "\\\\")}\")"
         )
     }
 
     private fun setupLinuxLauncher(): File {
-        val wrapper = FileUtils.join(project.buildFile.parentFile, "wrapper.sh")
+        val wrapper = join(project.buildFile.parentFile, "wrapper.sh")
         TestFileUtils.appendToFile(
             wrapper,
             """
                 #!/bin/bash
-                echo "${'$'}{TEST_ENV}" > ${FileUtils.join(project.buildFile.parentFile, "launcher_output.txt")}
+                echo "${'$'}{TEST_ENV}" > ${join(project.buildFile.parentFile, "launcher_output.txt")}
                 $*
             """.trimIndent()
         )
@@ -129,11 +148,11 @@ class CMakeBuildSettingsTest(
     }
 
     private fun setupWindowsLauncher(): File {
-        val wrapper = FileUtils.join(project.buildFile.parentFile, "wrapper.cmd")
+        val wrapper = join(project.buildFile.parentFile, "wrapper.cmd")
         TestFileUtils.appendToFile(
             wrapper,
             """
-                echo %TEST_ENV% > ${FileUtils.join(project.buildFile.parentFile, "launcher_output.txt")}
+                echo %TEST_ENV% > ${join(project.buildFile.parentFile, "launcher_output.txt")}
                 %*
             """.trimIndent()
         )
@@ -154,7 +173,7 @@ class CMakeBuildSettingsTest(
     @Test
     fun `uses BuildSettings environment variables during the build`() {
         TestFileUtils.appendToFile(
-            FileUtils.join(project.buildFile.parentFile, "BuildSettings.json"),
+            join(project.buildFile.parentFile, "BuildSettings.json"),
             """
             {
                 "environmentVariables": [
@@ -172,7 +191,6 @@ class CMakeBuildSettingsTest(
 
         project.execute("clean", "assembleDebug")
 
-
         // Verify that environment variables is set in BuildSettings
         project.recoverExistingCxxAbiModels()
             .forEach {
@@ -187,7 +205,7 @@ class CMakeBuildSettingsTest(
             }
 
         // Verify the environment variable was used by the launcher
-        val launcherOutput = FileUtils.join(project.buildFile.parentFile, "launcher_output.txt")
+        val launcherOutput = join(project.buildFile.parentFile, "launcher_output.txt")
         assertThat(launcherOutput.readText().trim()).isEqualTo("value for TEST_ENV")
     }
 }

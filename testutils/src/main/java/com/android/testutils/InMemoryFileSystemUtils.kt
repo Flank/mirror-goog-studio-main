@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.testutils
 
 import com.android.SdkConstants
@@ -30,15 +29,32 @@ import java.nio.file.attribute.FileTime
 import java.nio.file.attribute.PosixFilePermission
 import kotlin.streams.toList
 
+/**
+ * Creates an in-memory file system with a configuration appropriate for the current platform.
+ */
 fun createFileSystem(): FileSystem {
     var config = Configuration.forCurrentPlatform()
-    val root = if (OsType.getHostOs() == OsType.WINDOWS) "c:\\" else "/"
-    config = config.toBuilder()
-        .setRoots(root)
-        .setWorkingDirectory(root)
-        .setAttributeViews("posix")
-        .build()
+    config = config.toBuilder().apply {
+        if (OsType.getHostOs() == OsType.WINDOWS) {
+            setRoots("C:\\")
+            setWorkingDirectory("C:\\")
+        } else {
+            setRoots("/")
+            setWorkingDirectory("/")
+        }
+        setAttributeViews("posix")
+    }.build()
     return Jimfs.newFileSystem(config)
+}
+
+/**
+ * Creates an in-memory file system with a configuration appropriate for the current platform and
+ * a folder with the given name on that file system.
+ */
+fun createFileSystemAndFolder(folderName: String): Path {
+    val fileSystem = createFileSystem()
+    // On Windows the folder is created on the last drive.
+    return Files.createDirectory(fileSystem.rootDirectories.last().resolve(folderName))
 }
 
 fun canWrite(path: Path): Boolean {
@@ -58,10 +74,9 @@ fun canWrite(path: Path): Boolean {
 }
 
 fun getPlatformSpecificPath(path: String): String {
-    return if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
-        && (path.startsWith("/") || path.startsWith("\\"))) {
-        (File(path).absolutePath
-                + if (path.length > 1 && (path.endsWith("/") || path.endsWith("\\"))) File.separator else "")
+    return if (OsType.getHostOs() == OsType.WINDOWS) {
+        (if (path.startsWith('/') || path.startsWith('\\')) "C:" else "") +
+                path.replace('/', File.separatorChar)
     } else path
 }
 
@@ -69,21 +84,17 @@ fun getPlatformSpecificPath(path: String): String {
  * Records a new absolute file path.
  * Parent folders are automatically created.
  */
-fun recordExistingFile(path: Path, contents: String) =
-        recordExistingFile(path, 0, contents.toByteArray())
+fun recordExistingFile(path: Path, contents: String?) =
+        recordExistingFile(path, 0, contents?.toByteArray())
 
 /**
  * Records a new absolute file path.
  * Parent folders are automatically created.
  */
-fun recordExistingFile(
-    path: Path, lastModified: Long = 0, inputStream: ByteArray? = null) {
+fun recordExistingFile(path: Path, lastModified: Long = 0, contents: ByteArray? = null) {
     try {
         Files.createDirectories(path.parent)
-        Files.write(
-            path,
-            inputStream ?: ByteArray(0)
-        )
+        Files.write(path, contents ?: ByteArray(0))
         Files.setLastModifiedTime(path, FileTime.fromMillis(lastModified))
     } catch (e: IOException) {
         assert(false) { e.message!! }

@@ -1,0 +1,33 @@
+repositories {
+    jcenter()
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    // There's a newer version, 0.40.0 as of this writing,
+    // but updating now would generate a lot of diffs; deferring until
+    // a quiter period.
+    ktlint "com.pinterest:ktlint:0.37.2"
+}
+
+task formatJava(type: Exec) {
+    group = "verification"
+    description = "Format lint Java files"
+    executable = "java"
+    args = [ "-classpath", "../../../prebuilts/tools/common/google-java-format/google-java-format-all-deps.jar", "com.google.googlejavaformat.java.Main", "--replace", "--aosp"] + project.fileTree('.') { include '**/*.java' }.files
+}
+
+task formatKotlin(type: JavaExec, group: "verification") {
+    description = "Format lint Kotlin files"
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "--disabled_rules=import-ordering", "**/*.kt"
+}
+
+task formatlint {
+    dependsOn formatJava
+    dependsOn formatKotlin
+}

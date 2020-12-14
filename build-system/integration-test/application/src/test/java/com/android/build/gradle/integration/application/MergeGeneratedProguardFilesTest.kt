@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.LayoutFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.ManifestFileBuilder
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder

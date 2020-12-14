@@ -37,8 +37,7 @@ enum class Category {
 }
 
 /**
- * Determines to which form factor the template belongs. Templates with particular form factor may only be rendered in the
- * project of corresponding [Category].
+ * Representations of all Android hardware devices we can target when building an app.
  */
 enum class FormFactor(val displayName: String) {
   Mobile("Phone and Tablet"),
@@ -70,6 +69,22 @@ enum class TemplateConstraint {
  **/
 interface Template {
   /**
+   * A template name which is also used as identified.
+   */
+  val name: String
+  /**
+   * A textual description which is shown in wizards UIs.
+   */
+  val description: String
+  /**
+   * Address of an external website with more details about the template.
+   */
+  val documentationUrl: String?
+  /** Returns a thumbnail which are drawn in the UI. It will be called every time when any parameter is updated. */
+  // TODO(qumeric): consider using IconLoader and/or wizard icons.
+  fun thumb(): Thumb
+
+  /**
    * When a [Template] is chosen by the user, the [widgets] are used by the Wizards to build the user UI.
    *
    * Usually, it displays an input for [Parameter].
@@ -77,49 +92,32 @@ interface Template {
   val widgets: Collection<Widget<*>>
   /**
    * Usually, a user provides [Parameter.value]s by interaction with the UI [widgets].
-   **/
+   */
   val parameters: Collection<Parameter<*>> get() = widgets.filterIsInstance<ParameterWidget<*>>().map { it.parameter }
+
   /**
-   * A template name which is also used as identified.
-   *
-   * @see revision
+   * Recipe used to generate this [Template] output. It will be called after the user provides values for all [Parameter]s.
    */
-  val name: String
-  /**
-   * If there are multiple templates with the same name, a template with the highest [revision] will be used.
-   * It provides an ability to override default templates with the custom ones.
-   */
-  val revision: Int
-  val description: String
-  /**
-   * Address of an external website with more details about the template.
-   */
-  val documentationUrl: String?
+  val recipe: Recipe
+
+  /** The template will be shown only in given context. Should include all possible contexts by default. */
+  val uiContexts: Collection<WizardUiContext>
   /**
    * Minimum sdk version required to build this template.
    * If minSdkVersion in build.gradle is less than [minSdk], the template will not be available (e.g. action will be disabled).
    */
   val minSdk: Int
   /**
-   * Minimum compile sdk version required to build this template.
-   * If compileSdkVersion in build.gradle is less than [minCompileSdk], the template will not be available (e.g. action will be disabled).
-   */
-  val minCompileSdk: Int
-  /**
    * Determines to which menu entry the template belongs.
    */
   val category: Category
+  /**
+   * Determines to which form factor the template belongs. Templates with particular form factor may only be rendered in the
+   * project of corresponding [Category].
+   */
   val formFactor: FormFactor
-  /** Recipe used to generate this [Template] output. It will be called after the user provides values for all [Parameter]s. */
-  val recipe: Recipe
-  /** The template will be shown only in given context. Should include all possible contexts by default. */
-  val uiContexts: Collection<WizardUiContext>
   /** Conditions under which the template may be rendered. For example, some templates only support AndroidX */
   val constraints: Collection<TemplateConstraint>
-
-  /** Returns a thumbnail which are drawn in the UI. It will be called every time when any parameter is updated. */
-  // TODO(qumeric): consider using IconLoader and/or wizard icons.
-  fun thumb(): Thumb
 
   /**
    * Represent absence of a [Template] (null object pattern).
@@ -129,12 +127,10 @@ interface Template {
     override val uiContexts: Collection<WizardUiContext> get() = listOf(WizardUiContext.ActivityGallery)
     override val constraints: Collection<TemplateConstraint> = listOf()
     override val recipe: Recipe get() = throw UnsupportedOperationException()
-    override val revision: Int = 1
     override val name: String = "No Activity"
     override val description: String = "Creates a new empty project"
     override val documentationUrl: String? = null
     override val minSdk: Int = 1
-    override val minCompileSdk: Int = 1
     override val category: Category = Category.Activity
     override val formFactor: FormFactor = FormFactor.Mobile
     override fun thumb() = Thumb.NoThumb

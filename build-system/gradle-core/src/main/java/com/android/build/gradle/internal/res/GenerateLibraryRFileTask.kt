@@ -267,7 +267,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.nonTransitiveRClass.set(nonTransitiveRClass)
             task.compileClasspathLibraryRClasses.setDisallowChanges(compileClasspathLibraryRClasses)
-            task.packageForR.setDisallowChanges(creationConfig.packageName)
+            task.packageForR.setDisallowChanges(creationConfig.namespace)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
@@ -332,7 +332,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.nonTransitiveRClass.setDisallowChanges(projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS])
             task.compileClasspathLibraryRClasses.setDisallowChanges(false)
-            task.packageForR.setDisallowChanges(creationConfig.packageName)
+            task.packageForR.setDisallowChanges(creationConfig.namespace)
             task.mainSplit = creationConfig.outputs.getMainSplit()
             task.useConstantIds.setDisallowChanges(false)
             task.symbolTableBuildService.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))

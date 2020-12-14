@@ -92,10 +92,14 @@ class ManagedDeviceTestRunner(
             variantName,
             logger,
             outputDirectory)
-        return !resultsProto.testResultList.any { testCaseResult ->
-            testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
-                    || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
+        if (resultsProto.hasPlatformError()) {
+            logger.error(null, "Platform error occurred when running the UTP test suite")
         }
+        return !resultsProto.hasPlatformError() &&
+                !resultsProto.testResultList.any { testCaseResult ->
+                        testCaseResult.testStatus == TestStatusProto.TestStatus.FAILED
+                                || testCaseResult.testStatus == TestStatusProto.TestStatus.ERROR
+                }
     }
 
     private fun getTestedApks(

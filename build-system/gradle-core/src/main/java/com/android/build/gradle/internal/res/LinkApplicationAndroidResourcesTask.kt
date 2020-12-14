@@ -501,7 +501,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
-            task.packageName.setDisallowChanges(creationConfig.packageName)
+            task.packageName.setDisallowChanges(creationConfig.namespace)
 
             task.taskInputType = creationConfig.manifestArtifactType
             creationConfig.artifacts.setTaskInputToFinalProduct(

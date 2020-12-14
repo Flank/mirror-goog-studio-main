@@ -23,7 +23,7 @@ import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.testutils.TestResources
 import com.android.testutils.TestUtils
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
 import com.android.utils.ILogger

@@ -40,7 +40,6 @@ import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -372,7 +371,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                     @Override
                     public void downloadFully(
                             @NonNull URL url,
-                            @NonNull File target,
+                            @NonNull Path target,
                             @Nullable String checksum,
                             @NonNull ProgressIndicator indicator)
                             throws IOException {

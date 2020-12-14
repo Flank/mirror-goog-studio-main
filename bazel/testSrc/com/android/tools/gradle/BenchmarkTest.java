@@ -70,6 +70,7 @@ public class BenchmarkTest {
     private boolean fromStudio = false;
     @Nullable private String agpVersion = null;
     private boolean failOnWarning = true;
+    private boolean reuseTransformCache = true;
     private boolean enableYourKit = false;
     private String yourKitAgentPath = null;
     private String yourKitLibraryPath = null;
@@ -77,7 +78,6 @@ public class BenchmarkTest {
 
     @Before
     public void setUp() throws Exception {
-
         // See http://cs/android/prebuilts/studio/buildbenchmarks/scenarios.bzl for meaning of
         // these flags.
         String value;
@@ -157,6 +157,10 @@ public class BenchmarkTest {
         value = System.getProperty("fail_on_warning");
         if (value != null && !value.isEmpty()) {
             failOnWarning = Boolean.parseBoolean(value);
+        }
+        value = System.getProperty("reuse_transform_cache");
+        if (value != null && !value.isEmpty()) {
+            reuseTransformCache = Boolean.parseBoolean(value);
         }
         value = System.getProperty("enable_yourkit");
         if (value != null && !value.isEmpty()) {
@@ -366,6 +370,9 @@ public class BenchmarkTest {
                             e);
                 }
 
+                if (!reuseTransformCache) {
+                    gradle.modifyBuildscriptClasspath();
+                }
             }
 
             listeners.forEach(BenchmarkListener::benchmarkDone);

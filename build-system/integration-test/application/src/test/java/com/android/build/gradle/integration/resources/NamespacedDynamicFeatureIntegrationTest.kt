@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Dex
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.objectweb.asm.Opcodes
@@ -344,7 +344,7 @@ class NamespacedDynamicFeatureIntegrationTest {
                     "feature_set_metadata",
                     "debug",
                     "feature-metadata.json")
-        FileSubject.assertThat(idsList).exists()
+        assertThat(idsList).exists()
         val featureSetMetadata = FeatureSetMetadata.load(idsList)
         assertThat(featureSetMetadata).isNotNull()
         val otherFeature1PackageId = featureSetMetadata.getResOffsetFor(":otherFeature1")

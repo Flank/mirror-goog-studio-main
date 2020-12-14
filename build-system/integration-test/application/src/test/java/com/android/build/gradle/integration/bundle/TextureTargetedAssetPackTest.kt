@@ -25,8 +25,8 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -92,7 +92,7 @@ class TextureTargetedAssetPackTest {
 
         // Fetch the build output model.
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         // Verify the installed apks.
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
@@ -130,7 +130,7 @@ class TextureTargetedAssetPackTest {
 
         // Fetch the build output model.
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         // Verify the installed apks.
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")
@@ -168,7 +168,7 @@ class TextureTargetedAssetPackTest {
 
         // Fetch the build output model.
         var apkFolder = getApkFolderOutput("debug").apkFolder
-        FileSubject.assertThat(apkFolder).isDirectory()
+        assertThat(apkFolder).isDirectory()
 
         // Verify the installed standalone apk.
         var apkFileArray = apkFolder.list() ?: fail("No Files at $apkFolder")

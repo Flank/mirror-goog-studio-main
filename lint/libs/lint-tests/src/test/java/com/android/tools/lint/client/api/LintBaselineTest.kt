@@ -19,6 +19,7 @@ package com.android.tools.lint.client.api
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
+import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
@@ -250,6 +251,18 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertTrue(stringsEquivalent("````abc", "abc"))
         assertFalse(stringsEquivalent("abc", "def"))
         assertFalse(stringsEquivalent("abcd", "abce"))
+    }
+
+    @Test
+    fun tolerateMinSpChanges() {
+        val baseline = LintBaseline(null, File(""))
+        assertTrue(
+            baseline.sameMessage(
+                PxUsageDetector.SMALL_SP_ISSUE,
+                "Avoid using sizes smaller than 12sp: 11sp",
+                "Avoid using sizes smaller than 11sp: 11sp"
+            )
+        )
     }
 
     @Test

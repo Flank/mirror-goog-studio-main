@@ -37,7 +37,6 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.SettingsController;
 import com.android.repository.api.UpdatablePackage;
-import com.android.repository.io.FileOp;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -351,7 +350,6 @@ public class DefaultSdkLoader implements SdkLoader {
                             + localPath
                             + File.separator
                             + License.LICENSE_DIR);
-            FileOp fileOp = mSdkHandler.getFileOp();
             if (p.getLicense() != null
                     && !p.getLicense().checkAccepted(repoManager.getLocalPath())) {
                 progress.logWarning("License for package " + p.getDisplayName() + " not accepted.");
@@ -360,7 +358,7 @@ public class DefaultSdkLoader implements SdkLoader {
                 progress.logVerbose("License for package " + p.getDisplayName() + " accepted.");
                 Installer installer =
                         SdkInstallerUtil.findBestInstallerFactory(p, mSdkHandler)
-                                .createInstaller(p, repoManager, downloader, fileOp);
+                                .createInstaller(p, repoManager, downloader);
                 if (installer.prepare(progress) && installer.complete(progress)) {
                     installResults.put(p, InstallResultType.SUCCESS);
                 } else {

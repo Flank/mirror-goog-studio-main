@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -25,7 +26,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.testutils.truth.FileSubject;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -78,6 +78,6 @@ public class JacocoWithKotlinTest {
                         "out",
                         "META-INF",
                         "project_debug.kotlin_module");
-        FileSubject.assertThat(kotlinModuleFile).isFile();
+        assertThat(kotlinModuleFile).isFile();
     }
 }

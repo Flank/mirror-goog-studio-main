@@ -36,7 +36,6 @@ import java.io.File
 
 val automotiveMediaServiceTemplate
   get() = template {
-    revision = 1
     name = "Media Service"
     description = "Create a MediaBrowserService and adds the required metadata for Android Automotive"
     minApi = 21

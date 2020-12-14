@@ -60,7 +60,11 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
                         manifestPackage = packageName.get(),
                         outputFilePath = outputJar.get().asFile
                 )
-        ).generate()
+        ).apply {
+            if (customPermissions.any()) {
+                generate()
+            }
+        }
     }
 
     class CreationAction(
@@ -88,7 +92,7 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
                             ArtifactType.MERGED_MANIFEST,
                             task.mergedManifests
                     )
-            task.packageName.setDisallowChanges(creationConfig.packageName)
+            task.packageName.setDisallowChanges(creationConfig.namespace)
         }
     }
 }

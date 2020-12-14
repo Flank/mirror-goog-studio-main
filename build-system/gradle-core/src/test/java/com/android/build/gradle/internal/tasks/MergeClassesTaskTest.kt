@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.TestInputsGenerator
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
 import org.gradle.api.provider.Property

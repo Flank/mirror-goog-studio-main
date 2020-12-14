@@ -41,6 +41,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.nio.file.Paths
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
 import kotlin.test.assertFailsWith
@@ -54,6 +55,7 @@ class MergeJavaResWorkActionTest {
     fun testMergeResources() {
         // Create first jar file containing resources to be merged
         val jarFile1 = File(tmpDir.root, "jarFile1.jar")
+        // include "fileEndingWithDot." as a regression test for bug 65337573
         ZFile(jarFile1).use {
             it.add("fileEndingWithDot.", ByteArrayInputStream(ByteArray(0)))
             it.add("fileNotEndingWithDot", ByteArrayInputStream(ByteArray(0)))
@@ -123,10 +125,6 @@ class MergeJavaResWorkActionTest {
             it.contains("javaResFromJarFile2")
             it.doesNotContain("LICENSE")
         }
-
-        // Check that the zip entries are not extracted (regression test for bug 65337573)
-        assertThat(File(outputFile, "fileEndingWithDot.")).doesNotExist()
-        assertThat(File(outputFile, "fileNotEndingWithDot")).doesNotExist()
 
         // Check that the zip entries' timestamps are erased (regression test for bug 142890134)
         ZipFile(outputFile).use {

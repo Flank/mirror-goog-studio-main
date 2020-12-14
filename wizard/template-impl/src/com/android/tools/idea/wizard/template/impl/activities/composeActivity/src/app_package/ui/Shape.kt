@@ -21,7 +21,7 @@ import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 fun shapeKt(
   packageName: String
 ) = """
-package ${escapeKotlinIdentifier(packageName)}.ui
+package ${escapeKotlinIdentifier(packageName)}.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

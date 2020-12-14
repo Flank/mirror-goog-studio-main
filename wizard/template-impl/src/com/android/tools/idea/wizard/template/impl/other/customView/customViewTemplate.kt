@@ -34,7 +34,6 @@ import java.io.File
 
 val customViewTemplate
   get() = template {
-    revision = 1
     name = "Custom View"
     description = "Creates a new custom view that extends android.view.View and exposes custom attributes"
 

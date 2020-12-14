@@ -40,10 +40,8 @@ import java.io.File
 
 val googleMapsWearActivityTemplate
   get() = template {
-    revision = 1
     name = "Google Maps Activity"
     minApi = 23
-    minBuildApi = 25
     constraints = listOf(TemplateConstraint.AndroidX)
     description = "Creates an new activity with a Google Map for Wear OS"
 

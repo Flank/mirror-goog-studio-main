@@ -41,11 +41,11 @@ abstract class AnalyticsEnabledVariant (
             return delegate.applicationId
         }
 
-    override val packageName: Provider<String>
+    override val namespace: Provider<String>
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.PACKAGE_NAME_VALUE
-            return delegate.packageName
+                VariantPropertiesMethodType.NAMESPACE_VALUE
+            return delegate.namespace
         }
 
     override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>>

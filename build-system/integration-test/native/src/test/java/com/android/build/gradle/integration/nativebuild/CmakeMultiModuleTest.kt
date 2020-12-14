@@ -21,16 +21,27 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.SimpleNativeLib
+import com.android.build.gradle.integration.common.fixture.model.cartesianOf
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION
+import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
+import com.android.build.gradle.internal.cxx.configure.OFF_STAGE_CMAKE_VERSION
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * Cmake test with multiple modules.
  */
-class CmakeMultiModuleTest {
+@RunWith(Parameterized::class)
+class CmakeMultiModuleTest(
+        private val cmakeVersionInDsl: String,
+        private val hasFoldableVariants: Boolean,
+        enableConfigurationFolding: Boolean
+) {
 
     @get:Rule
     val project =
@@ -46,7 +57,19 @@ class CmakeMultiModuleTest {
         .setCmakeVersion(DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
         .setWithCmakeDirInLocalProp(true)
+        .addGradleProperties("${BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING.propertyName}=$enableConfigurationFolding")
         .create()
+
+    companion object {
+        @Parameterized.Parameters(name = "version={0} hasFoldableVariants={1} enableConfigurationFolding={2}")
+        @JvmStatic
+        fun data() =
+                cartesianOf(
+                        arrayOf("3.6.0", OFF_STAGE_CMAKE_VERSION, DEFAULT_CMAKE_VERSION),
+                        arrayOf(true, false),
+                        arrayOf(true, false)
+                )
+    }
 
     @Before
     fun setUp() {
@@ -66,6 +89,7 @@ android {
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
+            version "$cmakeVersionInDsl"
         }
     }
 }
@@ -95,6 +119,23 @@ android {
     }
 }
 """)
+
+        if (hasFoldableVariants) {
+            project.getSubproject(":app").buildFile.appendText("""
+            android {
+                buildTypes {
+                    secondDebug {}
+                }
+            }
+            """.trimIndent())
+            project.getSubproject(":lib").buildFile.appendText("""
+            android {
+                buildTypes {
+                    secondDebug {}
+                }
+            }
+            """.trimIndent())
+        }
     }
 
     @Test

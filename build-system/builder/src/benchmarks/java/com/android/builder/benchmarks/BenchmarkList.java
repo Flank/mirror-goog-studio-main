@@ -21,7 +21,6 @@ import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.zipflinger.Entry;
 import com.android.zipflinger.ZipMap;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
@@ -65,7 +64,7 @@ public class BenchmarkList {
         long[] times = new long[Utils.BENCHMARK_SAMPLE_SIZE];
         for (int i = 0; i < times.length; i++) {
             StopWatch watch = new StopWatch();
-            ZipMap map = ZipMap.from(zipPath.toFile(), false);
+            ZipMap map = ZipMap.from(zipPath, false);
             long nameSize = 0;
             for (Entry entry : map.getEntries().values()) {
                 nameSize += entry.getName().length();

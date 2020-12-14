@@ -1,4 +1,4 @@
-apply plugin: 'com.android.tools.java'
+apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
 
 group = 'com.android.tools.external.com-intellij'
@@ -9,8 +9,17 @@ dependencies {
     implementation libs.trove4j
 }
 
-jar {
-    from zipTree("../../../../../prebuilts/tools/common/lint-psi/intellij-core/intellij-core.jar")
+def prebuiltJars = [
+    "../../../../../prebuilts/tools/common/lint-psi/intellij-core/intellij-core.jar",
+]
+
+prebuiltJars.forEach {
+    jar.from(zipTree(it))
+}
+
+// For symbol resolution in Intellij IDEA, does not affect publishing
+dependencies {
+    api files(prebuiltJars)
 }
 
 tasks.getByName("sourcesJar") {

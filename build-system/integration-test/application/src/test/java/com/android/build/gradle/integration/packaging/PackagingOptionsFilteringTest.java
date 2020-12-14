@@ -19,13 +19,13 @@ package com.android.build.gradle.integration.packaging;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.RELEASE;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.testutils.truth.FileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -471,21 +471,21 @@ public class PackagingOptionsFilteringTest {
 
         app.execute("assemble", "assembleDebugAndroidTest");
 
-        FileSubject.assertThat(app.getApk(DEBUG).getFile().toFile()).exists();
+        assertThat(app.getApk(DEBUG).getFile()).exists();
         ApkSubject debugApk = TruthHelper.assertThat(app.getApk(DEBUG));
         debugApk.doesNotContainJavaResource("foo.debugExclude");
         debugApk.containsJavaResourceWithContent("foo.debugKeep", c0);
         debugApk.containsJavaResourceWithContent("foo.releaseExclude", c0);
         debugApk.containsJavaResourceWithContent("foo.releaseKeep", c0);
 
-        FileSubject.assertThat(app.getApk(RELEASE).getFile().toFile()).exists();
+        assertThat(app.getApk(RELEASE).getFile()).exists();
         ApkSubject releaseApk = TruthHelper.assertThat(app.getApk(RELEASE));
         releaseApk.doesNotContainJavaResource("foo.releaseExclude");
         releaseApk.containsJavaResourceWithContent("foo.debugExclude", c0);
         releaseApk.containsJavaResourceWithContent("foo.debugKeep", c0);
         releaseApk.containsJavaResourceWithContent("foo.releaseKeep", c0);
 
-        FileSubject.assertThat(app.getApk(ANDROIDTEST_DEBUG).getFile().toFile()).exists();
+        assertThat(app.getApk(ANDROIDTEST_DEBUG).getFile()).exists();
         ApkSubject androidTestApk = TruthHelper.assertThat(app.getApk(ANDROIDTEST_DEBUG));
         androidTestApk.doesNotContainJavaResource("foo.testExclude");
         androidTestApk.containsJavaResourceWithContent("foo.testKeep", c0);
@@ -501,7 +501,7 @@ public class PackagingOptionsFilteringTest {
                 }
         );
 
-        FileSubject.assertThat(lib.getApk(ANDROIDTEST_DEBUG).getFile().toFile()).exists();
+        assertThat(lib.getApk(ANDROIDTEST_DEBUG).getFile()).exists();
         ApkSubject libAndroidTestApk = TruthHelper.assertThat(lib.getApk(ANDROIDTEST_DEBUG));
         libAndroidTestApk.doesNotContainJavaResource("foo.testExclude");
         libAndroidTestApk.containsJavaResourceWithContent("foo.testKeep", c0);

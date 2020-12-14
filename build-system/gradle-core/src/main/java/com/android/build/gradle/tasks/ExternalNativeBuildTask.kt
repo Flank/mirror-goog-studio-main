@@ -67,7 +67,7 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
  * dependencies). It doesn't do any work but it does expose 'objFolder' and 'soFolder'
  * for consumers of variant API.
  */
-fun createReferringCxxBuildTask(
+fun createNopCxxBuildTask(
         configurationModel : CxxConfigurationModel,
         creationConfig: VariantCreationConfig,
         name : String
@@ -83,7 +83,7 @@ fun createReferringCxxBuildTask(
 
 /**
  * Create a C/C++ build task does actual build work. It may be referred to by build tasks created
- * by [createReferringCxxBuildTask].
+ * by [createNopCxxBuildTask].
  */
 fun createWorkingCxxBuildTask(
         globalScope: GlobalScope,

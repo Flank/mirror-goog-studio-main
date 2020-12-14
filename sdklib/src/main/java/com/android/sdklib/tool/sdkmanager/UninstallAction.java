@@ -48,8 +48,7 @@ class UninstallAction extends SdkPackagesAction {
             } else {
                 Uninstaller uninstaller =
                         SdkInstallerUtil.findBestInstallerFactory(p, getSdkHandler())
-                                .createUninstaller(
-                                        p, getRepoManager(), getSdkHandler().getFileOp());
+                                .createUninstaller(p, getRepoManager());
                 progressMax += progressIncrement;
                 if (!applyPackageOperation(uninstaller, progress.createSubProgress(progressMax))) {
                     // there was an error, abort.

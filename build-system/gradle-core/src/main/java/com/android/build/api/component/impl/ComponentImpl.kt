@@ -106,7 +106,7 @@ abstract class ComponentImpl(
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
     // ---------------------------------------------------------------------------------------------
-    override val packageName: Provider<String> =
+    override val namespace: Provider<String> =
         internalServices.providerOf(String::class.java, variantDslInfo.packageName)
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
@@ -732,6 +732,10 @@ abstract class ComponentImpl(
             )
         }
     }
+
+    override val packageJacocoRuntime: Boolean
+        get() = false
+
     companion object {
         // String to
         final val ENABLE_LEGACY_API: String =

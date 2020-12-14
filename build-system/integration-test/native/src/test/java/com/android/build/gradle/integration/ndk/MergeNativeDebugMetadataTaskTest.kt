@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.FULL
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.NONE
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.SYMBOL_TABLE
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.truth.Truth.assertThat

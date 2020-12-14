@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.integration.resources
-
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
@@ -24,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.options.BooleanOption
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
 import org.jf.dexlib2.dexbacked.DexBackedClassDef
 import org.jf.dexlib2.iface.value.IntEncodedValue
@@ -106,20 +104,20 @@ class NonNamespacedCompileRClassTest {
 
         // Check that we only parsed the local app files
         val rDef = app.getIntermediateFile("local_only_symbol_list", "debug", "R-def.txt")
-        FileSubject.assertThat(rDef).contains("string app_string")
-        FileSubject.assertThat(rDef).doesNotContain("lib_string")
-        FileSubject.assertThat(rDef).doesNotContain("abc_action_bar_home_description")
+        assertThat(rDef).contains("string app_string")
+        assertThat(rDef).doesNotContain("lib_string")
+        assertThat(rDef).doesNotContain("abc_action_bar_home_description")
 
         // Check that the compile R class was generated
         val compileR =
             app.getIntermediateFile("compile_r_class_jar", "debug", "R.jar")
-        FileSubject.assertThat(compileR).exists()
+        assertThat(compileR).exists()
 
         // Check that the compile R.txt contains symbols from the app, lib and transitive
         // dependencies, and also they are initialized with the mock value of 0.
         val compileRTxt = app.getIntermediateFile("compile_symbol_list", "debug", "R.txt")
-        FileSubject.assertThat(compileRTxt).exists()
-        FileSubject.assertThat(compileRTxt).containsAllOf(
+        assertThat(compileRTxt).exists()
+        assertThat(compileRTxt).containsAllOf(
             "int string app_string 0x0",
             "int string lib_string 0x0",
             "int string abc_action_bar_home_description 0x0")

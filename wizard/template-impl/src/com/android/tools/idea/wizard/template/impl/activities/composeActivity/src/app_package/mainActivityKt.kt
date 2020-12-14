@@ -35,7 +35,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.setContent
 import androidx.compose.ui.tooling.preview.Preview
-import ${escapeKotlinIdentifier(packageName)}.ui.${themeName}
+import ${escapeKotlinIdentifier(packageName)}.ui.theme.${themeName}
 
 class ${activityClass} : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

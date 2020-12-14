@@ -39,6 +39,7 @@ import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UEnumConstant
@@ -445,6 +446,32 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         }
     }
 
+    fun visitCallableReferenceExpression(
+        context: JavaContext,
+        methodReference: UCallableReferenceExpression
+    ) {
+        val method = methodReference.resolve() as? PsiMethod ?: return
+        val evaluator = context.evaluator
+        val allMethodAnnotations = evaluator.getAllAnnotations(method, inHierarchy = true)
+        val methodAnnotations = filterRelevantAnnotations(evaluator, allMethodAnnotations)
+        val (classAnnotations, pkgAnnotations) = getClassAndPkgAnnotations(
+            method.containingClass, evaluator, methodReference
+        )
+
+        checkAnnotations(
+            context = context,
+            argument = methodReference,
+            type = AnnotationUsageType.METHOD_REFERENCE,
+            method = method,
+            referenced = method,
+            annotations = methodAnnotations,
+            allMethodAnnotations = methodAnnotations,
+            allClassAnnotations = classAnnotations,
+            packageAnnotations = pkgAnnotations,
+            annotated = method,
+        )
+    }
+
     fun visitAnnotation(context: JavaContext, annotation: UAnnotation) {
         // Check annotation references; these are a form of method call
         val qualifiedName = annotation.qualifiedName
@@ -598,7 +625,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
     private fun getClassAndPkgAnnotations(
         containingClass: PsiClass?,
         evaluator: JavaEvaluator,
-        call: UCallExpression
+        context: UElement,
     ): Pair<List<UAnnotation>, List<UAnnotation>> {
 
         // Yes, returning a pair is ugly. But we are initializing two lists, and splitting this
@@ -610,7 +637,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
 
         if (containingClass != null) {
             val annotations = evaluator.getAllAnnotations(containingClass, inHierarchy = true)
-            classAnnotations = filterRelevantAnnotations(evaluator, annotations, call)
+            classAnnotations = filterRelevantAnnotations(evaluator, annotations, context)
 
             val pkg = evaluator.getPackage(containingClass)
             pkgAnnotations = if (pkg != null) {

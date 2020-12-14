@@ -1,4 +1,4 @@
-apply plugin: 'com.android.tools.java'
+apply plugin: 'com.android.tools.java-library'
 apply plugin: 'com.android.tools.publish'
 
 group = 'com.android.tools.external.org-jetbrains'
@@ -13,7 +13,11 @@ def prebuiltJars = [
 
 prebuiltJars.forEach {
     jar.from(zipTree(it))
-    dependencies.implementation(files(it)) // For Symbol resolution in Intellij IDEA
+}
+
+// For symbol resolution in Intellij IDEA, does not affect publishing
+dependencies {
+    api files(prebuiltJars)
 }
 
 project.ext.pomName = 'Unified AST'

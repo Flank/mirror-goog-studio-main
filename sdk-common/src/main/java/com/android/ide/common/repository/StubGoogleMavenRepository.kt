@@ -13,12 +13,12 @@
 // limitations under the License.
 package com.android.ide.common.repository
 
-import java.io.File
+import java.nio.file.Path
 
 class StubGoogleMavenRepository @JvmOverloads constructor(
     private val builtInData: Map<String, String> = emptyMap(),
     private val urls: Map<String, String> = emptyMap(),
-    cacheDir: File? = null
+    cacheDir: Path? = null
 ) : GoogleMavenRepository(cacheDir = cacheDir) {
     override fun readUrlData(url: String, timeout: Int): ByteArray? = urls[url]?.toByteArray()
     override fun error(throwable: Throwable, message: String?) = throw throwable

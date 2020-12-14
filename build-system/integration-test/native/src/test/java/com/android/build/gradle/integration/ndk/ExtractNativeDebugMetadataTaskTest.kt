@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.tasks.PackageBundleTask
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.base.Throwables
 import com.google.common.truth.Truth.assertThat

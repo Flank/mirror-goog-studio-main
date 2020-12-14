@@ -21,6 +21,7 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.io.CancellableFileIo;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
@@ -28,11 +29,10 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
-import com.android.repository.io.FileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.Lists;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -56,17 +56,16 @@ public enum SdkMavenRepository {
 
     /**
      * Returns the location of the repository within a given SDK home.
+     *
      * @param sdkHome the SDK home, or null
      * @param requireExists if true, the location will only be returned if it also exists
      * @return the location of the this repository within a given SDK
      */
     @Nullable
-    public File getRepositoryLocation(@Nullable File sdkHome, boolean requireExists,
-            @NonNull FileOp fileOp) {
+    public Path getRepositoryLocation(@Nullable Path sdkHome, boolean requireExists) {
         if (sdkHome != null) {
-            File dir = new File(sdkHome, FD_EXTRAS + separator + mDir
-                    + separator + FD_M2_REPOSITORY);
-            if (!requireExists || fileOp.isDirectory(dir)) {
+            Path dir = sdkHome.resolve(FD_EXTRAS + separator + mDir + separator + FD_M2_REPOSITORY);
+            if (!requireExists || CancellableFileIo.isDirectory(dir)) {
                 return dir;
             }
         }
@@ -80,8 +79,8 @@ public enum SdkMavenRepository {
      * @param sdkHome the SDK installation location
      * @return true if the repository is installed
      */
-    public boolean isInstalled(@Nullable File sdkHome, @NonNull FileOp fileOp) {
-        return getRepositoryLocation(sdkHome, true, fileOp) != null;
+    public boolean isInstalled(@Nullable Path sdkHome) {
+        return getRepositoryLocation(sdkHome, true) != null;
     }
 
     /**
@@ -110,19 +109,16 @@ public enum SdkMavenRepository {
      */
     @Nullable
     public static SdkMavenRepository find(
-            @NonNull File sdkLocation,
-            @NonNull String groupId,
-            @NonNull String artifactId,
-            @NonNull FileOp fileOp) {
+            @NonNull Path sdkLocation, @NonNull String groupId, @NonNull String artifactId) {
         for (SdkMavenRepository repository : values()) {
-            File repositoryLocation =
-                    repository.getRepositoryLocation(sdkLocation, true, fileOp);
+            Path repositoryLocation = repository.getRepositoryLocation(sdkLocation, true);
 
             if (repositoryLocation != null) {
-                File artifactIdDirectory =
-                        MavenRepositories.getArtifactIdDirectory(repositoryLocation, groupId, artifactId);
+                Path artifactIdDirectory =
+                        MavenRepositories.getArtifactIdDirectory(
+                                repositoryLocation, groupId, artifactId);
 
-                if (fileOp.exists(artifactIdDirectory)) {
+                if (CancellableFileIo.exists(artifactIdDirectory)) {
                     return repository;
                 }
             }

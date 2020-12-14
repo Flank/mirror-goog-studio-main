@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.internal.pipeline;
 
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.utils.FileUtils.mkdirs;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -35,7 +35,6 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.testutils.truth.FileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
@@ -47,6 +46,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -851,9 +851,9 @@ public class TransformTaskTest extends TaskTestUtils {
         // Don't create deleted files. This is handled in a separate test.
         final File addedFile = temporaryFolder.newFile("jar file1");
         final File changedFile = temporaryFolder.newFile("jar file2");
-        final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
-                addedFile, Status.ADDED,
-                changedFile, Status.CHANGED);
+        final ImmutableMap<Path, Status> jarMap = ImmutableMap.of(
+                addedFile.toPath(), Status.ADDED,
+                changedFile.toPath(), Status.CHANGED);
         OriginalStream projectClass =
                 OriginalStream.builder("")
                         .addContentType(DefaultContentType.CLASSES)
@@ -913,7 +913,7 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file));
+            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
         }
     }
 
@@ -942,9 +942,9 @@ public class TransformTaskTest extends TaskTestUtils {
         mkdirs(changedJar.getParentFile());
         Files.write("foo", changedJar, Charsets.UTF_8);
         // no need to create a deleted jar. It's handled by a separate test.
-        final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
-                addedJar, Status.ADDED,
-                changedJar, Status.CHANGED);
+        final ImmutableMap<Path, Status> jarMap = ImmutableMap.of(
+                addedJar.toPath(), Status.ADDED,
+                changedJar.toPath(), Status.CHANGED);
 
         // we need to simulate a save from a previous transform to ensure the state of the stream
         // is correct
@@ -992,7 +992,7 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file));
+            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
         }
     }
 
@@ -1050,9 +1050,9 @@ public class TransformTaskTest extends TaskTestUtils {
                         Format.JAR);
 
         // no need to create a deleted jar. It's handled by a separate test.
-        final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
-                addedJar, Status.ADDED,
-                changedJar, Status.CHANGED);
+        final ImmutableMap<Path, Status> jarMap = ImmutableMap.of(
+                addedJar.toPath(), Status.ADDED,
+                changedJar.toPath(), Status.CHANGED);
 
         // we need to simulate a save from a previous transform to ensure the state of the stream
         // is correct
@@ -1104,7 +1104,7 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file));
+            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
         }
     }
 
@@ -1161,9 +1161,9 @@ public class TransformTaskTest extends TaskTestUtils {
                         Format.JAR);
 
         // no need to create a deleted jar. It's handled by a separate test.
-        final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
-                addedJar, Status.ADDED,
-                changedJar, Status.CHANGED);
+        final ImmutableMap<Path, Status> jarMap = ImmutableMap.of(
+                addedJar.toPath(), Status.ADDED,
+                changedJar.toPath(), Status.CHANGED);
 
         // we need to simulate a save from a previous transform to ensure the state of the stream
         // is correct
@@ -1215,7 +1215,7 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarMap.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file));
+            assertThat(jarInput.getStatus()).isSameAs(jarMap.get(file.toPath()));
         }
     }
 
@@ -1682,7 +1682,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(jarInputs).isNotNull();
         assertThat(jarInputs).hasSize(2);
 
-        List<File> jarLocations = ImmutableList.of(jarFile, deletedJarFile);
+        List<Path> jarLocations = ImmutableList.of(jarFile.toPath(), deletedJarFile.toPath());
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(jarLocations);
@@ -1821,7 +1821,7 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(directoryInputs).isNotNull();
         assertThat(directoryInputs).hasSize(2);
 
-        List<File> folderLocations = ImmutableList.of(outputFolder, deletedOutputFolder);
+        List<Path> folderLocations = ImmutableList.of(outputFolder.toPath(), deletedOutputFolder.toPath());
         for (DirectoryInput directoryInput : directoryInputs) {
             File file = directoryInput.getFile();
             assertThat(file).isIn(folderLocations);
@@ -1909,13 +1909,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // is correct
         scope4.save();
 
-        final ImmutableMap<File, Status> inputJarMap1 = ImmutableMap.of(
-                scope1Jar, Status.ADDED,
-                scope2Jar, Status.REMOVED);
+        final ImmutableMap<Path, Status> inputJarMap1 = ImmutableMap.of(
+                scope1Jar.toPath(), Status.ADDED,
+                scope2Jar.toPath(), Status.REMOVED);
 
-        final ImmutableMap<File, Status> inputJarMap2 = ImmutableMap.of(
-                scope3Jar, Status.ADDED,
-                scope4Jar, Status.REMOVED);
+        final ImmutableMap<Path, Status> inputJarMap2 = ImmutableMap.of(
+                scope3Jar.toPath(), Status.ADDED,
+                scope4Jar.toPath(), Status.REMOVED);
 
         transformManager.addStream(scope1);
         transformManager.addStream(scope2);
@@ -1979,7 +1979,7 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(inputJarMap1.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(inputJarMap1.get(file));
+            assertThat(jarInput.getStatus()).isSameAs(inputJarMap1.get(file.toPath()));
         }
 
         assertThat(directoryInputs).hasSize(2);
@@ -1989,7 +1989,7 @@ public class TransformTaskTest extends TaskTestUtils {
             assertThat(changedFiles).hasSize(1);
 
             File file = directoryInput.getFile();
-            assertThat(file).isAnyOf(scope1RootFolder, scope2RootFolder);
+            assertThat(file).isAnyOf(scope1RootFolder.toPath(), scope2RootFolder.toPath());
 
             if (file.equals(scope1RootFolder)) {
                 assertThat(changedFiles).containsEntry(addedFile1, Status.ADDED);
@@ -2015,7 +2015,7 @@ public class TransformTaskTest extends TaskTestUtils {
         for (JarInput jarInput : jarInputs) {
             File file = jarInput.getFile();
             assertThat(file).isIn(inputJarMap2.keySet());
-            assertThat(jarInput.getStatus()).isSameAs(inputJarMap2.get(file));
+            assertThat(jarInput.getStatus()).isSameAs(inputJarMap2.get(file.toPath()));
         }
 
         assertThat(directoryInputs).hasSize(2);
@@ -2025,7 +2025,7 @@ public class TransformTaskTest extends TaskTestUtils {
             assertThat(changedFiles).hasSize(1);
 
             File file = directoryInput.getFile();
-            assertThat(file).isAnyOf(scope3RootFolder, scope4RootFolder);
+            assertThat(file).isAnyOf(scope3RootFolder.toPath(), scope4RootFolder.toPath());
 
             if (file.equals(scope3RootFolder)) {
                 assertThat(changedFiles).containsEntry(addedFile3, Status.ADDED);
@@ -2463,7 +2463,7 @@ public class TransformTaskTest extends TaskTestUtils {
         File transformOutputFolder = transformTask.getStreamOutputFolder().get().getAsFile();
         assertThat(transformOutputFolder).isNotNull();
         File subStreamFile = new File(transformOutputFolder, SubStream.FN_FOLDER_CONTENT);
-        FileSubject.assertThat(subStreamFile).doesNotExist();
+        assertThat(subStreamFile).doesNotExist();
         String subStreamFileContents =
                 ""
                         + "[{\"name\":\"foo\","
@@ -2473,7 +2473,7 @@ public class TransformTaskTest extends TaskTestUtils {
                         + "\"format\":\"DIRECTORY\","
                         + "\"present\":true}]";
         FileUtils.createFile(subStreamFile, subStreamFileContents);
-        FileSubject.assertThat(subStreamFile).exists();
+        assertThat(subStreamFile).exists();
         Collection<SubStream> subStreams = SubStream.loadSubStreams(transformOutputFolder);
         assertThat(subStreams)
                 .containsExactly(
@@ -2488,7 +2488,7 @@ public class TransformTaskTest extends TaskTestUtils {
         // run the transform. Afterwards, the old SubStream should be marked as not being present
         // in the __content__.json file.
         transformTask.transform(inputBuilder().build());
-        FileSubject.assertThat(subStreamFile).exists();
+        assertThat(subStreamFile).exists();
         subStreams = SubStream.loadSubStreams(transformOutputFolder);
         assertThat(subStreams)
                 .containsExactly(

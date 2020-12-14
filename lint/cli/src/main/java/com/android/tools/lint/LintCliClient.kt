@@ -1224,8 +1224,12 @@ open class LintCliClient : LintClient {
             // is up to date
             val annotationsManager =
                 ExternalAnnotationsManager.getInstance(ideaProject) as LintExternalAnnotationsManager
-            val target = pickBuildTarget(contexts.first().driver.projects)
-            annotationsManager.updateAnnotationRoots(this@LintCliClient, target)
+            val projects = contexts.first().driver.projects
+            val target = pickBuildTarget(projects)
+            annotationsManager.updateAnnotationRoots(
+                this@LintCliClient, target,
+                target == null && projects.isNotEmpty()
+            )
             return ok
         }
     }

@@ -41,6 +41,7 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImageManager;
+import com.android.testutils.InMemoryFileSystemUtilsKt;
 import com.android.testutils.MockLog;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -99,9 +100,8 @@ public class AvdManagerCliTest {
         // Create a representative hardware configuration file
         String emuPath = "emulator";
         FakePackage.FakeLocalPackage p3 = new FakePackage.FakeLocalPackage(emuPath, mFileOp);
-        File hardwareDefs =
-                new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI).getAbsoluteFile();
-        createHardwarePropertiesFile(hardwareDefs.getAbsolutePath());
+        File hardwareDefs = new File(EMU_LIB_LOCATION, SdkConstants.FN_HARDWARE_INI);
+        createHardwarePropertiesFile(hardwareDefs.getPath());
 
         packages.setLocalPkgInfos(ImmutableList.of(p1, p2, p3));
 
@@ -220,21 +220,25 @@ public class AvdManagerCliTest {
         mLogger.clear();
         mCli.run(new String[] {"list", "avds"});
         assertEquals(
-            "P Available Android Virtual Devices:\n"
-          + "P     Name: testGapiAvd\n"
-          + "P   Device: Nexus 6PP  (Google)P \n"
-          + "P     Path: " + new File("/avd/testGapiAvd.avd").getAbsolutePath() + "\n"
-          + "P   Target: Google APIs (Google)\n"
-          + "P           Based on: Android 7.1.1 (Nougat)P  Tag/ABI: google_apis/x86\n"
-          + "P   Sdcard: 512 MB\n"
-          + "P ---------\n"
-          + "P     Name: testWearApi\n"
-          + "P   Device: wear_roundP  (Google)P \n"
-          + "P     Path: " + new File("/avd/testWearApi.avd").getAbsolutePath() + "\n"
-          + "P   Target: Google APIs\n"
-          + "P           Based on: Android 8.0 (Oreo)P  Tag/ABI: android-wear/armeabi-v7a\n"
-          + "P   Sdcard: 512 MB\n",
-          Joiner.on("").join(mLogger.getMessages()));
+                "P Available Android Virtual Devices:\n"
+                        + "P     Name: testGapiAvd\n"
+                        + "P   Device: Nexus 6PP  (Google)P \n"
+                        + "P     Path: "
+                        + InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/avd/testGapiAvd.avd")
+                        + "\n"
+                        + "P   Target: Google APIs (Google)\n"
+                        + "P           Based on: Android 7.1.1 (Nougat)P  Tag/ABI: google_apis/x86\n"
+                        + "P   Sdcard: 512 MB\n"
+                        + "P ---------\n"
+                        + "P     Name: testWearApi\n"
+                        + "P   Device: wear_roundP  (Google)P \n"
+                        + "P     Path: "
+                        + InMemoryFileSystemUtilsKt.getPlatformSpecificPath("/avd/testWearApi.avd")
+                        + "\n"
+                        + "P   Target: Google APIs\n"
+                        + "P           Based on: Android 8.0 (Oreo)P  Tag/ABI: android-wear/armeabi-v7a\n"
+                        + "P   Sdcard: 512 MB\n",
+                Joiner.on("").join(mLogger.getMessages()));
     }
 
     @Test

@@ -95,7 +95,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
             task.uniqueIdentifier = task.getProject().getPath();
             // rename this as packageName since this is really what this is
             // TODO b/152002064
-            task.getApplicationId().set(creationConfig.getPackageName());
+            task.getApplicationId().set(creationConfig.getNamespace());
             task.getApplicationId().disallowChanges();
         }
     }

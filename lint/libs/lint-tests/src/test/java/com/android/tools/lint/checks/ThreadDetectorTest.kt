@@ -1055,4 +1055,95 @@ class ThreadDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testFunctionalInterfacesJava() {
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.support.annotation.MainThread;
+                    import android.support.annotation.WorkerThread;
+
+                    public class Test {
+
+                        interface Foo {
+                            @WorkerThread
+                            void foo();
+                        }
+
+                        @MainThread
+                        void uiMethod() {}
+
+                        void test(Foo foo) {}
+
+                        void testLambda() {
+                            test(() -> { uiMethod(); }); // ERROR
+                        }
+
+                        void testMethodRef() {
+                            test(this::uiMethod); // ERROR
+                        }
+                    }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Test.java:19: Error: Method uiMethod must be called from the main thread, currently inferred thread is worker thread [WrongThread]
+                    test(() -> { uiMethod(); }); // ERROR
+                                 ~~~~~~~~~~
+            src/test/pkg/Test.java:23: Error: Method uiMethod must be called from the main thread, currently inferred thread is worker thread [WrongThread]
+                    test(this::uiMethod); // ERROR
+                         ~~~~~~~~~~~~~~
+            2 errors, 0 warnings
+        """
+        )
+    }
+
+    fun testFunctionalInterfacesKotlin() {
+        lint().files(
+            kotlin(
+                """
+                    package test.pkg
+
+                    import android.support.annotation.MainThread
+                    import android.support.annotation.WorkerThread
+
+                    class Test {
+                        fun interface Foo {
+                            @WorkerThread
+                            fun foo()
+                        }
+
+                        @MainThread
+                        fun uiMethod() {}
+
+                        fun test(foo: Foo) {}
+
+                        fun testLambda() {
+                            test { uiMethod() } // ERROR
+                        }
+
+                        fun testMethodRef() {
+                            test(this::uiMethod) // ERROR
+                        }
+                    }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Test.kt:18: Error: Method uiMethod must be called from the main thread, currently inferred thread is worker thread [WrongThread]
+                    test { uiMethod() } // ERROR
+                           ~~~~~~~~~~
+            src/test/pkg/Test.kt:22: Error: Method uiMethod must be called from the main thread, currently inferred thread is worker thread [WrongThread]
+                    test(this::uiMethod) // ERROR
+                         ~~~~~~~~~~~~~~
+            2 errors, 0 warnings
+        """
+        )
+    }
 }

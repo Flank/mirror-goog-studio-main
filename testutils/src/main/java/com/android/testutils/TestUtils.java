@@ -80,7 +80,14 @@ public class TestUtils {
         }
     }
 
-    /** @deprecated Temporary directories and files should be deleted after each test. */
+    /**
+     * Creates a temporary directory that is deleted when the JVM exits.
+     *
+     * @deprecated Temporary directories and files should be deleted after each test, not kept
+     *     around for the lifetime of the JVM. This can be achieved by using
+     *     a {@link org.junit.rules.TemporaryFolder} rule, or by calling the
+     *     {@link PathUtils#deleteRecursivelyIfExists(Path)} method in {@code tearDown}.
+     */
     @Deprecated
     public static Path createTempDirDeletedOnExit() throws IOException {
         Path tempDir = Files.createTempDirectory("");

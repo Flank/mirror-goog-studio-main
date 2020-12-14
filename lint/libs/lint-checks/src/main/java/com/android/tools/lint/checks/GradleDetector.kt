@@ -27,7 +27,7 @@ import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.MavenRepositories
-import com.android.repository.io.FileOpUtils
+import com.android.io.CancellableFileIo
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
@@ -1101,16 +1101,15 @@ open class GradleDetector : Detector(), GradleScanner {
         dependency: GradleCoordinate,
         filter: Predicate<GradleVersion>?
     ): GradleVersion? {
-        val versionDir = File(
-            getArtifactCacheHome(),
-            dependency.groupId + File.separator + dependency.artifactId
-        )
-        return if (versionDir.exists()) {
+        val versionDir =
+            getArtifactCacheHome().toPath().resolve(
+                dependency.groupId + File.separator + dependency.artifactId
+            )
+        return if (CancellableFileIo.exists(versionDir)) {
             MavenRepositories.getHighestVersion(
                 versionDir,
                 filter,
-                MavenRepositories.isPreview(dependency),
-                FileOpUtils.create()
+                MavenRepositories.isPreview(dependency)
             )
         } else null
     }
@@ -2127,7 +2126,7 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun getGoogleMavenRepository(client: LintClient): GoogleMavenRepository {
         return googleMavenRepository ?: run {
             val cacheDir = client.getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
-            val repository = object : GoogleMavenRepository(cacheDir) {
+            val repository = object : GoogleMavenRepository(cacheDir?.toPath()) {
 
                 public override fun readUrlData(url: String, timeout: Int): ByteArray? =
                     readUrlData(client, url, timeout)
@@ -2144,7 +2143,7 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun getDeprecatedLibraryLookup(client: LintClient): DeprecatedSdkRegistry {
         return deprecatedSdkRegistry ?: run {
             val cacheDir = client.getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
-            val repository = object : DeprecatedSdkRegistry(cacheDir) {
+            val repository = object : DeprecatedSdkRegistry(cacheDir?.toPath()) {
 
                 public override fun readUrlData(url: String, timeout: Int) =
                     readUrlData(client, url, timeout)

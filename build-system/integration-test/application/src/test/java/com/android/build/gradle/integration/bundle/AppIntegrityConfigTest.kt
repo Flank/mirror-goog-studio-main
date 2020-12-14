@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.bundle.AppIntegrityConfigOuterClass
 import com.android.testutils.apk.Zip
-import com.android.testutils.truth.FileSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
@@ -52,7 +52,7 @@ class AppIntegrityConfigTest {
         project.execute(":bundleDebug")
 
         val bundleFile = getBundleFile()
-        FileSubject.assertThat(bundleFile).exists()
+        assertThat(bundleFile).exists()
         assertThat(bundleFile) { it.contains(entry) }
         Zip(bundleFile).use {
             val configFile =

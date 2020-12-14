@@ -144,4 +144,7 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override val minSdkVersionWithTargetDeviceApi: AndroidVersion
         get() = delegate.minSdkVersionWithTargetDeviceApi
+
+    override val packageJacocoRuntime: Boolean
+        get() = variantDslInfo.isTestCoverageEnabled
 }

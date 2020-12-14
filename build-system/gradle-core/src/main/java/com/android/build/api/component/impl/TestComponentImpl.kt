@@ -68,6 +68,11 @@ abstract class TestComponentImpl @Inject constructor(
     // map the internal getter to the impl of the external variant object
     override val testedConfig: VariantCreationConfig
         get() = testedVariant
+
+    // Only include the jacoco agent if coverage is enabled in library test components
+    // as in apps it will have already been included in the tested application.
+    override val packageJacocoRuntime: Boolean
+        get() = variantDslInfo.isTestCoverageEnabled && testedVariant.variantType.isAar
 }
 
 

@@ -117,7 +117,6 @@ abstract class LintStandaloneTask : DefaultTask() {
                     override val manifestMergeReport: File? = null
                 }
             }
-            override val buildToolsRevision: Revision? = null
             override val variantName: String? = null
             override fun getVariantNames(): Set<String> = emptySet()
             override val sdkHome: File? = null

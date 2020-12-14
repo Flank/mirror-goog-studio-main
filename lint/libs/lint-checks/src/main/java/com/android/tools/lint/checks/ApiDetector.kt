@@ -32,7 +32,6 @@ import com.android.SdkConstants.ATTR_LABEL_FOR
 import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
 import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
 import com.android.SdkConstants.ATTR_NAME
-import com.android.SdkConstants.ATTR_PADDING_START
 import com.android.SdkConstants.ATTR_PARENT
 import com.android.SdkConstants.ATTR_ROUND_ICON
 import com.android.SdkConstants.ATTR_TARGET_API
@@ -108,7 +107,6 @@ import com.android.tools.lint.detector.api.isString
 import com.android.tools.lint.detector.api.skipParentheses
 import com.android.utils.XmlUtils
 import com.android.utils.usLocaleCapitalize
-import com.android.utils.usLocaleDecapitalize
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiAnonymousClass
@@ -235,7 +233,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         // No need to warn for example that
                         //  "layout_alignParentEnd will only be used in API level 17 and higher"
                         // since we have a dedicated RTL lint rule dealing with those attributes
-
+                        //
                         // However, paddingStart in particular is known to cause crashes
                         // when used on TextViews (and subclasses of TextViews), on some
                         // devices, because vendor specific attributes conflict with the
@@ -243,44 +241,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         // by the text views.
                         //
                         // However, as of build tools 23.0.1 aapt works around this by packaging
-                        // the resources differently.
-                        if (name == ATTR_PADDING_START) {
-                            val buildTools = context.project.buildToolsRevision
-                            val isOldBuildTools =
-                                buildTools != null && (
-                                    buildTools.major < 23 || (
-                                        buildTools.major == 23 &&
-                                            buildTools.minor == 0 &&
-                                            buildTools.micro == 0
-                                        )
-                                    )
-                            if ((buildTools == null || isOldBuildTools) && viewMayExtendTextView(
-                                attribute.ownerElement
-                            )
-                            ) {
-                                val location = context.getLocation(attribute)
-                                val messagePart =
-                                    "Attribute `${attribute.localName}` referenced here can result in a crash on " +
-                                        "some specific devices older than API $attributeApiLevel " +
-                                        "(current min is $minSdk)"
-
-                                val message =
-                                    if (buildTools != null) {
-                                        val version = buildTools.toShortString()
-                                        val lowCased = messagePart.usLocaleDecapitalize()
-                                        "Upgrade `buildToolsVersion` from `$version` to at least `23.0.1`; if not, $lowCased"
-                                    } else {
-                                        messagePart
-                                    }
-                                context.report(
-                                    UNSUPPORTED,
-                                    attribute,
-                                    location,
-                                    message,
-                                    apiLevelFix(attributeApiLevel)
-                                )
-                            }
-                        }
+                        // the resources differently. At this point everyone is using a newer
+                        // version of aapt.
                     } else {
                         val location = context.getLocation(attribute)
                         val localName = attribute.localName

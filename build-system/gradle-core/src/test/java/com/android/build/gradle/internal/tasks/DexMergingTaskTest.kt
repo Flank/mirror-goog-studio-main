@@ -35,7 +35,7 @@ import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject.assertThatDex
-import com.android.testutils.truth.FileSubject.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType

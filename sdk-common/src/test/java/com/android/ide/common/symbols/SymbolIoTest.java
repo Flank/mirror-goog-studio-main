@@ -16,6 +16,7 @@
 
 package com.android.ide.common.symbols;
 
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
@@ -27,13 +28,10 @@ import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
 import com.android.testutils.TestResources;
-import com.android.testutils.truth.FileSubject;
-import com.android.testutils.truth.PathSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.io.Files;
@@ -730,7 +728,7 @@ public class SymbolIoTest {
         Path aarRTxt = tmp.resolve("R.txt");
         Path out = tmp.resolve("with_package.txt");
         SymbolIo.writeSymbolListWithPackageName(aarRTxt, "somePackage", out);
-        PathSubject.assertThat(out).hasContents("somePackage");
+        assertThat(out).hasContents("somePackage");
     }
 
     @Test
@@ -840,7 +838,7 @@ public class SymbolIoTest {
     @Test
     public void testEmptyPackageAwareSymbolTableRead() throws Exception {
         File file = mTemporaryFolder.newFile();
-        FileSubject.assertThat(file).exists();
+        assertThat(file).exists();
 
         try {
             symbolIo.readSymbolListWithPackageName(file.toPath());
@@ -1184,14 +1182,14 @@ public class SymbolIoTest {
         // Test writing package aware R.
         File pr = mTemporaryFolder.newFile("package-aware-R.txt");
         SymbolIo.writeSymbolListWithPackageName(r.toPath(), "foo.bar", pr.toPath());
-        FileSubject.assertThat(pr).contains("string e_ë");
+        assertThat(pr).contains("string e_ë");
 
         // Test writing the R.java class.
         File rSources = mTemporaryFolder.newFolder("java");
         SymbolIo.exportToJava(table, rSources, true);
         File rClass = FileUtils.join(rSources, "foo", "bar", "R.java");
-        FileSubject.assertThat(rClass).exists();
-        FileSubject.assertThat(rClass).contains("e_ë = 0x0");
+        assertThat(rClass).exists();
+        assertThat(rClass).contains("e_ë = 0x0");
     }
 
     @Test

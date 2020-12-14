@@ -127,7 +127,7 @@ public class MavenInstallListenerTest extends TestCase {
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
                                 new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
-        Installer installer = factory.createInstaller(p, mgr, downloader, fop);
+        Installer installer = factory.createInstaller(p, mgr, downloader);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
         installer.complete(progress.createSubProgress(1));
@@ -245,7 +245,7 @@ public class MavenInstallListenerTest extends TestCase {
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
                                 new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
-        Installer installer = factory.createInstaller(remotePackage, mgr, downloader, fop);
+        Installer installer = factory.createInstaller(remotePackage, mgr, downloader);
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         installer.prepare(progress.createSubProgress(0.5));
         installer.complete(progress.createSubProgress(1));
@@ -384,7 +384,7 @@ public class MavenInstallListenerTest extends TestCase {
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
                                 new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
-        Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
+        Uninstaller uninstaller = factory.createUninstaller(p, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
         uninstaller.complete(progress);
@@ -468,7 +468,7 @@ public class MavenInstallListenerTest extends TestCase {
                 new FakeInstallListenerFactory(
                         new MavenInstallListener(
                                 new AndroidSdkHandler(fop.toPath(ROOT), null, fop))));
-        Uninstaller uninstaller = factory.createUninstaller(p, mgr, fop);
+        Uninstaller uninstaller = factory.createUninstaller(p, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
         uninstaller.complete(progress);

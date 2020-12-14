@@ -20,5 +20,6 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     api "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
+    implementation project(':transitiveLibrary')
     testImplementation 'junit:junit:4.12'
 }

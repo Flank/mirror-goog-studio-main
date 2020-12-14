@@ -17,6 +17,7 @@ package com.android;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
+import java.util.concurrent.CancellationException;
 
 /**
  * An adapter for accessing environment-dependent progress and cancellation functionality. By
@@ -37,7 +38,40 @@ public abstract class ProgressManagerAdapter {
         }
     }
 
+    /**
+     * Rethrows the given exception if it means that the current computation was cancelled. This
+     * method is intended to be used in the following context:
+     *
+     * <pre>
+     *     try {
+     *         // Code that calls ProgressManagerAdapter.checkCancelled()
+     *     }
+     *     catch (Exception e) {
+     *         ProgressManagerAdapter.throwIfCancellation(e);
+     *         // Handle other exceptions.
+     *     }
+     * </pre>
+     */
+    public static void throwIfCancellation(@NonNull Throwable t) {
+        ProgressManagerAdapter instance = ourInstance;
+        if (instance == null) {
+            throwIfCancellationException(t);
+        } else {
+            instance.doThrowIfCancellation(t);
+        }
+    }
+
     protected abstract void doCheckCanceled();
+
+    protected void doThrowIfCancellation(@NonNull Throwable t) {
+        throwIfCancellationException(t);
+    }
+
+    private static void throwIfCancellationException(@NonNull Throwable t) {
+        if (t instanceof CancellationException) {
+            throw (CancellationException) t;
+        }
+    }
 
     protected static void setInstance(@NonNull ProgressManagerAdapter instance) {
         Preconditions.checkState(ourInstance == null);

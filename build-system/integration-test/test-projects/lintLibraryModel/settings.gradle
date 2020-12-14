@@ -1,1 +1,1 @@
-include ':app', ':mylibrary', ':javalib', ':javalib2'
+include ':app', ':mylibrary', ':transitiveLibrary', ':javalib', ':javalib2'

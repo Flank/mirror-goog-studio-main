@@ -108,7 +108,7 @@ abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
             super.configure(task)
             task.usePreciseShrinking.set(creationConfig.services.projectOptions.get(
               BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER_PRECISE))
-            task.basePackageName.set(creationConfig.packageName)
+            task.basePackageName.set(creationConfig.namespace)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.FEATURE_SET_METADATA,

@@ -298,7 +298,7 @@ class LintBaseline(
         return false
     }
 
-    private fun sameMessage(issue: Issue, new: String, old: String): Boolean {
+    fun sameMessage(issue: Issue, new: String, old: String): Boolean {
         // Sometimes the exact message format for a given error shifts over time, for example
         // when we decide to make it clearer. Since baselines are primarily matched by
         // the error message, any format change would mean the recorded issue in the baseline
@@ -310,6 +310,8 @@ class LintBaseline(
             "InvalidPackage" -> sameSuffixFrom("not included in", new, old)
             // See https://issuetracker.google.com/68802305
             "IconDensities" -> true
+            // See 168897210
+            "SmallSp" -> sameSuffixFrom("sp:", new, old)
             "BatteryLife" -> {
                 // Changed URL within error string
                 val s = "Use of REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"

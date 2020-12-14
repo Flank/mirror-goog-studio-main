@@ -1,7 +1,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY;
-import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;

@@ -23,7 +23,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import java.nio.file.Path;
 
@@ -32,9 +31,8 @@ import java.nio.file.Path;
  */
 class BasicUninstaller extends AbstractUninstaller {
 
-    public BasicUninstaller(@NonNull LocalPackage p, @NonNull RepoManager mgr,
-            @NonNull FileOp fop) {
-        super(p, mgr, fop);
+    public BasicUninstaller(@NonNull LocalPackage p, @NonNull RepoManager mgr) {
+        super(p, mgr);
     }
 
     @Override
