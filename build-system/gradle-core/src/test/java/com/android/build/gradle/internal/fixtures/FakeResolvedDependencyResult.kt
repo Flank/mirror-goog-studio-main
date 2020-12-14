@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.fixtures
 
 import org.gradle.api.artifacts.component.ComponentSelector
+import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
@@ -33,4 +34,17 @@ class FakeResolvedDependencyResult(
     override fun getSelected() = selected ?: error("value not set")
     override fun getRequested() = requested ?: error("value not set")
     override fun getResolvedVariant(): ResolvedVariantResult? = null
+}
+
+internal fun createComponent(group: String, name: String, version: String) =
+        FakeResolvedComponentResult(
+                id = FakeModuleComponentIdentifier(group = group, module = name, version = version),
+                dependents = mutableSetOf(),
+                dependencies = mutableSetOf()
+        )
+
+@Suppress("UNCHECKED_CAST")
+internal fun addDependencyEdge(a: ResolvedComponentResult, b: ResolvedComponentResult) {
+    (a.dependencies as MutableSet<DependencyResult>).add(FakeResolvedDependencyResult(selected = b))
+    (b.dependents as MutableSet<DependencyResult>).add(FakeResolvedDependencyResult(from = a))
 }
