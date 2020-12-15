@@ -21,8 +21,8 @@ import org.gradle.api.Incubating
 /**
  * Specifies defaults for variant properties that the Android plugin applies to all build variants.
  *
- * You can override any `defaultConfig` property when [configuring product
- * flavors](https://developer.android.com/studio/build/build-variants.html#product-flavors).
+ * You can override any `defaultConfig` property when
+ * [configuring product flavors](https://developer.android.com/studio/build/build-variants.html#product-flavors).
  *
  * @see [ProductFlavor]
  */
