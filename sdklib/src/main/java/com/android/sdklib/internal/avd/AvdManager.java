@@ -614,9 +614,7 @@ public class AvdManager {
         return null;
     }
 
-    /**
-     * Returns whether an emulator is currently running the AVD.
-     */
+    /** Returns whether an emulator is currently running the AVD. */
     @Slow
     public boolean isAvdRunning(@NonNull AvdInfo info, @NonNull ILogger logger) {
         String pid;
@@ -753,9 +751,10 @@ public class AvdManager {
 
     /**
      * Reloads the AVD list.
+     *
      * @param log the log object to receive action logs. Cannot be null.
-     * @throws AndroidLocationException if there was an error finding the location of the
-     * AVD folder.
+     * @throws AndroidLocationException if there was an error finding the location of the AVD
+     *     folder.
      */
     @Slow
     public void reloadAvds(@NonNull ILogger log) throws AndroidLocationException {
@@ -1177,14 +1176,14 @@ public class AvdManager {
 
     /**
      * Actually deletes the files of an existing AVD.
-     * <p>
-     * This also remove it from the manager's list, The caller does not need to
-     * call {@link #removeAvd(AvdInfo)} afterwards.
-     * <p>
-     * This method is designed to somehow work with an unavailable AVD, that is an AVD that
-     * could not be loaded due to some error. That means this method still tries to remove
-     * the AVD ini file or its folder if it can be found. An error will be output if any of
-     * these operations fail.
+     *
+     * <p>This also remove it from the manager's list, The caller does not need to call {@link
+     * #removeAvd(AvdInfo)} afterwards.
+     *
+     * <p>This method is designed to somehow work with an unavailable AVD, that is an AVD that could
+     * not be loaded due to some error. That means this method still tries to remove the AVD ini
+     * file or its folder if it can be found. An error will be output if any of these operations
+     * fail.
      *
      * @param avdInfo the information on the AVD to delete
      * @param log the log object to receive action logs. Cannot be null.
@@ -1233,24 +1232,24 @@ public class AvdManager {
     }
 
     /**
-     * Moves and/or rename an existing AVD and its files.
-     * This also change it in the manager's list.
-     * <p>
-     * The caller should make sure the name or path given are valid, do not exist and are
+     * Moves and/or rename an existing AVD and its files. This also change it in the manager's list.
+     *
+     * <p>The caller should make sure the name or path given are valid, do not exist and are
      * actually different than current values.
      *
      * @param avdInfo the information on the AVD to move.
      * @param newName the new name of the AVD if non null.
      * @param paramFolderPath the new data folder if non null.
      * @param log the log object to receive action logs. Cannot be null.
-     * @return True if the move succeeded or there was nothing to do.
-     *         If false, this method will have had already output error in the log.
+     * @return True if the move succeeded or there was nothing to do. If false, this method will
+     *     have had already output error in the log.
      */
     @Slow
-    public boolean moveAvd(@NonNull  AvdInfo avdInfo,
-                           @Nullable String newName,
-                           @Nullable String paramFolderPath,
-                           @NonNull  ILogger log) {
+    public boolean moveAvd(
+            @NonNull AvdInfo avdInfo,
+            @Nullable String newName,
+            @Nullable String paramFolderPath,
+            @NonNull ILogger log) {
         try {
             if (paramFolderPath != null) {
                 File f = new File(avdInfo.getDataFolderPath());
@@ -1400,8 +1399,8 @@ public class AvdManager {
      *
      * @param iniPath The path to the AVD .ini file
      * @param log the log object to receive action logs. Cannot be null.
-     * @return A new {@link AvdInfo} with an {@link AvdStatus} indicating whether this AVD is
-     *         valid or not.
+     * @return A new {@link AvdInfo} with an {@link AvdStatus} indicating whether this AVD is valid
+     *     or not.
      */
     @VisibleForTesting
     @Slow
@@ -1612,11 +1611,11 @@ public class AvdManager {
 
     /**
      * Parses a property file and returns a map of the content.
-     * <p>
-     * If the file is not present, null is returned with no error messages sent to the log.
-     * <p>
-     * Charset encoding will be either the system's default or the one specified by the
-     * {@link #AVD_INI_ENCODING} key if present.
+     *
+     * <p>If the file is not present, null is returned with no error messages sent to the log.
+     *
+     * <p>Charset encoding will be either the system's default or the one specified by the {@link
+     * #AVD_INI_ENCODING} key if present.
      *
      * @param propFile the property file to parse
      * @param log the ILogger object receiving warning/error from the parsing.
@@ -1624,8 +1623,7 @@ public class AvdManager {
      */
     @Slow
     public static Map<String, String> parseIniFile(
-            @NonNull IAbstractFile propFile,
-            @Nullable ILogger log) {
+            @NonNull IAbstractFile propFile, @Nullable ILogger log) {
         return parseIniFileImpl(propFile, log, null);
     }
 
@@ -1785,8 +1783,7 @@ public class AvdManager {
     }
 
     @Slow
-    public AvdInfo updateAvd(AvdInfo avd,
-            Map<String, String> newProperties) throws IOException {
+    public AvdInfo updateAvd(AvdInfo avd, Map<String, String> newProperties) throws IOException {
         // now write the config file
         File configIniFile = new File(avd.getDataFolderPath(), CONFIG_INI);
         writeIniFile(configIniFile, newProperties, true);
@@ -1809,6 +1806,7 @@ public class AvdManager {
 
     /**
      * Updates the device-specific part of an AVD ini.
+     *
      * @param avd the AVD to update.
      * @param log the log object to receive action logs. Cannot be null.
      * @return The new AVD on success.
