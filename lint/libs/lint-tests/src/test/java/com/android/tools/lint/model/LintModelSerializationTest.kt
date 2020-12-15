@@ -1065,15 +1065,15 @@ class LintModelSerializationTest {
         val pathVariables: MutableList<Pair<String, File>> = mutableListOf()
         pathVariables.add(Pair("SDK", folder1))
         pathVariables.add(Pair("GRADLE", folder2))
-        val adapter = LintModelSerializationFileAdapter(root, pathVariables)
+        LintModelSerializationFileAdapter(root, pathVariables).use { adapter ->
+            assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
+            assertEquals("\$SDK/file1", adapter.toPathString(file1, root))
+            assertEquals("\$GRADLE/file2", adapter.toPathString(file2, root))
 
-        assertEquals("module.xml", adapter.toPathString(moduleFile, root).cleanup())
-        assertEquals("\$SDK/file1", adapter.toPathString(file1, root))
-        assertEquals("\$GRADLE/file2", adapter.toPathString(file2, root))
-
-        assertEquals(moduleFile, adapter.fromPathString("module.xml", root))
-        assertEquals(file1, adapter.fromPathString("\$SDK/file1", root))
-        assertEquals(file2, adapter.fromPathString("\$GRADLE/file2", root))
+            assertEquals(moduleFile, adapter.fromPathString("module.xml", root))
+            assertEquals(file1, adapter.fromPathString("\$SDK/file1", root))
+            assertEquals(file2, adapter.fromPathString("\$GRADLE/file2", root))
+        }
     }
 
     /** Check that the relative paths in variants are resolved against the project directory */
