@@ -50,7 +50,7 @@ public class MockFileOp extends FileOp {
     private FileSystem mFileSystem;
 
     public MockFileOp() {
-        mFileSystem = InMemoryFileSystems.createFileSystem();
+        mFileSystem = InMemoryFileSystems.createInMemoryFileSystem();
     }
 
     @Override
@@ -60,7 +60,7 @@ public class MockFileOp extends FileOp {
 
     /** Resets the internal state, as if the object had been newly created. */
     public void reset() {
-        mFileSystem = InMemoryFileSystems.createFileSystem();
+        mFileSystem = InMemoryFileSystems.createInMemoryFileSystem();
     }
 
     @Override

@@ -33,7 +33,7 @@ import kotlin.streams.toList
 /**
  * Creates an in-memory file system with a configuration appropriate for the current platform.
  */
-fun createFileSystem(): FileSystem {
+fun createInMemoryFileSystem(): FileSystem {
     var config = Configuration.forCurrentPlatform()
     config = config.toBuilder().apply {
         if (OsType.getHostOs() == OsType.WINDOWS) {
@@ -52,8 +52,8 @@ fun createFileSystem(): FileSystem {
  * Creates an in-memory file system with a configuration appropriate for the current platform and
  * a folder with the given name on that file system.
  */
-fun createFileSystemAndFolder(folderName: String): Path {
-    val fileSystem = createFileSystem()
+fun createInMemoryFileSystemAndFolder(folderName: String): Path {
+    val fileSystem = createInMemoryFileSystem()
     // On Windows the folder is created on the last drive.
     return Files.createDirectory(fileSystem.someRoot.resolve(folderName))
 }

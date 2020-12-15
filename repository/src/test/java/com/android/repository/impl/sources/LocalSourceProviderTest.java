@@ -55,7 +55,7 @@ import org.junit.Test;
 public class LocalSourceProviderTest {
     @Test
     public void loadSources() throws Exception {
-        FileSystem fs = InMemoryFileSystems.createFileSystem();
+        FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         InMemoryFileSystems.recordExistingFile(
                 fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources")),
                 "#A comment"
@@ -86,7 +86,7 @@ public class LocalSourceProviderTest {
 
     @Test
     public void configFileDoesntExistDoesntWarn() {
-        FileSystem fs = InMemoryFileSystems.createFileSystem();
+        FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         LocalSourceProvider provider =
                 new LocalSourceProvider(
                         fs.getPath(
@@ -100,7 +100,7 @@ public class LocalSourceProviderTest {
 
     @Test
     public void forceRefresh() {
-        FileSystem fs = InMemoryFileSystems.createFileSystem();
+        FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         Path sourcesPath =
                 fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources"));
         InMemoryFileSystems.recordExistingFile(
@@ -128,7 +128,7 @@ public class LocalSourceProviderTest {
 
     @Test
     public void modifySources() throws Exception {
-        FileSystem fs = InMemoryFileSystems.createFileSystem();
+        FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         Path file = fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources"));
         LocalSourceProvider provider =
                 new LocalSourceProvider(file, ImmutableList.of(RepoManager.getGenericModule()));
@@ -188,7 +188,7 @@ public class LocalSourceProviderTest {
         @SuppressWarnings("unchecked")
         SchemaModule<Object> dummy = mock(SchemaModule.class);
 
-        FileSystem fs = InMemoryFileSystems.createFileSystem();
+        FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         Path sourcesPath =
                 fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources"));
         InMemoryFileSystems.recordExistingFile(
@@ -232,7 +232,7 @@ public class LocalSourceProviderTest {
                     }
                 };
         RepositorySource source2 = mock(RepositorySource.class);
-        FileSystem fs = InMemoryFileSystems.createFileSystem();
+        FileSystem fs = InMemoryFileSystems.createInMemoryFileSystem();
         LocalSourceProvider provider =
                 new LocalSourceProvider(
                         fs.getPath(InMemoryFileSystems.getPlatformSpecificPath("/sources")),

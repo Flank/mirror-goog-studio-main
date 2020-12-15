@@ -16,7 +16,7 @@
 
 package com.android.repository.io;
 
-import static com.android.testutils.file.InMemoryFileSystems.createFileSystem;
+import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystem;
 import static com.android.testutils.file.InMemoryFileSystems.getExistingFiles;
 import static com.android.testutils.file.InMemoryFileSystems.getPlatformSpecificPath;
 import static com.android.testutils.file.InMemoryFileSystems.recordExistingFile;
@@ -223,7 +223,7 @@ public class FileOpUtilsTest {
 
     @Test
     public void safeRecursiveOverwriteSimpleMove() throws Exception {
-        FileSystem fs = createFileSystem();
+        FileSystem fs = createInMemoryFileSystem();
 
         Path src = fs.getPath(getPlatformSpecificPath("/root/src"));
         recordExistingFile(src.resolve("a"), "content1");
@@ -247,7 +247,7 @@ public class FileOpUtilsTest {
 
     @Test
     public void safeRecursiveOverwriteActuallyOverwrite() throws Exception {
-        FileSystem fs = createFileSystem();
+        FileSystem fs = createInMemoryFileSystem();
         Path s1 = fs.getPath(getPlatformSpecificPath("/root/src/a"));
         Path s2 = fs.getPath(getPlatformSpecificPath("/root/src/foo/a"));
         Path s3 = fs.getPath(getPlatformSpecificPath("/root/src/foo/bar/a"));
@@ -281,7 +281,7 @@ public class FileOpUtilsTest {
         Path[] destRef = new Path[1];
         final AtomicBoolean hitRename = new AtomicBoolean(false);
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -324,7 +324,7 @@ public class FileOpUtilsTest {
         Path[] d1Ref = new Path[1];
 
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -376,7 +376,7 @@ public class FileOpUtilsTest {
     public void safeRecursiveOverwriteCantDeleteDestPartial() throws Exception {
         AtomicBoolean deletedSomething = new AtomicBoolean(false);
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -435,7 +435,7 @@ public class FileOpUtilsTest {
         Path[] s1Ref = new Path[1];
         Path[] d1Ref = new Path[1];
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void copy(
                             @NonNull Path source,
@@ -496,7 +496,7 @@ public class FileOpUtilsTest {
         Path[] d1Ref = new Path[1];
 
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -571,7 +571,7 @@ public class FileOpUtilsTest {
         Path[] d1Ref = new Path[1];
 
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,

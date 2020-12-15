@@ -15,7 +15,7 @@
  */
 package com.android.testutils.truth
 
-import com.android.testutils.file.createFileSystemAndFolder
+import com.android.testutils.file.createInMemoryFileSystemAndFolder
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -29,7 +29,7 @@ import kotlin.test.assertFailsWith
  * Tests for [PathSubject].
  */
 class PathSubjectTest {
-    private val rootDir = createFileSystemAndFolder("test")
+    private val rootDir = createInMemoryFileSystemAndFolder("test")
 
     @Test
     fun testExists() {
