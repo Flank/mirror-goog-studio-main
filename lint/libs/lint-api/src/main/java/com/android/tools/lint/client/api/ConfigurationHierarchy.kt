@@ -25,7 +25,6 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.assertionsEnabled
 import com.android.tools.lint.model.LintModelLintOptions
-import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import java.io.File
 import java.util.HashSet
 
@@ -401,14 +400,6 @@ open class ConfigurationHierarchy(
             this.fallback = fallback
             prev?.let { fallback.setParent(prev) }
         }
-    }
-
-    /** Returns the global fallback XML fall */
-    fun getLintXmlConfigurationFallback(): LintXmlConfiguration? {
-        val configs = generateSequence(fallback) {
-            parentOf[it]
-        }
-        return configs.firstIsInstanceOrNull()
     }
 
     /**

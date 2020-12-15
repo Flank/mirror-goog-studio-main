@@ -82,7 +82,6 @@ import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.util.PerformanceCounter.Companion.resetAllCounters
-import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.w3c.dom.Document
 import org.xml.sax.SAXException
 import java.io.File
@@ -976,7 +975,7 @@ open class LintCliClient : LintClient {
         val configs = generateSequence(configurations.fallback) {
             configurations.getParentConfiguration(it)
         }
-        val config = configs.firstIsInstanceOrNull<LintXmlConfiguration>()
+        val config = configs.filterIsInstance(LintXmlConfiguration::class.java).firstOrNull()
             ?: return
 
         val checkAllWarnings = config.getCheckAllWarnings()

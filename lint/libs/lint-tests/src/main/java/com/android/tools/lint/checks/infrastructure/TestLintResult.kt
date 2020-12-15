@@ -34,7 +34,6 @@ import com.google.common.collect.Maps
 import com.google.common.io.Files
 import com.intellij.util.ArrayUtil
 import org.intellij.lang.annotations.Language
-import org.jetbrains.kotlin.utils.addToStdlib.firstNotNullResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -686,6 +685,14 @@ class TestLintResult internal constructor(
             transformer = transformer,
             checkers = *checkers
         )
+    }
+
+    private inline fun <T, R : Any> Iterable<T>.firstNotNullResult(transform: (T) -> R?): R? {
+        for (element in this) {
+            val result = transform(element)
+            if (result != null) return result
+        }
+        return null
     }
 
     private fun checkReport(
