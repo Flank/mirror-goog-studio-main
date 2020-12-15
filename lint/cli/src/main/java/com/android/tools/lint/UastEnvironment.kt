@@ -39,6 +39,7 @@ import com.intellij.openapi.vfs.impl.ZipHandler
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiManager
 import com.intellij.util.io.URLUtil.JAR_SEPARATOR
+import org.jetbrains.kotlin.asJava.classes.FacadeCache
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY
 import org.jetbrains.kotlin.cli.common.messages.GradleStyleMessageRenderer
@@ -231,6 +232,10 @@ class UastEnvironment private constructor(
         //  repeatedly for multiple analyses---which we do when checkDependencies=true. This hack
         //  should be removed when we move to a model where UastEnvironment is used only once.
         resetPackagePartProviders()
+
+        // TODO: This is a temporary hotfix for b/159733104.
+        ideaProject.picoContainer.unregisterComponent(FacadeCache::class.java.name)
+        ideaProject.registerService(FacadeCache::class.java, FacadeCache(ideaProject))
 
         val perfManager = kotlinCompilerConfig.get(CLIConfigurationKeys.PERF_MANAGER)
         perfManager?.notifyAnalysisStarted()
