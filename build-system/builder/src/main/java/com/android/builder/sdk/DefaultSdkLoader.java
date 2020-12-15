@@ -466,7 +466,8 @@ public class DefaultSdkLoader implements SdkLoader {
 
     @Override
     @Nullable
-    public File getLocalEmulator() {
+    public File getLocalEmulator(@NonNull ILogger logger) {
+        init(logger);
         ProgressIndicator progress =
                 new LoggerProgressIndicatorWrapper(new StdLogger(StdLogger.Level.WARNING));
         RepoManager repoManager = mSdkHandler.getSdkManager(progress);

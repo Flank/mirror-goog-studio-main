@@ -88,5 +88,5 @@ public interface SdkLoader {
      * @return The location of the emulator, or null if it is not installed.
      */
     @Nullable
-    File getLocalEmulator();
+    File getLocalEmulator(@NonNull ILogger logger);
 }

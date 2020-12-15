@@ -134,7 +134,7 @@ public class PlatformLoader implements SdkLoader {
 
     @Nullable
     @Override
-    public File getLocalEmulator() {
+    public File getLocalEmulator(@NonNull ILogger logger) {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         progress.logWarning(
                 "Retrieving the Emulator is not supported when building using an"
