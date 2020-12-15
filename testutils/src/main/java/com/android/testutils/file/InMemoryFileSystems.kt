@@ -92,18 +92,18 @@ fun getPlatformSpecificPath(path: String): String {
  * Records a new absolute file path.
  * Parent folders are automatically created.
  */
-fun recordExistingFile(path: Path, contents: String?) =
-        recordExistingFile(path, 0, contents?.toByteArray())
+fun Path.recordExistingFile(contents: String?) =
+        recordExistingFile(0, contents?.toByteArray())
 
 /**
  * Records a new absolute file path.
  * Parent folders are automatically created.
  */
-fun recordExistingFile(path: Path, lastModified: Long = 0, contents: ByteArray? = null) {
+fun Path.recordExistingFile(lastModified: Long = 0, contents: ByteArray? = null) {
     try {
-        Files.createDirectories(path.parent)
-        Files.write(path, contents ?: ByteArray(0))
-        Files.setLastModifiedTime(path, FileTime.fromMillis(lastModified))
+        Files.createDirectories(parent)
+        Files.write(this, contents ?: ByteArray(0))
+        Files.setLastModifiedTime(this, FileTime.fromMillis(lastModified))
     } catch (e: IOException) {
         assert(false) { e.message!! }
     }
@@ -115,8 +115,8 @@ fun recordExistingFile(path: Path, lastModified: Long = 0, contents: ByteArray? 
  *
  * The returned list is sorted by alphabetic absolute path string.
  */
-fun getExistingFiles(fileSystem: FileSystem): Array<String> {
-    return fileSystem.rootDirectories
+fun FileSystem.getExistingFiles(): Array<String> {
+    return rootDirectories
         .flatMap { Files.walk(it).use { it.toList() } }
         .filter { Files.isRegularFile(it) }
         .map { it.toString() }
@@ -130,8 +130,8 @@ fun getExistingFiles(fileSystem: FileSystem): Array<String> {
  * <p>
  * The returned list is sorted by alphabetic absolute path string.
  */
-fun getExistingFolders(fileSystem: FileSystem): Array<String> {
-    return fileSystem.rootDirectories
+fun FileSystem.getExistingFolders(): Array<String> {
+    return rootDirectories
         .flatMap { Files.walk(it).use { it.toList() } }
         .filter { Files.isDirectory(it) }
         .map { it.toString() }
