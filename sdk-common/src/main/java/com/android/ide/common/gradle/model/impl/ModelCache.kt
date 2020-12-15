@@ -196,8 +196,6 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       myResourcesDirectories = provider.resourcesDirectories.makeRelativeAndDeduplicate(),
       myAidlDirectories = provider.aidlDirectories.makeRelativeAndDeduplicate(),
       myRenderscriptDirectories = provider.renderscriptDirectories.makeRelativeAndDeduplicate(),
-      myCDirectories = provider.cDirectories.makeRelativeAndDeduplicate(),
-      myCppDirectories = provider.cppDirectories.makeRelativeAndDeduplicate(),
       myResDirectories = provider.resDirectories.makeRelativeAndDeduplicate(),
       myAssetsDirectories = provider.assetsDirectories.makeRelativeAndDeduplicate(),
       myJniLibsDirectories = provider.jniLibsDirectories.makeRelativeAndDeduplicate(),

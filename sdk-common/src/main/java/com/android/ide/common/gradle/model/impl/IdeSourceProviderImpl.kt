@@ -27,8 +27,6 @@ data class IdeSourceProviderImpl(
   private val myResourcesDirectories: Collection<String>,
   private val myAidlDirectories: Collection<String>,
   private val myRenderscriptDirectories: Collection<String>,
-  private val myCDirectories: Collection<String>,
-  private val myCppDirectories: Collection<String>,
   private val myResDirectories: Collection<String>,
   private val myAssetsDirectories: Collection<String>,
   private val myJniLibsDirectories: Collection<String>,
@@ -47,8 +45,6 @@ data class IdeSourceProviderImpl(
     myResourcesDirectories = mutableListOf(),
     myAidlDirectories = mutableListOf(),
     myRenderscriptDirectories = mutableListOf(),
-    myCDirectories = mutableListOf(),
-    myCppDirectories = mutableListOf(),
     myResDirectories = mutableListOf(),
     myAssetsDirectories = mutableListOf(),
     myJniLibsDirectories = mutableListOf(),
@@ -62,8 +58,6 @@ data class IdeSourceProviderImpl(
   override val resourcesDirectories: Collection<File> get() = myResourcesDirectories.translate()
   override val aidlDirectories: Collection<File> get() = myAidlDirectories.translate()
   override val renderscriptDirectories: Collection<File> get() = myRenderscriptDirectories.translate()
-  override val cDirectories: Collection<File> get() = myCDirectories.translate()
-  override val cppDirectories: Collection<File> get() = myCppDirectories.translate()
   override val resDirectories: Collection<File> get() = myResDirectories.translate()
   override val assetsDirectories: Collection<File> get() = myAssetsDirectories.translate()
   override val jniLibsDirectories: Collection<File> get() = myJniLibsDirectories.translate()

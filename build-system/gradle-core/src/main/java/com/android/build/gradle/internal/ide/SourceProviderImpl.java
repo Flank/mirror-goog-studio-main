@@ -23,6 +23,7 @@ import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 /**
@@ -46,10 +47,6 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
     @NonNull
     private final Collection<File> rsDirs;
     @NonNull
-    private final Collection<File> cDirs;
-    @NonNull
-    private final Collection<File> cppDirs;
-    @NonNull
     private final Collection<File> resDirs;
     @NonNull
     private final Collection<File> assetsDirs;
@@ -66,8 +63,6 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.resourcesDirs = sourceProvider.getResourcesDirectories();
         this.aidlDirs = sourceProvider.getAidlDirectories();
         this.rsDirs = sourceProvider.getRenderscriptDirectories();
-        this.cDirs = sourceProvider.getCDirectories();
-        this.cppDirs = sourceProvider.getCDirectories();
         this.resDirs = sourceProvider.getResDirectories();
         this.assetsDirs = sourceProvider.getAssetsDirectories();
         this.libsDirs = sourceProvider.getJniLibsDirectories();
@@ -114,13 +109,13 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
     @NonNull
     @Override
     public Collection<File> getCDirectories() {
-        return cDirs;
+        return Collections.emptyList();
     }
 
     @NonNull
     @Override
     public Collection<File> getCppDirectories() {
-        return cppDirs;
+        return Collections.emptyList();
     }
 
     @NonNull
@@ -168,8 +163,6 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 && Objects.equals(resourcesDirs, that.resourcesDirs)
                 && Objects.equals(aidlDirs, that.aidlDirs)
                 && Objects.equals(rsDirs, that.rsDirs)
-                && Objects.equals(cDirs, that.cDirs)
-                && Objects.equals(cppDirs, that.cppDirs)
                 && Objects.equals(resDirs, that.resDirs)
                 && Objects.equals(assetsDirs, that.assetsDirs)
                 && Objects.equals(libsDirs, that.libsDirs)
@@ -186,8 +179,6 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 resourcesDirs,
                 aidlDirs,
                 rsDirs,
-                cDirs,
-                cppDirs,
                 resDirs,
                 assetsDirs,
                 libsDirs,
@@ -204,8 +195,6 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
                 .add("resourcesDirs", resourcesDirs)
                 .add("aidlDirs", aidlDirs)
                 .add("rsDirs", rsDirs)
-                .add("cDirs", cDirs)
-                .add("cppDirs", cppDirs)
                 .add("resDirs", resDirs)
                 .add("assetsDirs", assetsDirs)
                 .add("libsDirs", libsDirs)

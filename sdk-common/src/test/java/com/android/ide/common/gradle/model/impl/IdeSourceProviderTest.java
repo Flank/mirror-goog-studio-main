@@ -55,8 +55,6 @@ public class IdeSourceProviderTest {
                                 getResourcesDirectories(),
                                 getAidlDirectories(),
                                 getRenderscriptDirectories(),
-                                getCDirectories(),
-                                getCppDirectories(),
                                 getResDirectories(),
                                 getAssetsDirectories(),
                                 getJniLibsDirectories());
