@@ -16,7 +16,6 @@
 package com.android.testutils.file
 
 import java.io.IOException
-import java.lang.UnsupportedOperationException
 import java.net.URI
 import java.nio.channels.SeekableByteChannel
 import java.nio.file.AccessMode
@@ -104,12 +103,12 @@ open class DelegatingFileSystemProvider(delegateFileSystem: FileSystem) : FileSy
 
     @Throws(IOException::class)
     override fun copy(source: Path, target: Path, vararg options: CopyOption) {
-        delegate.copy(delegate(source), delegate(target))
+        delegate.copy(delegate(source), delegate(target), *options)
     }
 
     @Throws(IOException::class)
     override fun move(source: Path, target: Path, vararg options: CopyOption) {
-        delegate.move(delegate(source), delegate(target))
+        delegate.move(delegate(source), delegate(target), *options)
     }
 
     @Throws(IOException::class)
