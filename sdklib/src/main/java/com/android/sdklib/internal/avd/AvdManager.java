@@ -18,6 +18,7 @@ package com.android.sdklib.internal.avd;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.io.CancellableFileIo;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
@@ -616,6 +617,7 @@ public class AvdManager {
     /**
      * Returns whether an emulator is currently running the AVD.
      */
+    @Slow
     public boolean isAvdRunning(@NonNull AvdInfo info, @NonNull ILogger logger) {
         String pid;
         try {
@@ -657,6 +659,7 @@ public class AvdManager {
     // Log info about a running AVD.
     // This is intended to help identify why we occasionally get a false report
     // that an AVD instance is already executing.
+    @Slow
     public void logRunningAvdInfo(@NonNull AvdInfo info, @NonNull ILogger logger) {
         String pid;
         try {
@@ -705,6 +708,7 @@ public class AvdManager {
         }
     }
 
+    @Slow
     public void stopAvd(@NonNull AvdInfo info) {
         try {
             String pid = getAvdPid(info);
@@ -753,6 +757,7 @@ public class AvdManager {
      * @throws AndroidLocationException if there was an error finding the location of the
      * AVD folder.
      */
+    @Slow
     public void reloadAvds(@NonNull ILogger log) throws AndroidLocationException {
         // build the list in a temp list first, in case the method throws an exception.
         // It's better than deleting the whole list before reading the new one.
@@ -773,6 +778,7 @@ public class AvdManager {
      * @param log the log object to receive action logs
      * @return an updated AVD
      */
+    @Slow
     public AvdInfo reloadAvd(@NonNull AvdInfo avdInfo, @NonNull ILogger log) {
         AvdInfo newInfo = parseAvdInfo(avdInfo.getIniFile(), log);
         synchronized (mAllAvdList) {
@@ -809,6 +815,7 @@ public class AvdManager {
      *     list) or null in case of failure.
      */
     @Nullable
+    @Slow
     public AvdInfo createAvd(
             @NonNull Path avdFolder,
             @NonNull String avdName,
@@ -1183,6 +1190,7 @@ public class AvdManager {
      * @param log the log object to receive action logs. Cannot be null.
      * @return True if the AVD was deleted with no error.
      */
+    @Slow
     public boolean deleteAvd(@NonNull AvdInfo avdInfo, @NonNull ILogger log) {
         try {
             boolean error = false;
@@ -1238,11 +1246,11 @@ public class AvdManager {
      * @return True if the move succeeded or there was nothing to do.
      *         If false, this method will have had already output error in the log.
      */
+    @Slow
     public boolean moveAvd(@NonNull  AvdInfo avdInfo,
                            @Nullable String newName,
                            @Nullable String paramFolderPath,
                            @NonNull  ILogger log) {
-
         try {
             if (paramFolderPath != null) {
                 File f = new File(avdInfo.getDataFolderPath());
@@ -1396,6 +1404,7 @@ public class AvdManager {
      *         valid or not.
      */
     @VisibleForTesting
+    @Slow
     public AvdInfo parseAvdInfo(@NonNull File iniPath, @NonNull ILogger log) {
         Map<String, String> map = parseIniFile(new PathFileWrapper(mFop.toPath(iniPath)), log);
 
@@ -1613,6 +1622,7 @@ public class AvdManager {
      * @param log the ILogger object receiving warning/error from the parsing.
      * @return the map of (key,value) pairs, or null if the parsing failed.
      */
+    @Slow
     public static Map<String, String> parseIniFile(
             @NonNull IAbstractFile propFile,
             @Nullable ILogger log) {
@@ -1774,6 +1784,7 @@ public class AvdManager {
         return false;
     }
 
+    @Slow
     public AvdInfo updateAvd(AvdInfo avd,
             Map<String, String> newProperties) throws IOException {
         // now write the config file
@@ -1802,8 +1813,8 @@ public class AvdManager {
      * @param log the log object to receive action logs. Cannot be null.
      * @return The new AVD on success.
      */
+    @Slow
     public AvdInfo updateDeviceChanged(AvdInfo avd, ILogger log) throws IOException {
-
         // Overwrite the properties derived from the device and nothing else
         Map<String, String> properties = new HashMap<>(avd.getProperties());
 
