@@ -128,7 +128,7 @@ public class FileOpUtilsTest {
         assertEquals("content5", new String(fop.getContent(s5)));
 
         // Finally verify that nothing else is created
-        assertEquals(10, fop.getExistingFiles().length);
+        assertEquals(10, fop.getExistingFiles().size());
     }
 
     @Test
@@ -156,7 +156,7 @@ public class FileOpUtilsTest {
         assertEquals("content2", new String(fop.getContent(s2)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().length);
+        assertEquals(3, fop.getExistingFiles().size());
     }
 
     @Test
@@ -190,7 +190,7 @@ public class FileOpUtilsTest {
         assertEquals("content2", new String(fop.getContent(new File("/root/dest/foo/a"))));
 
         // Finally verify that nothing else is created
-        assertEquals(8, fop.getExistingFiles().length);
+        assertEquals(8, fop.getExistingFiles().size());
     }
 
     @Test
@@ -218,7 +218,7 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(fop.getContent(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().length);
+        assertEquals(3, fop.getExistingFiles().size());
     }
 
     @Test
@@ -242,7 +242,7 @@ public class FileOpUtilsTest {
         assertEquals("content5", new String(Files.readAllBytes(dest.resolve("baz/c"))));
 
         // Verify that the original files are gone
-        assertEquals(5, getExistingFiles(fs).length);
+        assertEquals(5, getExistingFiles(fs).size());
     }
 
     @Test
@@ -273,7 +273,7 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(Files.readAllBytes(s3Moved)));
 
         // Verify that the original files are gone
-        assertEquals(3, getExistingFiles(fs).length);
+        assertEquals(3, getExistingFiles(fs).size());
     }
 
     @Test
@@ -316,7 +316,7 @@ public class FileOpUtilsTest {
         assertEquals("content2", new String(Files.readAllBytes(dest.resolve("foo/a"))));
 
         // Finally verify that nothing else is created
-        assertEquals(2, getExistingFiles(fs).length);
+        assertEquals(2, getExistingFiles(fs).size());
     }
 
     @Test
@@ -369,7 +369,7 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(Files.readAllBytes(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, getExistingFiles(fs).length);
+        assertEquals(3, getExistingFiles(fs).size());
     }
 
     @Test
@@ -427,7 +427,7 @@ public class FileOpUtilsTest {
         assertEquals("content4", new String(Files.readAllBytes(d2)));
 
         // Finally verify that nothing else is created
-        assertEquals(4, getExistingFiles(fs).length);
+        assertEquals(4, getExistingFiles(fs).size());
     }
 
     @Test
@@ -487,7 +487,7 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(Files.readAllBytes(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, getExistingFiles(fs).length);
+        assertEquals(3, getExistingFiles(fs).size());
     }
 
     @Test

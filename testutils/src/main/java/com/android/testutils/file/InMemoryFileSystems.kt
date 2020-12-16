@@ -100,41 +100,37 @@ fun Path.recordExistingFile(contents: String?) =
  * Parent folders are automatically created.
  */
 fun Path.recordExistingFile(lastModified: Long = 0, contents: ByteArray? = null) {
-    try {
-        Files.createDirectories(parent)
-        Files.write(this, contents ?: ByteArray(0))
-        Files.setLastModifiedTime(this, FileTime.fromMillis(lastModified))
-    } catch (e: IOException) {
-        assert(false) { e.message!! }
-    }
+    Files.createDirectories(parent)
+    Files.write(this, contents ?: ByteArray(0))
+    Files.setLastModifiedTime(this, FileTime.fromMillis(lastModified))
 }
 
 /**
- * Returns the list of paths added using [.recordExistingFile]
- * and eventually updated by [.delete] operations.
+ * Returns the list of paths added using [recordExistingFile] and eventually updated by
+ * [Files.delete] operations.
  *
  * The returned list is sorted by alphabetic absolute path string.
  */
-fun FileSystem.getExistingFiles(): Array<String> {
+fun FileSystem.getExistingFiles(): List<String> {
     return rootDirectories
         .flatMap { Files.walk(it).use { it.toList() } }
         .filter { Files.isRegularFile(it) }
         .map { it.toString() }
         .sorted()
-        .toTypedArray()
+        .toList()
 }
 
 /**
- * Returns the list of folder paths added using {@link #recordExistingFolder(String)}
- * and eventually updated {@link #delete(File)} or {@link #mkdirs(File)} operations.
- * <p>
+ * Returns the list of folder paths added by [Files.createDirectory], [Files.delete] or similar
+ * operations.
+ *
  * The returned list is sorted by alphabetic absolute path string.
  */
-fun FileSystem.getExistingFolders(): Array<String> {
+fun FileSystem.getExistingFolders(): List<String> {
     return rootDirectories
         .flatMap { Files.walk(it).use { it.toList() } }
-        .filter { Files.isDirectory(it) }
+        .filter { Files.isDirectory(it) && it.parent != null }
         .map { it.toString() }
         .sorted()
-        .toTypedArray()
+        .toList()
 }

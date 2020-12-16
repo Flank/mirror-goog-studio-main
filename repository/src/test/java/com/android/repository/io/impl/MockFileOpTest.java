@@ -16,6 +16,7 @@
 
 package com.android.repository.io.impl;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 
 import com.android.annotations.NonNull;
@@ -24,7 +25,6 @@ import com.android.testutils.OsType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import junit.framework.TestCase;
@@ -85,7 +85,6 @@ public class MockFileOpTest extends TestCase {
 
         assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                        "/",
                         "/dir1",
                         "/dir1/dir2",
                         "/dir1/dir2/dir3",
@@ -138,18 +137,17 @@ public class MockFileOpTest extends TestCase {
     }
 
     public void testMkDirs() {
-        assertEqualsMaybeIgnoreCase(ImmutableList.of("/"), m.getExistingFolders());
+        assertThat(m.getExistingFolders()).isEmpty();
 
         assertTrue(m.mkdirs(createFile("/dir1")));
-        assertEqualsMaybeIgnoreCase(ImmutableList.of("/", "/dir1"), m.getExistingFolders());
+        assertEqualsMaybeIgnoreCase(ImmutableList.of("/dir1"), m.getExistingFolders());
 
         m.recordExistingFolder("/dir1");
-        assertEqualsMaybeIgnoreCase(ImmutableList.of("/", "/dir1"), m.getExistingFolders());
+        assertEqualsMaybeIgnoreCase(ImmutableList.of("/dir1"), m.getExistingFolders());
 
         assertTrue(m.mkdirs(createFile("/dir1/dir2/dir3")));
         assertEqualsMaybeIgnoreCase(
-                ImmutableList.of("/", "/dir1", "/dir1/dir2", "/dir1/dir2/dir3"),
-                m.getExistingFolders());
+                ImmutableList.of("/dir1", "/dir1/dir2", "/dir1/dir2/dir3"), m.getExistingFolders());
     }
 
     public void testRenameTo() {
@@ -160,7 +158,6 @@ public class MockFileOpTest extends TestCase {
                 ImmutableList.of("/dir1/dir2/dir6/file7"), m.getExistingFiles());
         assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                        "/",
                         "/dir1",
                         "/dir1/dir2",
                         "/dir1/dir2/dir3",
@@ -173,7 +170,6 @@ public class MockFileOpTest extends TestCase {
                 ImmutableList.of("/dir1/newDir2/dir6/file7"), m.getExistingFiles());
         assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                        "/",
                         "/dir1",
                         "/dir1/newDir2",
                         "/dir1/newDir2/dir3",
@@ -191,7 +187,6 @@ public class MockFileOpTest extends TestCase {
                 ImmutableList.of("/dir1/newDir2/dir6/newFile7"), m.getExistingFiles());
         assertEqualsMaybeIgnoreCase(
                 ImmutableList.of(
-                        "/",
                         "/dir1",
                         "/dir1/newDir2",
                         "/dir1/newDir2/dir3",
@@ -240,16 +235,16 @@ public class MockFileOpTest extends TestCase {
     }
 
     private void assertEqualsMaybeIgnoreCase(
-            @NonNull List<String> expected, @NonNull String[] actual) {
+            @NonNull List<String> expected, @NonNull List<String> actual) {
         if (OsType.getHostOs() == OsType.WINDOWS || OsType.getHostOs() == OsType.DARWIN) {
             assertEquals(
                     expected.stream()
                             .map(m::getPlatformSpecificPath)
                             .map(String::toLowerCase)
                             .collect(Collectors.toList()),
-                    Arrays.stream(actual).map(String::toLowerCase).collect(Collectors.toList()));
+                    actual.stream().map(String::toLowerCase).collect(Collectors.toList()));
         } else {
-            assertEquals(expected, Arrays.asList(actual));
+            assertEquals(expected, actual);
         }
     }
 }

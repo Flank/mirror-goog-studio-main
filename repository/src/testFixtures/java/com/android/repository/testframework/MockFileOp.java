@@ -30,6 +30,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.util.List;
 
 /**
  * Mock version of {@link FileOpImpl} that wraps some common {@link File} operations on files and
@@ -199,24 +200,24 @@ public class MockFileOp extends FileOp {
     }
 
     /**
-     * Returns the list of paths added using {@link #recordExistingFile(String)}
-     * and eventually updated by {@link #delete(File)} operations.
-     * <p>
-     * The returned list is sorted by alphabetic absolute path string.
+     * Returns the list of paths added using {@link #recordExistingFile(String)} and eventually
+     * updated by {@link #delete(File)} operations.
+     *
+     * <p>The returned list is sorted by alphabetic absolute path string.
      */
     @NonNull
-    public String[] getExistingFiles() {
+    public List<String> getExistingFiles() {
         return InMemoryFileSystems.getExistingFiles(mFileSystem);
     }
 
     /**
-     * Returns the list of folder paths added using {@link #recordExistingFolder(String)}
-     * and eventually updated {@link #delete(File)} or {@link #mkdirs(File)} operations.
-     * <p>
-     * The returned list is sorted by alphabetic absolute path string.
+     * Returns the list of folder paths added using {@link #recordExistingFolder(String)} and
+     * eventually updated {@link #delete(File)} or {@link #mkdirs(File)} operations.
+     *
+     * <p>The returned list is sorted by alphabetic absolute path string.
      */
     @NonNull
-    public String[] getExistingFolders() {
+    public List<String> getExistingFolders() {
         return InMemoryFileSystems.getExistingFolders(mFileSystem);
     }
 
