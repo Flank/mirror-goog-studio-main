@@ -28,7 +28,9 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.google.common.io.Files
 import java.io.File
-import java.util.*
+import java.util.ArrayList
+import java.util.HashMap
+import java.util.HashSet
 
 /**
  * The purpose of this class is to take the raw output of an ndk-build -n call and to produce a
@@ -54,7 +56,7 @@ import java.util.*
  */
 class NativeBuildConfigValueBuilder internal constructor(
     private val androidMk: File,
-    private val executionRootPath: File,
+    private var executionRootPath: File,
     fileConventions: OsFileConventions
 ) {
     private val toolChainToCCompiler: MutableMap<String, String> = HashMap()
@@ -107,6 +109,7 @@ class NativeBuildConfigValueBuilder internal constructor(
         if (outputs.isNotEmpty()) {
             throw RuntimeException("setCommands should be called once")
         }
+        extractWorkingDirectoryFromDryRunOutputIfAvailable(dryRunOutput)
         val buildSteps = CommandClassifier.classify(dryRunOutput, fileConventions)
         val outputs = FlowAnalyzer.analyze(buildSteps)
         for ((key, value) in outputs.entries()) {
@@ -115,6 +118,18 @@ class NativeBuildConfigValueBuilder internal constructor(
         buildTargetsCommand =
             buildCommand + listOf(CxxRegularBuilder.BUILD_TARGETS_PLACEHOLDER)
         return this
+    }
+
+    private fun extractWorkingDirectoryFromDryRunOutputIfAvailable(dryRunOutput: String) {
+        if (dryRunOutput.contains("make: Entering directory")) {
+            // A custom working dir can be specified with `-C` when invoking ndk-build to overwrite
+            // the working directory when invoking the compiler. In NDK 20.x and before, the path is
+            // quoted with asymmetric single quotes "`'". In NDK 21 and above, it's symmetric.
+            val workingDirPattern =
+                Regex("^make: Entering directory [`'](.*?)'$", RegexOption.MULTILINE)
+            val match = workingDirPattern.find(dryRunOutput) ?: return
+            executionRootPath = File(match.groups[1]!!.value)
+        }
     }
 
     /**
