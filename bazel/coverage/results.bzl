@@ -48,31 +48,6 @@ def test_shard_split_dict():
             ret[k] = None
     return ret
 
-def coverage_class_jar(test):
-    target_formatted = ":".join(test.rsplit("/", 1))
-    incl = [
-        "com/android/*.class",
-        "org/jetbrains/android/*.class",
-        "org/jetbrains/kotlin/android/*.class",
-    ]
-    excl = [
-        "com/android/aapt/*.class",
-        "com/android/i18n/*.class",
-        "com/android/internal/*.class",
-        "com/android/tools/r8/*.class",
-    ]
-    native.genrule(
-        name = "{}.CovClsJar".format(test),
-        srcs = ["@//{}_deploy.jar".format(target_formatted)],
-        outs = ["{}/coverage.jar".format(test)],
-        # zip -U copies from one zip to another
-        # We use it to extract the classes we care about for coverage
-        cmd = "zip -q -U $< --out $@ {incl} -x {excl}".format(
-            incl = " ".join(incl),
-            excl = " ".join(excl),
-        ),
-    )
-
 def extract_exec_files(path):
     native.genrule(
         name = "{}.JacocoExec".format(path),
@@ -107,13 +82,13 @@ def jacoco_xml_report(test):
         tools = [jacoco_cli],
         srcs = [
             "{}.JacocoExec".format(test),
-            "{}.CovClsJar".format(test),
+            "@baseline//:merged-baseline-jars",
         ],
         outs = ["{}/jacoco.xml".format(test)],
         cmd = "$(location {cli}) report --quiet $(location {exc}) --classfiles $(location {jar}) --xml $@".format(
             cli = jacoco_cli,
             exc = "{}.JacocoExec".format(test),
-            jar = "{}.CovClsJar".format(test),
+            jar = "@baseline//:merged-baseline-jars",
         ),
     )
 
@@ -131,7 +106,6 @@ def lcov_tracefile(test):
     )
 
 def test_target_pipeline(test, shards):
-    coverage_class_jar(test)
     jacoco_exec_file(test, shards)
     jacoco_xml_report(test)
     lcov_tracefile(test)

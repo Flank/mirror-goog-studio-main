@@ -28,6 +28,12 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
     if not jar:
         jar = name
 
+    native.alias(
+        name = name + "_coverage.baseline.jar",
+        actual = jar,
+        visibility = ["@baseline//:__pkg__"],
+    )
+
     tags = tags if tags else []
     tags += [] if "no_mac" in tags else ["no_mac"]
     tags += [] if "no_windows" in tags else ["no_windows"]
@@ -54,7 +60,7 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
     native.genrule(
         name = name + "_coverage.baseline.xml",
         tools = ["@//prebuilts/tools/common/jacoco:cli"],
-        srcs = [jar],
+        srcs = [name + "_coverage.baseline.jar"],
         outs = [name + ".coverage.baseline.xml"],
         tags = tags,
         cmd = "$(location {cli}) report --quiet --classfiles $< --xml $@".format(
