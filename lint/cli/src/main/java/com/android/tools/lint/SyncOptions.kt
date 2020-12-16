@@ -16,19 +16,12 @@
 @file:JvmName("SyncOptions")
 package com.android.tools.lint
 
-import com.android.SdkConstants
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.detector.api.Category.Companion.getCategory
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.model.LintModelModule
-import java.io.BufferedWriter
 import java.io.File
-import java.io.File.separator
-import java.io.FileWriter
-import java.io.IOException
-import java.io.PrintWriter
-import java.io.Writer
 import com.android.tools.lint.model.LintModelSeverity as ModelSeverity
 
 // Operations related to syncing LintOptions to lint's internal state
