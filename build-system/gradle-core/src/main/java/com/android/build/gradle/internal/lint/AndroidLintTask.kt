@@ -292,8 +292,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             arguments += listOf("--check", check)
         }
 
-        arguments += listOf("--variant", variantInputs.name.get())
-
         val rules = lintRulesJar.files.filter { it.isFile }.map { it.absolutePath }
         if (rules.isNotEmpty()) {
             arguments += "--lint-rule-jars"
