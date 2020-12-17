@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.AndroidJarInput
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
@@ -163,9 +164,7 @@ abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
             creationConfig.services.initializeAapt2Input(task.aapt2)
 
-            task.androidJarInput.sdkBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.androidJarInput.initialize(creationConfig)
         }
     }
 }

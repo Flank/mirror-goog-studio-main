@@ -95,7 +95,13 @@ abstract class RenderscriptCompile : NdkTask() {
 
     @Input
     fun getBuildToolsVersion(): String =
-        sdkBuildService.get().buildToolInfoProvider.get().revision.toString()
+        buildToolsRevision.get().toString()
+
+    @get: Input
+    abstract val compileSdkVersion: Property<String>
+
+    @get: Internal
+    abstract val buildToolsRevision: Property<Revision>
 
     @get:Internal
     abstract val sdkBuildService: Property<SdkComponentsBuildService>
@@ -157,7 +163,10 @@ abstract class RenderscriptCompile : NdkTask() {
 
         val sourceDirectories = sourceDirs.files
 
-        val buildToolsInfo = sdkBuildService.get().buildToolInfoProvider.get()
+        val buildToolsInfo = sdkBuildService.get().sdkLoader(
+            compileSdkVersion = compileSdkVersion,
+            buildToolsRevision = buildToolsRevision
+        ).buildToolInfoProvider.get()
         compileAllRenderscriptFiles(
             sourceDirectories,
             importFolders,
@@ -307,6 +316,12 @@ abstract class RenderscriptCompile : NdkTask() {
 
             task.ndkConfig = variantDslInfo.ndkConfig
 
+            task.buildToolsRevision.setDisallowChanges(
+                creationConfig.globalScope.extension.buildToolsRevision
+            )
+            task.compileSdkVersion.setDisallowChanges(
+                creationConfig.globalScope.extension.compileSdkVersion
+            )
             task.sdkBuildService.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )

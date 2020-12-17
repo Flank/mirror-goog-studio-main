@@ -19,6 +19,7 @@ import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
+import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.LibraryAndroidComponentsExtension;
 import com.android.build.api.extension.impl.LibraryAndroidComponentsExtensionImpl;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
@@ -33,6 +34,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.LibraryExtensionImpl;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.services.DslServices;
@@ -106,12 +108,20 @@ public class LibraryPlugin
             @NonNull
                     VariantApiOperationsRegistrar<LibraryVariantBuilderImpl, LibraryVariantImpl>
                             variantApiOperationsRegistrar) {
+        SdkComponents sdkComponents =
+                dslServices.newInstance(
+                        SdkComponentsImpl.class,
+                        dslServices,
+                        project.provider(getExtension()::getCompileSdkVersion),
+                        project.provider(getExtension()::getBuildToolsRevision));
+
         return project.getExtensions()
                 .create(
                         LibraryAndroidComponentsExtension.class,
                         "androidComponents",
                         LibraryAndroidComponentsExtensionImpl.class,
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar);
     }
 

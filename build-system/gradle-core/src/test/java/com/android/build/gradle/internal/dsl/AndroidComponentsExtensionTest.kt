@@ -21,9 +21,7 @@ import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.*
 import com.android.build.api.variant.*
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.google.common.truth.Truth.assertThat
@@ -31,44 +29,29 @@ import org.gradle.api.Action
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
-import java.io.File
 import java.util.regex.Pattern
 
 class AndroidComponentsExtensionTest {
     private lateinit var dslServices: DslServices
-    private lateinit var sdkComponents: SdkComponentsBuildService
+    private lateinit var sdkComponents: SdkComponents
 
     @Before
     fun setUp() {
-        sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
-        Mockito.`when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
-        Mockito.`when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-        Mockito.`when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-
-        dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponents))
+        val sdkComponentsBuildService = Mockito.mock(SdkComponentsBuildService::class.java)
+        dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponentsBuildService))
+        sdkComponents = Mockito.mock(SdkComponents::class.java)
     }
 
     @Test
     fun testSdkComponents() {
         val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
-        Mockito.`when`(sdkComponents.adbExecutableProvider).thenReturn(
-            FakeGradleProvider(FakeGradleRegularFile(File("/adb")))
-        )
-        Mockito.`when`(sdkComponents.ndkDirectoryProvider).thenReturn(
-            FakeGradleProvider(FakeGradleDirectory(File("/ndk")))
-        )
-        Mockito.`when`(sdkComponents.sdkDirectoryProvider).thenReturn(
-            FakeGradleProvider(FakeGradleDirectory(File("/sdk")))
-        )
 
         val sdkComponentsFromComponents = ApplicationAndroidComponentsExtensionImpl(
             dslServices,
+            sdkComponents,
             variantApiOperationsRegistrar
         ).sdkComponents
-        assertThat(sdkComponentsFromComponents.adb).isNotNull()
-        assertThat(sdkComponentsFromComponents.adb.get().asFile.absolutePath).endsWith("adb")
-        assertThat(sdkComponentsFromComponents.ndkDirectory.get().asFile.absolutePath).endsWith("ndk")
-        assertThat(sdkComponentsFromComponents.sdkDirectory.get().asFile.absolutePath).endsWith("sdk")
+        assertThat(sdkComponentsFromComponents).isSameInstanceAs(sdkComponents)
     }
 
     @Test
@@ -77,6 +60,7 @@ class AndroidComponentsExtensionTest {
         testNoSelection(
                 ApplicationAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar
                 ),
                 variantApiOperationsRegistrar,
@@ -89,6 +73,7 @@ class AndroidComponentsExtensionTest {
         testNoSelection(
                 LibraryAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar
                 ),
                 variantApiOperationsRegistrar,
@@ -101,6 +86,7 @@ class AndroidComponentsExtensionTest {
         testNoSelection(
                 DynamicFeatureAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar,
                 ),
                 variantApiOperationsRegistrar,
@@ -113,6 +99,7 @@ class AndroidComponentsExtensionTest {
         testNoSelection(
                 TestAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar),
                 variantApiOperationsRegistrar,
                 TestVariantBuilder::class.java)
@@ -124,6 +111,7 @@ class AndroidComponentsExtensionTest {
         testAllSelection(
                 ApplicationAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar),
                 variantApiOperationsRegistrar,
                 ApplicationVariantBuilder::class.java)
@@ -135,6 +123,7 @@ class AndroidComponentsExtensionTest {
         testAllSelection(
                 LibraryAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar
                 ),
                 variantApiOperationsRegistrar,
@@ -147,6 +136,7 @@ class AndroidComponentsExtensionTest {
         testAllSelection(
                 DynamicFeatureAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar
                 ),
                 variantApiOperationsRegistrar,
@@ -159,6 +149,7 @@ class AndroidComponentsExtensionTest {
         testAllSelection(
                 TestAndroidComponentsExtensionImpl(
                         dslServices,
+                        sdkComponents,
                         variantApiOperationsRegistrar
                 ),
                 variantApiOperationsRegistrar,
@@ -169,7 +160,9 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testBeforeVariants() {
         val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
-        val appExtension = ApplicationAndroidComponentsExtensionImpl(dslServices, variantApiOperationsRegistrar)
+        val appExtension = ApplicationAndroidComponentsExtensionImpl(dslServices,
+            Mockito.mock(SdkComponents::class.java),
+            variantApiOperationsRegistrar)
         val fooVariant = appExtension.selector().withName(Pattern.compile("foo"))
         appExtension.beforeVariants {
                     it.minSdkVersion = AndroidVersion(23)
@@ -183,7 +176,9 @@ class AndroidComponentsExtensionTest {
     @Test
     fun testOnVariantsProperties() {
         val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
-        val appExtension = ApplicationAndroidComponentsExtensionImpl(dslServices, variantApiOperationsRegistrar)
+        val appExtension = ApplicationAndroidComponentsExtensionImpl(dslServices,
+            Mockito.mock(SdkComponents::class.java),
+            variantApiOperationsRegistrar)
         val fooVariant = appExtension.selector().withName(Pattern.compile("foo"))
 
         appExtension.onVariants(fooVariant, Action { it.artifacts.get(ArtifactType.APK) })

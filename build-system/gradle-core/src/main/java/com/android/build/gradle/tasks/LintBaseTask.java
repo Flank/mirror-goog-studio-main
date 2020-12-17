@@ -39,7 +39,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.StartParameterUtils;
 import com.android.build.gradle.internal.dsl.LintOptions;
@@ -134,13 +133,8 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
     }
 
     // No influence on output, this is to give access to the build tools version.
-    @NonNull
-    private Revision getBuildToolsRevision() {
-        return getSdkBuildService().get().getBuildToolsRevisionProvider().get();
-    }
-
     @Internal
-    public abstract Property<SdkComponentsBuildService> getSdkBuildService();
+    public abstract Property<Revision> getBuildToolsRevision();
 
     protected abstract class LintBaseTaskDescriptor extends
             com.android.tools.lint.gradle.api.LintExecutionRequest {
@@ -182,7 +176,7 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
         @NonNull
         @Override
         public Revision getBuildToolsRevision() {
-            return LintBaseTask.this.getBuildToolsRevision();
+            return LintBaseTask.this.getBuildToolsRevision().get();
         }
 
         @Override
@@ -451,10 +445,10 @@ public abstract class LintBaseTask extends NonIncrementalGlobalTask {
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
             HasConfigurableValuesKt.setDisallowChanges(
-                    lintTask.getSdkBuildService(),
-                    BuildServicesKt.getBuildService(
-                            lintTask.getProject().getGradle().getSharedServices(),
-                            SdkComponentsBuildService.class));
+                    lintTask.getBuildToolsRevision(),
+                    getGlobalScope()
+                            .getProject()
+                            .provider(getGlobalScope().getExtension()::getBuildToolsRevision));
 
             lintTask.lintClassPath = globalScope.getProject().getConfigurations()
                     .getByName(LINT_CLASS_PATH);

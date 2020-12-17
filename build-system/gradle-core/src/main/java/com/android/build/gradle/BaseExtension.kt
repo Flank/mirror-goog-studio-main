@@ -393,7 +393,8 @@ abstract class BaseExtension protected constructor(
      */
     val adbExecutable: File
         get() {
-            return dslServices.sdkComponents.flatMap { it.adbExecutableProvider }.get().asFile
+            return globalScope.versionedSdkLoader.flatMap {
+                it.adbExecutableProvider }.get().asFile
         }
 
     /** This property is deprecated. Instead, use [adbExecutable]. */

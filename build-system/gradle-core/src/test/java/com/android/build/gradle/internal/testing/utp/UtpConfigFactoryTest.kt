@@ -44,7 +44,7 @@ import java.io.File
  */
 class UtpConfigFactoryTest {
     @get:Rule var mockitoJUnitRule: MockitoRule = MockitoJUnit.rule()
-    @Mock lateinit var mockSdkComponents: SdkComponentsBuildService
+    @Mock lateinit var versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
     @Mock
     lateinit var mockAppApk: File
     @Mock
@@ -113,17 +113,17 @@ class UtpConfigFactoryTest {
         `when`(mockAppApk.absolutePath).thenReturn("mockAppApkPath")
         `when`(mockTestApk.absolutePath).thenReturn("mockTestApkPath")
         `when`(mockHelperApk.absolutePath).thenReturn("mockHelperApkPath")
-        `when`(mockSdkComponents.sdkDirectoryProvider).thenReturn(
+        `when`(versionedSdkLoader.sdkDirectoryProvider).thenReturn(
             FakeGradleProvider(
                 FakeGradleDirectory(mockSdkDir)
             )
         )
         `when`(mockSdkDir.absolutePath).thenReturn("mockSdkDirPath")
-        `when`(mockSdkComponents.adbExecutableProvider).thenReturn(mockAdbProvider)
+        `when`(versionedSdkLoader.adbExecutableProvider).thenReturn(mockAdbProvider)
         `when`(mockAdbProvider.get()).thenReturn(mockAdb)
         `when`(mockAdb.asFile).thenReturn(mockAdbFile)
         `when`(mockAdbFile.absolutePath).thenReturn("mockAdbPath")
-        `when`(mockSdkComponents.buildToolInfoProvider).thenReturn(mockBuildToolInfoProvider)
+        `when`(versionedSdkLoader.buildToolInfoProvider).thenReturn(mockBuildToolInfoProvider)
         `when`(mockBuildToolInfoProvider.get()).thenReturn(mockBuildToolInfo)
         `when`(mockBuildToolInfo.getPath(ArgumentMatchers.any())).then {
             when (it.getArgument<BuildToolInfo.PathId>(0)) {
@@ -142,7 +142,7 @@ class UtpConfigFactoryTest {
             testData,
             listOf(mockAppApk, mockTestApk, mockHelperApk),
             utpDependencies,
-            mockSdkComponents,
+            versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
             mockTestLogDir,
@@ -279,7 +279,7 @@ class UtpConfigFactoryTest {
             testData,
             listOf(mockAppApk, mockTestApk, mockHelperApk),
             utpDependencies,
-            mockSdkComponents,
+            versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
             mockTestLogDir,

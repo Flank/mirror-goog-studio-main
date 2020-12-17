@@ -671,7 +671,7 @@ public class PluginDslTest {
         plugin.createAndroidTasks();
         assertThat(
                         plugin.globalScope
-                                .getSdkComponents()
+                                .getVersionedSdkLoader()
                                 .get()
                                 .getBuildToolsRevisionProvider()
                                 .get())

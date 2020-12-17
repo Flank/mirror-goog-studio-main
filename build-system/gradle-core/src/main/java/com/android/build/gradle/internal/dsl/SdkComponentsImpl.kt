@@ -18,16 +18,25 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.gradle.internal.services.DslServices
+import com.android.repository.Revision
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-open class SdkComponentsImpl @Inject constructor(dslServices: DslServices) : SdkComponents {
+open class SdkComponentsImpl @Inject constructor(
+    dslServices: DslServices,
+    compileSdkVersion: Provider<String>,
+    buildToolsRevision: Provider<Revision>
+) : SdkComponents {
     override val sdkDirectory: Provider<Directory> =
-        dslServices.sdkComponents.flatMap { it.sdkDirectoryProvider }
+        dslServices.sdkComponents.flatMap {
+            it.sdkLoader(compileSdkVersion, buildToolsRevision).sdkDirectoryProvider }
     override val ndkDirectory: Provider<Directory> =
         dslServices.sdkComponents.flatMap { it.ndkDirectoryProvider }
     override val adb: Provider<RegularFile> =
-        dslServices.sdkComponents.flatMap { it.adbExecutableProvider }
+        dslServices.sdkComponents.flatMap {
+            it.sdkLoader(compileSdkVersion, buildToolsRevision)
+                .adbExecutableProvider
+        }
 }

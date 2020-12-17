@@ -31,7 +31,6 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.AvdComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
-import com.android.build.gradle.internal.ide.DependencyFailureHandler;
 import com.android.build.gradle.internal.lint.CustomLintCheckUtils;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.services.DslServices;
@@ -328,7 +327,7 @@ public class GlobalScope {
      * @return {@link FileCollection} for the boot classpath.
      */
     @NonNull
-    public Provider<List<RegularFile>> getBootClasspath() {
+    public synchronized Provider<List<RegularFile>> getBootClasspath() {
         if (bootClasspath == null) {
             bootClasspath =
                     project.provider(
@@ -341,7 +340,7 @@ public class GlobalScope {
                                         .getTargetCompatibility()
                                         .isJava8Compatible()) {
                                     builder.add(
-                                            getSdkComponents()
+                                            getVersionedSdkLoader()
                                                     .get()
                                                     .getCoreLambdaStubsProvider()
                                                     .get());
@@ -352,6 +351,8 @@ public class GlobalScope {
         return bootClasspath;
     }
 
+    Provider<List<RegularFile>> filteredBootClasspath = null;
+
     /**
      * Returns the boot classpath to be used during compilation with all available additional jars
      * but only the requested optional ones.
@@ -360,20 +361,51 @@ public class GlobalScope {
      *
      * @return a {@link FileCollection} that forms the filtered classpath.
      */
-    public Provider<List<RegularFile>> getFilteredBootClasspath() {
-        return BootClasspathBuilder.INSTANCE.computeClasspath(
-                project,
-                getDslServices().getIssueReporter(),
-                getSdkComponents()
-                        .flatMap(SdkComponentsBuildService::getTargetBootClasspathProvider),
-                getSdkComponents()
-                        .flatMap(SdkComponentsBuildService::getTargetAndroidVersionProvider),
-                getSdkComponents()
-                        .flatMap(SdkComponentsBuildService::getAdditionalLibrariesProvider),
-                getSdkComponents().flatMap(SdkComponentsBuildService::getOptionalLibrariesProvider),
-                getSdkComponents().flatMap(SdkComponentsBuildService::getAnnotationsJarProvider),
-                false,
-                ImmutableList.copyOf(getExtension().getLibraryRequests()));
+    public synchronized Provider<List<RegularFile>> getFilteredBootClasspath() {
+        if (filteredBootClasspath == null) {
+            Provider<SdkComponentsBuildService.VersionedSdkLoader> versionedSdkLoader =
+                    getVersionedSdkLoader();
+            filteredBootClasspath =
+                    BootClasspathBuilder.INSTANCE.computeClasspath(
+                            project,
+                            getDslServices().getIssueReporter(),
+                            versionedSdkLoader.flatMap(
+                                    SdkComponentsBuildService.VersionedSdkLoader
+                                            ::getTargetBootClasspathProvider),
+                            versionedSdkLoader.flatMap(
+                                    SdkComponentsBuildService.VersionedSdkLoader
+                                            ::getTargetAndroidVersionProvider),
+                            versionedSdkLoader.flatMap(
+                                    SdkComponentsBuildService.VersionedSdkLoader
+                                            ::getAdditionalLibrariesProvider),
+                            versionedSdkLoader.flatMap(
+                                    SdkComponentsBuildService.VersionedSdkLoader
+                                            ::getOptionalLibrariesProvider),
+                            versionedSdkLoader.flatMap(
+                                    SdkComponentsBuildService.VersionedSdkLoader
+                                            ::getAnnotationsJarProvider),
+                            false,
+                            ImmutableList.copyOf(getExtension().getLibraryRequests()));
+        }
+        return filteredBootClasspath;
+    }
+
+    private Provider<SdkComponentsBuildService.VersionedSdkLoader> versionedSdkLoader = null;
+
+    public synchronized Provider<SdkComponentsBuildService.VersionedSdkLoader>
+            getVersionedSdkLoader() {
+        if (versionedSdkLoader == null) {
+            versionedSdkLoader =
+                    getSdkComponents()
+                            .map(
+                                    sdkComponentsBuildService ->
+                                            sdkComponentsBuildService.sdkLoader(
+                                                    project.provider(
+                                                            extension::getCompileSdkVersion),
+                                                    project.provider(
+                                                            extension::getBuildToolsRevision)));
+        }
+        return versionedSdkLoader;
     }
 
     /**
@@ -392,14 +424,26 @@ public class GlobalScope {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
                 project,
                 getDslServices().getIssueReporter(),
-                getSdkComponents()
-                        .flatMap(SdkComponentsBuildService::getTargetBootClasspathProvider),
-                getSdkComponents()
-                        .flatMap(SdkComponentsBuildService::getTargetAndroidVersionProvider),
-                getSdkComponents()
-                        .flatMap(SdkComponentsBuildService::getAdditionalLibrariesProvider),
-                getSdkComponents().flatMap(SdkComponentsBuildService::getOptionalLibrariesProvider),
-                getSdkComponents().flatMap(SdkComponentsBuildService::getAnnotationsJarProvider),
+                getVersionedSdkLoader()
+                        .flatMap(
+                                SdkComponentsBuildService.VersionedSdkLoader
+                                        ::getTargetBootClasspathProvider),
+                getVersionedSdkLoader()
+                        .flatMap(
+                                SdkComponentsBuildService.VersionedSdkLoader
+                                        ::getTargetAndroidVersionProvider),
+                getVersionedSdkLoader()
+                        .flatMap(
+                                SdkComponentsBuildService.VersionedSdkLoader
+                                        ::getAdditionalLibrariesProvider),
+                getVersionedSdkLoader()
+                        .flatMap(
+                                SdkComponentsBuildService.VersionedSdkLoader
+                                        ::getOptionalLibrariesProvider),
+                getVersionedSdkLoader()
+                        .flatMap(
+                                SdkComponentsBuildService.VersionedSdkLoader
+                                        ::getAnnotationsJarProvider),
                 true,
                 ImmutableList.of());
     }
