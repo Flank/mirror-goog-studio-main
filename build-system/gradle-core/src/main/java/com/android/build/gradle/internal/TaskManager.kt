@@ -355,9 +355,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
         if (variantProperties.variantDslInfo.renderscriptSupportModeEnabled) {
             val fileCollection = project.files(
-                    globalScope
-                            .sdkComponents
-                            .flatMap(SdkComponentsBuildService::renderScriptSupportJarProvider))
+                    globalScope.versionedSdkLoader.flatMap {
+                        it.renderScriptSupportJarProvider
+                    }
+            )
             project.dependencies.add(variantDependencies.compileClasspath.name, fileCollection)
             if (variantType.isApk && !variantType.isForTesting) {
                 project.dependencies.add(variantDependencies.runtimeClasspath.name, fileCollection)
@@ -393,10 +394,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .add(
                             variantDependencies.compileClasspath.name,
                             project.files(
-                                    globalScope
-                                            .sdkComponents
-                                            .flatMap(
-                                                    SdkComponentsBuildService::renderScriptSupportJarProvider)))
+                                    globalScope.versionedSdkLoader.flatMap {
+                                        it.renderScriptSupportJarProvider
+                                    }
+                            ))
+
         }
         if (testVariant.variantType.isApk) { // ANDROID_TEST
             if ((testVariant as ApkCreationConfig).dexingType.isLegacyMultiDexMode()) {
@@ -535,11 +537,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         VariantDependencies.CONFIG_NAME_ANDROID_APIS,
                         project.files(
                                 Callable {
-                                    globalScope
-                                            .sdkComponents
-                                            .flatMap(
-                                                    SdkComponentsBuildService::androidJarProvider)
-                                            .orNull
+                                    globalScope.versionedSdkLoader.flatMap {
+                                        it.androidJarProvider
+                                    }.orNull
                                 } as Callable<*>))
 
         // Adding this task to help the IDE find the mockable JAR.

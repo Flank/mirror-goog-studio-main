@@ -35,7 +35,7 @@ import java.io.IOException
 class ManagedDeviceTestRunner(
     private val javaProcessExecutor: JavaProcessExecutor,
     private val utpDependencies: UtpDependencies,
-    private val sdkComponents: SdkComponentsBuildService,
+    private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
     private val retentionConfig: RetentionConfig,
     private val useOrchestrator: Boolean,
     private val configFactory: UtpConfigFactory = UtpConfigFactory()) {
@@ -61,7 +61,7 @@ class ManagedDeviceTestRunner(
                     testData,
                     testedApks.union(helperApks) + testData.testApk,
                     utpDependencies,
-                    sdkComponents,
+                    versionedSdkLoader,
                     utpOutputDir,
                     utpTmpDir,
                     utpTestLogDir,

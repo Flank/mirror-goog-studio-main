@@ -44,14 +44,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -78,17 +76,8 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             .include("**/*." + ShaderProcessor.EXT_FRAG)
             .include("**/*." + ShaderProcessor.EXT_COMP);
 
-    @Internal
-    public Provider<Revision> getBuildToolInfoRevisionProvider() {
-        return getSdkBuildService()
-                .flatMap(SdkComponentsBuildService::getBuildToolsRevisionProvider);
-    }
-
     @Input
-    public Provider<String> getBuildToolsVersion() {
-        return getBuildToolInfoRevisionProvider()
-                .map(rev -> Objects.requireNonNull(rev.toString()));
-    }
+    public abstract Property<Revision> getBuildToolInfoRevisionProvider();
 
     @Internal
     public abstract Property<SdkComponentsBuildService> getSdkBuildService();
@@ -290,6 +279,11 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                     BuildServicesKt.getBuildService(
                             creationConfig.getServices().getBuildServiceRegistry(),
                             SdkComponentsBuildService.class));
+
+            setDisallowChanges(
+                    task.getBuildToolInfoRevisionProvider(),
+                    creationConfig.getGlobalScope().getExtension().getBuildToolsRevision());
+
             creationConfig
                     .getArtifacts()
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());

@@ -32,11 +32,9 @@ import org.gradle.api.Action
 
 abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, VariantT: Variant>(
         private val dslServices: DslServices,
+        override val sdkComponents: SdkComponents,
         private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
 ): AndroidComponentsExtension<VariantBuilderT, VariantT> {
-
-    override val sdkComponents: SdkComponents =
-        dslServices.newInstance(SdkComponentsImpl::class.java, dslServices)
 
     override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
         variantApiOperations.variantBuilderOperations.addOperation({

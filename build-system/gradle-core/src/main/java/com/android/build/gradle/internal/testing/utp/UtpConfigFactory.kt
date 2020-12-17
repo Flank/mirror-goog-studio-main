@@ -77,7 +77,7 @@ class UtpConfigFactory {
         testData: StaticTestData,
         apks: Iterable<File>,
         utpDependencies: UtpDependencies,
-        sdkComponents: SdkComponentsBuildService,
+        versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
         testLogDir: File,
@@ -92,7 +92,7 @@ class UtpConfigFactory {
                     apks,
                     testData,
                     utpDependencies,
-                    sdkComponents,
+                    versionedSdkLoader,
                     outputDir,
                     tmpDir,
                     testLogDir,
@@ -115,7 +115,7 @@ class UtpConfigFactory {
         testData: StaticTestData,
         apks: Iterable<File>,
         utpDependencies: UtpDependencies,
-        sdkComponents: SdkComponentsBuildService,
+        versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
         testLogDir: File,
@@ -126,7 +126,7 @@ class UtpConfigFactory {
             addDevice(createGradleManagedDevice(device, testData, utpDependencies))
             addTestFixture(
                 createTestFixture(
-                    null, apks, testData, utpDependencies, sdkComponents,
+                    null, apks, testData, utpDependencies, versionedSdkLoader,
                     outputDir, tmpDir, testLogDir, retentionConfig, useOrchestrator
                 )
             )
@@ -231,7 +231,7 @@ class UtpConfigFactory {
         apks: Iterable<File>,
         testData: StaticTestData,
         utpDependencies: UtpDependencies,
-        sdkComponents: SdkComponentsBuildService,
+        versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
         testLogDir: File,
@@ -256,7 +256,7 @@ class UtpConfigFactory {
                 outputDir,
                 tmpDir,
                 testLogDir,
-                sdkComponents
+                versionedSdkLoader
             )
 
             if (retentionConfig.enabled && !useOrchestrator && grpcPort != null) {
@@ -318,7 +318,7 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         testLogDir: File,
-        sdkComponents: SdkComponentsBuildService
+        versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
     ): EnvironmentProto.Environment {
         return EnvironmentProto.Environment.newBuilder().apply {
             outputDirBuilder.apply {
@@ -330,17 +330,17 @@ class UtpConfigFactory {
             androidEnvironmentBuilder.apply {
                 androidSdkBuilder.apply {
                     sdkPathBuilder.apply {
-                        path = sdkComponents.sdkDirectoryProvider.get().asFile.absolutePath
+                        path = versionedSdkLoader.sdkDirectoryProvider.get().asFile.absolutePath
                     }
                     adbPathBuilder.apply {
-                        path = sdkComponents.adbExecutableProvider.get().asFile.absolutePath
+                        path = versionedSdkLoader.adbExecutableProvider.get().asFile.absolutePath
                     }
                     aaptPathBuilder.apply {
-                        path = sdkComponents.buildToolInfoProvider.get()
+                        path = versionedSdkLoader.buildToolInfoProvider.get()
                             .getPath(BuildToolInfo.PathId.AAPT)
                     }
                     dexdumpPathBuilder.apply {
-                        path = sdkComponents.buildToolInfoProvider.get()
+                        path = versionedSdkLoader.buildToolInfoProvider.get()
                             .getPath(BuildToolInfo.PathId.DEXDUMP)
                     }
                     testLogDirBuilder.apply {

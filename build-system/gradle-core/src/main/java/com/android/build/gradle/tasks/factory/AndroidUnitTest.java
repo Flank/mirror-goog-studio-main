@@ -226,30 +226,28 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                     .getServices()
                     .fileCollection(
                             (Callable)
-                                    () ->
-                                            BootClasspathBuilder.INSTANCE
-                                                    .computeAdditionalAndRequestedOptionalLibraries(
-                                                            globalScope.getProject(),
-                                                            globalScope
-                                                                    .getSdkComponents()
-                                                                    .flatMap(
-                                                                            SdkComponentsBuildService
-                                                                                    ::getAdditionalLibrariesProvider)
-                                                                    .get(),
-                                                            globalScope
-                                                                    .getSdkComponents()
-                                                                    .flatMap(
-                                                                            SdkComponentsBuildService
-                                                                                    ::getOptionalLibrariesProvider)
-                                                                    .get(),
-                                                            false,
-                                                            ImmutableList.copyOf(
-                                                                    globalScope
-                                                                            .getExtension()
-                                                                            .getLibraryRequests()),
-                                                            creationConfig
-                                                                    .getServices()
-                                                                    .getIssueReporter()));
+                                    () -> {
+                                        SdkComponentsBuildService.VersionedSdkLoader
+                                                versionedSdkLoader =
+                                                        globalScope.getVersionedSdkLoader().get();
+                                        return BootClasspathBuilder.INSTANCE
+                                                .computeAdditionalAndRequestedOptionalLibraries(
+                                                        globalScope.getProject(),
+                                                        versionedSdkLoader
+                                                                .getAdditionalLibrariesProvider()
+                                                                .get(),
+                                                        versionedSdkLoader
+                                                                .getOptionalLibrariesProvider()
+                                                                .get(),
+                                                        false,
+                                                        ImmutableList.copyOf(
+                                                                globalScope
+                                                                        .getExtension()
+                                                                        .getLibraryRequests()),
+                                                        creationConfig
+                                                                .getServices()
+                                                                .getIssueReporter());
+                                    });
         }
     }
 }

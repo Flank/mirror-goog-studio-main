@@ -61,8 +61,14 @@ abstract class CommonExtensionImpl<
     // TODO: Make private when AndroidConfig is removed
     val libraryRequests: MutableList<LibraryRequest> = mutableListOf()
 
-    override val sdkComponents: SdkComponents =
-        dslServices.newInstance(SdkComponentsImpl::class.java, dslServices)
+    override val sdkComponents: SdkComponents by lazy {
+        dslServices.newInstance(
+            SdkComponentsImpl::class.java,
+            dslServices,
+            dslServices.provider(String::class.java, _compileSdkVersion),
+            dslServices.provider(Revision::class.java, buildToolsRevision)
+        )
+    }
 
     override val buildTypes: NamedDomainObjectContainer<BuildTypeT> =
         dslContainers.buildTypeContainer

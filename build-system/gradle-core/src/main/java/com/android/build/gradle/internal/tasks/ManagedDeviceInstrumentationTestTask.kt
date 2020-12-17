@@ -50,6 +50,7 @@ import com.android.builder.core.BuilderConstants.FD_REPORTS
 import com.android.builder.core.BuilderConstants.MANAGED_DEVICE
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.TestOptions
+import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import org.gradle.api.Action
@@ -91,6 +92,12 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         @get: Input
         abstract val retentionConfig: Property<RetentionConfig>
 
+        @get: Input
+        abstract val compileSdkVersion: Property<String>
+
+        @get: Input
+        abstract val buildToolsRevision: Property<Revision>
+
         @get: Internal
         abstract val sdkBuildService: Property<SdkComponentsBuildService>
 
@@ -123,7 +130,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             return ManagedDeviceTestRunner(
                     javaProcessExecutor,
                     utpDependencies,
-                    sdkBuildService.get(),
+                    sdkBuildService.get().sdkLoader(compileSdkVersion, buildToolsRevision),
                     retentionConfig.get(),
                     useOrchestrator)
 
@@ -303,6 +310,12 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.group = JavaBasePlugin.VERIFICATION_GROUP
 
             task.testData.setDisallowChanges(testData)
+            task.testRunnerFactory.compileSdkVersion.setDisallowChanges(
+                extension.compileSdkVersion
+            )
+            task.testRunnerFactory.buildToolsRevision.setDisallowChanges(
+                extension.buildToolsRevision
+            )
             task.testRunnerFactory.sdkBuildService.setDisallowChanges(
                     getBuildService(
                             creationConfig.services.buildServiceRegistry,

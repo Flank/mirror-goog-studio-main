@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.BuildToolsExecutableInput
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -36,6 +38,7 @@ import com.android.builder.internal.compiler.DirectoryWalker
 import com.android.builder.internal.compiler.DirectoryWalker.FileAction
 import com.android.builder.internal.incremental.DependencyData
 import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Preconditions
@@ -52,6 +55,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -85,32 +89,10 @@ abstract class AidlCompile : NonIncrementalTask() {
     lateinit var importDirs: FileCollection
         private set
 
-    // Given the same version, the path or contents of the AIDL tool may change across platforms,
-    // but it would still produce the same output (given the same inputs)---see bug 138920846.
-    // Therefore, the path or contents of the tool should not be an input. Instead, we set the
-    // tool's version as input.
-    @get:Input
-    val aidlVersion: String
-        get() {
-            val buildToolsRevision = sdkBuildService.get().buildToolsRevisionProvider.orNull
-            Preconditions.checkState(buildToolsRevision != null, "Build Tools not present")
-
-            val aidlExecutable = sdkBuildService.get().aidlExecutableProvider.orNull
-            Preconditions.checkState(
-                aidlExecutable != null,
-                "AIDL executable not present in Build Tools $buildToolsRevision"
-            )
-            Preconditions.checkState(
-                aidlExecutable!!.exists(),
-                "AIDL executable does not exist: ${aidlExecutable.path}"
-            )
-
-            return buildToolsRevision.toString()
-        }
-
     @InputFile
     @PathSensitive(PathSensitivity.NONE)
-    fun getAidlFrameworkProvider(): Provider<File> = sdkBuildService.flatMap { it.aidlFrameworkProvider }
+    fun getAidlFrameworkProvider(): Provider<File> =
+        buildTools.aidlFrameworkProvider()
 
     @get:InputFiles
     @get:SkipWhenEmpty
@@ -124,8 +106,8 @@ abstract class AidlCompile : NonIncrementalTask() {
     @get:Optional
     abstract val packagedDir: DirectoryProperty
 
-    @get:Internal
-    abstract val sdkBuildService: Property<SdkComponentsBuildService>
+    @get:Nested
+    abstract val buildTools: BuildToolsExecutableInput
 
     private class DepFileProcessor : DependencyFileProcessor {
         override fun processFile(dependencyFile: File): DependencyData? {
@@ -134,8 +116,11 @@ abstract class AidlCompile : NonIncrementalTask() {
     }
 
     override fun doTaskAction() {
-        // this is full run, clean the previous output
-        val aidlExecutable = sdkBuildService.get().aidlExecutableProvider.get().absoluteFile
+        // this is full run, clean the previous output'
+        val aidlExecutable = buildTools
+            .aidlExecutableProvider()
+            .get()
+            .absoluteFile
         val frameworkLocation = getAidlFrameworkProvider().get().absoluteFile
         val destinationDir = sourceOutputDir.get().asFile
         val parcelableDir = packagedDir.orNull
@@ -219,9 +204,7 @@ abstract class AidlCompile : NonIncrementalTask() {
             if (creationConfig.variantType.isAar) {
                 task.packagedList = globalScope.extension.aidlPackagedList
             }
-            task.sdkBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.buildTools.initialize(creationConfig)
         }
     }
 

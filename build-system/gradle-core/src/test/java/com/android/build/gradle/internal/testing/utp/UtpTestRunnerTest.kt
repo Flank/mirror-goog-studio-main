@@ -61,7 +61,7 @@ class UtpTestRunnerTest {
     @Mock lateinit var mockProcessExecutor: ProcessExecutor
     @Mock lateinit var mockJavaProcessExecutor: JavaProcessExecutor
     @Mock lateinit var mockExecutorServiceAdapter: ExecutorServiceAdapter
-    @Mock lateinit var mockSdkComponents: SdkComponentsBuildService
+    @Mock lateinit var mockVersionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
     @Mock lateinit var mockTestData: StaticTestData
     @Mock lateinit var mockAppApk: File
     @Mock lateinit var mockTestApk: File
@@ -99,7 +99,7 @@ class UtpTestRunnerTest {
                 any(StaticTestData::class.java),
                 anyIterable(),
                 any(UtpDependencies::class.java),
-                any(SdkComponentsBuildService::class.java),
+                any(SdkComponentsBuildService.VersionedSdkLoader::class.java),
                 any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),
@@ -153,7 +153,7 @@ class UtpTestRunnerTest {
                 mockJavaProcessExecutor,
                 mockExecutorServiceAdapter,
                 utpDependencies,
-                mockSdkComponents,
+                mockVersionedSdkLoader,
                 mockRetentionConfig,
                 useOrchestrator = false,
                 mockUtpConfigFactory)
