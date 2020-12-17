@@ -27,7 +27,7 @@ readonly script_name="$(basename "$0")"
 # Invocation ID must be lower case in Upsalite URL
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
-readonly config_options="--config=local --config=release --config=cloud_resultstore"
+readonly config_options=""
 readonly target_filters="qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator"
 
 # Use test strategy to run 1 test at a time after all build dependencies are built
@@ -37,7 +37,7 @@ readonly target_filters="qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requ
         --keep_going \
         ${config_options} \
         --test_strategy=exclusive \
-        --spawn_strategy=standalone \
+        --spawn_strategy=local \
         --invocation_id=${invocation_id} \
         --define=meta_android_build_number=${build_number} \
         --build_tag_filters=${target_filters} \
