@@ -22,12 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuil
 import com.android.build.gradle.options.BooleanOption
 
 enum class LintInvocationType {
-    REFLECTIVE_LINT_RUNNER {
-        override fun addGradleProperties(projectBuilder: GradleTestProjectBuilder, maxProblems: Int): GradleTestProjectBuilder =
-            projectBuilder
-                .addGradleProperties(BooleanOption.USE_NEW_LINT_MODEL.propertyName + "=false")
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-    },
     NEW_LINT_MODEL {
         override fun addGradleProperties(projectBuilder: GradleTestProjectBuilder, maxProblems: Int): GradleTestProjectBuilder =
             projectBuilder

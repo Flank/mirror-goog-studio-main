@@ -196,7 +196,7 @@ class CoreLibraryDesugarTest {
 
             android.lintOptions.abortOnError = true
         """.trimIndent())
-        executor().with(BooleanOption.USE_NEW_LINT_MODEL, true).run("app:lintDebug")
+        executor().run("app:lintDebug")
     }
 
     @Test
@@ -208,7 +208,6 @@ class CoreLibraryDesugarTest {
         """.trimIndent())
         val result =
             executor()
-                .with(BooleanOption.USE_NEW_LINT_MODEL, true)
                 .expectFailure().run("app:lintDebug")
         assertThat(result.failureMessage).contains("Lint found errors in the project")
         val reportXml = app.file("build/reports/lint-results-debug.html").readText()

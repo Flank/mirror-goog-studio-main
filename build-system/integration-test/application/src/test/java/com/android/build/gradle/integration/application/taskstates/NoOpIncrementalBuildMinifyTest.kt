@@ -172,9 +172,7 @@ class NoOpIncrementalBuildMinifyTest {
 
     @Test
     fun `check task states`() {
-        val result = project.executor()
-                .with(BooleanOption.USE_NEW_LINT_MODEL, true)
-                .run {
+        val result = project.executor().run {
             val tasks =
                 listOf("assembleRelease", "testReleaseUnitTest", "assembleDebugAndroidTest", "lint")
             run(tasks)

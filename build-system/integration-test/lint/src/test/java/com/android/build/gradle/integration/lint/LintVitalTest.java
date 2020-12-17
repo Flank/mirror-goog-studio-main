@@ -98,16 +98,10 @@ public class LintVitalTest {
         // this, it's possible that we break the execution in some other way and the test still
         // passes.
         final String expectedFailedTaskPath;
-        switch (lintInvocationType) {
-            case REFLECTIVE_LINT_RUNNER:
-                expectedFailedTaskPath = ":lint";
-                break;
-            case NEW_LINT_MODEL:
-                expectedFailedTaskPath = ":lintDebug";
-                break;
-            default:
-                throw new IllegalStateException(
-                        "Unexpected lintInvocationType" + lintInvocationType);
+        if (lintInvocationType == LintInvocationType.NEW_LINT_MODEL) {
+            expectedFailedTaskPath = ":lintDebug";
+        } else {
+            expectedFailedTaskPath = ":lint";
         }
 
         TaskStateList.TaskInfo task = result.getTask(expectedFailedTaskPath);
