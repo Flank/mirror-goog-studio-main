@@ -171,8 +171,6 @@ enum class BooleanOption(
      * SOFTLY-ENFORCED FEATURES
      */
 
-    USE_NEW_LINT_MODEL("android.experimental.useNewLintModel", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
-
     /** Whether Jetifier will skip libraries that already support AndroidX. */
     JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
@@ -365,6 +363,8 @@ enum class BooleanOption(
             "R8 desugaring is used by default, when applicable."
         )
     ),
+
+    USE_NEW_LINT_MODEL("android.experimental.useNewLintModel", true, FeatureStage.Enforced(VERSION_7_0)),
 
     /* ----------------
      * REMOVED FEATURES

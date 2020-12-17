@@ -34,7 +34,6 @@ class OptionVersionTest {
         /** Deprecated [Option]s that have invalid deprecation versions and need to be fixed. */
         @Suppress("DEPRECATION")
         private val KNOWN_VIOLATING_DEPRECATION_OPTIONS: Set<Option<*>> = setOf(
-                BooleanOption.USE_NEW_LINT_MODEL, // TODO(b/160392650): This will be removed in 7.0 as the previous integration is incompatible with the configuration cache.
                 BooleanOption.JETIFIER_SKIP_IF_POSSIBLE,
                 BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2,
                 BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM,
