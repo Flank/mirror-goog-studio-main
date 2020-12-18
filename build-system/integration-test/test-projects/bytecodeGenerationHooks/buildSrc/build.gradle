@@ -7,4 +7,5 @@ apply from: "../../commonLocalRepo.gradle"
 dependencies {
     api "com.android.tools.build:gradle:$rootProject.buildVersion"
     api gradleApi()
+    implementation 'com.google.guava:guava:20.0'
 }

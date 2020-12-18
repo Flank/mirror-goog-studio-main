@@ -1,13 +1,11 @@
 package com.android.test.jarjar;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.ContentType;
+import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
@@ -18,7 +16,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -60,11 +57,12 @@ public class JarJarTransform extends Transform {
 
     @Override
     public void transform(
-            @NonNull Context context,
-            @NonNull Collection<TransformInput> inputs,
-            @NonNull Collection<TransformInput> referencedStreams,
-            @Nullable TransformOutputProvider output,
-            boolean isIncremental) throws TransformException, IOException {
+            Context context,
+            Collection<TransformInput> inputs,
+            Collection<TransformInput> referencedStreams,
+            TransformOutputProvider output,
+            boolean isIncremental)
+            throws TransformException, IOException {
 
         if (output == null) {
             throw new RuntimeException("Missing output object for transform " + getName());
@@ -105,9 +103,8 @@ public class JarJarTransform extends Transform {
         }
     }
 
-    private void combineInputIntoJar(
-            @NonNull Collection<TransformInput> inputs,
-            @NonNull File mergedInputs) throws TransformException, IOException {
+    private void combineInputIntoJar(Collection<TransformInput> inputs, File mergedInputs)
+            throws TransformException, IOException {
         Closer closer = Closer.create();
         try {
 
@@ -135,11 +132,7 @@ public class JarJarTransform extends Transform {
         }
     }
 
-    private static void processFolder(
-            @NonNull JarOutputStream jos,
-            @NonNull String path,
-            @NonNull File folder,
-            @NonNull byte[] buffer)
+    private static void processFolder(JarOutputStream jos, String path, File folder, byte[] buffer)
             throws IOException {
         File[] files = folder.listFiles();
         if (files != null) {

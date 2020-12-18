@@ -16,7 +16,6 @@
 
 package com.example.test.customplugin;
 
-import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -83,8 +82,7 @@ public class CustomTransform extends Transform {
     }
 
     @Override
-    public void transform(@NonNull TransformInvocation invocation)
-            throws InterruptedException, IOException {
+    public void transform(TransformInvocation invocation) throws InterruptedException, IOException {
         final TransformOutputProvider outputProvider = invocation.getOutputProvider();
         outputProvider.deleteAll();
         // Copy inputs to outputs
