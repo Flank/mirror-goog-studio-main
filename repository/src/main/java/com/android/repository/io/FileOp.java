@@ -45,6 +45,9 @@ import java.util.stream.Stream;
  *
  * <p>This makes it possible to override/mock/stub some file operations in unit tests. Uses {@link
  * CancellableFileIo} to check for cancellation before read I/O operations.
+ *
+ * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
+ *     InMemoryFileSystems} directly.
  */
 public abstract class FileOp {
     /** Returns the {@link FileSystem} this is based on. */
