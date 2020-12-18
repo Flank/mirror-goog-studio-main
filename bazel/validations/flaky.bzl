@@ -23,11 +23,13 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:FlavorlibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavoredlibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavoredConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:DataBindingExternalArtifactDependencyConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:DependenciesConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:DensitySplitConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:D8DesugaringConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:CoreLibraryDesugarConversionConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:ComposeHelloWorldConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:CmakeJniLibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:BasicConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:ApplibtestConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AttrOrderConnectedTest",  # b/148626301

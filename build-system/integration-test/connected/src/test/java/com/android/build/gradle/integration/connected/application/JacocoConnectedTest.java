@@ -188,7 +188,6 @@ public class JacocoConnectedTest {
 
     /** Regression test for http://b/152872138. */
     @Test
-    @Category(DeviceTests.class)
     public void testDisablingBuildFeatures() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

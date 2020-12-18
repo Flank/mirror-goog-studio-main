@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.databinding;
+package com.android.build.gradle.integration.connected.databinding;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.util.List;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,31 +36,36 @@ import org.junit.runners.Parameterized;
 public class DataBindingExternalArtifactDependencyConnectedTest {
     private static final String MAVEN_REPO_ARG_PREFIX = "-Pmaven_repo=";
 
-    @Rule public GradleTestProject library;
+    @Rule public GradleTestProject libraryProject;
 
-    @Rule public GradleTestProject app;
+    @Rule public GradleTestProject appProject;
 
     @Rule public TemporaryFolder mavenRepo = new TemporaryFolder();
 
-    @Rule public Adb adb = new Adb();
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
+
+    @Before
+    public void setUp() throws Exception {
+        // fail fast if no response
+        appProject.getSubproject("app").addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        appProject.getSubproject("app").execute("uninstallAll");
+    }
 
     public DataBindingExternalArtifactDependencyConnectedTest(boolean useAndroidX) {
         String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
         String enableJetifier = BooleanOption.ENABLE_JETIFIER.getPropertyName() + "=" + useAndroidX;
 
-        library =
+        libraryProject =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("IndependentLibrary", useAndroidX)
-                        // b/146163513
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .addGradleProperties(useX)
                         .create();
-        app =
+        appProject =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("MultiModuleTestApp", useAndroidX)
                         .addGradleProperties(useX)
-                        // b/146163513
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .addGradleProperties(enableJetifier)
                         .create();
     }
@@ -76,17 +80,16 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
-    public void buildLibraryThenBuildApp_connectedCheck() throws IOException, InterruptedException {
+    public void buildLibraryThenBuildApp_connectedCheck() {
         List<String> args = createLibraryArtifact();
-        app.executeConnectedCheck(args);
+        appProject.execute(args, ":app:connectedCheck");
     }
 
     @NonNull
-    private List<String> createLibraryArtifact() throws IOException, InterruptedException {
+    private List<String> createLibraryArtifact() {
         List<String> args =
                 ImmutableList.of(MAVEN_REPO_ARG_PREFIX + mavenRepo.getRoot().getAbsolutePath());
-        library.execute(args, "uploadArchives");
+        libraryProject.execute(args, "publishDebugPublicationToTestRepoRepository");
         return args;
     }
 }
