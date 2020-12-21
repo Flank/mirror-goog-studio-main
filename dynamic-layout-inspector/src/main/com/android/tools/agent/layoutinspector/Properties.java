@@ -419,36 +419,21 @@ class Properties {
     private long addLambdaProperty(long event, long property, int name, Object value) {
         Class<?> lambdaClass = value.getClass();
         String lambdaClassName = lambdaClass.getName();
-        String enclosedClassName = substringBefore(lambdaClassName, '$', "");
+        String packageName = substringBeforeLast(lambdaClassName, '.', "");
         String lambdaName = substringAfter(lambdaClassName, '$');
-        if (enclosedClassName.isEmpty()) {
-            return 0L;
+        LambdaLocation location = getLambdaLocation(value.getClass());
+        if (location == null) {
+            return 0;
         }
         return addLambdaProperty(
                 event,
                 property,
                 name,
-                toPackageName(enclosedClassName),
-                toClassName(enclosedClassName),
+                toInt(packageName),
+                toInt(location.getFileName()),
                 toInt(lambdaName),
-                lambdaClass);
-    }
-
-    private int toPackageName(@NonNull String fullyQualifiedClassName) {
-        return toInt(substringBeforeLast(fullyQualifiedClassName, '.', ""));
-    }
-
-    private int toClassName(@NonNull String fullyQualifiedClassName) {
-        return toInt(substringAfterLast(fullyQualifiedClassName, '.'));
-    }
-
-    // Similar to kotlins String.substringBefore(Char,String)
-    @SuppressWarnings("SameParameterValue")
-    @NonNull
-    private static String substringBefore(
-            @NonNull String value, char delimiter, @NonNull String missingDelimiterValue) {
-        int index = value.indexOf(delimiter);
-        return index >= 0 ? value.substring(0, index) : missingDelimiterValue;
+                location.getStartLine(),
+                location.getEndLine());
     }
 
     // Similar to kotlins String.substringAfter(Char)
@@ -466,14 +451,6 @@ class Properties {
             @NonNull String value, char delimiter, @NonNull String missingDelimiterValue) {
         int index = value.lastIndexOf(delimiter);
         return index >= 0 ? value.substring(0, index) : missingDelimiterValue;
-    }
-
-    // Similar to kotlins String.substringAfterLast(Char)
-    @SuppressWarnings("SameParameterValue")
-    @NonNull
-    private static String substringAfterLast(@NonNull String value, char delimiter) {
-        int index = value.lastIndexOf(delimiter);
-        return index >= 0 ? value.substring(index + 1) : value;
     }
 
     @Nullable
@@ -601,9 +578,10 @@ class Properties {
             long property,
             int name,
             int enclosedPackageName,
-            int enclosedSimpleName,
+            int fileName,
             int lambdaName,
-            @NonNull Class<?> lambdaClass);
+            int startLine,
+            int endLine);
 
     /** Adds a resource property value into the property protobuf. */
     private native void addPropertySource(long propertyId, int namespace, int type, int name);
@@ -613,4 +591,8 @@ class Properties {
 
     /** Adds the layout of the view as a resource. */
     private native void addLayoutResource(long event, int namespace, int type, int name);
+
+    /** Find the lambda source location from JVMTI */
+    @Nullable
+    private native LambdaLocation getLambdaLocation(@NonNull Class<?> lambdaClass);
 }

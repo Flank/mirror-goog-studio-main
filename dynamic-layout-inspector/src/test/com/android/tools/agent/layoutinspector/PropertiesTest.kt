@@ -266,8 +266,8 @@ class PropertiesTest {
             val holder =
                 LambdaValueHolder(
                     packageName = "com.android.tools.agent.layoutinspector",
-                    className = "PropertiesTest",
                     lambdaName = "lambdaValue\$1",
+                    fileName = "PropertiesTest.kt",
                     startLine = lambdaLine,
                     endLine = lambdaLine
                 )
@@ -325,8 +325,8 @@ class PropertiesTest {
             val holder =
                 LambdaValueHolder(
                     packageName = "com.android.tools.agent.layoutinspector",
-                    className = "PropertiesTest",
                     lambdaName = "lambdaValue\$1",
+                    fileName = "PropertiesTest.kt",
                     startLine = lambdaLine,
                     endLine = lambdaLine
                 )
@@ -384,8 +384,8 @@ class PropertiesTest {
                     val lambda = property.lambdaValue
                     val holder = value as LambdaValueHolder
                     assertThat(table[lambda.packageName]).isEqualTo(holder.packageName)
-                    assertThat(table[lambda.className]).isEqualTo(holder.className)
                     assertThat(table[lambda.lambdaName]).isEqualTo(holder.lambdaName)
+                    assertThat(table[lambda.fileName]).isEqualTo(holder.fileName)
                     assertThat(lambda.startLineNumber).isEqualTo(holder.startLine)
                     assertThat(lambda.endLineNumber).isEqualTo(holder.endLine)
                 }
@@ -397,8 +397,8 @@ class PropertiesTest {
 
 private class LambdaValueHolder(
     val packageName: String,
-    val className: String,
     val lambdaName: String,
+    val fileName: String,
     val startLine: Int,
     val endLine: Int
 )

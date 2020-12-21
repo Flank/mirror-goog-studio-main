@@ -217,6 +217,49 @@ Java_com_android_tools_agent_layoutinspector_Properties_addFlagPropertyValue(
   flags->add_flag(flag);
 }
 
+JNIEXPORT jlong JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_addLambdaProperty(
+    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
+    jint package_name, jint file_name, jint lambda_name, jint start_line,
+    jint end_line) {
+  auto *property = addProperty(jevent, jproperty);
+  property->set_name(name);
+  property->set_is_layout(false);
+  property->set_type(Property::LAMBDA);
+  auto *lambda = property->mutable_lambda_value();
+  lambda->set_package_name(package_name);
+  lambda->set_file_name(file_name);
+  lambda->set_lambda_name(lambda_name);
+  lambda->set_start_line_number(start_line);
+  lambda->set_end_line_number(end_line);
+  return (long)property;
+}
+
+static jclass location_class = nullptr;
+static jmethodID location_class_constructor = nullptr;
+
+bool create_lambda_location_result_fields(JNIEnv *env) {
+  static bool failure_creating_result = false;
+
+  if (failure_creating_result) {
+    return false;
+  }
+  if (location_class != nullptr) {
+    return true;
+  }
+  failure_creating_result = true;  // In case the next lines throw exceptions...
+  jclass local_location_class =
+      env->FindClass("com/android/tools/agent/layoutinspector/LambdaLocation");
+  location_class = (jclass)env->NewGlobalRef(local_location_class);
+  location_class_constructor =
+      env->GetMethodID(location_class, "<init>", "(Ljava/lang/String;II)V");
+  if (location_class == nullptr || location_class_constructor == nullptr) {
+    return false;
+  }
+  failure_creating_result = false;
+  return true;
+}
+
 /**
  * Create a Jvmti environment.
  * The env is created and kept in a static for the duration of the JVM lifetime.
@@ -265,68 +308,73 @@ jvmtiEnv *getJvmti(JNIEnv *env) {
 }
 
 /**
- * Set the line range of a lambda.
+ * Get the lambda source location.
  *
- * Use jvmti to get the lines of the invoke method of the generated
- * class for a lambda. This class seem to have 4 methods: 2 <clinit>
- * and 2 invoke methods. Only 1 of these methods has associated lines.
+ * Use jvmti to get the source file name and the lines of the invoke
+ * method of the generated class for a lambda. This class seem to have
+ * 4 methods: 2 <clinit> and 2 invoke methods.
+ * Only 1 of these methods has associated lines.
+ *
  * Extract the start and end line from the first method that has a
  * line table and assume they are specified in ascending order.
  * If the line range is not found (in case of missing VM support)
  * just return without writing the line range.
  *
  * @param env the JNI environment
+ * @param clazz the Properties class
  * @param lambda_class the compiler generated class of a lambda
- * @param lambda the protobuf to write to
+ * @return a instance of LambdaLocation with source file and lines
+ *         or null if information cannot be found.
  */
-void setLineRangeOfLambda(JNIEnv *env, jclass lambda_class,
-                          LambdaValue *lambda) {
+JNIEXPORT jobject JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_getLambdaLocation(
+    JNIEnv *env, jclass clazz, jclass lambda_class) {
+  if (!create_lambda_location_result_fields(env)) {
+    return nullptr;
+  }
   jvmtiEnv *jvmti = getJvmti(env);
   if (jvmti == nullptr) {
-    return;
+    return nullptr;
   }
   jint count;
   jmethodID *methods;
-  if (CheckJvmtiError(jvmti,
-                      jvmti->GetClassMethods(lambda_class, &count, &methods))) {
-    return;
+  jvmtiError error = jvmti->GetClassMethods(lambda_class, &count, &methods);
+  if (CheckJvmtiError(jvmti, error)) {
+    return nullptr;
   }
+  jint start_line = -1;
+  jint end_line = -1;
   for (int i = count - 1; i >= 0; i--) {
     jint entries;
     jvmtiLineNumberEntry *table;
-    if (CheckJvmtiError(
-            jvmti, jvmti->GetLineNumberTable(methods[i], &entries, &table))) {
+    error = jvmti->GetLineNumberTable(methods[i], &entries, &table);
+    if (CheckJvmtiError(jvmti, error)) {
       continue;
     }
-    jint start_line = -1;
-    jint end_line = -1;
     if (entries > 0) {
       start_line = table[0].line_number;
       end_line = table[entries - 1].line_number;
     }
     jvmti->Deallocate((unsigned char *)table);
     if (start_line > 0 && end_line > 0 && end_line >= start_line) {
-      lambda->set_start_line_number(start_line);
-      lambda->set_end_line_number(end_line);
       break;
     }
   }
   jvmti->Deallocate((unsigned char *)methods);
-}
 
-JNIEXPORT jlong JNICALL
-Java_com_android_tools_agent_layoutinspector_Properties_addLambdaProperty(
-    JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
-    jint package_name, jint class_name, jint lambda_name, jclass lambda_class) {
-  auto *property = addProperty(jevent, jproperty);
-  property->set_name(name);
-  property->set_is_layout(false);
-  property->set_type(Property::LAMBDA);
-  auto *lambda = property->mutable_lambda_value();
-  lambda->set_package_name(package_name);
-  lambda->set_class_name(class_name);
-  lambda->set_lambda_name(lambda_name);
-  setLineRangeOfLambda(env, lambda_class, lambda);
-  return (long)property;
+  if (start_line < 0 || end_line < 0) {
+    return nullptr;
+  }
+
+  char *source_name_ptr;
+  error = jvmti->GetSourceFileName(lambda_class, &source_name_ptr);
+  if (CheckJvmtiError(jvmti, error)) {
+    return nullptr;
+  }
+  jstring file_name = env->NewStringUTF(source_name_ptr);
+  jvmti->Deallocate((unsigned char *)source_name_ptr);
+  jobject result = env->NewObject(location_class, location_class_constructor,
+                                  file_name, start_line, end_line);
+  return result;
 }
 }
