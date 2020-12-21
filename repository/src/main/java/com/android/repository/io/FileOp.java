@@ -34,7 +34,6 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -283,10 +282,10 @@ public abstract class FileOp {
      */
     public abstract File ensureRealFile(@NonNull File in) throws IOException;
 
-    /** Returns {@code true} if we're on windows, {@code false} otherwise. */
+    /** @see CancellableFileIo#readString(Path). */
     @NonNull
     public final String readText(@NonNull File f) throws IOException {
-        return CancellableFileIo.readText(toPath(f));
+        return CancellableFileIo.readString(toPath(f));
     }
 
     /** @see File#list(FilenameFilter) */

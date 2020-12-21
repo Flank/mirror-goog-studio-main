@@ -44,8 +44,8 @@ import java.util.stream.Stream;
  * Write operations (such as delete, etc) are not exposed by this class because cancelling them is
  * potentially unsafe. Please invoke write operations through the {@link Files} class directly.
  *
- * <p>Please don't add convenience methods to this class. All methods except {@link #readText} have
- * to closely match {@link Files}.
+ * <p>Please don't add convenience methods to this class. All methods are intended to closely match
+ * {@link Files}.
  *
  * @see Files
  * @see ProgressManagerAdapter
@@ -306,7 +306,7 @@ public class CancellableFileIo {
     /** Reads a text file in UTF-8 encoding. */
     @Slow
     @NonNull
-    public static String readText(@NonNull Path file) throws IOException {
+    public static String readString(@NonNull Path file) throws IOException {
         return new String(readAllBytes(file), StandardCharsets.UTF_8);
     }
 
