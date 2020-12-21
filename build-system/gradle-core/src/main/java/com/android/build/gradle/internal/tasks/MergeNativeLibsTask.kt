@@ -107,7 +107,10 @@ abstract class MergeNativeLibsTask
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        val canRunIncrementally = incrementalStateFile.isFile
+        // Run non-incrementally if changedInputs.size > 20. Temporary workaround for
+        // https://issuetracker.google.com/175337498
+        val canRunIncrementally =
+            incrementalStateFile.isFile && changedInputs.size <= 20
         doProcessing(canRunIncrementally, changedInputs)
     }
 
