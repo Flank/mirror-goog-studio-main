@@ -26,7 +26,6 @@ import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.AppCompatCallDetector
 import com.android.tools.lint.checks.AppCompatCustomViewDetector
 import com.android.tools.lint.checks.AppCompatResourceDetector
-import com.android.tools.lint.checks.AppIndexingApiDetector
 import com.android.tools.lint.checks.AppLinksValidDetector
 import com.android.tools.lint.checks.ByteOrderMarkDetector
 import com.android.tools.lint.checks.CheckResultDetector
@@ -379,8 +378,6 @@ abstract class Reporter protected constructor(
                         AppCompatCallDetector.ISSUE,
                         AppCompatCustomViewDetector.ISSUE,
                         AppCompatResourceDetector.ISSUE,
-                        AppIndexingApiDetector.ISSUE_APP_INDEXING,
-                        AppIndexingApiDetector.ISSUE_APP_INDEXING_API,
                         AppLinksValidDetector.VALIDATION,
                         ByteOrderMarkDetector.BOM,
                         CheckResultDetector.CHECK_PERMISSION,
