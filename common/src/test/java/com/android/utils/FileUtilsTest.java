@@ -101,22 +101,36 @@ public class FileUtilsTest {
 
     @Test
     public void testIsFileInDirectory() {
-        assertTrue(
-                FileUtils.isFileInDirectory(
-                        new File(FileUtils.join("foo", "bar", "baz")), new File("foo")));
-        assertTrue(
-                FileUtils.isFileInDirectory(
-                        new File(FileUtils.join("foo", "bar")), new File("foo")));
-        assertFalse(FileUtils.isFileInDirectory(new File("foo"), new File("foo")));
-        assertFalse(FileUtils.isFileInDirectory(new File("bar"), new File("foo")));
-        assertFalse(
-                FileUtils.isFileInDirectory(
-                        new File("foo"), new File(FileUtils.join("foo", "bar"))));
+        // Test basic cases
+        assertTrue(FileUtils.isFileInDirectory(new File("/a/b"), new File("/a")));
+        assertTrue(FileUtils.isFileInDirectory(new File("/a/b/c"), new File("/a")));
+        assertFalse(FileUtils.isFileInDirectory(new File("/a/b"), new File("/c/d")));
+
+        // Test absolute and relative paths
+        assertTrue(FileUtils.isFileInDirectory(new File("a/b"), new File("a")));
+        assertFalse(FileUtils.isFileInDirectory(new File("/a/b"), new File("a")));
+        assertFalse(FileUtils.isFileInDirectory(new File("a/b"), new File("/a")));
+
+        // Test ".." in paths
+        assertTrue(FileUtils.isFileInDirectory(new File("/a/b/c/.."), new File("/a/d/..")));
+
+        // Test other corner cases
+        assertFalse(FileUtils.isFileInDirectory(new File("/a"), new File("/a")));
+        assertFalse(FileUtils.isFileInDirectory(new File("/a"), new File("/b")));
+        assertFalse(FileUtils.isFileInDirectory(new File("/a"), new File("/a/b")));
+        assertFalse(FileUtils.isFileInDirectory(new File("/ab/ab"), new File("/a")));
+
+        // Test case sensitivity
+        if (isFileSystemCaseSensitive()) {
+            assertFalse(FileUtils.isFileInDirectory(new File("/a/b"), new File("/A")));
+        } else {
+            assertTrue(FileUtils.isFileInDirectory(new File("/a/b"), new File("/A")));
+        }
     }
 
     @Test
     public void testIsSameFile() throws IOException {
-        // Test basic case
+        // Test basic cases
         assertThat(FileUtils.isSameFile(new File("foo"), new File("foo"))).isTrue();
         assertThat(FileUtils.isSameFile(new File("foo"), new File("bar"))).isFalse();
 
@@ -125,16 +139,6 @@ public class FileUtilsTest {
                 .isTrue();
         assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("bar")))
                 .isFalse();
-
-        // Test upper-case and lower-case paths
-        boolean isFileSystemCaseSensitive = !new File("a").equals(new File("A"));
-        if (isFileSystemCaseSensitive) {
-            assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("FOO")))
-                    .isFalse();
-        } else {
-            assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("FOO")))
-                    .isTrue();
-        }
 
         // Test ".." in paths
         assertThat(
@@ -146,18 +150,33 @@ public class FileUtilsTest {
                                 new File(FileUtils.join("foo", "bar", "..")), new File("bar")))
                 .isFalse();
 
+        // Test case sensitivity
+        if (isFileSystemCaseSensitive()) {
+            assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("FOO")))
+                    .isFalse();
+        } else {
+            assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("FOO")))
+                    .isTrue();
+        }
+
         // Test hard links
         File fooFile = mTemporaryFolder.newFile("foo");
         File fooHardLinkFile = new File(mTemporaryFolder.getRoot(), "fooHardLink");
+        assertThat(FileUtils.isSameFile(fooHardLinkFile, fooFile)).isFalse();
         java.nio.file.Files.createLink(fooHardLinkFile.toPath(), fooFile.toPath());
         assertThat(FileUtils.isSameFile(fooHardLinkFile, fooFile)).isTrue();
 
         // Test symbolic links
         if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS) {
             File fooSymbolicLinkFile = new File(mTemporaryFolder.getRoot(), "fooSymbolicLink");
+            assertThat(FileUtils.isSameFile(fooSymbolicLinkFile, fooFile)).isFalse();
             java.nio.file.Files.createSymbolicLink(fooSymbolicLinkFile.toPath(), fooFile.toPath());
             assertThat(FileUtils.isSameFile(fooSymbolicLinkFile, fooFile)).isTrue();
         }
+    }
+
+    private static boolean isFileSystemCaseSensitive() {
+        return !new File("a").equals(new File("A"));
     }
 
     @Test

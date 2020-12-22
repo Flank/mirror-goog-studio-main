@@ -529,45 +529,48 @@ public final class FileUtils {
     }
 
     /**
-     * Returns {@code true} if a file/directory is in a given directory or in a subdirectory of the
-     * given directory, and {@code false} otherwise. Note that this method resolves the real paths
-     * of the given file/directory first via {@link File#getCanonicalFile()}.
+     * Returns {@code true} if a file/directory is located directly or indirectly inside a base
+     * directory.
+     *
+     * <p>The given file/directories may or may not exist.
+     *
+     * <p>Note on corner cases:
+     *
+     * <ul>
+     *   <li>Case sensitivity: Internally, this method uses the {@link Path} API, so it is able to
+     *       take the case sensitivity of the filesystem into account (e.g., file `/a/b` is inside
+     *       directory `/A` in case-insensitive filesystem).
+     *   <li>For other corner cases (e.g., hard/symbolic links), please refer to the javadoc of
+     *       {@link Path#relativize(Path)} which this method uses.
+     * </ul>
      */
-    public static boolean isFileInDirectory(@NonNull File file, @NonNull File directory) {
-        File parentFile;
+    public static boolean isFileInDirectory(@NonNull File fileOrDir, @NonNull File baseDir) {
+        String relativePath;
         try {
-            parentFile = file.getCanonicalFile().getParentFile();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            relativePath = baseDir.toPath().relativize(fileOrDir.toPath()).toString();
+        } catch (IllegalArgumentException e) {
+            // This exception is thrown from Path.relativize() (e.g., when one path is absolute and
+            // the other is relative), so we return `false` in that case.
+            return false;
         }
-
-        while (parentFile != null) {
-            if (isSameFile(parentFile, directory)) {
-                return true;
-            }
-            parentFile = parentFile.getParentFile();
-        }
-        return false;
+        return !relativePath.isEmpty() && !relativePath.startsWith("..");
     }
 
     /**
-     * Returns {@code true} if the two files refer to the same physical file, and {@code false}
-     * otherwise. This is the correct way to compare physical files, instead of comparing using
-     * {@link File#equals(Object)} directly.
+     * Returns {@code true} if the two files refer to the same physical file (or potentially the
+     * same physically file when created in the case that the given files do not exist yet).
      *
-     * <p>Unlike {@link java.nio.file.Files#isSameFile(Path, Path)}, this method does not require
-     * the files to exist.
-     *
-     * <p>Internally, this method delegates to {@link java.nio.file.Files#isSameFile(Path, Path)} if
-     * the files exist.
-     *
-     * <p>If either of the files does not exist, this method instead compares the canonical files of
-     * the two files, since {@link java.nio.file.Files#isSameFile(Path, Path)} in some cases require
-     * that the files exist and therefore cannot be used. The downside of using {@link
-     * File#getCanonicalFile()} is that it may not handle hard links and symbolic links correctly as
-     * with {@link java.nio.file.Files#isSameFile(Path, Path)}.
+     * <p>This is the correct way to compare physical files, instead of using {@link
+     * File#equals(Object)} or similar variants.
      */
     public static boolean isSameFile(@NonNull File file1, @NonNull File file2) {
+        // The best ways to compare physical files are:
+        //   1. java.nio.file.Files.isSameFile(file1.toPath(), file2.toPath())
+        //   2. file1.getCanonicalFile().equals(file2.getCanonicalFile())
+        // If the files exist, method 1 should be preferred (e.g., it compares hard links better).
+        // If the files don't exist, method 1 may throw an exception, so method 2 should be used
+        // instead. Caveat: In the rare cases that the non-existent files are later created as
+        // hard/symbolic links to somewhere else, it may invalidate the result returned here.
         try {
             if (file1.exists() && file2.exists()) {
                 return java.nio.file.Files.isSameFile(file1.toPath(), file2.toPath());
