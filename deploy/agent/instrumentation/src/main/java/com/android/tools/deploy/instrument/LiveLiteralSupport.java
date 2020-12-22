@@ -16,6 +16,7 @@
 
 package com.android.tools.deploy.instrument;
 
+import com.android.tools.deployer.Sites;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -214,7 +215,7 @@ public class LiveLiteralSupport {
     // Accessing the initMap will require a lock.
     private static synchronized void store(Map<String, Map<String, Object>> literals) {
         try {
-            Path dir = Paths.get(getLiveLiteralOverlayLocation());
+            Path dir = Paths.get(Sites.appLiveLiteral(applicationId));
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
             }
@@ -230,13 +231,7 @@ public class LiveLiteralSupport {
         }
     }
 
-    // TODO: USE_SITESLIB
     private static String getMappingFileLocation() {
-        return getLiveLiteralOverlayLocation() + "ll.mapping";
-    }
-
-    // TODO: USE_SITESLIB
-    private static String getLiveLiteralOverlayLocation() {
-        return "/data/data/" + applicationId + "/code_cache/.overlay/ll/";
+        return Sites.appLiveLiteral(applicationId) + "ll.mapping";
     }
 }

@@ -33,6 +33,7 @@ TEST_F(SitesTest, TestSitesMethods) {
   std::string logs = Sites::AppLog(pkg);
   std::string startup = Sites::AppStartupAgent(pkg);
   std::string overlays = Sites::AppOverlays(pkg);
+  std::string ll = Sites::AppLiveLiteral(pkg);
 }
 
 }  // namespace deploy

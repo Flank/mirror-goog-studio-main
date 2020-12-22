@@ -30,5 +30,6 @@ public class TestSites {
         String logs = Sites.appLog(pkg);
         String startup = Sites.appStartupAgent(pkg);
         String overlays = Sites.appOverlays(pkg);
+        String liveLiteral = Sites.appLiveLiteral(pkg);
     }
 }

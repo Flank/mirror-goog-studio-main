@@ -23,6 +23,7 @@
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
 
@@ -34,7 +35,7 @@ namespace {
 // Keep a list of all instrumented live literal helpers
 // so we no longer need to instrument it in this section.
 std::unordered_set<std::string> instrumented_helpers;
-std::string overlay_dir;
+std::string applicationId;
 
 extern "C" void JNICALL Agent_LiveLiteralHelperClassFileLoadHook(
     jvmtiEnv* jvmti, JNIEnv* jni, jclass klass, jobject loader,
@@ -59,14 +60,14 @@ extern "C" void JNICALL Agent_LiveLiteralHelperClassFileLoadHook(
   size_t new_size;
   unsigned char* result = writer.CreateImage(&allocator, &new_size);
 
+  const std::string overlay_dir = Sites::AppOverlays(applicationId);
   if (!IO::mkpath(overlay_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
     if (errno != EEXIST) {
       Log::E("Could not create %s", overlay_dir.c_str());
     }
   }
 
-  // TODO: USE_SITESLIB
-  std::string ll_dir = overlay_dir + "ll/";
+  std::string ll_dir = Sites::AppLiveLiteral(applicationId);
   if (!IO::mkpath(ll_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
     if (errno != EEXIST) {
       Log::E("Could not create %s", ll_dir.c_str());
@@ -184,8 +185,7 @@ jstring LiveLiteral::LookUpKeyByOffSet(const std::string& helper, int offset) {
 proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
     const proto::LiveLiteralUpdateRequest& request) {
   proto::AgentLiveLiteralUpdateResponse response;
-  // TODO: USE_SITESLIB
-  overlay_dir = "/data/data/" + package_name_ + "/code_cache/.overlay/";
+  applicationId = package_name_;
 
   jclass klass = class_finder_.FindInClassLoader(
       class_finder_.GetApplicationClassLoader(),

@@ -176,8 +176,8 @@ void OverlayInstallCommand::UpdateOverlay(
   // considered part of the APK's install. We want all installs to nuke
   // all live literals information and the source of truth of all literal
   // updates will be based on this last install.
-  // TODO: USE_SITESLIB
-  overlay_request.add_files_to_delete("ll");
+  std::string live_literal_dir = Sites::AppOverlays(request_.package_name());
+  overlay_request.add_files_to_delete(live_literal_dir);
 
   auto resp = client_->UpdateOverlay(overlay_request);
   if (!resp) {

@@ -26,16 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Overlay {
-    // TODO: USE_SITESLIB
-    private static final String LL_OVERLAY_PATH_FORMAT = "/data/data/%s/code_cache/.overlay/ll";
-
     private final Path overlayPath;
     private final Path liveLiteralOverlayPath;
 
     public Overlay(String packageName) {
         String pathString = Sites.appOverlays(packageName);
         overlayPath = Paths.get(pathString);
-        String llPathString = String.format(LL_OVERLAY_PATH_FORMAT, packageName);
+
+        String llPathString = Sites.appLiveLiteral(packageName);
         liveLiteralOverlayPath = Paths.get(llPathString);
     }
 
