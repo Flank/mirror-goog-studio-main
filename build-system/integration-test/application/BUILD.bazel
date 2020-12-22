@@ -240,14 +240,6 @@ CONNECTED_TESTS = [
 
 CHECK_ALL_SOURCES = ["src/test/java/**/CheckAll.java"]
 
-# Group all the test targets that are not :coupled_tests or :automatic-tests.
-# Note: For coverage to work on this suite (:tests), targets in the suite must
-# match :tests__<name>
-test_suite(
-    name = "tests",
-    tags = ["split-tests"],
-)
-
 # Creates separate target for each source
 single_gradle_integration_test_per_source(
     name = "tests",
@@ -282,12 +274,11 @@ single_gradle_integration_test_per_source(
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
-    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 
 gradle_integration_test(
-    name = "tests__packaging",
+    name = "packaging-tests",
     timeout = "long",
     srcs = glob(
         [
@@ -306,12 +297,11 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 5,
-    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 
 gradle_integration_test(
-    name = "tests__dependencies",
+    name = "dependencies-tests",
     timeout = "long",
     srcs = glob(
         [
@@ -330,12 +320,11 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 4,
-    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 
 gradle_integration_test(
-    name = "tests__library",
+    name = "library-tests",
     timeout = "long",
     srcs = glob(
         [
@@ -354,12 +343,11 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 4,
-    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 
 gradle_integration_test(
-    name = "tests__testing",
+    name = "testing-tests",
     timeout = "long",
     srcs = glob(
         [
@@ -378,12 +366,11 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 3,
-    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 
 gradle_integration_test(
-    name = "tests__mlkit",
+    name = "mlkit-tests",
     timeout = "long",
     srcs = glob(
         [
@@ -403,14 +390,13 @@ gradle_integration_test(
         "//tools/base/third_party/kotlin:kotlin-m2repository",
     ],
     resources = glob(["src/test/resources/**"]),
-    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 
 # These tests are split into a target per source due to b/175148611.
 # It still helps to define these tests separately to use fewer dependencies.
 single_gradle_integration_test_per_source(
-    name = "tests",
+    name = "resources-tests",
     package_name = "tools/base/build-system/integration-test/application",
     srcs = glob(
         [
@@ -426,7 +412,6 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     resources = glob(["src/test/resources/**"]),
-    tags = ["split-tests"],
     deps = TEST_DEPS,
 )
 

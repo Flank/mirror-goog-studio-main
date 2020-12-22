@@ -103,6 +103,8 @@ def single_gradle_integration_test_per_source(
         if target.startswith(eternal_target_prefix):
             eternal_target_names.append(target[len(eternal_target_prefix):])
 
+    split_targets = []
+
     # need case-insensitive target names because of case-insensitive FS e.g. on Windows
     lowercase_split_targets = []
     num_flaky_applied = 0
@@ -118,8 +120,9 @@ def single_gradle_integration_test_per_source(
         if is_flaky:
             num_flaky_applied += 1
 
-        # For coverage to work with a test suite, test targets need a <suite>__ prefix
+        # For coverage to work with the test suite, test targets need a <suite>__ prefix
         target_name = name + "__" + target_name
+        split_targets.append(target_name)
 
         gradle_integration_test(
             name = target_name,
@@ -136,3 +139,8 @@ def single_gradle_integration_test_per_source(
         )
     if num_flaky_applied != len(flaky_targets):
         fail("mismatch between flaky_targets given and targets found.")
+
+    native.test_suite(
+        name = name,
+        tests = split_targets,
+    )
