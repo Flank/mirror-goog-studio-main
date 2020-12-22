@@ -36,7 +36,7 @@ internal data class TemplateImpl(
 @DslMarker
 annotation class TemplateDSL
 
-fun template(block: TemplateBuilder.() -> Unit): Template = TemplateBuilder().apply(block).build()
+inline fun template(block: TemplateBuilder.() -> Unit): Template = TemplateBuilder().apply(block).build()
 
 @TemplateDSL
 class TemplateBuilder {
@@ -66,6 +66,7 @@ class TemplateBuilder {
     thumb = { Thumb { findResource(this.javaClass, ThumbBuilder().block()) } }
   }
 
+  @PublishedApi
   internal fun build(): Template {
     checkNotNull(name) { "Template must have a name." }
     checkNotNull(description) { "Template must have a description." }
