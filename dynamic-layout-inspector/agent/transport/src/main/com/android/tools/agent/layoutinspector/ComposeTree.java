@@ -56,6 +56,14 @@ class ComposeTree {
         }
     }
 
+    public void setHideSystemNodes(boolean hideSystemNodes) {
+        try {
+            mTreeBuilder.setHideSystemNodes(hideSystemNodes);
+        } catch (ReflectiveOperationException ignore) {
+            // ignore
+        }
+    }
+
     public void resetGeneratedId() {
         try {
             mTreeBuilder.resetGeneratedId();

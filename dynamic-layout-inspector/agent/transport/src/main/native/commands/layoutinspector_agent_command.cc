@@ -64,9 +64,10 @@ void LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(
 
           case LayoutInspectorCommand::START: {
             jmethodID start_command_method = jni_env->GetMethodID(
-                inspector_class, "onStartLayoutInspectorCommand", "(Z)V");
+                inspector_class, "onStartLayoutInspectorCommand", "(ZZ)V");
             jni_env->CallVoidMethod(inspector_service, start_command_method,
-                                    liCommand->compose_mode());
+                                    liCommand->compose_mode(),
+                                    liCommand->hide_system_nodes());
             break;
           }
 
@@ -95,10 +96,11 @@ void LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(
 
           case LayoutInspectorCommand::REFRESH: {
             jmethodID refresh_command_method = jni_env->GetMethodID(
-                inspector_class, "onRefreshLayoutInspectorCommand", "(Z)V");
+                inspector_class, "onRefreshLayoutInspectorCommand", "(ZZ)V");
 
             jni_env->CallVoidMethod(inspector_service, refresh_command_method,
-                                    liCommand->compose_mode());
+                                    liCommand->compose_mode(),
+                                    liCommand->hide_system_nodes());
             break;
           }
 

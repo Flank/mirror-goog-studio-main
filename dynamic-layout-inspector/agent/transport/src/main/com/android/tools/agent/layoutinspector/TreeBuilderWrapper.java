@@ -33,6 +33,7 @@ import java.util.List;
  */
 class TreeBuilderWrapper {
     private final Object mInstance;
+    private final Method mSetHideSystemNodes;
     private final Method mConvert;
     private final Method mConvertParameters;
     private final Method mResetGeneratedId;
@@ -61,6 +62,7 @@ class TreeBuilderWrapper {
                 classLoader.loadClass("androidx.compose.ui.tooling.inspector.NodeParameter");
         Class<?> viewClass = classLoader.loadClass("android.view.View");
         mInstance = builderClass.newInstance();
+        mSetHideSystemNodes = getOptionalMethod(builderClass, "setHideSystemNodes", Boolean.TYPE);
         mConvert = builderClass.getDeclaredMethod("convert", viewClass);
         mConvertParameters = builderClass.getDeclaredMethod("convertParameters", nodeClass);
         mResetGeneratedId = builderClass.getDeclaredMethod("resetGeneratedId");
@@ -81,6 +83,12 @@ class TreeBuilderWrapper {
         mGetParamElements = paramClass.getDeclaredMethod("getElements");
     }
 
+    public void setHideSystemNodes(boolean hideSystemNodes) throws ReflectiveOperationException {
+        if (mSetHideSystemNodes != null) {
+            mSetHideSystemNodes.invoke(mInstance, hideSystemNodes);
+        }
+    }
+
     /** See documentation for androidx.compose.tooling.inspector.LayoutInspectorTree */
     public List<InspectorNodeWrapper> convert(@NonNull View view)
             throws ReflectiveOperationException {
@@ -88,8 +96,17 @@ class TreeBuilderWrapper {
     }
 
     public void resetGeneratedId() throws ReflectiveOperationException {
-        if (mResetGeneratedId != null) {
-            mResetGeneratedId.invoke(mInstance);
+        mResetGeneratedId.invoke(mInstance);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    @Nullable
+    private static Method getOptionalMethod(
+            @NonNull Class<?> clazz, @NonNull String name, @NonNull Class<?>... parameterTypes) {
+        try {
+            return clazz.getDeclaredMethod(name, parameterTypes);
+        } catch (NoSuchMethodException ignored) {
+            return null;
         }
     }
 

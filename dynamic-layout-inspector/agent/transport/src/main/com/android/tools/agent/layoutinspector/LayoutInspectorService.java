@@ -95,9 +95,10 @@ public class LayoutInspectorService {
 
     /** This method is called when a layout inspector command is received by the agent. */
     @SuppressWarnings("unused") // invoked via jni
-    public void onStartLayoutInspectorCommand(boolean showComposeNodes) {
+    public void onStartLayoutInspectorCommand(boolean showComposeNodes, boolean hideSystemNodes) {
         mCaptureOnlyOnce = false;
         mComponentTree.setShowComposeNodes(showComposeNodes);
+        mComponentTree.setHideSystemNodes(hideSystemNodes);
         List<View> roots = getRootViews();
         for (View root : roots) {
             startLayoutInspector(root);
@@ -203,9 +204,10 @@ public class LayoutInspectorService {
 
     /** Sends a single capture and properties. */
     @SuppressWarnings("unused") // invoked via jni
-    public void onRefreshLayoutInspectorCommand(boolean showComposeNodes) {
+    public void onRefreshLayoutInspectorCommand(boolean showComposeNodes, boolean hideSystemNodes) {
         mCaptureOnlyOnce = true;
         mComponentTree.setShowComposeNodes(showComposeNodes);
+        mComponentTree.setHideSystemNodes(hideSystemNodes);
         mGeneration++;
 
         // Start the root view detector here because:
