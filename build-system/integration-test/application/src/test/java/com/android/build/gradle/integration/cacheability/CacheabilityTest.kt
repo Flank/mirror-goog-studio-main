@@ -54,6 +54,7 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "compress", "Assets", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "create", "CompatibleScreenManifests",
                     listOf("Debug", "Release")),
+            TaskInfo(FROM_CACHE, "desugar", "FileDependencies", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "dexBuilder", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "extractDeepLinks", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "generate", "BuildConfig", listOf("Debug", "Release")),
@@ -89,8 +90,6 @@ class CacheabilityTest {
              * If you add a task to this list, remember to add an explanation/file a bug for it.
              */
             TaskInfo(DID_WORK, "collect", "Dependencies", listOf("Release")),
-            /* Bug 160138798 */
-            TaskInfo(DID_WORK, "desugar", "FileDependencies", listOf("Debug", "Release")),
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Bug 141301405 */
             TaskInfo(DID_WORK, "merge", "Resources", listOf("Debug", "Release")),
