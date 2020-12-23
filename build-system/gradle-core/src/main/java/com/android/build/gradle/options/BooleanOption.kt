@@ -447,14 +447,14 @@ enum class BooleanOption(
     ENABLE_BUILD_CACHE(
         "android.enableBuildCache",
         false,
-        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches are superseded by the Gradle build cache https://docs.gradle.org/current/userguide/build_cache.html")
+        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches were superseded by the Gradle build cache (https://docs.gradle.org/current/userguide/build_cache.html).")
     ),
 
     @Suppress("unused")
     ENABLE_INTERMEDIATE_ARTIFACTS_CACHE(
         "android.enableIntermediateArtifactsCache",
         false,
-        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches are superseded by the Gradle build cache https://docs.gradle.org/current/userguide/build_cache.html")
+        FeatureStage.Removed(VERSION_7_0, "The Android-specific build caches were superseded by the Gradle build cache (https://docs.gradle.org/current/userguide/build_cache.html).")
     ),
 
     @Suppress("unused")

@@ -76,7 +76,7 @@ sealed class ApiStage(status: Option.Status) : Stage(status) {
      * @param removedVersion the version when the API and the corresponding [Option] were removed
      * @param additionalMessage the additional message to be shown if the [Option] is used
      */
-    class Removed(removedVersion: Version, additionalMessage: String) :
+    class Removed(removedVersion: Version, additionalMessage: String? = null) :
         ApiStage(Option.Status.Removed(removedVersion, additionalMessage))
 }
 

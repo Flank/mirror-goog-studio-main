@@ -326,7 +326,6 @@ APPROVED_ETERNAL_TESTS = [
     "//tools/base/build-system/integration-test/application:tests__CompileLibraryResourcesTest",
     "//tools/base/build-system/integration-test/application:tests__CompileAndRuntimeClasspathTest",
     "//tools/base/build-system/integration-test/application:tests__CleanBuildTaskStatesTest",
-    "//tools/base/build-system/integration-test/application:tests__CleanBuildCacheTest",
     "//tools/base/build-system/integration-test/application:tests__CheckMultiApkLibrariesTaskTest",
     "//tools/base/build-system/integration-test/application:tests__CheckAarMetadataTaskTest",
     "//tools/base/build-system/integration-test/application:tests__CacheabilityTest",

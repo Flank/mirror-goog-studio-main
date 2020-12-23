@@ -162,7 +162,6 @@ import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.AidlCompile
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask
-import com.android.build.gradle.tasks.CleanBuildCache
 import com.android.build.gradle.tasks.CompatibleScreensManifest
 import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.GenerateManifestJarTask
@@ -2948,7 +2947,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             globalScope.setLintChecks(createCustomLintChecksConfig(project))
             globalScope.setLintPublish(createCustomLintPublishConfig(project))
             globalScope.setAndroidJarConfig(createAndroidJarConfig(project))
-            taskFactory.register(CleanBuildCache.CreationAction(globalScope))
 
             // for testing only.
             taskFactory.register(
