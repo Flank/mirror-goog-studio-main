@@ -1,6 +1,7 @@
 load(":coverage.bzl", "coverage_baseline", "coverage_java_test")
 load(":functions.bzl", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
 load(":kotlin.bzl", "kotlin_compile")
+load(":kotlin.bzl", "test_kotlin_use_ir")
 load(":lint.bzl", "lint_test")
 load(":merge_archives.bzl", "create_manifest_argfile", "run_singlejar")
 load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
@@ -319,6 +320,7 @@ _iml_module_ = rule(
         ),
         "java_srcs": attr.label_list(allow_files = True),
         "kotlin_srcs": attr.label_list(allow_files = True),
+        "kotlin_use_ir": attr.bool(),
         "form_srcs": attr.label_list(allow_files = True),
         "java_test_srcs": attr.label_list(allow_files = True),
         "kotlin_test_srcs": attr.label_list(allow_files = True),
@@ -503,6 +505,7 @@ def iml_module(
         visibility = visibility,
         java_srcs = srcs.javas,
         kotlin_srcs = srcs.kotlins,
+        kotlin_use_ir = test_kotlin_use_ir(),
         form_srcs = srcs.forms,
         resources = srcs.resources,
         manifests = srcs.manifests,
