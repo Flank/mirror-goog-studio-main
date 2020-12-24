@@ -48,10 +48,4 @@ public interface AnnotationProcessorOptions {
      */
     @NonNull
     List<CommandLineArgumentProvider> getCompilerArgumentProviders();
-
-    /**
-     * Whether to include compile classpath in the processors path.
-     */
-    @Nullable
-    Boolean getIncludeCompileClasspath();
 }
