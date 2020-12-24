@@ -27,7 +27,7 @@ readonly script_name="$(basename "$0")"
 # Invocation ID must be lower case in Upsalite URL
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
-readonly config_options=""
+readonly config_options="--config=local --config=release --config=cloud_resultstore"
 readonly target_filters="qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator"
 
 # Use test strategy to run 1 test at a time after all build dependencies are built
@@ -44,7 +44,11 @@ readonly target_filters="qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requ
         --test_tag_filters=${target_filters} \
         --tool_tag=${script_name} \
         -- \
-        //tools/adt/idea/android-uitests:CreateDefaultActivityTest
+        //tools/adt/idea/android-uitests:AddCppToModuleActionTest \
+        //tools/adt/idea/android-uitests:BasicLayoutEditTest \
+        //tools/adt/idea/android-uitests:CreateBasicKotlinProjectTest \
+        //tools/adt/idea/android-uitests:CreateDefaultActivityTest \
+        //tools/adt/idea/android-uitests:OpenExistingProjectTest
 
 readonly bazel_status=$?
 
