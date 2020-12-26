@@ -287,7 +287,9 @@ class TestLintRunner(private val task: TestLintTask) {
                 try {
                     TestLintClient()
                 } finally {
-                    LintClient.clientName = clientName
+                    if (clientName != LintClient.CLIENT_UNKNOWN) {
+                        LintClient.clientName = clientName
+                    }
                 }
             }
             if (!useTestConfiguration && overrideConfigFile != null) {

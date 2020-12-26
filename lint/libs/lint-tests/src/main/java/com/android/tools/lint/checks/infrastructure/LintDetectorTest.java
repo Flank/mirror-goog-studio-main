@@ -475,6 +475,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return TestFiles.projectProperties();
     }
 
+    /** Use {@link #bytecode(String, TestFile, String...)} instead */
+    @Deprecated
     @NonNull
     public static BinaryTestFile bytecode(@NonNull String to, @NonNull BytecodeProducer producer) {
         return TestFiles.bytecode(to, producer);
@@ -485,6 +487,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return TestFiles.bytes(to, bytes);
     }
 
+    /** Use {@link #toBase64gzip(File)} instead. */
+    @Deprecated
     public static String toBase64(@NonNull byte[] bytes) {
         return TestFiles.toBase64(bytes);
     }
@@ -493,6 +497,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return TestFiles.toBase64gzip(bytes);
     }
 
+    /** Use {@link #toBase64gzip(File)} instead. */
+    @Deprecated
     public static String toBase64(@NonNull File file) throws IOException {
         return TestFiles.toBase64(file);
     }
@@ -510,7 +516,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * @param to the file to write as
      * @param encoded the encoded data
      * @return the new test file
+     * @deprecated Use {@link #toBase64gzip(File)} instead.
      */
+    @Deprecated
     public static BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
         return TestFiles.base64(to, encoded);
     }
@@ -520,14 +528,79 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * data, use {@link #toBase64gzip(File)} or {@link #toBase64gzip(byte[])}, for example via
      *
      * <pre>{@code assertEquals("", toBase64gzip(new File("path/to/your.class")));}</pre>
+     *
+     * <b>For bytes from compiled bytecode, use {@link #bytecode(String, TestFile, String...)}
+     * instead!</b>
      */
     @NonNull
     public static BinaryTestFile base64gzip(@NonNull String to, @NonNull String encoded) {
         return TestFiles.base64gzip(to, encoded);
     }
 
+    /**
+     * Create a project classpath file including the given extra libraries.
+     *
+     * <p>Note that bin/classes/ is included by default, as are all jars found under libs/.
+     */
     public static TestFile classpath(String... extraLibraries) {
         return TestFiles.classpath(extraLibraries);
+    }
+
+    /**
+     * Special test file which uses the bytecode from the given source. Note that only the bytecode
+     * will be injected into the project; the source is here in the test file declaration for two
+     * reasons: (1) Ability to regenerate the bytecode in the future if we want to for example
+     * change to a higher class format version. (2) Ability to easily generate the bytecode in the
+     * first place: write the test and create this object where you only specify the source and an
+     * empty string for the bytecode: lint will then try to compile it and spit out the expected
+     * bytecode string you can then add to the test. (3) Ability for lint to test checks both with
+     * and without source access. In the provisional reporting situation (where each module is
+     * analyzed independently) you don't get to look at upstream dependency source code. Lint can
+     * simulate this by taking these files and checking in both scenarios (e.g. in {@link
+     * TestMode#PROVISIONAL} it can check for projects that contain compiled files and move these
+     * into their own module.)
+     *
+     * <p>The reason you need to provide the compiled contents is that we don't want to have to
+     * recompile the sources every time the test runs, and besides, the compilation environment
+     * (javac, kotlinc) may not be available in the test execution environment, and finally we want
+     * to make sure that the output is stable across test invocations, not subject to changes as for
+     * example the Kotlin compiler gets updated.
+     *
+     * <p>The [into] parameter is normally a path like libs/foo.jar but can also be something like
+     * bin/classes/ to have the classes be part of the class file analysis, not just for symbol
+     * resolution or simulating a library dependency. Note also that you can specify the same jar
+     * multiple times: all the bytecode from these files are accumulated into a single jar.
+     *
+     * <p>Note: To include <b>both</b> the source <b>and</b> the bytecode, use {@link
+     * #compiled(String, TestFile, String...)} instead.
+     */
+    public static CompiledSourceFile bytecode(
+            @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
+
+        return new CompiledSourceFile(into, CompiledSourceFile.Type.BYTECODE_ONLY, source, encoded);
+    }
+
+    /**
+     * Special test file which includes the bytecode for the given source (as well as the source
+     * itself) in the test project. This type of test file makes it easy to include binary bytecode
+     * because lint can generate this bytecode on its own by compiling the test sources (though this
+     * is not done automatically since we want stable test output as well as much faster test
+     * execution than compiling each of lint's 2000+ unit tests every time.)
+     *
+     * <p>The [into] parameter specifies where the bytecode should be written; it is normally a path
+     * like libs/foo.jar but can also be something like bin/classes/ to have the classes be part of
+     * the class file analysis, not just for symbol resolution or simulating a library dependency.
+     * Note also that you can specify the same jar multiple times: all the bytecode from these files
+     * are accumulated into a single jar. (The source file is written to the relative path of the
+     * nested test source file.)
+     *
+     * <p>Note: To only include the bytecode, not the source, use {@link #bytecode(String, TestFile,
+     * String...)} instead.
+     */
+    public static CompiledSourceFile compiled(
+            @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
+        return new CompiledSourceFile(
+                into, CompiledSourceFile.Type.SOURCE_AND_BYTECODE, source, encoded);
     }
 
     @NonNull

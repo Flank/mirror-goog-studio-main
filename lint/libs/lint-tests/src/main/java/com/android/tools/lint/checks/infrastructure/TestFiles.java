@@ -161,21 +161,71 @@ public class TestFiles {
                 + "\"";
     }
 
+    // Backwards compat: default to Java formatting
     public static String toBase64gzip(@NonNull byte[] bytes) {
+        return toBase64gzipJava(bytes, 0, false, true);
+    }
+
+    public static String toBase64gzipJava(
+            @NonNull byte[] bytes, int indent, boolean indentStart, boolean includeEmptyPrefix) {
+        String base64 = toBase64gzipString(bytes);
+        StringBuilder indentString = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            indentString.append(' ');
+        }
+
+        Iterable<String> lines = Splitter.fixedLength(60).split(base64);
+        StringBuilder result = new StringBuilder();
+        if (indentStart) {
+            result.append(indentString);
+        }
+        if (includeEmptyPrefix) {
+            result.append("\"\" +\n");
+            result.append(indentString);
+        }
+        result.append("\"");
+        String separator = "\" +\n" + indentString.toString() + "\"";
+        result.append(Joiner.on(separator).join(lines));
+        result.append("\"");
+        return result.toString();
+    }
+
+    public static String toBase64gzipKotlin(
+            @NonNull byte[] bytes, int indent, boolean indentStart, boolean includeQuotes) {
+        String base64 = toBase64gzipString(bytes).replace('$', '＄');
+        StringBuilder indentString = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            indentString.append(' ');
+        }
+        Iterable<String> lines = Splitter.fixedLength(60).split(base64);
+        StringBuilder result = new StringBuilder();
+        if (indentStart) {
+            result.append(indentString);
+        }
+        if (includeQuotes) {
+            result.append("\"\"\"\n");
+            result.append(indentString);
+        }
+        result.append(Joiner.on("\n" + indentString.toString()).join(lines));
+        if (includeQuotes) {
+            result.append("\"\"\"");
+        }
+        result.append("\n");
+        return result.toString();
+    }
+
+    private static String toBase64gzipString(@NonNull byte[] bytes) {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             try (GZIPOutputStream stream = new GZIPOutputStream(out)) {
                 stream.write(bytes);
             }
             bytes = out.toByteArray();
+            return Base64.getEncoder().encodeToString(bytes).replace('$', '＄');
         } catch (IOException ignore) {
             // Can't happen on a ByteArrayInputStream
+            return "";
         }
-
-        String base64 = Base64.getEncoder().encodeToString(bytes);
-        return "\"\" +\n\""
-                + Joiner.on("\" +\n\"").join(Splitter.fixedLength(60).split(base64))
-                + "\"";
     }
 
     public static String toBase64(@NonNull File file) throws IOException {
@@ -195,9 +245,11 @@ public class TestFiles {
      * @param to the file to write as
      * @param encoded the encoded data
      * @return the new test file
+     * @deprecated Use {@link #base64gzip(String, String)} instead
      */
+    @Deprecated
     public static TestFile.BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
-        encoded = encoded.replaceAll("\n", "");
+        encoded = encoded.replace('＄', '$');
         final byte[] bytes = Base64.getDecoder().decode(encoded);
         return new TestFile.BinaryTestFile(
                 to,
@@ -218,7 +270,24 @@ public class TestFiles {
      */
     @NonNull
     public static TestFile.BinaryTestFile base64gzip(@NonNull String to, @NonNull String encoded) {
-        encoded = encoded.replaceAll("\n", "");
+        return new TestFile.BinaryTestFile(to, getByteProducerForBase64gzip(encoded));
+    }
+
+    /**
+     * Creates a bytecode producer which takes an encoded base64gzip string and returns the
+     * uncompressed de-base64'ed byte array
+     */
+    @NonNull
+    public static TestFile.ByteProducer getByteProducerForBase64gzip(@NonNull String encoded) {
+        encoded =
+                encoded
+                        // Recover any $'s we've converted to ＄ to better handle Kotlin raw strings
+                        .replace('＄', '$')
+                        // Whitespace is not significant in base64 but isn't handled properly by
+                        // the base64 decoder
+                        .replace(" ", "")
+                        .replace("\n", "")
+                        .replace("\t", "");
         byte[] bytes = Base64.getDecoder().decode(encoded);
 
         try {
@@ -230,15 +299,13 @@ public class TestFiles {
         }
 
         byte[] finalBytes = bytes;
-        return new TestFile.BinaryTestFile(
-                to,
-                new TestFile.BytecodeProducer() {
-                    @NonNull
-                    @Override
-                    public byte[] produce() {
-                        return finalBytes;
-                    }
-                });
+        return new TestFile.BytecodeProducer() {
+            @NonNull
+            @Override
+            public byte[] produce() {
+                return finalBytes;
+            }
+        };
     }
 
     public static TestFile classpath(String... extraLibraries) {

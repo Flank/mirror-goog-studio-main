@@ -868,7 +868,9 @@ open class LintCliClient : LintClient {
             // However, we *do* need them for libraries; otherwise, type resolution into
             // compiled libraries will not work; see
             // https://issuetracker.google.com/72032121
-            if (project.isLibrary) {
+            // (We also enable this for unit tests where there is no actual compilation;
+            // here, the presence of class files is simulating binary-only access
+            if (project.isLibrary || isUnitTest) {
                 classpathRoots.addAll(project.javaClassFolders)
             } else if (project.isGradleProject) {
                 // As of 3.4, R.java is in a special jar file

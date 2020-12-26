@@ -34,9 +34,7 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                         + "        KeyGenerator generator = KeyGenerator.getInstance(\"AES\", \"BC\");\n"
                         + "                                              ~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n";
-        lint().files(classpath(), manifest().minSdk(10), mPrngCalls, mPrngCalls2)
-                .run()
-                .expect(expected);
+        lint().files(classpath(), manifest().minSdk(10), mPrngCalls).run().expect(expected);
     }
 
     public void testWithWorkaround() {
@@ -44,7 +42,6 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
                         classpath(),
                         manifest().minSdk(10),
                         mPrngCalls,
-                        mPrngCalls2,
                         base64gzip(
                                 "bin/classes/test/pkg/PrngWorkaround$LinuxPRNGSecureRandom.class",
                                 ""
@@ -174,52 +171,53 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
     public void testCipherInit() {
         String expected =
                 ""
-                        + "src/test/pkg/CipherTest1.java:11: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
+                        + "src/test/pkg/CipherTest1.java:14: Warning: Potentially insecure random numbers on Android 4.3 and older. Read https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html for more info. [TrulyRandom]\n"
                         + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
                         + "               ~~~~\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
                         classpath(),
                         manifest().minSdk(16),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import java.security.Key;\n"
-                                        + "import java.security.SecureRandom;\n"
-                                        + "\n"
-                                        + "import javax.crypto.Cipher;\n"
-                                        + "\n"
-                                        + "@SuppressWarnings(\"all\")\n"
-                                        + "public class CipherTest1 {\n"
-                                        + "    public void test1(Cipher cipher, Key key) {\n"
-                                        + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public void test2(Cipher cipher, Key key, SecureRandom random) {\n"
-                                        + "        cipher.init(Cipher.ENCRYPT_MODE, key, random);\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public void setup(String transform) {\n"
-                                        + "        Cipher cipher = Cipher.getInstance(transform);\n"
-                                        + "    }\n"
-                                        + "}\n"),
-                        base64gzip(
-                                "bin/classes/test/pkg/CipherTest1.class",
-                                ""
-                                        + "H4sIAAAAAAAAAI1S227TQBA92zh2kgZSmrTlUqBAgSROa5U+BvFScYkIRSJV"
-                                        + "3x13m7pNbMveoOazeCmIBz6Aj0LM2FYSgrnY2pnZ2Zk5M2f3+4+v3wDsY7cE"
-                                        + "HVslPMBDFo9YbBt4bOCJgP7c9Vz1QiBXbxwLaAf+iRSodF1PHo5HfRke2f0h"
-                                        + "eVa7vmMPj+3Q5X3q1NSZGwmsd5WMlBVcDKwDNzijHNrutQXy7N8TMOvdc/uj"
-                                        + "fWk54SRQfhrVjp1WJJ1x6KqJ9VZO2tyD7sTHAmuZWdTqhZwIVDPSBUovLx0Z"
-                                        + "KNf3IgNP0xaeCbz+7xYWXD025AfbO/FHSXthbAts/i2SkCOpxgFNkSBbQ9sb"
-                                        + "WD0Vut4grlNUVCg69cMRs/tbCI3S88ehI1+5TPXKHLO7HFyGgYKBehkNNFmY"
-                                        + "ZbSwI1DLugwqMEN43z+XjiIGZ64pa6l3gSe6an4mAhv1zh9ubT/z5F9kLg+k"
-                                        + "6niRsj2HhmxkUZV5b/SE8/Sq+dMgmAqSRdpZpAXpfPMzxCcyllAiqcfOIpZJ"
-                                        + "lpMA0tdIC1xHhaI4uYMc/YBh6q0rLM3SS6RByTolcYmtJCwtwdYKbsRlDayi"
-                                        + "StG1tLM1WuvYSAGOyKeRLphaa+cKuUWESlyJEZpJ3BShMEUopAhs3cQt6mQe"
-                                        + "6zbupFhvaMdd6uYXaO8WkapEQG1uFn2KpGMTdyk3T4sxf53lXlzn/k9RvT9I"
-                                        + "XQQAAA=="))
+                        compiled(
+                                "bin/classes",
+                                java(
+                                        ""
+                                                + "package test.pkg;\n"
+                                                + "\n"
+                                                + "import java.security.InvalidKeyException;\n"
+                                                + "import java.security.Key;\n"
+                                                + "import java.security.NoSuchAlgorithmException;\n"
+                                                + "import java.security.SecureRandom;\n"
+                                                + "\n"
+                                                + "import javax.crypto.Cipher;\n"
+                                                + "import javax.crypto.NoSuchPaddingException;\n"
+                                                + "\n"
+                                                + "@SuppressWarnings(\"all\")\n"
+                                                + "public class CipherTest1 {\n"
+                                                + "    public void test1(Cipher cipher, Key key) throws InvalidKeyException {\n"
+                                                + "        cipher.init(Cipher.WRAP_MODE, key); // FLAG\n"
+                                                + "    }\n"
+                                                + "\n"
+                                                + "    public void test2(Cipher cipher, Key key, SecureRandom random) throws InvalidKeyException {\n"
+                                                + "        cipher.init(Cipher.ENCRYPT_MODE, key, random);\n"
+                                                + "    }\n"
+                                                + "\n"
+                                                + "    public void setup(String transform) throws NoSuchPaddingException, NoSuchAlgorithmException {\n"
+                                                + "        Cipher cipher = Cipher.getInstance(transform);\n"
+                                                + "    }\n"
+                                                + "}\n"),
+                                "test/pkg/CipherTest1.class:"
+                                        + "H4sIAAAAAAAAAI1S2U7bQBQ9Q7xAaghlSxegDaE0EIrV9qEPVJUq1FYRSyuC"
+                                        + "eHfskTM0GVv2GJHP6gsgHvoB/aiqd2JUkihVseUzvnfuOXeZ+fX75ieAd3hZ"
+                                        + "hI1HNh4XMYEnGp5qWLaxYmOVwXovpFAfGAq1zVMGYy8KOEPpQEh+lHVbPDnx"
+                                        + "Wh3ymIqn6jVDvXZw5p17F66f9GIVuXsibvNkt+90U+5niVA9d5/3drVc8dOF"
+                                        + "z2MlIpnaeHar8obhy71VRlxN/cOPPRlE3X4GM+UqixkWc0W348nQbapEyJD2"
+                                        + "bTy3UaE6mlGW+Pyz0K3M5tlOdEM7muRgElMM82NKcrCGqoZ1By+wwbCgO3Dj"
+                                        + "76E7oEKad8m/ts64rxgqw5U35LnXEQH19HcmDNWhlEdRM/Pb37wgoOoHojaG"
+                                        + "lfKwj50wIrPdHQg09FkylGuNf5zH27E7/5vxg5CrhkyVJ30a3+a4SY89TlRg"
+                                        + "0e3TjwGmh0xYJGuFVkaruXUF9oN+KAeh1Xc6hA6m6ZLq0CoK9AJ23dq+ROEu"
+                                        + "WN9iYIZIJcI8Q4m+WTy8pa6Tz6B1sm5sv7qEMcqdo9rmh7hzZOfcNbJ0Wqt+"
+                                        + "DfNwlLkEE+U+0yJ7AYu0u0TWBMp/AOFtLn55AwAA"))
                 .run()
                 .expect(expected);
     }
@@ -237,54 +235,50 @@ public class SecureRandomGeneratorDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("all") // Sample code
     private TestFile mPrngCalls =
-            java(
+            compiled(
+                    "bin/classes",
+                    java(
+                            ""
+                                    + "package test.pkg;\n"
+                                    + "\n"
+                                    + "import java.security.KeyPairGenerator;\n"
+                                    + "import java.security.NoSuchAlgorithmException;\n"
+                                    + "import java.security.NoSuchProviderException;\n"
+                                    + "import java.security.SecureRandom;\n"
+                                    + "\n"
+                                    + "import javax.crypto.KeyAgreement;\n"
+                                    + "import javax.crypto.KeyGenerator;\n"
+                                    + "\n"
+                                    + "public class PrngCalls {\n"
+                                    + "    public void testKeyGenerator() throws NoSuchAlgorithmException, NoSuchProviderException {\n"
+                                    + "        KeyGenerator generator = KeyGenerator.getInstance(\"AES\", \"BC\");\n"
+                                    + "        generator.init(128);\n"
+                                    + "\n"
+                                    + "        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(\"RSA\");\n"
+                                    + "        keyGen.initialize(512);\n"
+                                    + "\n"
+                                    + "        KeyAgreement agreement = KeyAgreement.getInstance(\"DH\", \"BC\");\n"
+                                    + "        agreement.generateSecret();\n"
+                                    + "\n"
+                                    + "        SecureRandom random = new SecureRandom();\n"
+                                    + "        byte bytes[] = new byte[20];\n"
+                                    + "        random.nextBytes(bytes);\n"
+                                    + "    }\n"
+                                    + "}\n"),
                     ""
-                            + "package test.pkg;\n"
-                            + "\n"
-                            + "import java.security.KeyPairGenerator;\n"
-                            + "import java.security.NoSuchAlgorithmException;\n"
-                            + "import java.security.NoSuchProviderException;\n"
-                            + "import java.security.SecureRandom;\n"
-                            + "\n"
-                            + "import javax.crypto.KeyAgreement;\n"
-                            + "import javax.crypto.KeyGenerator;\n"
-                            + "\n"
-                            + "public class PrngCalls {\n"
-                            + "    public void testKeyGenerator() throws NoSuchAlgorithmException, NoSuchProviderException {\n"
-                            + "        KeyGenerator generator = KeyGenerator.getInstance(\"AES\", \"BC\");\n"
-                            + "        generator.init(128);\n"
-                            + "\n"
-                            + "        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(\"RSA\");\n"
-                            + "        keyGen.initialize(512);\n"
-                            + "\n"
-                            + "        KeyAgreement agreement = KeyAgreement.getInstance(\"DH\", \"BC\");\n"
-                            + "        agreement.generateSecret();\n"
-                            + "\n"
-                            + "        SecureRandom random = new SecureRandom();\n"
-                            + "        byte bytes[] = new byte[20];\n"
-                            + "        random.nextBytes(bytes);\n"
-                            + "    }\n"
-                            + "}\n");
-
-    @SuppressWarnings("all") // Sample code
-    private TestFile mPrngCalls2 =
-            base64gzip(
-                    "bin/classes/test/pkg/PrngCalls.class",
-                    ""
-                            + "H4sIAAAAAAAAAJ1UW1PTUBD+TmmbNBShpVwKiKCALbcooiBFtC1XrchQB8fh"
-                            + "KQ1nQqBNmDRlqE/+JV8Ko47jsz/KcU+KrQxFZ0xmzp6zu+fbbze7+fHz8zcA"
-                            + "c3gpwccQdXnZVU+ODXXHsYysViyWJfgZuo60U00tapahvikccd1lCC6blumu"
-                            + "MLQlknsM/qx9wBW0IRRGAEGGzpxp8e1KqcCdt1qhyAk8Z+tacU9zTHG+VPrd"
-                            + "Q7PMEMtdj5yiuEL7ilc3uMUdzbUdBmXtTOcnrmlbRC3CMOFRK3O94phuVd22"
-                            + "8xX9MF00bDoelhrOEroZxlv57jj2qXnAnYarjB7KKr2Wl9HH4MtkFcQxKGGA"
-                            + "IS4AzlTdqZ64tvonsTCGcJuh3eDullV2NUun5NKJXLNwedcxLSN1XZPM3Yia"
-                            + "EqHvhDGCUSqVKDiJxFZyT8Y94ribTysYx30JEwzDV5MjmB3NdK4QTDDMt6BU"
-                            + "J3Dz1ZQIMhnGlGChCBamVjQ/cBkzVJ/VTQUqHkp40KI+acPhvMQtV4Sf+/+K"
-                            + "NHBSIth8GI/xhOGWUafI81x3uFeb5H5GwiLDwNWU8mLDdzXrwC4pWEBILKkw"
-                            + "lvGMIWTxMzdTpV5jCCT2M6KfQ0az5Qb/8oFoEI69M8PIv8pIqNrvPFqhNpMk"
-                            + "VMfjyjCUuzkT8gsU6rx9+xn6Nnm74uh83RSTdasxSLMCAaOgjoF4fLSjGaVV"
-                            + "opNKkpEMTJ5D/uSZFVqDnrKdXiBcdyDZQZKgyepDp+flQxeiHtB32gdJvojG"
-                            + "or0X6M9NRfCxhuHo3QuMvZ6O+FBDMjotbLPbMzU8evcFC+/P8XTJ3xX7Ki8F"
-                            + "4v54oIalJodJb+2ATBE7KU4PItRG3RhDDEn00m+rD4vox3OaEsFzpR7/kqdM"
-                            + "thWyMbo3Rdo0oY7R/QyyVIg5wlzFGvzkJWMdG5Qfw6YXe+sXcKUKZxcFAAA=");
+                            + "test/pkg/PrngCalls.class:"
+                            + "H4sIAAAAAAAAAJ1SXU8TQRQ9s7TdZVkKXUEpX4oCtuVj/UDBgmKLqMSKhBqM"
+                            + "4Wm7TJbFdpdMp4QaH/xLvhSixh/gjzLeKQkfEV7ch3Nnzt4759y58/vP918A"
+                            + "5vHURC+GDAwbGDExipsKbhkYM3EbdxSMG5gwMYm7CjI6siYsDCnI6ZjSMc2Q"
+                            + "WArCQD5j6MhktxhiK9EOZ+gpBSFfb9QqXLx3K1VieiWvyze8+YqHXLgyEgzm"
+                            + "6qHH92UQhXUdMzpmiSpHDeHxl4EqSW6I0F9xq9X67J574FpIwSadwmqZQSuu"
+                            + "6HAs3MN9Cw/wkPjNckHHnKIeWXisKO3Fax3zilmw8AR5hkF1kFPnXkMEsumU"
+                            + "1YJvuuFOVLOwiCUGW/l09j/5zqk6mW+XVd3Qd95V9rgnGSYvnrQelRvebqHq"
+                            + "R7TdrZ12xjBxWeKGiA6CHS7O5aVV3qHjiea+jJyLN9Xlc7kW1qUbenQvhUzp"
+                            + "zE9ZiiD0F/9lsqUrD1ykOampUcisqamNXvRIuRtuIM4ZmLtE8kTg6ipSMZVK"
+                            + "4FaDz/ySBgu+4LzGQ/n/LZ0eQWJJ/0SZ01QFbzeX3S4ydIb8UBabNFeGeGa7"
+                            + "mN3CGHro6atPA1PPivAa7UYoMorx3BHYN1ow9BEm2mQXYT+lau3ULxQTFJ/b"
+                            + "mt1xjFhpKoWvLcTtxDH0t9MpDS0Ydqf6Z67PtND14Qesj0fozsd6+34a+Xg6"
+                            + "lo63kDxTycEk7IaBZNtePxkbJq1x+pvFdXrlN7CAASwjTTvlSiNmgKrT7UYG"
+                            + "/wIFnqm92QMAAA==");
 }

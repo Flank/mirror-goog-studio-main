@@ -59,7 +59,7 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
                         mThemes2,
                         mUnsupported,
                         //// Only the path matters as far as this test is concerned; we don't
-                        //// need the actual junit-4.12 code that  is referencing
+                        //// need the actual junit-4.12 code that is referencing
                         // java.lang.management
                         // base64gzip("libs/junit-4.12.jar", UNSUPPORTED_BYTECODE)
                         daggerTestFile)
@@ -71,30 +71,61 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
         lint().files(
                         classpath(),
                         manifest().minSdk(2),
-                        base64gzip(
-                                "bin/classes/foo/bar/ApiCallTest.class",
-                                ""
-                                        + "H4sIAAAAAAAAAJ1U7VLbRhQ9a4yFbVEIIQkfoaWUUNukVkISkmJKYwxJ3Mo4"
-                                        + "kxCn7Z+OkNf2FlnSrASp+1RtpkNn+qMP0HfpK3RyVxaDx4HQqT2zn/eee+7d"
-                                        + "e/T3v3/+BWANdQ0JhumQB6HhH7aNsi8qluPs015Dkm4styk90TQs3zfKdiiO"
-                                        + "RdhjSG0KV4RbDCO5fIMhWfGaPIMRpHWMIsUwYQqX7x11D7jctw4czjBlerbl"
-                                        + "NCwp1D4+TIYdETBcN8+LX6IwXR52vCbDw5x5SuSNaLZ5aFQ60nM9uueyZHqy"
-                                        + "bby5ZxtNr2vs1GsqVOjJUr6RAcMVHVO4yqCTm8rAc7ctyTCby5vDyUVXJQ3X"
-                                        + "GOaHMHel9OQzcnC4zOAGZjXMMMxdzErHHOYZbtJx3R043xf2oSmCkLucWDwa"
-                                        + "YPE+xvKFniXFYUHHx/iE4WrAw33+c1gNXnKH22Fc3NwP+UYan+IzDUtEtWk5"
-                                        + "x+LQOOiF3KbnMuq+mqpuy9OxjFsM47Xyd9Xaq9qPjbL5apeBVVX5PteRQ54h"
-                                        + "TdxecN+TIcPKcO183xFUcypgVKe+XSmNVXyh4TbD0uXWOoowGLIHVki59hQv"
-                                        + "hjv/Iczy9pkHhbyLexrWGBZPPdvS8jvCDoznZMzlzlGrtVyjzHXcxwMGrd7Y"
-                                        + "fWGWvyeS5mUu1JJZ++xB6HU/1JaE7fQ7kWHmoh5lGOUqF6WC81qODEZs5xdq"
-                                        + "Y/Mn69gyHMttGxXHCgLl2hLcIXlkWsJxnluSu/Q42a4V2p3TXbJLvCPwQfn1"
-                                        + "/FMJTg/Dbha2CHmcknkqRdO0et4RwSy836dn12SfeekdSZs/EQpzckDFRQVP"
-                                        + "4qu61LVRAB5o+IYE9oFiE21Vbg01hvv/Rx4k7wvvSBFUU6hfklb0vaJRo51B"
-                                        + "M6N5tPAHxn6jRQIZGlPR4RVkadT7BjSP08zwESZi539ia6NwgsnXbG9qeiO5"
-                                        + "eoLrr1eTJ7j5Fovro4n1VGJdI/CV31HYGHuLOxtpFWYkcixGAaYJ/AYBztBu"
-                                        + "HpOk72vEdw5LWCCRLmIFefoXUYisW/2QMR21WsfDiKKBR/iSKGkk3g2UKEaW"
-                                        + "/DfxFeU8R5hbuEWRFujL+DWtUoQ8gce00gg9pZSIMRoZyniANLbj1PsYFcIA"
-                                        + "drAbp347rluC/TpUtOJA0RIxy4T6nFzquXau55NofIpnNE/R6i6q+PbxLEyq"
-                                        + "2V4q/Q6UwMkB1gYAAA=="),
+                        bytecode(
+                                "bin/classes",
+                                java(
+                                        "package test.pkg;\n"
+                                                + "\n"
+                                                + "import android.app.Activity;\n"
+                                                + "import android.app.ApplicationErrorReport;\n"
+                                                + "import android.app.ApplicationErrorReport.BatteryInfo;\n"
+                                                + "import android.graphics.PorterDuff.Mode;\n"
+                                                + "import android.widget.Chronometer;\n"
+                                                + "import android.widget.GridLayout;\n"
+                                                + "import dalvik.bytecode.OpcodeInfo;\n"
+                                                + "import org.w3c.dom.DOMError;\n"
+                                                + "import org.w3c.dom.DOMErrorHandler;\n"
+                                                + "import org.w3c.dom.DOMLocator;\n"
+                                                + "\n"
+                                                + "public class ApiCallTest extends Activity {\n"
+                                                + "   public void method(Chronometer chronometer, DOMLocator locator) {\n"
+                                                + "      this.getActionBar();\n"
+                                                + "      DOMError error = null;\n"
+                                                + "      Class<?> clz = DOMErrorHandler.class;\n"
+                                                + "      chronometer.getOnChronometerTickListener();\n"
+                                                + "      chronometer.setTextIsSelectable(true);\n"
+                                                + "      int field = OpcodeInfo.MAXIMUM_VALUE;\n"
+                                                + "      boolean fillParent = true;\n"
+                                                + "      boolean matchParent = true;\n"
+                                                + "      BatteryInfo batteryInfo = this.getReport().batteryInfo;\n"
+                                                + "      Mode mode = Mode.OVERLAY;\n"
+                                                + "   }\n"
+                                                + "\n"
+                                                + "   GridLayout getGridLayout() {\n"
+                                                + "      return null;\n"
+                                                + "   }\n"
+                                                + "\n"
+                                                + "   private ApplicationErrorReport getReport() {\n"
+                                                + "      return null;\n"
+                                                + "   }\n"
+                                                + "}"),
+                                "test/pkg/ApiCallTest.class:"
+                                        + "H4sIAAAAAAAAAJ1U8VMSQRT+Vg9O8DRTM0EpNTLQ4iwNDaxEsmLmkEZRq1+a"
+                                        + "A1a8xNubu0PjvyqnsZl+6A/oj2p6BzoSjVnBzL7b97737be77+33H1+/AVhE"
+                                        + "JohejAYRREhGOIgxjHtDJIAbuOm5JwKYxFQAtxCVcVvGNIN/2TAN9wlDdyy+"
+                                        + "zSBlRYUzXNEMk6/XD0rcLuqlGnn8B9zdExWGxZimmxVbGBX1yKhUuatm92xh"
+                                        + "CopzO60Ju6oezZfVijhQnxXymijrrrDTHncfgV/YRkXTG6LuMkRi8U6q83Ca"
+                                        + "IUCeDW4Jm7DTbVjdstSMZdUMojaEuWbbwm7hKCm4Kep2mT83PNEDGcvI6rVa"
+                                        + "kTtu4r1+qCtQ0KfgDmIMYx1SmzwvaZEat2XEFcwgoUDFnIz7Ch5gXsEwrslY"
+                                        + "UPAQSzJSCpbxmGHYJXbV2q+qbauR+xe5Zdc4NNwGg0Kb8mbCXNVthlDnvs5C"
+                                        + "tJXwxefMME6egtnmKhrlfc1wXG568ulCQxeGSUXOJJut6Y7DHYal32+iLTV6"
+                                        + "IRGJHHK4W+Qf3JyzyWu87LaqRYq99W48XNFrh8a+Wmq4vEyFpRYsz+TMXUHl"
+                                        + "kM+8zuW38u+2M9rWGgPLMUxdfscMvSXdJSENj0bGU3KsnjsY5v6iUKJtGWkZ"
+                                        + "KwwTZ0lVW7f2jLKjviIct5/Vd3ej+WZTSC0jF7bXNrTMG1KrXZZEB7TwPwfL"
+                                        + "kPi3TVA5/0ELdb33NHg/CczrARr7aRYhy8j6Zr6AfaIPan0a/U1nP40DuHoK"
+                                        + "FegiEkCdOUHXDlsf7E5JsyeQdmalE/iO4U/6pKRfSsoUlz+jJ9VzjEAqcE6a"
+                                        + "aCoYgI8oZQzSbIhm1FL0D2OEtFzHBEYRR4iwYcIOEqK1ePhUZxf72CEyQrI8"
+                                        + "jstwk4Qb8SK0yr0mshuz9Dje9QeQpOgivGfxEdIroZ8FkciLUAUAAA=="),
                         base64gzip(
                                 "libs/GetterTest.jar",
                                 ""

@@ -77,28 +77,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented(),
-            base64gzip(
-                "bin/classes/test/pkg/ConditionalApiTest.class",
-                "" +
-                    "H4sIAAAAAAAAAIWU208TQRTGv2lLty0LdMv9UhCEUqiwKngLxkQBk8YKhiUl" +
-                    "PpGh3ZSB7W6z3ZLw5/DkszxIoomPPvhHGc8sy9Jy0TaZM3POzPf75pL9/ef7" +
-                    "TwAreJVCNyaTmMIDBTMK5lKIIScbSs4jn8BCCosoKHikYIkh/lrYwnvDEM0v" +
-                    "lBli607VZOgrCdvcatUPTHeXH1iUyZScCrfK3BVyHCRj3qFoMmRLntn09MZx" +
-                    "TV937KrwhGNz621D7FJ6TU6jyDCWL3G76jqiqtdc3jgUlaa+Y1a8NR/sUo9h" +
-                    "+J4pDD2GxyvHH3kjYHdJ0adBXAniahCfMaQMp+VWzPdCTh6+7Wv5iJ9wFSp6" +
-                    "FCyreIwnCkhu8orvNPV3LWFVZ8ubO0Zxe2t/fXtj0yAfN8Zq0bZNd93izaZJ" +
-                    "ZzF1tZ7bos4l0d/A5gm3WtxzXEkcULCiYhXkMmk4dZNO0a4peK7iBV4yjP/j" +
-                    "NBnS0rducbumbx8c+Yc2cp9nBuW6Z2x82C9u7TKwIqncXNIhbJw2PbNOb8Jp" +
-                    "kfxgya8IR//kCtszPNfkdbqR/jvSxGnIkWXTunypTdKjdI2uGtOQT1T+4mDy" +
-                    "/KntpZFOkVHsWrwA+0qdCPqCSUACaWrVywnQkPHr/RgIFp8iSmNg/hyR9OAZ" +
-                    "1B+IfS5coGsvSKQLv9qSUj7qy48RAOQoQZ408jJKclmq5AghkUOXsgFS9gYp" +
-                    "Ry+K+jFEtAGqj4Q29gIbmVs2rom9FEEqCdLRaO01JRNSMm2UKJhG5dEQUqaR" +
-                    "nK5JSPIM3RJygfgtxjgxJkh/so2hhQytk5Gm8ljI8IKN5IKNDJ9DySS+IRlu" +
-                    "6Mudmxui2wFdcQIzBH1I+Dn6z7cZyIUGcp1HOZGg+njooBY4yJKD+Bn6/gPO" +
-                    "kATow6agQM9iicB6GzQbQrOd0H4JnfAfUxazvk6EFKfJuvyGTpNK8i/Dv36D" +
-                    "XAUAAA=="
-            )
+            ).indented()
         )
             .run()
             .expect(
@@ -269,29 +248,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented(),
-            base64gzip(
-                "bin/classes/test/pkg/VersionConditional1.class",
-                "" +
-                    "H4sIAAAAAAAAAL2Vz28TVxDHP8/5YSdxEmOCHUgIMYTWkJYtUBWpQahgErAw" +
-                    "iYrTpI1U0o29DS+4u+l6zQ+1QoAQ6oEjEuIG9NDeKjgQCSTECSGOiBNcemz/" +
-                    "AMQJxDzjkDQitCoS+1Yzb36+mfcdrx+8uHUH2M5HYVY3E6G7ibX0hFnXTD29" +
-                    "hqTCrA+zQdG4U7s62KWoS28aU9RnvKKjaM9p1xmu/DDl+KP2VEk08ZxXsEtj" +
-                    "tq+NXFPWB0d0WdGTC5xyYM0enbbGHL+sPTfjuUUdyMYubR0wfmIXlp4wZ0Rm" +
-                    "fe35OjipUBOK1nxgF44etGdrSRuM8zZFc96r+AVnSBtl5xsSb5mxj9lh+qQA" +
-                    "2y36ni5aXtnaU9GlYt/Y4KF8dmR4MjOydzAvZyyRo1nXdfxMyS6XnXKUJprD" +
-                    "bIzyIWnF6vlkx3Vx2gmsfb4u5uyTXiUwjpuibKZf0f22lhUxU5tVst1pa2Rq" +
-                    "xilI97GlRUpXy9WtCC/s8nsPTGaHR+W2snJuOjcfVPDcwHEDK2P4iWDA3G2b" +
-                    "VDzia1HbppYqrFlShGUKzFOHMt0KbRHJEq6EN2yeI3RdNiGiQhurylZZiFx1" +
-                    "oI124dIFK14Fh/olWUhUkzeoi7VdJX6b+m/UHA03aRz/jfbF4vt1ufaeDmq5" +
-                    "ysauy0vdev4lKvbGqK5/itF5cfx6FTUDy1l6hbYLkjGSxNnAKvpJ8DmdDNHF" +
-                    "MN18Sw9a8P6R9Zymjwsy0xdJ86tM7R98zBxbuMcnPJSvw2M+5W8+46lkeM6A" +
-                    "UuxUMXapdexW/Qyq7QypHexTQ2TVV+TUYTnBjETiFey1kTC7OCtlKDqqto5k" +
-                    "S2LRWtMmb0Ssq+YHRz2pDU6qdhvx5Vr/L/bWd4x/Z/u1BYSXQft/51+A3hdo" +
-                    "4UuB/pBAPyqDMC6gfs0OJvhCQN/PYdF8J6vAEYoc53uBX/MLM1yixBU8fmdW" +
-                    "4Pe5S4X7HOMRJ/iTn/iLn3nGKfmZn1ERzqok51Qv5xdBnXoNdWoR1B3Ek5HE" +
-                    "67WyxVDxT1S/I0kZSMQ7JN6drMH8A3XyAU0vAYbI8ZqdBgAA"
-            )
+            ).indented()
         )
             .run()
             .expect(
@@ -558,31 +515,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented(),
-            base64gzip(
-                "bin/classes/test/pkg/VersionConditional1b.class",
-                "" +
-                    "H4sIAAAAAAAAAK2WzW8TRxjGn7Gd2ImdxJg0TjD5MBhwAmXJB0lTIlTi8GFw" +
-                    "E4EjR0QIWHtXYYOzG603pKkqgSq1IKgqFSFQb4VLe4UDkVoJcax67q0XjvwH" +
-                    "vVV9xthxsAgGxV7p3Xln3pnfs+/Mvuu//vv9BYBhjHgRbYYPsSbsw34vDjTD" +
-                    "g7g0/V4MeHFQoHHCMA3nuIA73p8R8CQsTRdoSxmmPr2ylNXtWTWbZ08oZeXU" +
-                    "fEa1DemXOj3ONaMg0Jty9IKjLF9fUDK6XTAsM2GZmuGwoeYHs8cEXEvjjI7P" +
-                    "S4Rv2TYs23DWBMS8QEvaUXPXv1SXS2u6lj6TZkyaUWmOSjMizbA0Q9IMCjRI" +
-                    "Jp3mtLVi5/RThpzc9S7+4UX1hurFIYEe1dRsy9AUq6BMrhh5LZY5eSGdnJm+" +
-                    "kpiZOpmmmCo/kDRN3U7k1UJBLwTQhGYvPg1AwRGyyoutGtqC7iinbUNLqWvW" +
-                    "iiMDBwMYAgV3vzc1AkEpTsmr5oIyk13Ucw67qlUKdG4lXMBbaaWnzl1JTs8y" +
-                    "r0mB3fFUeVLOMh3ddJSEvH/lHJO70ErJM7bBblWKKe5/ElF4eVzkzw8hH5fW" +
-                    "T0/hXfDeMLAO11M2XAjQNhY7W3iBfjEArWgrjgexozT5Ntz0gZFncAeDj7Ev" +
-                    "8jNCf8BzUayj4Tka535F5G03UHbnJMtdZO0iDVzVx3UDCCGCdgwgzFPeVeR3" +
-                    "vGGU+LIVwk4qaC+qckdafQz4ZEPU3ZKoMSnK/05RPW+7bZvdal3d1NVDv5e6" +
-                    "otQVwyj2b9I1tqFrrFqXnwEdG5nWuKxMZEzqan1crWkLESG+0kA/RciUHMJe" +
-                    "HN60KbESXCI9cIUlMVwX4iCJQ1xrhMTRGsTOLYhPPoo4TuLnJE6QeLwGsasu" +
-                    "z3iCxEkSp0g8VYO4qy7EJIlnSUyROF2DGKkL8TyJF0icJTFTg7i7LsSLJM6T" +
-                    "eInEy+8lsoaW31rxz5u3VkRLpSS0Vd34kPGWbc7f9viTSoqq07Xd9Svptrlh" +
-                    "gMp0Z5luDX1YQBzXWIcW8QWWcAYm5rCMqyiw18EqbuAW1nAHX+MRvsEvuInf" +
-                    "2LOOb/ES3+FPfI+/OfoK9/AaP+Bf/Mh9+0n4cF+E8UD04WGl7oloue6xVal7" +
-                    "7QiFfR0b106/tIzvKX45enkk5DFxMboPeyD/vPSxoDX9DyGCeCXYCAAA"
-            )
+            ).indented()
         )
             .run()
             .expect(
@@ -843,29 +776,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented(),
-            base64gzip(
-                "bin/classes/test/pkg/VersionConditional2.class",
-                "" +
-                    "H4sIAAAAAAAAAKWVa08TQRiFz0ChUAvdgggqKghyp+s9UYgXLiqxgrWkJsaE" +
-                    "bNtNWai7sLuVxJhoookmmmj8BaAmftZETfzgd/1RxrNlqZOVGoLbZGbOzOz7" +
-                    "nmfm3fTnr2/fAZxCIozOCOpxpBFd6I7gKHrC6A3jmED9uGEa7gWB2oHBjEBo" +
-                    "0srrArGkYeqzpXtZ3Z7XskXOtCStnFbMaLbhaX8y5C4ajsDhpKs7rrqyXFAz" +
-                    "uu0YljlpmXnD5UArnhxjOG/9qq1rLuMtaqbA+YGkZuZty8ir9w19Tc2wGatM" +
-                    "FWxtZdHIOWre1ta8VOqUPxgrm7QtyxVo3SaEQCSr5ZYLtlUy8wK9Owkp0JR2" +
-                    "+dINbcXnag/4nbOnV0takahRbyWpO84mRqss/V204M1uvRFJWyU7p18xvMAd" +
-                    "25xPYkm7r4XRx3PcMms56kTJKOZ7M9O30jNzswuTc1PTafoM6OiMaer2ZFFz" +
-                    "HN2JIoyGMPqjGMRQGMNRjGBUoPNfdyOgeNnVomYW1Lnskp7juSpBG/RdzZlA" +
-                    "+M8oPXV9YWZ2XkDMCMT/uhz6d3R3Qrqe/oGdXTm6Ucfy9Z56CI+TbSOVyl6w" +
-                    "rxv6ipqPHNQg4m8CmrGHbXRzA/um8nozYv7Ln6lq2U98Qq3S+B4NwyNfEPJE" +
-                    "syxislBkEd8SXubacuZEOWcrDe5lvna0oQMHcJBfXCf6cYSGu3AaPRhHLy6j" +
-                    "r7y7a9OF79AbKYiXXU+ghbFqGAuErmuK8qFsq4KwISPIIiYLRRbxjSoIg0QY" +
-                    "oqFRZksQ4QQRThLhDBHOEuEcEc4TYXx3CPsqCD98hFQZ4S3qP8gUAR0LaCWg" +
-                    "45IOEl1k6/ma5nVco+PrGMYsjiOFMczjEm5z5g5u4q5ElKoQpSpEKYkoisie" +
-                    "UMT/ca69Cta7AFZAxwJaCej4u+pYC2yzNKcTa5G2l4llEmuVWC6x1oj1gFgP" +
-                    "/wOro0rBrctMsojJQpFFfL0KxyMW3GO6esKCe8qCe8aCe86Ce8GCe8mCe8VS" +
-                    "e82Ce7O7gttf/vgP4DD7Fo4Ej+sQvP/DgxhA42+M2tIyKwcAAA=="
-            )
+            ).indented()
         )
             .run()
             .expect(
@@ -2876,6 +2787,8 @@ class VersionChecksTest : AbstractCheckTest() {
                 """
                 package test.pkg
 
+                import test.pkg.constants.Constants;
+                import test.pkg.utils.*;
                 import android.support.annotation.RequiresApi
 
                 fun test() {
@@ -2905,73 +2818,104 @@ class VersionChecksTest : AbstractCheckTest() {
                 }
                 """
             ).indented(),
-            // Compiled version of Constants.java above
-            jar(
-                "libs/compiled.jar",
-                base64gzip(
-                    "test/pkg/Constants.class",
-                    "" +
-                        "H4sIAAAAAAAAAG1STW/TQBB9m2+noWnThgIF2vCZFIQl4NYKEaKCLFltFIcc" +
-                        "cqk29pJu46wjexPBf+JScQBx4AfwoxBjN0oqwsEznnkz896z/PvPz18AXuN5" +
-                        "ETk8KOBhEY/w2EAWT/J4mkedYcf52G6fdrrOmX3c7R53zpx2s2WdfGBgfYbd" +
-                        "zlRpORaWmslIDnzRVCrQXMtARQwNmysvDKT32eSLvtk6F+4ocryRpXRT24JH" +
-                        "+pAhzScyTWKqDLkjqaR+Q716o8eQaQWeYCjbUomT6Xggwi4nJoaKHbjc7/FQ" +
-                        "xvW8mdHnkqi3bS0ibU5GQ7NFWjRXOiKWjaHQPRFGpCOR8TIh6a8Cr8h53b7g" +
-                        "M276XA1NR4dSDQ/7Vjyc9abj8ZdYwMoAqU9AOlwgR7aYCZ8+lcVgTHjIx0KL" +
-                        "MLaZIvzI9edGi04wDV3xXsYO1heCX8TnS7iBdZL5KQjyaJRwgGcl5FEg+lWL" +
-                        "ZGQp6XRwIVzNsLlsvQsCX3BFjOR3UVT/47TRR43+gxxpZbgdE1I2qFqjXKRn" +
-                        "zUIJGXoheRTLBJmUGeXswXewy9glNijmkmYemxRLVwOoYIuygW1UaSpevpMg" +
-                        "tJP+mnAuN4urvAZuYme++Jaa6cXidcpyQrl/heIW2UgIiKqQ4Cns4i7F6+fv" +
-                        "WbhP8N7CVG2uy6ikfiD9DZnLf+RtUdxPrtX+Ak5s+MxRAwAA"
+            bytecode(
+                "libs/lib1.jar",
+                kotlin(
+                    "src/test/pkg/utils/utils.kt",
+                    """
+                    @file:Suppress("RemoveRedundantQualifierName", "unused")
+
+                    package test.pkg.utils
+                    import android.os.Build
+                    import androidx.annotation.ChecksSdkIntAtLeast
+
+                    @ChecksSdkIntAtLeast(parameter = 0, lambda = 1)
+                    inline fun fromApi(value: Int, action: () -> Unit) {
+                    }
+
+                    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O, lambda = 0)
+                    inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {
+                        return this
+                    }
+
+                    @ChecksSdkIntAtLeast(parameter = 0, lambda = 1)
+                    inline fun <T> sdk(level: Int, func: () -> T): T? {
+                        return null
+                    }
+
+
+                    @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.HONEYCOMB)
+                    val versionCheck1: Boolean
+                        get() = false
+                    """
                 ),
-                base64gzip(
-                    "test/pkg/UtilsKt.class",
-                    "" +
-                        "H4sIAAAAAAAAAI1Wz1PbRhT+Vja2bPNDGBJAtECJk2AICJOmTWNCS2gc3LrQ" +
-                        "FodDOXTWtnCEZcmjlT3JjVv/j5566KG9dXroMBx77f+T6VtZJgbcUIbRvv3e" +
-                        "2+997+2Txn+//fMvAB/jKwbNN4VvtBp146Vv2eJrPw5G6AnvcMPmTt3Yr5yY" +
-                        "VUIjDPFjz21utyyGzFKx1HB923KMk07TOG47Vd9yHWEUQms9nz1keHhj2GbP" +
-                        "/9Kx/PxWcCpb4k7Nc63aa4M7jutzGWnsvDKrDXFQaxQdf9svmVz4eYZEi3u8" +
-                        "afqmF6GKwBCzebNS43JHddwpuV7dODH9isctyvuOTxh7rr/Xtm0iifFAjIpR" +
-                        "hrk+vZZDvA63DUrp0XGrKuLQGKaqUsu3vcxFEVIx3F8qXe1cvg85kDR1KnIY" +
-                        "aUwkMY5JhqEOt9smAysyLNzUVYbhjJU5zlzcxARvtew3Bdfb90x339uuuB3i" +
-                        "KgzS8V7qXD57/QjDd5vlJ9fxraVy+Sa+zdW+mN7tEsQQ4S1L3o9OtVdst9pQ" +
-                        "Mc8wk/FfWSIzsJz0IGk39CpHIdNBrwZSRkStwfDof8zxoNzP/qMtN477CnWg" +
-                        "14fM+4aTxolXbJPCopJHRZa6ZZsdk6ZMDcoKCtDqpn9oeoIOBS9Ijipbyv4g" +
-                        "25tiGO/J+cb0eY37nOiUZkd6aYyVSmDRi80a0lAIqhHBP2eny8mz06SipZKK" +
-                        "GqFV6W7VYJlWCI1318BW9HktqivrQxsxLUZrfGNYU3U1HU0Ttp7YPf9J1R9o" +
-                        "ST06zXZTi1H17FRLUehwGDrSDd1NdUPPf44p2qie08Z05SJ8mcyNKU3TJ7qh" +
-                        "Ife4DFbTF8cmFse1s1PiZY9fEBDTo6qiRc5/iU3K0jYYRjqXewU5W2GP+l8y" +
-                        "Vh7gkBM11wOfv/ZNR1L1vOU3LXlbCZq2H2tmpV2ne2rLT+paw6dL3HFrNHVj" +
-                        "Jcsx99rNiumV5fXKLG6V24fcs+Q+BBMHVt3hftsje/b7tuNbTbPodCxhkXv7" +
-                        "3ZjQDF31XnyVLoUlD9y2VzULlmSfCc8cXuNDDgqi8kNKzxkMIUbrM9rtEi5H" +
-                        "JJlOPl1Jj/2BW7/LgcEOPWPUxATi+JLshW4UbmMqYEliFNPkj5B/hjAFz4Nz" +
-                        "cRTkDJJHpV2iSIGpIobxgtCEEnzIR+g5Ax2zoYRiKCEVSFggCcu/XdGQ6tOQ" +
-                        "wkdYDDSkMI87gQYVmT4NH1zS8GERc1JD8rqGu7g3UMMyaWBXNWiXNKyEfUgh" +
-                        "G/ZBxYM+DfcDDZNkXe7DEqHXdKxijYKkDp0w+adEfg38vfSgxheCdLIoJosy" +
-                        "6MhukGub5AOC4HW62dwRIpQp+N/Aw94uWaSfBY+K+ASfHoEJPMZnR7gl8EQg" +
-                        "L7AqsCYwFNi3g+eowKbAXYGnAisCWYF7ArrAvMCWwOcCswJf/AsGbi0NcAgA" +
-                        "AA=="
+                "test/pkg/utils/UtilsKt.class:" +
+                    "H4sIAAAAAAAAAI1UzVcaVxT/vQFhGPwY0fiBrVpDEtDqIEnaNBhbYzVySrWt" +
+                    "xEVdPWAkI8MMZ97ASXaebvo3dNt1F+0up4sej931P+k/0dP7RjCgNJbFe/fd" +
+                    "+7v3/u4H89c/v/8BIIcCw5RvCt9o1mtGy7dsYbyU51d+FIxBP+VtbtjcqRkH" +
+                    "5VOzQtoQQ/TEcxtbTYshlS4U665vW45x2m4YJy2n4luuI4zdjpTNZ44YHt4K" +
+                    "2+jaXzqWn98MvDJF7lQ916q+NrjjuD6XSGP7lVmpi8NqveD4W37R5MLPM8Sa" +
+                    "3OMN0ze9ENUFhojNG+Uqly+q427R9WrGqemXPW5R3nfxhLHv+vst26YgER6Q" +
+                    "UTHKMN/D13IorsNtg1J65G5VRBQ6w52K5NLx/6ZLgOFBuni9b/kezaEMUqMS" +
+                    "h5HAhIZxTDIMtbndMhkYTWTxtp4yDKes1Enqag4TvNm03+y63oFnugfeVtlt" +
+                    "U6zdQTzeG3o9n7npwvDtRunpTf1mulS6Ld7Gag+mO1tSMYR405LTSVLtZdut" +
+                    "1FUsMMym/FeWSA0sJzGI2i29WifITNCrgSFDolpnePw/tnhQ7uf/0ZZbl32F" +
+                    "OtDtQ+p9q0l7xcu2SbCwjKMiQ92yzbZpM6hBWUEBes30j0xPkFPw91inytKZ" +
+                    "72V74wzjXTpfmz6vcp9TOKXRltYwSeVAor81q0tBIVWVAvx9fpbWzs80RY9r" +
+                    "ihqiW7l8qsE1o5A2ennPSEtySQ8nlexQLqJH6I7mhnU1qSbCCdJlY3sXP6p/" +
+                    "vmUEM3QtGZ5he/GlsHp+pscJP9zBj1zi9+I9+IufI4o+mnykjyWVK59lEnPT" +
+                    "up6cuMR3soxLsJro951YGtcprZJlT16QIpIMq4oeuvhBiWpD6sVPuSyTBecY" +
+                    "Rtr9HYTcuE7nev96rDTAIPdsvqvcee2bjgzVtZbeNOUM1eADu1b3aZzbbpX2" +
+                    "b6xoOeZ+q1E2vZIctIzsVrh9xD1LvjvK2KFVc7jf8kie+67l+FbDLDhtS1hk" +
+                    "3nq3MLRN161Xn6U+mHbotryKuWvJ6LMdn6Mb8bAOBWH5QaVzFkOI0L1Frz3S" +
+                    "y2XREtqzlcTYW9z5Ta4OntMZocbFoGGb5MVLFKYwHUTRMIoZsocQpXjT5PFl" +
+                    "4BfFDt06WVR6xQoEjBcwjF3SxpTggz5C5yySmOtQKHQoxAMKi0Rh+ddrHEZ7" +
+                    "OMTxEZYCDnEs4G7AQUWqh8MHfRw+LGBectBucriH+wM5LBMHdp3DRB+HlU4f" +
+                    "4sh0+qDi4x4ODwIOkyT19yFN2hs8VrFGIMkjSTr5U0K/BPZueonaCdLJopgs" +
+                    "yiCXF0GuL2iKQJPUWZrs+jFClKmAnMz3sPvSCniExwV8gk+PwQSe4LNjTAo8" +
+                    "FcgLrAqsCQwF8lRwjgpsCNwTeCawIpARuC+QFFgQ2BT4XGDuXy4VqTB7CAAA",
+                "META-INF/main.kotlin_module:" +
+                    "H4sIAAAAAAAAAGNgYGBmYGBgBGIWKM3AJcTFUZJaXKJXkJ0uxBYCZHmXcEly" +
+                    "8cHE9EpLMnOKhdhDQZR3iRKDFgMA7UDMuUcAAAA="
+            ),
+            bytecode(
+                "libs/lib2.jar",
+                java(
+                    """
+                    package test.pkg.constants;
+
+                    import android.os.Build;
+
+                    import androidx.annotation.ChecksSdkIntAtLeast;
+
+                    public class Constants {
+                        @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.LOLLIPOP)
+                        public static boolean getVersionCheck2() {
+                            return false;
+                        }
+
+                        @ChecksSdkIntAtLeast(parameter = 2)
+                        public static boolean getVersionCheck3(String sample, boolean sample2, int apiLevel) {
+                            return false;
+                        }
+
+                        @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.LOLLIPOP)
+                        public static final boolean SUPPORTS_LETTER_SPACING = Boolean.getBoolean("foo");
+                    }
+                    """
                 ),
-                base64gzip(
-                    "androidx/annotation/ChecksSdkIntAtLeast.class",
-                    "" +
-                        "H4sIAAAAAAAAAIVRyU4CQRB9zTa4b7jgEpcYhYtcvHkiLJEEg2GIF0/NTImN" +
-                        "Qw+Z6SHyax78AD9KrTkoaiaxk+6qevXqVaX67f3lFcAl9i0ULexa2BNIy7Hi" +
-                        "t1RuCaxVtfaNNMrXdXqQkWfSH3wE8o7vkpYjEiiUyu2hnMiKJ/WgYptA6cGV" +
-                        "AATmxjJgiqFAIOfJUd+VAvO2HwUONZXHtTu1R3KeQtt9amlTNW2SobmIxQSK" +
-                        "3UgbNaI7Faq+R7NBQoHjHw3ld6JS951oRNqQy/2PkjldHkfHHlOyE+lFPMXZ" +
-                        "P9Rb31PONC6otau2LXCQXNCTwYAM806S8w2P4vF60zExKXfT6F136qzabDXa" +
-                        "bM+ldgNfuc8/axIWJLA6k+/0h+QwdJjYcba1M8EfkuKb5g/PZAQyyHKU4yjd" +
-                        "gsVAHnNfQIh5Bhb+MhZ/Aay2xG4Ky1hhe8rKq2zXmLJO2EABm7F7jxRhC9vx" +
-                        "s/MJ+kN96nECAAA="
-                ),
-                base64gzip(
-                    "META-INF/app_debug.kotlin_module",
-                    "" +
-                        "H4sIAAAAAAAAAGNgYGBmYGBghGIBLmkujpLU4hK9gux0IbYQIMu7RIg9tCQz" +
-                        "p9i7BAAgbwQqLQAAAA=="
-                )
+                "test/pkg/Constants.class:" +
+                    "H4sIAAAAAAAAAG2Rz08aQRTHv8MisICKVGr9LepBPHQTPfSgMaHENptslLDI" +
+                    "gYsZYMQRmCG7g/GP8tL0UOOhf0D/qMa3G4Otetj3Zt687/t8Z/bP38ffAL5g" +
+                    "N4sUVjJYzWIN6zZmsJHGZhpbDEv+Rb1+3mj6l95ps3nauPTr1Zp79p2BtRlW" +
+                    "GxNl5Ei46laGsjMUVaW04UZqFTJUPK56gZa9O4dP607tWnQHod8buMpUjSd4" +
+                    "aI4YLD6WFpkpMaSOpZLmhGp7lRZDsqZ7gmHek0qcTUYdETQ5kRgKfWFaIghp" +
+                    "aDzzIFa03x4c0jX2vBt+y50hV33HN4FU/aO2GzXbYx7wkTAiiPAJhsxxd/hs" +
+                    "IOvrSdAV32SEm6vRpQxXJvwcjcpjFnNEvNI6jXIe29jJI40MQ9GI0DjjQd+Z" +
+                    "KsjTC/68cyO6hmHhpfRV66HgiohkfbopvWO60kaZ/k+KvDIsR0DKNu1ylLP0" +
+                    "5VzkkaQF2aM4T0frlBnlmf1fYD9iZYFiKi5mSL2AIhJx60pco3ew7l/15d5S" +
+                    "bHzA4j9C611h4T9hycVHYi5NzZWfiXYx8QDrJ5KvDS5S/BRNxvITd5pGLLEC" +
+                    "AAA="
             ),
             mChecksSdkIntAtLeast,
             mSupportJar
@@ -2979,7 +2923,7 @@ class VersionChecksTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                src/main/java/test/pkg/test.kt:21: Error: Call requires API level 10 (current min is 1): bar [NewApi]
+                src/main/java/test/pkg/test.kt:23: Error: Call requires API level 10 (current min is 1): bar [NewApi]
                     bar() // ERROR
                     ~~~
                 1 errors, 0 warnings

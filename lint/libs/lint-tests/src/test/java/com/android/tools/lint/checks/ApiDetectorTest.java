@@ -3709,31 +3709,45 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    <string name=\"string3\">String 3</string>\n"
                                         + "\n"
                                         + "</resources>\n"),
-                        base64gzip(
+                        bytecode(
                                 "../LibraryProject/libs/fragment_support.jar",
-                                ""
-                                        + "H4sIAAAAAAAAAAvwZmYRYeAAQuV+PTcGJMDJwMLg6xriqOvp56b/7xQDAzND"
-                                        + "gDc7B0iKCaokAKdmESCGa/Z19PN0cw0O0fN1++x75rSPt67eRV5vXa1zZ85v"
-                                        + "DjK4YvzgaZGel6+Op+/F0lUsnDNeSh6ZPVMrw0JM5MkSrYpnqq8zPxV9LGIE"
-                                        + "217vbnHcBmi2DdR2LrBttztRbQc5MjEvpSg/M0UftyoBJFXFpQUF+UUleFQL"
-                                        + "Y1FdZoKkoaoXVYM4dg2JBQX6iHBD16SKW5NbUWJ6bmpeiV5yTmJx8dTAWG8m"
-                                        + "RxHbzbt37VqdGRbm/3C2/EWHL2Ecgj9Uvgb8sFvX3fvi3aY+7r+rm5ReLJS/"
-                                        + "0N/1bs2swMajB/4+mlN8vuD+vfg4Rpnk+42tc218QnLf3LqRfML/nK2q8Mp3"
-                                        + "ElKxgjyPAvh+lIi5Jq6pKDrkKvLRT6dN2D7A+4Wm8zcftqCtkmeqFh9PiG1h"
-                                        + "nr/wytTGesvZX/7+cPty3GRlibN/T7XStF3xPLql2st5tpb+zui3/nr11MPE"
-                                        + "v+fFtq6e8yNl1+H1Vmt/1f97FdO++cZn66BqfT1Gd+WJHUw5T7hOKJwu2OA2"
-                                        + "ceEazRqdJsX9r/pr/CNNd7W6bk802MIRqnZ1iaehv+zyMxrps84n8IdIFGik"
-                                        + "XV7IOT0pkW9BjE+rWUDUhNstZia7blY1bUyyfnlFzU8vdMW5QG7W2KmXeWd/"
-                                        + "0bLvsTm043/akb9XT4R13foHTk4bjytmOjEyMNQxISdm9EjRJRwpjsklmWWZ"
-                                        + "JZWQyOn1P+h12EGg9vKyzt6LXS/YKy59e9BUsZlD6YvIni1f9vmKzb2UdrhM"
-                                        + "+MNmG065X4x1Uyw63y5VT39g+P5sNfPnv5+3sha0b5aIneNi0Wug0JKsd8Ne"
-                                        + "aJf5YUvFim07FXmC9M54b42TML/cPVXj+cqzX7LWyZrXqLP96zVvSVzVfSfy"
-                                        + "3NVlWt6v96x6P1XP27TwV2ku1/8pletu7rcXeLRybUya2p0n+vy8271jX7Mw"
-                                        + "VrW8rpdTjXkz92yV/mMu2cotmpOmTW5aaHC1aIH5L5baExccVST+dVoI+ZQV"
-                                        + "yxdK2+fFntQHBZrMcv2zt4BB4swICjRGJhEG1DIAVjqAChBUgFKcoGtFztoi"
-                                        + "KNpscRQmIBO4GHAXAQiwG6VAwK1LAEXXQyzxjk+3MIpufkYcBQbCAGxFBgI4"
-                                        + "YDcAUoAgwg5kCHI6VkUxpBS3IagFCrqRyLGsi2IkFzOJ2SHAm5UNEiccDKpA"
-                                        + "F9qD0wUAV7HJDXoGAAA="))
+                                java(
+                                        "package android.support.v4.app;\n"
+                                                + "\n"
+                                                + "public abstract class Fragment {\n"
+                                                + "   private FragmentActivity mActivity;\n"
+                                                + "\n"
+                                                + "   public void setActivity(FragmentActivity activity) {\n"
+                                                + "      this.mActivity = activity;\n"
+                                                + "   }\n"
+                                                + "\n"
+                                                + "   public final FragmentActivity getActivity() {\n"
+                                                + "      return this.mActivity;\n"
+                                                + "   }\n"
+                                                + "}"),
+                                "android/support/v4/app/Fragment.class:"
+                                        + "H4sIAAAAAAAAAJWQTUvDQBCG303Spvmobf04iugpbaW5CB4UQYSeih4U75tk"
+                                        + "CVuaD9JNwH+loAge/AH+KHESLBU9qJd5Z2ffeWaYt/eXVwDH2LFhYGBBx6aJ"
+                                        + "LRPbDFZyHipZSXXHMJzxNCoyGfnLMs+zQvnVkc/z3J8WPE5EqlbWE4b2qUyl"
+                                        + "OmPQveEtg3GRRYKhN5OpuCyTQBQ3PFhQxVkKtZ5w6P15RE114q/NY+8/C9rX"
+                                        + "WVmEYirrLborw2TOK+7CRMdFC22GvV+IDP26xV/wNPavgrkIlbFPBzTooAxa"
+                                        + "DaFMp5yYFC167ZIy0tboGeyhMdoU202xtjpwP60HhNDqv9H4CdraazdVk/Ad"
+                                        + "DNDFxg/0I7T7b2iHYo9UQ/8DUf3dXvMBAAA="),
+                        bytecode(
+                                "../LibraryProject/libs/fragment_support.jar",
+                                java(
+                                        "package android.support.v4.app;\n"
+                                                + "\n"
+                                                + "import android.app.Activity;\n"
+                                                + "\n"
+                                                + "public class FragmentActivity extends Activity {\n"
+                                                + "}"),
+                                "android/support/v4/app/FragmentActivity.class:"
+                                        + "H4sIAAAAAAAAADv1b9c+BgYGcwZeLgZmBi52Bm52Bh5GBjabzLzMEjtGBmYN"
+                                        + "zTBGBhbn/JRURgZ+n8y8VL/S3KTUopDEpBygCFdwfmlRcqpbJogj6laUmJ6b"
+                                        + "mlfimFySWZZZUqmXlViWyMPAwsDKyKCemJdSlJ+Zol9cWlCQX1SiX2ain1hQ"
+                                        + "oI+uh5FBBKYSJA0TZlBkYAI6EAQYgRBoJJBkA/JkwXwGBlat7QyMG8HS7ECS"
+                                        + "DSIIJDmANBMDJwAfXa/p6QAAAA=="))
                 .allowCompilationErrors(true)
                 .allowSystemErrors(false)
                 .checkMessage(this::checkReportedError)
@@ -6697,28 +6711,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testTargetApiInCustomJar() {
-        String libraryJarPath = "jar/jar/binks.jar";
-        String base64JarData =
-                ""
-                        + "H4sIAAAAAAAAAAvwZmbhYmDgYAACRRsGJMDJwMLg6xriqOvp56b/7xQDQwCK"
-                        + "UpaLMTuKgSwQFgFiuFJfRz9PN9fgED1fN9/EvMy01OIS3bDUouLM/DwrBUM9"
-                        + "A14u56LUxJLUFF2nSiuFpMSq1BxerpDEovTUEl2fxKTUHCsFff3UioLUoszc"
-                        + "1LySxBz90mKgdv3EosTs1OIM/azEskQgUQTCVjmZeSXxJUAr4nMyk3i5eLkC"
-                        + "cPqHBYhB2nCr4ICqgKkSYeDg4GBgRFMljKTKKTMvu1gvOSexuLjV/7QXs6GI"
-                        + "7cvg41nZtQ6C4u9Wcac/9hNcpSDCNjVql//yhffKfI75LPv/1KvgIfuPwEdn"
-                        + "Q44cP9Ry5/jO73eqP33794nrActuxlM3ViXv7pNtvCWZWfSc6em7hx4LijLV"
-                        + "vBZITgy7/vNwxM2FMuo9W5SFT6eo6P78I7xmR/Wpmu8+ty7s5770+c2UiSHH"
-                        + "ii1DbY7xhj5j+ca2s+zLgl9VjpKGu5dvLbw08aLNQmlP241taonTlq/cqDcl"
-                        + "/mnBArniTVqvlx5ZvJp75pNVZ+Jvir/IWKxcdOrUk2/fjz0498QsLPzJVLbW"
-                        + "TY9nxpxg01rBteb/BZ0Ln7YaTKySuteTrlVm4cBZx3+Dyz8p+rFOiv6N8P55"
-                        + "ivMsNBae2xbWsDoi8XaEWYGYyA2p40ub7hz8JOLysffGA+68lNQ/Zr8yjNZ/"
-                        + "tV//c7r6hsgVWfXAhMXO0a+2dJs1IwPDF0ZQQmNk4mLAnSpRAVoaRdWKnkoR"
-                        + "QBtHmsVnOarVF+AJCrcODhQdn1ASGCOTCAMiiSEHgDCKLglGrAkuwJuVDSTN"
-                        + "CoRqQCVTmEA8AKV33pzQAwAA";
-
-        TestFile customLibraryJar = base64gzip(libraryJarPath, base64JarData);
-        TestFile classPath = classpath(SUPPORT_JAR_PATH, libraryJarPath);
-
         lint().files(
                         manifest().minSdk(10),
                         java(
@@ -6735,11 +6727,35 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "\n"
                                         + "    @RequiresApi(29)\n"
-                                        + "    private void classLintTest() {}\n"
+                                        + "    private static void classLintTest() {}\n"
                                         + "}\n"),
-                        classPath,
-                        SUPPORT_ANNOTATIONS_JAR,
-                        customLibraryJar)
+                        bytecode(
+                                "libs/binks.jar",
+                                java(
+                                        ""
+                                                + "package jar.jar;\n"
+                                                + "\n"
+                                                + "import android.support.annotation.RequiresApi;\n"
+                                                + "\n"
+                                                + "public class Binks {\n"
+                                                + "   @RequiresApi(29)\n"
+                                                + "   public static void packageLintTest() {\n"
+                                                + "   }\n"
+                                                + "\n"
+                                                + "   @RequiresApi(29)\n"
+                                                + "   public static void nonLiteralPackageLintTest() {\n"
+                                                + "   }\n"
+                                                + "}"),
+                                "jar/jar/Binks.class:"
+                                        + "H4sIAAAAAAAAAIVOPUsDQRB9k28viYlaBbGwixZeaaEIURACQSUG+02yhEku"
+                                        + "u+fe3v0vK8HCH+CPEmcTsDCFA/NmeB/MfH1/fAK4xFGEMrp1HNRxSKhds2F/"
+                                        + "Qyj3z14IlTs714TOiI1+yNdT7SZqmgQmVbOVWmgR/ERnnnA8zo3ntR6agjMW"
+                                        + "08AY65VnazJCf6TM3Fmex1meptb5WP3K8Vi/5ux0Nkj5ilAtVJLrsjx3QugZ"
+                                        + "a0bstVPJ09+L0bPN3Uzfc3goumWzyi6WqlAtVFAltJfKxaE3CqEbtDhRZhE/"
+                                        + "Tpd65nGKEsIdCFIICdbCXZkks3r+DnqThVAXrG1J7KEhWNpYe9jWjq0hNqAp"
+                                        + "eyTdHKIlRPv/XGs3R9gXqoTOD6/2mP20AQAA"),
+                        classpath(SUPPORT_JAR_PATH),
+                        SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(
                         "src/test/pkg/CheckJarAnnotations.java:8: Error: Call requires API level 29 (current min is 10): packageLintTest [NewApi]\n"

@@ -21,28 +21,74 @@ import com.android.tools.lint.detector.api.Detector
 class DiffUtilDetectorTest : AbstractCheckTest() {
 
     private val diffUtilStubs = arrayOf(
-        java(
+        compiled(
+            "libs/diffutil.jar",
+            java(
+                """
+                        package android.support.v7.util;
+                        public class DiffUtil {
+                            public abstract static class ItemCallback<T> {
+                                public abstract boolean areItemsTheSame(T oldItem, T newItem);
+                                public abstract boolean areContentsTheSame(T oldItem, T newItem);
+                            }
+                        }
+                        """
+            ).indented(),
             """
-            package android.support.v7.util;
-            public class DiffUtil {
-                public abstract static class ItemCallback<T> {
-                    public abstract boolean areItemsTheSame(T oldItem, T newItem);
-                    public abstract boolean areContentsTheSame(T oldItem, T newItem);
-                }
-            }
+                    android/support/v7/util/DiffUtil＄ItemCallback.class:
+                    H4sIAAAAAAAAAIVQzU7CQBD+1hZqKwji78VEExPBRHskEcKlxmhC8ED14G0L
+                    Cy6WLWm3vJcnEw8+gA9lnMUYDRzcbOb7yczszH58vr0DaOLAg4Wag20HewzF
+                    tlRSdxiseuOBwQ6SoWCodKUSvXwaiTTkUWwcnopbLaZZ+CT6fErOab074XPu
+                    x1yN/btoIga6teo0HhncvhwrrvOUqtx6GLboGr9GPYNEaaH0b9t6O7xcbdNZ
+                    tRi8fpKnA3EtzYDlKzka3WsZX5hMhvWeyPRNkmkH+yXYKDCcczVMEzn0s3w2
+                    S1Ltz5t+ThX+T+mJ2TDgcRzxwTNDaVkqJdIg5lkmMobq8kQMR/89YB9jjX7f
+                    HAvMTEWxSOqQkBEWzl7BXogwOBSLC9OyaR24xD1Sa9ggXfqrqdE3K2NzgRVU
+                    F7iFXUKPMg3fsd0vck4+0AYCAAA=
+                    """,
             """
-        ).indented(),
-        java(
+                    android/support/v7/util/DiffUtil.class:
+                    H4sIAAAAAAAAAIWPz0rDQBDGv2nTxqaprd4FBQ8q6B57kV4iBUHrwT/3TbKV
+                    rdtNyW76Xp4EDz6ADyWdDQjenIGZ/b6ZH8t8/3x+AZjiMEEX+zHGMSYxDgjp
+                    rVfrTBqTy+ItSGtVnRnpnHKE/rW22s8I3bPzF0KUVaUijO+0VYtmnav6SeaG
+                    neSxaupCzXUQoxu9XD57ba5WcisJw4Vy/l6FdZcixh7hWNqyrnQpXLPZVLUX
+                    26lomBC/KGESYGGkfRUP+UoVnnD5H3X69xicoMPHhiBO/pfrgNVRq4HexQfo
+                    vR0nXPutGZBh21OMuEfsRjwD74RXB71osAO37QQ3TwEAAA==
+                    """
+        ),
+        compiled(
+            "libs/diffutil.jar",
+            java(
+                """
+                        package androidx.recyclerview.widget;
+                        public class DiffUtil {
+                            public abstract static class ItemCallback<T> {
+                                public abstract boolean areItemsTheSame(T oldItem, T newItem);
+                                public abstract boolean areContentsTheSame(T oldItem, T newItem);
+                            }
+                        }
+                        """
+            ).indented(),
             """
-            package androidx.recyclerview.widget;
-            public class DiffUtil {
-                public abstract static class ItemCallback<T> {
-                    public abstract boolean areItemsTheSame(T oldItem, T newItem);
-                    public abstract boolean areContentsTheSame(T oldItem, T newItem);
-                }
-            }
+                    androidx/recyclerview/widget/DiffUtil＄ItemCallback.class:
+                    H4sIAAAAAAAAAI1RzU7CQBCepYXaCoL4e/FgohE82MSLiRAuNUYTggeqB2/b
+                    dsDFsk22C+hjeTLx4AP4UMZZjNHAxc1mvp/MzM5kPz7f3gHgDHY9sKDuwIYD
+                    2wxKbSGF7jCwGs07BnaQJcig2hUSe5NxhCrkUWocrvBa4zgPH7DPx+QcNboj
+                    PuV+yuXQv4lGGOvWstO8Z+D2xVByPVFU5TbCsEXX+HXqGWRSo9S/bRvt8Hy5
+                    TWfZYuD1s4mK8VKYASsXYjC41SI9MZkMVnqY66ss1w7slMGGIoNTLhOVieTJ
+                    Vxg/xymqqcCZPxPJELX/U39g1gx4mkY8fmRQXpRSogpSnueYM6gtjsXg8F+v
+                    2PtQoH8wxwJm5qNYIrVHyAiLx6/AXogwcCiW5qZl02LgEvdIFWCVdPmvpkbf
+                    rAJrc6xCbY7rsEXoUabhm7b7BThTKZsQAgAA
+                    """,
             """
-        ).indented()
+                    androidx/recyclerview/widget/DiffUtil.class:
+                    H4sIAAAAAAAAAI1PTUsDQQx9abddu93a6t2DoKAeXPDiRXpZEQStBz/us7tp
+                    mTqdwuy01Z/lSfDgD/BHiZkFwaMJJHkveSH5+v74BHCO3QRtbMcYxhjF2CGk
+                    154XuTKmUOVzgNayy42qa64J3QtttR8T2kfHT4QoX1ZMGN5oy5PVomD3oAoj
+                    THK/XLmSr3QAg0s9nT56bU7naq0I/QnX/pbDeJ0ixhbhUNnKLXX1kjkuX0vD
+                    bq15k210NWOf/eoJo7AhM8rOsrtizqUnnP1LevD3LeyjJW8HI3G5QGJP0F6D
+                    gc7JO+itaScSuw0ZJP0mpxhIjoSNpAeZCVULnaj3A2+AtRtZAQAA
+                    """
+        )
     )
 
     fun testIdentityEqualsOkay() {

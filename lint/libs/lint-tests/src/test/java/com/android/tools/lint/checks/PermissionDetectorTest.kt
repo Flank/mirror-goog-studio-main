@@ -1181,29 +1181,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
     }
 
     fun testPermissionAnnotationsInCompiledJars() {
-        val libJarPath = "jar/jar/annotation_test.jar"
-        val base64JarData = "" +
-            "H4sIAAAAAAAAAAvwZmbhYmDgYAACRRsGJMDJwMLg6xriqOvp56b/7xQDQwCK" +
-            "0h/FzxlqgSwQFgFiuFJfRz9PN9fgED1fN9/EvMy01OIS3bDUouLM/DwrBUM9" +
-            "A14u56LUxJLUFF2nSiuFpMSq1BxerpDEovTUEl2fxKTUHCsFff3UioLUoszc" +
-            "1LySxBz90mKgdv3EosTs1OIM/azEskQgUQTCVol5efkliSVAs+NzMvNK4nm5" +
-            "FEqAFvJy8XIF4PQZCxCDDMCtggOqAqZKhIGDg4OBEU2VHJIqR7hDip1zEouL" +
-            "9ZJBZGugb76woUDt5PNqvF+6naJ3fGlYILNp+r2uCdtWh7hEpa5Wedvq/FSl" +
-            "zerWjcS3vVfmH+VcyV7HYM9leM8ttyUq8aTxvJnf5x1/fL8+r57R4lidcOqe" +
-            "NY9DZatbbrkvnfrbRWO//S6VECXjiS29EZk3T6crz+Q9qvH0TFnOMaW9IjM/" +
-            "fTSKLLx+Sojv0coTTPud1/YK+0nmLg6JqHayKLm067LJ9HMS5bV6m2dumsbI" +
-            "H3Dodd26ubNOrovTWB1R5doucMTJ32ixWuPZ58WTdzrcmd6878+81T632BP3" +
-            "bd4lUKP48OykG/Puh99e/tE1fYbK4fMt2/dtDbivEv/38Z47j9+Gth4XuGer" +
-            "JO4WmG6ww+r1N6vwQqHWw3mXlGVse3smbbCPOGrGrnb+2Cefn53v/lkf/Bai" +
-            "48ItGsJZ7d87c8PLREetL9sVJH2f3ngooPovff8phfPp0Y81EvzfrJava6r7" +
-            "sLDF6nbUxDXJvbmv+RrYZr2RjnhevFLh/eM8UZcoRbMZLGxC8z7W5W08uPLs" +
-            "/89RrPnZJ2//app0dNtRPnb9rntl/5kCvNk5Djy1aZnEyMCwgwmUqBmZuBhw" +
-            "5wBUgJYfULWi5wgE0MaRP/BZjmr1LXiSxa2DA0XHH5QkzMgkwoBIxMgBIIei" +
-            "S4mRUJIO8GZlA6lkBUJDoGoGZhAPALGIOx5HBAAA"
-
-        val customLib = base64gzip(libJarPath, base64JarData)
-        val classPath = classpath(SUPPORT_JAR_PATH, libJarPath)
-
         lint().files(
             java(
                 "package test.pkg;\n" +
@@ -1225,9 +1202,39 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    }\n" +
                     "}"
             ),
-            classPath,
-            SUPPORT_ANNOTATIONS_JAR,
-            customLib
+            bytecode(
+                "bin/classes",
+                java(
+                    "package jar.jar;\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class AnnotationsClass {\n" +
+                        "   @RequiresPermission(\"android.permission.BLUETOOTH\")\n" +
+                        "   public static void testBluetoothPermissionAnnotation() {\n" +
+                        "   }\n" +
+                        "\n" +
+                        "   @RequiresPermission(\n" +
+                        "      anyOf = {\"android.permission.ACCESS_FINE_LOCATION\", \"android.permission.ACCESS_COARSE_LOCATION\"}\n" +
+                        "   )\n" +
+                        "   public static void testAnyOfLocationPermissionAnnotation() {\n" +
+                        "   }\n" +
+                        "}"
+                ),
+                "jar/jar/AnnotationsClass.class:" +
+                    "H4sIAAAAAAAAAIVRyUoDQRB9lZhE476iqAcP4nLIHD0owjhEDAwZSaIXD9JJ" +
+                    "Wu2QdMfpnoCf5Unw4Af4UWJNFBUXLKj9verq7ueXxycAe1gqIov5AhYKWCTk" +
+                    "D5RW7pCQ3d45J4wEpi0J06HSspr0mjJuiGaXKxtOWnfUTaQzxt2cyrinrFVG" +
+                    "+1obJxxHhNVaop3qyYoeKKuY9tm0BC8Uuh0b1fZs0u+b2Hnio+3V5G2iYmk/" +
+                    "B+8TcgPBBxLW3oml/ke3dBSelRtR1DghbKar+fouugpNazju9/VyIsUQtn4Z" +
+                    "5wdBuV6/PK5Uy5dhFPiNSlQl7PyNDCK/Vv+KLdZNErfksUpfa/HLzYOusLbU" +
+                    "EQMxgRHkCMsdEXupfgcRZlKY1xX62ouaHdly2ECGvyuVLCjls81zts6e2Od2" +
+                    "H0D3HBAKbPNvRYxhlG1mCF3Bm/yAjTIMGOe4yDpuMcGFyf95U0Pe7Dtv6gIZ" +
+                    "i2mLGU5muZHB3CvnFPqobQIAAA=="
+
+            ),
+            classpath(SUPPORT_JAR_PATH),
+            SUPPORT_ANNOTATIONS_JAR
         )
             .run()
             .expect(
