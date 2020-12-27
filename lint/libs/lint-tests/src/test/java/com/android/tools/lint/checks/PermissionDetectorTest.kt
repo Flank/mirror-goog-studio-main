@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 
 class PermissionDetectorTest : AbstractCheckTest() {

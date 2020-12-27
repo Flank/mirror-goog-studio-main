@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.KotlinClasspathKt;
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.android.utils.PathUtils;
@@ -1012,6 +1011,6 @@ public class ExtractAnnotationsDriverTest {
                     + "Kvym8qciDwN7/VUe0J9l0O0qVvH6v/4PSKCfCIhgAAA=";
 
     private static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
-    private static final LintDetectorTest.TestFile SUPPORT_ANNOTATIONS_JAR =
+    private static final TestFile SUPPORT_ANNOTATIONS_JAR =
             base64gzip(SUPPORT_JAR_PATH, SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
 }

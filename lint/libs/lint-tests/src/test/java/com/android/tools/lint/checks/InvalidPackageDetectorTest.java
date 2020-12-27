@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Project;

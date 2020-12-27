@@ -5,6 +5,7 @@ import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -102,7 +103,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("ClassNameDiffersFromFileName") // Sample code
-    private static TestFile rClass =
+    private static final TestFile rClass =
             java(
                     "src/main/java/test/pkg/R.java",
                     ""

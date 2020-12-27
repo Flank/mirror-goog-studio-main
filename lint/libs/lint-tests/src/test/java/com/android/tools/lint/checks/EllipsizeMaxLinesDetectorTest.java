@@ -16,10 +16,11 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 public class EllipsizeMaxLinesDetectorTest extends AbstractCheckTest {
-    TestFile testFile =
+    private TestFile testFile =
             xml(
                     "res/layout/sample.xml",
                     ""

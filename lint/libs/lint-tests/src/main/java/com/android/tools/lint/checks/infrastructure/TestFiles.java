@@ -47,51 +47,47 @@ public class TestFiles {
     private TestFiles() {}
 
     @NonNull
-    public static LintDetectorTest.TestFile file() {
-        return new LintDetectorTest.TestFile();
+    public static TestFile file() {
+        return new TestFile();
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile source(@NonNull String to, @NonNull String source) {
+    public static TestFile source(@NonNull String to, @NonNull String source) {
         return file().to(to).withSource(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile java(
-            @NonNull String to, @NonNull @Language("JAVA") String source) {
+    public static TestFile java(@NonNull String to, @NonNull @Language("JAVA") String source) {
         return TestFile.JavaTestFile.create(to, source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile java(@NonNull @Language("JAVA") String source) {
+    public static TestFile java(@NonNull @Language("JAVA") String source) {
         return TestFile.JavaTestFile.create(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kt(@NonNull @Language("kotlin") String source) {
+    public static TestFile kt(@NonNull @Language("kotlin") String source) {
         return kotlin(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kt(
-            @NonNull String to, @NonNull @Language("kotlin") String source) {
+    public static TestFile kt(@NonNull String to, @NonNull @Language("kotlin") String source) {
         return kotlin(to, source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kotlin(@NonNull @Language("kotlin") String source) {
+    public static TestFile kotlin(@NonNull @Language("kotlin") String source) {
         return TestFile.KotlinTestFile.create(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kotlin(
-            @NonNull String to, @NonNull @Language("kotlin") String source) {
+    public static TestFile kotlin(@NonNull String to, @NonNull @Language("kotlin") String source) {
         return TestFile.KotlinTestFile.create(to, source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile xml(
-            @NonNull String to, @NonNull @Language("XML") String source) {
+    public static TestFile xml(@NonNull String to, @NonNull @Language("XML") String source) {
         if (!to.endsWith(DOT_XML)) {
             throw new IllegalArgumentException("Expected .xml suffix for XML test file");
         }
@@ -100,13 +96,13 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile copy(
+    public static TestFile copy(
             @NonNull String from, @NonNull TestResourceProvider resourceProvider) {
         return file().from(from, resourceProvider).to(from);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile copy(
+    public static TestFile copy(
             @NonNull String from,
             @NonNull String to,
             @NonNull TestResourceProvider resourceProvider) {
@@ -130,7 +126,7 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile manifest(@NonNull @Language("XML") String source) {
+    public static TestFile manifest(@NonNull @Language("XML") String source) {
         return TestFiles.source(ANDROID_MANIFEST_XML, source);
     }
 
@@ -245,7 +241,7 @@ public class TestFiles {
                 });
     }
 
-    public static LintDetectorTest.TestFile classpath(String... extraLibraries) {
+    public static TestFile classpath(String... extraLibraries) {
         StringBuilder sb = new StringBuilder();
         sb.append(
                 ""
@@ -270,8 +266,7 @@ public class TestFiles {
     }
 
     @NonNull
-    public static TestFile.JarTestFile jar(
-            @NonNull String to, @NonNull LintDetectorTest.TestFile... files) {
+    public static TestFile.JarTestFile jar(@NonNull String to, @NonNull TestFile... files) {
         if (!to.endsWith("jar") // don't insist on .jar since we're also supporting .srcjar etc
                 && !to.endsWith("zip")) {
             throw new IllegalArgumentException("Expected .jar suffix for jar test file");

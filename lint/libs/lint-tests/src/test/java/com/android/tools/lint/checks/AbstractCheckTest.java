@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;

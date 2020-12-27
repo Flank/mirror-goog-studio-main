@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;

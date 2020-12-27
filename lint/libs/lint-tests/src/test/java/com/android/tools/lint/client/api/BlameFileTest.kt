@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.client.api
 
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFile.XmlTestFile
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.utils.XmlUtils

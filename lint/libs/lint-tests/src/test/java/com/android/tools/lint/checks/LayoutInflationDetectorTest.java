@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
 
 import com.android.annotations.NonNull;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 import java.io.IOException;
 import java.io.StringReader;

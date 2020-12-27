@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.JavaPerformanceDetector.USE_VALUE_OF;
 
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")

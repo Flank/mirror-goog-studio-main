@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
 
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})

@@ -29,7 +29,6 @@ import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.UastEnvironment
 import com.android.tools.lint.checks.infrastructure.ClassName
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
@@ -378,7 +377,7 @@ class LintUtilsTest : TestCase() {
 
     @Suppress("JoinDeclarationAndAssignment")
     fun testGetLocale2() {
-        var xml: LintDetectorTest.TestFile
+        var xml: TestFile
         var context: XmlContext
 
         xml = TestFiles.xml("res/values/strings.xml", "<resources>\n</resources>\n")

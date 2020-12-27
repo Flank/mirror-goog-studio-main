@@ -29,6 +29,7 @@ import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Detector;

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 public class AndroidAutoDetectorTest extends AbstractCheckTest {

@@ -52,6 +52,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
@@ -208,8 +209,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     /**
-     * See {@link #lintProject(TestFile...)} for instructions on how to migrate.
-     *
      * @deprecated Use the new lint testing infrastructure instead; the entry point is {@link
      *     #lint()}
      */
@@ -472,8 +471,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
-    public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile
-            projectProperties() {
+    public static PropertyTestFile projectProperties() {
         return TestFiles.projectProperties();
     }
 
@@ -927,8 +925,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @NonNull
         @Override
         public Configuration getConfiguration(
-                @NonNull com.android.tools.lint.detector.api.Project project,
-                @Nullable final LintDriver driver) {
+                @NonNull Project project, @Nullable final LintDriver driver) {
             return getConfigurations()
                     .getConfigurationForProject(
                             project,
@@ -937,8 +934,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
 
         private Configuration createConfiguration(
-                @NonNull com.android.tools.lint.detector.api.Project project,
-                @NonNull Configuration defaultConfiguration) {
+                @NonNull Project project, @NonNull Configuration defaultConfiguration) {
             // Ensure that we have a fallback configuration which disables everything
             // except the relevant issues
             ConfigurationHierarchy configurations = getConfigurations();
@@ -1287,60 +1283,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @Override
         public void ignore(@NonNull String issueId, @NonNull File file) {
             fail("Not supported in tests.");
-        }
-    }
-
-    /**
-     * Test file description, which can copy from resource directory or from a specified hardcoded
-     * string literal, and copy into a target directory
-     *
-     * <p>This class is just a temporary shim to keep the API compatible; new code should reference
-     * com.android.tools.lint.checks.infrastructure.TestFile.
-     */
-    public static class TestFile extends com.android.tools.lint.checks.infrastructure.TestFile {
-        public TestFile() {}
-
-        // This source file is indented: dedent the contents before creating the file
-        @Override
-        public TestFile indented() {
-            contents = kotlin.text.StringsKt.trimIndent(contents);
-            return this;
-        }
-
-        @Override
-        public TestFile withSource(@NonNull String source) {
-            super.withSource(source);
-            return this;
-        }
-
-        @Override
-        public TestFile from(@NonNull String from, @NonNull TestResourceProvider provider) {
-            super.from(from, provider);
-            return this;
-        }
-
-        @Override
-        public TestFile to(@NonNull String to) {
-            super.to(to);
-            return this;
-        }
-
-        @Override
-        public TestFile copy(@NonNull String relativePath, @NonNull TestResourceProvider provider) {
-            super.copy(relativePath, provider);
-            return this;
-        }
-
-        @Override
-        public TestFile withBytes(@NonNull byte[] bytes) {
-            super.withBytes(bytes);
-            return this;
-        }
-
-        @Override
-        public TestFile within(@Nullable String root) {
-            super.within(root);
-            return this;
         }
     }
 }

@@ -21,6 +21,7 @@ import static com.android.tools.lint.client.api.LintClient.CLIENT_GRADLE;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
 import org.intellij.lang.annotations.Language;

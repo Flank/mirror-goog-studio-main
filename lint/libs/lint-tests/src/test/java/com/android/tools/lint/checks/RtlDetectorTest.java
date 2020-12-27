@@ -29,6 +29,7 @@ import static com.android.tools.lint.checks.RtlDetector.convertOldToNew;
 import static com.android.tools.lint.checks.RtlDetector.convertToOppositeDirection;
 import static com.android.tools.lint.checks.RtlDetector.isRtlAttributeName;
 
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")

@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.VersionChecks.Companion.getMinSdkVersionFromMethodName
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.detector.api.Detector
 
 /** Unit tests for [VersionChecks]. This is using the ApiDetector to drive the analysis. */
