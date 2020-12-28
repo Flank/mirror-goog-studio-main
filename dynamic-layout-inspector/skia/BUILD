@@ -31,7 +31,6 @@ kotlin_test(
 
 cc_binary(
     name = "skia-grpc-server",
-    srcs = ["src/main/native/server.cc"],
     copts = [
         "-DSK_USER_CONFIG_HEADER=\\\"StudioConfig.h\\\"",
         "-UFORTIFY_SOURCE",
@@ -61,7 +60,7 @@ cc_library(
     srcs = glob([
         "src/main/native/tree_building_canvas*.cc",
         "src/main/native/*.h",
-    ]),
+    ]) + ["src/main/native/server.cc"],
     copts = [
         "-DSK_USER_CONFIG_HEADER=\\\"StudioConfig.h\\\"",
         "-UFORTIFY_SOURCE",

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "server.h"
 #include <grpc++/grpc++.h>
 #include <future>
 #include <mutex>
@@ -20,55 +21,29 @@
 #include "skia.grpc.pb.h"
 #include "tree_building_canvas.h"
 
-class SkiaParserServiceImpl final
-    : public ::layoutinspector::proto::SkiaParserService::Service {
- private:
-  std::unique_ptr<::grpc::Server> server;
-  std::promise<void> exit_requested;
+::grpc::Status SkiaParserServiceImpl::Ping(::grpc::ServerContext*,
+                                           const google::protobuf::Empty*,
+                                           google::protobuf::Empty*) {
+  return ::grpc::Status::OK;
+}
 
- public:
-  ::grpc::Status GetViewTree(
-      ::grpc::ServerContext* context,
-      const ::layoutinspector::proto::GetViewTreeRequest* request,
-      ::layoutinspector::proto::GetViewTreeResponse* response) override {
-    v1::TreeBuildingCanvas::ParsePicture(
-        request->skp().data(), request->skp().length(), request->version(),
-        &request->requested_nodes(),
-        request->scale() == 0 ? 1 : request->scale(), response->mutable_root());
-    return ::grpc::Status::OK;
-  }
+::grpc::Status SkiaParserServiceImpl::Shutdown(::grpc::ServerContext*,
+                                               const google::protobuf::Empty*,
+                                               google::protobuf::Empty*) {
+  exit_requested.set_value();
+  return ::grpc::Status::OK;
+}
 
-  ::grpc::Status Ping(::grpc::ServerContext*, const google::protobuf::Empty*,
-                      google::protobuf::Empty*) override {
-    return ::grpc::Status::OK;
-  }
-
-  ::grpc::Status Shutdown(::grpc::ServerContext* context,
-                          const google::protobuf::Empty* request,
-                          google::protobuf::Empty* response) override {
-    exit_requested.set_value();
-    return ::grpc::Status::OK;
-  }
-
-  static void RunServer(const std::string &port) {
-    std::string server_address("0.0.0.0:");
-    server_address.append(port);
-
-    ::grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address,
-                             ::grpc::InsecureServerCredentials());
-    SkiaParserServiceImpl service;
-    builder.RegisterService(&service);
-    service.server = builder.BuildAndStart();
-    std::thread shutdown_thread([&service]() {
-      service.exit_requested.get_future().wait();
-      service.server->Shutdown(std::chrono::system_clock::now());;
-    });
-    service.server->Wait();
-    service.exit_requested.set_value();
-    shutdown_thread.join();
-  }
-};
+::grpc::Status SkiaParserServiceImpl::GetViewTree(
+    ::grpc::ServerContext*,
+    const ::layoutinspector::proto::GetViewTreeRequest* request,
+    ::layoutinspector::proto::GetViewTreeResponse* response) {
+  v1::TreeBuildingCanvas::ParsePicture(
+      request->skp().data(), request->skp().length(), request->version(),
+      &request->requested_nodes(), request->scale() == 0 ? 1 : request->scale(),
+      response->mutable_root());
+  return ::grpc::Status::OK;
+}
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
