@@ -18,6 +18,7 @@ dependencies {
     implementation project(':base:builder-model')
     implementation libs.junit
     implementation libs.asm
+    implementation libs.asm_tree
     implementation libs.groovy
     implementation libs.mockito_core
 
