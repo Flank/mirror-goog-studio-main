@@ -83,7 +83,6 @@ class NoOpIncrementalBuildMinifyTest {
                 ":mergeDebugAndroidTestAssets",
                 ":mergeDebugAndroidTestJavaResource",
                 ":mergeDebugAndroidTestJniLibFolders",
-                ":mergeDebugAndroidTestNativeLibs", /* Bug 154984238 */
                 ":mergeDebugAndroidTestResources",
                 ":mergeDebugAndroidTestShaders",
                 ":mergeDebugResources",
@@ -140,6 +139,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":compileReleaseShaders",
                 ":compileReleaseUnitTestJavaWithJavac",
                 ":extractReleaseNativeSymbolTables",
+                ":mergeDebugAndroidTestNativeLibs",
                 ":mergeReleaseNativeDebugMetadata",
                 ":mergeReleaseNativeLibs",
                 ":preDebugAndroidTestBuild",

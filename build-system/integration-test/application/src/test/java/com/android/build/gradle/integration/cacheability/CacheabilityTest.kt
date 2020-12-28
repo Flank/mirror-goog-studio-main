@@ -67,7 +67,6 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "merge", "Assets", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "JavaResource", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "JniLibFolders", listOf("Debug", "Release")),
-            TaskInfo(FROM_CACHE, "merge", "NativeLibs", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "Shaders", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "mergeDex", "", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "mergeExtDex", "", listOf("Debug", "Release")),
@@ -110,6 +109,7 @@ class CacheabilityTest {
             TaskInfo(SKIPPED, "compile", "Sources", listOf("Debug", "Release")),
             TaskInfo(SKIPPED, "extract", "NativeSymbolTables", listOf("Release")),
             TaskInfo(SKIPPED, "merge", "NativeDebugMetadata", listOf("Debug", "Release")),
+            TaskInfo(SKIPPED, "merge", "NativeLibs", listOf("Debug", "Release")),
             TaskInfo(SKIPPED, "process", "JavaRes",
                     listOf("Debug", "DebugUnitTest","Release", "ReleaseUnitTest")),
             TaskInfo(SKIPPED, "strip", "DebugSymbols", listOf("Debug", "Release"))

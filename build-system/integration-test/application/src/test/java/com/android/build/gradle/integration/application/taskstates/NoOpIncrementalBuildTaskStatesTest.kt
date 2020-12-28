@@ -63,7 +63,6 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:mergeDebugAssets",
                 ":app:mergeDebugJavaResource",
                 ":app:mergeDebugJniLibFolders",
-                ":app:mergeDebugNativeLibs", /* Bug 154984238 */
                 ":app:mergeDebugResources",
                 ":app:mergeDebugShaders",
                 ":app:mergeDexDebug",
@@ -89,6 +88,7 @@ class NoOpIncrementalBuildTaskStatesTest {
                 ":app:compileDebugRenderscript",
                 ":app:compileDebugShaders",
                 ":app:mergeDebugNativeDebugMetadata",
+                ":app:mergeDebugNativeLibs",
                 ":app:processDebugJavaRes",
                 ":app:processDebugUnitTestJavaRes",
                 ":app:stripDebugDebugSymbols"

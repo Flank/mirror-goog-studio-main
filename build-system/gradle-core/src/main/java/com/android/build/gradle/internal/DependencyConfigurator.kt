@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.dependency.JetifyTransform
 import com.android.build.gradle.internal.dependency.JdkImageTransform
 import com.android.build.gradle.internal.dependency.CollectResourceSymbolsTransform
 import com.android.build.gradle.internal.dependency.CollectClassesTransform
+import com.android.build.gradle.internal.dependency.ExtractJniTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
@@ -364,6 +365,11 @@ class DependencyConfigurator(
                 classesOrResources
             )
         }
+        registerTransform(
+            ExtractJniTransform::class.java,
+            AndroidArtifacts.ArtifactType.PROCESSED_JAR,
+            AndroidArtifacts.ArtifactType.JNI
+        )
         // The Kotlin Kapt plugin should query for PROCESSED_JAR, but it is currently querying for
         // JAR, so we need to have the workaround below to make it get PROCESSED_JAR. See
         // http://issuetracker.google.com/111009645.

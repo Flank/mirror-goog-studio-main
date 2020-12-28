@@ -86,7 +86,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:mergeDebugAssets",
                     ":app:mergeDebugJavaResource",
                     ":app:mergeDebugJniLibFolders",
-                    ":app:mergeDebugNativeLibs",
                     ":app:mergeDebugShaders",
                     ":app:mergeDexDebug",
                     ":app:multiDexListDebug",
@@ -195,6 +194,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:compileDebugShaders",
                     ":app:compileDebugSources",
                     ":app:mergeDebugNativeDebugMetadata",
+                    ":app:mergeDebugNativeLibs",
                     ":app:processDebugJavaRes",
                     ":app:stripDebugDebugSymbols",
 
