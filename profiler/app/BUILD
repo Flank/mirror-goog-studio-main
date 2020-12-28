@@ -74,7 +74,7 @@ java_jarjar(
     name = "perfa_java",
     srcs = [
         ":perfa_java_core",
-        "//tools/base/dynamic-layout-inspector:agent",
+        "//tools/base/dynamic-layout-inspector/agent/transport:agent",
     ],
     rules = "//tools/base/bazel:jarjar_rules.txt",
 )

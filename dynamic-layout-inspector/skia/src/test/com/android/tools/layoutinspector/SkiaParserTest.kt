@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
-private const val TEST_DATA_PATH = "tools/base/dynamic-layout-inspector/testData"
+private const val TEST_DATA_PATH = "tools/base/dynamic-layout-inspector/skia/testData"
 private const val DIFF_THRESHOLD = 0.01
 
 class SkiaParserTest {
