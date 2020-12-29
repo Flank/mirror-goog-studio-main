@@ -70,10 +70,6 @@ class BaseSwapCommand : public AgentInteractionCommand {
   bool CheckFilesExist(const std::vector<std::string>& files,
                        std::unordered_set<std::string>* missing_files);
 
-  const std::string kAgent = "agent.so";
-  const std::string kAgentAlt = "agent-alt.so";
-  const std::string kInstallServer = "install_server";
-
  private:
   std::string agent_path_;
 

@@ -43,11 +43,6 @@ bool isUserDebug() {
   return deploy::Env::build_type().find("userdebug") != std::string::npos;
 }
 
-// Copied from BaseSwap
-const std::string kAgent = "agent.so";
-const std::string kAgentAlt = "agent-alt.so";
-const std::string kInstallServer = "install_server";
-
 }  // namespace
 
 namespace deploy {

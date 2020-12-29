@@ -28,12 +28,6 @@
 #include "tools/base/deploy/installer/server/install_server.h"
 #include "tools/base/deploy/sites/sites.h"
 
-namespace {
-const std::string kAgent = "agent.so";
-const std::string kAgentAlt = "agent-alt.so";
-const std::string kInstallServer = "install_server";
-}  // namespace
-
 namespace deploy {
 
 void OverlayInstallCommand::ParseParameters(

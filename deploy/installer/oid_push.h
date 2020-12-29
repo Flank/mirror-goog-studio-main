@@ -31,7 +31,6 @@ class OverlayIdPushCommand : public Command {
 
  private:
   proto::OverlayIdPush request_;
-  const std::string kInstallServer = "install_server";
 };
 
 }  // namespace deploy

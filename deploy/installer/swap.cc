@@ -43,12 +43,6 @@
 
 namespace deploy {
 
-namespace {
-const std::string kAgentFilename = "agent.so";
-const std::string kAgentAltFilename = "agent-alt.so";
-const std::string kServerFilename = "install_server";
-}  // namespace
-
 // Note: the use of shell commands for what would typically be regular stdlib
 // filesystem io is because the installer does not have permissions in the
 // /data/data/<app> directory and needs to utilize run-as.
@@ -128,8 +122,8 @@ bool SwapCommand::Setup() noexcept {
   }
 
   client_ = StartInstallServer(
-      Executor::Get(), workspace_.GetTmpFolder() + kServerFilename,
-      request_.package_name(), kServerFilename + "-" + workspace_.GetVersion());
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
+      request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
 
   if (client_ == nullptr) {
     ErrEvent("SwapCommand: Unable to get InstallServer client");
@@ -144,9 +138,9 @@ bool SwapCommand::CopyBinaries() const noexcept {
 
   // Extract binaries from matryoshka to the tmp folder.
   const std::string tmp_dir = workspace_.GetTmpFolder();
-  std::vector<std::string> to_extract = {kAgentFilename, kServerFilename};
+  std::vector<std::string> to_extract = {kAgent, kInstallServer};
 #if defined(__aarch64__) || defined(__x86_64__)
-  to_extract.emplace_back(kAgentAltFilename);
+  to_extract.emplace_back(kAgentAlt);
 #endif
   ExtractBinaries(workspace_.GetTmpFolder(), to_extract);
 
@@ -184,10 +178,10 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   }
 
   // Attach agents to pids.
-  std::string agent_path = target_dir_ + kAgentFilename;
+  std::string agent_path = target_dir_ + kAgent;
 #if defined(__aarch64__) || defined(__x86_64__)
   if (request_.arch() == proto::ARCH_32_BIT) {
-    agent_path = target_dir_ + kAgentAltFilename;
+    agent_path = target_dir_ + kAgentAlt;
   }
 #endif
   if (!Attach(request_.process_ids(), agent_path)) {

@@ -18,6 +18,10 @@
 
 namespace deploy {
 
+const std::string kAgent = "agent.so";
+const std::string kAgentAlt = "agent-alt.so";
+const std::string kInstallServer = "install_server";
+
 void ConvertProtoEventsToEvents(
     const google::protobuf::RepeatedPtrField<proto::Event>& events) {
   for (int i = 0; i < events.size(); i++) {
