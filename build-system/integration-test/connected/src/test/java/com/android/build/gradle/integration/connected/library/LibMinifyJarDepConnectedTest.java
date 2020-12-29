@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library;
+package com.android.build.gradle.integration.connected.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.CodeShrinker;
 import java.io.IOException;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -39,21 +41,36 @@ public class LibMinifyJarDepConnectedTest {
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
 
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("libMinifyJarDep")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
+    @Before
+    public void setUp() throws IOException, InterruptedException {
+        if (codeShrinker == CodeShrinker.PROGUARD) {
+            TestFileUtils.searchAndReplace(
+                    project.getSubproject("app").getBuildFile(),
+                    "testProguardFiles \'config_test.pro\'",
+                    "testProguardFiles getDefaultProguardFile('proguard-android.txt'), \"config_test.pro\"");
+        }
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeout();
+        project.getSubproject("lib").addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
+    }
+
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
         project.executor()
                 .with(
                         OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
                         codeShrinker == CodeShrinker.R8)
-                .executeConnectedCheck();
+                .run("connectedAndroidTest");
     }
 }

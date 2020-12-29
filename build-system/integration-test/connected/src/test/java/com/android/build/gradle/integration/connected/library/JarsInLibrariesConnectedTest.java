@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2020 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library;
+package com.android.build.gradle.integration.connected.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 
 public class JarsInLibrariesConnectedTest {
     byte[] simpleJarDataA;
@@ -44,32 +44,32 @@ public class JarsInLibrariesConnectedTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("assets")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
+
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
     @Before
     public void setUp() throws IOException, InterruptedException {
         simpleJarDataA =
                 Resources.toByteArray(
                         Resources.getResource(
-                                JarsInLibraries.class,
-                                "/jars/simple-jar-with-A_DoIExist-class.jar"));
+                                JarsInLibrariesConnectedTest.class,
+                                "jars/simple-jar-with-A_DoIExist-class.jar"));
         simpleJarDataB =
                 Resources.toByteArray(
                         Resources.getResource(
-                                JarsInLibraries.class,
-                                "/jars/simple-jar-with-B_DoIExist-class.jar"));
+                                JarsInLibrariesConnectedTest.class,
+                                "jars/simple-jar-with-B_DoIExist-class.jar"));
         simpleJarDataC =
                 Resources.toByteArray(
                         Resources.getResource(
-                                JarsInLibraries.class,
-                                "/jars/simple-jar-with-C_DoIExist-class.jar"));
+                                JarsInLibrariesConnectedTest.class,
+                                "jars/simple-jar-with-C_DoIExist-class.jar"));
         simpleJarDataD =
                 Resources.toByteArray(
                         Resources.getResource(
-                                JarsInLibraries.class,
-                                "/jars/simple-jar-with-D_DoIExist-class.jar"));
+                                JarsInLibrariesConnectedTest.class,
+                                "jars/simple-jar-with-D_DoIExist-class.jar"));
 
         // Make directories where we will place jars.
         assetsDir = project.file("lib/src/main/assets");
@@ -95,11 +95,17 @@ public class JarsInLibrariesConnectedTest {
 
         // Run the project.
         project.execute("clean", "assembleDebug");
+
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeout();
+        project.getSubproject("lib").addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
-        project.executor().executeConnectedCheck();
+        project.executor().run("connectedCheck");
     }
 }

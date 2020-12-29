@@ -18,7 +18,11 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:MlModelBindingConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MinifyConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MigratedConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:LibTestDepConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:LibsTestConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:LibMinifyJarDepConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:KotlinAppConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:JarsInLibrariesConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:JacocoConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavorlibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavoredlibConnectedTest",  # b/148626301
