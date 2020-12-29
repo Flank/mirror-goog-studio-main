@@ -62,11 +62,11 @@ fi
   --invocation_id=${report_invocation_id} \
   ${auth_options} \
   -- \
-  @cov//:all.lcov \
+  @cov//:comps.lcov_all \
   @cov//:comps.list_all \
   || exit $?
 
-readonly lcov_path="./bazel-bin/external/cov/all/lcov"
+readonly lcov_path="./bazel-bin/external/cov/comps/lcov"
 readonly comp_list_path="./bazel-bin/external/cov/comps/list"
 
 # Generate the HTML report

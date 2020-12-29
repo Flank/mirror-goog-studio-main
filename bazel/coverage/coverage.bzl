@@ -1,3 +1,5 @@
+jacoco_cli = "@//prebuilts/tools/common/jacoco:cli"
+
 # Define a coverage report
 #
 # Arguments:
@@ -23,13 +25,44 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         tests = ["@{}".format(t) for t in tests],
     )
 
-    lcovs = ["@results//:{}.LCOVTracefile".format(t[2:].replace(":", "/")) for t in tests]
+    execs = ["@results//:{}.JacocoExec".format(t[2:].replace(":", "/")) for t in tests]
+    native.genrule(
+        name = "{}.JacocoExec".format(name),
+        srcs = execs,
+        outs = ["{}/jacoco.exec".format(name)],
+        tools = [jacoco_cli],
+        cmd = "$(location {cli}) merge --quiet $(SRCS) --destfile $@".format(cli = jacoco_cli),
+    )
+
+    native.genrule(
+        name = "{}.JacocoXML".format(name),
+        srcs = [
+            "{}.JacocoExec".format(name),
+            "@baseline//:merged-baseline-jars",
+        ],
+        outs = ["{}/jacoco.xml".format(name)],
+        tools = [jacoco_cli],
+        cmd = "$(location {cli}) report --quiet $(location {exc}) --classfiles $(location {jar}) --xml $@".format(
+            cli = jacoco_cli,
+            exc = "{}.JacocoExec".format(name),
+            jar = "@baseline//:merged-baseline-jars",
+        ),
+    )
+
     native.genrule(
         name = "{}.lcov.unfiltered".format(name),
-        srcs = ["@baseline//:merged-baseline-lcov"] + lcovs,
+        srcs = [
+            "@baseline//:merged-baseline-srcs",
+            "{}.JacocoXML".format(name),
+        ],
         outs = ["{}/lcov.unfiltered".format(name)],
-        tools = [":merge_lcov"],
-        cmd = "python $(location :merge_lcov) $(SRCS) >$@",
+        tools = ["@cov//:jacoco_xml_to_lcov"],
+        cmd = "python $(location {xml2lcov}) {test} $(location {base}) <$(location {xml}) >$@".format(
+            xml2lcov = "@cov//:jacoco_xml_to_lcov",
+            test = name,
+            base = "@baseline//:merged-baseline-srcs",
+            xml = "{}.JacocoXML".format(name),
+        ),
     )
 
     spi = " ".join(srcpath_include)
@@ -69,4 +102,12 @@ def combine_report_definitions(prefix, reports):
         srcs = ["{}.list".format(c) for c in reports],
         outs = ["{}/list".format(prefix)],
         cmd = "cat $(SRCS) >$@",
+    )
+
+    native.genrule(
+        name = "{}.lcov_all".format(prefix),
+        srcs = ["{}.lcov".format(c) for c in reports],
+        outs = ["{}/lcov".format(prefix)],
+        tools = [":merge_lcov"],
+        cmd = "python $(location :merge_lcov) $(SRCS) >$@",
     )
