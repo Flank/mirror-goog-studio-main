@@ -86,9 +86,8 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
       rootBounds.join(rect);
       requested_nodes.insert(std::make_pair(node.id(), rect));
     }
-    TreeBuildingCanvas canvas(version, root, requested_node_info,
-                              rootBounds.width(), rootBounds.height(),
-                              requested_nodes, scale);
+    TreeBuildingCanvas canvas(version, root, rootBounds.width(),
+                              rootBounds.height(), requested_nodes, scale);
     picture->playback(&canvas);
 
     picture->unref();
@@ -102,8 +101,6 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
  protected:
   explicit TreeBuildingCanvas(
       int version, ::layoutinspector::proto::InspectorView* r,
-      const ::google::protobuf::RepeatedPtrField<
-          ::layoutinspector::proto::RequestedNodeInfo>* requested_node_info,
       int width, int height, std::map<long, SkIRect> requested_nodes,
       float scale)
       : SkCanvasVirtualEnforcer<SkCanvas>(),

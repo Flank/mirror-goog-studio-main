@@ -6,6 +6,9 @@ option java_outer_classname = "SkiaParser";
 
 service SkiaParserService {
   rpc GetViewTree(GetViewTreeRequest) returns (GetViewTreeResponse) {}
+  rpc GetViewTree2(stream GetViewTreeRequest) returns (stream GetViewTreeResponse) {}
+  rpc Ping(PingRequest) returns (PingResponse) {}
+  rpc Shutdown(ShutdownRequest) returns (ShutdownResponse) {}
 }
 
 message RequestedNodeInfo {
@@ -22,13 +25,17 @@ message RequestedNodeInfo {
 // Version of GetViewTreeRequest:
 // - : skp field only, from: AS 4.0
 // 1 : requested_nodes added, from: AS 4.2
+// 2 : chunked requests, images in separate responses
 
 message GetViewTreeRequest {
   bytes skp = 1;
   int32 version = 2;      // See above for description
+  // This only needs to be included in the final part of a multi-part message.
   repeated RequestedNodeInfo requested_nodes = 3;
   // Factor by which to scale the result. Should probably be < 1.
   float scale = 4;
+  // If skp spans multiple messages, total_size is the combined size of skp in all the parts.
+  int32 total_size = 6;
 }
 
 message InspectorView {
@@ -40,11 +47,16 @@ message InspectorView {
   int32 width = 6;
   int32 height = 7;
 
+  // We can include the image directly here, or in version 2+ in a separate message via image_id.
   bytes image = 8;
 
   repeated InspectorView children = 9;
 
   int64 id = 10;
+
+  // If specified and image is not set, indicates that this image will be in a separate message
+  // with image set and the same image_id.
+  int32 image_id = 11;
 }
 
 // Version of GetViewTreeResponse:
@@ -53,4 +65,13 @@ message InspectorView {
 
 message GetViewTreeResponse {
   InspectorView root = 1;
+  bytes image = 2;
+  int32 image_id = 3;
 }
+
+// Note these are used in skiaparser;1 since the branch off which it's built doesn't support
+// the default EmptyMessage include.
+message PingRequest {}
+message PingResponse {}
+message ShutdownRequest {}
+message ShutdownResponse {}
