@@ -8,14 +8,20 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/application:tests__GradlePluginMemoryLeakTest",  # b/153972155
     "//tools/base/build-system/integration-test/connected:SigningConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:ShardingConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:ResValueTypeConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:RenderscriptNdkConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:PkgOverrideConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:ParentLibsConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:Overlay3ConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:Overlay2ConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:Overlay1ConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:NdkJniLibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MultiresConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MultiProjectConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MultiDexWithLibConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MultiDexConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MlModelBindingConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:MinifyLibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MinifyConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:MigratedConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:LibTestDepConnectedTest",  # b/148626301

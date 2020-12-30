@@ -14,34 +14,42 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library;
+package com.android.build.gradle.integration.connected.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import java.io.IOException;
-import org.junit.Ignore;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 
 public class MultiProjectConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("multiproject")
-                    // b/146163513
+                    // b/176510270
                     .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
-    @Rule public Adb adb = new Adb();
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
-    @Ignore("Causes deadlocks.")
+    @Before
+    public void setUp() throws IOException, InterruptedException {
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeout();
+        project.getSubproject("baseLibrary").addAdbTimeout();
+        project.getSubproject("library").addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
+    }
+
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheckAndReport() throws IOException, InterruptedException {
-        adb.exclusiveAccess();
         project.execute("connectedCheck");
         // android-reporting plugin currently executes connected tasks.
         project.execute("mergeAndroidReports");

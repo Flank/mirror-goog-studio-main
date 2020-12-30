@@ -14,44 +14,36 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.connected.application;
 
-import com.android.build.gradle.integration.application.MultiDexTest.MainDexListTool;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import org.junit.Ignore;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.rules.ExternalResource;
 
-@RunWith(FilterableParameterized.class)
 public class MultiDexConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("multiDex")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withHeap("2048M")
                     .create();
 
-    @Rule public Adb adb = new Adb();
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
-    @Parameterized.Parameters(name = "mainDexListTool = {0}")
-    public static Object[] data() {
-        return MainDexListTool.values();
+    @Before
+    public void setup() {
+        // fail fast if no response
+        project.addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
-    @Parameterized.Parameter public MainDexListTool tool;
-
     @Test
-    @Ignore("b/78108767")
-    @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         project.executor()
                 .run(
@@ -59,7 +51,6 @@ public class MultiDexConnectedTest {
                         "assembleIcsDebugAndroidTest",
                         "assembleLollipopDebug",
                         "assembleLollipopDebugAndroidTest");
-        adb.exclusiveAccess();
         project.executor().run("connectedCheck");
     }
 }

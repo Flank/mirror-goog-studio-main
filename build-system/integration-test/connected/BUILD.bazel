@@ -307,12 +307,48 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "MinifyLibConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/minifyLib"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "MlModelBindingConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + [
         "//tools/base/build-system/integration-test:test-projects/mlModelBinding",
         "//prebuilts/tools/common/mlkit/testData",
     ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MultiDexConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/multiDex"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MultiDexWithLibConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/multiDexWithLib"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MultiProjectConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/multiproject"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
@@ -377,6 +413,15 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "PkgOverrideConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/pkgOverride"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "RenderscriptNdkConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/nativebuild/",
     data = TEST_DATA + [
@@ -384,6 +429,15 @@ gradle_connected_test(
         "//prebuilts/studio/sdk:ndk",
         "//tools/base/build-system/integration-test:test-projects/renderscriptNdk",
     ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "ResValueTypeConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA,
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
@@ -518,6 +572,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable-animated/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/versionedparcelable/versionedparcelable/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex-instrumentation/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-base/15.0.1:aar",
