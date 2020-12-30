@@ -29,6 +29,11 @@ class SkiaParserServiceImpl final
         request->scale() == 0 ? 1 : request->scale(), response->mutable_root());
     return ::grpc::Status::OK;
   }
+
+  ::grpc::Status Ping(::grpc::ServerContext*, const google::protobuf::Empty*,
+                      google::protobuf::Empty*) {
+    return ::grpc::Status::OK;
+  }
 };
 
 void RunServer(char* port) {
@@ -48,7 +53,6 @@ int main(int argc, char* argv[]) {
     std::cerr << "usage: SkiaParserServer <port>" << std::endl;
     return 1;
   }
-  std::cout << "  SkiaServer starting..." << std::endl;
 
   RunServer(argv[1]);
   return 0;

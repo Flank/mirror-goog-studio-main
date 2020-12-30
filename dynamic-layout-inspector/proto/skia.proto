@@ -4,8 +4,11 @@ package layoutinspector.proto;
 option java_package = "com.android.tools.idea.layoutinspector.proto";
 option java_outer_classname = "SkiaParser";
 
+import "google/protobuf/empty.proto";
+
 service SkiaParserService {
   rpc GetViewTree(GetViewTreeRequest) returns (GetViewTreeResponse) {}
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message RequestedNodeInfo {
