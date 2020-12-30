@@ -27,6 +27,7 @@ import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.api.dsl.CommonExtension;
+import com.android.build.api.dsl.TestedExtension;
 import com.android.build.api.extension.AndroidComponentsExtension;
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar;
 import com.android.build.api.variant.Variant;
@@ -697,7 +698,12 @@ public abstract class BasePlugin<
                 variantFactory.createBuildFeatureValues(
                         extension.getBuildFeatures(), projectServices.getProjectOptions());
 
-        variantManager.createVariants(buildFeatureValues, extension.getNamespace());
+        @Nullable String testNamespace = null;
+        if (extension instanceof TestedExtension) {
+            testNamespace = ((TestedExtension) extension).getTestNamespace();
+        }
+
+        variantManager.createVariants(buildFeatureValues, extension.getNamespace(), testNamespace);
 
         List<ComponentInfo<VariantBuilderT, VariantT>> variants =
                 variantManager.getMainComponents();

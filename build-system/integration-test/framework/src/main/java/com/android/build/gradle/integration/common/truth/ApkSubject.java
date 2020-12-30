@@ -136,15 +136,15 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
         return check().that(locales);
     }
 
-    public void hasPackageName(@NonNull String packageName) {
+    public void hasApplicationId(@NonNull String applicationId) {
         Path apk = actual().getFile();
 
         ApkInfoParser.ApkInfo apkInfo = getApkInfo(apk);
 
-        String actualPackageName = apkInfo.getPackageName();
+        String actualApplicationId = apkInfo.getPackageName();
 
-        if (!actualPackageName.equals(packageName)) {
-            failWithBadResults("has packageName", packageName, "is", actualPackageName);
+        if (!actualApplicationId.equals(applicationId)) {
+            failWithBadResults("has applicationId", applicationId, "is", actualApplicationId);
         }
     }
 

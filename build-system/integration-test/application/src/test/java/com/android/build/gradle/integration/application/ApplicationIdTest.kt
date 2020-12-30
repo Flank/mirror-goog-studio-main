@@ -69,7 +69,7 @@ class ApplicationIdTest {
     fun checkApplicationIdDebug() {
         project.execute("assembleF1Debug")
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
-            .hasPackageName("com.example.applicationidtest.default.f1.debug")
+            .hasApplicationId("com.example.applicationidtest.default.f1.debug")
 
         TestFileUtils.searchAndReplace(
             project.buildFile,
@@ -80,7 +80,7 @@ class ApplicationIdTest {
         project.execute("assembleF1Debug")
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
-            .hasPackageName("com.example.applicationidtest.default.f1.foo")
+            .hasApplicationId("com.example.applicationidtest.default.f1.foo")
     }
 
     @Test
@@ -90,14 +90,14 @@ class ApplicationIdTest {
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .run("assembleF1Release")
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
-            .hasPackageName("com.example.applicationidtest.default.f1")
+            .hasApplicationId("com.example.applicationidtest.default.f1")
 
         project.executor()
             // http://b/149978740 and http://b/146208910
             .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .run("assembleF1Release")
         assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
-            .hasPackageName("com.example.applicationidtest.default.f1")
+            .hasApplicationId("com.example.applicationidtest.default.f1")
     }
 }
 

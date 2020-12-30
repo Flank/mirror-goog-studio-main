@@ -724,7 +724,9 @@ com.android.build.api.dsl.TestVariantDimension.setMultiDexEnabled: void (java.la
 com.android.build.api.dsl.TestVariantDimension.setSigningConfig: void (SigningConfigT)
 com.android.build.api.dsl.TestedExtension
 com.android.build.api.dsl.TestedExtension.getTestBuildType: java.lang.String ()
+com.android.build.api.dsl.TestedExtension.getTestNamespace: java.lang.String ()
 com.android.build.api.dsl.TestedExtension.setTestBuildType: void (java.lang.String)
+com.android.build.api.dsl.TestedExtension.setTestNamespace: void (java.lang.String)
 com.android.build.api.dsl.UnitTestOptions
 com.android.build.api.dsl.UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
 com.android.build.api.dsl.UnitTestOptions.isIncludeAndroidResources: boolean ()

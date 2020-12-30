@@ -75,4 +75,10 @@ interface TestedExtension {
      * You can resolve this issue by changing the test build type to "stage".
      */
     var testBuildType: String
+
+    /**
+     * The namespace used by the android test and unit test components for the generated R and
+     * BuildConfig classes.
+     */
+    var testNamespace: String?
 }

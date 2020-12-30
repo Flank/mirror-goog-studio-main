@@ -44,4 +44,5 @@ abstract class TestedExtensionImpl<
     dslContainers
 ), com.android.build.api.dsl.TestedExtension {
     override var testBuildType = "debug"
+    override var testNamespace: String? = null
 }

@@ -53,7 +53,8 @@ class VariantDslInfoBuilder private constructor(
     private val manifestDataProvider: ManifestDataProvider,
     private val dslServices: DslServices,
     private val variantPropertiesApiServices: VariantPropertiesApiServices,
-    private val dslNamespace: String?
+    private val dslNamespace: String?,
+    private val dslTestNamespace: String?
 ) {
 
     companion object {
@@ -72,7 +73,8 @@ class VariantDslInfoBuilder private constructor(
             manifestDataProvider: ManifestDataProvider,
             dslServices: DslServices,
             variantPropertiesApiServices: VariantPropertiesApiServices,
-            dslNamespace: String? = null
+            dslNamespace: String? = null,
+            dslTestNamespace: String? = null
         ): VariantDslInfoBuilder {
             return VariantDslInfoBuilder(
                 dimensionCombination,
@@ -85,7 +87,8 @@ class VariantDslInfoBuilder private constructor(
                 manifestDataProvider,
                 dslServices,
                 variantPropertiesApiServices,
-                dslNamespace
+                dslNamespace,
+                dslTestNamespace
             )
         }
 
@@ -293,7 +296,8 @@ class VariantDslInfoBuilder private constructor(
             dslServices,
             variantPropertiesApiServices,
             buildDirectory,
-            dslNamespace
+            dslNamespace,
+            dslTestNamespace
         )
     }
 

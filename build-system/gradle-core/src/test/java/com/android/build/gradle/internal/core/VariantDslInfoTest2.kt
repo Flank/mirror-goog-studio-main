@@ -611,6 +611,23 @@ class VariantDslInfoTest2 :
         }
     }
 
+    @Test
+    fun `namespace from testedVariant testNamespace`() {
+        val testedVariant = Mockito.mock(VariantDslInfoImpl::class.java)
+        Mockito.`when`(testedVariant.testNamespace).thenReturn("com.example.fromDsl.test")
+
+        given {
+            // no specific manifest info
+            manifestData { }
+
+            testedVariantDslInfoImpl = testedVariant
+        }
+
+        expect {
+            namespace = "com.example.fromDsl.test"
+        }
+    }
+
     // ---------------------------------------------------------------------------------------------
 
     @get:Rule
@@ -634,12 +651,13 @@ class VariantDslInfoTest2 :
             buildTypeObj = given.buildType,
             productFlavorList = given.flavors,
             signingConfigOverride = null,
-            testedVariantImpl = null,
+            testedVariantImpl = given.testedVariantDslInfoImpl,
             dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
             dslServices = dslServices,
             services = services,
             buildDirectory = buildDirectory,
-            dslNamespace = given.namespace
+            dslNamespace = given.namespace,
+            dslTestNamespace = given.testNamespace
         )
 
         return instantiateResult().also {
@@ -701,6 +719,10 @@ class VariantDslInfoTest2 :
         var dexingType = DexingType.NATIVE_MULTIDEX
 
         var namespace: String? = null
+
+        var testNamespace: String? = null
+
+        var testedVariantDslInfoImpl: VariantDslInfoImpl? = null
 
         /** default Config values */
         val defaultConfig: DefaultConfig = DefaultConfig(BuilderConstants.MAIN, dslServices)

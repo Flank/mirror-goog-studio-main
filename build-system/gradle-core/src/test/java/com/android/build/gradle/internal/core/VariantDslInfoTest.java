@@ -61,6 +61,7 @@ public class VariantDslInfoTest {
     private DslServices dslServices;
     private VariantPropertiesApiServices variantPropertiesApiServices;
     private String namespace;
+    private String testNamespace;
 
     @Before
     public void setUp() throws Exception {
@@ -293,6 +294,37 @@ public class VariantDslInfoTest {
         assertThat(variant.getNamespace().get()).isEqualTo("com.example.myNamespace");
     }
 
+    @Test
+    public void testTestNamespace() {
+        initNoDeviceApiInjection();
+
+        testNamespace = "com.example.myTestNamespace";
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getTestNamespace()).isEqualTo("com.example.myTestNamespace");
+    }
+
+    @Test
+    public void testDefaultTestNamespace() {
+        initNoDeviceApiInjection();
+
+        namespace = "com.example.myNamespace";
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getTestNamespace()).isEqualTo("com.example.myNamespace.test");
+    }
+
+    @Test
+    public void testNullTestNamespace() {
+        initNoDeviceApiInjection();
+
+        VariantDslInfo variant = getVariant();
+
+        assertThat(variant.getTestNamespace()).isEqualTo(null);
+    }
+
     private VariantDslInfo getVariant() {
         return createVariant(null /*signingOverride*/);
     }
@@ -316,7 +348,8 @@ public class VariantDslInfoTest {
                         Mockito.mock(LazyManifestParser.class),
                         dslServices,
                         variantPropertiesApiServices,
-                        namespace);
+                        namespace,
+                        testNamespace);
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
@@ -372,5 +405,6 @@ public class VariantDslInfoTest {
         flavorConfig.dimension("dimension1");
         buildType = dslServices.newInstance(BuildType.class, "debug", dslServices);
         namespace = null;
+        testNamespace = null;
     }
 }
