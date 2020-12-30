@@ -155,9 +155,10 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
                                     SkBlendMode mode,
                                     const SkPaint& paint) override;
 
-  void onDrawImageRect(const SkImage* image, const SkRect* src,
-                       const SkRect& dst, const SkPaint* paint,
-                       SrcRectConstraint constraint) override;
+  void onDrawImageRect2(const SkImage* image, const SkRect& src,
+                        const SkRect& dst, const SkSamplingOptions&,
+                        const SkPaint* paint,
+                        SrcRectConstraint constraint) override;
 
   void onDrawPaint(const SkPaint& paint) override;
 
@@ -180,8 +181,8 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
 
   void onDrawPath(const SkPath& path, const SkPaint& paint) override;
 
-  void onDrawImage(const SkImage* image, SkScalar left, SkScalar top,
-                   const SkPaint* paint) override;
+  void onDrawImage2(const SkImage* image, SkScalar left, SkScalar top,
+                    const SkSamplingOptions&, const SkPaint* paint) override;
 
   void onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                       const SkPaint& paint) override;
@@ -190,18 +191,16 @@ class TreeBuildingCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
                    const SkPoint* texCoords, SkBlendMode mode,
                    const SkPaint& paint) override;
 
-  void onDrawImageNine(const SkImage* image, const SkIRect& center,
-                       const SkRect& dst, const SkPaint* paint) override;
-
-  void onDrawImageLattice(const SkImage* image, const Lattice& lattice,
-                          const SkRect& dst, const SkPaint* paint) override;
+  void onDrawImageLattice2(const SkImage* image, const Lattice& lattice,
+                           const SkRect& dst, SkFilterMode filterMode,
+                           const SkPaint* paint) override;
 
   void onClipShader(sk_sp<SkShader> shader, SkClipOp clipOp) override;
 
-  void onDrawAtlas(const SkImage* atlas, const SkRSXform* xform,
-                   const SkRect* rect, const SkColor* colors, int count,
-                   SkBlendMode mode, const SkRect* cull,
-                   const SkPaint* paint) override;
+  void onDrawAtlas2(const SkImage* atlas, const SkRSXform xform[],
+                    const SkRect src[], const SkColor colors[], int count,
+                    SkBlendMode mode, const SkSamplingOptions&,
+                    const SkRect* cull, const SkPaint* paint) override;
 
   void onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) override;
 
