@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.tools.lint.checks.AnnotationDetector.GMS_HIDE_ANNOTATION
+import com.android.tools.lint.checks.AnnotationDetector.GMS_SHOW_FIRST_PARTY_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.GUAVA_VISIBLE_FOR_TESTING
 import com.android.tools.lint.checks.AnnotationDetector.RESTRICT_TO_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.VISIBLE_FOR_TESTING_ANNOTATION
@@ -42,6 +43,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.impl.compiled.ClsAnnotationImpl
 import com.intellij.psi.util.PsiTypesUtil
 import org.jetbrains.uast.UAnnotated
@@ -134,8 +136,48 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
     }
 
-    // Checks whether the client code is in the GMS codebase; if so, allow @Hide calls
-    // there
+    /**
+     * Returns true if we should report usages of APIs annotated with
+     * com.google.android.gms.common.internal.Hide
+     */
+    private fun flagHide(
+        context: JavaContext,
+        containingClass: PsiClass,
+        member: PsiMember?,
+        node: UElement
+    ): Boolean {
+        if (isGmsContext(context, node)) return false
+        return !isAllowedFirstParty(context, containingClass, member)
+    }
+
+    /**
+     * Is the annotated @Hide element *also* annotated with @ShowFirstParty, *and* we're
+     * in a context where @ShowFirstParty is enabled (e.g. g3).
+     */
+    private fun isAllowedFirstParty(
+        context: JavaContext,
+        containingClass: PsiClass,
+        member: PsiMember?
+    ): Boolean {
+        val binDir = System.getProperty("com.android.tools.lint.bindir") ?: return false
+        if (!binDir.contains("third_party/java/android/")) return false
+
+        val evaluator = context.evaluator
+        fun PsiModifierListOwner.isFirstParty(): Boolean {
+            evaluator.findAnnotationInHierarchy(this, GMS_SHOW_FIRST_PARTY_ANNOTATION)
+                ?: return false
+            return true
+        }
+
+        if (member !== containingClass && member?.isFirstParty() == true) {
+            return true
+        }
+        return containingClass.isFirstParty()
+    }
+
+    /**
+     * Checks whether the client code is in the GMS codebase
+     */
     private fun isGmsContext(
         context: JavaContext,
         element: UElement
@@ -441,7 +483,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         if (scope and RESTRICT_TO_ALL != 0) {
-            if (!isGmsContext(context, node)) {
+            val fqn = annotation.qualifiedName
+            if (fqn != GMS_HIDE_ANNOTATION || flagHide(context, containingClass, member, node)) {
                 reportRestriction(
                     null, containingClass, member, context,
                     node, isClassAnnotation

@@ -1067,6 +1067,143 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testGmsShowFirstParty() {
+        // Regression test for b/175773881
+        val files = arrayOf(
+            java(
+                "src/test/pkg/HideTest.java",
+                "" +
+                    "package test.pkg;\n" +
+                    "\n" +
+                    "import com.google.android.gms.common.internal.Hide;\n" +
+                    "import com.google.android.gms.common.internal.ShowFirstParty;\n" +
+                    "import com.google.android.gms.foo.bar.HiddenClass;\n" +
+                    "\n" +
+                    "public class HideTest {\n" +
+                    "    public void test() {\n" +
+                    "        HiddenClass h = new HiddenClass(); // Error\n" +
+                    "        h.hidden();  // Error\n" +
+                    "        h.notHidden();  // OK\n" +
+                    "        PartialApi a = new PartialApi();" +
+                    "        a.firstParty();\n" +
+                    "    }\n" +
+                    "}\n"
+            ),
+            java(
+                "" +
+                    "package test.pkg;\n" +
+                    "\n" +
+                    "import com.google.android.gms.common.internal.Hide;\n" +
+                    "import com.google.android.gms.common.internal.ShowFirstParty;\n" +
+                    "\n" +
+                    "public class PartialApi {\n" +
+                    "\n" +
+                    "    @Hide @ShowFirstParty\n" +
+                    "    public void firstParty() {\n" +
+                    "    }\n" +
+                    "}\n"
+            ),
+            java(
+                "" +
+                    "package test.pkg;\n" +
+                    "\n" +
+                    "import com.google.android.gms.common.internal.Hide;\n" +
+                    "import com.google.android.gms.common.internal.ShowFirstParty;\n" +
+                    "\n" +
+                    "@Hide\n" +
+                    "@ShowFirstParty\n" +
+                    "public class HiddenClass {\n" +
+                    "    public HiddenClass() {\n" +
+                    "    }\n" +
+                    "    @Hide\n" +
+                    "    public void hidden() {\n" +
+                    "    }\n" +
+                    "    public void notHidden() {\n" +
+                    "    }\n" +
+                    "}\n"
+            ),
+            java(
+                "" +
+                    "package com.google.android.gms.common.internal;\n" +
+                    "\n" +
+                    "import java.lang.annotation.Documented;\n" +
+                    "import java.lang.annotation.ElementType;\n" +
+                    "import java.lang.annotation.Retention;\n" +
+                    "import java.lang.annotation.RetentionPolicy;\n" +
+                    "import java.lang.annotation.Target;\n" +
+                    "import static java.lang.annotation.ElementType.*;\n" +
+                    "@Target({TYPE,FIELD,METHOD,CONSTRUCTOR,PACKAGE})\n" +
+                    "@Retention(RetentionPolicy.CLASS)\n" +
+                    "public @interface Hide {}"
+            ),
+            java(
+                "" +
+                    "package com.google.android.gms.common.internal;\n" +
+                    "import java.lang.annotation.Documented;\n" +
+                    "import java.lang.annotation.ElementType;\n" +
+                    "import java.lang.annotation.Retention;\n" +
+                    "import java.lang.annotation.RetentionPolicy;\n" +
+                    "import java.lang.annotation.Target;\n" +
+                    "@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})\n" +
+                    "@Retention(RetentionPolicy.CLASS)\n" +
+                    "@Documented\n" +
+                    "public @interface ShowFirstParty {}\n"
+            ),
+            java(
+                "src/test/pkg/internal/package-info.java",
+                "" +
+                    "@Hide\n" +
+                    "package test.pkg.internal;\n" +
+                    "\n" +
+                    "import com.google.android.gms.common.internal.Hide;\n"
+            ),
+            // Also register the compiled version of the above package-info jar file;
+            // without this we don't resolve package annotations
+            base64gzip(
+                "libs/packageinfoclass.jar",
+                "" +
+                    "H4sIAAAAAAAAAAvwZmYRYeDg4GC4tYDfmwEJcDKwMPi6hjjqevq56f87xcDA" +
+                    "zBDgzc4BkmKCKgnAqVkEiOGafR39PN1cg0P0fN0++5457eOtq3eR11tX69yZ" +
+                    "85uDDK4YP3hapOflq+Ppe7F0FQtnxAvJI9KzpF6KLX22RE1suVZGxdJpFqKq" +
+                    "ac9EtUVei758mv2p6GMRI9gtbSuDVb2ANnmhuEVhPqpbVIC4JLW4RL8gO10/" +
+                    "M68ktSgvMUe/IDE5OzE9VTczLy1fLzknsbjYt9cw75CDgOt/oQOKoRmXXB6x" +
+                    "pc0qWZmhpKSoqKoe8SbRNM22+c1WfveDjBYih1RcP3X/X/q/q3znvHMM9wxO" +
+                    "T0itKKn4tW2d5g9nJesz/fssfhzY+eLetKnv9x5+Hb7cM+vflbiom65xK6M+" +
+                    "efpEt9cER/ge1HFRW5+aHBS0Ilrq3a0pLsLmr5TXLn1S3u76yOziR4F/J+qX" +
+                    "H/581+ti9oK36x4p7WXgU/6T1tI+Xy7Z6E2JQvADNlAAHM4XN1kP9N5VcAAw" +
+                    "MokwoEYHLKJAcYkKUGIWXStyuIqgaLPFEa/IJoDCH9lhKigmnCQyNgK8WdlA" +
+                    "6pmB8DyQPsUI4gEAH9csuq8CAAA="
+            )
+        )
+
+        // We normally want to complain about hidden GMS APIs
+        lint().files(*files).run().expect(
+            "" +
+                "src/test/pkg/HideTest.java:9: Error: HiddenClass is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                "        HiddenClass h = new HiddenClass(); // Error\n" +
+                "                        ~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/HideTest.java:10: Error: HiddenClass.hidden is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                "        h.hidden();  // Error\n" +
+                "          ~~~~~~\n" +
+                "src/test/pkg/HideTest.java:12: Error: PartialApi.firstParty is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                "        PartialApi a = new PartialApi();        a.firstParty();\n" +
+                "                                                  ~~~~~~~~~~\n" +
+                "3 errors, 0 warnings"
+        )
+
+        // ...but allow them when specifically requested in g3
+        try {
+            // TODO: Get a more stable contract for this in the AndroidLintRunner:
+            System.setProperty(
+                "com.android.tools.lint.bindir",
+                "third_party/java/android/android_sdk_linux/tools"
+            )
+            lint().files(*files).run().expectClean()
+        } finally {
+            System.clearProperty("com.android.tools.lint.bindir")
+        }
+    }
+
     fun testPrivateVisibilityWithDefaultConstructor() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=235661
         lint().files(

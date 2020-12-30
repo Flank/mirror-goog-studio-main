@@ -117,6 +117,8 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /** Checks annotations to make sure they are valid */
 public class AnnotationDetector extends Detector implements SourceCodeScanner {
     public static final String GMS_HIDE_ANNOTATION = "com.google.android.gms.common.internal.Hide";
+    public static final String GMS_SHOW_FIRST_PARTY_ANNOTATION =
+            "com.google.android.gms.common.internal.ShowFirstParty";
     public static final AndroidxName CHECK_RESULT_ANNOTATION =
             AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CheckResult");
     public static final AndroidxName INT_RANGE_ANNOTATION =
