@@ -114,7 +114,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_cc_proto",
+        "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_cc_proto",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/test-framework:native_test_support",
     ],

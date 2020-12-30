@@ -22,7 +22,7 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         "//tools/base/dynamic-layout-inspector/common:studio.layout-inspector-common",
-        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_java_proto",
+        "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_java_proto",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
@@ -91,7 +91,7 @@ cc_library(
     linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_cc_proto",
+        "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_cc_proto",
         "@skia_repo//:libskia",
     ],
     alwayslink = 1,
@@ -117,7 +117,7 @@ cc_library(
     deps = [
         ":skia-lib",
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/dynamic-layout-inspector/proto:layout_inspector_skia_cc_proto",
+        "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_cc_proto",
     ],
     alwayslink = 1,
 )
