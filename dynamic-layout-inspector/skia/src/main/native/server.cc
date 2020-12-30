@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 #include <grpc++/grpc++.h>
+#include <future>
+#include <mutex>
+#include <thread>
 #include "skia.grpc.pb.h"
 #include "tree_building_canvas.h"
 
 class SkiaParserServiceImpl final
     : public ::layoutinspector::proto::SkiaParserService::Service {
+ private:
+  std::unique_ptr<::grpc::Server> server;
+  std::promise<void> exit_requested;
+
+ public:
   ::grpc::Status GetViewTree(
       ::grpc::ServerContext* context,
       const ::layoutinspector::proto::GetViewTreeRequest* request,
@@ -31,22 +39,36 @@ class SkiaParserServiceImpl final
   }
 
   ::grpc::Status Ping(::grpc::ServerContext*, const google::protobuf::Empty*,
-                      google::protobuf::Empty*) {
+                      google::protobuf::Empty*) override {
     return ::grpc::Status::OK;
   }
+
+  ::grpc::Status Shutdown(::grpc::ServerContext* context,
+                          const google::protobuf::Empty* request,
+                          google::protobuf::Empty* response) override {
+    exit_requested.set_value();
+    return ::grpc::Status::OK;
+  }
+
+  static void RunServer(const std::string &port) {
+    std::string server_address("0.0.0.0:");
+    server_address.append(port);
+
+    ::grpc::ServerBuilder builder;
+    builder.AddListeningPort(server_address,
+                             ::grpc::InsecureServerCredentials());
+    SkiaParserServiceImpl service;
+    builder.RegisterService(&service);
+    service.server = builder.BuildAndStart();
+    std::thread shutdown_thread([&service]() {
+      service.exit_requested.get_future().wait();
+      service.server->Shutdown(std::chrono::system_clock::now());;
+    });
+    service.server->Wait();
+    service.exit_requested.set_value();
+    shutdown_thread.join();
+  }
 };
-
-void RunServer(char* port) {
-  std::string server_address("0.0.0.0:");
-  server_address.append(port);
-  SkiaParserServiceImpl service;
-
-  ::grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, ::grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
-  std::unique_ptr<::grpc::Server> server(builder.BuildAndStart());
-  server->Wait();
-}
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
@@ -54,6 +76,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  RunServer(argv[1]);
+  SkiaParserServiceImpl::RunServer(std::string(argv[1]));
   return 0;
 }
