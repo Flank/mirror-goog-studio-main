@@ -364,12 +364,62 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "NdkConnectedCheckTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "NdkJniLibConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
     data = TEST_DATA + [
         "//prebuilts/studio/sdk:cmake",
         "//prebuilts/studio/sdk:ndk",
         "//tools/base/build-system/integration-test:test-projects/ndkJniLib",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "NdkLibPrebuiltsConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+        "//tools/base/build-system/integration-test:test-projects/ndkLibPrebuilts",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "NdkSanAngelesConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+        "//tools/base/build-system/integration-test:test-projects/ndkSanAngeles",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "NoSplitNdkVariantsConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
     ],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
@@ -453,12 +503,75 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "SameNamedLibsConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/sameNamedLibs"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestModuleConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestModule"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestModuleWithMinifiedAppConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestModuleWithMinifiedApp"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestWithAarDependencyConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestModule"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestWithMinificationButNoObfuscationConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestWithMinificationButNoObfuscation"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "SigningConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA,
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "TestingSupportLibraryConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "TestWithSameDepAsAppConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/dependencies/",
+    data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
 )
 

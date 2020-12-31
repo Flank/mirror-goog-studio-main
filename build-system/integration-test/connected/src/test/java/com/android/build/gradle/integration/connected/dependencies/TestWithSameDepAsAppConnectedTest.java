@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.dependencies;
+package com.android.build.gradle.integration.connected.dependencies;
 
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -39,6 +39,8 @@ import org.junit.runners.Parameterized;
 public class TestWithSameDepAsAppConnectedTest {
 
     @Rule public GradleTestProject project;
+
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
     public String plugin;
     public String appDependency;
@@ -122,8 +124,6 @@ public class TestWithSameDepAsAppConnectedTest {
         this.project =
                 GradleTestProject.builder()
                         .fromTestApp(HelloWorldApp.forPlugin(plugin))
-                        // b/146163513
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .create();
     }
 
@@ -162,11 +162,15 @@ public class TestWithSameDepAsAppConnectedTest {
                         + "\n"
                         + "}\n"
                         + "");
+        // fail fast if no response
+        project.addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
     @Test
-    @Category(DeviceTests.class)
     public void runTestsOnDevices() throws Exception {
-        project.executeConnectedCheck();
+        project.executor().run("connectedAndroidTest");
     }
 }

@@ -14,26 +14,37 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.ndk;
+package com.android.build.gradle.integration.connected.ndk;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 
-public class NdkSanAngelesConnectedTest {
+public class NdkLibPrebuiltsConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestProject("ndkSanAngeles")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .fromTestProject("ndkLibPrebuilts")
+                    .addGradleProperties("android.useDeprecatedNdk=true")
                     .create();
 
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
+
+    @Before
+    public void setUp() throws Exception {
+        // fail fast if no response
+        project.addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
+    }
+
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
+        project.executor().run("connectedAndroidTest");
     }
 }

@@ -14,35 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.ndk;
+package com.android.build.gradle.integration.connected.ndk;
 
-import static com.android.build.gradle.integration.common.utils.AbiMatcher.anyAbi;
-import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.anyAndroidVersion;
-
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.StringOption;
-import com.android.ddmlib.IDevice;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 
 public class NoSplitNdkVariantsConnectedTest {
-    @Rule public Adb adb = new Adb();
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(new HelloWorldJniApp())
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
+
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
     @Before
     public void setUp() throws Exception {
@@ -102,23 +98,31 @@ public class NoSplitNdkVariantsConnectedTest {
                         + "LOCAL_SRC_FILES := src/main/jni/hello-jni.c\n"
                         + "\n"
                         + "include $(BUILD_SHARED_LIBRARY)");
+        // fail fast if no response
+        project.addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Ignore("b/175333004 ADB is not supported")
     public void connectedAndroidTest() throws Exception {
         project.executor()
                 .run(
                         "assembleX86Debug", "assembleX86DebugAndroidTest",
                         "assembleArmDebug", "assembleArmDebugAndroidTest");
-        IDevice testDevice = adb.getDevice(anyAndroidVersion(), anyAbi());
-        Collection<String> abis = testDevice.getAbis();
+        Collection<String> abis = ImmutableList.of("x86");
         String taskName =
                 abis.contains("x86")
                         ? "devicePoolX86DebugAndroidTest"
                         : "devicePoolArmDebugAndroidTest";
         project.executor()
-                .with(StringOption.DEVICE_POOL_SERIAL, testDevice.getSerialNumber())
                 .run(taskName);
+    }
+
+    @Test
+    public void connectedCheck() throws Exception {
+        project.executor().run("connectedX86DebugAndroidTest");
     }
 }

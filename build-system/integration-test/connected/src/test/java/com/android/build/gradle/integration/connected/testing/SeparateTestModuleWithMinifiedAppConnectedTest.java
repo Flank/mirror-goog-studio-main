@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing;
+package com.android.build.gradle.integration.connected.testing;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.CodeShrinker;
 import java.io.IOException;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
-public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
+public class SeparateTestModuleWithMinifiedAppConnectedTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] getShrinkers() {
@@ -43,21 +43,27 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestProject("separateTestWithMinificationButNoObfuscation")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .fromTestProject("separateTestModuleWithMinifiedApp")
                     .create();
 
-    @Rule public Adb adb = new Adb();
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
+
+    @Before
+    public void setUp() throws IOException {
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeout();
+        project.getSubproject("test").addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
+    }
 
     @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        adb.exclusiveAccess();
+    public void checkRunOnDevice() throws Exception {
         project.executor()
                 .with(
                         OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
                         codeShrinker == CodeShrinker.R8)
-                .run(":test:connectedCheck");
+                .run(":test:connectedAndroidTest");
     }
 }

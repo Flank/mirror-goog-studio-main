@@ -14,30 +14,27 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing;
+package com.android.build.gradle.integration.connected.testing;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 
 public class SeparateTestModuleConnectedTest {
-    @Rule public Adb adb = new Adb();
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("separateTestModule")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
+
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
     @Before
     public void setUp() throws IOException {
@@ -56,18 +53,21 @@ public class SeparateTestModuleConnectedTest {
                         + "    })\n"
                         + "  }\n"
                         + "}\n");
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeout();
+        project.getSubproject("test").addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
     }
 
     @Test
-    @Category(DeviceTests.class)
     public void checkWillRunWithoutInstrumentationInManifest() throws Exception {
         project.execute(":test:deviceCheck");
     }
 
     @Test
-    @Category(DeviceTests.class)
     public void checkConnectedCheckCompletesNormally() throws Exception {
-        adb.exclusiveAccess();
         project.execute(":test:connectedCheck");
     }
 }
