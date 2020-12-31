@@ -24,7 +24,6 @@ import android.view.View;
 import android.view.inspector.WindowInspector;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,7 +49,6 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @SuppressWarnings({"unused", "Convert2Lambda"}) // invoked via jni
 public class LayoutInspectorService {
-    @VisibleForTesting public static final int MAX_IMAGE_SIZE = (int) (3.5 * 1024. * 1024.);
     // Copied from ViewDebug
     private static final int CAPTURE_TIMEOUT = 6000;
     private static final int RETRY_LIMIT_REFRESH = 2;
@@ -79,7 +77,6 @@ public class LayoutInspectorService {
         UNKNOWN,
         NONE,
         SKP,
-        PNG_SKP_TOO_LARGE,
         PNG_AS_REQUESTED
     }
 
@@ -111,7 +108,6 @@ public class LayoutInspectorService {
     }
 
     public void startLayoutInspector(@NonNull View root) {
-        @SuppressWarnings("resource")
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         final Callable<OutputStream> callable =
                 new Callable<OutputStream>() {
@@ -283,13 +279,7 @@ public class LayoutInspectorService {
         if (mUseScreenshotMode != useScreenshotMode) {
             mUseScreenshotMode = useScreenshotMode;
             for (View root : getRootViews()) {
-                root.post(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                root.invalidate();
-                            }
-                        });
+                root.post(root::invalidate);
             }
         }
     }
@@ -349,14 +339,11 @@ public class LayoutInspectorService {
         try {
             request = allocateSendRequest();
             ImageType type = ImageType.SKP;
-            if (mUseScreenshotMode || (image.length > MAX_IMAGE_SIZE && root != null)) {
+            if (mUseScreenshotMode) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 capture(baos, root);
                 image = baos.toByteArray();
-                type =
-                        mUseScreenshotMode
-                                ? ImageType.PNG_AS_REQUESTED
-                                : ImageType.PNG_SKP_TOO_LARGE;
+                type = ImageType.PNG_AS_REQUESTED;
             }
             int index = 0;
             long[] rootViewIds = getRootViewIds();
@@ -468,7 +455,6 @@ public class LayoutInspectorService {
     public static native void sendErrorMessage(@NonNull String message);
 
     public static void sendErrorMessage(@NonNull Throwable e) {
-        //noinspection resource
         ByteArrayOutputStream error = new ByteArrayOutputStream();
         e.printStackTrace(new PrintStream(error));
         sendErrorMessage(error.toString());

@@ -141,32 +141,6 @@ class LayoutInspectorServiceTest {
     }
 
     @Test
-    fun testPictureTooLarge() {
-        val bitmap = mock(Bitmap::class.java)
-        Bitmap.INSTANCE = bitmap
-        val bitmapBytes = byteArrayOf(1, 2, 3, 4)
-        `when`(bitmap.compress(eq(Bitmap.CompressFormat.PNG), anyInt(), any()))
-            .then { invocation ->
-                invocation.getArgument<OutputStream>(2).write(bitmapBytes)
-                true
-            }
-        val picture = Picture()
-        val pictureContents = ByteArray(LayoutInspectorService.MAX_IMAGE_SIZE + 1)
-        picture.setImage(pictureContents)
-
-        val (_, callback) = setUpInspectorService()
-
-        val event = onPictureCaptured(callback, picture)
-        assertThat(event.groupId).isEqualTo(1101)
-        assertThat(event.kind).isEqualTo(Common.Event.Kind.LAYOUT_INSPECTOR)
-        val tree = event.layoutInspectorEvent.tree
-        assertThat(tree.payloadType)
-            .isEqualTo(LayoutInspectorProto.ComponentTreeEvent.PayloadType.PNG_SKP_TOO_LARGE)
-        assertThat(agentRule.payloads[event.layoutInspectorEvent.tree.payloadId])
-            .isEqualTo(bitmapBytes)
-    }
-
-    @Test
     fun testUseScreenshotMode() {
         val bitmap = mock(Bitmap::class.java)
         Bitmap.INSTANCE = bitmap

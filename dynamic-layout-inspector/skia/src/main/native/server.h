@@ -30,6 +30,13 @@ class SkiaParserServiceImpl final
   std::unique_ptr<::grpc::Server> server;
   std::promise<void> exit_requested;
 
+  static void SplitOutImages(
+      ::layoutinspector::proto::InspectorView* node,
+      ::grpc::ServerReaderWriter<::layoutinspector::proto::GetViewTreeResponse,
+                                 ::layoutinspector::proto::GetViewTreeRequest>*
+          stream,
+      int& id);
+
  public:
   ::grpc::Status Ping(::grpc::ServerContext* context,
                       const google::protobuf::Empty* request,
@@ -43,6 +50,12 @@ class SkiaParserServiceImpl final
       ::grpc::ServerContext* context,
       const ::layoutinspector::proto::GetViewTreeRequest* request,
       ::layoutinspector::proto::GetViewTreeResponse* response) override;
+
+  ::grpc::Status GetViewTree2(
+      ::grpc::ServerContext* context,
+      ::grpc::ServerReaderWriter<::layoutinspector::proto::GetViewTreeResponse,
+                                 ::layoutinspector::proto::GetViewTreeRequest>*
+          stream) override;
 
   static void RunServer(const std::string &port) {
     std::string server_address("0.0.0.0:");

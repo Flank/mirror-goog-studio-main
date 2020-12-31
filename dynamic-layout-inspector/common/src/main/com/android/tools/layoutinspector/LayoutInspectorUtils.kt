@@ -17,6 +17,7 @@
 package com.android.tools.layoutinspector
 
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
+import com.android.tools.idea.protobuf.ByteString
 import com.google.common.annotations.VisibleForTesting
 import java.awt.Image
 import java.awt.Point
@@ -44,23 +45,23 @@ object LayoutInspectorUtils {
         return BufferedImage(colorModel, raster, false, null)
     }
 
-    @VisibleForTesting
     fun buildTree(
-        node: SkiaParser.InspectorView,
-        isInterrupted: () -> Boolean,
-        drawIdToRequest: Map<Long, SkiaParser.RequestedNodeInfo>
+      node: SkiaParser.InspectorView,
+      images: Map<Int, ByteString>,
+      isInterrupted: () -> Boolean,
+      drawIdToRequest: Map<Long, SkiaParser.RequestedNodeInfo>
     ): SkiaViewNode? {
         if (isInterrupted()) {
             throw InterruptedException()
         }
-
-        return if (!node.image.isEmpty) {
+        val image = if (node.image.isEmpty) images[node.imageId] else node.image
+        return if (image?.isEmpty == false) {
             val width = if (node.width > 0) node.width else drawIdToRequest[node.id]?.width ?: return null
             val height = if (node.height > 0) node.height else drawIdToRequest[node.id]?.height ?: return null
-            SkiaViewNode(node.id, createImage(node.image.asReadOnlyByteBuffer(), width, height))
+            SkiaViewNode(node.id, createImage(image.asReadOnlyByteBuffer(), width, height))
         }
         else {
-            SkiaViewNode(node.id, node.childrenList.mapNotNull { buildTree(it, isInterrupted, drawIdToRequest) })
+            SkiaViewNode(node.id, node.childrenList.mapNotNull { buildTree(it, images, isInterrupted, drawIdToRequest) })
         }
     }
 
