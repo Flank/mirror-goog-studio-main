@@ -17,6 +17,7 @@
 package com.android.tools.agent.layoutinspector;
 
 import android.graphics.Matrix;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -104,20 +105,29 @@ class ComponentTree {
             if (mComposeTree != null) {
                 long parentView = buffer;
                 synchronized (mComposeLock) {
-                    view.post(
-                            () -> {
-                                try {
-                                    mComposeTree.loadComposeTree(view, parentView);
-                                } catch (Throwable ex) {
-                                    Log.w("Compose", "loadComposeTree failed: ", ex);
-                                } finally {
-                                    synchronized (mComposeLock) {
-                                        mComposeLock.notify();
+                    boolean wasPosted = false;
+                    Handler handler = view.getHandler();
+                    if (handler != null) {
+                        wasPosted = handler.post(
+                                () -> {
+                                    try {
+                                        mComposeTree.loadComposeTree(view, parentView);
+                                    } catch (Throwable ex) {
+                                        Log.w("Compose", "loadComposeTree failed: ", ex);
+                                    } finally {
+                                        synchronized (mComposeLock) {
+                                            mComposeLock.notify();
+                                        }
                                     }
-                                }
-                            });
+                                });
+                    }
                     try {
-                        mComposeLock.wait();
+                        // Wait until the UI thread is done with the compose part.
+                        // If [wasPosted] is false the compose work could not be scheduled,
+                        // which could happen when the root view is being closed.
+                        if (wasPosted) {
+                            mComposeLock.wait();
+                        }
                     } catch (InterruptedException ignored) {
                     }
                 }

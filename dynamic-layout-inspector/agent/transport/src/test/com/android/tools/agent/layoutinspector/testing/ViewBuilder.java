@@ -16,18 +16,19 @@
 
 package com.android.tools.agent.layoutinspector.testing;
 
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.annotation.NonNull;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import android.content.res.ColorStateList;
-import android.content.res.Resources;
-import android.graphics.drawable.Drawable;
-import android.view.View;
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
 
 /** Utility to create a mock {@link android.view.View} for testing. */
 public class ViewBuilder<V extends View, L extends ViewGroup.LayoutParams> {
@@ -44,7 +45,14 @@ public class ViewBuilder<V extends View, L extends ViewGroup.LayoutParams> {
     @NonNull
     public static <V extends View, L extends ViewGroup.LayoutParams> ViewBuilder<V, L> create(
             @NonNull Class<V> viewClass, @NonNull Class<L> layoutParams) {
-        return new ViewBuilder<>(mock(viewClass), mock(layoutParams));
+        V view = mock(viewClass);
+        Handler handler = mock(Handler.class);
+        doAnswer(invocation -> {
+            ((Runnable)invocation.getArgument(0)).run();
+            return null;
+        }).when(handler).post(any(Runnable.class));
+        when(view.getHandler()).thenReturn(handler);
+        return new ViewBuilder<>(view, mock(layoutParams));
     }
 
     @NonNull

@@ -40,7 +40,7 @@
         <CLASSES />
         <JAVADOC />
         <NATIVE>
-          <root url="file://$MODULE_DIR$/../../../bazel-bin/tools/base/dynamic-layout-inspector" />
+          <root url="file://$MODULE_DIR$/../../../bazel-bin/tools/base/dynamic-layout-inspector/agent/transport" />
           <root url="file://$MODULE_DIR$/../../../bazel-bin/tools/base/transport/test-framework" />
         </NATIVE>
         <SOURCES />

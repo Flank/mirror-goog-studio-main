@@ -42,6 +42,12 @@ public class Handler {
         return mLooper;
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
+    public boolean post(Runnable runnable) {
+        runnable.run();
+        return true;
+    }
+
     @SuppressWarnings("UnusedReturnValue")
     public boolean postDelayed(Runnable runnable, long delay) {
         mMessages.put(mTime + delay, runnable);

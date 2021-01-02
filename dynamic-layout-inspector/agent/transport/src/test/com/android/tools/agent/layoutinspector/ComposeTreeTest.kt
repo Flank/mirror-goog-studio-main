@@ -33,6 +33,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.reset
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -119,6 +120,36 @@ class ComposeTreeTest {
         assertThat(table[view.className]).isEqualTo(AndroidComposeView::class.java.simpleName)
         assertThat(view.subViewCount).isEqualTo(1)
         checkComposeView(table, view.subViewList.first(), root)
+    }
+
+    @Test // regression test for b/176656378
+    fun testIgnoreComposeWhenViewIsDetaching() {
+        val linearLayout = StandardView.createLinearLayoutWithComposeView()
+        val androidComposeView = linearLayout.getChildAt(0)
+        `when`(androidComposeView.getTag(eq(TREE_ENTRY))).thenReturn(listOf(root))
+        doAnswer { invocation -> edt!!.submit(invocation.getArgument(0)); true }
+            .`when`(androidComposeView).post(any())
+
+        // Setup handler to return false from post()
+        val handler = androidComposeView.handler
+        reset(handler)
+        // End setup
+
+        System.loadLibrary("jni-test")
+        val event = ComponentTreeTest.allocateEvent()
+        val properties = Properties()
+        val treeBuilder = ComponentTree(properties)
+        treeBuilder.setShowComposeNodes(true)
+        treeBuilder.writeTree(event, linearLayout)
+
+        val proto = ComponentTreeEvent.parseFrom(ComponentTreeTest.toByteArray(event))
+        val table = StringTable(proto.stringList)
+        val layout = proto.root
+        assertThat(table[layout.className]).isEqualTo(RootLinearLayout::class.java.simpleName)
+        assertThat(layout.subViewCount).isEqualTo(1)
+        val view = layout.subViewList.first()
+        assertThat(table[view.className]).isEqualTo(AndroidComposeView::class.java.simpleName)
+        assertThat(view.subViewCount).isEqualTo(0)
     }
 
     @Test
