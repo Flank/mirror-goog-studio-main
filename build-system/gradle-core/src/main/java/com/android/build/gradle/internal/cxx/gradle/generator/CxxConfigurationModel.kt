@@ -42,6 +42,7 @@ import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
+import com.android.build.gradle.options.StringOption.NATIVE_BUILD_OUTPUT_LEVEL
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
 import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
@@ -58,7 +59,8 @@ import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CON
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.lang.IllegalStateException
-import java.util.*
+import java.util.Locale
+import java.util.Objects
 
 /**
  * The createCxxMetadataGenerator(...) function is meant to be use at
@@ -81,6 +83,10 @@ data class CxxConfigurationModel(
     // Remaining ABIs that are not used in the build
     val unusedAbis: List<CxxAbiModel>
 )
+
+enum class NativeBuildOutputLevel {
+    QUIET, VERBOSE
+}
 
 /**
  * Parameters common to configuring the creation of [CxxConfigurationModel].
@@ -114,7 +120,8 @@ data class CxxConfigurationParameters(
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
-    val isPreferCmakeFileApiEnabled: Boolean
+    val isPreferCmakeFileApiEnabled: Boolean,
+    val nativeBuildOutputLevel: NativeBuildOutputLevel,
 )
 
 /**
@@ -261,7 +268,10 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, variant, variant.variantDslInfo
         ),
-        isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API)
+        isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API),
+        nativeBuildOutputLevel = NativeBuildOutputLevel.values()
+            .firstOrNull { it.toString() == option(NATIVE_BUILD_OUTPUT_LEVEL)?.toUpperCase(Locale.US) }
+            ?: NativeBuildOutputLevel.QUIET
     )
 }
 

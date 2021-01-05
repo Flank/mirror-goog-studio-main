@@ -143,6 +143,7 @@ fun createCxxModuleModel(
                     )
                 }
                 .toMap(),
+        nativeBuildOutputLevel = configurationParameters.nativeBuildOutputLevel,
     )
 }
 

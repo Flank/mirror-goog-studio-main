@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.cmake.readCmakeFileApiReply
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
@@ -67,8 +68,9 @@ internal class CmakeQueryMetadataGenerator(
           abi.metadataGenerationStderrFile,
           getProcessBuilder(abi),
           "${variant.variantName}|${abi.abi.tag} :")
-          .logStderrToLifecycle()
-          .logStdoutToInfo()
+          .logStderr()
+          .logStdout()
+          .logFullStdout(variant.module.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
           .execute(ops::exec)
 
         val config = abi.additionalProjectFilesIndexFile.bufferedWriter(StandardCharsets.UTF_8).use { additionalProjectFileWriter ->

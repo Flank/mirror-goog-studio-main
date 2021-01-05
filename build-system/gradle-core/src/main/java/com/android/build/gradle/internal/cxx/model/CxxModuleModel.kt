@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.cxx.configure.getNdkBuildProperty
 import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.configure.toCmakeArguments
 import com.android.build.gradle.internal.cxx.configure.toNdkBuildArguments
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
@@ -148,7 +149,10 @@ data class CxxModuleModel(
         /**
      * The project for this module
      */
-    val project: CxxProjectModel
+    val project: CxxProjectModel,
+
+    /** Whether to forward the full native build output to stdout. */
+    val nativeBuildOutputLevel: NativeBuildOutputLevel,
 )
 
 /** The user's CMakeSettings.json file next to CMakeLists.txt */

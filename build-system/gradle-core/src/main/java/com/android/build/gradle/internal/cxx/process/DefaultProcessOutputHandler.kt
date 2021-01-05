@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.process
 
-import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.ide.common.process.ProcessOutput
 import com.android.ide.common.process.ProcessOutputHandler
@@ -30,27 +29,29 @@ import java.io.OutputStream
  * process executes.
  */
 class DefaultProcessOutputHandler(
-    private val stderrFile : File,
-    private val stdoutFile : File,
+    private val stderrFile: File,
+    private val stdoutFile: File,
     private val logPrefix: String,
-    private val logErrorToLifecycle: Boolean,
-    private val logOutputToInfo: Boolean) : ProcessOutputHandler {
+    private val logStderr: Boolean,
+    private val logStdout: Boolean,
+    private val logFullStdout: Boolean,
+) : ProcessOutputHandler {
 
-    var stderr : FileOutputStream? = null
-    var stdout : FileOutputStream? = null
+    var stderr: FileOutputStream? = null
+    var stdout: FileOutputStream? = null
 
-    override fun createOutput() : ProcessOutput {
+    override fun createOutput(): ProcessOutput {
         val singleStderr = FileOutputStream(stderrFile, true)
         val singleStdout = FileOutputStream(stdoutFile, true)
         val stderrReceivers = mutableListOf<OutputStream>(singleStderr)
         val stdoutReceivers = mutableListOf<OutputStream>(singleStdout)
-        if (logErrorToLifecycle) {
+        if (logStderr) {
             stderrReceivers.add(ChunkBytesToLineOutputStream(logPrefix, { lifecycleln(it) }))
         }
-        if (logOutputToInfo) {
+        if (logStdout) {
             stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix, {
-                if (shouldElevateToLifeCycle(it)) lifecycleln(it)
-                else infoln(it)
+                if (logFullStdout) lifecycleln(it)
+                else if (shouldElevateToLifeCycle(it)) lifecycleln(it)
             }))
         }
         return DefaultProcessOutput(

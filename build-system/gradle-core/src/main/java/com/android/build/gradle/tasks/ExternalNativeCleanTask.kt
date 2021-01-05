@@ -19,6 +19,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfigs
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.infoln
@@ -114,8 +115,9 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
                     processBuilder,
                     ""
             )
-                    .logStderrToLifecycle()
-                    .logStdoutToInfo()
+                    .logStderr()
+                    .logStdout()
+                    .logFullStdout(configurationModel.variant.module.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
                     .execute(ops::exec)
         }
     }

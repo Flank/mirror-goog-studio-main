@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.build
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -378,8 +379,9 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                     buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
                     processBuilder,
                     "")
-                    .logStderrToLifecycle()
-                    .logStdoutToInfo()
+                    .logStderr()
+                    .logStdout()
+                    .logFullStdout(abis.firstOrNull()?.variant?.module?.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
                     .execute(ops::exec)
 
             generateChromeTraces?.invoke()
