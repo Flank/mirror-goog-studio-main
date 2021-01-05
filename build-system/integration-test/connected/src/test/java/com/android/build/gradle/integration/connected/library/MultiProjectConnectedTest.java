@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.library;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import java.io.IOException;
@@ -29,11 +28,7 @@ import org.junit.rules.ExternalResource;
 public class MultiProjectConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("multiproject")
-                    // b/176510270
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                    .create();
+            GradleTestProject.builder().fromTestProject("multiproject").create();
 
     @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
