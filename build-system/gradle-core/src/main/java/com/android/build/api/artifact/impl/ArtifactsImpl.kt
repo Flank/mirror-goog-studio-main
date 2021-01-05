@@ -245,7 +245,7 @@ class ArtifactsImpl(
     }
 
     /**
-     * Returns the current [FileCollection] for [AnchorOutputType.ALL_CLASSES] as of now.
+     * The current [FileCollection] for [AnchorOutputType.ALL_CLASSES] as of now.
      * The returned file collection is final but its content can change.
      */
     fun getAllClasses(): FileCollection = allClasses

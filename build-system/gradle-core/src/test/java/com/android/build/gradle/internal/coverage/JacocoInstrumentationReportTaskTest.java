@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.coverage;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -26,10 +24,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.common.truth.Expect;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import kotlin.jvm.Throws;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -38,15 +33,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import static com.google.common.truth.Truth.assertThat;
+
 /**
- * Processes the coverage metadata file and makes sure that we display the information
- * correctly.
+ * Processes the coverage metadata file and makes sure that we display the information correctly.
  *
- * <p>Whenever we update the Jacoco version, we need to regenerate the coverage file used in
- * this test. In order to do that, please create a small test project containing
- * the MainActivity.java
- * (in resources/jacocoReport/com/android/tools/build/tests/myapplication/MainActivity.java)
- * and the following test under androidTest:
+ * <p>Whenever we update the Jacoco version, we need to regenerate the coverage file used in this
+ * test. In order to do that, please create a small test project containing the MainActivity.java
+ * (in resources/jacocoReport/com/android/tools/build/tests/myapplication/MainActivity.java) and the
+ * following test under androidTest:
+ *
  * <pre>
  * package com.android.tools.build.tests.myapplication;
  *
@@ -63,11 +64,12 @@ import org.junit.rules.TemporaryFolder;
  *     }
  * }
  * </pre>
- * <p>Add the com.android.support.design library and execute the connectedCheck task with at
- * least one connected device. This will generate the necessary coverage.ec file that you can
- * copy to the resources/jacocoReport/com/android/tools/build/tests/myapplication/ directory.
+ *
+ * <p>Add the com.android.support.design library and execute the connectedCheck task with at least
+ * one connected device. This will generate the necessary coverage.ec file that you can copy to the
+ * resources/jacocoReport/com/android/tools/build/tests/myapplication/ directory.
  */
-public class JacocoReportTaskTest {
+public class JacocoInstrumentationReportTaskTest {
 
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
@@ -81,8 +83,8 @@ public class JacocoReportTaskTest {
         File coverageFile = copyResourceToFolder(
                 "jacocoReport/com/android/tools/build/tests/myapplication/coverage.ec",
                 mTemporaryFolder.newFolder());
-        File sourceRoot = setUpSourceDirectory();
-        File classDir = setUpClassDirectory();
+        File sourceRoot = setUpSourceDirectory(mTemporaryFolder);
+        File classDir = setUpClassDirectory(mTemporaryFolder);
         File reportDir = mTemporaryFolder.newFolder();
 
         JacocoReportTask.JacocoReportWorkerAction.generateReport(
@@ -130,9 +132,7 @@ public class JacocoReportTaskTest {
                 target, Charsets.UTF_8.name(), target.getParentFile().toURI().toString());
     }
 
-    private static File copyResourceToFolder(
-            @NonNull String fileName,
-            @NonNull File folder) throws IOException {
+    File copyResourceToFolder(String fileName, File folder) throws IOException {
         // Bazel cannot handle $ in filenames. Our test-scanning code doesn't like classes which are
         // resources.
         String resourceName = fileName.replace('$', '_').replace(".class", ".klass");
@@ -143,28 +143,33 @@ public class JacocoReportTaskTest {
         return file;
     }
 
-    private File setUpSourceDirectory() throws IOException {
-        File sourceRoot = mTemporaryFolder.newFolder();
+    File setUpSourceDirectory(TemporaryFolder tempFolder) throws IOException {
+        File sourceRoot = tempFolder.newFolder();
         copyResourceToFolder(
                 "jacocoReport/com/android/tools/build/tests/myapplication/MainActivity.java",
-                sourceRoot);
+                sourceRoot
+        );
         copyResourceToFolder(
                 "jacocoReport/com/android/tools/build/tests/myapplication/BuildConfig.java",
-                sourceRoot);
+                sourceRoot
+        );
         return new File(sourceRoot, "jacocoReport");
     }
 
-    private File setUpClassDirectory() throws IOException {
-        File sourceRoot = mTemporaryFolder.newFolder();
+    File setUpClassDirectory(TemporaryFolder tempFolder) throws IOException {
+        File sourceRoot = tempFolder.newFolder();
         copyResourceToFolder(
                 "jacocoReport/com/android/tools/build/tests/myapplication/MainActivity.class",
-                sourceRoot);
+                sourceRoot
+        );
         copyResourceToFolder(
                 "jacocoReport/com/android/tools/build/tests/myapplication/MainActivity$1.class",
-                sourceRoot);
+                sourceRoot
+        );
         copyResourceToFolder(
                 "jacocoReport/com/android/tools/build/tests/myapplication/BuildConfig.class",
-                sourceRoot);
+                sourceRoot
+        );
         return new File(sourceRoot, "jacocoReport");
     }
 }

@@ -108,11 +108,6 @@ class TaskMethodModifiersAndAnnotationsTest {
 
         val currentPublicSetters =
             listOf(
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setCoverageFile",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setJacocoClasspath",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setReportDir",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setReportName",
-                "com.android.build.gradle.internal.coverage.JacocoReportTask::setTabWidth",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setType",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setReportType",

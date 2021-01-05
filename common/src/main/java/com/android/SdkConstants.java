@@ -2160,6 +2160,7 @@ public final class SdkConstants {
     public static final String DOT_TTF = ".ttf"; //$NON-NLS-1$
     public static final String DOT_TTC = ".ttc"; //$NON-NLS-1$
     public static final String DOT_OTF = ".otf"; //$NON-NLS-1$
+    public static final String DOT_EXEC = ".exec"; // $NON-NLS-1$
 
     /** Extension of the Application package Files, i.e. "apk". */
     public static final String EXT_ANDROID_PACKAGE = "apk"; //$NON-NLS-1$

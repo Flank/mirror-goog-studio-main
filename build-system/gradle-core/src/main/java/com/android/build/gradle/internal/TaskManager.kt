@@ -230,6 +230,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.testing.jacoco.plugins.JacocoPlugin
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.Callable
@@ -1274,6 +1275,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // testedVariantScope.getTaskContainer().getJavacTask());
         maybeCreateTransformClassesWithAsmTask(unitTestCreationConfig, false)
 
+
         // TODO: use merged java res for unit tests (bug 118690729)
         createRunUnitTestTask(unitTestCreationConfig)
 
@@ -1360,6 +1362,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             .assembleTask
                             .name)
         }
+
         createConnectedTestForVariant(androidTestProperties)
     }
 
@@ -1369,9 +1372,28 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     private fun createRunUnitTestTask(unitTestCreationConfig: UnitTestCreationConfig) {
+        val ant = JacocoConfigurations.getJacocoAntTaskConfiguration(
+            project, JacocoTask.getJacocoVersion(unitTestCreationConfig))
+
         val runTestsTask =
                 taskFactory.register(AndroidUnitTest.CreationAction(unitTestCreationConfig))
-        taskFactory.configure(JavaPlugin.TEST_TASK_NAME) { test: Task -> test.dependsOn(runTestsTask) }
+        taskFactory.configure(JavaPlugin.TEST_TASK_NAME) {
+                test: Task -> test.dependsOn(runTestsTask)
+        }
+
+        if (unitTestCreationConfig.isTestCoverageEnabled) {
+            unitTestCreationConfig.services.projectInfo.getProject().plugins.withType(
+                JacocoPlugin::class.java
+            ) {
+                // Jacoco plugin is applied and test coverage enabled, ∴ generate coverage report.
+                taskFactory.register(
+                    JacocoReportTask.CreateActionUnitTest(
+                        unitTestCreationConfig,
+                        ant
+                    )
+                )
+            }
+       }
     }
 
     private fun createTopLevelTestTasks() {
@@ -1517,11 +1539,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    protected fun createConnectedTestForVariant(androidTestProperties: AndroidTestImpl) {
+    private fun createConnectedTestForVariant(androidTestProperties: AndroidTestImpl) {
         val testedVariant = androidTestProperties.testedVariant
         val isLibrary = testedVariant.variantType.isAar
-        val testData: AbstractTestDataImpl
-        testData = if (testedVariant.variantType.isDynamicFeature) {
+        val testData: AbstractTestDataImpl = if (testedVariant.variantType.isDynamicFeature) {
             BundleTestDataImpl(
                     project.providers,
                     androidTestProperties,
@@ -1554,11 +1575,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
                     project, JacocoTask.getJacocoVersion(androidTestProperties))
             val reportTask = taskFactory.register(
-                    JacocoReportTask.CreationAction(
+                    JacocoReportTask.CreationActionConnectedTest(
                             androidTestProperties, jacocoAntConfiguration))
             testedVariant.taskContainer.coverageReportTask.dependsOn(reportTask)
             taskFactory.configure(
-                    CONNECTED_ANDROID_TEST
+                CONNECTED_ANDROID_TEST
             ) { connectedAndroidTest: Task -> connectedAndroidTest.dependsOn(reportTask) }
         }
         val providers = extension.deviceProviders
