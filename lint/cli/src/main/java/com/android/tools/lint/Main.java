@@ -160,6 +160,7 @@ public class Main {
     private static final String ARG_UPDATE_BASELINE = "--update-baseline";
     private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
     private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
+    private static final String ARG_PRINT_INTERNAL_ERROR_STACKTRACE = "--stacktrace";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_WARN_2 = "--nowarn";
@@ -1187,6 +1188,8 @@ public class Main {
                 flags.setAllowSuppress(true);
             } else if (arg.equals(ARG_RESTRICT_SUPPRESS)) {
                 flags.setAllowSuppress(false);
+            } else if (arg.equals(ARG_PRINT_INTERNAL_ERROR_STACKTRACE)) {
+                flags.setPrintInternalErrorStackTrace(true);
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -1762,6 +1765,8 @@ public class Main {
                     "\nOutput Options:",
                     ARG_QUIET,
                     "Don't show progress.",
+                    ARG_PRINT_INTERNAL_ERROR_STACKTRACE,
+                    "Print full stacktrace for internal errors.",
                     ARG_FULL_PATH,
                     "Use full paths in the error output.",
                     ARG_SHOW_ALL,

@@ -45,6 +45,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.configuration.ShowStacktrace
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
@@ -163,6 +164,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
     abstract val unitTestDependencyLintModels: ConfigurableFileCollection
+
+    @get:Input
+    abstract val printStackTrace: Property<Boolean>
 
     @get:Input
     abstract val runInProcess: Property<Boolean>
@@ -296,6 +300,9 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         if (rules.isNotEmpty()) {
             arguments += "--lint-rule-jars"
             arguments += rules.asLintPaths()
+        }
+        if (printStackTrace.get()) {
+            arguments += "--stacktrace"
         }
 
         return Collections.unmodifiableList(arguments)
@@ -541,6 +548,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 AndroidProject.FD_INTERMEDIATES
             ).dir("lint-cache")
         )
+        if (project.gradle.startParameter.showStacktrace != ShowStacktrace.INTERNAL_EXCEPTIONS) {
+            printStackTrace.setDisallowChanges(true)
+        } else {
+            printStackTrace.setDisallowChanges(
+                project.providers.environmentVariable(LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE)
+                    .map { it.equals("true", ignoreCase = true) }.orElse(false)
+            )
+        }
     }
 
     fun configureForStandalone(
@@ -605,5 +620,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.htmlReportEnabled.setDisallowChanges(lintOptions.htmlReport)
         this.xmlReportEnabled.setDisallowChanges(lintOptions.xmlReport)
         this.sarifReportEnabled.setDisallowChanges(lintOptions.sarifReport)
+    }
+
+
+    private companion object {
+        const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
     }
 }

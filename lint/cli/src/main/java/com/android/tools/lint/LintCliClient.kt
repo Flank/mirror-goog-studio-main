@@ -1331,4 +1331,7 @@ open class LintCliClient : LintClient {
             return sb.toString()
         }
     }
+
+    override val printInternalErrorStackTrace: Boolean
+        get() = flags.printInternalErrorStackTrace || super.printInternalErrorStackTrace
 }
