@@ -21,10 +21,12 @@ import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.UnitTestBuilder
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.api.extension.VariantSelector
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.gradle.internal.dsl.SdkComponentsImpl
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 
@@ -32,6 +34,9 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         private val dslServices: DslServices,
         private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
 ): AndroidComponentsExtension<VariantBuilderT, VariantT> {
+
+    override val sdkComponents: SdkComponents =
+        dslServices.newInstance(SdkComponentsImpl::class.java, dslServices)
 
     override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
         variantApiOperations.variantBuilderOperations.addOperation({

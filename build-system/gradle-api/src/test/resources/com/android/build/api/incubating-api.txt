@@ -768,6 +768,7 @@ com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTest: void 
 com.android.build.api.extension.AndroidComponentsExtension.beforeUnitTest: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<com.android.build.api.component.UnitTestBuilder>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantBuilderT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.beforeVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantBuilderT>)
+com.android.build.api.extension.AndroidComponentsExtension.getSdkComponents: com.android.build.api.dsl.SdkComponents ()
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, kotlin.jvm.functions.Function1<? super VariantT, kotlin.Unit>)
 com.android.build.api.extension.AndroidComponentsExtension.onVariants: void (com.android.build.api.extension.VariantSelector, org.gradle.api.Action<VariantT>)
 com.android.build.api.extension.AndroidComponentsExtension.selector: com.android.build.api.extension.VariantSelector ()
