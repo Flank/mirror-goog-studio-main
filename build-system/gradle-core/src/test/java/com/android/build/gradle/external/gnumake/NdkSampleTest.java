@@ -445,6 +445,11 @@ public class NdkSampleTest {
                             matched = true;
                         }
 
+                        // joptsimple won't accept flags with +
+                        if (trimmed.contains("+")) {
+                            matched = true;
+                        }
+
                         if (!matched) {
                             // If you get here, there is a new gcc or clang flag in a baseline test.
                             // For completeness, you should add this flag in CompilerParser.
@@ -662,6 +667,11 @@ public class NdkSampleTest {
     @Test
     public void sanAngelesExample() throws IOException {
         checkJson("samples/san-angeles", SdkConstants.PLATFORM_LINUX);
+    }
+
+    @Test
+    public void ndk22StaticLibraryExample() throws IOException {
+        checkJson("samples/r22", SdkConstants.PLATFORM_LINUX);
     }
 
     @Test

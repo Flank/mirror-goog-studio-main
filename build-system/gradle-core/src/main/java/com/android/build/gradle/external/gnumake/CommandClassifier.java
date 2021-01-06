@@ -155,6 +155,7 @@ class CommandClassifier {
         public boolean isMatch(@NonNull CommandLine command) {
             return command.getExecutable().endsWith("gcc-ar")
                     || command.getExecutable().endsWith("android-ar")
+                    || command.getExecutable().endsWith("llvm-ar")
                     || command.getExecutable().endsWith("androideabi-ar");
         }
     }
