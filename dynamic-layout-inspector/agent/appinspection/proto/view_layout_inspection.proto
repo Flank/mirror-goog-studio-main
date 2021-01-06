@@ -85,7 +85,11 @@ message Screenshot {
 // ======= COMMANDS, RESPONSES, AND EVENTS =======
 
 // Tells the inspector to start sending |LayoutEvent|s asynchronously
-message StartFetchCommand {}
+message StartFetchCommand {
+    // If continuous, layout events will keep coming until a |StopFetchCommand| is sent.
+    // Otherwise, only a single |LayoutEvent| will be sent.
+    bool continuous = 1;
+}
 message StartFetchResponse {}
 
 // Command to fire to stop |LayoutEvent|s from being returned.
@@ -99,6 +103,15 @@ message LayoutEvent {
     repeated StringEntry strings = 1;
     ViewNode root_view = 2;
     Screenshot screenshot = 3;
+}
+
+// An event for reporting an error message, particularly for crashes that happen off the inspector
+// thread.
+// TODO(b/176993981): The inspector framework handles crashes that happen on the inspector thread,
+//  but no support for non-inspector threads at this point. We can stop using this custom message
+//  when such support is added, however.
+message ErrorEvent {
+    string message = 1;
 }
 
 message Command {
@@ -115,6 +128,7 @@ message Response {
 }
 message Event {
     oneof specialized {
-        LayoutEvent layout_event = 1;
+        ErrorEvent error_event = 1;
+        LayoutEvent layout_event = 2;
     }
 }

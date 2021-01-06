@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,22 @@
  * limitations under the License.
  */
 
-package android.os;
+package com.android.tools.agent.appinspection.framework
 
-import androidx.annotation.NonNull;
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import com.android.tools.agent.appinspection.util.ThreadUtils
+
+fun ViewGroup.getChildren(): List<View> {
+    ThreadUtils.assertOnMainThread()
+    return (0 until childCount).map { i -> getChildAt(i) }
+}
 
 /**
- * This class is included for testing of LayoutInspectorService.
- *
- * <p>Only the methods needed for LayoutInspectorService is included.
+ * Return this node's text value, if it is a kind of node that has one.
  */
-public class Looper {
-    private static final Looper mInstance = new Looper();
-
-    @NonNull
-    public static Looper myLooper() {
-        return mInstance;
-    }
-
-    @NonNull
-    public static Looper getMainLooper() {
-        return mInstance;
-    }
-
-    public boolean isCurrentThread() {
-        return true;
-    }
+fun View.getTextValue(): String? {
+    if (this !is TextView) return null
+    return text.toString()
 }
