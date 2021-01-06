@@ -21,6 +21,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTest
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import org.gradle.api.Action
@@ -37,6 +38,13 @@ import org.gradle.api.Incubating
 @Incubating
 interface AndroidComponentsExtension<
         VariantBuilderT: VariantBuilder, VariantT: Variant> {
+
+    /**
+     * Provides access to underlying Android SDK and build-tools components like adb.
+     *
+     * @return [SdkComponents] to access Android SDK used by Gradle.
+     */
+    val sdkComponents: SdkComponents
 
     /**
      * Creates a [VariantSelector] instance that can be configured
