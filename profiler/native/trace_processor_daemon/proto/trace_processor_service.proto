@@ -39,6 +39,11 @@ message LoadTraceRequest {
   // Optional paths to symbol root. If this is provided the trace is
   // symbolized on load.
   repeated string symbol_path = 3;
+
+  // Optional path for the trace processor to save the symbolized
+  // data as a proto file. This file can be appended to the
+  // original capture to created a symbolized capture file.
+  string symbolized_output_path = 4;
 }
 
 message LoadTraceResponse {

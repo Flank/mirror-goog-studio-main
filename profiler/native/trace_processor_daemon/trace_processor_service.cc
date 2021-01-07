@@ -18,6 +18,7 @@
 
 #include <grpc++/grpc++.h>
 #include <mutex>
+#include <stdio.h>
 
 #include "counters/counters_request_handler.h"
 #include "memory/memory_request_handler.h"
@@ -106,6 +107,10 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
   }
   if (!symbol_paths.empty() && !llvm_path_.empty() &&
       ::perfetto::profiling::GetFileSize(llvm_path_) != 0) {
+    FILE* output_file_fd = nullptr;
+    if (!request->symbolized_output_path().empty()) {
+      output_file_fd = fopen(request->symbolized_output_path().c_str(), "w+");
+    }
     std::unique_ptr<BinaryFinder> finder(new LocalBinaryFinder(symbol_paths));
     std::unique_ptr<Symbolizer> symbolizer(
         new LocalSymbolizer(llvm_path_, std::move(finder)));
@@ -120,10 +125,13 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
                       << std::endl;
             return;
           }
-          // TODO (b/175320308): If studio passes a export path, append proto
-          // to file. This allows us to cache the symbol protos and append them
-          // to an exported trace.
+          if (output_file_fd != nullptr) {
+            fputs(trace_proto.c_str(), output_file_fd);
+          }
         });
+    if (output_file_fd != nullptr) {
+      fclose(output_file_fd);
+    }
     tp_->NotifyEndOfFile();
   }
 
