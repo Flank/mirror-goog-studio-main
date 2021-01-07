@@ -42,15 +42,22 @@ data class CxxAbiModel(
 
     /**
      * The .cxx build folder
-     *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
+     *   ex, $moduleRootFolder/.cxx/Debug/{hashcode}/x86_64
      */
     val cxxBuildFolder: File,
 
     /**
      * Folder for .so files
-     *   ex, $moduleRootFolder/build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a
+     *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/obj/x86_64
      */
     val soFolder: File,
+
+    /**
+     * An extra .cxx folder where build outputs are copied or symlinked too. This is also the
+     * old location where actual builds happened before configuration folding was implemented.
+     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj/x86_64
+     */
+    val soRepublishFolder: File,
 
     /**
      * The final platform version for this ABI (ex 28)

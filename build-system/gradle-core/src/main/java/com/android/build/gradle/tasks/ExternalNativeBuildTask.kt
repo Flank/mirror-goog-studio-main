@@ -20,8 +20,8 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.build.CxxBuilder
-import com.android.build.gradle.internal.cxx.build.CxxNopBuilder
 import com.android.build.gradle.internal.cxx.build.CxxRegularBuilder
+import com.android.build.gradle.internal.cxx.build.CxxRepublishBuilder
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -63,11 +63,11 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
 }
 
 /**
- * Create a C/C++ build task that just refers to another set of tasks (by way of Gradle
- * dependencies). It doesn't do any work but it does expose 'objFolder' and 'soFolder'
- * for consumers of variant API.
+ * Create a C/C++ build task just republishes build outputs from a prior build task.
+ * This is used to publish build outputs to their legacy locations (from before configuration
+ * folding).
  */
-fun createNopCxxBuildTask(
+fun createRepublishCxxBuildTask(
         configurationModel : CxxConfigurationModel,
         creationConfig: VariantCreationConfig,
         name : String
@@ -76,14 +76,14 @@ fun createNopCxxBuildTask(
     override val type = ExternalNativeBuildTask::class.java
     override fun configure(task: ExternalNativeBuildTask) {
         super.configure(task)
-        task.builder = CxxNopBuilder(configurationModel)
+        task.builder = CxxRepublishBuilder(configurationModel)
         task.sdkComponents.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
     }
 }
 
 /**
  * Create a C/C++ build task does actual build work. It may be referred to by build tasks created
- * by [createNopCxxBuildTask].
+ * by [createRepublishCxxBuildTask].
  */
 fun createWorkingCxxBuildTask(
         globalScope: GlobalScope,

@@ -232,8 +232,14 @@ enum class Macro(
         tag = "moduleDir",
         example = "\$PROJECTS/MyProject/Source/Android/app1",
         bind = CxxModuleModel::moduleRootFolder),
+    NDK_MODULE_BUILD_INTERMEDIATES_BASE_DIR(
+        description = "The module level build base intermediates folder.",
+        environment = GRADLE,
+        tag = "moduleBuildIntermediatesBaseDir",
+        example = "\$PROJECTS/MyProject/Source/Android/app1/build/intermediates",
+        bind = CxxModuleModel::intermediatesBaseFolder),
     NDK_MODULE_BUILD_INTERMEDIATES_DIR(
-        description = "The module level build intermediates folder.",
+        description = "The module level build intermediates cxx subfolder.",
         environment = GRADLE,
         tag = "moduleBuildIntermediatesDir",
         example = "\$PROJECTS/MyProject/Source/Android/app1/build/intermediates/cxx",
@@ -295,6 +301,16 @@ enum class Macro(
         example = "${NDK_MODULE_DIR.ref}/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/obj",
         ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/obj/local",
         bind = CxxVariantModel::soFolder),
+    NDK_VARIANT_SO_REPUBLISH_DIR(
+        description = "A folder with a predictable name where final build outputs (mainly .so) are" +
+                "hard linked or copied after the build completes. The purpose is so scripts " +
+                "and other external tools have a known path, with no embedded hashcode, to locate " +
+                "these files.",
+        environment = GRADLE,
+        tag = "variantSoRepublishDir",
+        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/ndkBuild/debug/obj/local",
+        bind = CxxVariantModel::soRepublishFolder),
     NDK_SO_OUTPUT_DIR(
         description = "The ABI-level folder where .so files are written.",
         environment = GRADLE,
@@ -303,6 +319,16 @@ enum class Macro(
         ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/obj/local/x86_64",
         cmakeProperties = listOf(CMAKE_LIBRARY_OUTPUT_DIRECTORY, CMAKE_RUNTIME_OUTPUT_DIRECTORY),
         bind = CxxAbiModel::soFolder),
+    NDK_SO_REPUBLISH_DIR(
+        description = "A folder with a predictable name where final build outputs (mainly .so) are" +
+                "hard linked or copied after the build completes. The purpose is so scripts " +
+                "and other external tools have a known path, with no embedded hashcode, to locate " +
+                "these files.",
+        environment = GRADLE,
+        tag = "soRepublishDir",
+        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/ndkBuild/debug/obj/local/x86_64",
+        bind = CxxAbiModel::soRepublishFolder),
     NDK_VARIANT_OPTIMIZATION_TAG(
         description = "The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. " +
                 "May be Debug, Release, RelWithDebInfo, or MinSizeRel.",

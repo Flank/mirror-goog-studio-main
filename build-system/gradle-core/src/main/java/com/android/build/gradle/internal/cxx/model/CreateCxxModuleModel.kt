@@ -78,6 +78,7 @@ fun createCxxModuleModel(
     // Without the added "cxx", there's no indication that these intermediates are for C/C++
     // and we risk colliding with a variant named "Debug" in that folder.
     //
+    val intermediatesBaseFolder = configurationParameters.intermediatesFolder
     val intermediatesFolder = if (configurationParameters.isConfigurationFoldingEnabled) {
         join(configurationParameters.intermediatesFolder, "cxx")
     } else {
@@ -125,6 +126,7 @@ fun createCxxModuleModel(
         ndkDefaultStl = ndk.ndkInfo.getDefaultStl(configurationParameters.buildSystem),
         makeFile = configurationParameters.makeFile,
         buildSystem = configurationParameters.buildSystem,
+        intermediatesBaseFolder = intermediatesBaseFolder,
         intermediatesFolder = intermediatesFolder,
         gradleModulePathName = configurationParameters.gradleModulePathName,
         moduleRootFolder = configurationParameters.moduleRootFolder,

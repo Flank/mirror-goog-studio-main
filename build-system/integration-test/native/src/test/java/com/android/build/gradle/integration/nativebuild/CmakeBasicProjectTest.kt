@@ -62,7 +62,7 @@ import java.util.zip.GZIPInputStream
 @RunWith(Parameterized::class)
 class CmakeBasicProjectTest(
     private val cmakeVersionInDsl: String,
-    enableConfigurationFolding: Boolean
+    private val enableConfigurationFolding: Boolean
 ) {
     @Rule
     @JvmField
@@ -273,7 +273,21 @@ class CmakeBasicProjectTest(
         project.execute("assembleDebug")
         val golden = project.goldenBuildProducts()
         println(golden)
-        Truth.assertThat(golden).isEqualTo("""
+        if (enableConfigurationFolding) {
+            Truth.assertThat(golden).isEqualTo("""
+            {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+            {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
+            {PROJECT}/build/intermediates/cmake/debug/obj/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/cmake/debug/obj/x86_64/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/x86_64/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
+            {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
+        """.trimIndent())
+        } else {
+            Truth.assertThat(golden).isEqualTo("""
             {PROJECT}/.cxx/{DEBUG}/armeabi-v7a/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
             {PROJECT}/.cxx/{DEBUG}/x86_64/CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o{F}
             {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
@@ -283,6 +297,7 @@ class CmakeBasicProjectTest(
             {PROJECT}/build/intermediates/{DEBUG}/obj/armeabi-v7a/libhello-jni.so{F}
             {PROJECT}/build/intermediates/{DEBUG}/obj/x86_64/libhello-jni.so{F}
         """.trimIndent())
+        }
     }
 
     @Test

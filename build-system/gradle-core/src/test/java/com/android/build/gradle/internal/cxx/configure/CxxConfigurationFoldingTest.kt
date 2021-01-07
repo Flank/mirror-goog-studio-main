@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.configure.CxxGradleTaskModel.VariantBuild
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.google.common.truth.Truth.assertThat
@@ -35,6 +36,25 @@ class CxxConfigurationFoldingTest {
             assertThat(namer.buildConfigureEdges).containsExactly(
                     "buildCMakeDebug" to "configureCMakeDebug"
             )
+        }
+    }
+
+    @Test
+    fun `Dependency model CMake variants that fold`() {
+        BasicCmakeMock().apply {
+            val configurationParameters = configurationParameters.copy(isConfigurationFoldingEnabled = true)
+            val config1 = configurationParameters.copy(variantName = "debug")
+            val config2 = configurationParameters.copy(variantName = "debug2")
+            val allAbis = createInitialCxxModel(
+                    sdkComponents,
+                    listOf(config1, config2))
+            val result = createFoldedCxxTaskDependencyModel(allAbis)
+            val variantBuild = result.tasks["externalNativeBuildDebug"] as VariantBuild
+            assertThat(variantBuild.representatives).isNotEmpty()
+            variantBuild.representatives.forEach { abi ->
+                // Make sure republish folder is different than soFolder
+                assertThat(abi.soFolder).isNotEqualTo(abi.soRepublishFolder)
+            }
         }
     }
 
