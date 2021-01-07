@@ -44,6 +44,7 @@ fi
   --define agent_coverage=true \
   -- \
   @cov//:all.suite \
+  @baseline//... \
   || exit $?
 
 # Generate another UUID for the report invocation
