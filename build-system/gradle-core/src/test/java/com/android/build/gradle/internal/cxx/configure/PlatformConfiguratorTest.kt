@@ -177,7 +177,7 @@ class PlatformConfiguratorTest {
             28,
             null)
         assertThat(platform).isEqualTo(27)
-        assertThat(logger.warnings).containsExactly("Platform version " +
+        assertThat(logger.warnings).containsExactly("C/C++: Platform version " +
                 "'28' is beyond '27', the maximum API level supported by this NDK.")
     }
 
@@ -214,7 +214,7 @@ class PlatformConfiguratorTest {
             29,
             null)
         assertThat(platform).isEqualTo(28)
-        assertThat(logger.warnings).containsExactly("Platform version '29' " +
+        assertThat(logger.warnings).containsExactly("C/C++: Platform version '29' " +
                 "is beyond '28', the maximum API level supported by this NDK.")
     }
 
@@ -240,7 +240,7 @@ class PlatformConfiguratorTest {
             "P")
         assertThat(platform).isEqualTo(28)
         assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
+            "C/C++: Version minSdkVersion='P' is mapped to '28'.")
     }
 
     @Test
@@ -251,7 +251,7 @@ class PlatformConfiguratorTest {
             "x86",
             20,
             null)
-        assertThat(logger.infos).containsExactly("Version minSdkVersion='20' " +
+        assertThat(logger.infos).containsExactly("C/C++: Version minSdkVersion='20' " +
                 "is mapped to '19'.")
         assertThat(platform).isEqualTo(19)
     }
@@ -267,7 +267,7 @@ class PlatformConfiguratorTest {
            )
         assertThat(platform).isEqualTo(28)
         assertThat(logger.errors).containsExactly(
-            "API codeName 'O-MR2' is not supported by NDK '$ndk17'."
+            "C/C++: API codeName 'O-MR2' is not supported by NDK '$ndk17'."
         )
     }
 
@@ -281,7 +281,7 @@ class PlatformConfiguratorTest {
             null,
             expectedNdkR17MetaPlatforms())
         assertThat(platform).isEqualTo(16)
-        assertThat(logger.infos).containsExactly("Neither codeName nor " +
+        assertThat(logger.infos).containsExactly("C/C++: Neither codeName nor " +
                 "minSdkVersion specified. Using minimum platform version for 'x86'.")
     }
 
@@ -308,7 +308,7 @@ class PlatformConfiguratorTest {
             null,
             expectedNdkR17MetaPlatforms())
         assertThat(platform).isEqualTo(28)
-        assertThat(logger.warnings).containsExactly("Platform version '29' " +
+        assertThat(logger.warnings).containsExactly("C/C++: Platform version '29' " +
                 "is beyond '28', the maximum API level supported by this NDK.")
     }
 
@@ -336,7 +336,7 @@ class PlatformConfiguratorTest {
             expectedNdkR17MetaPlatforms())
         assertThat(platform).isEqualTo(28)
         assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
+            "C/C++: Version minSdkVersion='P' is mapped to '28'.")
     }
 
     @Test
@@ -348,7 +348,7 @@ class PlatformConfiguratorTest {
             20,
             null,
             expectedNdkR17MetaPlatforms())
-        assertThat(logger.infos).containsExactly("Version minSdkVersion='20' " +
+        assertThat(logger.infos).containsExactly("C/C++: Version minSdkVersion='20' " +
                 "is mapped to '19'.")
         assertThat(platform).isEqualTo(19)
     }
@@ -364,7 +364,7 @@ class PlatformConfiguratorTest {
             expectedNdkR17MetaPlatforms())
         assertThat(platform).isEqualTo(27)
         assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='O-MR1' is mapped to '27'.")
+            "C/C++: Version minSdkVersion='O-MR1' is mapped to '27'.")
     }
 
     @Test
@@ -378,7 +378,7 @@ class PlatformConfiguratorTest {
             expectedNdkR17MetaPlatforms())
         assertThat(platform).isEqualTo(28)
         assertThat(logger.errors).containsExactly(
-            "API codeName 'O-MR2' is not supported by NDK '$ndk17'.")
+            "C/C++: API codeName 'O-MR2' is not supported by NDK '$ndk17'.")
     }
 
     @Test
@@ -390,7 +390,7 @@ class PlatformConfiguratorTest {
             13,
             null)
         assertThat(platform).isEqualTo(AndroidVersion.MIN_RECOMMENDED_API)
-        assertThat(logger.errors).containsExactly("Specified abi='bob' " +
+        assertThat(logger.errors).containsExactly("[CXX1200] Specified abi='bob' " +
                 "is not recognized.")
     }
 
@@ -404,9 +404,9 @@ class PlatformConfiguratorTest {
             "P")
         assertThat(platform).isEqualTo(28)
         assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.")
+            "C/C++: Version minSdkVersion='P' is mapped to '28'.")
         assertThat(logger.warnings).containsExactly(
-            "Both codeName and minSdkVersion specified. They agree but only " +
+            "C/C++: Both codeName and minSdkVersion specified. They agree but only " +
                     "one should be specified.")
     }
 
@@ -419,8 +419,8 @@ class PlatformConfiguratorTest {
             27,
             "P")
         assertThat(logger.infos).containsExactly(
-            "Version minSdkVersion='P' is mapped to '28'.",
-            "Disagreement between codeName='P' and minSdkVersion='27'. Probably a preview " +
+            "C/C++: Version minSdkVersion='P' is mapped to '28'.",
+            "C/C++: Disagreement between codeName='P' and minSdkVersion='27'. Probably a preview " +
                     "release. Using 28 to match code name.")
         assertThat(platform).isEqualTo(28)
     }
@@ -447,7 +447,7 @@ class PlatformConfiguratorTest {
             20,
             null)
         assertThat(platform).isEqualTo(19)
-        assertThat(logger.infos).containsExactly("Version minSdkVersion='20' " +
+        assertThat(logger.infos).containsExactly("C/C++: Version minSdkVersion='20' " +
                 "is mapped to '19'.")
     }
 
@@ -460,7 +460,7 @@ class PlatformConfiguratorTest {
             defaultApiLevelFromDsl,
             "J")
         assertThat(platform).isEqualTo(16)
-        assertThat(logger.infos).containsExactly("Version " +
+        assertThat(logger.infos).containsExactly("C/C++: Version " +
                 "minSdkVersion='J' is mapped to '16'.")
     }
 
@@ -474,7 +474,7 @@ class PlatformConfiguratorTest {
             "Z")
         assertThat(platform).isEqualTo(28)
         assertThat(logger.errors).containsExactly(
-            "API codeName 'Z' is not supported by NDK '$ndk17'.")
+            "C/C++: API codeName 'Z' is not supported by NDK '$ndk17'.")
     }
 
     @Test
@@ -498,7 +498,7 @@ class PlatformConfiguratorTest {
             null,
             null)
         assertThat(platform).isEqualTo(19)
-        assertThat(logger.warnings).containsExactly("Expected platform " +
+        assertThat(logger.warnings).containsExactly("C/C++: Expected platform " +
                 "folder platforms/android-22, using platform API 19 instead.")
     }
 }

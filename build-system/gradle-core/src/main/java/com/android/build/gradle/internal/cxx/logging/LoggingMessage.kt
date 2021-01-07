@@ -32,18 +32,18 @@ data class LoggingMessage(
 ) {
     override fun toString(): String {
         val codeHeader = when (diagnosticCode) {
-            null -> "C/C++"
+            null -> "C/C++: "
             else -> when (level) {
-                WARN -> "CXX${diagnosticCode.warningCode}"
-                ERROR -> "CXX${diagnosticCode.errorCode}"
+                WARN -> "[CXX${diagnosticCode.warningCode}] "
+                ERROR -> "[CXX${diagnosticCode.errorCode}] "
                 else -> throw IllegalStateException("Message at $level should not have diagnostic code.")
             }
         }
         return when {
-            (file == null && tag == null) -> message
-            (file != null && tag == null) -> "$file : $codeHeader : $message"
-            (file == null && tag != null) -> "$codeHeader $tag : $message"
-            else -> "$file : $codeHeader $tag : $message"
+            (file == null && tag == null) -> "$codeHeader$message"
+            (file != null && tag == null) -> "$codeHeader$file : $message"
+            (file == null && tag != null) -> "$codeHeader$tag : $message"
+            else -> "$codeHeader$file $tag : $message"
         }
     }
 }

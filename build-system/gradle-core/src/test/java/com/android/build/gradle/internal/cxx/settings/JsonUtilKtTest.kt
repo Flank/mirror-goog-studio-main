@@ -141,7 +141,7 @@ class JsonUtilKtTest {
     fun `check parse error becomes errorln`() {
         PassThroughDeduplicatingLoggingEnvironment().apply {
             createSettingsFromJsonString("{")
-            assertThat(errors.single()).isEqualTo("End of input at line 1 column 2 path \$.")
+            assertThat(errors.single()).isEqualTo("C/C++: End of input at line 1 column 2 path \$.")
         }
     }
 }

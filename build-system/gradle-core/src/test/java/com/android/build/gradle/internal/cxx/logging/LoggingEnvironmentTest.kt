@@ -67,11 +67,11 @@ class LoggingEnvironmentTest {
             errorln("error")
             TestLoggingEnvironment("nest 2").use { inner ->
                 errorln("error")
-                assertThat(inner.messages).containsExactly("error nest 2: error")
+                assertThat(inner.messages).containsExactly("error nest 2: C/C++: error")
             }
             errorln("error")
-            assertThat(outer.messages).containsExactly("error nest 1: error",
-                "error nest 1: error")
+            assertThat(outer.messages).containsExactly("error nest 1: C/C++: error",
+                "error nest 1: C/C++: error")
         }
     }
 

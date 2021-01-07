@@ -27,7 +27,7 @@ class PassThroughPrefixingLoggingEnvironmentTest {
     fun `attach filename to error`() {
         PassThroughPrefixingLoggingEnvironment(File("my-file")).apply {
             errorln("an error")
-            assertThat(errors.single().toString()).isEqualTo("my-file : C/C++ : an error")
+            assertThat(errors.single().toString()).isEqualTo("C/C++: my-file : an error")
         }
     }
 
@@ -35,7 +35,7 @@ class PassThroughPrefixingLoggingEnvironmentTest {
     fun `attach tag to error`() {
         PassThroughPrefixingLoggingEnvironment(tag = "my-tag").apply {
             errorln("an error")
-            assertThat(errors.single().toString()).isEqualTo("C/C++ my-tag : an error")
+            assertThat(errors.single().toString()).isEqualTo("C/C++: my-tag : an error")
         }
     }
 
@@ -43,7 +43,7 @@ class PassThroughPrefixingLoggingEnvironmentTest {
     fun `attach filename and tag to error`() {
         PassThroughPrefixingLoggingEnvironment(File("my-file"), "my-tag").apply {
             errorln("an error")
-            assertThat(errors.single().toString()).isEqualTo("my-file : C/C++ my-tag : an error")
+            assertThat(errors.single().toString()).isEqualTo("C/C++: my-file my-tag : an error")
         }
     }
 
@@ -53,7 +53,7 @@ class PassThroughPrefixingLoggingEnvironmentTest {
             PassThroughPrefixingLoggingEnvironment(File("my-file-inner")).use {
                 errorln("an error")
             }
-            assertThat(errors.single().toString()).isEqualTo("my-file-inner : C/C++ my-tag : an error")
+            assertThat(errors.single().toString()).isEqualTo("C/C++: my-file-inner my-tag : an error")
         }
     }
 }
