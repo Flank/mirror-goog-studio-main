@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
 import com.android.build.gradle.internal.cxx.configure.convertCmakeCommandLineArgumentsToStringList
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -60,8 +61,9 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
             abi.metadataGenerationStderrFile,
             getProcessBuilder(abi),
             logPrefix)
-            .logStderrToLifecycle()
-            .logStdoutToInfo()
+            .logStderr()
+            .logStdout()
+            .logFullStdout(variant.module.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
             .execute(ops::exec)
 
         postProcessForkCmakeOutput(abi)

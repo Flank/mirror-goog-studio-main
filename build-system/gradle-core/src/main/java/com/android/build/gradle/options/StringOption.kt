@@ -67,6 +67,9 @@ enum class StringOption(
     // The exact version of Android Support plugin used, e.g. 2.4.0.6
     IDE_ANDROID_STUDIO_VERSION(AndroidProject.PROPERTY_ANDROID_SUPPORT_VERSION, ApiStage.Stable),
 
+    // Native
+    NATIVE_BUILD_OUTPUT_LEVEL(AndroidProject.PROPERTY_NATIVE_BUILD_OUTPUT_LEVEL, ApiStage.Stable),
+
     // User-specified path to Prefab jar to return from getPrefabFromMaven.
     PREFAB_CLASSPATH("android.prefabClassPath", ApiStage.Experimental),
 

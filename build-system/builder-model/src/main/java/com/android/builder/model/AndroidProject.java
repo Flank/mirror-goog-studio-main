@@ -138,6 +138,9 @@ public interface AndroidProject {
      */
     String PROPERTY_INJECTED_DYNAMIC_MODULES_LIST = "android.injected.modules.install.list";
 
+    /** Logging level of native build output. Possible values are "quiet" and "verbose". */
+    String PROPERTY_NATIVE_BUILD_OUTPUT_LEVEL = "android.native.buildOutput";
+
     String ARTIFACT_MAIN = "_main_";
     String ARTIFACT_ANDROID_TEST = "_android_test_";
     String ARTIFACT_UNIT_TEST = "_unit_test_";

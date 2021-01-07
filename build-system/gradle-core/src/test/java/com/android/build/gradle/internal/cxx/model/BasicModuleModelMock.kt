@@ -386,6 +386,8 @@ open class BasicModuleModelMock {
                 .`when`(projectOptions).get(BooleanOption.ENABLE_V2_NATIVE_MODEL)
             doReturn(false)
                 .`when`(projectOptions).get(BooleanOption.PREFER_CMAKE_FILE_API)
+            doReturn("verbose")
+                .`when`(projectOptions).get(StringOption.NATIVE_BUILD_OUTPUT_LEVEL)
 
             doReturn(defaultCmakeVersion.toString()).`when`(cmake).version
             doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis

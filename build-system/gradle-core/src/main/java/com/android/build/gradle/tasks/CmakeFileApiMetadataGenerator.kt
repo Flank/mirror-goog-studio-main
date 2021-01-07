@@ -21,6 +21,7 @@ import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.cxx.cmake.readCmakeFileApiReply
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument
 import com.android.build.gradle.internal.cxx.configure.convertCmakeCommandLineArgumentsToStringList
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile
 import com.android.build.gradle.internal.cxx.model.*
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
@@ -63,9 +64,10 @@ internal class CmakeQueryMetadataGenerator(
                 abi.metadataGenerationStderrFile,
                 getProcessBuilder(abi),
                 "${variant.variantName}|${abi.abi.tag} :")
-                .logStderrToLifecycle()
-                .logStdoutToInfo()
-                .execute(ops::exec)
+            .logStderr()
+            .logStdout()
+            .logFullStdout(variant.module.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
+            .execute(ops::exec)
 
         val config = readCmakeFileApiReply(cmakeAbi.clientReplyFolder) {
             // TODO(152223150) populate compile_commands.json.bin and stop generating compile_commands.json
