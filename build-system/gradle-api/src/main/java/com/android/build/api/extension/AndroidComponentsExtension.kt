@@ -227,4 +227,71 @@ interface AndroidComponentsExtension<
     fun androidTests(
             selector: VariantSelector = selector().all(),
             callback: (AndroidTest) -> Unit)
+
+
+    // Those API are for backward compatibility until 4.2-beta5 is released.
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeUnitTests(selector, callback)"))
+    fun beforeUnitTest(
+        selector: VariantSelector = selector().all(),
+        callback: (UnitTestBuilder) -> Unit) {
+        beforeUnitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeUnitTests(selector, callback)"))
+    fun beforeUnitTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<UnitTestBuilder>) {
+        beforeUnitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeAndroidTests(selector, callback)"))
+    fun beforeAndroidTest(
+        selector: VariantSelector = selector().all(),
+        callback: (AndroidTestBuilder) -> Unit) {
+        beforeAndroidTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeAndroidTests(selector, callback)"))
+    fun beforeAndroidTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<AndroidTestBuilder>) {
+        beforeAndroidTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("unitTests(selector, callback)"))
+    fun unitTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<UnitTest>) {
+        unitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("unitTests(selector, callback)"))
+    fun unitTest(
+        selector: VariantSelector = selector().all(),
+        callback: (UnitTest) -> Unit) {
+        unitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("androidTests(selector, callback)")
+    )
+    fun androidTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<AndroidTest>) {
+        androidTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("androidTests(selector, callback)"))
+    fun androidTest(
+        selector: VariantSelector = selector().all(),
+        callback: (AndroidTest) -> Unit) {
+        androidTests(selector, callback)
+    }
 }
