@@ -100,6 +100,7 @@ public class JarContentsTest {
                 "com/android/testutils/diff/",
                 "com/android/testutils/file/",
                 "com/android/testutils/filesystemdiff/",
+                "com/android/testutils/ignore/",
                 "com/android/testutils/internal/",
                 "com/android/testutils/truth/",
                 "META-INF/",
