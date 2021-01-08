@@ -32,7 +32,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileTree
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
@@ -118,7 +117,7 @@ abstract class MergeNativeLibsTask
     }
 
     private fun doProcessing(isIncremental: Boolean, changedInputs: Map<File, FileStatus>) {
-        val allProfilerNativeLibs = profilerNativeLibs.orNull?.asFile?.listFiles()?.toSet() ?: emptySet()
+        val allProfilerNativeLibs = profilerNativeLibs.orNull?.asFile ?: emptySet<File>()
         workerExecutor.noIsolation().submit(MergeJavaResWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.projectJavaRes.from(unfilteredProjectNativeLibs)

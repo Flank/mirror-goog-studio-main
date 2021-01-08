@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask
 import com.android.utils.FileUtils
-import com.google.common.annotations.VisibleForTesting
 import com.google.common.io.ByteStreams
 import org.gradle.api.artifacts.transform.CacheableTransform
 import org.gradle.api.artifacts.transform.TransformAction
@@ -78,4 +77,4 @@ abstract class ExtractJniTransform : TransformAction<GenericTransformParameters>
     }
 }
 
-private val JAR_JNI_PATTERN = Pattern.compile("lib/([^/]+)/[^/]+")
+val JAR_JNI_PATTERN: Pattern = Pattern.compile("lib/([^/]+)/[^/]+")
