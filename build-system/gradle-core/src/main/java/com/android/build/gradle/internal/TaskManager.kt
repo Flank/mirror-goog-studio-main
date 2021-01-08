@@ -1590,6 +1590,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val testData: AbstractTestDataImpl
         testData = if (testedVariant.variantType.isDynamicFeature) {
             BundleTestDataImpl(
+                    project.providers,
+                    androidTestProperties,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(ArtifactType.APK),
                     getFeatureName(globalScope.project.path),
@@ -1602,6 +1604,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val testedApkFileCollection =
                     project.files(testedVariant.artifacts.get(ArtifactType.APK))
             TestDataImpl(
+                    project.providers,
+                    androidTestProperties,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(ArtifactType.APK),
                     if (isLibrary) null else testedApkFileCollection)
