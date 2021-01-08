@@ -26,9 +26,6 @@ import kotlin.test.assertNotNull
 class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
     @Test
     fun workerEnabledTransformation() {
-        val outFolderForApk = File(testProjectDir.root, "${testName.methodName}/build/acme_apks")
-        outFolderForApk.deleteRecursively()
-
         given {
             tasksToInvoke.add(":app:copyDebugApks")
 
@@ -62,7 +59,6 @@ class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
 
                             copyApksProvider.configure {
                                 it.transformationRequest.set(transformationRequest)
-                                it.outFolder.set(File("${outFolderForApk.absolutePath}"))
                             }
                         }
                     }
@@ -83,7 +79,8 @@ class WorkerEnabledTransformationTest: BuildSrcScriptApiTest() {
             val task = task(":app:copydebugApks")
             assertNotNull(task)
             Truth.assertThat(task.outcome).isEqualTo(TaskOutcome.SUCCESS)
-            Truth.assertThat(outFolderForApk.listFiles()?.asList()?.map { it.name }).containsExactly(
+            val outFolder = File(testProjectDir.root, "${testName.methodName}/app/build/intermediates/apk/copydebugApks")
+            Truth.assertThat(outFolder.listFiles()?.asList()?.map { it.name }).containsExactly(
                 "app-debug.apk", BuiltArtifactsImpl.METADATA_FILE_NAME
             )
         }

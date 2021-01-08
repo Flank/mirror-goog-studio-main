@@ -79,7 +79,7 @@ class InstrumentationPlugin : Plugin<Project> {
             }
         }
 
-        androidComponentsExt.unitTest {
+        androidComponentsExt.unitTests {
             it.transformClassesWith(
                 AnnotationAddingClassVisitorFactory::class.java,
                 InstrumentationScope.PROJECT
@@ -117,7 +117,7 @@ class InstrumentationPlugin : Plugin<Project> {
             }
         }
 
-        androidComponentsExt.unitTest {
+        androidComponentsExt.unitTests {
             it.transformClassesWith(
                 InterfaceAddingClassVisitorFactory::class.java,
                 InstrumentationScope.PROJECT

@@ -17,10 +17,13 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.impl.*
 import com.android.build.api.variant.*
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.google.common.truth.Truth.assertThat
@@ -28,18 +31,44 @@ import org.gradle.api.Action
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
+import java.io.File
 import java.util.regex.Pattern
 
 class AndroidComponentsExtensionTest {
     private lateinit var dslServices: DslServices
+    private lateinit var sdkComponents: SdkComponentsBuildService
+
     @Before
     fun setUp() {
-        val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
+        sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
         Mockito.`when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
         Mockito.`when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
         Mockito.`when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
 
         dslServices = createDslServices(sdkComponents = FakeGradleProvider(sdkComponents))
+    }
+
+    @Test
+    fun testSdkComponents() {
+        val variantApiOperationsRegistrar = VariantApiOperationsRegistrar<ApplicationVariantBuilder, ApplicationVariant>()
+        Mockito.`when`(sdkComponents.adbExecutableProvider).thenReturn(
+            FakeGradleProvider(FakeGradleRegularFile(File("/adb")))
+        )
+        Mockito.`when`(sdkComponents.ndkDirectoryProvider).thenReturn(
+            FakeGradleProvider(FakeGradleDirectory(File("/ndk")))
+        )
+        Mockito.`when`(sdkComponents.sdkDirectoryProvider).thenReturn(
+            FakeGradleProvider(FakeGradleDirectory(File("/sdk")))
+        )
+
+        val sdkComponentsFromComponents = ApplicationAndroidComponentsExtensionImpl(
+            dslServices,
+            variantApiOperationsRegistrar
+        ).sdkComponents
+        assertThat(sdkComponentsFromComponents.adb).isNotNull()
+        assertThat(sdkComponentsFromComponents.adb.get().asFile.absolutePath).endsWith("adb")
+        assertThat(sdkComponentsFromComponents.ndkDirectory.get().asFile.absolutePath).endsWith("ndk")
+        assertThat(sdkComponentsFromComponents.sdkDirectory.get().asFile.absolutePath).endsWith("sdk")
     }
 
     @Test

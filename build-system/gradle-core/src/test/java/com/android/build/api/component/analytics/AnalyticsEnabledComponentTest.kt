@@ -24,6 +24,8 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.common.truth.Truth
+import com.google.wireless.android.sdk.stats.AsmClassesTransformRegistration
+import com.google.wireless.android.sdk.stats.AsmFramesComputationModeUpdate
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.junit.Before
 import org.junit.Test
@@ -46,37 +48,92 @@ class AnalyticsEnabledComponentTest {
         proxy = object: AnalyticsEnabledComponent(delegate, stats, FakeObjectFactory.factory) {}
     }
 
-    abstract class MockedVisitor : AsmClassVisitorFactory<InstrumentationParameters>
+    abstract class MockedVisitor : AsmClassVisitorFactory<InstrumentationParameters.None>
 
     @Test
     fun transformClasspathWith() {
-        val scope = Mockito.mock(InstrumentationScope::class.java)
         val block = { _ : InstrumentationParameters  -> }
         proxy.transformClassesWith(
             MockedVisitor::class.java,
-            scope,
+            InstrumentationScope.PROJECT,
             block
         )
 
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
+        proxy.transformClassesWith(
+            MockedVisitor::class.java,
+            InstrumentationScope.ALL,
+            block
+        )
+
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(2)
         Truth.assertThat(
             stats.variantApiAccess.variantPropertiesAccessList.first().type
         ).isEqualTo(VariantPropertiesMethodType.ASM_TRANSFORM_CLASSES_VALUE)
+        Truth.assertThat(
+            stats.variantApiAccess.variantPropertiesAccessList.last().type
+        ).isEqualTo(VariantPropertiesMethodType.ASM_TRANSFORM_CLASSES_VALUE)
+
+        Truth.assertThat(stats.asmClassesTransformsCount).isEqualTo(2)
+        Truth.assertThat(stats.asmClassesTransformsList.first().classVisitorFactoryClassName)
+            .isEqualTo("com.android.build.api.component.analytics.AnalyticsEnabledComponentTest\$MockedVisitor")
+        Truth.assertThat(stats.asmClassesTransformsList.last().classVisitorFactoryClassName)
+            .isEqualTo("com.android.build.api.component.analytics.AnalyticsEnabledComponentTest\$MockedVisitor")
+
+        Truth.assertThat(stats.asmClassesTransformsList.first().scope)
+            .isEqualTo(AsmClassesTransformRegistration.Scope.PROJECT)
+        Truth.assertThat(stats.asmClassesTransformsList.last().scope)
+            .isEqualTo(AsmClassesTransformRegistration.Scope.ALL)
+
         Mockito.verify(delegate, times(1))
-            .transformClassesWith(MockedVisitor::class.java, scope, block)
+            .transformClassesWith(MockedVisitor::class.java, InstrumentationScope.PROJECT, block)
+        Mockito.verify(delegate, times(1))
+            .transformClassesWith(MockedVisitor::class.java, InstrumentationScope.ALL, block)
     }
 
     @Test
     fun setAsmFramesComputationNode() {
-        val mode = Mockito.mock(FramesComputationMode::class.java)
-        proxy.setAsmFramesComputationMode(mode)
+        proxy.setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
+        proxy.setAsmFramesComputationMode(
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+        )
+        proxy.setAsmFramesComputationMode(
+            FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+        )
+        proxy.setAsmFramesComputationMode(FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES)
 
-        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(1)
-        Truth.assertThat(
-            stats.variantApiAccess.variantPropertiesAccessList.first().type
-        ).isEqualTo(VariantPropertiesMethodType.ASM_FRAMES_COMPUTATION_NODE_VALUE)
+        Truth.assertThat(stats.variantApiAccess.variantPropertiesAccessCount).isEqualTo(4)
+        stats.variantApiAccess.variantPropertiesAccessList.forEach {
+            Truth.assertThat(it.type).isEqualTo(
+                VariantPropertiesMethodType.ASM_FRAMES_COMPUTATION_NODE_VALUE
+            )
+        }
+
+        Truth.assertThat(stats.framesComputationModeUpdatesCount).isEqualTo(4)
+        Truth.assertThat(stats.framesComputationModeUpdatesList[0].mode).isEqualTo(
+            AsmFramesComputationModeUpdate.Mode.COPY_FRAMES
+        )
+        Truth.assertThat(stats.framesComputationModeUpdatesList[1].mode).isEqualTo(
+            AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+        )
+        Truth.assertThat(stats.framesComputationModeUpdatesList[2].mode).isEqualTo(
+            AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+        )
+        Truth.assertThat(stats.framesComputationModeUpdatesList[3].mode).isEqualTo(
+            AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_ALL_CLASSES
+        )
+
         Mockito.verify(delegate, times(1))
-            .setAsmFramesComputationMode(mode)
+            .setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
+        Mockito.verify(delegate, times(1))
+            .setAsmFramesComputationMode(
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+            )
+        Mockito.verify(delegate, times(1))
+            .setAsmFramesComputationMode(
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+            )
+        Mockito.verify(delegate, times(1))
+            .setAsmFramesComputationMode(FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES)
     }
 
     @Test

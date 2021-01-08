@@ -28,6 +28,7 @@ import com.android.build.api.artifact.InAndOutFileOperationRequest
 import com.android.build.api.artifact.OutOperationRequest
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getOutputPath
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -39,6 +40,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 class OutOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
@@ -143,6 +145,11 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
             currentProvider,
             builtArtifactsReference
         )
+
+        // set the output location, so public uses of the API do not have to do it.
+        taskProvider.configure { task ->
+            into(task).set(type.getOutputPath(artifacts.buildDirectory, taskProvider.name))
+        }
 
         // if this is a public type with an associated listing file used by studio, automatically
         // adjust the listing file provider to be the new task. In order for Studio to use this

@@ -18,11 +18,6 @@ package com.android.build.api.artifact.impl
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
-import com.android.build.api.artifact.Artifact.Appendable
-import com.android.build.api.artifact.Artifact.Replaceable
-import com.android.build.api.artifact.Artifact.Transformable
-import com.android.build.api.artifact.ArtifactKind.DIRECTORY
-import com.android.build.api.artifact.ArtifactKind.FILE
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_APPENDABLE_DIRECTORIES
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_APPENDABLE_FILES
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestMultipleArtifactType.TEST_DIRECTORIES
@@ -35,7 +30,6 @@ import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactT
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_REPLACABLE_FILE
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_TRANSFORMABLE_DIRECTORY
 import com.android.build.api.artifact.impl.ArtifactsImplTest.TestSingleArtifactType.TEST_TRANSFORMABLE_FILE
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.gradle.api.DefaultTask

@@ -1017,6 +1017,13 @@ class LintDriver(
             assert(phase > 1)
             uastSourceList = prevUastSourceList.uastSourceList
         } else {
+            if (VALUE_TRUE == System.getenv("LINT_DO_NOT_REUSE_UAST_ENV") ||
+                VALUE_TRUE == System.getProperty("lint.do.not.reuse.uast.env")
+            ) {
+                // This is a temporary workaround for b/159733104.
+                realClient.performDisposeProjects(projectRoots)
+                realClient.performInitializeProjects(projectRoots)
+            }
             assert(phase == 1 || checkDependencies)
             val files = project.subset
             uastSourceList = if (files != null) {

@@ -45,7 +45,7 @@ class NativeSoPackagingOptionsTest {
                     android {
                         lintOptions {
                             checkReleaseBuilds = false // TODO(b/146208910): Lint is not compatible with instant execution
-                        }   
+                        }
                         packagingOptions {
                             jniLibs {
                                 excludes += '**/dslExclude.so'
@@ -65,7 +65,7 @@ class NativeSoPackagingOptionsTest {
                         onVariants(selector().all(), {
                             packagingOptions.jniLibs.pickFirsts.add('**/variantPickFirst.so')
                         })
-                        androidTest(selector().all(), {
+                        androidTests(selector().all(), {
                             packagingOptions.jniLibs.excludes.add('**/testExclude.so')
                         })
                     }
@@ -91,7 +91,7 @@ class NativeSoPackagingOptionsTest {
                         onVariants(selector().all(), {
                             packagingOptions.jniLibs.excludes.add('**/libExclude.so')
                         })
-                        androidTest(selector().all(), {
+                        androidTests(selector().all(), {
                             packagingOptions.jniLibs.excludes.add('**/testExclude.so')
                         })
                     }

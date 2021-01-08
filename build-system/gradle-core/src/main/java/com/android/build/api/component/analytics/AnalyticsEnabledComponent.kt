@@ -23,6 +23,8 @@ import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
+import com.google.wireless.android.sdk.stats.AsmClassesTransformRegistration
+import com.google.wireless.android.sdk.stats.AsmFramesComputationModeUpdate
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
 
@@ -49,6 +51,15 @@ abstract class AnalyticsEnabledComponent(
     ) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.ASM_TRANSFORM_CLASSES_VALUE
+        stats.addAsmClassesTransformsBuilder()
+            .setClassVisitorFactoryClassName(classVisitorFactoryImplClass.name)
+            .setScope(
+                when(scope) {
+                    InstrumentationScope.PROJECT -> AsmClassesTransformRegistration.Scope.PROJECT
+                    InstrumentationScope.ALL -> AsmClassesTransformRegistration.Scope.ALL
+                }
+            )
+            .build()
         delegate.transformClassesWith(
             classVisitorFactoryImplClass,
             scope,
@@ -58,6 +69,16 @@ abstract class AnalyticsEnabledComponent(
     override fun setAsmFramesComputationMode(mode: FramesComputationMode) {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.ASM_FRAMES_COMPUTATION_NODE_VALUE
+        stats.addFramesComputationModeUpdatesBuilder().mode =
+            when (mode) {
+                FramesComputationMode.COPY_FRAMES -> AsmFramesComputationModeUpdate.Mode.COPY_FRAMES
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS ->
+                    AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
+                FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES ->
+                    AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
+                FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES ->
+                    AsmFramesComputationModeUpdate.Mode.COMPUTE_FRAMES_FOR_ALL_CLASSES
+            }
         delegate.setAsmFramesComputationMode(mode)
     }
 

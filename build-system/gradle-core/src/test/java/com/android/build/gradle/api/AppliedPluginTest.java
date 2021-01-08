@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.api;
 
+import static com.android.build.gradle.internal.utils.AgpVersionChecker.ANDROID_GRADLE_PLUGIN_ID;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -67,6 +68,6 @@ public class AppliedPluginTest {
         assertThat(project.getPlugins().findPlugin(pluginName)).isNotNull();
         assertThat(project.getPlugins().findPlugin(pluginClass)).isNotNull();
         assertThat(project.getPlugins().findPlugin(AndroidBasePlugin.class)).isNotNull();
-        assertThat(project.getPlugins().findPlugin("com.android.base")).isNotNull();
+        assertThat(project.getPlugins().findPlugin(ANDROID_GRADLE_PLUGIN_ID)).isNotNull();
     }
 }

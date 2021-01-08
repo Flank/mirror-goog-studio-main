@@ -72,11 +72,11 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cleanCommandsComponents": [
                 ["echo", "clean", "command"]
-              ],  
+              ],
               "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
               "libraries": {
                 "a-debug-x86_64": {
-                  "abi" : "x86_64",      
+                  "abi" : "x86_64",
                   "artifactName" : "a",
                   "buildCommandComponents": ["echo", "build", "command", "x86_64/a.so"],
                   "toolchain": "toolchain-x86_64",
@@ -129,6 +129,57 @@ class NativeBuildConfigValueBuilderTest {
             }""".trimIndent()
         )
     }
+
+    @Test
+    fun customWorkingDir() {
+        assertThatNativeBuildConfigEquals(
+            """
+                make: Entering directory `/path/to/custom/dir'
+                g++ -c a.c -o x/aa.o -Isome-include-path
+            """.trimIndent(),
+            """{
+              "buildFiles": [
+                {
+                  "path": "/projects/MyProject/jni/Android.mk"
+                }
+              ],
+              "cleanCommandsComponents": [
+                ["echo", "clean", "command"]
+              ],
+              "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
+              "libraries": {
+                "aa-debug-x": {
+                  "buildCommandComponents": ["echo", "build", "command", "x/aa.o"],
+                  "toolchain": "toolchain-x",
+                  "abi": "x",
+                  "artifactName" : "aa",      "files": [
+                    {
+                      "src": {
+                        "path": "/path/to/custom/dir/a.c"
+                      },
+                      "flags": "-Isome-include-path"
+                    }
+                  ],
+                  "output": {
+                    "path": "x/aa.o"
+                  }
+                }
+              },
+              "toolchains": {
+                "toolchain-x": {
+                  "cCompilerExecutable": {
+                    "path": "g++"
+                  }
+                }
+              },
+              "cFileExtensions": [
+                "c"
+              ],
+              "cppFileExtensions": []
+            }"""
+        )
+    }
+
 
     @Test
     fun includeInSource() {
@@ -193,7 +244,7 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cleanCommandsComponents": [
                 ["echo", "clean", "command"]
-              ],  
+              ],
               "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
               "libraries": {
                 "a-debug-x86": {
@@ -257,7 +308,7 @@ class NativeBuildConfigValueBuilderTest {
               "libraries": {
                 "a-debug-x86": {
                   "abi" : "x86",
-                  "artifactName" : "a",      
+                  "artifactName" : "a",
                   "buildCommandComponents": ["echo", "build", "command", "x86/a.so"],
                   "toolchain": "toolchain-x86",
                   "files": [
@@ -313,11 +364,11 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cleanCommandsComponents": [
                 ["echo", "clean", "command"]
-              ],  
+              ],
               "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
               "libraries": {
                 "a-debug-x86_64": {
-                  "abi" : "x86_64",      
+                  "abi" : "x86_64",
                   "artifactName" : "a",
                   "buildCommandComponents": ["echo", "build", "command", "x86_64/a.so"],
                   "toolchain": "toolchain-x86_64",
@@ -445,7 +496,7 @@ class NativeBuildConfigValueBuilderTest {
               ],
               "cleanCommandsComponents": [
                 ["echo", "clean", "command"]
-              ],  
+              ],
               "buildTargetsCommandComponents": ["echo", "build", "command", "{LIST_OF_TARGETS_TO_BUILD}"],
               "libraries": {
                 "a-debug-x86": {
@@ -515,7 +566,7 @@ class NativeBuildConfigValueBuilderTest {
               "libraries": {
                 "a-debug-x86": {
                   "abi" : "x86",
-                  "artifactName" : "a",      
+                  "artifactName" : "a",
                   "buildCommandComponents": ["echo", "build", "command", "x86/a.so"],
                   "toolchain": "toolchain-x86",
                   "output": {
