@@ -30,7 +30,6 @@ import com.android.tools.bazel.model.UnmanagedRule;
 import com.android.tools.bazel.model.Workspace;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -193,6 +192,10 @@ public class IrToBazel {
                         for (File file : library.getFiles()) {
                             String relJar = workspace.relativize(file.toPath()).toString();
                             Package jarPkg = bazel.findPackage(relJar);
+                            if (jarPkg == null) {
+                                // Temporary hack (b/177083397)
+                                continue;
+                            }
                             String relToPkg =
                                     jarPkg.getPackageDir()
                                             .toPath()
