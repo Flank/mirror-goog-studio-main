@@ -60,7 +60,15 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
          * When true, indicates we should stop capturing after the next one
          */
         var isLastCapture: Boolean = false
-    )
+    ) {
+        /**
+         * How many times this capture was triggered.
+         *
+         * The most important detail is that this is exposed to the client as a monotonically
+         * increasing number.
+         */
+        var generation: Int = 1
+    }
 
     private val contextMapLock = Any()
 
@@ -69,6 +77,14 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
      */
     @GuardedBy("contextMapLock")
     private val contextMap = mutableMapOf<Long, CaptureContext>()
+
+    /**
+     * A snapshot of the current list of view root IDs.
+     *
+     * We'll occasionally check against these against the current list of roots, generating an
+     * event if they've ever changed.
+     */
+    private var lastRootIds = emptySet<Long>()
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
@@ -86,12 +102,146 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
         forceStopAllCaptures()
     }
 
+    /**
+     * This method checks to see if any views were added or removed since the last time it was
+     * called, returning true if so.
+     *
+     * As side effects, if anything did change, this method will sends a [WindowRootsEvent] to the
+     * host to inform them. It will also stop any stale roots from capturing.
+     *
+     * @param captureNewRoots If this inspector is in continuous capture mode, this should be set
+     *     to true, so that we automatically start capturing newly discovered views as well.
+     */
+    private fun checkRoots(captureNewRoots: Boolean): Boolean {
+        val currRoots = getRootViews().map { v -> v.uniqueDrawingId to v }.toMap()
+        val currRootIds = currRoots.keys
+        if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
+            val removed = lastRootIds.filter { !currRootIds.contains(it) }
+            val added = currRootIds.filter { !lastRootIds.contains(it) }
+            lastRootIds = currRootIds
+            connection.sendEvent {
+                rootsEvent = WindowRootsEvent.newBuilder().apply {
+                    addAllIds(currRootIds)
+                }.build()
+            }
+
+            synchronized(contextMapLock) {
+                for (toRemove in removed) {
+                    contextMap.remove(toRemove)?.handle?.close()
+                }
+                if (captureNewRoots) {
+                    for (toAdd in added) {
+                        startCapturing(currRoots.getValue(toAdd), continuous = true)
+                    }
+                }
+            }
+        }
+        return lastRootIds === currRootIds
+    }
+
     private fun forceStopAllCaptures() {
         synchronized(contextMapLock) {
             for (context in contextMap.values) {
                 context.handle.close()
             }
             contextMap.clear()
+        }
+    }
+
+    private fun startCapturing(root: View, continuous: Boolean) {
+        val os = ByteArrayOutputStream()
+        // We might get multiple callbacks for the same view while still processing an earlier
+        // one. Let's avoid processing these in parallel to avoid confusion.
+        val sequentialExecutor = Executors.newSingleThreadExecutor { r -> ThreadUtils.newThread(r) }
+
+        val captureExecutor = Executor { command ->
+            sequentialExecutor.execute {
+                var context: CaptureContext
+                synchronized(contextMapLock) {
+                    // We might get some lingering captures even though we already finished
+                    // listening earlier (this would be indicated by no context). Just abort
+                    // early in that case.
+                    context = contextMap[root.uniqueDrawingId] ?: return@execute
+                    if (context.isLastCapture) {
+                        contextMap.remove(root.uniqueDrawingId)
+                    }
+                }
+
+                command.run() // Triggers image fetch into `os`
+                val screenshot = ByteString.copyFrom(os.toByteArray())
+                os.reset() // Clear stream, ready for next frame
+
+                if (context.isLastCapture) {
+                    context.handle.close()
+                }
+
+                val stringTable = StringTable()
+                lateinit var rootView: ViewNode
+                lateinit var rootOffset: IntArray
+                run {
+                    // Get layout info on the view thread, to avoid races
+                    val future = CompletableFuture<Unit>()
+                    root.post {
+                        rootView = root.toNode(stringTable)
+                        rootOffset = IntArray(2)
+                        root.getLocationInSurface(rootOffset)
+
+                        future.complete(Unit)
+                    }
+                    future.get()
+                }
+
+                // Check roots before sending a layout event, as this may send out a roots event.
+                // We always want layout events to follow up-to-date root events.
+                checkRoots(continuous)
+
+                connection.sendEvent {
+                    layoutEvent = LayoutEvent.newBuilder().apply {
+                        addAllStrings(stringTable.toStringEntries())
+                        this.rootView = rootView
+                        this.rootOffset = Point.newBuilder().apply {
+                            x = rootOffset[0]
+                            y = rootOffset[1]
+                        }.build()
+                        this.screenshot = Screenshot.newBuilder().apply {
+                            type = Screenshot.Type.SKP
+                            bytes = screenshot
+                        }.build()
+                        generation = context.generation
+                    }.build()
+                }
+
+                context.generation++
+            }
+        }
+
+        // Starting rendering captures must be called on the View thread or else it throws
+        root.post {
+            // Sometimes the window has become detached before we get in here,
+            // so check one more time before trying to start capture.
+            if (!root.isAttachedToWindow) return@post
+
+            try {
+                synchronized(contextMapLock) {
+                    val handle =
+                        SkiaQWorkaround.startRenderingCommandsCapture(
+                            root,
+                            captureExecutor
+                        ) { os }
+                    if (handle != null) {
+                        contextMap[root.uniqueDrawingId] =
+                            CaptureContext(handle, isLastCapture = (!continuous))
+                    }
+                }
+                root.invalidate() // Force a re-render so we send the current screen
+            }
+            catch (t: Throwable) {
+                connection.sendEvent {
+                    errorEvent = ErrorEvent.newBuilder().apply {
+                        message = t.stackTraceToString()
+                    }.build()
+                }
+            }
         }
     }
 
@@ -105,85 +255,7 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
 
         forceStopAllCaptures()
         for (root in getRootViews()) {
-            val os = ByteArrayOutputStream()
-            // We might get multiple callbacks for the same view while still processing an earlier
-            // one. Let's avoid processing these in parallel to avoid confusion.
-            val sequentialExecutor = Executors.newSingleThreadExecutor { r -> ThreadUtils.newThread(r) }
-
-            val captureExecutor = Executor { command ->
-                sequentialExecutor.execute {
-                    var context: CaptureContext
-                    synchronized(contextMapLock) {
-                        // We might get some lingering captures even though we already finished
-                        // listening earlier (this would be indicated by no context). Just abort
-                        // early in that case.
-                        context = contextMap[root.uniqueDrawingId] ?: return@execute
-                        if (context.isLastCapture) {
-                            contextMap.remove(root.uniqueDrawingId)
-                        }
-                    }
-
-                    command.run() // Triggers image fetch into `os`
-                    val screenshot = ByteString.copyFrom(os.toByteArray())
-                    os.reset() // Clear stream, ready for next frame
-
-                    if (context.isLastCapture) {
-                        context.handle.close()
-                    }
-
-                    val stringTable = StringTable()
-                    lateinit var rootView: ViewNode
-                    run {
-                        // Get layout info on the view thread, to avoid races
-                        val future = CompletableFuture<Unit>()
-                        root.post {
-                            rootView = root.toNode(stringTable)
-                            future.complete(Unit)
-                        }
-                        future.get()
-                    }
-
-                    connection.sendEvent {
-                        layoutEvent = LayoutEvent.newBuilder().apply {
-                            addAllStrings(stringTable.toStringEntries())
-                            this.rootView = rootView
-                            this.screenshot = Screenshot.newBuilder().apply {
-                                type = Screenshot.Type.SKP
-                                bytes = screenshot
-                            }.build()
-                        }.build()
-                    }
-                }
-            }
-
-            // Starting rendering captures must be called on the View thread or else it throws
-            root.post {
-                // Sometimes the window has become detached before we get in here,
-                // so check one more time before trying to start capture.
-                if (!root.isAttachedToWindow) return@post
-
-                try {
-                    synchronized(contextMapLock) {
-                        val handle =
-                            SkiaQWorkaround.startRenderingCommandsCapture(
-                                root,
-                                captureExecutor
-                            ) { os }
-                        if (handle != null) {
-                            contextMap[root.uniqueDrawingId] =
-                                CaptureContext(handle, isLastCapture = (!startFetchCommand.continuous))
-                        }
-                    }
-                    root.invalidate() // Force a re-render so we send the current screen
-                }
-                catch (t: Throwable) {
-                    connection.sendEvent {
-                        errorEvent = ErrorEvent.newBuilder().apply {
-                            message = t.stackTraceToString()
-                        }.build()
-                    }
-                }
-            }
+            startCapturing(root, startFetchCommand.continuous)
         }
     }
 

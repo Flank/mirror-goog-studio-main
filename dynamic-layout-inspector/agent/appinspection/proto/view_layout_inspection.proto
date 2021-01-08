@@ -29,6 +29,11 @@ message StringEntry {
     string str = 2;
 }
 
+message Point {
+    int32 x = 1;
+    int32 y = 2;
+}
+
 message Rect {
     int32 x = 1;
     int32 y = 2;
@@ -63,10 +68,16 @@ message ViewNode {
     int64 id = 1;
     repeated ViewNode children = 2;
 
-    int32 package_name = 3;
-    int32 class_name = 4;
+    // Resource reference associated with the view itself inside a layout
+    Resource resource = 3;
+    int32 package_name = 4;
+    int32 class_name = 5;
 
-    Bounds bounds = 5;
+    Bounds bounds = 6;
+
+    // Resource reference associated with view's layout
+    Resource layout_resource = 7;
+    int32 layout_flags = 8;
 
     // Type-specific node properties
     int32 text_value = 101; // For TextView, etc.
@@ -80,6 +91,18 @@ message Screenshot {
     }
     Type type = 1;
     bytes bytes = 2;
+}
+
+// In Android, a resource id is a simple integer. This class holds the namespace, type, and name
+// of such a resource id.
+// For example, with "@android:id/textView":
+//   type: id
+//   namespace: android
+//   name: textView
+message Resource {
+    int32 type = 1;
+    int32 namespace = 2;
+    int32 name = 3;
 }
 
 // ======= COMMANDS, RESPONSES, AND EVENTS =======
@@ -102,7 +125,18 @@ message LayoutEvent {
     // A collection of all text referenced by other fields in this message
     repeated StringEntry strings = 1;
     ViewNode root_view = 2;
-    Screenshot screenshot = 3;
+    // The offset of the root view from the origin of the surface. Will always be 0,0 for
+    // the main window, but can be positive for floating windows (e.g. dialogs).
+    Point root_offset = 3;
+    Screenshot screenshot = 4;
+    // A monotonically increasing number, which can be used by the client to ignore stale events.
+    int32 generation = 5;
+}
+
+// An event fired whenever a new root is added or an old root is removed.
+// Host is guaranteed to receive this at least once before the first |LayoutEvent|
+message WindowRootsEvent {
+    repeated int64 ids = 1;
 }
 
 // An event for reporting an error message, particularly for crashes that happen off the inspector
@@ -129,6 +163,7 @@ message Response {
 message Event {
     oneof specialized {
         ErrorEvent error_event = 1;
-        LayoutEvent layout_event = 2;
+        WindowRootsEvent roots_event = 2;
+        LayoutEvent layout_event = 3;
     }
 }
