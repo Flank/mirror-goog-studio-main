@@ -90,7 +90,12 @@ public class TestApplicationTaskManager
                                 APK);
 
         TestApplicationTestData testData =
-                new TestApplicationTestData(testVariantProperties, testingApk, testedApks);
+                new TestApplicationTestData(
+                        project.getProviders(),
+                        testVariantProperties,
+                        testVariantProperties,
+                        testingApk,
+                        testedApks);
 
         configureTestData(testVariantProperties, testData);
 
