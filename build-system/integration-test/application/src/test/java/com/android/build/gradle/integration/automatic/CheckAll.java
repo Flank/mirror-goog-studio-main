@@ -156,6 +156,7 @@ public class CheckAll {
                     "lintCustomRules", // contains integ test for lint itself
                     "lintCustomLocalAndPublishRules", // contains integ test for lint itself
                     "simpleCompositeBuild", // broken composite build project.
-                    "multiCompositeBuild" // too complex composite build project to setup
+                    "multiCompositeBuild", // too complex composite build project to setup
+                    "sourceDependency" // not set up fully, just used for sync tests
                     );
 }

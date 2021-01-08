@@ -176,6 +176,7 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/simpleCompositeBuild",
     "//tools/base/build-system/integration-test:test-projects/simpleManifestMergingTask",
     "//tools/base/build-system/integration-test:test-projects/simpleMicroApp",
+    "//tools/base/build-system/integration-test:test-projects/sourceDependency",
     "//tools/base/build-system/integration-test:test-projects/splitAwareSeparateTestModule",
     "//tools/base/build-system/integration-test:test-projects/testDependency",
     "//tools/base/build-system/integration-test:test-projects/testWithDep",
