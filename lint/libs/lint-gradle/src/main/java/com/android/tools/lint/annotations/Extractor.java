@@ -174,6 +174,9 @@ public class Extractor {
      */
     private final boolean includeClassRetentionAnnotations;
 
+    /** Whether the tool should fail on class-retention typedef annotations */
+    private final boolean strictTypedefRetention;
+
     /**
      * Whether we should skip nullable annotations in merged in annotations zip files (these are
      * typically from infer nullity, which sometimes is a bit aggressive in assuming something
@@ -305,12 +308,14 @@ public class Extractor {
             @Nullable Collection<File> classDir,
             boolean displayInfo,
             boolean includeClassRetentionAnnotations,
+            boolean strictTypedefRetention,
             boolean sortAnnotations) {
         this.apiFilter = apiFilter;
         this.listIgnored = apiFilter != null;
         this.classDir = classDir;
         this.displayInfo = displayInfo;
         this.includeClassRetentionAnnotations = includeClassRetentionAnnotations;
+        this.strictTypedefRetention = strictTypedefRetention;
         this.sortAnnotations = sortAnnotations;
     }
 
@@ -2857,8 +2862,7 @@ public class Extractor {
                                     aClass.getQualifiedName()
                                             + ": The typedef annotation should have "
                                             + "@Retention(RetentionPolicy.SOURCE)";
-                            if (VALUE_TRUE.equals(
-                                    System.getProperty("android.typedef.enforce-retention"))) {
+                            if (strictTypedefRetention) {
                                 throw new ReflectiveLintRunner.ExtractErrorException(message);
                             } else {
                                 Extractor.warning(message);

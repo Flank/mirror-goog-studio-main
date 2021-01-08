@@ -47,33 +47,6 @@ class ReflectiveLintRunner {
         }
     }
 
-    fun extractAnnotations(
-        classLoaderProvider: LintClassLoaderProvider,
-        request: ExtractAnnotationRequest,
-        lintClassPath: Set<File>
-    ) {
-        try {
-            val loader = classLoaderProvider.getClassLoader(lintClassPath)
-            val cls = loader.loadClass("com.android.tools.lint.gradle.LintExtractAnnotations")
-            val driver = cls.newInstance()
-            val analyzeMethod = driver.javaClass.getDeclaredMethod(
-                "extractAnnotations",
-                ExtractAnnotationRequest::class.java
-            )
-            analyzeMethod.invoke(driver, request)
-        } catch (e: ExtractErrorException) {
-            throw GradleException(e.message)
-        } catch (e: InvocationTargetException) {
-            if (e.targetException is GradleException) {
-                // Build error from lint -- pass it on
-                throw e.targetException
-            }
-            throw wrapExceptionAsString(e)
-        } catch (t: Throwable) {
-            throw wrapExceptionAsString(t)
-        }
-    }
-
     private fun wrapExceptionAsString(t: Throwable) = RuntimeException(
         "Lint infrastructure error\nCaused by: ${Throwables.getStackTraceAsString(t)}\n"
     )

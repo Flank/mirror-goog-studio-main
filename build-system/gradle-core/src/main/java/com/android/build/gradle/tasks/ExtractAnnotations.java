@@ -29,16 +29,14 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
+import com.android.build.gradle.internal.lint.LintTool;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.services.BuildServicesKt;
-import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
+import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.packaging.TypedefRemover;
-import com.android.tools.lint.gradle.api.ExtractAnnotationRequest;
-import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -46,8 +44,11 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -55,17 +56,21 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.EmptyFileVisitor;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.file.RelativePath;
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
@@ -102,20 +107,13 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
     private ArtifactCollection libraries;
 
-    @Nullable FileCollection lintClassPath;
-
     private final List<Object> sources = new ArrayList<>();
     private FileTree sourcesFileTree;
 
     private FileCollection classpath;
 
-    /** Lint classpath */
-    @InputFiles
-    @Nullable
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getLintClassPath() {
-        return lintClassPath;
-    }
+    @Nested
+    public abstract LintTool getLintTool();
 
     @NonNull
     @PathSensitive(PathSensitivity.NAME_ONLY)
@@ -189,8 +187,8 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         this.classDir = classDir;
     }
 
-    @Internal
-    public abstract Property<LintClassLoaderBuildService> getLintClassLoader();
+    @Input
+    public abstract Property<String> getStrictTypedefRetention();
 
     @Override
     protected void doTaskAction() {
@@ -212,21 +210,42 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
         }
         classpathRoots.addAll(getBootClasspath().getFiles());
 
-        ExtractAnnotationRequest request =
-                new ExtractAnnotationRequest(
-                        getTypedefFile().get().getAsFile(),
-                        getLogger(),
-                        getClassDir(),
-                        getOutput().get().getAsFile(),
-                        sourceFiles,
-                        fileVisitor.getSourceRoots(),
-                        classpathRoots);
-        FileCollection lintClassPath = getLintClassPath();
-        if (lintClassPath != null) {
-            new ReflectiveLintRunner()
-                    .extractAnnotations(
-                            getLintClassLoader().get(), request, lintClassPath.getFiles());
+        List<String> args = new ArrayList<>();
+        addArgument(args, "--typedef-file", getTypedefFile());
+        addArgument(args, "--class-dir", getClassDir().getFiles());
+        addArgument(args, "--output", getOutput());
+        addArgument(args, "--sources", sourceFiles);
+        addArgument(args, "--source-roots", fileVisitor.sourceRoots);
+        addArgument(args, "--classpath", classpathRoots);
+        if (!Logging.getLogger(this.getClass()).isEnabled(LogLevel.INFO)) {
+            args.add("--quiet");
         }
+        if (getStrictTypedefRetention().get().equalsIgnoreCase("true")) {
+            args.add("--strict-typedef-retention");
+        }
+        args.add("--skip-class-retention");
+        args.add("--no-sort");
+        getLintTool()
+                .submit(
+                        getWorkerExecutor(),
+                        "com.android.tools.lint.annotations.ExtractAnnotationsDriver",
+                        args);
+    }
+
+    private void addArgument(
+            List<String> args, String name, Provider<? extends FileSystemLocation> file) {
+        addArgument(args, name, Collections.singleton(file.get().getAsFile()));
+    }
+
+    private void addArgument(List<String> args, String name, Collection<File> files) {
+        if (files.isEmpty()) {
+            return;
+        }
+        args.add(name);
+        args.add(
+                files.stream()
+                        .map(File::getAbsolutePath)
+                        .collect(Collectors.joining(File.pathSeparator)));
     }
 
     private static void writeEmptyTypeDefFile(@Nullable File file) {
@@ -350,6 +369,14 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
             task.setGroup(BasePlugin.BUILD_GROUP);
 
             task.setClassDir(creationConfig.getArtifacts().getAllClasses());
+            Provider<String> strictTypedefRetention =
+                    creationConfig
+                            .getServices()
+                            .getGradleEnvironmentProvider()
+                            .getSystemProperty("android.typedef.enforce-retention")
+                            .orElse("false");
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getStrictTypedefRetention(), strictTypedefRetention);
 
             task.source(creationConfig.getJavaSources());
             task.setEncoding(
@@ -374,20 +401,14 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             .getServices()
                             .fileCollection(globalScope.getFilteredBootClasspath()));
 
-            task.lintClassPath =
-                    globalScope
-                            .getProject()
-                            .getConfigurations()
-                            .getByName(LintBaseTask.LINT_CLASS_PATH);
+            task.getLintTool()
+                    .initialize(
+                            globalScope.getProject(),
+                            creationConfig.getServices().getProjectOptions());
             task.sourcesFileTree =
                     task.getProject()
                             .files((Callable<List<Object>>) () -> task.sources)
                             .getAsFileTree();
-            task.getLintClassLoader()
-                    .set(
-                            BuildServicesKt.getBuildService(
-                                    creationConfig.getServices().getBuildServiceRegistry(),
-                                    LintClassLoaderBuildService.class));
         }
     }
 

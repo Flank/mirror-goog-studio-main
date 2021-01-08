@@ -19,11 +19,10 @@ package com.android.tools.lint.annotations;
 import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.android.tools.lint.checks.infrastructure.LintDetectorTest.base64gzip;
 import static com.android.utils.SdkUtils.fileToUrlString;
+import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.pathSeparator;
 import static java.io.File.pathSeparatorChar;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
@@ -37,10 +36,13 @@ import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.Rule;
@@ -77,7 +79,7 @@ public class ExtractAnnotationsDriverTest {
         String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
-        new ExtractAnnotationsDriver().run(args);
+        assertEquals(0, new ExtractAnnotationsDriver().run(args));
         assertEquals(
                 ""
                         + "-keep class test.pkg.KeepTest {\n"
@@ -135,7 +137,7 @@ public class ExtractAnnotationsDriverTest {
         String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
-        new ExtractAnnotationsDriver().run(args);
+        assertEquals(0, new ExtractAnnotationsDriver().run(args));
 
         // Check extracted annotations
         checkPackageXml(
@@ -241,7 +243,68 @@ public class ExtractAnnotationsDriverTest {
         String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
-        new ExtractAnnotationsDriver().run(args);
+        assertEquals(0, new ExtractAnnotationsDriver().run(args));
+
+        // Check external annotations
+        checkPackageXml(
+                "test.pkg",
+                output,
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                        + "<root>\n"
+                        + "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n"
+                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
+                        + "      <val name=\"flag\" val=\"true\" />\n"
+                        + "    </annotation>\n"
+                        + "  </item>\n"
+                        + "  <item name=\"test.pkg.IntDefTest void setStyle(int, int) 0\">\n"
+                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n"
+                        + "    </annotation>\n"
+                        + "    <annotation name=\"android.support.annotation.IntRange\">\n"
+                        + "      <val name=\"from\" val=\"20\" />\n"
+                        + "    </annotation>\n"
+                        + "  </item>\n"
+                        + "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n"
+                        + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                        + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
+                        + "      <val name=\"flag\" val=\"true\" />\n"
+                        + "    </annotation>\n"
+                        + "  </item>\n"
+                        + "</root>\n\n");
+
+        PathUtils.deleteRecursivelyIfExists(project.toPath());
+    }
+
+    @Test
+    public void testWithExplicitSourceRoots() throws Exception {
+        Path androidJar = TestUtils.resolvePlatformPath("android.jar");
+
+        File project =
+                createProject(intDefTest, permissionsTest, manifest, SUPPORT_ANNOTATIONS_JAR);
+        File supportLib = new File(project, SUPPORT_JAR_PATH);
+
+        File output = temporaryFolder.newFile("annotations.zip");
+        File proguard = temporaryFolder.newFile("proguard.cfg");
+
+        String[] args =
+                new String[] {
+                    "--sources",
+                    new File(project, "src/test/pkg/IntDefTest.java").getPath(),
+                    "--source-roots",
+                    new File(project, "src").getPath(),
+                    "--classpath",
+                    androidJar + pathSeparator + supportLib,
+                    "--quiet",
+                    "--skip-class-retention",
+                    "--output",
+                    output.getPath(),
+                    "--proguard",
+                    proguard.getPath()
+                };
+
+        assertEquals(0, new ExtractAnnotationsDriver().run(args));
 
         // Check external annotations
         checkPackageXml(
@@ -311,7 +374,7 @@ public class ExtractAnnotationsDriverTest {
         String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
-        new ExtractAnnotationsDriver().run(args);
+        assertEquals(0, new ExtractAnnotationsDriver().run(args));
 
         // Check external annotations
         checkPackageXml(
@@ -373,7 +436,7 @@ public class ExtractAnnotationsDriverTest {
         String[] args = list.toArray(new String[0]);
         assertNotNull(args);
 
-        new ExtractAnnotationsDriver().run(args);
+        assertEquals(0, new ExtractAnnotationsDriver().run(args));
 
         // Check external annotations
         assertEquals(
@@ -381,6 +444,23 @@ public class ExtractAnnotationsDriverTest {
                 Files.toString(typedefFile, Charsets.UTF_8));
 
         PathUtils.deleteRecursivelyIfExists(project.toPath());
+    }
+
+    @Test
+    public void testHelp() throws Exception {
+
+        String[] args = new String[] {"--help"};
+
+        PrintStream systemOut = System.out;
+        String output;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            System.setOut(new PrintStream(baos, true, StandardCharsets.UTF_8.name()));
+            assertNotEquals(0, new ExtractAnnotationsDriver().run(args));
+            output = baos.toString(StandardCharsets.UTF_8.name());
+        } finally {
+            System.setOut(systemOut);
+        }
+        assertThat(output).contains("--source-roots <paths>");
     }
 
     private File createProject(@NonNull TestFile... files) throws IOException {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import static java.io.File.pathSeparatorChar;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.UastEnvironment;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.SdkUtils;
@@ -52,14 +53,18 @@ import kotlin.text.Charsets;
  * annotations into android.support.annotations.
  */
 public class ExtractAnnotationsDriver {
+
     public static void main(String[] args) throws IOException {
-        new ExtractAnnotationsDriver().run(args);
+        int status = new ExtractAnnotationsDriver().run(args);
+        if (status != 0) {
+            System.exit(status);
+        }
     }
 
     private static void usage(PrintStream output) {
         output.println("Usage: " + ExtractAnnotationsDriver.class.getSimpleName() + " <flags>");
         output.println(
-                " --sources <paths>       : Source directories to extract annotations from. ");
+                " --sources <paths>       : Source directories or files to extract annotations from. ");
         output.println(
                 "                           Separate paths with "
                         + pathSeparator
@@ -90,11 +95,18 @@ public class ExtractAnnotationsDriver {
                 "--skip-class-retention   : Don't extract annotations that have class retention");
         output.println(
                 "--typedef-file <path>    : Write a packaging recipe description to the given file");
-        System.exit(-1);
+        output.println(
+                "--source-roots <paths>   : Source directories to find classes."
+                        + "                           If not specified the roots are derived from the sources above");
+        output.println(
+                "--no-sort                : Do not sort the output alphabetically, output the "
+                        + "                           extracted annotations in the order they are visited");
+        output.println(
+                "--strict-typedef-retention : Fail if encountering a typedef with incorrect retention");
     }
 
     @SuppressWarnings("MethodMayBeStatic")
-    public void run(@NonNull String[] args) throws IOException {
+    public int run(@NonNull String[] args) throws IOException {
         List<File> classpath = Lists.newArrayList();
         List<File> sources = Lists.newArrayList();
         List<File> mergePaths = Lists.newArrayList();
@@ -105,15 +117,20 @@ public class ExtractAnnotationsDriver {
         boolean allowErrors = false;
         boolean listFiltered = true;
         boolean skipClassRetention = false;
+        boolean strictTypedefRetention = false;
+        boolean sortAnnotations = true;
+        List<File> sourceRoots = null;
 
         File output = null;
         File proguard = null;
         File typedefFile = null;
         if (args.length == 1 && "--help".equals(args[0])) {
             usage(System.out);
+            return -1;
         }
         if (args.length < 2) {
             usage(System.err);
+            return -1;
         }
         for (int i = 0, n = args.length; i < n; i++) {
             String flag = args[i];
@@ -134,6 +151,12 @@ public class ExtractAnnotationsDriver {
                 case "--skip-class-retention":
                     skipClassRetention = true;
                     continue;
+                case "--no-sort":
+                    sortAnnotations = false;
+                    continue;
+                case "--strict-typedef-retention":
+                    strictTypedefRetention = true;
+                    continue;
             }
             if (i == n - 1) {
                 usage(System.err);
@@ -144,41 +167,56 @@ public class ExtractAnnotationsDriver {
             switch (flag) {
                 case "--sources":
                     sources = getFiles(value);
+                    if (sources == null) {
+                        return -1;
+                    }
                     break;
                 case "--classpath":
                     classpath = getFiles(value);
+                    if (classpath == null) {
+                        return -1;
+                    }
                     break;
                 case "--merge-zips":
                     mergePaths = getFiles(value);
+                    if (mergePaths == null) {
+                        return -1;
+                    }
                     break;
 
                 case "--output":
                     output = new File(value);
                     if (output.exists()) {
                         if (output.isDirectory()) {
-                            abort(output + " is a directory");
+                            System.err.println(output + " is a directory");
+                            return -1;
                         }
                         boolean deleted = output.delete();
                         if (!deleted) {
-                            abort("Could not delete previous version of " + output);
+                            System.err.println("Could not delete previous version of " + output);
+                            return -1;
                         }
                     } else if (output.getParentFile() != null && !output.getParentFile().exists()) {
-                        abort(output.getParentFile() + " does not exist");
+                        System.err.println(output.getParentFile() + " does not exist");
+                        return -1;
                     }
                     break;
                 case "--proguard":
                     proguard = new File(value);
                     if (proguard.exists()) {
                         if (proguard.isDirectory()) {
-                            abort(proguard + " is a directory");
+                            System.err.println(proguard + " is a directory");
+                            return -1;
                         }
                         boolean deleted = proguard.delete();
                         if (!deleted) {
-                            abort("Could not delete previous version of " + proguard);
+                            System.err.println("Could not delete previous version of " + proguard);
+                            return -1;
                         }
                     } else if (proguard.getParentFile() != null
                             && !proguard.getParentFile().exists()) {
-                        abort(proguard.getParentFile() + " does not exist");
+                        System.err.println(proguard.getParentFile() + " does not exist");
+                        return -1;
                     }
                     break;
                 case "--typedef-file":
@@ -192,7 +230,8 @@ public class ExtractAnnotationsDriver {
                         File apiFilter = new File(path);
                         if (!apiFilter.isFile()) {
                             String message = apiFilter + " does not exist or is not a file";
-                            abort(message);
+                            System.err.println(message);
+                            return -1;
                         }
                         apiFilters.add(apiFilter);
                     }
@@ -200,12 +239,19 @@ public class ExtractAnnotationsDriver {
                 case "--rmtypedefs":
                     File classDir = new File(value);
                     if (!classDir.isDirectory()) {
-                        abort(classDir + " is not a directory");
+                        System.err.println(classDir + " is not a directory");
+                        return -1;
                     }
                     if (rmTypeDefs == null) {
                         rmTypeDefs = new ArrayList<>();
                     }
                     rmTypeDefs.add(classDir);
+                    break;
+                case "--source-roots":
+                    sourceRoots = getFiles(value);
+                    if (sourceRoots == null) {
+                        return -1;
+                    }
                     break;
                 default:
                     System.err.println(
@@ -215,13 +261,18 @@ public class ExtractAnnotationsDriver {
         }
 
         if (sources.isEmpty()) {
-            abort("Must specify at least one source path");
+            System.err.println("Must specify at least one source path");
+            return -1;
         }
         if (classpath.isEmpty()) {
-            abort("Must specify classpath pointing to at least android.jar or the framework");
+            System.err.println(
+                    "Must specify classpath pointing to at least android.jar or the framework");
+            return -1;
         }
         if (output == null && proguard == null) {
-            abort("Must specify output path with --output or a proguard path with --proguard");
+            System.err.println(
+                    "Must specify output path with --output or a proguard path with --proguard");
+            return -1;
         }
 
         // API definition files
@@ -234,18 +285,35 @@ public class ExtractAnnotationsDriver {
                 }
                 database = new ApiDatabase(lines);
             } catch (IOException e) {
-                abort("Could not open API database " + apiFilters + ": " + e.getLocalizedMessage());
+                System.err.println(
+                        "Could not open API database "
+                                + apiFilters
+                                + ": "
+                                + e.getLocalizedMessage());
+                return -1;
             }
         }
 
         Extractor extractor =
-                new Extractor(database, rmTypeDefs, verbose, !skipClassRetention, true);
+                new Extractor(
+                        database,
+                        rmTypeDefs,
+                        verbose,
+                        !skipClassRetention,
+                        strictTypedefRetention,
+                        sortAnnotations);
         extractor.setListIgnored(listFiltered);
 
-        LintClient.setClientName(LintClient.CLIENT_UNIT_TESTS);
+        LintClient.setClientName(LintClient.CLIENT_CLI);
 
         UastEnvironment.Configuration config = UastEnvironment.Configuration.create();
-        config.addSourceRoots(findSourceRoots(sources));
+        if (sourceRoots == null) {
+            sourceRoots = findSourceRoots(sources);
+            if (sourceRoots == null) {
+                return -1;
+            }
+        }
+        config.addSourceRoots(sourceRoots);
         config.addClasspathRoots(classpath);
 
         UastEnvironment env = UastEnvironment.create(config);
@@ -286,12 +354,12 @@ public class ExtractAnnotationsDriver {
 
         env.dispose();
         UastEnvironment.disposeApplicationEnvironment();
+        return 0;
     }
 
     private static final String SEP_JAVA_SEP = File.separator + "java" + File.separator;
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
 
-    @NonNull
     private static List<File> findSourceRoots(@NonNull List<File> sources) {
         List<File> roots = Lists.newArrayList();
         for (File sourceFile : sources) {
@@ -321,7 +389,8 @@ public class ExtractAnnotationsDriver {
                 Matcher matcher = PACKAGE_PATTERN.matcher(source);
                 boolean foundPackage = matcher.find();
                 if (!foundPackage) {
-                    abort("Couldn't find package declaration in " + sourceFile);
+                    System.err.println("Couldn't find package declaration in " + sourceFile);
+                    return null;
                 }
                 String pkg = matcher.group(1).trim();
                 int end = path.lastIndexOf(File.separatorChar);
@@ -334,27 +403,25 @@ public class ExtractAnnotationsDriver {
                             roots.add(root);
                         }
                     } else {
-                        abort(
+                        System.err.println(
                                 "File found in a folder that doesn't appear to match the package "
                                         + "declaration: package="
                                         + pkg
                                         + " and file path="
                                         + path);
+                        return null;
                     }
                 }
             } catch (Exception e) {
-                abort("Couldn't access " + sourceFile);
+                System.err.println("Couldn't access " + sourceFile);
+                return null;
             }
         }
 
         return roots;
     }
 
-    private static void abort(@NonNull String message) {
-        System.err.println(message);
-        System.exit(-1);
-    }
-
+    @Nullable
     private static List<File> getFiles(String value) {
         List<File> files = Lists.newArrayList();
         Splitter splitter = Splitter.on(pathSeparatorChar).omitEmptyStrings().trimResults();
@@ -363,7 +430,8 @@ public class ExtractAnnotationsDriver {
                 // Special syntax for providing files in a list
                 File sourcePath = new File(path.substring(1));
                 if (!sourcePath.exists()) {
-                    abort(sourcePath + " does not exist");
+                    System.err.println(sourcePath + " does not exist");
+                    return null;
                 }
                 try {
                     for (String line : FilesKt.readLines(sourcePath, Charsets.UTF_8)) {
@@ -392,12 +460,13 @@ public class ExtractAnnotationsDriver {
                     continue;
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.exit(-1);
+                    return null;
                 }
             }
             File file = new File(path);
             if (!file.exists()) {
-                abort(file + " does not exist");
+                System.err.println(file + " does not exist");
+                return null;
             }
             files.add(file);
         }

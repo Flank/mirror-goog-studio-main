@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.model.AndroidProject
 import com.android.tools.lint.model.LintModelSerialization
@@ -71,9 +70,8 @@ import javax.inject.Inject
 /** Task to invoke lint in a process isolated worker passing in the new lint models. */
 abstract class AndroidLintTask : NonIncrementalTask() {
 
-    /** Lint itself */
-    @get:Classpath
-    abstract val lintClasspath: ConfigurableFileCollection
+    @get:Nested
+    abstract val lintTool: LintTool
 
     @get:OutputDirectory
     abstract val lintModelDirectory: DirectoryProperty
@@ -168,17 +166,13 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     @get:Input
     abstract val printStackTrace: Property<Boolean>
 
-    @get:Input
-    abstract val runInProcess: Property<Boolean>
-
     override fun doTaskAction() {
         writeLintModelFile()
         workerExecutor.noIsolation().submit(AndroidLintLauncherWorkAction::class.java) { parameters ->
             parameters.arguments.set(generateCommandLineArguments())
-            parameters.classpath.from(lintClasspath)
+            parameters.lintTool.set(lintTool)
             parameters.android.set(android)
             parameters.fatalOnly.set(fatalOnly)
-            parameters.runInProcess.set(runInProcess)
             parameters.lintFixBuildService.set(lintFixBuildService)
         }
     }
@@ -190,11 +184,11 @@ abstract class AndroidLintTask : NonIncrementalTask() {
      */
     abstract class AndroidLintLauncherWorkAction: WorkAction<AndroidLintLauncherWorkAction.LauncherParameters> {
         abstract class LauncherParameters: WorkParameters {
+            @get:Nested
+            abstract val lintTool: Property<LintTool>
             abstract val arguments: ListProperty<String>
-            abstract val classpath: ConfigurableFileCollection
             abstract val android: Property<Boolean>
             abstract val fatalOnly: Property<Boolean>
-            abstract val runInProcess: Property<Boolean>
             // Build service to prevent multiple lint fix runs from happening concurrently.
             abstract val lintFixBuildService: Property<LintFixBuildService>
         }
@@ -204,25 +198,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
         override fun execute() {
             val lintFixBuildService: LintFixBuildService? = parameters.lintFixBuildService.orNull
-            // Respect the android.experimental.runLintInProcess flag (useful for debugging)
-            val workQueue = if (parameters.runInProcess.get()) {
-                workerExecutor.noIsolation()
-            } else {
-                workerExecutor.processIsolation {
-                    it.classpath.from(parameters.classpath)
-                }
-            }
-            workQueue.submit(AndroidLintWorkAction::class.java) { isolatedParameters ->
-                isolatedParameters.arguments.set(parameters.arguments.get())
-                isolatedParameters.classpath.from(parameters.classpath)
-                isolatedParameters.android.set(parameters.android)
-                isolatedParameters.fatalOnly.set(parameters.fatalOnly)
-                isolatedParameters.cacheClassLoader.set(!parameters.runInProcess.get())
-            }
-            // Allow only one lintFix to execute at a time.
-            if (lintFixBuildService != null) {
-                workQueue.await()
-            }
+            parameters.lintTool.get().submit(
+                mainClass = "com.android.tools.lint.Main",
+                workerExecutor = workerExecutor,
+                arguments = parameters.arguments.get(),
+                android = parameters.android.get(),
+                fatalOnly = parameters.fatalOnly.get(),
+                await = lintFixBuildService != null // Allow only one lintFix to execute at a time.
+            )
         }
     }
 
@@ -434,9 +417,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.lintRulesJar.disallowChanges()
             task.fatalOnly.setDisallowChanges(fatalOnly)
             task.autoFix.setDisallowChanges(autoFix)
-            task.runInProcess.setDisallowChanges(
-                creationConfig.services.projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
-            if (autoFix) {
+             if (autoFix) {
                 task.lintFixBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
             }
             task.lintFixBuildService.disallowChanges()
@@ -480,12 +461,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.mainDependencyLintModels.disallowChanges()
             task.androidTestDependencyLintModels.disallowChanges()
             task.unitTestDependencyLintModels.disallowChanges()
-            // TODO(b/160392650) Clean this up to use a detached configuration
-            task.lintClasspath.fromDisallowChanges(
-                creationConfig.globalScope.project.configurations.getByName(
-                    "lintClassPath"
-                )
-            )
+            task.lintTool.initialize(creationConfig.globalScope.project, creationConfig.services.projectOptions)
             if (checkDependencies) {
                 task.outputs.upToDateWhen {
                     it.logger.debug("Lint with checkDependencies does not model all of its inputs yet.")
@@ -581,13 +557,12 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.lintFixBuildService.disallowChanges()
         this.checkDependencies.setDisallowChanges(false)
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
-        this.lintClasspath.fromDisallowChanges(project.configurations.getByName("lintClassPath"))
+        this.lintTool.initialize(project, projectOptions)
         this.projectInputs.initializeForStandalone(project, javaPluginConvention, lintOptions)
         // Do not support check dependencies in the standalone lint plugin
         this.variantInputs.initializeForStandalone(project, javaPluginConvention, projectOptions, checkDependencies=false)
         this.lintRulesJar.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(project.layout.buildDirectory.dir("intermediates/android-lint-model"))
-        this.runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
         this.initializeOutputTypesConvention()
         when {
             fatalOnly -> {
