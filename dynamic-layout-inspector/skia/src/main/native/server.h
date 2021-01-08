@@ -54,12 +54,17 @@ class SkiaParserServiceImpl final
     SkiaParserServiceImpl service;
     builder.RegisterService(&service);
     service.server = builder.BuildAndStart();
-    std::thread shutdown_thread([&service]() {
+    bool exit_requested(false);
+    std::thread shutdown_thread([&service, &exit_requested]() {
       service.exit_requested.get_future().wait();
-      service.server->Shutdown(std::chrono::system_clock::now());;
+      exit_requested = true;
+      service.server->Shutdown(std::chrono::system_clock::now());
+      ;
     });
     service.server->Wait();
-    service.exit_requested.set_value();
+    if (!exit_requested) {
+      service.exit_requested.set_value();
+    }
     shutdown_thread.join();
   }
 };
