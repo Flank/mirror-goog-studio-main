@@ -137,6 +137,11 @@ if [[ -d "${DIST_DIR}" ]]; then
     -testlogs "${DIST_DIR}/logs/junit" \
     ${perfgate_arg}
 
+  if [[ $? -ne 0 ]]; then
+    echo "Bazel logs-collector failed!"
+    exit 1
+  fi
+
   if [[ ! $skip_bazel_artifacts ]]; then
     copy_bazel_artifacts "${bin_dir}"
   fi

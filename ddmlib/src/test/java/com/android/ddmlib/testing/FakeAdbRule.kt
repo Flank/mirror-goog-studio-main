@@ -32,9 +32,16 @@ import java.util.concurrent.TimeUnit
  * Rule that sets up and tears down a FakeAdbServer, and provides some convenience methods for interacting with it.
  */
 class FakeAdbRule : ExternalResource() {
+  /**
+   * An [AndroidDebugBridge] that will be initialized unless [initAdbBridgeDuringSetup] is set to false, in which
+   * case trying to access this value will throw an exception.
+   */
+  lateinit var bridge: AndroidDebugBridge
+    private set
+
   private var initAdbBridgeDuringSetup = true
   private var closeFakeAdbServerDuringCleanUp = true
-  private var fakeAdbServer: FakeAdbServer? = null
+  private lateinit var fakeAdbServer: FakeAdbServer
   private val startingDevices: MutableMap<String, CountDownLatch> = mutableMapOf()
   private val hostCommandHandlers: MutableMap<String, () -> HostCommandHandler> = mutableMapOf()
   private val deviceCommandHandlers: MutableList<DeviceCommandHandler> = mutableListOf(
@@ -82,26 +89,26 @@ class FakeAdbRule : ExternalResource() {
                    hostConnectionType: DeviceState.HostConnectionType): DeviceState {
     val startLatch = CountDownLatch(1)
     startingDevices[deviceId] = startLatch
-    val device = fakeAdbServer?.connectDevice(deviceId, manufacturer, model, release, sdk, hostConnectionType)?.get()!!
+    val device = fakeAdbServer.connectDevice(deviceId, manufacturer, model, release, sdk, hostConnectionType).get()
     device.deviceStatus = DeviceState.DeviceStatus.ONLINE
     assertThat(startLatch.await(30, TimeUnit.SECONDS)).isTrue()
     return device
   }
 
   val fakeAdbServerPort: Int
-    get() = fakeAdbServer!!.port
+    get() = fakeAdbServer.port
 
   override fun before() {
     val builder = FakeAdbServer.Builder().installDefaultCommandHandlers()
     hostCommandHandlers.forEach { (command, constructor) -> builder.setHostCommandHandler(command, constructor) }
     deviceCommandHandlers.forEach { builder.addDeviceHandler(it) }
     fakeAdbServer = builder.build()
-    fakeAdbServer?.start()
+    fakeAdbServer.start()
 
     if (initAdbBridgeDuringSetup) {
-      AndroidDebugBridge.enableFakeAdbServerMode(fakeAdbServer!!.port)
+      AndroidDebugBridge.enableFakeAdbServerMode(fakeAdbServer.port)
       AndroidDebugBridge.initIfNeeded(true)
-      val bridge = AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS) ?: error("Could not create ADB bridge")
+      bridge = AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS) ?: error("Could not create ADB bridge")
       val startTime = System.currentTimeMillis()
       while ((!bridge.isConnected || !bridge.hasInitialDeviceList()) &&
              System.currentTimeMillis() - startTime < TimeUnit.SECONDS.toMillis(10)) {
@@ -114,8 +121,8 @@ class FakeAdbRule : ExternalResource() {
     AndroidDebugBridge.terminate()
     AndroidDebugBridge.disableFakeAdbServerMode()
     if (closeFakeAdbServerDuringCleanUp) {
-      fakeAdbServer?.close()
-      if (fakeAdbServer?.awaitServerTermination(30, TimeUnit.SECONDS) == false) {
+      fakeAdbServer.close()
+      if (fakeAdbServer.awaitServerTermination(30, TimeUnit.SECONDS) == false) {
         error("The adbServer didn't terminate in 30 seconds")
       }
     }

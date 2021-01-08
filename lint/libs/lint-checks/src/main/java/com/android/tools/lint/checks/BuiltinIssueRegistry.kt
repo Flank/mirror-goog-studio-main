@@ -74,8 +74,6 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 AppCompatCallDetector.ISSUE,
                 AppCompatCustomViewDetector.ISSUE,
                 AppCompatResourceDetector.ISSUE,
-                AppIndexingApiDetector.ISSUE_APP_INDEXING,
-                AppIndexingApiDetector.ISSUE_APP_INDEXING_API,
                 AppLinksAutoVerifyDetector.ISSUE_ERROR,
                 AppLinksAutoVerifyDetector.ISSUE_WARNING,
                 AppLinksValidDetector.TEST_URL,

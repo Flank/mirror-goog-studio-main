@@ -478,7 +478,6 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testMinSdkVersion() {
-        val expectedNewVersion = LOWEST_ACTIVE_API.toString()
         val expected = (
             "" +
                 "build.gradle:8: Warning: The value of minSdkVersion is too low. It can be incremented without noticeably reducing the number of supported devices. [MinSdkTooLow]\n" +
@@ -505,13 +504,12 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "}\n"
             )
         ).issues(MIN_SDK_TOO_LOW).run().expect(expected).expectFixDiffs(
-            "" +
-                "Fix for build.gradle line 8: Update minSdkVersion to 16:\n" +
-                "@@ -8 +8\n" +
-                "-         minSdkVersion 7\n" +
-                "+         minSdkVersion " +
-                expectedNewVersion +
-                "\n"
+            """
+            Fix for build.gradle line 8: Update minSdkVersion to $LOWEST_ACTIVE_API:
+            @@ -8 +8
+            -         minSdkVersion 7
+            +         minSdkVersion $LOWEST_ACTIVE_API
+            """
         )
     }
 
@@ -2502,10 +2500,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                 @@ -30 +30
                 -     compile("com.android.support.constraint:constraint-layout:1.0.0-alpha8")
                 +     compile("com.android.support.constraint:constraint-layout:1.0.3-alpha8")
-                Fix for build.gradle.kts line 12: Update minSdkVersion to 16:
+                Fix for build.gradle.kts line 12: Update minSdkVersion to $LOWEST_ACTIVE_API:
                 @@ -12 +12
                 -         minSdkVersion(7)
-                +         minSdkVersion(16)
+                +         minSdkVersion($LOWEST_ACTIVE_API)
                 """
             )
     }

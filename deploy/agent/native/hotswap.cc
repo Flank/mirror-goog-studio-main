@@ -48,19 +48,17 @@ jobject HotSwap::GetComposeHotReload() const {
   }
   Log::V("GetComposeHotReload found. Starting JetPack Compose HotReload");
   JniClass reloaderClass(jni_, klass);
-  return reloaderClass.GetStaticField<jobject>(
-      {"Companion", "Landroidx/compose/HotReloader$Companion;"});
+  return reloaderClass.GetStaticObjectField(
+      "Companion", "Landroidx/compose/HotReloader$Companion;");
 }
 
 void HotSwap::SaveStateAndDispose(jobject reloader) const {
   JniObject reloader_jnio(jni_, reloader);
   JniClass activity_thread(jni_, "android/app/ActivityThread");
-  jobject context = activity_thread.CallStaticMethod<jobject>(
-      {"currentApplication", "()Landroid/app/Application;"});
-  jvalue loader_args[1];
-  loader_args[0].l = context;
-  reloader_jnio.CallMethod<void>(
-      {"saveStateAndDispose", "(Ljava/lang/Object;)V"}, loader_args);
+  jobject context = activity_thread.CallStaticObjectMethod(
+      "currentApplication", "()Landroid/app/Application;");
+  reloader_jnio.CallVoidMethod("saveStateAndDispose", "(Ljava/lang/Object;)V",
+                               context);
 
   // TODO Although unlikely, we should fail hard on this.
   if (jni_->ExceptionCheck()) {
@@ -72,12 +70,10 @@ void HotSwap::SaveStateAndDispose(jobject reloader) const {
 void HotSwap::LoadStateAndCompose(jobject reloader) const {
   JniObject reloader_jnio(jni_, reloader);
   JniClass activity_thread(jni_, "android/app/ActivityThread");
-  jobject context = activity_thread.CallStaticMethod<jobject>(
-      {"currentApplication", "()Landroid/app/Application;"});
-  jvalue loader_args[1];
-  loader_args[0].l = context;
-  reloader_jnio.CallMethod<void>(
-      {"loadStateAndCompose", "(Ljava/lang/Object;)V"}, loader_args);
+  jobject context = activity_thread.CallStaticObjectMethod(
+      "currentApplication", "()Landroid/app/Application;");
+  reloader_jnio.CallVoidMethod("loadStateAndCompose", "(Ljava/lang/Object;)V",
+                               context);
 
   // TODO Although unlikely, we should fail hard on this.
   if (jni_->ExceptionCheck()) {
@@ -274,28 +270,21 @@ void HotSwap::DefineNewClasses(const proto::SwapRequest& swap_request) const {
   }
 
   jobject dex_elements =
-      thread_loader
-          .GetField<JniObject>({"pathList", "Ldalvik/system/DexPathList;"})
-          .GetField<jobject>({"dexElements",
-                              "[Ldalvik/system/"
-                              "DexPathList$Element;"});
-  jvalue loader_args[2];
-  loader_args[0].l = dex_bytes_array;
-  loader_args[1].l = dex_elements;
+      thread_loader.GetJniObjectField("pathList", "Ldalvik/system/DexPathList;")
+          .GetObjectField("dexElements",
+                          "[Ldalvik/system/"
+                          "DexPathList$Element;");
 
   jobject new_dex_elements =
       JniClass(jni_, "com/android/tools/deploy/instrument/DexUtility")
-          .CallStaticMethod<jobject>(
-              {"createNewDexElements",
-               "([[B[Ljava/lang/Object;)[Ljava/lang/Object;"},
-              loader_args);
+          .CallStaticObjectMethod("createNewDexElements",
+                                  "([[B[Ljava/lang/Object;)[Ljava/lang/Object;",
+                                  dex_bytes_array, dex_elements);
 
   jni_->DeleteLocalRef(dex_bytes_array);
 
-  thread_loader.GetField<JniObject>({"pathList", "Ldalvik/system/DexPathList;"})
-      .SetField({"dexElements",
-                 "[Ldalvik/system/"
-                 "DexPathList$Element;"},
+  thread_loader.GetJniObjectField("pathList", "Ldalvik/system/DexPathList;")
+      .SetField("dexElements", "[Ldalvik/system/DexPathList$Element;",
                 new_dex_elements);
 
   jni_->DeleteLocalRef(new_dex_elements);

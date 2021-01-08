@@ -1,11 +1,15 @@
 package com.android.build.gradle.internal.lint
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
+import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
@@ -15,8 +19,12 @@ import com.android.build.gradle.tasks.LintGlobalTask
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 /** Factory for the LintModel based lint tasks */
 class LintTaskManager constructor(private val globalScope: GlobalScope, private val taskFactory: TaskFactory) {
@@ -54,12 +62,21 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             return // Don't  create lint tasks in test-only projects
         }
 
-        val variantsWithTests = attachTestsToVariants(variantPropertiesList, testComponentPropertiesList)
+        val variantsWithTests = attachTestsToVariants(
+            variantPropertiesList = variantPropertiesList,
+            testComponentPropertiesList = if (globalScope.extension.lintOptions.isIgnoreTestSources) {
+                listOf()
+            } else {
+                testComponentPropertiesList
+            }
+        )
 
         // Map of task path to the providers for tasks that that task subsumes,
         // and therefore should be disabled if both are in the task graph.
         // e.g. Running `lintRelease` should cause `lintVitalRelease` to be skipped,
         val variantLintTaskToLintVitalTask = mutableMapOf<String, TaskProvider<AndroidLintTask>>()
+
+        val needsCopyReportTask = needsCopyReportTask(globalScope.extension.lintOptions)
 
         for (variantWithTests in variantsWithTests.values) {
             if (variantType.isAar) { // Export lint models to support checkDependencies.
@@ -67,6 +84,14 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             }
             val variantLintTask =
                 taskFactory.register(AndroidLintTask.SingleVariantCreationAction(variantWithTests))
+
+            if (needsCopyReportTask) {
+                val copyLintReportTask =
+                    taskFactory.register(AndroidLintCopyReportTask.CreationAction(variantWithTests.main))
+                variantLintTask.configure {
+                    it.finalizedBy(copyLintReportTask)
+                }
+            }
 
             val mainVariant = variantWithTests.main
             if (mainVariant.variantType.isBaseModule &&
@@ -153,6 +178,17 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         fun computeUseNewLintModel(project: Project, projectOptions: ProjectOptions): Boolean {
             return projectOptions[BooleanOption.USE_NEW_LINT_MODEL] ||
                     (project.gradle.startParameter.isConfigurationCache ?: false)
+        }
+
+        internal fun File?.isLintStdout() = this?.path == "stdout"
+        internal fun File?.isLintStderr() = this?.path == "stdout"
+
+        internal fun needsCopyReportTask(lintOptions: LintOptions) : Boolean {
+            val textOutput = lintOptions.textOutput
+            return (lintOptions.textReport && textOutput != null && !textOutput.isLintStdout() && !textOutput.isLintStderr()) ||
+                    (lintOptions.htmlReport && lintOptions.htmlOutput != null) ||
+                    (lintOptions.xmlReport && lintOptions.xmlOutput != null) ||
+                    (lintOptions.sarifReport && lintOptions.sarifOutput != null)
         }
     }
 }

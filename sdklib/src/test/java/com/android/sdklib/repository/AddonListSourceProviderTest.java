@@ -22,10 +22,13 @@ import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestResources;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import junit.framework.TestCase;
 
@@ -86,12 +89,13 @@ public class AddonListSourceProviderTest extends TestCase {
     public void testLocalSource() throws Exception {
         AndroidLocation.resetFolder();
         MockFileOp fop = new MockFileOp();
-        fop.mkdirs(new File(ANDROID_FOLDER));
+        Path androidFolder = fop.toPath(ANDROID_FOLDER);
+        Files.createDirectories(androidFolder);
         File testFile = TestResources.getFile(getClass(), "/repositories.xml");
-        fop.recordExistingFile(
-                new File(ANDROID_FOLDER, AndroidSdkHandler.LOCAL_ADDONS_FILENAME).getAbsolutePath(),
+        InMemoryFileSystems.recordExistingFile(
+                androidFolder.resolve(AndroidSdkHandler.LOCAL_ADDONS_FILENAME),
                 FileUtils.loadFileWithUnixLineSeparators(testFile));
-        AndroidSdkHandler handler = new AndroidSdkHandler(null, fop.toPath(ANDROID_FOLDER), fop);
+        AndroidSdkHandler handler = new AndroidSdkHandler(null, androidFolder, fop);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         handler.getSdkManager(progress);
         RepositorySourceProvider provider = handler.getUserSourceProvider(progress);

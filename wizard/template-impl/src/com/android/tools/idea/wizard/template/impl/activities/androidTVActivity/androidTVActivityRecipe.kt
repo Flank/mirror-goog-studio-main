@@ -63,7 +63,6 @@ fun RecipeExecutor.androidTVActivityRecipe(
 ) {
   val (projectData, srcOut, resOut, manifestOut) = moduleData
   val appCompatVersion = moduleData.apis.appCompatVersion
-  val useAndroidX = moduleData.projectTemplateData.androidXSupport
   val ktOrJavaExt = projectData.language.extension
   addAllKotlinDependencies(moduleData)
 
@@ -82,28 +81,28 @@ fun RecipeExecutor.androidTVActivityRecipe(
   save(activityDetailsXml(detailsActivityClass, packageName), resOut.resolve("layout/${detailsLayoutName}.xml"))
 
   val mainActivity = when (projectData.language) {
-    Language.Java -> mainActivityJava(activityClass, layoutName, mainFragmentClass, packageName, useAndroidX)
-    Language.Kotlin -> mainActivityKt(activityClass, layoutName, mainFragmentClass, packageName, useAndroidX)
+    Language.Java -> mainActivityJava(activityClass, layoutName, mainFragmentClass, packageName)
+    Language.Kotlin -> mainActivityKt(activityClass, layoutName, mainFragmentClass, packageName)
   }
   save(mainActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
 
   val mainFragment = when (projectData.language) {
-    Language.Java -> mainFragmentJava(detailsActivityClass, mainFragmentClass, moduleData.apis.minApi.api, packageName, useAndroidX)
-    Language.Kotlin -> mainFragmentKt(detailsActivityClass, mainFragmentClass, moduleData.apis.minApi.api, packageName, useAndroidX)
+    Language.Java -> mainFragmentJava(detailsActivityClass, mainFragmentClass, moduleData.apis.minApi.api, packageName)
+    Language.Kotlin -> mainFragmentKt(detailsActivityClass, mainFragmentClass, moduleData.apis.minApi.api, packageName)
   }
   save(mainFragment, srcOut.resolve("${mainFragmentClass}.${ktOrJavaExt}"))
 
   val detailsActivity = when (projectData.language) {
-    Language.Java -> detailsActivityJava(detailsActivityClass, detailsFragmentClass, detailsLayoutName, packageName, useAndroidX)
-    Language.Kotlin -> detailsActivityKt(detailsActivityClass, detailsFragmentClass, detailsLayoutName, packageName, useAndroidX)
+    Language.Java -> detailsActivityJava(detailsActivityClass, detailsFragmentClass, detailsLayoutName, packageName)
+    Language.Kotlin -> detailsActivityKt(detailsActivityClass, detailsFragmentClass, detailsLayoutName, packageName)
   }
   save(detailsActivity, srcOut.resolve("${detailsActivityClass}.${ktOrJavaExt}"))
 
   val videoDetailsFragment = when (projectData.language) {
     Language.Java -> videoDetailsFragmentJava(
-      activityClass, detailsActivityClass, detailsFragmentClass, moduleData.apis.minApi.api, packageName, useAndroidX)
+      activityClass, detailsActivityClass, detailsFragmentClass, moduleData.apis.minApi.api, packageName)
     Language.Kotlin -> videoDetailsFragmentKt(
-      activityClass, detailsActivityClass, detailsFragmentClass, moduleData.apis.minApi.api, packageName, useAndroidX)
+      activityClass, detailsActivityClass, detailsFragmentClass, moduleData.apis.minApi.api, packageName)
   }
   save(videoDetailsFragment, srcOut.resolve("${detailsFragmentClass}.${ktOrJavaExt}"))
 
@@ -120,38 +119,38 @@ fun RecipeExecutor.androidTVActivityRecipe(
   save(movieList, srcOut.resolve("MovieList.${ktOrJavaExt}"))
 
   val cardPresenter = when (projectData.language) {
-    Language.Java -> cardPresenterJava(packageName, useAndroidX)
-    Language.Kotlin -> cardPresenterKt(packageName, useAndroidX)
+    Language.Java -> cardPresenterJava(packageName)
+    Language.Kotlin -> cardPresenterKt(packageName)
   }
   save(cardPresenter, srcOut.resolve("CardPresenter.${ktOrJavaExt}"))
 
   val detailsDescriptionPresenter = when (projectData.language) {
-    Language.Java -> detailsDescriptionPresenterJava(packageName, useAndroidX)
-    Language.Kotlin -> detailsDescriptionPresenterKt(packageName, useAndroidX)
+    Language.Java -> detailsDescriptionPresenterJava(packageName)
+    Language.Kotlin -> detailsDescriptionPresenterKt(packageName)
   }
   save(detailsDescriptionPresenter, srcOut.resolve("DetailsDescriptionPresenter.${ktOrJavaExt}"))
 
   val playbackActivity = when (projectData.language) {
-    Language.Java -> playbackActivityJava(packageName, useAndroidX)
-    Language.Kotlin -> playbackActivityKt(packageName, useAndroidX)
+    Language.Java -> playbackActivityJava(packageName)
+    Language.Kotlin -> playbackActivityKt(packageName)
   }
   save(playbackActivity, srcOut.resolve("PlaybackActivity.${ktOrJavaExt}"))
 
   val playbackVideoFragment = when (projectData.language) {
-    Language.Java -> playbackVideoFragmentJava(moduleData.apis.minApi.api, packageName, useAndroidX)
-    Language.Kotlin -> playbackVideoFragmentKt(moduleData.apis.minApi.api, packageName, useAndroidX)
+    Language.Java -> playbackVideoFragmentJava(moduleData.apis.minApi.api, packageName)
+    Language.Kotlin -> playbackVideoFragmentKt(moduleData.apis.minApi.api, packageName)
   }
   save(playbackVideoFragment, srcOut.resolve("PlaybackVideoFragment.${ktOrJavaExt}"))
 
   val browseErrorActivity = when (projectData.language) {
-    Language.Java -> browseErrorActivityJava(layoutName, packageName, mainFragmentClass, useAndroidX)
-    Language.Kotlin -> browseErrorActivityKt(layoutName, packageName, mainFragmentClass, useAndroidX)
+    Language.Java -> browseErrorActivityJava(layoutName, packageName, mainFragmentClass)
+    Language.Kotlin -> browseErrorActivityKt(layoutName, packageName, mainFragmentClass)
   }
   save(browseErrorActivity, srcOut.resolve("BrowseErrorActivity.${ktOrJavaExt}"))
 
   val errorFragment = when (projectData.language) {
-    Language.Java -> errorFragmentJava(moduleData.apis.minApi.api, packageName, useAndroidX)
-    Language.Kotlin -> errorFragmentKt(moduleData.apis.minApi.api, packageName, useAndroidX)
+    Language.Java -> errorFragmentJava(moduleData.apis.minApi.api, packageName )
+    Language.Kotlin -> errorFragmentKt(moduleData.apis.minApi.api, packageName)
   }
   save(errorFragment, srcOut.resolve("ErrorFragment.${ktOrJavaExt}"))
 

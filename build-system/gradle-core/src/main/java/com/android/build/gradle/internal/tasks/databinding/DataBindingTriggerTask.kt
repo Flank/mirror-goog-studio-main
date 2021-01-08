@@ -40,7 +40,7 @@ import org.gradle.api.tasks.TaskProvider
 abstract class DataBindingTriggerTask : NonIncrementalTask() {
 
     @get:Input
-    abstract val applicationId: Property<String>
+    abstract val namespace: Property<String>
 
     @get:Input
     abstract val useAndroidX: Property<Boolean>
@@ -59,14 +59,14 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
             }
         val fileContents =
             """
-            package ${applicationId.get()};
+            package ${namespace.get()};
 
             @${annotation.canonicalName}
             public class $DATA_BINDING_TRIGGER_CLASS {}
             """.trimIndent()
 
         val outputFile = triggerDir.get().asFile.resolve(
-            "${applicationId.get().replace('.', '/')}/$DATA_BINDING_TRIGGER_CLASS.java"
+            "${namespace.get().replace('.', '/')}/$DATA_BINDING_TRIGGER_CLASS.java"
         )
         FileUtils.mkdirs(outputFile.parentFile)
         outputFile.writeText(fileContents)
@@ -93,7 +93,7 @@ abstract class DataBindingTriggerTask : NonIncrementalTask() {
 
         override fun configure(task: DataBindingTriggerTask) {
             super.configure(task)
-            task.applicationId.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
             task.useAndroidX.setDisallowChanges(
                 creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]
             )

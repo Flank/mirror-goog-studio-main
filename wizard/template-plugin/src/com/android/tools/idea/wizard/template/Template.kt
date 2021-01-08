@@ -44,7 +44,6 @@ enum class FormFactor(val displayName: String) {
   Wear("Wear OS"),
   Tv("Android TV"),
   Automotive("Automotive"),
-  Things("Android Things"),
   Generic("Generic");
 
   override fun toString(): String {
@@ -54,7 +53,6 @@ enum class FormFactor(val displayName: String) {
 
 enum class TemplateConstraint {
   AndroidX,
-  Jetifier,
   Kotlin
 }
 

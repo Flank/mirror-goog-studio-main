@@ -1397,14 +1397,6 @@ public class TestLintClient extends LintCliClient {
                                 + " is installed "
                                 + "there");
             }
-
-            IAndroidTarget[] targets = getTargets();
-            for (int i = targets.length - 1; i >= 0; i--) {
-                IAndroidTarget target = targets[i];
-                if (target.isPlatform()) {
-                    return target;
-                }
-            }
         }
 
         return compileTarget;

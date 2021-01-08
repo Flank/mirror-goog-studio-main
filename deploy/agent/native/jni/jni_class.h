@@ -23,7 +23,6 @@
 #include <jni.h>
 
 #include "tools/base/deploy/agent/native/jni/jni_object.h"
-#include "tools/base/deploy/agent/native/jni/jni_signature.h"
 
 namespace deploy {
 
@@ -40,20 +39,31 @@ class JniClass {
 
   JniClass& operator=(JniClass&&) = default;
 
-  template <typename T>
-  T CallStaticMethod(const JniSignature& method) {
-    return CallStaticMethod<T>(method, nullptr);
-  }
+  jboolean CallStaticBooleanMethod(const char* name, const char* signature,
+                                   ...);
+  jbyte CallStaticByteMethod(const char* name, const char* signature, ...);
+  jchar CallStaticCharMethod(const char* name, const char* signature, ...);
+  jshort CallStaticShortMethod(const char* name, const char* signature, ...);
+  jint CallStaticIntMethod(const char* name, const char* signature, ...);
+  jlong CallStaticLongMethod(const char* name, const char* signature, ...);
+  jfloat CallStaticFloatMethod(const char* name, const char* signature, ...);
+  jdouble CallStaticDoubleMethod(const char* name, const char* signature, ...);
+  jobject CallStaticObjectMethod(const char* name, const char* signature, ...);
+  void CallStaticVoidMethod(const char* name, const char* signature, ...);
+  JniObject CallStaticJniObjectMethod(const char* name, const char* signature,
+                                      ...);
 
-  template <typename T>
-  T CallStaticMethod(const JniSignature& method, jvalue* args) {
-    NO_DEFAULT_SPECIALIZATION(T)
-  }
-
-  template <typename T>
-  T GetStaticField(const JniSignature& field) {
-    NO_DEFAULT_SPECIALIZATION(T)
-  }
+  jboolean GetStaticBooleanField(const char* name, const char* signature);
+  jbyte GetStaticByteField(const char* name, const char* type);
+  jchar GetStaticCharField(const char* name, const char* type);
+  jshort GetStaticShortField(const char* name, const char* type);
+  jint GetStaticIntField(const char* name, const char* type);
+  jlong GetStaticLongField(const char* name, const char* type);
+  jfloat GetStaticFloatField(const char* name, const char* type);
+  jdouble GetStaticDoubleField(const char* name, const char* type);
+  jobject GetStaticObjectField(const char* name, const char* type);
+  void GetStaticVoidField(const char* name, const char* type);
+  JniObject GetStaticJniObjectField(const char* name, const char* type);
 
  private:
   JNIEnv* jni_;
@@ -62,40 +72,6 @@ class JniClass {
   JniClass(const JniClass&) = delete;
   JniClass& operator=(const JniClass&) = delete;
 };
-
-template <>
-inline void JniClass::CallStaticMethod(const JniSignature& method,
-                                       jvalue* args) {
-  jmethodID id = jni_->GetStaticMethodID(class_, method.name, method.signature);
-  jni_->CallStaticVoidMethodA(class_, id, args);
-}
-
-template <>
-inline jboolean JniClass::CallStaticMethod(const JniSignature& method,
-                                           jvalue* args) {
-  jmethodID id = jni_->GetStaticMethodID(class_, method.name, method.signature);
-  return jni_->CallStaticBooleanMethodA(class_, id, args);
-}
-
-template <>
-inline jobject JniClass::CallStaticMethod(const JniSignature& method,
-                                          jvalue* args) {
-  jmethodID id = jni_->GetStaticMethodID(class_, method.name, method.signature);
-  return jni_->CallStaticObjectMethodA(class_, id, args);
-}
-
-template <>
-inline JniObject JniClass::CallStaticMethod(const JniSignature& method,
-                                            jvalue* args) {
-  jobject object = CallStaticMethod<jobject>(method, args);
-  return JniObject(jni_, object);
-}
-
-template <>
-inline jobject JniClass::GetStaticField(const JniSignature& field) {
-  jfieldID fid = jni_->GetStaticFieldID(class_, field.name, field.signature);
-  return jni_->GetStaticObjectField(class_, fid);
-}
 
 }  // namespace deploy
 

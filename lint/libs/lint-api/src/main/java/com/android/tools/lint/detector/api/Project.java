@@ -929,27 +929,16 @@ public class Project {
                 minSdk = element.getAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION);
             }
             if (minSdk != null && !minSdk.isEmpty()) {
-                if (Character.isDigit(minSdk.charAt(0))) {
-                    // If the minSdk version is a number we don't need to look up
-                    // SDK targets to resolve code names (and computing the target list
-                    // is expensive)
-                    manifestMinSdk = SdkVersionInfo.getVersion(minSdk, null);
-                } else {
-                    IAndroidTarget[] targets = client.getTargets();
-                    manifestMinSdk = SdkVersionInfo.getVersion(minSdk, targets);
-                }
+                // If the minSdk version is a number we don't need to look up
+                // SDK targets to resolve code names (and computing the target list
+                // is expensive)
+                manifestMinSdk = SdkVersionInfo.getVersion(minSdk, null);
             }
 
             if (element.hasAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION)) {
                 String targetSdk = element.getAttributeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION);
                 if (targetSdk != null && !targetSdk.isEmpty()) {
-                    if (Character.isDigit(targetSdk.charAt(0))) {
-                        // See minSdk comment above
-                        manifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, null);
-                    } else {
-                        IAndroidTarget[] targets = client.getTargets();
-                        manifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, targets);
-                    }
+                    manifestTargetSdk = SdkVersionInfo.getVersion(targetSdk, null);
                 }
             } else {
                 manifestTargetSdk = manifestMinSdk;
@@ -1471,7 +1460,7 @@ public class Project {
                     if (version.equals("current")) {
                         manifestMinSdk = findCurrentAospVersion();
                     } else {
-                        manifestMinSdk = SdkVersionInfo.getVersion(version, client.getTargets());
+                        manifestMinSdk = SdkVersionInfo.getVersion(version, null);
                     }
                     break;
                 }

@@ -16,7 +16,8 @@
 
 package com.android.repository.impl.installer;
 
-import static com.android.testutils.InMemoryFileSystemUtilsKt.*;
+import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystem;
+import static com.android.testutils.file.InMemoryFileSystems.getPlatformSpecificPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -183,7 +184,7 @@ public class AbstractInstallerFactoryTest {
                 factory.createInstaller(
                         new FakePackage.FakeRemotePackage("foo"),
                         new FakeRepoManager(
-                                createFileSystem().getPath(getPlatformSpecificPath("/sdk")),
+                                createInMemoryFileSystem().getPath(getPlatformSpecificPath("/sdk")),
                                 new RepositoryPackages()),
                         Mockito.mock(Downloader.class)));
 

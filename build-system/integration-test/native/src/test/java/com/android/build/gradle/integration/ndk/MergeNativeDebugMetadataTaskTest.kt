@@ -82,9 +82,12 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
         // add native libs to app and feature modules
         listOf("app", "feature1", "feature2").forEach {
             val subProject = project.getSubproject(":$it")
-            createAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
-            createAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
-            createAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it.so")
+            createUnstrippedAbiFile(subProject, ABI_INTEL_ATOM64, "$it.so")
+            createStrippedAbiFile(subProject, ABI_ARMEABI_V7A, "$it-stripped.so")
+            createStrippedAbiFile(subProject, ABI_INTEL_ATOM, "$it-stripped.so")
+            createStrippedAbiFile(subProject, ABI_INTEL_ATOM64, "$it-stripped.so")
         }
 
         project.executor().run("app:assembleDebug")
@@ -118,7 +121,28 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
             "/$ABI_INTEL_ATOM64/feature1.so.sym",
             "/$ABI_INTEL_ATOM64/feature2.so.sym"
         )
+        val expectedExcludedEntries = listOf(
+            "/$ABI_ARMEABI_V7A/app-stripped.so.dbg",
+            "/$ABI_ARMEABI_V7A/feature1-stripped.so.dbg",
+            "/$ABI_ARMEABI_V7A/feature2-stripped.so.dbg",
+            "/$ABI_INTEL_ATOM/app-stripped.so.dbg",
+            "/$ABI_INTEL_ATOM/feature1-stripped.so.dbg",
+            "/$ABI_INTEL_ATOM/feature2-stripped.so.dbg",
+            "/$ABI_INTEL_ATOM64/app-stripped.so.dbg",
+            "/$ABI_INTEL_ATOM64/feature1-stripped.so.dbg",
+            "/$ABI_INTEL_ATOM64/feature2-stripped.so.dbg",
+            "/$ABI_ARMEABI_V7A/app-stripped.so.sym",
+            "/$ABI_ARMEABI_V7A/feature1-stripped.so.sym",
+            "/$ABI_ARMEABI_V7A/feature2-stripped.so.sym",
+            "/$ABI_INTEL_ATOM/app-stripped.so.sym",
+            "/$ABI_INTEL_ATOM/feature1-stripped.so.sym",
+            "/$ABI_INTEL_ATOM/feature2-stripped.so.sym",
+            "/$ABI_INTEL_ATOM64/app-stripped.so.sym",
+            "/$ABI_INTEL_ATOM64/feature1-stripped.so.sym",
+            "/$ABI_INTEL_ATOM64/feature2-stripped.so.sym"
+        )
         Zip(output).use { zip ->
+            assertThat(zip.entries.map { it.toString() }).containsNoneIn(expectedExcludedEntries)
             when (debugSymbolLevel) {
                 SYMBOL_TABLE -> {
                     assertThat(zip.entries.map { it.toString() })
@@ -143,7 +167,7 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
         // add native libs to app and feature modules
         listOf("app", "feature1").forEach {
             val subProject = project.getSubproject(":$it")
-            createAbiFile(subProject, ABI_ARMEABI_V7A, "collide.so")
+            createUnstrippedAbiFile(subProject, ABI_ARMEABI_V7A, "collide.so")
         }
 
         try {
@@ -166,7 +190,7 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
         assertThat(output).doesNotExist()
         assertThat(result1.skippedTasks).contains(":app:$taskName")
         // then test that the task does work after adding native libraries.
-        createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "foo.so")
+        createUnstrippedAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "foo.so")
         val result2 = project.executor().run("app:assembleDebug")
         // task still shouldn't do work if debugSymbolLevel null or NONE.
         if (debugSymbolLevel == null || debugSymbolLevel == NONE) {
@@ -184,7 +208,7 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
         val taskName = "mergeDebugNativeDebugMetadata"
         val output = getNativeDebugSymbolsOutput("debug")
         // first add a native library, build, and check the output.
-        createAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "foo.so")
+        createUnstrippedAbiFile(project.getSubproject(":feature1"), ABI_ARMEABI_V7A, "foo.so")
         val result1 = project.executor().run("app:assembleDebug")
         assertThat(output).exists()
         assertThat(result1.didWorkTasks).contains(":app:$taskName")
@@ -237,7 +261,23 @@ class MergeNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymbol
         )
     }
 
-    private fun createAbiFile(
+    private fun createUnstrippedAbiFile(
+        project: GradleTestProject,
+        abiName: String,
+        libName: String
+    ) {
+        val abiFolder = File(project.getMainSrcDir("jniLibs"), abiName)
+        FileUtils.mkdirs(abiFolder)
+        MergeNativeDebugMetadataTaskTest::class.java.getResourceAsStream(
+            "/nativeLibs/unstripped.so"
+        ).use { inputStream ->
+            File(abiFolder, libName).outputStream().use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+    }
+
+    private fun createStrippedAbiFile(
         project: GradleTestProject,
         abiName: String,
         libName: String

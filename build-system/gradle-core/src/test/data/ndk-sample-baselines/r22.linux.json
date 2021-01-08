@@ -1,0 +1,196 @@
+{
+  "configs": [
+    {
+      "buildFiles": [
+        {
+          "path": "{testPath}"
+        }
+      ],
+      "cleanCommandsComponents": [
+        [
+          "echo",
+          "clean",
+          "command"
+        ]
+      ],
+      "buildTargetsCommandComponents": [
+        "echo",
+        "build",
+        "command",
+        "{LIST_OF_TARGETS_TO_BUILD}"
+      ],
+      "libraries": {
+        "xposed_detector-debug-x86": {
+          "buildCommandComponents": [
+            "echo",
+            "build",
+            "command",
+            "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/build/intermediates/ndkBuild/release/obj/local/x86/libxposed_detector.a"
+          ],
+          "toolchain": "toolchain-x86",
+          "abi": "x86",
+          "artifactName": "xposed_detector",
+          "files": [
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/classloader.cpp"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fno-exceptions -fno-rtti -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign -fno-strict-aliasing"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/find-name.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/hash.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/logging.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/plt.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/xposed-detector.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/xposed.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            }
+          ],
+          "output": {
+            "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/build/intermediates/ndkBuild/release/obj/local/x86/libxposed_detector.a"
+          }
+        }
+      },
+      "toolchains": {
+        "toolchain-x86": {
+          "cCompilerExecutable": {
+            "path": "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+          },
+          "cppCompilerExecutable": {
+            "path": "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+          }
+        }
+      },
+      "cFileExtensions": [
+        "c"
+      ],
+      "cppFileExtensions": [
+        "cpp"
+      ]
+    },
+    {
+      "buildFiles": [
+        {
+          "path": "{testPath}"
+        }
+      ],
+      "cleanCommandsComponents": [
+        [
+          "echo",
+          "clean",
+          "command"
+        ]
+      ],
+      "buildTargetsCommandComponents": [
+        "echo",
+        "build",
+        "command",
+        "{LIST_OF_TARGETS_TO_BUILD}"
+      ],
+      "libraries": {
+        "xposed_detector-release-x86": {
+          "buildCommandComponents": [
+            "echo",
+            "build",
+            "command",
+            "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/build/intermediates/ndkBuild/release/obj/local/x86/libxposed_detector.a"
+          ],
+          "toolchain": "toolchain-x86",
+          "abi": "x86",
+          "artifactName": "xposed_detector",
+          "files": [
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/classloader.cpp"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fno-exceptions -fno-rtti -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign -fno-strict-aliasing"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/find-name.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/hash.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/logging.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/plt.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/xposed-detector.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            },
+            {
+              "src": {
+                "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni/xposed.c"
+              },
+              "flags": "-target i686-none-linux-android21 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fPIC -O2 -DNDEBUG -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include -I/usr/local/lib/android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++abi/include -I/home/runner/work/XposedDetector/XposedDetector/xposeddetector/src/main/jni -Wall -Wextra -Wshadow -Werror -fvisibility\u003dhidden -Wno-builtin-macro-redefined -D__FILE__\u003d__FILE_NAME__ -std\u003dc18 -DANDROID -Oz -nostdinc++ -Wformat -Werror\u003dformat-security -mstackrealign"
+            }
+          ],
+          "output": {
+            "path": "/home/runner/work/XposedDetector/XposedDetector/xposeddetector/build/intermediates/ndkBuild/release/obj/local/x86/libxposed_detector.a"
+          }
+        }
+      },
+      "toolchains": {
+        "toolchain-x86": {
+          "cCompilerExecutable": {
+            "path": "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+          },
+          "cppCompilerExecutable": {
+            "path": "/usr/local/lib/android/sdk/ndk/22.0.7026061/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+          }
+        }
+      },
+      "cFileExtensions": [
+        "c"
+      ],
+      "cppFileExtensions": [
+        "cpp"
+      ]
+    }
+  ]
+}

@@ -35,7 +35,7 @@ class BuildConfigByteCodeGenerator(private val data: BuildConfigData) :
     GeneratedCodeFileCreator {
 
     private val fullyQualifiedBuildConfigClassName: String by lazy {
-        "${data.buildConfigPackageName.replace('.', '/')}/${data.buildConfigName}"
+        "${data.namespace.replace('.', '/')}/${data.buildConfigName}"
     }
 
     override val folderPath: File = data.outputPath.toFile().also { it.mkdirs() }
@@ -48,7 +48,7 @@ class BuildConfigByteCodeGenerator(private val data: BuildConfigData) :
      */
     override fun generate() = writeToJar(
             generatedFilePath.toPath(),
-            """${data.buildConfigPackageName.replace('.', '/')}/${data
+            """${data.namespace.replace('.', '/')}/${data
                     .buildConfigName}${SdkConstants.DOT_CLASS}""".trimMargin(),
             generateByteCode()
     )

@@ -96,8 +96,6 @@ def single_gradle_integration_test_per_source(
         flaky_targets = [],
         tags = [],
         **kwargs):
-    split_targets = []
-
     # List of target names approved to use an eternal timeout.
     eternal_target_names = []
     eternal_target_prefix = "//" + package_name + ":"
@@ -120,9 +118,8 @@ def single_gradle_integration_test_per_source(
         if is_flaky:
             num_flaky_applied += 1
 
-        # For coverage to work with the test suite, test targets need a <suite>__ prefix
+        # For coverage to work with a test suite, test targets need a <suite>__ prefix
         target_name = name + "__" + target_name
-        split_targets.append(target_name)
 
         gradle_integration_test(
             name = target_name,
@@ -139,8 +136,3 @@ def single_gradle_integration_test_per_source(
         )
     if num_flaky_applied != len(flaky_targets):
         fail("mismatch between flaky_targets given and targets found.")
-
-    native.test_suite(
-        name = name,
-        tests = split_targets,
-    )

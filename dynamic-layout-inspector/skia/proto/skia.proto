@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package layoutinspector.proto;
+option java_package = "com.android.tools.idea.layoutinspector.proto";
+option java_outer_classname = "SkiaParser";
+
+import "google/protobuf/empty.proto";
+
+service SkiaParserService {
+  rpc GetViewTree(GetViewTreeRequest) returns (GetViewTreeResponse) {}
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message RequestedNodeInfo {
+  int64 id = 1;
+  // Since we don't know how big what we're drawing is right away while processing the
+  // SKP, send that over from studio so we can create a canvas with the right size.
+  // These are in absolute device coordinates.
+  sint32 x = 2;
+  sint32 y = 3;
+  int32 width = 4;
+  int32 height = 5;
+}
+
+// Version of GetViewTreeRequest:
+// - : skp field only, from: AS 4.0
+// 1 : requested_nodes added, from: AS 4.2
+
+message GetViewTreeRequest {
+  bytes skp = 1;
+  int32 version = 2;      // See above for description
+  repeated RequestedNodeInfo requested_nodes = 3;
+  // Factor by which to scale the result. Should probably be < 1.
+  float scale = 4;
+}
+
+message InspectorView {
+  string id_for_v0_only = 1 [deprecated = true];
+  int64 timestamp_for_v0_only = 2 [deprecated = true];
+  string type_for_v0_only = 3 [deprecated = true];
+  int32 x_for_v0_only = 4 [deprecated = true];
+  int32 y_for_v0_only = 5 [deprecated = true];
+  int32 width = 6;
+  int32 height = 7;
+
+  bytes image = 8;
+
+  repeated InspectorView children = 9;
+
+  int64 id = 10;
+}
+
+// Version of GetViewTreeResponse:
+// - : Include images for all render nodes found, from: AS 4.0
+// 1 : Collect images only for known ids, from AS 4.1
+
+message GetViewTreeResponse {
+  InspectorView root = 1;
+}

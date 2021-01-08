@@ -15,12 +15,7 @@
       abortOnError="true"
       absolutePaths="true"
       checkReleaseBuilds="true"
-      explainIssues="true"
-      textReport="true"
-      textOutput="build/reports/lint-results.txt"
-      htmlReport="true"
-      xmlReport="true"
-      xmlOutput="lint-report.xml">
+      explainIssues="true">
     <severities>
       <severity
         id="GradleDependency"

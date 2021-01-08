@@ -241,7 +241,16 @@ def android_java_proto_library(
         visibility = visibility,
     )
 
-def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility = None, grpc_support = False, tags = None, include_prefix = None):
+def cc_grpc_proto_library(
+        name,
+        srcs = [],
+        deps = [],
+        includes = [],
+        visibility = None,
+        grpc_support = False,
+        protoc_version = PROTOC_VERSION,
+        tags = None,
+        include_prefix = None):
     outs = []
     hdrs = []
     for src in srcs:
@@ -258,7 +267,8 @@ def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility 
         srcs = srcs,
         deps = deps,
         outs = outs + hdrs,
-        proto_include_version = "3.0.0",
+        include = "@//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + protoc_version + "/include",
+        proto_include_version = protoc_version,
         protoc = "//external:protoc",
         grpc_plugin = "//external:grpc_cpp_plugin" if grpc_support else None,
         target_language = proto_languages.CPP,

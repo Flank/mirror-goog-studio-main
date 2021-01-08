@@ -49,7 +49,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
     abstract val sourceOutDir: DirectoryProperty
 
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val namespace: Property<String>
 
     override fun doTaskAction() {
         modelFileDir.asFileTree.visit(
@@ -66,7 +66,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
                         try {
                             val modelGenerator = TfliteModelGenerator(
                                 modelFile,
-                                packageName.get() + MlNames.PACKAGE_SUFFIX,
+                                namespace.get() + MlNames.PACKAGE_SUFFIX,
                                 fileVisitDetails.relativePath.pathString
                             )
                             modelGenerator.generateBuildClass(sourceOutDir)
@@ -101,7 +101,7 @@ abstract class GenerateMlModelClass : NonIncrementalTask() {
                 .setTaskInputToFinalProduct(
                     MERGED_ML_MODELS, task.modelFileDir
                 )
-            task.packageName.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
         }
     }
 }

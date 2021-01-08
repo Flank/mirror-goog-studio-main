@@ -16,8 +16,10 @@
 
 package com.android.repository.io;
 
-import static com.android.testutils.InMemoryFileSystemUtilsKt.*;
-import static com.android.testutils.InMemoryFileSystemUtilsKt.getPlatformSpecificPath;
+import static com.android.testutils.file.InMemoryFileSystems.createInMemoryFileSystem;
+import static com.android.testutils.file.InMemoryFileSystems.getExistingFiles;
+import static com.android.testutils.file.InMemoryFileSystems.getPlatformSpecificPath;
+import static com.android.testutils.file.InMemoryFileSystems.recordExistingFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -126,7 +128,7 @@ public class FileOpUtilsTest {
         assertEquals("content5", new String(fop.getContent(s5)));
 
         // Finally verify that nothing else is created
-        assertEquals(10, fop.getExistingFiles().length);
+        assertEquals(10, fop.getExistingFiles().size());
     }
 
     @Test
@@ -154,7 +156,7 @@ public class FileOpUtilsTest {
         assertEquals("content2", new String(fop.getContent(s2)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().length);
+        assertEquals(3, fop.getExistingFiles().size());
     }
 
     @Test
@@ -188,7 +190,7 @@ public class FileOpUtilsTest {
         assertEquals("content2", new String(fop.getContent(new File("/root/dest/foo/a"))));
 
         // Finally verify that nothing else is created
-        assertEquals(8, fop.getExistingFiles().length);
+        assertEquals(8, fop.getExistingFiles().size());
     }
 
     @Test
@@ -216,12 +218,12 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(fop.getContent(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, fop.getExistingFiles().length);
+        assertEquals(3, fop.getExistingFiles().size());
     }
 
     @Test
     public void safeRecursiveOverwriteSimpleMove() throws Exception {
-        FileSystem fs = createFileSystem();
+        FileSystem fs = createInMemoryFileSystem();
 
         Path src = fs.getPath(getPlatformSpecificPath("/root/src"));
         recordExistingFile(src.resolve("a"), "content1");
@@ -240,12 +242,12 @@ public class FileOpUtilsTest {
         assertEquals("content5", new String(Files.readAllBytes(dest.resolve("baz/c"))));
 
         // Verify that the original files are gone
-        assertEquals(5, getExistingFiles(fs).length);
+        assertEquals(5, getExistingFiles(fs).size());
     }
 
     @Test
     public void safeRecursiveOverwriteActuallyOverwrite() throws Exception {
-        FileSystem fs = createFileSystem();
+        FileSystem fs = createInMemoryFileSystem();
         Path s1 = fs.getPath(getPlatformSpecificPath("/root/src/a"));
         Path s2 = fs.getPath(getPlatformSpecificPath("/root/src/foo/a"));
         Path s3 = fs.getPath(getPlatformSpecificPath("/root/src/foo/bar/a"));
@@ -271,7 +273,7 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(Files.readAllBytes(s3Moved)));
 
         // Verify that the original files are gone
-        assertEquals(3, getExistingFiles(fs).length);
+        assertEquals(3, getExistingFiles(fs).size());
     }
 
     @Test
@@ -279,7 +281,7 @@ public class FileOpUtilsTest {
         Path[] destRef = new Path[1];
         final AtomicBoolean hitRename = new AtomicBoolean(false);
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -314,7 +316,7 @@ public class FileOpUtilsTest {
         assertEquals("content2", new String(Files.readAllBytes(dest.resolve("foo/a"))));
 
         // Finally verify that nothing else is created
-        assertEquals(2, getExistingFiles(fs).length);
+        assertEquals(2, getExistingFiles(fs).size());
     }
 
     @Test
@@ -322,7 +324,7 @@ public class FileOpUtilsTest {
         Path[] d1Ref = new Path[1];
 
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -367,14 +369,14 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(Files.readAllBytes(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, getExistingFiles(fs).length);
+        assertEquals(3, getExistingFiles(fs).size());
     }
 
     @Test
     public void safeRecursiveOverwriteCantDeleteDestPartial() throws Exception {
         AtomicBoolean deletedSomething = new AtomicBoolean(false);
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -425,7 +427,7 @@ public class FileOpUtilsTest {
         assertEquals("content4", new String(Files.readAllBytes(d2)));
 
         // Finally verify that nothing else is created
-        assertEquals(4, getExistingFiles(fs).length);
+        assertEquals(4, getExistingFiles(fs).size());
     }
 
     @Test
@@ -433,7 +435,7 @@ public class FileOpUtilsTest {
         Path[] s1Ref = new Path[1];
         Path[] d1Ref = new Path[1];
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void copy(
                             @NonNull Path source,
@@ -485,7 +487,7 @@ public class FileOpUtilsTest {
         assertEquals("content3", new String(Files.readAllBytes(d1)));
 
         // Finally verify that nothing else is created
-        assertEquals(3, getExistingFiles(fs).length);
+        assertEquals(3, getExistingFiles(fs).size());
     }
 
     @Test
@@ -494,7 +496,7 @@ public class FileOpUtilsTest {
         Path[] d1Ref = new Path[1];
 
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,
@@ -569,7 +571,7 @@ public class FileOpUtilsTest {
         Path[] d1Ref = new Path[1];
 
         FileSystem fs =
-                new DelegatingFileSystemProvider(createFileSystem()) {
+                new DelegatingFileSystemProvider(createInMemoryFileSystem()) {
                     @Override
                     public void move(
                             @NonNull Path source,

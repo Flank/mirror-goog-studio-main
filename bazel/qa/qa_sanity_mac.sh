@@ -37,14 +37,18 @@ readonly target_filters="qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requ
         --keep_going \
         ${config_options} \
         --test_strategy=exclusive \
-        --spawn_strategy=standalone \
+        --spawn_strategy=local \
         --invocation_id=${invocation_id} \
         --define=meta_android_build_number=${build_number} \
         --build_tag_filters=${target_filters} \
         --test_tag_filters=${target_filters} \
         --tool_tag=${script_name} \
         -- \
-        //tools/adt/idea/android-uitests:CreateDefaultActivityTest
+        //tools/adt/idea/android-uitests:AddCppToModuleActionTest \
+        //tools/adt/idea/android-uitests:BasicLayoutEditTest \
+        //tools/adt/idea/android-uitests:CreateBasicKotlinProjectTest \
+        //tools/adt/idea/android-uitests:CreateDefaultActivityTest \
+        //tools/adt/idea/android-uitests:OpenExistingProjectTest
 
 readonly bazel_status=$?
 

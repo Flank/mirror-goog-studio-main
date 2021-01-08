@@ -46,6 +46,7 @@ import com.google.testing.platform.proto.api.core.PathProto
 import com.google.testing.platform.proto.api.core.TestArtifactProto
 import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
+import org.gradle.api.logging.Logging
 
 // This is an arbitrary string. This ID is used to lookup test results from UTP.
 // UTP can run multiple test fixtures at a time so we have to give a name for
@@ -69,6 +70,7 @@ private const val TEST_RUNNER_LOG_FILE_NAME = "test-results.log"
  */
 class UtpConfigFactory {
 
+    val logger = Logging.getLogger(this.javaClass)
     /**
      * Creates a runner config proto which you can pass into the Unified Test Platform's
      * test executor.
@@ -260,47 +262,54 @@ class UtpConfigFactory {
                 sdkComponents
             )
 
-            if (retentionConfig.enabled) {
-                if (grpcPort == null) {
-                    // TODO: log warning here.
-                } else {
-                    val retentionTestData = testData.copy(
-                        instrumentationRunnerArguments = testData.instrumentationRunnerArguments
-                            .toMutableMap()
-                            .apply { put("debug", "true") })
-                    testDriver = createTestDriver(
-                            retentionTestData, utpDependencies, useOrchestrator)
-                    addHostPlugin(ExtensionProto.Extension.newBuilder().apply {
-                        label = LabelProto.Label.newBuilder().apply {
-                            label = "icebox_plugin"
-                        }.build()
-                        className = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
-                        config = Any.pack(IceboxPlugin.newBuilder().apply {
-                            appPackage = testData.testedApplicationId
-                            // TODO(155308548): query device for the following fields
-                            emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
-                            emulatorGrpcPort = grpcPort
-                            snapshotCompression = if (retentionConfig.compressSnapshots) {
-                                IceboxPluginProto.Compression.TARGZ
-                            } else {
-                                IceboxPluginProto.Compression.NONE
-                            }
-                            skipSnapshot = false
-                            maxSnapshotNumber = if (retentionConfig.retainAll) {
-                                0
-                            } else {
-                                retentionConfig.maxSnapshots
-                            }
-                        }.build())
-                        addAllJar(
-                            utpDependencies.testPluginHostRetention.files.map {
-                                PathProto.Path.newBuilder().apply {
-                                    path = it.absolutePath
-                                }.build()
-                            })
+            if (retentionConfig.enabled && !useOrchestrator && grpcPort != null) {
+                val retentionTestData = testData.copy(
+                    instrumentationRunnerArguments = testData.instrumentationRunnerArguments
+                        .toMutableMap()
+                        .apply { put("debug", "true") })
+                testDriver = createTestDriver(
+                    retentionTestData, utpDependencies, useOrchestrator
+                )
+                addHostPlugin(ExtensionProto.Extension.newBuilder().apply {
+                    label = LabelProto.Label.newBuilder().apply {
+                        label = "icebox_plugin"
+                    }.build()
+                    className = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
+                    config = Any.pack(IceboxPlugin.newBuilder().apply {
+                        appPackage = testData.testedApplicationId
+                        // TODO(155308548): query device for the following fields
+                        emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
+                        emulatorGrpcPort = grpcPort
+                        snapshotCompression = if (retentionConfig.compressSnapshots) {
+                            IceboxPluginProto.Compression.TARGZ
+                        } else {
+                            IceboxPluginProto.Compression.NONE
+                        }
+                        skipSnapshot = false
+                        maxSnapshotNumber = if (retentionConfig.retainAll) {
+                            0
+                        } else {
+                            retentionConfig.maxSnapshots
+                        }
                     }.build())
-                }
+                    addAllJar(
+                        utpDependencies.testPluginHostRetention.files.map {
+                            PathProto.Path.newBuilder().apply {
+                                path = it.absolutePath
+                            }.build()
+                        })
+                }.build())
             } else {
+                if (retentionConfig.enabled) {
+                    if (useOrchestrator) {
+                        logger.error("Currently Retention does not work with orchestrator. " +
+                                "Disabling Android Test Retention.");
+                    } else if (grpcPort == null) {
+                        logger.error(
+                            "GRPC port of the emulator not set. Disabling Android Test Retention."
+                        );
+                    }
+                }
                 testDriver = createTestDriver(testData, utpDependencies, useOrchestrator)
             }
             addHostPlugin(createAndroidTestPlugin(utpDependencies))

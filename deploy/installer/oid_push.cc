@@ -20,12 +20,12 @@
 
 #include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/server/install_server.h"
+#include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
 
@@ -55,14 +55,12 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
 
   auto dump_response = response->mutable_overlayidpush_response();
 
-  proto::InstallServerRequest install_request;
-  install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-  auto update_request = install_request.mutable_overlay_request();
-  update_request->set_expected_overlay_id(request_.prev_oid());
-  update_request->set_overlay_id(request_.next_oid());
+  proto::OverlayUpdateRequest update_request;
+  update_request.set_expected_overlay_id(request_.prev_oid());
+  update_request.set_overlay_id(request_.next_oid());
   const std::string pkg = request_.package_name();
-  update_request->set_overlay_path(Sites::AppOverlays(pkg));
-  update_request->set_wipe_all_files(request_.wipe_overlays());
+  update_request.set_overlay_path(Sites::AppOverlays(pkg));
+  update_request.set_wipe_all_files(request_.wipe_overlays());
 
   std::unique_ptr<InstallClient> client_ = StartInstallServer(
       Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
@@ -73,25 +71,19 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  if (!client_->Write(install_request)) {
-    ErrEvent(
-        "OverlayIdPushCommand error: Unable to write request to AppServer");
+  auto resp = client_->UpdateOverlay(update_request);
+  if (!resp) {
+    ErrEvent("OverlayIdPushCommand comm error");
     return;
   }
 
-  // Wait for server overlay update response.
-  proto::InstallServerResponse install_response;
-  if (!client_->Read(&install_response)) {
-    return;
-  }
-
-  proto::OverlayUpdateResponse_Status status =
-      install_response.overlay_response().status();
+  proto::OverlayUpdateResponse_Status status = resp->status();
   if (status != proto::OverlayUpdateResponse::OK) {
     ErrEvent("OverlayIdPushCommand error: Bad status (" + to_string(status) +
              ")");
   }
 
+  proto::InstallServerResponse install_response;
   if (!client_->KillServerAndWait(&install_response)) {
     ErrEvent("OverlayIdPushCommand error: Unable to kill AppServer");
     return;

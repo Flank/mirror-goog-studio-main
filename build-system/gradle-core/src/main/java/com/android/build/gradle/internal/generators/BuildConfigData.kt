@@ -22,14 +22,14 @@ import java.nio.file.Path
 
 class BuildConfigData private constructor(
         val outputPath: Path,
-        val buildConfigPackageName: String,
+        val namespace: String,
         val buildConfigName: String,
         val buildConfigFields: Map<String, BuildConfigField<out Serializable>>
 ) {
 
     class Builder(
             private var outputPath: Path? = null,
-            private var buildConfigPackageName: String? = null,
+            private var namespace: String? = null,
             private var buildConfigName: String = "BuildConfig",
             private val buildConfigFields: MutableMap<String, BuildConfigField<out Serializable>> = mutableMapOf()
     ) {
@@ -37,8 +37,8 @@ class BuildConfigData private constructor(
         fun setOutputPath(outputPath: Path) =
                 apply { this.outputPath = outputPath }
 
-        fun setBuildConfigPackageName(buildConfigPackageName: String) =
-                apply { this.buildConfigPackageName = buildConfigPackageName }
+        fun setNamespace(namespace: String) =
+                apply { this.namespace = namespace }
 
         fun setBuildConfigName(buildConfigName: String) =
                 apply { this.buildConfigName = buildConfigName }
@@ -69,7 +69,7 @@ class BuildConfigData private constructor(
 
         fun build() = BuildConfigData(
             outputPath ?: error("outputPath is required."),
-            buildConfigPackageName ?: error("buildConfigPackageName is required."),
+            namespace ?: error("namespace is required."),
             buildConfigName,
             buildConfigFields
         )

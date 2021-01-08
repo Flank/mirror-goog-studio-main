@@ -175,7 +175,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     abstract val featureResourcePackages: ConfigurableFileCollection
 
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val namespace: Property<String>
 
     @get:Input
     @get:Optional
@@ -299,7 +299,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             parameters.mergeBlameDirectory.set(mergeBlameLogFolder)
             parameters.namespaced.set(isNamespaced)
             parameters.packageId.set(resOffset)
-            parameters.packageName.set(packageName)
+            parameters.namespace.set(namespace)
             parameters.resourceConfigs.set(resourceConfigs)
             parameters.sharedLibraryDependencies.from(sharedLibraryDependencies)
             parameters.useConditionalKeepRules.set(useConditionalKeepRules)
@@ -344,7 +344,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         abstract val mergeBlameDirectory: DirectoryProperty
         abstract val namespaced: Property<Boolean>
         abstract val packageId: Property<Int>
-        abstract val packageName: Property<String>
+        abstract val namespace: Property<String>
         abstract val resourceConfigs: SetProperty<String>
         abstract val sharedLibraryDependencies: ConfigurableFileCollection
         abstract val sourceSetMaps: ConfigurableFileCollection
@@ -501,7 +501,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
-            task.packageName.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
 
             task.taskInputType = creationConfig.manifestArtifactType
             creationConfig.artifacts.setTaskInputToFinalProduct(
@@ -814,11 +814,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 packageForR = if (parameters.variantType.get().isForTesting) {
                     // Workaround for b/162244493: Use application ID in the test variant to match
                     // previous behaviour.
-                    // TODO(170945282): migrate everything to use the actual package name in AGP
-                    //  7.0.
+                    // TODO(170945282): migrate everything to use the actual namespace in AGP 7.0.
                     parameters.applicationId.get()
                 } else {
-                    parameters.packageName.get()
+                    parameters.namespace.get()
                 }
 
                 // we have to clean the source folder output in case the package name changed.

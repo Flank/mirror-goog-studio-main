@@ -16,7 +16,6 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun videoDetailsFragmentKt(
@@ -24,8 +23,7 @@ fun videoDetailsFragmentKt(
   detailsActivity: String,
   detailsFragment: String,
   minApiLevel: Int,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ): String {
   val contextArgBlock = if (minApiLevel >= 23) "context!!" else "activity!!"
   return """
@@ -36,25 +34,25 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.graphics.drawable.Drawable
-import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsSupportFragment", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.app.DetailsSupportFragmentBackgroundController", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.Action", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ArrayObjectAdapter", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ClassPresenterSelector", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.DetailsOverviewRow", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.FullWidthDetailsOverviewRowPresenter", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.FullWidthDetailsOverviewSharedElementHelper", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.HeaderItem", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ImageCardView", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ListRow", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ListRowPresenter", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.OnActionClickedListener", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.OnItemViewClickedListener", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.Presenter", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.Row", useAndroidX)}
-import ${getMaterialComponentName("android.support.v17.leanback.widget.RowPresenter", useAndroidX)}
-import ${getMaterialComponentName("android.support.v4.app.ActivityOptionsCompat", useAndroidX)}
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)}
+import androidx.leanback.app.DetailsSupportFragment
+import androidx.leanback.app.DetailsSupportFragmentBackgroundController
+import androidx.leanback.widget.Action
+import androidx.leanback.widget.ArrayObjectAdapter
+import androidx.leanback.widget.ClassPresenterSelector
+import androidx.leanback.widget.DetailsOverviewRow
+import androidx.leanback.widget.FullWidthDetailsOverviewRowPresenter
+import androidx.leanback.widget.FullWidthDetailsOverviewSharedElementHelper
+import androidx.leanback.widget.HeaderItem
+import androidx.leanback.widget.ImageCardView
+import androidx.leanback.widget.ListRow
+import androidx.leanback.widget.ListRowPresenter
+import androidx.leanback.widget.OnActionClickedListener
+import androidx.leanback.widget.OnItemViewClickedListener
+import androidx.leanback.widget.Presenter
+import androidx.leanback.widget.Row
+import androidx.leanback.widget.RowPresenter
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.ContextCompat
 import android.util.Log
 import android.widget.Toast
 

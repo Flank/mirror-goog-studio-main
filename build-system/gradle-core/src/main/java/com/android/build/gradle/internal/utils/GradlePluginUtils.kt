@@ -22,7 +22,7 @@ import com.android.builder.errors.IssueReporter
 import com.android.ide.common.repository.GradleVersion
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.Project
-import org.gradle.api.artifacts.result.ResolvedComponentResult
+import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.initialization.dsl.ScriptHandler.CLASSPATH_CONFIGURATION
 import java.net.JarURLConnection
 import java.util.regex.Pattern
@@ -76,11 +76,34 @@ internal data class DependencyInfo(
  * Enforces minimum versions of certain plugins.
  */
 fun enforceMinimumVersionsOfPlugins(project: Project, issueReporter: IssueReporter) {
-    // Apply this check only to current subproject, other subprojects that do not apply the Android
-    // Gradle plugin should not be impacted by this check (see bug 148776286).
-    project.afterEvaluate {
-        for (plugin in pluginList) {
-            enforceMinimumVersionOfPlugin(it, plugin, issueReporter)
+    // Run only once per build
+    val extraProperties = project.rootProject.extensions.extraProperties
+    if (extraProperties.has(AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED)) {
+        return
+    }
+    extraProperties.set(AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED, true)
+
+    project.gradle.projectsEvaluated { gradle ->
+        val projectsToCheck = mutableSetOf<Project>()
+        gradle.allprojects {
+            // Check only projects that have AGP applied (see bug 148776286).
+            // Also check their parent projects recursively because the buildscript classpath(s) of
+            // parent projects are available to child projects.
+            if (it.pluginManager.hasPlugin(ANDROID_GRADLE_PLUGIN_ID)) {
+                var current: Project? = it
+                while (current != null && projectsToCheck.add(current)) {
+                    current = current.parent
+                }
+            }
+        }
+        // Calling allprojects again is needed as Gradle doesn't allow cross-project resolution of
+        // buildscript classpath
+        gradle.allprojects {
+            if (it in projectsToCheck) {
+                for (pluginToCheck in pluginList) {
+                    enforceMinimumVersionOfPlugin(it, pluginToCheck, issueReporter)
+                }
+            }
         }
     }
 }
@@ -91,10 +114,10 @@ private fun enforceMinimumVersionOfPlugin(
     issueReporter: IssueReporter
 ) {
     // Traverse the dependency graph to collect violating plugins
-    val pathsToViolatingPlugins = mutableListOf<String>()
     val buildScriptClasspath = project.buildscript.configurations.getByName(CLASSPATH_CONFIGURATION)
-    ViolatingPluginDetector(pluginInfo, project.displayName, pathsToViolatingPlugins)
-            .visit(buildScriptClasspath.incoming.resolutionResult)
+    val pathsToViolatingPlugins = ViolatingPluginDetector(
+            buildScriptClasspath.incoming.resolutionResult, pluginInfo, project.displayName
+    ).detect()
 
     // Report violating plugins
     if (pathsToViolatingPlugins.isNotEmpty()) {
@@ -116,30 +139,29 @@ private fun enforceMinimumVersionOfPlugin(
 
 @VisibleForTesting
 internal class ViolatingPluginDetector(
+        private val buildscriptClasspath: ResolutionResult,
         private val pluginToSearch: DependencyInfo,
-        private val projectDisplayName: String,
-        private val pathsToViolatingPlugins: MutableList<String>
-) : PathAwareDependencyGraphVisitor(visitOnlyOnce = true) {
+        private val projectDisplayName: String
+) {
 
-    override fun visitDependency(dependency: ResolvedComponentResult, parentPath: List<ResolvedComponentResult>) {
-        val moduleVersion = dependency.moduleVersion ?: return
-        if (moduleVersion.group == pluginToSearch.dependencyGroup
-                && moduleVersion.name == pluginToSearch.dependencyName) {
-            // Use GradleVersion to parse the version since the format accepted by GradleVersion is
-            // general enough. In the unlikely event that the version cannot be parsed, ignore the
-            // error.
-            val parsedVersion = GradleVersion.tryParse(moduleVersion.version)
-            if (parsedVersion != null && parsedVersion < pluginToSearch.minimumVersion) {
-                val dependencyPath = (parentPath + dependency).map { dep ->
-                    dep.moduleVersion?.let { "${it.group}:${it.name}:${it.version}" }
-                            ?: dep.toString()
-                }
-                // The root of the dependency graph (the start of the dependency path) in this case
-                // is not in a user-friendly format (e.g., ":<project-name>:unspecified"), so we use
-                // `project.displayName` instead (e.g., "root project '<project-name>'").
-                val adjustedPath = listOf(projectDisplayName) +
-                        dependencyPath.let { it.subList(1, it.size) }
-                pathsToViolatingPlugins.add(adjustedPath.joinToString(" -> "))
+    /** Returns the paths to violating plugins. */
+    fun detect(): List<String> {
+        val violatingPlugins = buildscriptClasspath.getModuleComponents { moduleComponentId ->
+            if (moduleComponentId.group == pluginToSearch.dependencyGroup
+                    && moduleComponentId.module == pluginToSearch.dependencyName) {
+                // Use GradleVersion to parse the version since the format accepted by GradleVersion
+                // is general enough. In the unlikely event that the version cannot be parsed,
+                // ignore the error.
+                val parsedVersion = GradleVersion.tryParse(moduleComponentId.version)
+                (parsedVersion != null) && (parsedVersion < pluginToSearch.minimumVersion)
+            } else {
+                false
+            }
+        }
+        return violatingPlugins.mapNotNull { component ->
+            component.getPathFromRoot(projectDisplayName).takeIf {
+                // Ignore Safe-args plugin for now (bug 175379963).
+                !it.contains("androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1")
             }
         }
     }
@@ -178,3 +200,5 @@ fun getBuildSrcPlugins(classLoader: ClassLoader): Set<String> {
     }
     return buildSrcPlugins
 }
+
+private const val AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED = "AGP_INTERNAL__MIN_PLUGIN_VERSION_CHECK_STARTED"

@@ -211,6 +211,16 @@ single_gradle_integration_test(
 )
 
 single_gradle_integration_test(
+    name = "MergeNativeLibsTaskTest",
+    timeout = "long",
+    srcs = "src/test/java/com/android/build/gradle/integration/ndk/",
+    data = DATA + ["//tools/base/build-system/integration-test:test-projects/multiproject"],
+    maven_repos = MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
     name = "NativeBuildOutputTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + CMAKE + NDK,
@@ -401,6 +411,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/android/support/constraint/constraint-layout/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/multidex-instrumentation/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/multidex/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar",
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: remove
     ],
 )

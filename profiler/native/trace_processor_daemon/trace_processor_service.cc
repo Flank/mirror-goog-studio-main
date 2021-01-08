@@ -26,8 +26,16 @@
 #include "perfetto/trace_processor/trace_processor.h"
 #include "process_metadata/process_metadata_request_handler.h"
 #include "scheduling/scheduling_request_handler.h"
+#include "src/profiling/symbolizer/filesystem.h"
+#include "src/profiling/symbolizer/local_symbolizer.h"
+#include "src/profiling/symbolizer/symbolize_database.h"
+#include "src/profiling/symbolizer/symbolizer.h"
 #include "trace_events/trace_events_request_handler.h"
 
+using ::perfetto::profiling::BinaryFinder;
+using ::perfetto::profiling::LocalBinaryFinder;
+using ::perfetto::profiling::LocalSymbolizer;
+using ::perfetto::profiling::Symbolizer;
 using ::perfetto::trace_processor::Config;
 using ::perfetto::trace_processor::ReadTrace;
 using ::perfetto::trace_processor::TraceProcessor;
@@ -90,6 +98,33 @@ grpc::Status TraceProcessorServiceImpl::LoadTrace(
     loaded_trace_id = 0;
 
     return grpc::Status::OK;
+  }
+
+  std::vector<std::string> symbol_paths;
+  for (const std::string& path : request->symbol_path()) {
+    symbol_paths.emplace_back(path);
+  }
+  if (!symbol_paths.empty() && !llvm_path_.empty() &&
+      ::perfetto::profiling::GetFileSize(llvm_path_) != 0) {
+    std::unique_ptr<BinaryFinder> finder(new LocalBinaryFinder(symbol_paths));
+    std::unique_ptr<Symbolizer> symbolizer(
+        new LocalSymbolizer(llvm_path_, std::move(finder)));
+    ::perfetto::profiling::SymbolizeDatabase(
+        tp_.get(), symbolizer.get(), [&](const std::string& trace_proto) {
+          std::unique_ptr<uint8_t[]> buf(new uint8_t[trace_proto.size()]);
+          memcpy(buf.get(), trace_proto.data(), trace_proto.size());
+          // Load symbols into symbol database.
+          auto status = tp_->Parse(std::move(buf), trace_proto.size());
+          if (!status.ok()) {
+            std::cout << "Failed to parse symbol line: " << trace_proto
+                      << std::endl;
+            return;
+          }
+          // TODO (b/175320308): If studio passes a export path, append proto
+          // to file. This allows us to cache the symbol protos and append them
+          // to an exported trace.
+        });
+    tp_->NotifyEndOfFile();
   }
 
   loaded_trace_id = trace_id;

@@ -146,15 +146,15 @@ interface VariantDslInfo {
     fun hasFlavors(): Boolean
 
     /**
-     * The Package Name of the variant.
+     * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
+     * any relative class names that are declared in the AndroidManifest.xml.
      *
-     * This is the package name original present in the manifest (for non-test variants).
+     * This value comes from the namespace DSL element, if present, or from the `package` attribute
+     * in the source AndroidManifest.xml if not specified in the DSL.
      *
-     * This is not impacted by (test)ApplicationId values coming from the manifest.
-     *
-     * For test components, this is the package name of the tested variant + '.test'
+     * For test components, this is the namespace of the tested variant + '.test'
      */
-    val packageName: Provider<String>
+    val namespace: Provider<String>
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could

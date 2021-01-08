@@ -290,7 +290,7 @@ public class VariantDslInfoTest {
 
         VariantDslInfo variant = getVariant();
 
-        assertThat(variant.getPackageName().get()).isEqualTo("com.example.myNamespace");
+        assertThat(variant.getNamespace().get()).isEqualTo("com.example.myNamespace");
     }
 
     private VariantDslInfo getVariant() {

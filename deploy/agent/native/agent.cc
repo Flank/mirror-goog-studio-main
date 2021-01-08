@@ -105,6 +105,12 @@ jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
     return JNI_OK;
   }
 
+  // Points the app to the Live Literal mapping file
+  jstring jpackage_name = jni->NewStringUTF(package_name.c_str());
+  JniClass support(jni, LiveLiteral::kSupportClass);
+  support.CallStaticVoidMethod("enableStartup", "(Ljava/lang/String;)V",
+                               jpackage_name);
+
   jvmti->DisposeEnvironment();
   return JNI_OK;
 }
@@ -188,7 +194,7 @@ jint HandleAgentRequest(JavaVM* vm, char* socket_name) {
   } else if (request.has_live_literal_request()) {
     proto::LiveLiteralUpdateRequest live_literal_request =
         request.live_literal_request();
-    LiveLiteral updater(jvmti, jni);
+    LiveLiteral updater(jvmti, jni, live_literal_request.package_name());
     *response.mutable_live_literal_response() =
         updater.Update(live_literal_request);
     SendResponse(socket, response);

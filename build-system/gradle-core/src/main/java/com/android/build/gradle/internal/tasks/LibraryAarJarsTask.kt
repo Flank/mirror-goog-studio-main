@@ -73,7 +73,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     abstract val dataBindingExcludeDelegate: Property<DataBindingExcludeDelegate>
 
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val namespace: Property<String>
 
     @get:Optional
     @get:InputFile
@@ -138,12 +138,12 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     }
 
     private fun computeExcludeList(): List<Pattern> {
-        val packageNameValue = packageName.get()
+        val namespaceValue = namespace.get()
 
-        val excludes = getDefaultExcludes(packageNameValue.replace(".", "/"))
+        val excludes = getDefaultExcludes(namespaceValue.replace(".", "/"))
 
         dataBindingExcludeDelegate.orNull?.let {
-            excludes.addAll(it.getExcludedClassList(packageNameValue))
+            excludes.addAll(it.getExcludedClassList(namespaceValue))
         }
 
         // create Pattern Objects.
@@ -325,7 +325,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 task.typedefRecipe
             )
 
-            task.packageName.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
             task.jarCreatorType.setDisallowChanges(creationConfig.variantScope.jarCreatorType)
             task.debugBuild.setDisallowChanges(creationConfig.debuggable)
 

@@ -16,12 +16,9 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
-
 fun errorFragmentJava(
   minApiLevel: Int,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ): String {
   val getDrawableArgBlock = if (minApiLevel >= 23) "getContext()" else "getActivity()"
   return """
@@ -31,12 +28,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)};
+import androidx.core.content.ContextCompat;
+import androidx.leanback.app.ErrorSupportFragment;
 
 /*
- * This class demonstrates how to extend ErrorFragment
+ * This class demonstrates how to extend ErrorSupportFragment.
  */
-public class ErrorFragment extends ${getMaterialComponentName("android.support.v17.leanback.app.ErrorSupportFragment", useAndroidX)} {
+public class ErrorFragment extends ErrorSupportFragment {
     private static final String TAG = "ErrorFragment";
     private static final boolean TRANSLUCENT = true;
 
@@ -48,7 +46,7 @@ public class ErrorFragment extends ${getMaterialComponentName("android.support.v
     }
 
     void setErrorContent() {
-        setImageDrawable(ContextCompat.getDrawable($getDrawableArgBlock, R.drawable.lb_ic_sad_cloud));
+        setImageDrawable(ContextCompat.getDrawable($getDrawableArgBlock, androidx.leanback.R.drawable.lb_ic_sad_cloud));
         setMessage(getResources().getString(R.string.error_fragment_message));
         setDefaultBackground(TRANSLUCENT);
 

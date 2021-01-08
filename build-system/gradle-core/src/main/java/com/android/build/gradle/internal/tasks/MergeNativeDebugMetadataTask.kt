@@ -32,6 +32,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -49,6 +50,7 @@ import java.io.File
 abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
 
     @get:SkipWhenEmpty
+    @get:IgnoreEmptyDirectories
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val inputFiles: ConfigurableFileCollection

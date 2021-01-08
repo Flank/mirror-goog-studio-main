@@ -15,6 +15,7 @@
  */
 package com.android.tools.deploy.instrument;
 
+import com.android.tools.deployer.Sites;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -25,13 +26,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Overlay {
-    private static final String OVERLAY_PATH_FORMAT = "/data/data/%s/code_cache/.overlay/";
-
     private final Path overlayPath;
+    private final Path liveLiteralOverlayPath;
 
     public Overlay(String packageName) {
-        String pathString = String.format(OVERLAY_PATH_FORMAT, packageName);
+        String pathString = Sites.appOverlays(packageName);
         overlayPath = Paths.get(pathString);
+
+        String llPathString = Sites.appLiveLiteral(packageName);
+        liveLiteralOverlayPath = Paths.get(llPathString);
     }
 
     public Path getOverlayRoot() {
@@ -61,6 +64,14 @@ class Overlay {
         ArrayList<File> dexFiles = new ArrayList<>();
         if (!overlayPathExists()) {
             return dexFiles;
+        }
+
+        // Ensure that ll instrumented swapped dex take precedence over swapped dex.
+        try (DirectoryStream<Path> dir =
+                Files.newDirectoryStream(liveLiteralOverlayPath, "*.dex")) {
+            for (Path dex : dir) {
+                dexFiles.add(dex.toFile());
+            }
         }
 
         // Ensure that swapped dex take precedence over installed dex by adding them to the class

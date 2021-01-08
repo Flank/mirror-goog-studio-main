@@ -70,11 +70,11 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         private set
 
     @get:Input
-    abstract val buildConfigPackageName: Property<String>
+    abstract val namespace: Property<String>
 
     @get:Input
     @get:Optional
-    abstract val appPackageName: Property<String>
+    abstract val applicationId: Property<String>
 
     @get:Input
     abstract val debuggable: Property<Boolean>
@@ -113,16 +113,16 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
         val itemsToGenerate = items.get()
 
         val buildConfigData = BuildConfigData.Builder()
-                .setBuildConfigPackageName(buildConfigPackageName.get())
+                .setNamespace(namespace.get())
                 .apply {
                     if (sourceOutputDir.isPresent) {
                         addBooleanField("DEBUG", debuggable.get())
                     }
 
                     if (isLibrary) {
-                        addStringField("LIBRARY_PACKAGE_NAME", buildConfigPackageName.get())
+                        addStringField("LIBRARY_PACKAGE_NAME", namespace.get())
                     } else {
-                        addStringField("APPLICATION_ID", appPackageName.get())
+                        addStringField("APPLICATION_ID", applicationId.get())
                     }
                     buildTypeName.orNull?.let {
                         addStringField("BUILD_TYPE", it)
@@ -167,7 +167,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                             .build()
                     BuildConfigByteCodeGenerator(byteCodeBuildConfigData)
                 } else {
-                    // must clear the folder in case the packagename changed, otherwise,
+                    // must clear the folder in case the namespace changed, otherwise,
                     // there'll be two classes.
                     val destinationDir = sourceOutputDir.get().asFile
                     FileUtils.cleanOutputDir(destinationDir)
@@ -235,10 +235,10 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             val variantDslInfo = creationConfig.variantDslInfo
             val project = creationConfig.globalScope.project
-            task.buildConfigPackageName.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
 
             if (creationConfig is ApkCreationConfig) {
-                task.appPackageName.setDisallowChanges(creationConfig.applicationId)
+                task.applicationId.setDisallowChanges(creationConfig.applicationId)
             }
 
             if (creationConfig is ApplicationCreationConfig) {

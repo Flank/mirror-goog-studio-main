@@ -1,6 +1,5 @@
 package com.android.test.transfomInModuleWithKotlin;
 
-import com.android.annotations.NonNull;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Transform;
@@ -26,12 +25,10 @@ public class TestTransform extends Transform {
 
     AtomicBoolean done = new AtomicBoolean(false);
 
-    @NonNull
     public Set<QualifiedContent.ContentType> getInputTypes() {
         return ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES);
     }
 
-    @NonNull
     public Set<? super QualifiedContent.Scope> getScopes() {
         return ImmutableSet.of(QualifiedContent.Scope.PROJECT);
     }
@@ -40,7 +37,7 @@ public class TestTransform extends Transform {
         return true;
     }
 
-    public void transform(@NonNull TransformInvocation transformInvocation)
+    public void transform(TransformInvocation transformInvocation)
             throws TransformException, InterruptedException, IOException {
 
         File outputDir =

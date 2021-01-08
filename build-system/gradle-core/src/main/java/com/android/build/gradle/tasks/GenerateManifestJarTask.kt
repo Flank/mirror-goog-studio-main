@@ -47,7 +47,7 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
     abstract val mergedManifests: RegularFileProperty
 
     @get:Input
-    abstract val packageName: Property<String>
+    abstract val namespace: Property<String>
 
     @get:OutputFile
     abstract val outputJar: RegularFileProperty
@@ -57,7 +57,7 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
         ManifestClassGenerator(
                 ManifestClassData(
                         manifestFile = mergedManifests.get().asFile,
-                        manifestPackage = packageName.get(),
+                        namespace = namespace.get(),
                         outputFilePath = outputJar.get().asFile
                 )
         ).apply {
@@ -92,7 +92,7 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
                             ArtifactType.MERGED_MANIFEST,
                             task.mergedManifests
                     )
-            task.packageName.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
         }
     }
 }

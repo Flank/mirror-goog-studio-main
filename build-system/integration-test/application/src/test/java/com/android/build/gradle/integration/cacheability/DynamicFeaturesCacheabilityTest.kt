@@ -75,6 +75,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:compileDebugJavaWithJavac",
                     ":app:compressDebugAssets",
                     ":app:createDebugCompatibleScreenManifests",
+                    ":app:desugarDebugFileDependencies",
                     ":app:dexBuilderDebug",
                     ":app:extractDeepLinksDebug",
                     ":app:generateDebugBuildConfig",
@@ -85,7 +86,6 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:mergeDebugAssets",
                     ":app:mergeDebugJavaResource",
                     ":app:mergeDebugJniLibFolders",
-                    ":app:mergeDebugNativeLibs",
                     ":app:mergeDebugShaders",
                     ":app:mergeDexDebug",
                     ":app:multiDexListDebug",
@@ -104,6 +104,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature1:compileDebugJavaWithJavac",
                     ":feature1:compressDebugAssets",
                     ":feature1:createDebugCompatibleScreenManifests",
+                    ":feature1:desugarDebugFileDependencies",
                     ":feature1:dexBuilderDebug",
                     ":feature1:extractDeepLinksDebug",
                     ":feature1:generateDebugBuildConfig",
@@ -129,6 +130,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":feature2:compileDebugJavaWithJavac",
                     ":feature2:compressDebugAssets",
                     ":feature2:createDebugCompatibleScreenManifests",
+                    ":feature2:desugarDebugFileDependencies",
                     ":feature2:dexBuilderDebug",
                     ":feature2:extractDeepLinksDebug",
                     ":feature2:generateDebugBuildConfig",
@@ -161,17 +163,14 @@ class DynamicFeaturesCacheabilityTest {
                  * If you add a task to this list, remember to file a bug for it.
                  */
                 DID_WORK to setOf(
-                    ":app:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":app:mergeDebugResources", /* Bug 141301405 */
                     ":app:packageDebug", /* Bug 74595859 */
                     ":app:writeDebugModuleMetadata",
 
-                    ":feature1:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":feature1:featureDebugWriter",
                     ":feature1:mergeDebugResources",
                     ":feature1:packageDebug",
 
-                    ":feature2:desugarDebugFileDependencies", /* Bug 160138798 */
                     ":feature2:featureDebugWriter",
                     ":feature2:mergeDebugResources",
                     ":feature2:packageDebug",
@@ -195,6 +194,7 @@ class DynamicFeaturesCacheabilityTest {
                     ":app:compileDebugShaders",
                     ":app:compileDebugSources",
                     ":app:mergeDebugNativeDebugMetadata",
+                    ":app:mergeDebugNativeLibs",
                     ":app:processDebugJavaRes",
                     ":app:stripDebugDebugSymbols",
 

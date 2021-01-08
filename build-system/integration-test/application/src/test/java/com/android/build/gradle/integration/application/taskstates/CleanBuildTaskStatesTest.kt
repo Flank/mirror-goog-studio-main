@@ -53,7 +53,6 @@ class CleanBuildTaskStatesTest {
                 ":app:mergeDebugAssets",
                 ":app:mergeDebugJavaResource",
                 ":app:mergeDebugJniLibFolders",
-                ":app:mergeDebugNativeLibs", /* Bug 154984238 */
                 ":app:mergeDebugResources",
                 ":app:mergeDebugShaders",
                 ":app:mergeDexDebug",
@@ -89,6 +88,7 @@ class CleanBuildTaskStatesTest {
                 ":app:compileDebugSources",
                 ":app:generateDebugResources",
                 ":app:mergeDebugNativeDebugMetadata",
+                ":app:mergeDebugNativeLibs",
                 ":app:processDebugJavaRes",
                 ":app:processDebugUnitTestJavaRes",
                 ":app:stripDebugDebugSymbols"

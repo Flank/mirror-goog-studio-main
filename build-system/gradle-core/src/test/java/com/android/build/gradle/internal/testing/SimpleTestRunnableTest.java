@@ -241,7 +241,8 @@ public class SimpleTestRunnableTest {
     @Test
     public void instrumentationArgsCanOverridesCoverageFile() throws Exception {
         String customCoverageFilePath = "path/to/custom/coverage/" + FILE_COVERAGE_EC;
-        instrumentationRunnerArguments = ImmutableMap.of("coverageFile", customCoverageFilePath);
+        instrumentationRunnerArguments =
+                ImmutableMap.of("coverageFilePath", customCoverageFilePath);
 
         File buddyApk = temporaryFolder.newFile();
         File resultsDir = temporaryFolder.newFile();

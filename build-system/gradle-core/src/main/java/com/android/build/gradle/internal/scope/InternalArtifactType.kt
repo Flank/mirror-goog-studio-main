@@ -319,6 +319,11 @@ InternalArtifactType<T : FileSystemLocation>(
     object LINT_PUBLISH_JAR: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Serialized Lint Model for a variant
     object LINT_MODEL:  InternalArtifactType<Directory>(DIRECTORY)
+    // Lint reports
+    object LINT_TEXT_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
+    object LINT_HTML_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
+    object LINT_XML_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
+    object LINT_SARIF_REPORT: InternalArtifactType<RegularFile>(FILE, Category.REPORTS)
 
     // the zip file output of the extract annotation class.
     object ANNOTATIONS_ZIP: InternalArtifactType<RegularFile>(FILE), Replaceable

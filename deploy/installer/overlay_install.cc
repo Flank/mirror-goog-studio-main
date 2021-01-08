@@ -20,19 +20,13 @@
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
-#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/installer/server/install_server.h"
-
-namespace {
-const std::string kAgent = "agent.so";
-const std::string kAgentAlt = "agent-alt.so";
-const std::string kInstallServer = "install_server";
-}  // namespace
+#include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
 
@@ -88,7 +82,7 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
   proto::InstallServerResponse install_response;
   if (!client_->KillServerAndWait(&install_response)) {
     overlay_response->set_status(
-        proto::OverlayInstallResponse::READ_FROM_SERVER_FAILED);
+        proto::OverlayInstallResponse::INSTALL_SERVER_COM_ERR);
     return;
   }
 
@@ -161,56 +155,51 @@ void OverlayInstallCommand::UpdateOverlay(
     proto::OverlayInstallResponse* overlay_response) {
   Phase p("UpdateOverlay");
 
-  proto::InstallServerRequest install_request;
-  install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-
-  auto overlay_request = install_request.mutable_overlay_request();
-  overlay_request->set_overlay_id(request_.overlay_id());
-  overlay_request->set_expected_overlay_id(request_.expected_overlay_id());
+  proto::OverlayUpdateRequest overlay_request;
+  overlay_request.set_overlay_id(request_.overlay_id());
+  overlay_request.set_expected_overlay_id(request_.expected_overlay_id());
 
   const std::string overlay_path = Sites::AppOverlays(request_.package_name());
-  overlay_request->set_overlay_path(overlay_path);
+  overlay_request.set_overlay_path(overlay_path);
 
   for (auto overlay_file : request_.overlay_files()) {
-    auto file = overlay_request->add_files_to_write();
+    auto file = overlay_request.add_files_to_write();
     file->set_path(overlay_file.path());
     file->set_allocated_content(overlay_file.release_content());
   }
 
   for (auto deleted_file : request_.deleted_files()) {
-    overlay_request->add_files_to_delete(deleted_file);
+    overlay_request.add_files_to_delete(deleted_file);
   }
 
-  if (!client_->Write(install_request)) {
-    ErrEvent("Could not write overlay update to install server");
+  // Live Literal instrumentation, while persistent across restarts, are not
+  // considered part of the APK's install. We want all installs to nuke
+  // all live literals information and the source of truth of all literal
+  // updates will be based on this last install.
+  std::string live_literal_dir = Sites::AppOverlays(request_.package_name());
+  overlay_request.add_files_to_delete(live_literal_dir);
+
+  auto resp = client_->UpdateOverlay(overlay_request);
+  if (!resp) {
+    ErrEvent("Could send update to install server");
     overlay_response->set_status(
-        proto::OverlayInstallResponse::WRITE_TO_SERVER_FAILED);
+        proto::OverlayInstallResponse::INSTALL_SERVER_COM_ERR);
     return;
   }
 
-  proto::InstallServerResponse install_response;
-  if (!client_->Read(&install_response)) {
-    ErrEvent("Could not read response from install server");
-    overlay_response->set_status(
-        proto::OverlayInstallResponse::READ_FROM_SERVER_FAILED);
-    return;
-  }
-
-  switch (install_response.overlay_response().status()) {
+  switch (resp->status()) {
     case proto::OverlayUpdateResponse::OK:
       overlay_response->set_status(proto::OverlayInstallResponse::OK);
       return;
     case proto::OverlayUpdateResponse::ID_MISMATCH:
       overlay_response->set_status(
           proto::OverlayInstallResponse::OVERLAY_ID_MISMATCH);
-      overlay_response->set_extra(
-          install_response.overlay_response().error_message());
+      overlay_response->set_extra(resp->error_message());
       return;
     case proto::OverlayUpdateResponse::UPDATE_FAILED:
       overlay_response->set_status(
           proto::OverlayInstallResponse::OVERLAY_UPDATE_FAILED);
-      overlay_response->set_extra(
-          install_response.overlay_response().error_message());
+      overlay_response->set_extra(resp->error_message());
       return;
   }
 }
@@ -220,43 +209,35 @@ bool OverlayInstallCommand::CheckFilesExist(
     std::unordered_set<std::string>* missing_files) {
   Phase p("CheckFilesExist");
 
-  proto::InstallServerRequest request;
-  request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  proto::CheckSetupRequest request;
   for (const std::string& file : files) {
-    request.mutable_check_request()->add_files(file);
+    request.add_files(file);
   }
-  proto::InstallServerResponse response;
-  if (!client_->Write(request) || !client_->Read(&response)) {
+
+  auto resp = client_->CheckSetup(request);
+  if (!resp) {
     return false;
   }
 
-  missing_files->insert(response.check_response().missing_files().begin(),
-                        response.check_response().missing_files().end());
+  missing_files->insert(resp->missing_files().begin(),
+                        resp->missing_files().end());
   return true;
 }
 
 void OverlayInstallCommand::GetAgentLogs(
     proto::OverlayInstallResponse* response) {
   Phase p("GetAgentLogs");
-  proto::InstallServerRequest install_request;
-  install_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-  install_request.mutable_log_request()->set_package_name(
-      request_.package_name());
+  proto::GetAgentExceptionLogRequest req;
+  req.set_package_name(request_.package_name());
 
   // If this fails, we don't really care - it's a best-effort situation; don't
   // break the deployment because of it. Just log and move on.
-  if (!client_->Write(install_request)) {
-    Log::W("Could not write to server to retrieve agent logs.");
+  auto resp = client_->GetAgentExceptionLog(req);
+  if (resp == nullptr) {
     return;
   }
 
-  proto::InstallServerResponse install_response;
-  if (!client_->Read(&install_response)) {
-    Log::W("Could not read from server while retrieving agent logs.");
-    return;
-  }
-
-  for (const auto& log : install_response.log_response().logs()) {
+  for (const auto& log : resp->logs()) {
     auto added = response->add_agent_logs();
     *added = log;
   }

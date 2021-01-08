@@ -46,6 +46,8 @@ import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
 import com.android.repository.util.InstallerUtil;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.file.InMemoryFileSystems;
+import com.android.utils.PathUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,7 +58,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Proxy;
 import java.net.URL;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -77,11 +78,9 @@ public class SdkManagerCliTest {
 
     private AndroidSdkHandler mSdkHandler;
     private FakeDownloader mDownloader;
-    private FileSystem mFileSystem;
 
     @Before
     public void setUp() throws Exception {
-        mFileSystem = mFileOp.getFileSystem();
         mDownloader = new FakeDownloader(mFileOp);
 
         RemoteRepoLoader loader = createRemoteRepo();
@@ -542,7 +541,7 @@ public class SdkManagerCliTest {
 
     @Test
     public void testNoUpdates() throws Exception {
-        mFileOp.deleteFileOrFolder(new File("sdk/upgrade"));
+        PathUtils.deleteRecursivelyIfExists(mSdkLocation.resolve("upgrade"));
         FakeProgressIndicator progress = new FakeProgressIndicator();
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
 
@@ -1179,12 +1178,11 @@ public class SdkManagerCliTest {
 
     @Test
     public void packageFile() throws Exception {
-        mFileOp.recordExistingFile("/foo.bar", "package1\r\n package2 \r\n\r\n");
+        String path = InMemoryFileSystems.getPlatformSpecificPath("/foo.bar");
+        mFileOp.recordExistingFile(path, "package1\r\n package2 \r\n\r\n");
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
-                        ImmutableList.of(
-                                "--package_file=" + (new File("/foo.bar")).getAbsolutePath(),
-                                "--sdk_root=" + mSdkLocation),
+                        ImmutableList.of("--package_file=" + path, "--sdk_root=" + mSdkLocation),
                         mFileOp.getFileSystem());
 
         assertNotNull(settings);

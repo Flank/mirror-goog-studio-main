@@ -327,6 +327,6 @@ public class SdkHandler {
             // during SdkHandler set-up.
             return null;
         }
-        return loader.getLocalEmulator();
+        return loader.getLocalEmulator(logger);
     }
 }

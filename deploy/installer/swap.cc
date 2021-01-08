@@ -32,7 +32,6 @@
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/proto_pipe.h"
-#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/trace.h"
 #include "tools/base/deploy/common/utils.h"
@@ -40,14 +39,9 @@
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
+#include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
-
-namespace {
-const std::string kAgentFilename = "agent.so";
-const std::string kAgentAltFilename = "agent-alt.so";
-const std::string kServerFilename = "install_server";
-}  // namespace
 
 // Note: the use of shell commands for what would typically be regular stdlib
 // filesystem io is because the installer does not have permissions in the
@@ -128,8 +122,8 @@ bool SwapCommand::Setup() noexcept {
   }
 
   client_ = StartInstallServer(
-      Executor::Get(), workspace_.GetTmpFolder() + kServerFilename,
-      request_.package_name(), kServerFilename + "-" + workspace_.GetVersion());
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
+      request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
 
   if (client_ == nullptr) {
     ErrEvent("SwapCommand: Unable to get InstallServer client");
@@ -144,9 +138,9 @@ bool SwapCommand::CopyBinaries() const noexcept {
 
   // Extract binaries from matryoshka to the tmp folder.
   const std::string tmp_dir = workspace_.GetTmpFolder();
-  std::vector<std::string> to_extract = {kAgentFilename, kServerFilename};
+  std::vector<std::string> to_extract = {kAgent, kInstallServer};
 #if defined(__aarch64__) || defined(__x86_64__)
-  to_extract.emplace_back(kAgentAltFilename);
+  to_extract.emplace_back(kAgentAlt);
 #endif
   ExtractBinaries(workspace_.GetTmpFolder(), to_extract);
 
@@ -183,43 +177,35 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
     return proto::SwapResponse::START_SERVER_FAILED;
   }
 
-  proto::InstallServerRequest server_request;
-  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-
-  proto::InstallServerResponse server_response;
-
   // Attach agents to pids.
-  std::string agent_path = target_dir_ + kAgentFilename;
+  std::string agent_path = target_dir_ + kAgent;
 #if defined(__aarch64__) || defined(__x86_64__)
   if (request_.arch() == proto::ARCH_32_BIT) {
-    agent_path = target_dir_ + kAgentAltFilename;
+    agent_path = target_dir_ + kAgentAlt;
   }
 #endif
   if (!Attach(request_.process_ids(), agent_path)) {
     ErrEvent("Could not attach agents");
+    proto::InstallServerResponse server_response;
     client_->KillServerAndWait(&server_response);
     return proto::SwapResponse::AGENT_ATTACH_FAILED;
   }
 
   size_t total_agents = request_.process_ids().size() + request_.extra_agents();
 
-  auto send_request = server_request.mutable_send_request();
-  send_request->set_agent_count(total_agents);
-  *send_request->mutable_agent_request()->mutable_swap_request() = request_;
-  if (!client_->Write(server_request)) {
-    ErrEvent("Could not write to install server");
+  proto::SendAgentMessageRequest send_request;
+  send_request.set_agent_count(total_agents);
+  *send_request.mutable_agent_request()->mutable_swap_request() = request_;
+
+  auto resp = client_->SendAgentMessage(send_request);
+  if (!resp) {
+    ErrEvent("Could not send to install server");
+    proto::InstallServerResponse server_response;
     client_->KillServerAndWait(&server_response);
-    return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
+    return proto::SwapResponse::INSTALL_SERVER_COM_ERR;
   }
 
-  if (!client_->Read(&server_response)) {
-    ErrEvent("Could not read from install server");
-    client_->KillServerAndWait(&server_response);
-    return proto::SwapResponse::READ_FROM_SERVER_FAILED;
-  }
-
-  for (const auto& agent_response :
-       server_response.send_response().agent_responses()) {
+  for (const auto& agent_response : resp->agent_responses()) {
     ConvertProtoEventsToEvents(agent_response.events());
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = response_->add_failed_agents();
@@ -228,7 +214,7 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   }
 
   // Ensure all of the agents have responded.
-  if (server_response.send_response().agent_responses_size() == total_agents) {
+  if (resp->agent_responses_size() == total_agents) {
     return response_->failed_agents_size() == 0
                ? proto::SwapResponse::OK
                : proto::SwapResponse::AGENT_ERROR;
@@ -263,29 +249,18 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
 
 bool SwapCommand::WaitForServer() const {
   Phase p("WaitForServer");
-  proto::InstallServerRequest server_request;
-  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
 
-  auto socket_request = server_request.mutable_socket_request();
-  socket_request->set_socket_name(Socket::kDefaultAddress);
+  proto::OpenAgentSocketRequest socket_request;
+  socket_request.set_socket_name(Socket::kDefaultAddress);
 
-  proto::InstallServerResponse server_response;
-  if (!client_->Write(server_request)) {
-    ErrEvent("SwapCommand::WaitForServer: Error writing to install-server");
+  auto resp = client_->OpenAgentSocket(socket_request);
+  if (!resp) {
+    ErrEvent("SwapCommand::WaitForServer: Error with install-server");
     return false;
   }
 
-  if (!client_->Read(&server_response)) {
-    ErrEvent("SwapCommand::WaitForServer: Error reading from install-server");
-    return false;
-  }
-
-  if (server_response.status() !=
-          proto::InstallServerResponse::REQUEST_COMPLETED ||
-      server_response.socket_response().status() !=
-          proto::OpenAgentSocketResponse::OK) {
-    ErrEvent(
-        "SwapCommand::WaitForServer: Unexpected response from install-server");
+  if (resp->status() != proto::OpenAgentSocketResponse::OK) {
+    ErrEvent("SwapCommand::WaitForServer: Bad response from install-server");
     return false;
   }
 

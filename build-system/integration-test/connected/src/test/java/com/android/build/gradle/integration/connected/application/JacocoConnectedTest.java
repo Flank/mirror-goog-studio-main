@@ -89,28 +89,61 @@ public class JacocoConnectedTest {
     }
 
     @Test
-    @Ignore("b/172655677")
     public void connectedCheckWithOrchestrator() throws Exception {
+        runConnectedCheckAndAssertCoverageReportExists(/*enableClearPackageDataOption=*/ false);
+    }
+
+    /** Regression test for http://b/123987001. */
+    @Test
+    public void connectedCheckWithOrchestratorAndClearPackageDataEnabled() throws Exception {
+        runConnectedCheckAndAssertCoverageReportExists(/*enableClearPackageDataOption=*/ true);
+    }
+
+    private void runConnectedCheckAndAssertCoverageReportExists(
+            boolean enableClearPackageDataOption) throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
                         + "android.defaultConfig.minSdkVersion 16\n"
-                        + "android.defaultConfig.testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
-                        + "android.testOptions.execution 'ANDROID_TEST_ORCHESTRATOR'\n"
+                        + "android.defaultConfig.testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'\n"
+                        + "android.defaultConfig.testInstrumentationRunnerArguments package: 'com.example.helloworld'\n"
+                        + (enableClearPackageDataOption
+                                ? "android.defaultConfig.testInstrumentationRunnerArguments clearPackageData: 'true'\n"
+                                        + "android.defaultConfig.testInstrumentationRunnerArguments coverageFilePath: '/storage/emulated/0/coverage/'\n"
+                                : "")
+                        + "android.testOptions.execution 'ANDROIDX_TEST_ORCHESTRATOR'\n"
+                        // Orchestrator requires some setup time and it usually takes
+                        // about an minute. Increase the timeout for running "am instrument" command
+                        // to 3 minutes.
+                        + "android.adbOptions.timeOutInMs=180000\n"
                         + "dependencies {\n"
-                        + "  androidTestImplementation 'com.android.support.test:runner:1.0.2'\n"
-                        + "  androidTestUtil 'com.android.support.test:orchestrator:1.0.2'\n"
+                        + "  androidTestImplementation 'androidx.test:core:1.3.1-alpha02'\n"
+                        + "  androidTestImplementation 'androidx.test.ext:junit:1.1.3-alpha02'\n"
+                        + "  androidTestImplementation 'androidx.test:monitor:1.3.1-alpha02'\n"
+                        + "  androidTestImplementation 'androidx.test:rules:1.3.1-alpha02'\n"
+                        + "  androidTestImplementation 'androidx.test:runner:1.3.1-alpha02'\n"
+                        + "  androidTestImplementation 'androidx.test.services:test-services:1.3.1-alpha02'\n"
+                        + "  androidTestUtil 'androidx.test:orchestrator:1.3.1-alpha02'\n"
                         + "}");
+        TestFileUtils.appendToFile(
+                project.getGradlePropertiesFile(),
+                "android.useAndroidX=true");
 
         String testSrc =
                 "package com.example.helloworld;\n"
                         + "\n"
-                        + "import android.support.test.runner.AndroidJUnit4;\n"
+                        + "import androidx.test.ext.junit.runners.AndroidJUnit4;\n"
+                        + "import androidx.test.rule.GrantPermissionRule;\n"
+                        + "import org.junit.Rule;\n"
                         + "import org.junit.Test;\n"
                         + "import org.junit.runner.RunWith;\n"
                         + "\n"
                         + "@RunWith(AndroidJUnit4.class)\n"
                         + "public class ExampleTest {\n"
+                        + "    @Rule public GrantPermissionRule mRuntimePermissionRule =\n"
+                        + "        GrantPermissionRule.grant(\n"
+                        + "            android.Manifest.permission.WRITE_EXTERNAL_STORAGE);\n"
+                        + "\n"
                         + "    @Test\n"
                         + "    public void test1() { }\n"
                         + "\n"
@@ -123,6 +156,22 @@ public class JacocoConnectedTest {
                         .resolve("src/androidTest/java/com/example/helloworld/ExampleTest.java");
         Files.createDirectories(exampleTest.getParent());
         Files.write(exampleTest, testSrc.getBytes());
+
+        // This example project uses deprecated "android.support.test.runner.AndroidJUnit4" runner
+        // which cannot be used with androidx.test.ext.junit.runners.AndroidJUnit4 together. So,
+        // deleting it here.
+        Path deprecatedTest =
+                project.getProjectDir()
+                        .toPath()
+                        .resolve("src/androidTest/java/com/example/helloworld/HelloWorldTest.java");
+        Files.deleteIfExists(deprecatedTest);
+
+        // Append WRITE_EXTERNAL_STORAGE permission.
+        TestFileUtils.searchAndReplace(
+                project.getProjectDir().toPath().resolve("src/main/AndroidManifest.xml"),
+                "</manifest>",
+                "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>\n"
+                        + "</manifest>");
 
         project.executor().run("connectedCheck");
         List<File> files =
@@ -139,7 +188,6 @@ public class JacocoConnectedTest {
 
     /** Regression test for http://b/152872138. */
     @Test
-    @Category(DeviceTests.class)
     public void testDisablingBuildFeatures() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

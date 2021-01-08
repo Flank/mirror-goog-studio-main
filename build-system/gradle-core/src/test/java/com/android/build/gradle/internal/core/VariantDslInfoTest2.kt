@@ -655,7 +655,7 @@ class VariantDslInfoTest2 :
                     it.functionalTest = variantDslInfo.functionalTest.get()
                 }
                 try {
-                    it.namespace = variantDslInfo.packageName.orNull
+                    it.namespace = variantDslInfo.namespace.orNull
                 } catch (e: RuntimeException) {
                     // RuntimeException can be thrown when ManifestData.packageName is null
                     it.namespace = null

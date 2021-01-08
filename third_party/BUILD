@@ -1334,7 +1334,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.8-rc-1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.8-rc-5:jar",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )
@@ -1405,6 +1405,14 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/intellij/deps/trove4j/1.0.20181211:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.jetbrains.kotlin.jvm_org.jetbrains.kotlin.jvm.gradle.plugin",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/jvm/org.jetbrains.kotlin.jvm.gradle.plugin/1.4.21:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.jetbrains.kotlin_kotlin-gradle-plugin"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

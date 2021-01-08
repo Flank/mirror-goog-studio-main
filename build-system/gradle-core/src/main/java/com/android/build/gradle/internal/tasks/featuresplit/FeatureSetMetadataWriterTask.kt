@@ -98,7 +98,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
                     parameters.minSdkVersion.get(),
                     feature.modulePath,
                     featureNameMap[feature.modulePath]!!,
-                    feature.applicationId
+                    feature.namespace
                 )
             }
 

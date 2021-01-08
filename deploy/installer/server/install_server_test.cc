@@ -125,10 +125,11 @@ TEST_F(InstallServerTest, TestServerStartNoOverlay) {
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  proto::InstallServerRequest request;
-  proto::InstallServerResponse response;
-  EXPECT_TRUE(client->Write(request));
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  proto::CheckSetupRequest req;
+  EXPECT_TRUE(client->CheckSetup(req) != nullptr);
+
+  proto::InstallServerResponse foo;
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   fake_exec.JoinServerThread();
 };
@@ -138,23 +139,21 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   std::deque<bool> success = {true, true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  proto::InstallServerRequest request;
-  proto::InstallServerResponse response;
-
   // Start the server and create an overlay
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-  request.mutable_overlay_request()->set_overlay_id("id");
-  request.mutable_overlay_request()->set_overlay_path(kOverlayFolder);
-  EXPECT_TRUE(client->Write(request));
+  proto::OverlayUpdateRequest req1;
+  req1.set_overlay_id("id");
+  req1.set_overlay_path(kOverlayFolder);
 
-  EXPECT_TRUE(client->Read(&response));
-  EXPECT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  EXPECT_EQ(proto::OverlayUpdateResponse::OK,
-            response.overlay_response().status());
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  auto resp1 = client->UpdateOverlay(req1);
+  EXPECT_TRUE(resp1 != nullptr);
+
+  EXPECT_EQ(proto::OverlayUpdateResponse::OK, resp1->status());
+
+  proto::InstallServerResponse foo;
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   fake_exec.JoinServerThread();
 
@@ -162,15 +161,15 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  request.mutable_overlay_request()->set_overlay_id("next-id");
-  request.mutable_overlay_request()->set_expected_overlay_id("not-id");
-  EXPECT_TRUE(client->Write(request));
+  proto::OverlayUpdateRequest req2;
+  req2.set_overlay_id("next-id");
+  req2.set_overlay_path(kOverlayFolder);
+  req2.set_expected_overlay_id("not-id");
 
-  EXPECT_TRUE(client->Read(&response));
-  EXPECT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  EXPECT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
-            response.overlay_response().status());
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  auto resp2 = client->UpdateOverlay(req2);
+  EXPECT_TRUE(resp2 != nullptr);
+  EXPECT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH, resp2->status());
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   fake_exec.JoinServerThread();
 
@@ -178,16 +177,17 @@ TEST_F(InstallServerTest, TestServerStartWithOverlay) {
   client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  request.mutable_overlay_request()->set_overlay_id("next-id");
-  request.mutable_overlay_request()->set_expected_overlay_id("id");
-  EXPECT_TRUE(client->Write(request));
+  proto::OverlayUpdateRequest req3;
+  req3.set_overlay_id("next-id");
+  req3.set_overlay_path(kOverlayFolder);
+  req3.set_expected_overlay_id("id");
 
-  EXPECT_TRUE(client->Read(&response));
-  EXPECT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  EXPECT_EQ(proto::OverlayUpdateResponse::OK,
-            response.overlay_response().status());
-  EXPECT_EQ("", response.overlay_response().error_message());
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  auto resp3 = client->UpdateOverlay(req3);
+  EXPECT_TRUE(resp3 != nullptr);
+
+  EXPECT_EQ(proto::OverlayUpdateResponse::OK, resp3->status());
+  EXPECT_EQ("", resp3->error_message());
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   fake_exec.JoinServerThread();
 };
@@ -197,23 +197,20 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   std::deque<bool> success = {true, true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  proto::InstallServerRequest request;
-  proto::InstallServerResponse response;
+  proto::InstallServerResponse foo;
 
   // Start the server and create an overlay
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-  request.mutable_overlay_request()->set_overlay_id("id");
-  request.mutable_overlay_request()->set_overlay_path(kOverlayFolder);
-  EXPECT_TRUE(client->Write(request));
+  proto::OverlayUpdateRequest req;
+  req.set_overlay_id("id");
+  req.set_overlay_path(kOverlayFolder);
+  auto resp = client->UpdateOverlay(req);
 
-  EXPECT_TRUE(client->Read(&response));
-  EXPECT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  EXPECT_EQ(proto::OverlayUpdateResponse::OK,
-            response.overlay_response().status());
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  EXPECT_TRUE(resp != nullptr);
+  EXPECT_EQ(proto::OverlayUpdateResponse::OK, resp->status());
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   fake_exec.JoinServerThread();
 
@@ -221,14 +218,14 @@ TEST_F(InstallServerTest, TestOverlayEmptyIdCheck) {
   client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  request.mutable_overlay_request()->set_overlay_id("next-id");
-  EXPECT_TRUE(client->Write(request));
+  proto::OverlayUpdateRequest req1;
+  req1.set_overlay_id("next-id");
+  req1.set_overlay_path(kOverlayFolder);
+  auto resp1 = client->UpdateOverlay(req1);
+  EXPECT_TRUE(resp1 != nullptr);
 
-  EXPECT_TRUE(client->Read(&response));
-  EXPECT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  EXPECT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH,
-            response.overlay_response().status());
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  EXPECT_EQ(proto::OverlayUpdateResponse::ID_MISMATCH, resp1->status());
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   fake_exec.JoinServerThread();
 }
@@ -238,28 +235,24 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   std::deque<bool> success = {true, true};
   FakeExecutor fake_exec(server_thread, success);
 
-  proto::InstallServerRequest request;
-  proto::InstallServerResponse response;
+  proto::InstallServerResponse foo;
 
   // Start the server and create an overlay
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
-  request.mutable_overlay_request()->set_overlay_id("id");
-  request.mutable_overlay_request()->set_overlay_path(kOverlayFolder);
-  proto::OverlayFile* added =
-      request.mutable_overlay_request()->add_files_to_write();
+  proto::OverlayUpdateRequest req;
+  req.set_overlay_id("id");
+  req.set_overlay_path(kOverlayFolder);
+  proto::OverlayFile* added = req.add_files_to_write();
   added->set_path("apk/hello.txt");
   added->set_content("hello world");
 
-  EXPECT_TRUE(client->Write(request));
+  auto resp = client->UpdateOverlay(req);
+  EXPECT_TRUE(resp != nullptr);
 
-  EXPECT_TRUE(client->Read(&response));
-  EXPECT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  EXPECT_EQ(proto::OverlayUpdateResponse::OK,
-            response.overlay_response().status());
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  EXPECT_EQ(proto::OverlayUpdateResponse::OK, resp->status());
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   std::string content;
   EXPECT_TRUE(deploy::ReadFile(kOverlayFolder + "apk/hello.txt", &content));
@@ -271,20 +264,21 @@ TEST_F(InstallServerTest, TestServerOverlayFiles) {
   client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  request.mutable_overlay_request()->set_expected_overlay_id("id");
-  request.mutable_overlay_request()->set_overlay_id("next-id");
-  request.mutable_overlay_request()->clear_files_to_write();
-  added = request.mutable_overlay_request()->add_files_to_write();
+  proto::OverlayUpdateRequest req1;
+  req1.set_expected_overlay_id("id");
+  req1.set_overlay_id("next-id");
+  req1.set_overlay_path(kOverlayFolder);
+  req1.clear_files_to_write();
+  added = req1.add_files_to_write();
   added->set_path("apk/hello_2.txt");
   added->set_content("hello again world");
-  request.mutable_overlay_request()->add_files_to_delete("apk/hello.txt");
-  EXPECT_TRUE(client->Write(request));
+  req1.add_files_to_delete("apk/hello.txt");
 
-  EXPECT_TRUE(client->Read(&response));
-  EXPECT_EQ(proto::InstallServerResponse::REQUEST_COMPLETED, response.status());
-  EXPECT_EQ(proto::OverlayUpdateResponse::OK,
-            response.overlay_response().status());
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  auto resp1 = client->UpdateOverlay(req1);
+  EXPECT_TRUE(resp1 != nullptr);
+
+  EXPECT_EQ(proto::OverlayUpdateResponse::OK, resp1->status());
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   content.clear();
   EXPECT_FALSE(deploy::ReadFile(kOverlayFolder + "apk/hello.txt", &content));
@@ -306,11 +300,11 @@ TEST_F(InstallServerTest, TestNeedCopy) {
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  proto::InstallServerRequest request;
-  proto::InstallServerResponse response;
-  EXPECT_TRUE(client->Write(request));
+  proto::CheckSetupRequest req;
+  EXPECT_TRUE(client->CheckSetup(req) != nullptr);
 
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  proto::InstallServerResponse foo;
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   // Make sure we consumed all the exec results.
   EXPECT_TRUE(success.empty());
@@ -326,11 +320,11 @@ TEST_F(InstallServerTest, TestNeedMkdir) {
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  proto::InstallServerRequest request;
-  proto::InstallServerResponse response;
-  EXPECT_TRUE(client->Write(request));
+  proto::CheckSetupRequest req;
+  EXPECT_TRUE(client->CheckSetup(req) != nullptr);
 
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  proto::InstallServerResponse foo;
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   // Make sure we consumed all the exec results.
   EXPECT_TRUE(success.empty());
@@ -361,11 +355,11 @@ TEST_F(InstallServerTest, TestMkdirFailCopySucceedss) {
   auto client = StartInstallServer(fake_exec, "fakepath", "fakepackage", "iwi");
   ASSERT_FALSE(nullptr == client);
 
-  proto::InstallServerRequest request;
-  proto::InstallServerResponse response;
-  EXPECT_TRUE(client->Write(request));
+  proto::CheckSetupRequest req;
+  EXPECT_TRUE(client->CheckSetup(req) != nullptr);
 
-  EXPECT_TRUE(client->KillServerAndWait(&response));
+  proto::InstallServerResponse foo;
+  EXPECT_TRUE(client->KillServerAndWait(&foo));
 
   // Make sure we consumed all the exec results.
   EXPECT_TRUE(success.empty());

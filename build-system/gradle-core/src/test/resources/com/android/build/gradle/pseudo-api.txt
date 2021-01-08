@@ -465,7 +465,6 @@ com.android.build.gradle.api.AnnotationProcessorOptions
 com.android.build.gradle.api.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.gradle.api.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
 com.android.build.gradle.api.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
-com.android.build.gradle.api.AnnotationProcessorOptions.getIncludeCompileClasspath: java.lang.Boolean ()
 com.android.build.gradle.api.ApkOutputFile implements com.android.build.OutputFile, java.io.Serializable
 com.android.build.gradle.api.ApkOutputFile.<init>: com.android.build.gradle.api.ApkOutputFile (com.android.build.VariantOutput$OutputType, java.util.Collection<com.android.build.FilterData>, java.util.concurrent.Callable<java.io.File>, int)
 com.android.build.gradle.api.ApkOutputFile.getFilter: java.lang.String (java.lang.String)
@@ -665,11 +664,9 @@ com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.compilerArgumen
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.getCompilerArgumentProviders: java.util.List<org.gradle.process.CommandLineArgumentProvider> ()
-com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.getIncludeCompileClasspath: java.lang.Boolean ()
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.setArguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.setClassNames: void (java.util.List<java.lang.String>)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.setCompilerArgumentProviders: void (java.util.List<org.gradle.process.CommandLineArgumentProvider>)
-com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.setIncludeCompileClasspath: void (java.lang.Boolean)
 com.android.build.gradle.internal.dsl.AnnotationProcessorOptions.toString: java.lang.String ()
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension extends com.android.build.gradle.AppExtension implements com.android.build.gradle.internal.dsl.InternalApplicationExtension
 com.android.build.gradle.internal.dsl.BaseAppModuleExtension.<init>: com.android.build.gradle.internal.dsl.BaseAppModuleExtension (com.android.build.gradle.internal.services.DslServices, com.android.build.gradle.internal.scope.GlobalScope, org.gradle.api.NamedDomainObjectContainer<com.android.build.gradle.api.BaseVariantOutput>, com.android.build.gradle.internal.dependency.SourceSetManager, com.android.build.gradle.internal.ExtraModelInfo, com.android.build.gradle.internal.dsl.ApplicationExtensionImpl)

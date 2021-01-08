@@ -32,14 +32,14 @@ interface ParameterBuilder<T> {
   }
 }
 
-fun stringParameter(block: StringParameterBuilder.() -> Unit): StringParameter = StringParameterBuilder().apply(block).build()
+inline fun stringParameter(block: StringParameterBuilder.() -> Unit): StringParameter = StringParameterBuilder().apply(block).build()
 
-fun booleanParameter(block: BooleanParameterBuilder.() -> Unit): BooleanParameter = BooleanParameterBuilder().apply(block).build()
+inline fun booleanParameter(block: BooleanParameterBuilder.() -> Unit): BooleanParameter = BooleanParameterBuilder().apply(block).build()
 
-inline fun <reified T : Enum<T>> enumParameter(noinline block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> =
+inline fun <reified T : Enum<T>> enumParameter(block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> =
   enumParameter(T::class, block)
 
-fun <T : Enum<T>> enumParameter(klass: KClass<T>, block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> =
+inline fun <T : Enum<T>> enumParameter(klass: KClass<T>, block: EnumParameterBuilder<T>.() -> Unit): EnumParameter<T> =
   EnumParameterBuilder(klass).apply(block).build()
 
 @TemplateDSL

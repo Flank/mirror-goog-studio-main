@@ -1107,12 +1107,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                                     + "there");
                 }
 
-                IAndroidTarget[] targets = getTargets();
-                for (int i = targets.length - 1; i >= 0; i--) {
-                    IAndroidTarget target = targets[i];
-                    if (target.isPlatform()) {
-                        return target;
-                    }
+                IAndroidTarget target = getLatestSdkTarget(1, true);
+                if (target != null) {
+                    return target;
                 }
             }
 

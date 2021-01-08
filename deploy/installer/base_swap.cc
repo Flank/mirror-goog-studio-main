@@ -117,29 +117,18 @@ bool BaseSwapCommand::Swap(
   // Request for the install-server to accept a connection for each agent
   // attached. The install-server will forward the specified swap request to
   // every agent, then return an aggregate list of each agent's response.
-  proto::InstallServerRequest server_request;
-  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  // TODO: Move this block to its own function.
+  proto::SendAgentMessageRequest req;
+  req.set_agent_count(process_ids_.size() + extra_agents_count_);
+  *req.mutable_agent_request()->mutable_swap_request() = *swap_request.get();
 
-  auto send_request = server_request.mutable_send_request();
-  send_request->set_agent_count(process_ids_.size() + extra_agents_count_);
-  *send_request->mutable_agent_request()->mutable_swap_request() =
-      *swap_request.get();
-
-  if (!client_->Write(server_request)) {
-    swap_response->set_status(proto::SwapResponse::WRITE_TO_SERVER_FAILED);
+  auto resp = client_->SendAgentMessage(req);
+  if (!resp) {
+    swap_response->set_status(proto::SwapResponse::INSTALL_SERVER_COM_ERR);
     return false;
   }
 
-  proto::InstallServerResponse server_response;
-  if (!client_->Read(&server_response) ||
-      server_response.status() !=
-          proto::InstallServerResponse::REQUEST_COMPLETED) {
-    swap_response->set_status(proto::SwapResponse::READ_FROM_SERVER_FAILED);
-    return false;
-  }
-
-  const auto& agent_server_response = server_response.send_response();
-  for (const auto& agent_response : agent_server_response.agent_responses()) {
+  for (const auto& agent_response : resp->agent_responses()) {
     ConvertProtoEventsToEvents(agent_response.events());
     if (agent_response.status() != proto::AgentResponse::OK) {
       auto failed_agent = swap_response->add_failed_agents();
@@ -147,7 +136,7 @@ bool BaseSwapCommand::Swap(
     }
   }
 
-  if (agent_server_response.status() == proto::SendAgentMessageResponse::OK) {
+  if (resp->status() == proto::SendAgentMessageResponse::OK) {
     if (swap_response->failed_agents_size() == 0) {
       swap_response->set_status(proto::SwapResponse::OK);
       return true;
@@ -212,25 +201,15 @@ void BaseSwapCommand::FilterProcessIds(std::vector<int>* process_ids) {
 
 proto::SwapResponse::Status BaseSwapCommand::ListenForAgents() const {
   Phase("ListenForAgents");
-  proto::InstallServerRequest server_request;
-  server_request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  proto::OpenAgentSocketRequest req;
+  req.set_socket_name(Socket::kDefaultAddress);
 
-  auto socket_request = server_request.mutable_socket_request();
-  socket_request->set_socket_name(Socket::kDefaultAddress);
-
-  if (!client_->Write(server_request)) {
-    return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
+  auto resp = client_->OpenAgentSocket(req);
+  if (!resp) {
+    return proto::SwapResponse::INSTALL_SERVER_COM_ERR;
   }
 
-  proto::InstallServerResponse server_response;
-  if (!client_->Read(&server_response)) {
-    return proto::SwapResponse::READ_FROM_SERVER_FAILED;
-  }
-
-  if (server_response.status() !=
-          proto::InstallServerResponse::REQUEST_COMPLETED ||
-      server_response.socket_response().status() !=
-          proto::OpenAgentSocketResponse::OK) {
+  if (resp->status() != proto::OpenAgentSocketResponse::OK) {
     return proto::SwapResponse::READY_FOR_AGENTS_NOT_RECEIVED;
   }
 
@@ -240,18 +219,17 @@ proto::SwapResponse::Status BaseSwapCommand::ListenForAgents() const {
 bool BaseSwapCommand::CheckFilesExist(
     const std::vector<std::string>& files,
     std::unordered_set<std::string>* missing_files) {
-  proto::InstallServerRequest request;
-  request.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
+  proto::CheckSetupRequest req;
   for (const std::string& file : files) {
-    request.mutable_check_request()->add_files(file);
+    req.add_files(file);
   }
-  proto::InstallServerResponse response;
-  if (!client_->Write(request) || !client_->Read(&response)) {
+  auto resp = client_->CheckSetup(req);
+  if (!resp) {
     return false;
   }
 
-  missing_files->insert(response.check_response().missing_files().begin(),
-                        response.check_response().missing_files().end());
+  missing_files->insert(resp->missing_files().begin(),
+                        resp->missing_files().end());
   return true;
 }
 

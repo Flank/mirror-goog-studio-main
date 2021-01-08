@@ -395,11 +395,30 @@ protected constructor() {
          */
         fun isDeletedIssueId(id: String): Boolean {
             return when (id) {
-                "IconLauncherFormat", // deleted a while back
-                "ViewTag", // no longer relevant, only applied to minSdk < 14
-                "FieldGetter", // no longer relevant, only applied to minSdk < 9
-                "MissingRegistered", // Renamed to MissingClass
-                "Assert" -> true // Deleted; no longer needed thanks to d8
+                // Off by default for a while; unlikely to be turned on (and this is
+                // just an awareness check which is unlikely to be enabled by those
+                // who could benefit from it)
+                "GoogleAppIndexingWarning",
+
+                // Implementation not correct and would require rewrite to fix, not worth it
+                "GoogleAppIndexingApiWarning",
+
+                // Deleted a while back when restrictions were removed on launcher icons
+
+                "IconLauncherFormat",
+
+                // No longer relevant, only applied to minSdk < 14
+                "ViewTag",
+
+                // No longer relevant, only applied to minSdk < 9
+                "FieldGetter",
+
+                // Renamed to MissingClass
+                "MissingRegistered",
+
+                // Deleted; no longer needed thanks to d8
+                "Assert" -> true
+
                 else -> false
             }
         }

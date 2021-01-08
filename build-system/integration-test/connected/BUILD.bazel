@@ -127,6 +127,19 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "CmakeJniLibConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/nativebuild/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+        "//tools/base/build-system/integration-test:test-projects/ndkJniLib",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "ComposeHelloWorldConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/composeHelloWorld"],
@@ -142,6 +155,27 @@ gradle_connected_test(
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "DataBindingExternalArtifactDependencyConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/databinding/",
+    data = TEST_DATA + [
+        "//tools/data-binding:integration-test-projects",
+        "//tools/data-binding:integration-test-projects-support",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    # TEST_MAVEN_REPOS with databinding
+    maven_repos = [
+        "//tools/base/build-system:gradle_plugin_repo",
+        "//tools/base/build-system/integration-test:androidx_latest",
+        "//tools/base/build-system/integration-test:support_library_latest",
+        "//tools/base/build-system/integration-test/connected:prebuilts",
+        "//tools/base/third_party/kotlin:kotlin-m2repository",
+        "//tools/data-binding:data_binding_runtime",
+        "//tools/base/build-system/integration-test/connected:databinding_prebuilts",
+    ],
     deps = TEST_DEPS,
 )
 
@@ -209,9 +243,46 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "JarsInLibrariesConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/assets"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "KotlinAppConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/kotlinApp"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "LibMinifyJarDepConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/libMinifyJarDep"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "LibsTestConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/libsTest"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "LibTestDepConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/libTestDep"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
@@ -236,12 +307,48 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "MinifyLibConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/minifyLib"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "MlModelBindingConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
     data = TEST_DATA + [
         "//tools/base/build-system/integration-test:test-projects/mlModelBinding",
         "//prebuilts/tools/common/mlkit/testData",
     ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MultiDexConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/multiDex"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MultiDexWithLibConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/multiDexWithLib"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "MultiProjectConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/multiproject"],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
@@ -257,12 +364,62 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "NdkConnectedCheckTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "NdkJniLibConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
     data = TEST_DATA + [
         "//prebuilts/studio/sdk:cmake",
         "//prebuilts/studio/sdk:ndk",
         "//tools/base/build-system/integration-test:test-projects/ndkJniLib",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "NdkLibPrebuiltsConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+        "//tools/base/build-system/integration-test:test-projects/ndkLibPrebuilts",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "NdkSanAngelesConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+        "//tools/base/build-system/integration-test:test-projects/ndkSanAngeles",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "NoSplitNdkVariantsConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/ndk/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
     ],
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
@@ -306,9 +463,113 @@ gradle_connected_test(
 )
 
 gradle_connected_test(
+    name = "PkgOverrideConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/pkgOverride"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "RenderscriptNdkConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/nativebuild/",
+    data = TEST_DATA + [
+        "//prebuilts/studio/sdk:cmake",
+        "//prebuilts/studio/sdk:ndk",
+        "//tools/base/build-system/integration-test:test-projects/renderscriptNdk",
+    ],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "ResValueTypeConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
     name = "ShardingConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/appWithTests"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SameNamedLibsConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/library/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/sameNamedLibs"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestModuleConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestModule"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestModuleWithMinifiedAppConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestModuleWithMinifiedApp"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestWithAarDependencyConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestModule"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SeparateTestWithMinificationButNoObfuscationConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/separateTestWithMinificationButNoObfuscation"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "SigningConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "TestingSupportLibraryConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/testing/",
+    data = TEST_DATA,
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
+gradle_connected_test(
+    name = "TestWithSameDepAsAppConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/dependencies/",
+    data = TEST_DATA,
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repos = TEST_MAVEN_REPOS,
     deps = TEST_DEPS,
@@ -408,23 +669,34 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/androidx/savedstate/savedstate/1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/savedstate/savedstate/1.1.0-alpha01:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/core/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/core/1.3.1-alpha02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-core/3.2.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-idling-resource/3.2.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/ext/junit/1.1.1:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/ext/junit/1.1.3-alpha02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/monitor/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/monitor/1.3.1-alpha02:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/orchestrator/1.3.1-alpha02:apk",
         "//prebuilts/tools/common/m2/repository/androidx/test/rules/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/rules/1.3.1-alpha02:aar",
         "//prebuilts/tools/common/m2/repository/androidx/test/runner/1.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/runner/1.3.1-alpha02:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/services/test-services/1.3.1-alpha02:apk",
         "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable-animated/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/vectordrawable/vectordrawable/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/androidx/versionedparcelable/versionedparcelable/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex-instrumentation/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/desugar_jdk_libs_configuration/1.0.9:jar",
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-base/15.0.1:aar",
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-basement/15.0.1:aar",
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-tasks/15.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar",
         "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/2.0.1:jar",
         "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.6:jar",
         "//prebuilts/tools/common/m2/repository/com/google/flatbuffers/flatbuffers-java/1.12.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-device-provider-gradle/0.0.7-dev:jar",
         "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-device-provider-local/0.0.7-dev:jar",
         "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-driver-instrumentation/0.0.7-dev:jar",
@@ -481,6 +753,45 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-metadata/0.1.0-rc1:jar",
         "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite-support/0.1.0-rc1:aar",
         "//prebuilts/tools/common/m2/repository/org/tensorflow/tensorflow-lite/2.2.0:aar",
+    ],
+    visibility = ["__subpackages__"],
+)
+
+# Maven repo with all the dependencies required by databinding tests.
+#
+# Quick way of updating this list:
+# - Run the new test with bazel
+# - Copy the output log to $PWD/test.log
+# - Run this command:
+# grep -F '> Could not find' test.log \
+#   | sed -e 's:> Could not find :"//prebuilts/tools/common/m2/repository/:' \
+#   | sed -e 's/:/\//g' \
+#   | sed -e 's/\.$/:jar",/' \
+#   | sed -e 's/\([a-z]\)\.\([a-z]\)/\1\/\2/g'
+maven_repo(
+    name = "databinding_prebuilts",
+    # keep sorted
+    artifacts = [
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/common/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/runtime/1.0.3:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/cardview/cardview/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-common/2.2.0:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/lifecycle/lifecycle-runtime/2.2.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-core/3.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/espresso/espresso-idling-resource/3.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/monitor/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/androidx/test/runner/1.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/26.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-compat/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-core-ui/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-core-utils/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-fragment/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-media-compat/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-v4/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/espresso/espresso-core/3.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/espresso/espresso-idling-resource/3.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/rules/1.0.1:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/runner/1.0.1:aar",
     ],
     visibility = ["__subpackages__"],
 )

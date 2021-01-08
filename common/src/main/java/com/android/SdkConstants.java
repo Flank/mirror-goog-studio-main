@@ -2537,9 +2537,12 @@ public final class SdkConstants {
     public static class MotionSceneTags {
         public static final String MOTION_SCENE = "MotionScene";
         public static final String TRANSITION = "Transition";
+        public static final String VIEW_TRANSITION = "ViewTransition";
+        public static final String INCLUDE = "Include";
         public static final String STATE_SET = "StateSet";
         public static final String CONSTRAINT_SET = "ConstraintSet";
         public static final String CONSTRAINT = "Constraint";
+        public static final String CONSTRAINT_OVERRIDE = "ConstraintOverride";
         public static final String KEY_FRAME_SET = "KeyFrameSet";
         public static final String KEY_ATTRIBUTE = "KeyAttribute";
         public static final String KEY_CYCLE = "KeyCycle";
@@ -2799,7 +2802,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "6.8-rc-1";
+    public static final String GRADLE_LATEST_VERSION = "6.8-rc-5";
 
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.3.2";

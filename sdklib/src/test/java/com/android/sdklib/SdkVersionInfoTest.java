@@ -15,8 +15,10 @@
  */
 package com.android.sdklib;
 
+import static com.android.sdklib.SdkVersionInfo.RECOMMENDED_MIN_SDK_VERSION;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API;
+import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
 import static com.android.sdklib.SdkVersionInfo.getApiByBuildCode;
 import static com.android.sdklib.SdkVersionInfo.getApiByPreviewName;
@@ -29,6 +31,13 @@ import com.android.testutils.TestUtils;
 import junit.framework.TestCase;
 
 public class SdkVersionInfoTest extends TestCase {
+    @SuppressWarnings("ConstantConditions")
+    public void testValidRanges() {
+        assertTrue(1 < LOWEST_ACTIVE_API &&
+                   LOWEST_ACTIVE_API <= RECOMMENDED_MIN_SDK_VERSION &&
+                   RECOMMENDED_MIN_SDK_VERSION <= HIGHEST_KNOWN_STABLE_API &&
+                   HIGHEST_KNOWN_STABLE_API <= HIGHEST_KNOWN_API);
+    }
 
     public void testGetAndroidName() {
         assertEquals("API 16: Android 4.1 (Jelly Bean)", SdkVersionInfo.getAndroidName(16));

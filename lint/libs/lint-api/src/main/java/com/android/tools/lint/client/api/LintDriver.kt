@@ -40,10 +40,8 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
 import com.android.ide.common.util.PathString
-import com.android.repository.api.ProgressIndicator
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
-import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.tools.lint.client.api.LintListener.EventType
 import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
@@ -1016,6 +1014,13 @@ class LintDriver(
             assert(phase > 1)
             uastSourceList = prevUastSourceList.uastSourceList
         } else {
+            if (VALUE_TRUE == System.getenv("LINT_DO_NOT_REUSE_UAST_ENV") ||
+                VALUE_TRUE == System.getProperty("lint.do.not.reuse.uast.env")
+            ) {
+                // This is a temporary workaround for b/159733104.
+                realClient.performDisposeProjects(projectRoots)
+                realClient.performInitializeProjects(projectRoots)
+            }
             assert(phase == 1 || checkDependencies)
             val files = project.subset
             uastSourceList = if (files != null) {
@@ -2288,9 +2293,7 @@ class LintDriver(
 
         override fun getSdkHome(): File? = delegate.getSdkHome()
 
-        override fun getTargets(): Array<IAndroidTarget> = delegate.getTargets()
-
-        override fun getSdk(): AndroidSdkHandler? = delegate.getSdk()
+        override fun getTargets(): List<IAndroidTarget> = delegate.getTargets()
 
         override fun getCompileTarget(project: Project): IAndroidTarget? =
             delegate.getCompileTarget(project)
@@ -2341,8 +2344,6 @@ class LintDriver(
                 project, includeModuleDependencies,
                 includeLibraries
             )
-
-        override fun getRepositoryLogger(): ProgressIndicator = delegate.getRepositoryLogger()
 
         override fun getResourceVisibilityProvider(): ResourceVisibilityLookup.Provider =
             delegate.getResourceVisibilityProvider()

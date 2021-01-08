@@ -35,6 +35,17 @@ const std::string STATE_TASK_DEAD_2 = std::string("I");
 const std::string STATE_EXIT_DEAD = std::string("X");
 const std::string STATE_ZOMBIE = std::string("Z");
 
+// We remove the system swapper scheduling events, because they are a
+// placeholder thread to represent when a core is available to run some
+// workload.
+// We don't filter only by the name because only checking the thread name
+// would be error prone since anyone can name a thread "swapper" and we could
+// lose data we actually care about.
+// Swapper seems to be the only thread that gets assigned tid=0 and utid=0, so
+// we use one of it (utid) instead of checking if upid IS NULL. Checking only
+// for upid would also drop some other data, like dumpsys and atrace.
+const std::string FILTER_SWAPPER = "NOT (thread.name = 'swapper' AND utid = 0) ";
+
 void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
                                               SchedulingEventsResult* result) {
   if (result == nullptr) {
@@ -49,8 +60,7 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
           "FROM sched INNER JOIN thread using(utid) "
           "           INNER JOIN process using(upid) "
           "WHERE pid = " +
-          std::to_string(params.process_id()) +
-          " "
+          std::to_string(params.process_id()) + " AND " + FILTER_SWAPPER +
           "ORDER BY tid ASC, ts ASC";
       break;
     case SchedulingEventsParameters::kThreadId:
@@ -60,8 +70,7 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
           "FROM sched INNER JOIN thread using(utid) "
           "           LEFT JOIN process using(upid) "
           "WHERE tid = " +
-          std::to_string(params.thread_id()) +
-          " "
+          std::to_string(params.thread_id()) + " AND " + FILTER_SWAPPER +
           "ORDER BY tid ASC, ts ASC";
       break;
     case SchedulingEventsParameters::CRITERIA_NOT_SET:
@@ -70,7 +79,8 @@ void SchedulingRequestHandler::PopulateEvents(SchedulingEventsParameters params,
           "priority "
           "FROM sched INNER JOIN thread using(utid) "
           "           LEFT JOIN process using(upid) "
-          "ORDER BY tid ASC, ts ASC";
+          "WHERE " +
+          FILTER_SWAPPER + "ORDER BY tid ASC, ts ASC";
       break;
     default:
       std::cerr << "Unknown SchedulingEventsParameters criteria." << std::endl;

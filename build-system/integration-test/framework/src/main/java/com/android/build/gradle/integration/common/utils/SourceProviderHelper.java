@@ -113,7 +113,6 @@ public final class SourceProviderHelper {
         testSinglePathCollection("assets", assetsDir, sourceProvider.getAssetsDirectories());
         testSinglePathCollection("aidl", aidlDir, sourceProvider.getAidlDirectories());
         testSinglePathCollection("rs", renderscriptDir, sourceProvider.getRenderscriptDirectories());
-        testSinglePathCollection("jni", jniDir, sourceProvider.getCDirectories());
 
         Truth.assertWithMessage("AndroidManifest")
                 .that((Comparable<Path>) new File(projectDir, manifestFile).toPath())

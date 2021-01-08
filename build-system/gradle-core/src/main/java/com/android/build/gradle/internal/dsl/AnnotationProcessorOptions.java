@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.services.DslServices;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -42,8 +40,6 @@ public class AnnotationProcessorOptions
 
     @NonNull
     private final List<CommandLineArgumentProvider> compilerArgumentProviders = new ArrayList<>();
-
-    private final Boolean includeCompileClasspath = false;
 
     @NonNull private final DslServices dslServices;
 
@@ -127,31 +123,6 @@ public class AnnotationProcessorOptions
         this.compilerArgumentProviders.addAll(Arrays.asList(compilerArgumentProviders));
     }
 
-    /**
-     * Whether to include compile classpath in the processor path.
-     *
-     * <p>This option is removed from Android Gradle plugin 4.0 and always returns false. We won't
-     * include annotation processors on your project's compile classpath and will throw warnings if
-     * you use this option.
-     */
-    @Override
-    public Boolean getIncludeCompileClasspath() {
-        dslServices
-                .getDeprecationReporter()
-                .reportObsoleteUsage(
-                        "annotationProcessorOptions.includeCompileClasspath",
-                        DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
-        return includeCompileClasspath;
-    }
-
-    public void setIncludeCompileClasspath(@Nullable Boolean includeCompileClasspath) {
-        dslServices
-                .getDeprecationReporter()
-                .reportObsoleteUsage(
-                        "annotationProcessorOptions.includeCompileClasspath",
-                        DeprecationReporter.DeprecationTarget.INCLUDE_COMPILE_CLASSPATH);
-    }
-
     public void _initWith(com.android.build.gradle.api.AnnotationProcessorOptions aptOptions) {
         setClassNames(aptOptions.getClassNames());
         setArguments(aptOptions.getArguments());
@@ -164,7 +135,6 @@ public class AnnotationProcessorOptions
                 .add("classNames", classNames)
                 .add("arguments", arguments)
                 .add("compilerArgumentProviders", compilerArgumentProviders)
-                .add("includeCompileClasspath", includeCompileClasspath)
                 .toString();
     }
 }

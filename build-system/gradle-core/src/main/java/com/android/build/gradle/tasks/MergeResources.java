@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.databinding.MergingFileLookup;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.Aapt2Input;
@@ -147,7 +146,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     @Input
     @Optional
-    public abstract Property<String> getPackageName();
+    public abstract Property<String> getNamespace();
 
     @Input
     @Optional
@@ -497,7 +496,7 @@ public abstract class MergeResources extends ResourceAwareTask {
                     FileUtils.join(getIncrementalFolder(), SdkConstants.FD_STRIPPED_DOT_DIR));
         }
         return RelativeResourceUtils.getIdentifiedSourceSetMap(
-                sourceSets, getPackageName().get(), getProjectName());
+                sourceSets, getNamespace().get(), getProjectName());
     }
 
     @Nullable
@@ -515,7 +514,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
         final LayoutXmlProcessor processor =
                 new LayoutXmlProcessor(
-                        getPackageName().get(),
+                        getNamespace().get(),
                         new JavaFileWriter() {
                             // These methods are not supposed to be used, they are here only because
                             // the superclass requires an implementation of it.
@@ -871,10 +870,10 @@ public abstract class MergeResources extends ResourceAwareTask {
             super.configure(task);
 
             VariantScope variantScope = creationConfig.getVariantScope();
-            GlobalScope globalScope = creationConfig.getGlobalScope();
             VariantPathHelper paths = creationConfig.getPaths();
 
-            task.getPackageName().set(creationConfig.getNamespace());
+            HasConfigurableValuesKt.setDisallowChanges(
+                    task.getNamespace(), creationConfig.getNamespace());
             task.getMinSdk()
                     .set(
                             task.getProject()
@@ -918,8 +917,6 @@ public abstract class MergeResources extends ResourceAwareTask {
                     task.getViewBindingEnabled(), isViewBindingEnabled);
 
             if (isDataBindingEnabled || isViewBindingEnabled) {
-                HasConfigurableValuesKt.setDisallowChanges(
-                        task.getPackageName(), creationConfig.getNamespace());
                 HasConfigurableValuesKt.setDisallowChanges(
                         task.getUseAndroidX(),
                         creationConfig

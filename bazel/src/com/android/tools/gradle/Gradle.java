@@ -20,8 +20,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -51,6 +53,7 @@ public class Gradle implements Closeable {
     @NonNull private final File distribution;
     @NonNull private final File project;
     @NonNull private final List<String> arguments;
+    @NonNull private final Set<File> usedGradleUserHomes = new HashSet<>();
 
     public Gradle(@NonNull File project, @NonNull File outDir, @NonNull File distribution)
             throws IOException {
@@ -138,10 +141,15 @@ public class Gradle implements Closeable {
     }
 
     public void run(List<String> tasks, OutputStream out, OutputStream err) throws IOException {
+        run(tasks, out, err, getDefaultGradleUserHome().getAbsoluteFile());
+    }
+
+    public void run(List<String> tasks, OutputStream out, OutputStream err, File homeDir)
+            throws IOException {
+        usedGradleUserHomes.add(homeDir);
         File buildDir = getBuildDir().getAbsoluteFile();
         File androidDir = new File(outDir, "_android").getAbsoluteFile();
         Files.createDirectories(androidDir.toPath());
-        File homeDir = getGradleUserHome().getAbsoluteFile();
         // gradle tries to write into .m2 so we pass it a tmp one.
         Path tmpLocalMaven = getLocalMavenRepo();
 
@@ -229,8 +237,10 @@ public class Gradle implements Closeable {
         // Note that this is internal Gradle API, but is used by Studio and Intellij so is
         // relatively stable.
         // Because this circumvents the connector we must set gradle.user.home for it to work
-        System.setProperty("gradle.user.home", getGradleUserHome().getAbsolutePath());
-        DefaultGradleConnector.close();
+        for (File gradleUserHome : usedGradleUserHomes) {
+            System.setProperty("gradle.user.home", gradleUserHome.getAbsolutePath());
+            DefaultGradleConnector.close();
+        }
 
         maybeCopyProfiles();
 
@@ -273,7 +283,7 @@ public class Gradle implements Closeable {
                 });
     }
 
-    private File getGradleUserHome() {
+    private File getDefaultGradleUserHome() {
         return new File(outDir, "_home");
     }
 

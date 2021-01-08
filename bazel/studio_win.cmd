@@ -101,6 +101,11 @@ CALL %SCRIPTDIR%bazel.cmd run //tools/vendor/adt_infra_internal/rbe/logscollecto
  -testlogs %DISTDIR%\logs\junit ^
  %PERFGATE_ARG%
 
+IF ERRORLEVEL 1 (
+  @echo Bazel logs-collector failed
+  EXIT /B 1
+)
+
 @echo studio_win.cmd time: %time%
 
 @rem Extra debugging for b/162585987

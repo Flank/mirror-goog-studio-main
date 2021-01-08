@@ -78,16 +78,20 @@ public interface SourceProvider {
      * Returns the C source folders.
      *
      * @return a list of folders. They may not all exist.
+     * @deprecated since ndk-compile is deprecated
      */
     @NonNull
+    @Deprecated
     Collection<File> getCDirectories();
 
     /**
      * Returns the C++ source folders.
      *
      * @return a list of folders. They may not all exist.
+     * @deprecated since ndk-compile is deprecated
      */
     @NonNull
+    @Deprecated
     Collection<File> getCppDirectories();
 
     /**

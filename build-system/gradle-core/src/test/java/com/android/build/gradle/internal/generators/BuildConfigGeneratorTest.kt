@@ -36,7 +36,7 @@ class BuildConfigGeneratorTest {
         val buildConfigData =
             BuildConfigData.Builder()
                 .setOutputPath(tempDir.toPath())
-                .setBuildConfigPackageName("my.app.pkg")
+                .setNamespace("my.app.pkg")
                 .addBooleanField("DEBUG", false)
                 .build()
         val generator =
@@ -66,7 +66,7 @@ class BuildConfigGeneratorTest {
         val buildConfigData =
             BuildConfigData.Builder()
                 .setOutputPath(tempDir.toPath())
-                .setBuildConfigPackageName("my.app.pkg")
+                .setNamespace("my.app.pkg")
                 .addBooleanField("DEBUG", true)
                 .build()
         val generator =
@@ -96,7 +96,7 @@ class BuildConfigGeneratorTest {
         val buildConfigData =
             BuildConfigData.Builder()
                 .setOutputPath(tempDir.toPath())
-                .setBuildConfigPackageName("my.app.pkg")
+                .setNamespace("my.app.pkg")
                 .addItem("DEBUG", BuildConfigField("boolean", "true", null))
                 .build()
         val generator =
@@ -125,7 +125,7 @@ class BuildConfigGeneratorTest {
         val buildConfigData =
             BuildConfigData.Builder()
                 .setOutputPath(tempDir.toPath())
-                .setBuildConfigPackageName("my.app.pkg")
+                .setNamespace("my.app.pkg")
                 .addLongField("TIME_STAMP", 12343434L)
                 .build()
         val generator =
@@ -155,7 +155,7 @@ class BuildConfigGeneratorTest {
         val buildConfigData =
             BuildConfigData.Builder()
                 .setOutputPath(tempDir.toPath())
-                .setBuildConfigPackageName("my.app.pkg")
+                .setNamespace("my.app.pkg")
                 .addIntField("EXTRA", 42, "Extra line")
                 .build()
         val generator =
@@ -186,7 +186,7 @@ class BuildConfigGeneratorTest {
         val buildConfigData =
             BuildConfigData.Builder()
                 .setOutputPath(tempDir.toPath())
-                .setBuildConfigPackageName("my.app.pkg")
+                .setNamespace("my.app.pkg")
                 .addItem("COMMENT", BuildConfigField("String", "\"String with comment\"", "A string!"))
                 .addItem("INT1", BuildConfigField("int", 1, null))
                 .addItem("INT2", BuildConfigField("int", "2", null))

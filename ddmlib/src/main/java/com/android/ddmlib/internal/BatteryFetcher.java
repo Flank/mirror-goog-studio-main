@@ -17,30 +17,32 @@ package com.android.ddmlib.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Fetches battery level from device.
- */
+/** Fetches battery level from device. */
 class BatteryFetcher {
     private static final String LOG_TAG = "BatteryFetcher";
     /**
-     * On Pixel 3 and Pixel 3 XL devices, the battery level reported in the UI is read
-     * from this "maximum fuel gauge" ("maxfg") file. This is a specific design of these
-     * devices.
+     * On Pixel 3 and Pixel 3 XL devices, the battery level reported in the UI is read from this
+     * "maximum fuel gauge" ("maxfg") file. This is a specific design of these devices.
      */
+    private static final Set<String> Pixel3_Pixel3XL =
+            new HashSet<>(Arrays.asList("Pixel 3", "Pixel 3 XL"));
+
     private static final String MAXFG_PATH = "/sys/class/power_supply/maxfg/capacity";
     private static final String NORMAL_PATH = "/sys/class/power_supply/*/capacity";
+    private static final String PROP_PRODUCT_MODEL = "ro.product.model";
 
     /** The amount of time to wait between unsuccessful battery fetch attempts. */
     private static final long BATTERY_TIMEOUT_MS = 2 * 1000; // 2 seconds
@@ -191,7 +193,8 @@ class BatteryFetcher {
                             SysFsBatteryLevelReceiver sysBattReceiver =
                                     new SysFsBatteryLevelReceiver();
                             String batteryLevelFile = NORMAL_PATH;
-                            if (hasPath(MAXFG_PATH)) {
+                            String mProduct = mDevice.getProperty(PROP_PRODUCT_MODEL);
+                            if (Pixel3_Pixel3XL.contains(mProduct)) {
                                 batteryLevelFile = MAXFG_PATH;
                             }
                             mDevice.executeShellCommand(
@@ -251,20 +254,5 @@ class BatteryFetcher {
             }
         }
         mPendingRequest = null;
-    }
-
-    private boolean hasPath(String path) {
-        CountDownLatch latch = new CountDownLatch(1);
-        CollectingOutputReceiver receiver = new CollectingOutputReceiver(latch);
-        try {
-            mDevice.executeShellCommand(
-                    "ls " + path, receiver, BATTERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (Throwable e) {
-            Log.w(LOG_TAG, "Error checking battery path \"" + path + "\": " + e);
-            return false;
-        }
-
-        String value = receiver.getOutput().trim();
-        return !value.endsWith("No such file or directory");
     }
 }

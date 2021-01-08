@@ -20,6 +20,7 @@ import com.android.builder.model.SourceProvider;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 public class SourceProviderStub extends BaseStub implements SourceProvider {
@@ -29,8 +30,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull private final Collection<File> myResourcesDirectories;
     @NonNull private final Collection<File> myAidlDirectories;
     @NonNull private final Collection<File> myRenderscriptDirectories;
-    @NonNull private final Collection<File> myCDirectories;
-    @NonNull private final Collection<File> myCppDirectories;
     @NonNull private final Collection<File> myResDirectories;
     @NonNull private final Collection<File> myAssetsDirectories;
     @NonNull private final Collection<File> myJniLibsDirectories;
@@ -50,8 +49,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 new File(rootDirectory, "resources"),
                 new File(rootDirectory, "aidl"),
                 new File(rootDirectory, "renderscript"),
-                new File(rootDirectory, "c"),
-                new File(rootDirectory, "cpp"),
                 new File(rootDirectory, "res"),
                 new File(rootDirectory, "assets"),
                 new File(rootDirectory, "jniLibs"),
@@ -66,8 +63,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
             @NonNull File resourcesDirectory,
             @NonNull File aidlDirectory,
             @NonNull File renderscriptDirectory,
-            @NonNull File cDirectory,
-            @NonNull File cppDirectory,
             @NonNull File resDirectory,
             @NonNull File assetsDirectory,
             @NonNull File jniLibsDirectory,
@@ -79,8 +74,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myResourcesDirectories = Lists.newArrayList(resourcesDirectory);
         myAidlDirectories = Lists.newArrayList(aidlDirectory);
         myRenderscriptDirectories = Lists.newArrayList(renderscriptDirectory);
-        myCDirectories = Lists.newArrayList(cDirectory);
-        myCppDirectories = Lists.newArrayList(cppDirectory);
         myResDirectories = Lists.newArrayList(resDirectory);
         myAssetsDirectories = Lists.newArrayList(assetsDirectory);
         myJniLibsDirectories = Lists.newArrayList(jniLibsDirectory);
@@ -95,8 +88,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
             @NonNull Collection<File> resourcesDirectories,
             @NonNull Collection<File> aidlDirectories,
             @NonNull Collection<File> renderscriptDirectories,
-            @NonNull Collection<File> cDirectories,
-            @NonNull Collection<File> cppDirectories,
             @NonNull Collection<File> resDirectories,
             @NonNull Collection<File> assetsDirectories,
             @NonNull Collection<File> jniLibsDirectories,
@@ -108,8 +99,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myResourcesDirectories = Lists.newArrayList(resourcesDirectories);
         myAidlDirectories = Lists.newArrayList(aidlDirectories);
         myRenderscriptDirectories = Lists.newArrayList(renderscriptDirectories);
-        myCDirectories = Lists.newArrayList(cDirectories);
-        myCppDirectories = Lists.newArrayList(cppDirectories);
         myResDirectories = Lists.newArrayList(resDirectories);
         myAssetsDirectories = Lists.newArrayList(assetsDirectories);
         myJniLibsDirectories = Lists.newArrayList(jniLibsDirectories);
@@ -156,13 +145,13 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @Override
     @NonNull
     public Collection<File> getCDirectories() {
-        return myCDirectories;
+        return Collections.emptyList();
     }
 
     @Override
     @NonNull
     public Collection<File> getCppDirectories() {
-        return myCppDirectories;
+        return Collections.emptyList();
     }
 
     @Override
@@ -210,8 +199,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 && Objects.equals(getResourcesDirectories(), stub.getResourcesDirectories())
                 && Objects.equals(getAidlDirectories(), stub.getAidlDirectories())
                 && Objects.equals(getRenderscriptDirectories(), stub.getRenderscriptDirectories())
-                && Objects.equals(getCDirectories(), stub.getCDirectories())
-                && Objects.equals(getCppDirectories(), stub.getCppDirectories())
                 && Objects.equals(getResDirectories(), stub.getResDirectories())
                 && Objects.equals(getAssetsDirectories(), stub.getAssetsDirectories())
                 && Objects.equals(getJniLibsDirectories(), stub.getJniLibsDirectories())
@@ -228,8 +215,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 getResourcesDirectories(),
                 getAidlDirectories(),
                 getRenderscriptDirectories(),
-                getCDirectories(),
-                getCppDirectories(),
                 getResDirectories(),
                 getAssetsDirectories(),
                 getJniLibsDirectories(),
@@ -253,10 +238,6 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
                 + myAidlDirectories
                 + ", myRenderscriptDirectories="
                 + myRenderscriptDirectories
-                + ", myCDirectories="
-                + myCDirectories
-                + ", myCppDirectories="
-                + myCppDirectories
                 + ", myResDirectories="
                 + myResDirectories
                 + ", myAssetsDirectories="

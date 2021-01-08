@@ -18,7 +18,8 @@ package com.android.build.gradle.integration.api
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ModelContainer
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.AndroidProject
@@ -32,24 +33,28 @@ class PluginVersionCheckTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
-        .fromTestApp(HelloWorldApp.forPlugin("com.android.library"))
-        .create()
+            .fromTestApp(
+                    MultiModuleTestProject.builder()
+                            .subproject("lib", MinimalSubProject.lib("com.example.lib"))
+                            .build()
+            ).create()
 
     @Test
     fun testButterKnifeTooOld() {
         // Use an old version of the ButterKnife plugin, expect sync issues
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.appendToFile(
             project.buildFile,
-            "android {\n",
             """
                 buildscript {
                     dependencies {
                         classpath 'com.jakewharton:butterknife-gradle-plugin:9.0.0-rc1'
                     }
                 }
-                apply plugin: 'com.jakewharton.butterknife'
-                android {
                 """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+                project.getSubproject("lib").buildFile,
+                "apply plugin: 'com.jakewharton.butterknife'"
         )
 
         val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
@@ -75,18 +80,19 @@ class PluginVersionCheckTest {
     @Test
     fun testButterKnifeOk() {
         // Use a sufficiently new version of the ButterKnife plugin, expect no sync issues
-        TestFileUtils.searchAndReplace(
+        TestFileUtils.appendToFile(
             project.buildFile,
-            "android {\n",
             """
                 buildscript {
                     dependencies {
                         classpath 'com.jakewharton:butterknife-gradle-plugin:9.0.0-rc2'
                     }
                 }
-                apply plugin: 'com.jakewharton.butterknife'
-                android {
                 """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+                project.getSubproject("lib").buildFile,
+                "apply plugin: 'com.jakewharton.butterknife'"
         )
 
         val model = project.model().fetchAndroidProjects()

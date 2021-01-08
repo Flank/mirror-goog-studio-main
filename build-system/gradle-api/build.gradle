@@ -21,7 +21,7 @@ dependencies {
     implementation project(':base:builder-test-api')
     implementation libs.guava
     implementation libs.kotlin_stdlib
-    implementation libs.asm
+    api libs.asm
 
     provided gradleApi()
     provided project(':base:builder-model') // Only present for legacy reasons.

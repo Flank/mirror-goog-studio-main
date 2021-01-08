@@ -71,6 +71,7 @@ public class BenchmarkTest {
     @Nullable private String agpVersion = null;
     private boolean failOnWarning = true;
     private boolean reuseTransformCache = true;
+    private boolean useSeparateGradleHome = false;
     private boolean enableYourKit = false;
     private String yourKitAgentPath = null;
     private String yourKitLibraryPath = null;
@@ -161,6 +162,10 @@ public class BenchmarkTest {
         value = System.getProperty("reuse_transform_cache");
         if (value != null && !value.isEmpty()) {
             reuseTransformCache = Boolean.parseBoolean(value);
+        }
+        value = System.getProperty("use_separate_gradle_home");
+        if (value != null && !value.isEmpty()) {
+            useSeparateGradleHome = Boolean.parseBoolean(value);
         }
         value = System.getProperty("enable_yourkit");
         if (value != null && !value.isEmpty()) {
@@ -337,8 +342,14 @@ public class BenchmarkTest {
             listeners.forEach(it -> it.benchmarkStarting(benchmark));
 
             for (int i = 0; i < benchmarkRun.warmUps + benchmarkRun.iterations; i++) {
+                if (!reuseTransformCache) {
+                    gradle.modifyBuildscriptClasspath();
+                }
+
                 if (!cleanups.isEmpty()) {
-                    gradle.run(cleanups);
+                    for (String cleanupTask : cleanups) {
+                        gradle.run(cleanupTask);
+                    }
                 }
 
                 if (i == benchmarkRun.warmUps && enableYourKit) {
@@ -352,7 +363,15 @@ public class BenchmarkTest {
                 if (i >= benchmarkRun.warmUps) {
                     listeners.forEach(it -> it.iterationStarting());
                 }
-                gradle.run(tasks);
+                if (useSeparateGradleHome) {
+                    gradle.run(
+                            tasks,
+                            System.out,
+                            System.err,
+                            new File(out, "measured-build-gradle-home").getAbsoluteFile());
+                } else {
+                    gradle.run(tasks);
+                }
                 if (i >= benchmarkRun.warmUps) {
                     listeners.forEach(BenchmarkListener::iterationDone);
                 }
@@ -368,10 +387,6 @@ public class BenchmarkTest {
                                     "Benchmark %s$1 assertion failed at iteration %d$2",
                                     benchmarkName, i),
                             e);
-                }
-
-                if (!reuseTransformCache) {
-                    gradle.modifyBuildscriptClasspath();
                 }
             }
 

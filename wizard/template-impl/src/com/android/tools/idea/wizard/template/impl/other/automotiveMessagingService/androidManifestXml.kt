@@ -24,7 +24,7 @@ fun androidManifestXml(
 ) = """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application>
+    <application android:appCategory="audio">
 
         <meta-data
             android:name="com.google.android.gms.car.application"

@@ -29,6 +29,9 @@ namespace perfetto {
 class TraceProcessorServiceImpl final
     : public proto::TraceProcessorService::Service {
  public:
+  TraceProcessorServiceImpl() {}
+  TraceProcessorServiceImpl(const std::string& llvm_path)
+      : llvm_path_(llvm_path) {}
   grpc::Status LoadTrace(grpc::ServerContext* context,
                          const proto::LoadTraceRequest* request,
                          proto::LoadTraceResponse* response) override;
@@ -42,6 +45,7 @@ class TraceProcessorServiceImpl final
   std::shared_mutex tp_mutex;
   std::unique_ptr<::perfetto::trace_processor::TraceProcessor> tp_;
   int64_t loaded_trace_id = 0;
+  std::string llvm_path_;
 
   void LoadAllProcessMetadata(proto::ProcessMetadataResult* metadata);
 };

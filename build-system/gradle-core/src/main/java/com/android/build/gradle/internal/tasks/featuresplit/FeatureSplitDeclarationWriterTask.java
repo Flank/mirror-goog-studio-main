@@ -42,7 +42,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     }
 
     @Input
-    public abstract Property<String> getApplicationId();
+    public abstract Property<String> getNamespace();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
@@ -50,7 +50,7 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
     @Override
     protected void doTaskAction() throws IOException {
         FeatureSplitDeclaration declaration =
-                new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId().get());
+                new FeatureSplitDeclaration(uniqueIdentifier, getNamespace().get());
         declaration.save(getOutputDirectory().get().getAsFile());
     }
 
@@ -93,10 +93,8 @@ public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTa
             super.configure(task);
 
             task.uniqueIdentifier = task.getProject().getPath();
-            // rename this as packageName since this is really what this is
-            // TODO b/152002064
-            task.getApplicationId().set(creationConfig.getNamespace());
-            task.getApplicationId().disallowChanges();
+            task.getNamespace().set(creationConfig.getNamespace());
+            task.getNamespace().disallowChanges();
         }
     }
 }

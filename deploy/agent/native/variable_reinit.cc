@@ -374,17 +374,14 @@ bool VariableReinitializer::TriggerClassInitialize(jclass clazz) {
   }
 
   JniClass java_class(jni_, "java/lang/Class");
-  jvalue params[3];
-  params[0].l = jni_->NewStringUTF(class_name.c_str());
-  params[1].z = true;  // This parameter determines if the forName method tries
-                       // to initialize the class.
-  params[2].l = class_loader;
 
   // The reflective method Class#forName() can be used to initialize the class.
-  java_class.CallStaticMethod<jobject>(
-      {"forName",
-       "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;"},
-      params);
+  // The second parameter determines if the forName method tries to initialize
+  // the class.
+  java_class.CallStaticObjectMethod(
+      "forName",
+      "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;",
+      jni_->NewStringUTF(class_name.c_str()), true, class_loader);
   jvmti_->Deallocate((unsigned char*)class_sig);
   if (jni_->ExceptionCheck()) {
     jni_->ExceptionDescribe();

@@ -116,6 +116,13 @@ class SigningConfigImplTest(
                 assertThat(v1Signed).isTrue()
             }
         }
+
+        // Regression test for b/158723475
+        if (targetApi == null || targetApi >= MIN_V2_SDK) {
+            if (!v2Signed && !v3Signed) {
+                assertThat(enableV2Signing).isFalse()
+            }
+        }
     }
 
     companion object {

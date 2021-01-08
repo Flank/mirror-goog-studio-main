@@ -19,7 +19,6 @@ package com.android.tools.idea.wizard.template.impl
 import com.android.tools.idea.wizard.template.Template
 import com.android.tools.idea.wizard.template.WizardTemplateProvider
 import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.androidTVActivityTemplate
-import com.android.tools.idea.wizard.template.impl.activities.androidThingsActivity.androidThingsActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.basicActivity.basicActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.blankWearActivity.blankWearActivityTemplate
 import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
@@ -69,7 +68,6 @@ import com.android.tools.idea.wizard.template.impl.other.watchFaceService.watchF
  */
 class WizardTemplateProviderImpl : WizardTemplateProvider() {
   override fun getTemplates(): List<Template> = listOf(
-    androidThingsActivityTemplate,
     androidTVActivityTemplate,
     basicActivityTemplate,
     blankWearActivityTemplate,

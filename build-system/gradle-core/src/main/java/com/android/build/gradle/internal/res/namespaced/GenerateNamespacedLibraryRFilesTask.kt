@@ -62,7 +62,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
     abstract val partialRFiles: ListProperty<Directory>
 
     @get:Input
-    abstract val packageForR: Property<String>
+    abstract val namespace: Property<String>
 
     @get:Optional
     @get:OutputFile
@@ -80,7 +80,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
         workerExecutor.noIsolation().submit(TaskAction::class.java) { parameters ->
             parameters.initializeFromAndroidVariantTask(this)
             parameters.partialRFiles.set(partialRFiles)
-            parameters.packageForR.set(packageForR)
+            parameters.namespace.set(namespace)
             parameters.rJarFile.set(rJarFile)
             parameters.textSymbolOutputFile.set(textSymbolFile)
             parameters.symbolsWithPackageNameOutputFile.set(symbolsWithPackageNameFile)
@@ -89,7 +89,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
 
     abstract class Params : ProfileAwareWorkAction.Parameters() {
         abstract val partialRFiles: ListProperty<Directory>
-        abstract val packageForR: Property<String>
+        abstract val namespace: Property<String>
         abstract val rJarFile: RegularFileProperty
         abstract val textSymbolOutputFile: RegularFileProperty
         abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
@@ -109,7 +109,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
                 Files.walkFileTree(directory.asFile.toPath(), emptySet(), 1, visitor)
             }
             // Read the symbol tables from the partial R.txt files and merge them into one.
-            val resources = SymbolTable.mergePartialTables(partialRFiles, parameters.packageForR.get())
+            val resources = SymbolTable.mergePartialTables(partialRFiles, parameters.namespace.get())
 
             parameters.rJarFile.orNull?.apply {
                 exportToCompiledJava(ImmutableList.of(resources), asFile.toPath())
@@ -164,7 +164,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
             task.partialRFiles.setDisallowChanges(
                 creationConfig.artifacts.getAll(
                 InternalMultipleArtifactType.PARTIAL_R_FILES))
-            task.packageForR.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
         }
     }
 }

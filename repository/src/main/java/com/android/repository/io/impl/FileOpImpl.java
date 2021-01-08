@@ -17,6 +17,7 @@
 package com.android.repository.io.impl;
 
 import com.android.annotations.NonNull;
+import com.android.io.CancellableFileIo;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import java.io.File;
@@ -30,6 +31,9 @@ import java.nio.file.Path;
  * <p>This makes it possible to override/mock/stub some file operations in unit tests.
  *
  * <p>Instances should be obtained through {@link FileOpUtils#create()}
+ *
+ * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
+ *     InMemoryFileSystems} directly.
  */
 public class FileOpImpl extends FileOp {
     private final FileSystem fileSystem;

@@ -42,6 +42,7 @@ import com.android.repository.testframework.FakeProgressRunner;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
+import com.android.testutils.file.InMemoryFileSystems;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
@@ -101,40 +102,39 @@ public class BasicInstallerTest extends TestCase {
         assertTrue(fop.exists(new File("/repo/dummy/bar/package.xml")));
     }
 
-    public void testDeleteNonstandardLocation() {
-        File toDeleteDir = new File("/sdk/foo with space");
-        File otherDir1 = new File("/sdk/foo");
-        File otherDir2 = new File("/sdk/bar");
-        MockFileOp fop = new MockFileOp();
-        fop.mkdirs(otherDir1);
-        fop.mkdirs(otherDir2);
-        fop.mkdirs(toDeleteDir);
-        File toDeleteFile = new File(toDeleteDir, "a");
-        fop.recordExistingFile(toDeleteFile);
-        File otherFile1 = new File(otherDir1, "b");
-        fop.recordExistingFile(otherFile1);
-        File otherFile2 = new File(otherDir2, "c");
-        fop.recordExistingFile(otherFile2);
+    public void testDeleteNonstandardLocation() throws IOException {
+        Path sdkRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("sdk");
+        Path toDeleteDir = sdkRoot.resolve("foo with space");
+        Path otherDir1 = sdkRoot.resolve("foo");
+        Path otherDir2 = sdkRoot.resolve("bar");
+        Files.createDirectories(otherDir1);
+        Files.createDirectories(otherDir2);
+        Files.createDirectories(toDeleteDir);
+        Path toDeleteFile = toDeleteDir.resolve("a");
+        InMemoryFileSystems.recordExistingFile(toDeleteFile);
+        Path otherFile1 = otherDir1.resolve("b");
+        InMemoryFileSystems.recordExistingFile(otherFile1);
+        Path otherFile2 = otherDir2.resolve("c");
+        InMemoryFileSystems.recordExistingFile(otherFile2);
 
-        LocalPackage localPackage = new FakePackage.FakeLocalPackage("foo", fop);
-        localPackage.setInstalledPath(fop.toPath(toDeleteDir));
+        LocalPackage localPackage = new FakePackage.FakeLocalPackage("foo", toDeleteDir);
         RepositoryPackages packages =
                 new RepositoryPackages(
                         ImmutableList.of(
-                                new FakePackage.FakeLocalPackage("bar", fop), localPackage),
+                                new FakePackage.FakeLocalPackage("bar", otherDir2), localPackage),
                         ImmutableList.of());
-        RepoManager mgr = new FakeRepoManager(fop.toPath("/sdk"), packages);
+        RepoManager mgr = new FakeRepoManager(sdkRoot, packages);
         InstallerFactory factory = new BasicInstallerFactory();
         Uninstaller uninstaller = factory.createUninstaller(localPackage, mgr);
         FakeProgressIndicator progress = new FakeProgressIndicator();
         uninstaller.prepare(progress);
         uninstaller.complete(progress);
-        assertFalse(fop.exists(toDeleteFile));
-        assertFalse(fop.exists(toDeleteDir));
-        assertTrue(fop.exists(otherFile1));
-        assertTrue(fop.exists(otherFile2));
-        assertTrue(fop.exists(otherDir1));
-        assertTrue(fop.exists(otherDir2));
+        assertFalse(Files.exists(toDeleteFile));
+        assertFalse(Files.exists(toDeleteDir));
+        assertTrue(Files.exists(otherFile1));
+        assertTrue(Files.exists(otherFile2));
+        assertTrue(Files.exists(otherDir1));
+        assertTrue(Files.exists(otherDir2));
     }
 
     // Test installing a new package

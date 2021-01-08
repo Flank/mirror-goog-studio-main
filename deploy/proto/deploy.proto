@@ -90,11 +90,10 @@ message OverlayInstallResponse {
     OK = 1;
     SETUP_FAILED = 2;
     START_SERVER_FAILED = 3;
-    WRITE_TO_SERVER_FAILED = 4;
-    READ_FROM_SERVER_FAILED = 5;
-    OVERLAY_ID_MISMATCH = 6;
-    OVERLAY_UPDATE_FAILED = 7;
-    START_SERVER_FAILED_USERDEBUG = 8;
+    OVERLAY_ID_MISMATCH = 4;
+    OVERLAY_UPDATE_FAILED = 5;
+    START_SERVER_FAILED_USERDEBUG = 6;
+    INSTALL_SERVER_COM_ERR = 7;
   }
 
   Status status = 1;
@@ -173,16 +172,15 @@ message LiveLiteralUpdateResponse {
     OK = 1;
     SETUP_FAILED = 2;
     START_SERVER_FAILED = 3;
-    WRITE_TO_SERVER_FAILED = 4;
-    READ_FROM_SERVER_FAILED = 5;
-    START_SERVER_FAILED_USERDEBUG = 6;
-    READY_FOR_AGENTS_NOT_RECEIVED = 7;
-    AGENT_ATTACH_FAILED = 8;
-    AGENT_ERROR = 9;                      // One or more of the agents reported failure
-    PROCESS_CRASHING = 10;                // One of the processes is crashing
-    PROCESS_NOT_RESPONDING = 11;          // One of the processes is not responding
-    PROCESS_TERMINATED = 12;              // One of the processes terminated during swap
-    MISSING_AGENT_RESPONSES = 13;         // Not all agents responded
+    START_SERVER_FAILED_USERDEBUG = 4;
+    READY_FOR_AGENTS_NOT_RECEIVED = 5;
+    AGENT_ATTACH_FAILED = 6;
+    AGENT_ERROR = 7;                      // One or more of the agents reported failure
+    PROCESS_CRASHING = 8;                // One of the processes is crashing
+    PROCESS_NOT_RESPONDING = 9;          // One of the processes is not responding
+    PROCESS_TERMINATED = 10;              // One of the processes terminated during swap
+    MISSING_AGENT_RESPONSES = 11;         // Not all agents responded
+    INSTALL_SERVER_COM_ERR = 12;           // InstallServer internal or pipe rw error
   }
   Status status = 1;
 
@@ -315,18 +313,17 @@ message SwapResponse {
     START_SERVER_FAILED = 6;              // Could not start the server
     AGENT_ATTACH_FAILED = 7;              // Could not attach agents
     MISSING_AGENT_RESPONSES = 8;          // Not all agents responded
-    WRITE_TO_SERVER_FAILED = 9;           // Could not communicate with the server
-    UNPARSEABLE_AGENT_RESPONSE = 10;      // An agent responded in an unexpected way
-    NO_DEBUGGER_SESSIONS = 11;            // Could not swap with debugger
-    PROCESS_CRASHING = 12;                // One of the processes is crashing
-    PROCESS_NOT_RESPONDING = 13;          // One of the processes is not responding
-    PROCESS_TERMINATED = 14;              // One of the processes terminated during swap
-    READ_FROM_SERVER_FAILED = 15;         // The install server failed to response
-    OVERLAY_ID_MISMATCH = 16;             // The expected overlay was not present
-    OVERLAY_UPDATE_FAILED = 17;           // The overlay update failed to complete
-    SWAP_FAILED_BUT_OVERLAY_UPDATED = 18; // Swap failed, but overlay was updated
-    START_SERVER_FAILED_USERDEBUG = 19;   // Could not start the server
-    READY_FOR_AGENTS_NOT_RECEIVED = 20;   // Did not receive the OK to attach agents
+    UNPARSEABLE_AGENT_RESPONSE = 9;      // An agent responded in an unexpected way
+    NO_DEBUGGER_SESSIONS = 10;            // Could not swap with debugger
+    PROCESS_CRASHING = 11;                // One of the processes is crashing
+    PROCESS_NOT_RESPONDING = 12;          // One of the processes is not responding
+    PROCESS_TERMINATED = 13;              // One of the processes terminated during swap
+    OVERLAY_ID_MISMATCH = 14;             // The expected overlay was not present
+    OVERLAY_UPDATE_FAILED = 15;           // The overlay update failed to complete
+    SWAP_FAILED_BUT_OVERLAY_UPDATED = 16; // Swap failed, but overlay was updated
+    START_SERVER_FAILED_USERDEBUG = 17;   // Could not start the server
+    READY_FOR_AGENTS_NOT_RECEIVED = 18;   // Did not receive the OK to attach agents
+    INSTALL_SERVER_COM_ERR = 19;          // InstallServer internal or pipe rw error
   }
 
   Status status = 1;

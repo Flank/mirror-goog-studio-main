@@ -827,6 +827,10 @@ public class Main {
                 if (outputName.equals("stdout")) {
                     writer = new PrintWriter(System.out, true);
                     closeWriter = false;
+                } else if (outputName.equals("stderr")) {
+                    //noinspection IOResourceOpenedButNotSafelyClosed,resource
+                    writer = new PrintWriter(System.err, true);
+                    closeWriter = false;
                 } else {
                     File output = getOutArgumentPath(outputName);
 

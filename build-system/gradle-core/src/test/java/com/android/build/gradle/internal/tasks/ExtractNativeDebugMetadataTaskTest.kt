@@ -48,6 +48,7 @@ class ExtractNativeDebugMetadataTaskTest {
     val temporaryFolder = TemporaryFolder()
 
     private lateinit var inputDir: File
+    private lateinit var strippedNativelibs: File
     private lateinit var x86NativeLib: File
     private lateinit var armeabiNativeLib: File
     private lateinit var outputDir: File
@@ -68,6 +69,9 @@ class ExtractNativeDebugMetadataTaskTest {
         armeabiNativeLib = FileUtils.join(inputDir, "lib", "armeabi", "foo.so")
         FileUtils.createFile(armeabiNativeLib, "foo")
         assertThat(armeabiNativeLib).exists()
+
+        // create empty strippedNativeLibs dir
+        strippedNativelibs = temporaryFolder.newFolder("strippedNativeLibs")
 
         outputDir = temporaryFolder.newFolder("outputDir")
 
@@ -97,6 +101,8 @@ class ExtractNativeDebugMetadataTaskTest {
                 return object : Parameters() {
                     override val inputDir = objectFactory.directoryProperty()
                         .fileValue(this@ExtractNativeDebugMetadataTaskTest.inputDir)
+                    override val strippedNativeLibs = objectFactory.directoryProperty()
+                        .fileValue(this@ExtractNativeDebugMetadataTaskTest.strippedNativelibs)
                     override val outputDir = objectFactory.directoryProperty()
                         .fileValue(this@ExtractNativeDebugMetadataTaskTest.outputDir)
                     override val objcopyExecutableMap =
@@ -147,6 +153,8 @@ class ExtractNativeDebugMetadataTaskTest {
                 return object : Parameters() {
                     override val inputDir = objectFactory.directoryProperty()
                         .fileValue(this@ExtractNativeDebugMetadataTaskTest.inputDir)
+                    override val strippedNativeLibs = objectFactory.directoryProperty()
+                        .fileValue(this@ExtractNativeDebugMetadataTaskTest.strippedNativelibs)
                     override val outputDir = objectFactory.directoryProperty()
                         .fileValue(this@ExtractNativeDebugMetadataTaskTest.outputDir)
                     override val objcopyExecutableMap =
@@ -196,6 +204,8 @@ class ExtractNativeDebugMetadataTaskTest {
                 return object : Parameters() {
                     override val inputDir = objectFactory.directoryProperty()
                         .fileValue(this@ExtractNativeDebugMetadataTaskTest.inputDir)
+                    override val strippedNativeLibs = objectFactory.directoryProperty()
+                        .fileValue(this@ExtractNativeDebugMetadataTaskTest.strippedNativelibs)
                     override val outputDir = objectFactory.directoryProperty()
                         .fileValue(this@ExtractNativeDebugMetadataTaskTest.outputDir)
                     override val objcopyExecutableMap =

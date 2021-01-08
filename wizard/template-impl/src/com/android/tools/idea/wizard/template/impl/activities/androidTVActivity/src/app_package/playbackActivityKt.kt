@@ -16,17 +16,15 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 
 fun playbackActivityKt(
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${escapeKotlinIdentifier(packageName)}
 
 import android.os.Bundle
-import ${getMaterialComponentName("android.support.v4.app.FragmentActivity", useAndroidX)}
+import androidx.fragment.app.FragmentActivity
 
 /** Loads [PlaybackVideoFragment]. */
 class PlaybackActivity : FragmentActivity() {

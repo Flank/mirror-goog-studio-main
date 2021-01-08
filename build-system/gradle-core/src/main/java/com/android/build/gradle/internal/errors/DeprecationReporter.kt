@@ -73,11 +73,6 @@ interface DeprecationReporter {
             "Gradle Properties must be used to change Variant information."
         ),
 
-        INCLUDE_COMPILE_CLASSPATH(
-            Version.VERSION_7_0,
-            "It does not do anything and AGP no longer includes annotation processors added on your project's compile classpath"
-        ),
-
         AGP_BUILD_CACHE(
             Version.VERSION_7_0,
             "It does not do anything and AGP is now using Gradle caching."

@@ -27,6 +27,7 @@ interface ComposeOptions {
      * Sets the version of the Kotlin Compiler used to compile the project or null if using
      * the default one.
      */
+    @Deprecated("")
     var kotlinCompilerVersion: String?
 
     /**

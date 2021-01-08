@@ -44,8 +44,7 @@ class OptionVersionTest {
                 BooleanOption.PREFER_CMAKE_FILE_API,
                 BooleanOption.ENABLE_NATIVE_CONFIGURATION_FOLDING,
                 OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
-                StringOption.JETIFIER_BLACKLIST,
-                StringOption.BUILD_CACHE_DIR
+                StringOption.JETIFIER_BLACKLIST
         )
 
         private fun getStableVersionIgnoringDotReleases(versionString: String): GradleVersion {

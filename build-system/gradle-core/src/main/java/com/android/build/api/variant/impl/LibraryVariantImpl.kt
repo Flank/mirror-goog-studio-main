@@ -78,7 +78,7 @@ open class  LibraryVariantImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val applicationId: Provider<String> =
-        internalServices.providerOf(String::class.java, variantDslInfo.packageName)
+        internalServices.providerOf(String::class.java, variantDslInfo.namespace)
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
         classVisitorFactoryImplClass: Class<out AsmClassVisitorFactory<ParamT>>,

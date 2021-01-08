@@ -30,11 +30,11 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.DosFileAttributeView;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +45,9 @@ import java.util.stream.Stream;
  *
  * <p>This makes it possible to override/mock/stub some file operations in unit tests. Uses {@link
  * CancellableFileIo} to check for cancellation before read I/O operations.
+ *
+ * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
+ *     InMemoryFileSystems} directly.
  */
 public abstract class FileOp {
     /** Returns the {@link FileSystem} this is based on. */
@@ -89,11 +92,16 @@ public abstract class FileOp {
      */
     public final void setReadOnly(@NonNull File file) throws IOException {
         Path path = toPath(file);
-        Set<PosixFilePermission> permissions = EnumSet.copyOf(Files.getPosixFilePermissions(path));
-        permissions.remove(PosixFilePermission.OWNER_WRITE);
-        permissions.remove(PosixFilePermission.GROUP_WRITE);
-        permissions.remove(PosixFilePermission.OTHERS_WRITE);
-        Files.setPosixFilePermissions(path, permissions);
+        if (FileOpUtils.isWindows()) {
+            Files.getFileAttributeView(path, DosFileAttributeView.class).setReadOnly(true);
+        } else {
+            Set<PosixFilePermission> permissions =
+                    EnumSet.copyOf(Files.getPosixFilePermissions(path));
+            permissions.remove(PosixFilePermission.OWNER_WRITE);
+            permissions.remove(PosixFilePermission.GROUP_WRITE);
+            permissions.remove(PosixFilePermission.OTHERS_WRITE);
+            Files.setPosixFilePermissions(path, permissions);
+        }
     }
 
     // TODO: make this final so we can migrate from FileOp to using Paths directly
@@ -283,10 +291,10 @@ public abstract class FileOp {
      */
     public abstract File ensureRealFile(@NonNull File in) throws IOException;
 
-    /** Returns {@code true} if we're on windows, {@code false} otherwise. */
+    /** @see CancellableFileIo#readString(Path). */
     @NonNull
     public final String readText(@NonNull File f) throws IOException {
-        return CancellableFileIo.readText(toPath(f));
+        return CancellableFileIo.readString(toPath(f));
     }
 
     /** @see File#list(FilenameFilter) */

@@ -34,14 +34,14 @@ import javax.lang.model.element.Modifier
  */
 class BuildConfigGenerator(buildConfigData: BuildConfigData) : GeneratedCodeFileCreator {
     private val genFolder: String = buildConfigData.outputPath.toString()
-    private val buildConfigPackageName: String = buildConfigData.buildConfigPackageName
+    private val namespace: String = buildConfigData.namespace
     private val fields: Map<String, BuildConfigField<out Serializable>> = buildConfigData.buildConfigFields
 
     /** Returns a File representing where the BuildConfig class will be.  */
     override val folderPath =
         File(
             genFolder,
-            buildConfigPackageName.replace('.', File.separatorChar)
+            namespace.replace('.', File.separatorChar)
         )
 
     override val generatedFilePath = File(folderPath, BUILD_CONFIG_NAME)
@@ -60,7 +60,7 @@ class BuildConfigGenerator(buildConfigData: BuildConfigData) : GeneratedCodeFile
             )
             val writer = closer.register(JavaWriter(out))
             writer.emitJavadoc("Automatically generated file. DO NOT MODIFY")
-                .emitPackage(buildConfigPackageName)
+                .emitPackage(namespace)
                 .beginType(
                     "BuildConfig",
                     "class",

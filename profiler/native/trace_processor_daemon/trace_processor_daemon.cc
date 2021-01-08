@@ -28,6 +28,9 @@ using profiler::perfetto::TraceProcessorServiceImpl;
 
 ABSL_FLAG(absl::Duration, server_timeout, absl::Hours(1),
           "How long to keep the server alive when inactive");
+ABSL_FLAG(std::string, llvm_symbolizer_path, "",
+          "Path to llvm symbolizer, used to symbolize traces that contain "
+          "callstacks");
 
 class GRPC_GlobalCallback : public grpc_impl::Server::GlobalCallbacks {
  public:
@@ -73,15 +76,22 @@ void check_last_activity(grpc::Server* server,
   }
 }
 
-void RunServer() {
-  auto time_point = std::chrono::steady_clock::now();
-  GRPC_GlobalCallback callback(&time_point);
-  grpc_impl::Server::SetGlobalCallbacks(&callback);
+void RunServer(GRPC_GlobalCallback* callback,
+               std::chrono::steady_clock::time_point* start_time) {
+  grpc_impl::Server::SetGlobalCallbacks(callback);
 
   ServerBuilder builder;
 
+  std::string llvm_path = absl::GetFlag(FLAGS_llvm_symbolizer_path);
+  if (llvm_path.empty()) {
+    std::cout << "Expected llvm path but it was empty. "
+                 "Please launch with --llvm_symbolizer_path set."
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
   // Register the handler for TraceProcessorService.
-  TraceProcessorServiceImpl service;
+  TraceProcessorServiceImpl service(llvm_path);
   builder.RegisterService(&service);
 
   // Bind to to loopback only, as we will only communicate with localhost.
@@ -104,7 +114,7 @@ void RunServer() {
   // are using.
   std::cout << "Server listening on 127.0.0.1:" << port << std::endl;
 
-  std::thread activity_checker(&check_last_activity, server.get(), &time_point);
+  std::thread activity_checker(&check_last_activity, server.get(), start_time);
   server->Wait();
   activity_checker.join();
 }
@@ -113,6 +123,12 @@ int main(int argc, char** argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   absl::ParseCommandLine(argc, argv);
 
-  RunServer();
+  // We create the callback here, so the GRPC server goes out of scope first
+  // (since it's built inside RunServer). This avoid the server invoking the
+  // callback after it has been disposed.
+  auto time_point = std::chrono::steady_clock::now();
+  GRPC_GlobalCallback callback(&time_point);
+  RunServer(&callback, &time_point);
+
   return 0;
 }

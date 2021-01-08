@@ -44,6 +44,14 @@ public class SdkVersionInfo {
     public static final int LOWEST_ACTIVE_API = 16;
 
     /**
+     * The default minSdkVersion to use for new projects and modules.
+     * This number is going to be at least {@link #LOWEST_ACTIVE_API}, but can
+     * often be higher; {@link #LOWEST_ACTIVE_API} is the minimum <b>supported</b>
+     * API level, whereas this constant is the <b>recommended</b> minSdkVersion.
+     */
+    public static final int RECOMMENDED_MIN_SDK_VERSION = 21;
+
+    /**
      * The highest known API level for Wearables. Note the tools at the
      * downloadable system images for wearables to see if there are more recent
      * versions.

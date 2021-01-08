@@ -46,6 +46,9 @@ public final class FileOpUtils {
 
     /**
      * The standard way to create a {@link FileOp} that interacts with the real filesystem.
+     *
+     * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
+     *     InMemoryFileSystems} directly.
      */
     @NonNull
     public static FileOp create() {
@@ -55,37 +58,44 @@ public final class FileOpUtils {
     /**
      * Copies a file or directory tree to the given location. {@code dest} should not exist: with
      * the file system currently looking like
-     * <pre>
-     *     {@code
-     *     /
-     *       dir1/
-     *         a.txt
-     *       dir2/
-     *     }
-     * </pre>
+     *
+     * <pre>{@code
+     * /
+     *   dir1/
+     *     a.txt
+     *   dir2/
+     *
+     * }</pre>
+     *
      * Running {@code recursiveCopy(new File("/dir1"), new File("/dir2"), fOp)} will result in an
      * exception, while {@code recursiveCopy(new File("/dir1"), new File("/dir2/foo")} will result
      * in
-     * <pre>
-     *     {@code
-     *     /
-     *       dir1/
-     *         a.txt
-     *       dir2/
-     *         foo/
-     *           a.txt
-     *     }
-     * </pre>
+     *
+     * <pre>{@code
+     * /
+     *   dir1/
+     *     a.txt
+     *   dir2/
+     *     foo/
+     *       a.txt
+     *
+     * }</pre>
+     *
      * This is equivalent to the behavior of {@code cp -r} when the target does not exist.
      *
-     * @param src  File to copy
+     * @param src File to copy
      * @param dest Destination.
-     * @param fop  The FileOp to use for file operations.
+     * @param fop The FileOp to use for file operations.
      * @throws IOException If the destination already exists, or if there is a problem copying the
-     *                     files or creating directories.
+     *     files or creating directories.
+     * @deprecated Use {@link #recursiveCopy(Path, Path, boolean, ProgressIndicator)}.
      */
-    public static void recursiveCopy(@NonNull File src, @NonNull File dest, @NonNull FileOp fop,
-            @NonNull ProgressIndicator progress) throws IOException {
+    public static void recursiveCopy(
+            @NonNull File src,
+            @NonNull File dest,
+            @NonNull FileOp fop,
+            @NonNull ProgressIndicator progress)
+            throws IOException {
         recursiveCopy(src, dest, false, fop, progress);
     }
 
@@ -96,7 +106,7 @@ public final class FileOpUtils {
     }
 
     @VisibleForTesting
-    static void recursiveCopy(
+    public static void recursiveCopy(
             @NonNull Path src,
             @NonNull Path dest,
             boolean merge,
@@ -258,12 +268,15 @@ public final class FileOpUtils {
     /**
      * Creates a new subdirectory of the system temp directory. The directory will be named {@code
      * <base> + NN}, where NN makes the directory distinct from any existing directories.
+     *
+     * @deprecated Use {@link #getNewTempDir(String, FileSystem)}.
      */
     @Nullable
     public static Path getNewTempDir(@NonNull String base, @NonNull FileOp fileOp) {
         return getNewTempDir(base, fileOp.getFileSystem());
     }
 
+    @Nullable
     public static Path getNewTempDir(@NonNull String base, @NonNull FileSystem fileSystem) {
         for (int i = 1; i < 100; i++) {
             Path rootTempDir = fileSystem.getPath(System.getProperty("java.io.tmpdir"));
@@ -386,6 +399,7 @@ public final class FileOpUtils {
      * exist to begin with.
      *
      * @return true if the file no longer exists, false if we failed to delete it
+     * @deprecated Use {@link Files#deleteIfExists(Path)}.
      */
     public static boolean deleteIfExists(File file, FileOp fop) {
         return !fop.exists(file) || fop.delete(file);

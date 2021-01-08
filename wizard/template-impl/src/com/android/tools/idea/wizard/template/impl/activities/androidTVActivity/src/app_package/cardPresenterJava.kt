@@ -16,18 +16,15 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
-
 fun cardPresenterJava(
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ) = """
 package ${packageName};
 
 import android.graphics.drawable.Drawable;
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ImageCardView", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.Presenter", useAndroidX)};
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)};
+import androidx.leanback.widget.ImageCardView;
+import androidx.leanback.widget.Presenter;
+import androidx.core.content.ContextCompat;
 import android.util.Log;
 import android.view.ViewGroup;
 
@@ -81,7 +78,7 @@ public class CardPresenter extends Presenter {
         // Both background colors should be set because the view"s background is temporarily visible
         // during animations.
         view.setBackgroundColor(color);
-        view.findViewById(R.id.info_field).setBackgroundColor(color);
+        view.setInfoAreaBackgroundColor(color);
     }
 
     @Override

@@ -76,7 +76,6 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":mergeMinifiedGeneratedProguardFiles",
             ":mergeMinifiedJavaResource",
             ":mergeMinifiedJniLibFolders",
-            ":mergeMinifiedNativeLibs",
             ":mergeMinifiedShaders",
             ":processMinifiedManifestForPackage",
             ":validateSigningMinified",
@@ -119,6 +118,7 @@ class MinifyCacheabilityTest (val shrinker: CodeShrinker) {
             ":compileMinifiedRenderscript",
             ":compileMinifiedShaders",
             ":mergeMinifiedNativeDebugMetadata",
+            ":mergeMinifiedNativeLibs",
             ":preMinifiedBuild",
             ":processMinifiedJavaRes",
             ":stripMinifiedDebugSymbols"

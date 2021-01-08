@@ -16,14 +16,11 @@
 
 package com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.src.app_package
 
-import com.android.tools.idea.wizard.template.getMaterialComponentName
-
 fun mainFragmentJava(
   detailsActivity: String,
   mainFragment: String,
   minApiLevel: Int,
-  packageName: String,
-  useAndroidX: Boolean
+  packageName: String
 ): String {
   val contextArgBlock = if (minApiLevel >= 23) "getContext()" else "getActivity()"
   return """
@@ -34,22 +31,22 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
-import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
-import ${getMaterialComponentName("android.support.annotation.Nullable", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.app.BackgroundManager", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.app.BrowseSupportFragment", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ArrayObjectAdapter", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.HeaderItem", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ImageCardView", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ListRow", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.ListRowPresenter", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.OnItemViewClickedListener", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.OnItemViewSelectedListener", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.Presenter", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.Row", useAndroidX)};
-import ${getMaterialComponentName("android.support.v17.leanback.widget.RowPresenter", useAndroidX)};
-import ${getMaterialComponentName("android.support.v4.app.ActivityOptionsCompat", useAndroidX)};
-import ${getMaterialComponentName("android.support.v4.content.ContextCompat", useAndroidX)};
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.leanback.app.BackgroundManager;
+import androidx.leanback.app.BrowseSupportFragment;
+import androidx.leanback.widget.ArrayObjectAdapter;
+import androidx.leanback.widget.HeaderItem;
+import androidx.leanback.widget.ImageCardView;
+import androidx.leanback.widget.ListRow;
+import androidx.leanback.widget.ListRowPresenter;
+import androidx.leanback.widget.OnItemViewClickedListener;
+import androidx.leanback.widget.OnItemViewSelectedListener;
+import androidx.leanback.widget.Presenter;
+import androidx.leanback.widget.Row;
+import androidx.leanback.widget.RowPresenter;
+import androidx.core.app.ActivityOptionsCompat;
+import androidx.core.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;

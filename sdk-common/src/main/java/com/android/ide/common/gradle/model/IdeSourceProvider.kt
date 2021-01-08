@@ -24,8 +24,6 @@ interface IdeSourceProvider {
   val resourcesDirectories: Collection<File>
   val aidlDirectories: Collection<File>
   val renderscriptDirectories: Collection<File>
-  val cDirectories: Collection<File>
-  val cppDirectories: Collection<File>
   val resDirectories: Collection<File>
   val assetsDirectories: Collection<File>
   val jniLibsDirectories: Collection<File>

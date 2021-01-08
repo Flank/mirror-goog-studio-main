@@ -118,10 +118,9 @@ public class FeatureSetMetadata {
     }
 
     @NonNull
-    public Map<String, String> getFeatureNameToPackageNameMap() {
-        return featureSplits
-                .stream()
-                .collect(toImmutableMap(info -> info.featureName, info -> info.packageName));
+    public Map<String, String> getFeatureNameToNamespaceMap() {
+        return featureSplits.stream()
+                .collect(toImmutableMap(info -> info.featureName, info -> info.namespace));
     }
 
     public void save(@NonNull File outputFile) throws IOException {
@@ -156,13 +155,13 @@ public class FeatureSetMetadata {
         final String modulePath;
         final String featureName;
         final int resOffset;
-        final String packageName;
+        final String namespace;
 
-        FeatureInfo(String modulePath, String featureName, int resOffset, String packageName) {
+        FeatureInfo(String modulePath, String featureName, int resOffset, String namespace) {
             this.modulePath = modulePath;
             this.featureName = featureName;
             this.resOffset = resOffset;
-            this.packageName = packageName;
+            this.namespace = namespace;
         }
     }
 }

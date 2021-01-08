@@ -28,12 +28,13 @@
 #include "tools/base/deploy/agent/native/crash_logger.h"
 #include "tools/base/deploy/agent/native/instrumentation.jar.cc"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
+#include "tools/base/deploy/agent/native/jni/jni_util.h"
 #include "tools/base/deploy/agent/native/native_callbacks.h"
 #include "tools/base/deploy/agent/native/transforms.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
-#include "tools/base/deploy/common/sites.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
 
@@ -211,10 +212,10 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
   // Ensure that the jar hasn't changed since we last instrumented. If it has,
   // fail out for now. This is an important scenario to guard against, since it
   // would likely cause silent failures.
-  jvalue jar_hash = {.l = jni->NewStringUTF(instrumentation_jar_hash)};
-  jboolean matches = breadcrumb.CallStaticMethod<jboolean>(
-      {"checkHash", "(Ljava/lang/String;)Z"}, &jar_hash);
-  jni->DeleteLocalRef(jar_hash.l);
+  jstring jar_hash = jni->NewStringUTF(instrumentation_jar_hash);
+  jboolean matches = breadcrumb.CallStaticBooleanMethod(
+      "checkHash", "(Ljava/lang/String;)Z", jar_hash);
+  jni->DeleteLocalRef(jar_hash);
 
   if (!matches) {
     Log::E(
@@ -225,8 +226,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
   }
 
   // Check if we need to instrument, or if a previous agent successfully did.
-  if (breadcrumb.CallStaticMethod<jboolean>(
-          {"isFinishedInstrumenting", "()Z"})) {
+  if (breadcrumb.CallStaticBooleanMethod("isFinishedInstrumenting", "()Z")) {
     return true;
   }
 
@@ -304,7 +304,7 @@ bool Instrument(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& jar,
              "Could not disable class file load hook event");
 
   if (success) {
-    breadcrumb.CallStaticMethod<void>({"setFinishedInstrumenting", "()V"});
+    breadcrumb.CallStaticVoidMethod("setFinishedInstrumenting", "()V");
     LogEvent("Finished instrumenting");
   }
 

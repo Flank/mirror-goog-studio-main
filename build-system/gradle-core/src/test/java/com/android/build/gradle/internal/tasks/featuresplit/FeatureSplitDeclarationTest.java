@@ -71,7 +71,7 @@ public class FeatureSplitDeclarationTest {
         FeatureSplitDeclaration loadedDeclaration = FeatureSplitDeclaration.load(fileCollection);
         assertThat(featureSplitDeclaration.getModulePath())
                 .isEqualTo(loadedDeclaration.getModulePath());
-        assertThat(featureSplitDeclaration.getApplicationId())
-                .isEqualTo(loadedDeclaration.getApplicationId());
+        assertThat(featureSplitDeclaration.getNamespace())
+                .isEqualTo(loadedDeclaration.getNamespace());
     }
 }

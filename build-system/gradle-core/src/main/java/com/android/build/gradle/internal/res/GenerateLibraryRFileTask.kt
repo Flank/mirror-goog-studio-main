@@ -83,7 +83,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @get:PathSensitive(PathSensitivity.NONE) abstract val dependencies: ConfigurableFileCollection
 
     @get:Input
-    abstract val packageForR: Property<String>
+    abstract val namespace: Property<String>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -117,7 +117,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             it.manifest.set(manifest)
             it.androidJar.from(platformAttrRTxt)
             it.dependencies.from(dependencies)
-            it.packageForR.set(packageForR.get())
+            it.namespace.set(namespace.get())
             it.rClassOutputJar.set(rClassOutputJar)
             it.textSymbolOutputFile.set(textSymbolOutputFileProperty)
             it.nonTransitiveRClass.set(nonTransitiveRClass.get())
@@ -138,7 +138,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
         abstract val manifest: RegularFileProperty
         abstract val androidJar: ConfigurableFileCollection
         abstract val dependencies: ConfigurableFileCollection
-        abstract val packageForR: Property<String>
+        abstract val namespace: Property<String>
         abstract val rClassOutputJar: RegularFileProperty
         abstract val textSymbolOutputFile: RegularFileProperty
         abstract val nonTransitiveRClass: Property<Boolean>
@@ -167,7 +167,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
                 depSymbolTables = depSymbolTables,
-                mainPackageName = parameters.packageForR.get(),
+                mainPackageName = parameters.namespace.get(),
                 manifestFile = parameters.manifest.asFile.get(),
                 rClassOutputJar = parameters.rClassOutputJar.asFile.orNull,
                 symbolFileOut = parameters.textSymbolOutputFile.asFile.orNull,
@@ -267,7 +267,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.nonTransitiveRClass.set(nonTransitiveRClass)
             task.compileClasspathLibraryRClasses.setDisallowChanges(compileClasspathLibraryRClasses)
-            task.packageForR.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles)
@@ -332,7 +332,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.nonTransitiveRClass.setDisallowChanges(projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS])
             task.compileClasspathLibraryRClasses.setDisallowChanges(false)
-            task.packageForR.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(creationConfig.namespace)
             task.mainSplit = creationConfig.outputs.getMainSplit()
             task.useConstantIds.setDisallowChanges(false)
             task.symbolTableBuildService.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))

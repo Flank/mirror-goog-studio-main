@@ -217,7 +217,8 @@ coverage_report(
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        #TODO(b/175459453)
+        #"//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/nav/editor:intellij.android.nav.editor.tests_tests",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
@@ -239,11 +240,11 @@ coverage_report(
     name = "dynamic-layout-inspector",
     srcpath_include = [
         "tools/adt/idea/layout-inspector/src",
-        "tools/base/dynamic-layout-inspector/src/main",
+        "tools/base/dynamic-layout-inspector/agent/transport/src/main",
     ],
     tests = [
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/base/dynamic-layout-inspector:agent_tests.test",
+        "//tools/base/dynamic-layout-inspector/agent/transport:agent_tests.test",
     ],
 )
 
@@ -265,7 +266,8 @@ coverage_report(
         "//tools/adt/idea/android-templates:intellij.android.templates.tests_tests",
         "//tools/adt/idea/compose-designer:intellij.android.compose-designer.tests_tests",
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
-        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        #TODO(b/175459453)
+        #"//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api_tests",
         "//tools/base/layoutlib-api:tools.tests",
@@ -624,7 +626,8 @@ coverage_report(
         "//tools/adt/idea/gradle-dsl:intellij.android.gradle.dsl.tests_tests",
         "//tools/adt/idea/kotlin-integration:kotlin-integration-tests_tests",
         "//tools/adt/idea/layout-inspector:intellij.android.layout-inspector.tests_tests",
-        "//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
+        #TODO(b/175459453)
+        #"//tools/adt/idea/layout-ui:intellij.android.layout-ui_tests",
         "//tools/adt/idea/layoutlib-loader:intellij.android.layoutlib-loader.tests_tests",
         "//tools/adt/idea/mlkit:intellij.android.mlkit.tests_tests",
         "//tools/adt/idea/native-symbolizer:native-symbolizer_tests",
@@ -717,7 +720,7 @@ coverage_report(
         "//tools/base/deploy/deployer:deployer.tests",
         "//tools/base/deploy/deployer:studio.android.sdktools.deployer_tests",
         "//tools/base/draw9patch:studio.android.sdktools.draw9patch_tests",
-        "//tools/base/dynamic-layout-inspector:agent_tests.test",
+        "//tools/base/dynamic-layout-inspector/agent/transport:agent_tests.test",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver_tests",
         "//tools/base/fakeadbserver:tools.tests",
         "//tools/base/flags:studio.android.sdktools.flags_tests",

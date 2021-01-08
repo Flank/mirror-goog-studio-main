@@ -16,6 +16,7 @@
  */
 
 #include "tools/base/deploy/agent/native/class_finder.h"
+
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/common/log.h"
 
@@ -24,18 +25,17 @@ namespace deploy {
 jobject ClassFinder::GetThreadClassLoader() const {
   JniClass thread(jni_, "java/lang/Thread");
   return thread
-      .CallStaticMethod<JniObject>({"currentThread", "()Ljava/lang/Thread;"})
-      .CallMethod<jobject>(
-          {"getContextClassLoader", "()Ljava/lang/ClassLoader;"});
+      .CallStaticJniObjectMethod("currentThread", "()Ljava/lang/Thread;")
+      .CallObjectMethod("getContextClassLoader", "()Ljava/lang/ClassLoader;");
 }
 
 jobject ClassFinder::GetApplicationClassLoader() const {
   JniClass activity_thread(jni_, "android/app/ActivityThread");
   return activity_thread
-      .CallStaticMethod<JniObject>(
-          {"currentApplication", "()Landroid/app/Application;"})
-      .GetField<JniObject>({"mLoadedApk", "Landroid/app/LoadedApk;"})
-      .CallMethod<jobject>({"getClassLoader", "()Ljava/lang/ClassLoader;"});
+      .CallStaticJniObjectMethod("currentApplication",
+                                 "()Landroid/app/Application;")
+      .GetJniObjectField("mLoadedApk", "Landroid/app/LoadedApk;")
+      .CallObjectMethod("getClassLoader", "()Ljava/lang/ClassLoader;");
 }
 
 jclass ClassFinder::FindInClassLoader(jobject class_loader,
@@ -45,13 +45,12 @@ jclass ClassFinder::FindInClassLoader(jobject class_loader,
     return nullptr;
   }
 
-  jvalue java_name = {.l = jni_->NewStringUTF(name.c_str())};
+  jstring java_name = jni_->NewStringUTF(name.c_str());
   jclass klass = static_cast<jclass>(
       JniObject(jni_, class_loader)
-          .CallMethod<jobject>(
-              {"findClass", "(Ljava/lang/String;)Ljava/lang/Class;"},
-              &java_name));
-  jni_->DeleteLocalRef(java_name.l);
+          .CallObjectMethod(
+              "findClass", "(Ljava/lang/String;)Ljava/lang/Class;", java_name));
+  jni_->DeleteLocalRef(java_name);
   return klass;
 }
 

@@ -28,6 +28,7 @@ import com.android.tools.idea.wizard.template.LanguageWidget
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.StringParameter
+import com.android.tools.idea.wizard.template.TemplateConstraint
 import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.TextFieldWidget
 import com.android.tools.idea.wizard.template.WizardUiContext
@@ -44,6 +45,7 @@ val androidTVActivityTemplate
     name = "Android TV Blank Activity"
     minApi = 21
     description = "Creates a new Android TV activity using Leanback Support library"
+    constraints = listOf(TemplateConstraint.AndroidX)
 
     category = Category.Activity
     formFactor = FormFactor.Tv
