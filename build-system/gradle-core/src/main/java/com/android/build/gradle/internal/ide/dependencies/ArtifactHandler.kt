@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.caching.CreatingCache
 import org.gradle.api.artifacts.component.ComponentIdentifier
@@ -77,8 +78,11 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
                 )
             }
         } else {
-            val buildId = id.getBuildId(artifact.buildMapping)
-                ?: throw RuntimeException("Failed to find matching buildId for artifact '${artifact.componentIdentifier}'. Build mapping is '${artifact.buildMapping}'")
+            val buildId: String = id.getBuildId(artifact.buildMapping) ?: run {
+                // Do not fail as these could be Gradle source dependencies, see b/176998942.
+                logger.info("Failed to find matching buildId for artifact '${artifact.componentIdentifier}'. Build mapping is '${artifact.buildMapping}'")
+                UNKNOWN_BUILD_NAME
+            }
 
             if (artifact.dependencyType === ResolvedArtifact.DependencyType.ANDROID) {
                 val lintJar = lintJarMap?.get(id)
@@ -141,3 +145,5 @@ abstract class ArtifactHandler<DependencyItemT> protected constructor(
         addressSupplier: () -> String
     ) : DependencyItemT
 }
+
+private val logger = LoggerWrapper.getLogger(ArtifactHandler::class.java)
