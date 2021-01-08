@@ -44,6 +44,7 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
         srcs = srcs,
         outs = [name + ".coverage.baseline.srcs"],
         tags = cov_sources_tags,
+        local = True,
         cmd = "printf '$(RULEDIR)/%s\n' {} | sed -e 's%^$(BINDIR)/%%' >$@".format(" ".join(srcs)),
     )
 
@@ -53,6 +54,7 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
         srcs = [name + "_coverage.baseline.srcs"],
         outs = [name + ".coverage.baseline.srcs.filtered"],
         tags = tags,
+        local = True,
         cmd = "python $(location @cov//:ignore_files_filter) <$< >$@",
         visibility = ["@baseline//:__pkg__"],
     )

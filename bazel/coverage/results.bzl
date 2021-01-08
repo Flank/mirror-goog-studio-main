@@ -53,6 +53,7 @@ def extract_exec_files(path):
         name = "{}.JacocoExec".format(path),
         srcs = ["{}/test.outputs/outputs.zip".format(path)],
         outs = ["{}/jacoco.exec".format(path)],
+        local = True,
         visibility = ["@cov//:__pkg__"],
         # Unzipping multiple .exec files to a pipe is equivalent
         # to unzipping each and then using jacoco to merge them.
@@ -73,6 +74,7 @@ def jacoco_exec_file(test, shards):
             srcs = ["{}/shard_{}_of_{}.JacocoExec".format(test, s, shards) for s in range(1, shards + 1)],
             outs = ["{}/jacoco.exec".format(test)],
             visibility = ["@cov//:__pkg__"],
+            local = True,
             cmd = "$(location {cli}) merge --quiet $(SRCS) --destfile $@".format(cli = jacoco_cli),
         )
     else:  # unsharded test
@@ -92,6 +94,7 @@ def construct_result_processing_graph():
                 tools = [jacoco_cli],
                 srcs = ["{}__{}.JacocoExec".format(k, s) for s in ts[k]],
                 outs = ["{}/jacoco.exec".format(k)],
+                local = True,
                 visibility = ["@cov//:__pkg__"],
                 cmd = "$(location {cli}) merge --quiet $(SRCS) --destfile $@".format(cli = jacoco_cli),
             )
