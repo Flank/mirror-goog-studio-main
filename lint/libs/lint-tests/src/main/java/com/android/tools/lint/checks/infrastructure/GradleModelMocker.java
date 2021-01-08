@@ -2019,12 +2019,12 @@ public class GradleModelMocker {
 
         Collection<IdeLibrary> libraries = dep.createLibrary();
         for (IdeLibrary library : libraries) {
-            if (library.getType() == IdeLibrary.LibraryType.LIBRARY_ANDROID) {
+            if (library instanceof IdeAndroidLibrary) {
                 IdeAndroidLibrary androidLibrary = (IdeAndroidLibrary) library;
                 if (!androidLibraries.contains(androidLibrary)) {
                     androidLibraries.add(androidLibrary);
                 }
-            } else if (library.getType() == IdeLibrary.LibraryType.LIBRARY_JAVA) {
+            } else if (library instanceof IdeJavaLibrary) {
                 IdeJavaLibrary javaLibrary = (IdeJavaLibrary) library;
                 if (!javaLibraries.contains(javaLibrary)) {
                     javaLibraries.add(javaLibrary);
@@ -2363,15 +2363,15 @@ public class GradleModelMocker {
 
         return new IdeDependenciesImpl(
                 result.stream()
-                        .filter(it -> it.getType() == IdeLibrary.LibraryType.LIBRARY_ANDROID)
+                        .filter(it -> it instanceof IdeAndroidLibrary)
                         .map(it -> (IdeAndroidLibrary) it)
                         .collect(toImmutableList()),
                 result.stream()
-                        .filter(it -> it.getType() == IdeLibrary.LibraryType.LIBRARY_JAVA)
+                        .filter(it -> it instanceof IdeJavaLibrary)
                         .map(it -> (IdeJavaLibrary) it)
                         .collect(toImmutableList()),
                 result.stream()
-                        .filter(it -> it.getType() == IdeLibrary.LibraryType.LIBRARY_MODULE)
+                        .filter(it -> it instanceof IdeModuleLibrary)
                         .map(it -> (IdeModuleLibrary) it)
                         .collect(toImmutableList()),
                 ImmutableList.of());

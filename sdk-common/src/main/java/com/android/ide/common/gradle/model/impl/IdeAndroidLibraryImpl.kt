@@ -136,15 +136,6 @@ data class IdeAndroidLibraryCore(
   override val artifact: File get() = File(_artifact.translate())
   override val symbolFile: String get() = _symbolFile.translate()
 
-  override val variant: String?
-    get() = throw unsupportedMethodForAndroidLibrary("getVariant")
-
-  override val buildId: String?
-    get() = throw unsupportedMethodForAndroidLibrary("getBuildId")
-
-  override val projectPath: String
-    get() = throw unsupportedMethodForAndroidLibrary("getProjectPath")
-
   override val isProvided: Nothing
     get() = error("abstract")
 

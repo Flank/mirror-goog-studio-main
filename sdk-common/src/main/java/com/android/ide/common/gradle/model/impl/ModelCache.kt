@@ -336,26 +336,24 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
             !androidLibrary.bundle.path.startsWith(buildFolderPath.path))
   }
 
-  fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String): IdeLibrary {
+  fun createIdeModuleLibrary(library: AndroidLibrary, artifactAddress: String, projectPath: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
       buildId = copyNewProperty(library::getBuildId),
-      projectPath = copyNewProperty(library::getProject),
+      projectPath = projectPath,
       variant = copyNewProperty(library::getProjectVariant),
-      folder = copyNewProperty(library::getFolder),
       lintJar = copyNewProperty(library::getLintJar)?.path
     )
     val isProvided = copyNewProperty(library::isProvided, false)
     return IdeModuleLibraryImpl(moduleLibraryCores.internCore(core), isProvided)
   }
 
-  fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String): IdeLibrary {
+  fun createIdeModuleLibrary(library: JavaLibrary, artifactAddress: String, projectPath: String): IdeLibrary {
     val core = IdeModuleLibraryCore(
       artifactAddress = artifactAddress,
       buildId = copyNewProperty(library::getBuildId),
-      projectPath = copyNewProperty(library::getProject),
+      projectPath = projectPath,
       variant = null,
-      folder = null,
       lintJar = null
     )
     val isProvided = copyNewProperty(library::isProvided, false)
@@ -456,8 +454,9 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
     // In AndroidLibrary, getProject() of such dependency returns non-null project name, but they should be converted to IdeLevel2AndroidLibrary.
     // Identify such case with the location of aar bundle.
     // If the aar bundle is inside of build directory of sub-module, then it's regular library module dependency, otherwise it's a wrapped aar module.
-    return if (androidLibrary.project != null && !isLocalAarModule(androidLibrary)) {
-      createIdeModuleLibrary(androidLibrary, computeAddress(androidLibrary))
+    val projectPath = androidLibrary.project
+    return if (projectPath != null && !isLocalAarModule(androidLibrary)) {
+      createIdeModuleLibrary(androidLibrary, computeAddress(androidLibrary), projectPath)
     }
     else {
       val core = IdeAndroidLibraryCore.create(
@@ -494,7 +493,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
     val project = copyNewProperty(javaLibrary::getProject)
     return if (project != null) {
       // Java modules don't have variant.
-      createIdeModuleLibrary(javaLibrary, computeAddress(javaLibrary))
+      createIdeModuleLibrary(javaLibrary, computeAddress(javaLibrary), project)
     }
     else {
       val core = IdeJavaLibraryCore(
@@ -597,12 +596,11 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       for (address in artifactAddresses) {
         val library = librariesById[address]!!
         // TODO(solodkyy): Build typed collections directly in populate methods.
-        @Suppress("REDUNDANT_ELSE_IN_WHEN")
-        when (library.type) {
-          IdeLibrary.LibraryType.LIBRARY_ANDROID -> androidLibraries.add(library as IdeAndroidLibrary)
-          IdeLibrary.LibraryType.LIBRARY_JAVA -> javaLibraries.add(library as IdeJavaLibrary)
-          IdeLibrary.LibraryType.LIBRARY_MODULE -> moduleDependencies.add(library as IdeModuleLibrary)
-          else -> throw UnsupportedOperationException("Unknown library type " + library.type)
+        when (library) {
+          is IdeAndroidLibrary -> androidLibraries.add(library)
+          is IdeJavaLibrary -> javaLibraries.add(library)
+          is IdeModuleLibrary -> moduleDependencies.add(library)
+          else -> throw UnsupportedOperationException("Unknown library type " + library::class.java)
         }
       }
       return IdeDependenciesImpl(

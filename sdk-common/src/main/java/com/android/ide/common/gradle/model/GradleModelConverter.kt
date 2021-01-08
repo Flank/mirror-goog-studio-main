@@ -31,9 +31,14 @@ import com.google.common.collect.ImmutableMap
 class GradleModelConverter(val project: IdeAndroidProject) {
 
   /**
-   * Converts the given [IdeLibrary] into a [ExternalLibrary]. Returns null if the given library is a module dependency.
+   * Converts the given [IdeJavaLibrary] into a [ExternalLibrary]. Returns null if the given library is a module dependency.
    */
-  fun convert(library: IdeLibrary): ExternalLibrary? = convertLibrary(library)
+  fun convert(library: IdeJavaLibrary): ExternalLibrary = convertLibrary(library)
+
+  /**
+   * Converts the given [IdeAndroidLibrary] into a [ExternalLibrary]. Returns null if the given library is a module dependency.
+   */
+  fun convert(library: IdeAndroidLibrary): ExternalLibrary = convertLibrary(library)
 }
 
 fun classFieldsToDynamicResourceValues(classFields: Map<String, IdeClassField>): Map<String, DynamicResourceValue> {
@@ -48,23 +53,23 @@ fun classFieldsToDynamicResourceValues(classFields: Map<String, IdeClassField>):
 }
 
 /**
- * Converts a builder-model [IdeLibrary] into a [ExternalLibrary]. Returns null
+ * Converts a builder-model [IdeJavaLibrary] into a [ExternalLibrary]. Returns null
  * if the input is invalid.
  */
-fun convertLibrary(source: IdeLibrary): ExternalLibrary? {
-  return when (source.type) {
-    IdeLibrary.LibraryType.LIBRARY_ANDROID -> AndroidExternalLibraryWrapper(source)
-    IdeLibrary.LibraryType.LIBRARY_JAVA -> JavaExternalLibraryWrapper(source)
-    else -> null
-  }
-}
+fun convertLibrary(source: IdeJavaLibrary): ExternalLibrary = JavaExternalLibraryWrapper(source)
 
-private abstract class ExternalLibraryWrapper(protected val lib: IdeLibrary) : ExternalLibrary {
+/**
+ * Converts a builder-model [IdeAndroidLibrary] into a [ExternalLibrary]. Returns null
+ * if the input is invalid.
+ */
+fun convertLibrary(source: IdeAndroidLibrary): ExternalLibrary = AndroidExternalLibraryWrapper(source)
+
+private abstract class ExternalLibraryWrapper<T: IdeLibrary>(protected val lib: T) : ExternalLibrary {
   @Suppress("FileComparisons")
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
-    return lib.artifact == (other as? ExternalLibraryWrapper)?.lib?.artifact
+    return lib.artifact == (other as? ExternalLibraryWrapper<*>)?.lib?.artifact
   }
 
   override fun hashCode(): Int {
@@ -72,7 +77,7 @@ private abstract class ExternalLibraryWrapper(protected val lib: IdeLibrary) : E
   }
 }
 
-private class JavaExternalLibraryWrapper(private val source: IdeLibrary) : ExternalLibraryWrapper(source) {
+private class JavaExternalLibraryWrapper(source: IdeJavaLibrary) : ExternalLibraryWrapper<IdeJavaLibrary>(source) {
   override val address: String get() = lib.artifactAddress
   override val location: PathString? get() = null
   override val manifestFile: PathString? get() = null
@@ -85,7 +90,7 @@ private class JavaExternalLibraryWrapper(private val source: IdeLibrary) : Exter
   override val hasResources: Boolean get() = false
 }
 
-private class AndroidExternalLibraryWrapper(private val source: IdeLibrary) : ExternalLibraryWrapper(source) {
+private class AndroidExternalLibraryWrapper(source: IdeAndroidLibrary) : ExternalLibraryWrapper<IdeAndroidLibrary>(source) {
   override val address: String get() = lib.artifactAddress
   override val location: PathString? get() = lib.artifact.toPathString()
   override val manifestFile: PathString? get() = PathString(lib.manifest)

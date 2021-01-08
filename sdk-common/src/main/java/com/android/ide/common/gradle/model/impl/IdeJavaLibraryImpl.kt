@@ -45,67 +45,9 @@ data class IdeJavaLibraryCore(
     artifact = File("")
   )
 
-  override val variant: String?
-    get() = throw unsupportedMethodForJavaLibrary("getVariant")
-
-  override val buildId: String?
-    get() = throw unsupportedMethodForJavaLibrary("getBuildId")
-
-  override val projectPath: String
-    get() = throw unsupportedMethodForJavaLibrary("getProjectPath")
-
-  override val folder: File?
-    get() = null
-
-  override val manifest: String
-    get() = throw unsupportedMethodForJavaLibrary("getManifest")
-
-  override val jarFile: String
-    get() = throw unsupportedMethodForJavaLibrary("getJarFile")
-
-  override val compileJarFile: String
-    get() = throw unsupportedMethodForJavaLibrary("getCompileJarFile")
-
-  override val resFolder: String
-    get() = throw unsupportedMethodForJavaLibrary("getResFolder")
-
-  override val resStaticLibrary: File?
-    get() = throw unsupportedMethodForJavaLibrary("getResStaticLibrary")
-
-  override val assetsFolder: String
-    get() = throw unsupportedMethodForJavaLibrary("getAssetsFolder")
-
-  override val localJars: Collection<String>
-    get() = throw unsupportedMethodForJavaLibrary("getLocalJars")
-
-  override val jniFolder: String
-    get() = throw unsupportedMethodForJavaLibrary("getJniFolder")
-
-  override val aidlFolder: String
-    get() = throw unsupportedMethodForJavaLibrary("getAidlFolder")
-
-  override val renderscriptFolder: String
-    get() = throw unsupportedMethodForJavaLibrary("getRenderscriptFolder")
-
-  override val proguardRules: String
-    get() = throw unsupportedMethodForJavaLibrary("getProguardRules")
-
   override val lintJar: String?
     get() = null
 
-  override val externalAnnotations: String
-    get() = throw unsupportedMethodForJavaLibrary("getExternalAnnotations")
-
-  override val publicResources: String
-    get() = throw unsupportedMethodForJavaLibrary("getPublicResources")
-
-  override val symbolFile: String
-    get() = throw unsupportedMethodForJavaLibrary("getSymbolFile")
-
   override val isProvided: Nothing
     get() = error("abstract")
-}
-
-private fun unsupportedMethodForJavaLibrary(methodName: String): UnsupportedOperationException {
-  return UnsupportedOperationException("$methodName() cannot be called when getType() returns LIBRARY_JAVA")
 }

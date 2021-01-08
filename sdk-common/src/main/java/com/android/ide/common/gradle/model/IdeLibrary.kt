@@ -21,18 +21,6 @@ import java.io.File
  * Represent a variant/module/artifact dependency.
  */
 interface IdeLibrary {
-
-  enum class LibraryType {
-    LIBRARY_ANDROID,
-    LIBRARY_JAVA,
-    LIBRARY_MODULE
-  }
-
-  /**
-   * The type of the dependency
-   */
-  val type: LibraryType
-
   /**
    * Returns the artifact address in a unique way.
    *
@@ -46,143 +34,11 @@ interface IdeLibrary {
   val artifact: File
 
   /**
-   * Returns the build id.
-   *
-   * This is only valid if the [.getProjectPath] is not null. However this can still be
-   * null if this is the root project.
-   */
-  val buildId: String?
-
-  /**
-   * Returns the gradle path.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_MODULE]
-   */
-  val projectPath: String?
-
-  /**
-   * Returns an optional variant name if the consumed artifact of the library is associated to
-   * one.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_MODULE]
-   */
-  val variant: String?
-
-  /**
-   * Returns the location of the unzipped bundle folder.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val folder: File?
-
-  /**
-   * Returns the location of the manifest relative to the folder.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val manifest: String
-
-  /**
-   * Returns the location of the jar file to use for compiling and packaging. The path may not point to an existing file.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID].
-   */
-  val jarFile: String
-
-  /**
-   * Returns the location of the jar file to use for compilation. The path may not point to an existing file.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID].
-   */
-  val compileJarFile: String
-
-  /**
-   * Returns the location of the res folder. The file may not point to an existing folder.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val resFolder: String
-
-  /**
-   * Returns the location of the namespaced resources static library (res.apk). Null if the library is not namespaced.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   *
-   * TODO(b/109854607): When rewriting dependencies, this should be populated with the
-   * rewritten artifact, which will not be in the exploded AAR directory.
-   */
-  val resStaticLibrary: File?
-
-  /**
-   * Returns the location of the assets folder. The file may not point to an existing folder.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val assetsFolder: String
-
-  /**
-   * Returns the list of local Jar files that are included in the dependency.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val localJars: Collection<String>
-
-  /**
-   * Returns the location of the jni libraries folder. The file may not point to an existing folder.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val jniFolder: String
-
-  /**
-   * Returns the location of the aidl import folder. The file may not point to an existing folder.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val aidlFolder: String
-
-  /**
-   * Returns the location of the renderscript import folder. The file may not point to an existing folder.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val renderscriptFolder: String
-
-  /**
-   * Returns the location of the proguard files. The file may not point to an existing file.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val proguardRules: String
-
-  /**
    * Returns the location of the lint jar. The file may not point to an existing file.
    *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
+   * Only valid for Android Library
    */
   val lintJar: String?
-
-  /**
-   * Returns the location of the external annotations zip file (which may not exist).
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val externalAnnotations: String
-
-  /**
-   * Returns the location of an optional file that lists the only resources that should be
-   * considered public. The file may not point to an existing file.
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val publicResources: String
-
-  /**
-   * Returns the location of the text symbol file
-   *
-   * Only valid for Android Library where [type] is [LIBRARY_ANDROID]
-   */
-  val symbolFile: String
 
   /**
    * Returns whether the dependency is on the compile class path but is not on the runtime class
@@ -192,13 +48,103 @@ interface IdeLibrary {
 }
 
 interface IdeAndroidLibrary: IdeLibrary {
-  override val type: IdeLibrary.LibraryType get() = IdeLibrary.LibraryType.LIBRARY_ANDROID
+  /**
+   * Returns the location of the unzipped bundle folder.
+   */
+  val folder: File?
+
+  /**
+   * Returns the location of the manifest relative to the folder.
+   */
+  val manifest: String
+
+  /**
+   * Returns the location of the jar file to use for compiling and packaging. The path may not point to an existing file.
+   */
+  val jarFile: String
+
+  /**
+   * Returns the location of the jar file to use for compilation. The path may not point to an existing file.
+   */
+
+  val compileJarFile: String
+  /**
+   * Returns the location of the res folder. The file may not point to an existing folder.
+   */
+  val resFolder: String
+
+  /**
+   * Returns the location of the namespaced resources static library (res.apk). Null if the library is not namespaced.
+   *
+   * TODO(b/109854607): When rewriting dependencies, this should be populated with the
+   * rewritten artifact, which will not be in the exploded AAR directory.
+   */
+  val resStaticLibrary: File?
+
+  /**
+   * Returns the location of the assets folder. The file may not point to an existing folder.
+   */
+  val assetsFolder: String
+
+  /**
+   * Returns the list of local Jar files that are included in the dependency.
+   */
+  val localJars: Collection<String>
+
+  /**
+   * Returns the location of the jni libraries folder. The file may not point to an existing folder.
+   */
+  val jniFolder: String
+
+    /**
+   * Returns the location of the aidl import folder. The file may not point to an existing folder.
+   */
+  val aidlFolder: String
+
+  /**
+   * Returns the location of the renderscript import folder. The file may not point to an existing folder.
+   */
+  val renderscriptFolder: String
+
+  /**
+   * Returns the location of the proguard files. The file may not point to an existing file.
+   */
+  val proguardRules: String
+
+  /**
+   * Returns the location of the external annotations zip file (which may not exist).
+   */
+  val externalAnnotations: String
+
+  /**
+   * Returns the location of an optional file that lists the only resources that should be
+   * considered public. The file may not point to an existing file.
+   */
+  val publicResources: String
+
+  /**
+   * Returns the location of the text symbol file
+   */
+  val symbolFile: String
 }
 
 interface IdeJavaLibrary: IdeLibrary {
-  override val type: IdeLibrary.LibraryType get() = IdeLibrary.LibraryType.LIBRARY_JAVA
 }
 
 interface IdeModuleLibrary: IdeLibrary {
-  override val type: IdeLibrary.LibraryType get() = IdeLibrary.LibraryType.LIBRARY_MODULE
+  /**
+   * Returns the gradle path.
+   */
+  val projectPath: String
+
+  /**
+   * Returns an optional variant name if the consumed artifact of the library is associated to
+   * one.
+   */
+  val variant: String?
+
+  /**
+   * Returns the build id.
+   */
+  val buildId: String?
 }
