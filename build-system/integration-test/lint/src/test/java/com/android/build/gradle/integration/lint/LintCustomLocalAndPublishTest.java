@@ -18,11 +18,17 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +47,7 @@ public class LintCustomLocalAndPublishTest {
     }
 
     @Rule public final GradleTestProject project;
+    private final LintInvocationType lintInvocationType;
 
     public LintCustomLocalAndPublishTest(LintInvocationType lintInvocationType) {
         this.project =
@@ -48,6 +55,7 @@ public class LintCustomLocalAndPublishTest {
                         .testProjectBuilder(2)
                         .fromTestProject("lintCustomLocalAndPublishRules")
                         .create();
+        this.lintInvocationType = lintInvocationType;
     }
 
     @Test
@@ -170,5 +178,22 @@ public class LintCustomLocalAndPublishTest {
                         it -> {
                             it.doesNotContain(FN_LINT_JAR);
                         });
+    }
+
+    /** Check custom rules are included in the model */
+    @Test
+    public void checkModel() throws Exception {
+        ModelContainer<AndroidProject> androidProjects =
+                project.model().withFailOnWarning(false).ignoreSyncIssues().fetchAndroidProjects();
+
+        assertThat(androidProjects.getOnlyModelMap().get(":library").getLintRuleJars()).hasSize(1);
+
+        List<SyncIssue> syncIssues =
+                androidProjects.getOnlyModelSyncIssues().stream()
+                        .filter(it -> it.getSeverity() == SyncIssue.SEVERITY_ERROR)
+                        .collect(Collectors.toList());
+        assertThat(syncIssues).hasSize(1);
+        assertThat(syncIssues.iterator().next().getMessage())
+                .isEqualTo("Unable to resolve dependency com.example.google:library-remote:1.0");
     }
 }

@@ -31,11 +31,9 @@ import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.AvdComponentsBuildService;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
-import com.android.build.gradle.internal.ide.DependencyFailureHandler;
 import com.android.build.gradle.internal.lint.CustomLintCheckUtils;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.OptionalCompilationStep;
@@ -43,12 +41,10 @@ import com.android.ide.common.blame.MessageReceiver;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.component.SoftwareComponentFactory;
@@ -288,7 +284,7 @@ public class GlobalScope {
      */
     @NonNull
     public FileCollection getLocalCustomLintChecks() {
-        return CustomLintCheckUtils.getLocalCustomLintChecks(lintChecks, dslServices, project.getPath());
+        return CustomLintCheckUtils.getLocalCustomLintChecks(lintChecks);
     }
 
     /**
