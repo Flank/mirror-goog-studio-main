@@ -35,4 +35,8 @@ public final class LiveLiteralKt {
     }
 
     public static boolean isLiveLiteralsEnabled = false;
+
+    public static void enableLiveLiterals() {
+        isLiveLiteralsEnabled = true;
+    }
 }
