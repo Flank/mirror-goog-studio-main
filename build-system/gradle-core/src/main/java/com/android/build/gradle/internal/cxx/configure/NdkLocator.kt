@@ -23,22 +23,22 @@ import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.SdkLocator
 import com.android.build.gradle.internal.cxx.caching.cache
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
-import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.builder.errors.IssueReporter
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
-import com.android.utils.cxx.CxxDiagnosticCode.NDK_IS_AMBIGUOUS
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_CORRUPTED
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_DIR_IS_DEPRECATED
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_IS_AMBIGUOUS
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_IS_INVALID
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_VERSION_IS_INVALID
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_VERSION_IS_UNMATCHED
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_VERSION_UNSUPPORTED
-import com.android.utils.cxx.CxxDiagnosticCode.NDK_DIR_IS_DEPRECATED
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.InvalidUserDataException
 import java.io.File
@@ -455,18 +455,16 @@ data class NdkLocator(
      * or it is an error. If no such version is specified then the default version is used.
      */
     fun findNdkPath(downloadOkay: Boolean): NdkLocatorRecord? {
-        IssueReporterLoggingEnvironment(issueReporter).use {
-            val properties = gradleLocalProperties(projectDir)
-            val sdkPath = SdkLocator.getSdkDirectory(projectDir, issueReporter)
-            return findNdkPathImpl(
-                ndkVersionFromDsl,
-                ndkPathFromDsl,
-                properties.getProperty(NDK_DIR_PROPERTY),
-                sdkPath,
-                getNdkVersionedFolders(File(sdkPath, FD_NDK_SIDE_BY_SIDE)),
-                ::getNdkVersionInfo,
-                if (downloadOkay) sdkHandler else null
-            )
-        }
+        val properties = gradleLocalProperties(projectDir)
+        val sdkPath = SdkLocator.getSdkDirectory(projectDir, issueReporter)
+        return findNdkPathImpl(
+            ndkVersionFromDsl,
+            ndkPathFromDsl,
+            properties.getProperty(NDK_DIR_PROPERTY),
+            sdkPath,
+            getNdkVersionedFolders(File(sdkPath, FD_NDK_SIDE_BY_SIDE)),
+            ::getNdkVersionInfo,
+            if (downloadOkay) sdkHandler else null
+        )
     }
 }
