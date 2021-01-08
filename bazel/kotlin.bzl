@@ -54,6 +54,9 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
     args.add("-api-version", "1.3")  # b/166582569
     args.add("-Xjvm-default=enable")
 
+    # Dependency jars may be compiled with a new kotlinc IR backend.
+    args.add("-Xallow-jvm-ir-dependencies")
+
     # Use custom JRE instead of the default one picked by kotlinc.
     args.add("-no-jdk")
     classpath = depset(direct = jre, transitive = [dep_jars])
