@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.feature
+package com.android.build.gradle.integration.connected.feature
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TEST_SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.build.gradle.integration.connected.utils.getEmulator
+import org.junit.Before
+import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.junit.experimental.categories.Category
+import java.io.IOException
 
-@Category(DeviceTests::class)
 class DynamicFeatureConnectedTest {
 
     private val build = MultiModuleTestProject.builder().apply {
@@ -129,16 +130,30 @@ class DynamicFeatureConnectedTest {
         .build()
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(build).create()
+    val project = GradleTestProject.builder()
+            .fromTestApp(build)
+            .create()
 
-    @get:Rule
-    val adb = Adb()
+    companion object {
+        @JvmField
+        @ClassRule
+        val emulator = getEmulator()
+    }
 
+    @Before
+    @Throws(IOException::class, InterruptedException::class)
+    fun setUp() {
+        // fail fast if no response
+        project.getSubproject("app").addAdbTimeout()
+        project.getSubproject("dynamicFeature").addAdbTimeout()
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll")
+    }
+
+    @Ignore("b/177370256")
     @Test
     fun runTestInDynamicFeature() {
-        adb.exclusiveAccess()
-        project.executor().run(":app:uninstallDebug")
         project.executor().run(":dynamicFeature:connectedAndroidTest")
-        project.executor().run(":app:uninstallDebug")
     }
 }

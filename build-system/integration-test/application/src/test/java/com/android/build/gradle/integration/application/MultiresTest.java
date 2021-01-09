@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for multires. */
 public class MultiresTest {
@@ -29,7 +27,7 @@ public class MultiresTest {
             GradleTestProject.builder().fromTestProject("multires").create();
 
     @Test
-    public void assemble() throws Exception {
+    public void assemble() {
         project.execute("clean", "assembleDebug");
     }
 }

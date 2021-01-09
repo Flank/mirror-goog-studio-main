@@ -14,47 +14,58 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library;
+package com.android.build.gradle.integration.connected.library;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.ExternalResource;
 
+@Ignore("b/174865909")
 public class AdditionalTestOutputConnectedTest {
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("additionalTestOutput")
-                    // b/146163513
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
+    @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
+
+    @Before
+    public void setUp() throws IOException {
+        // fail fast if no response
+        project.addAdbTimeout();
+        // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
+        // of each test and (2) check the adb connection before taking the time to build anything.
+        project.execute("uninstallAll");
+    }
+
     @Test
-    @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
         GradleBuildResult result =
                 project.executor()
                         .with(BooleanOption.ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT, true)
-                        .executeConnectedCheck();
+                        .run("connectedCheck");
 
         ScannerSubject.assertThat(result.getStdout()).contains("fetching test data data.json");
 
         File additionalTestOutputDir =
                 new File(
                         project.getOutputDir().getAbsolutePath(),
-                        "device_provider_android_test_additional_output/debugAndroidTest/devicePool");
+                        "connected_android_test_additional_output/debugAndroidTest/connected");
 
         for (File deviceDir : additionalTestOutputDir.listFiles()) {
             File expectedOutput = new File(deviceDir, "data.json");

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
@@ -27,14 +26,11 @@ import com.android.build.gradle.integration.common.fixture.app.JavaSourceFileBui
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.build.gradle.integration.common.utils.AbiMatcher
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.desugar.resources.ClassWithDesugarApi
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.StringOption
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.jarWithClasses
@@ -47,10 +43,8 @@ import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.jf.dexlib2.immutable.debug.ImmutableStartLocal
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.junit.experimental.categories.Category
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.assertTrue
@@ -159,19 +153,6 @@ class CoreLibraryDesugarTest {
         )
 
         addSourceWithDesugarApiToLibraryModule()
-    }
-
-
-    /**
-     * Check if Java 8 API(e.g. Stream) can be used on devices with Android API level 23 or below
-     */
-    @Test
-    @Category(DeviceTests::class)
-    fun testApiInvocation() {
-        val device = adb.getDevice(AndroidVersionMatcher.exactly(21), AbiMatcher.anyAbi())
-        executor()
-            .with(StringOption.DEVICE_POOL_SERIAL, device.serialNumber)
-            .run("app:connectedDebugAndroidTest")
     }
 
     /**
