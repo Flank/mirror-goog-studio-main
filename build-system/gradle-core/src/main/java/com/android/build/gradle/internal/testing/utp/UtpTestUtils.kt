@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.testing.CustomTestRunListener
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.ddmlib.testrunner.TestIdentifier
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.LoggedProcessOutputHandler
@@ -128,4 +131,12 @@ internal fun createTestReportXml(
         }
         testRunEnded(totalElapsedTimeMillis, mapOf())
     }
+}
+
+fun shouldEnableUtp(
+    projectOptions: ProjectOptions,
+    testOptions: TestOptions?
+): Boolean {
+    return (projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
+            || (testOptions != null && testOptions.failureRetention.enable))
 }

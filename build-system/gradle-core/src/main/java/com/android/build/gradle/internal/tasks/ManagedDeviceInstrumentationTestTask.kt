@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.testing.utp.UtpManagedDevice
 import com.android.build.gradle.internal.testing.utp.createRetentionConfig
 import com.android.build.gradle.internal.testing.utp.maybeCreateUtpConfigurations
 import com.android.build.gradle.internal.testing.utp.resolveDependencies
+import com.android.build.gradle.internal.testing.utp.shouldEnableUtp
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
@@ -323,10 +324,18 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
             val executionEnum = extension.testOptions.getExecutionEnum()
             task.testRunnerFactory.executionEnum.setDisallowChanges(executionEnum)
-            val useUtp = projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)
+            val useUtp = shouldEnableUtp(projectOptions,extension.testOptions)
             task.testRunnerFactory.unifiedTestPlatform.setDisallowChanges(useUtp)
 
             if (useUtp) {
+                if (!projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
+                    LoggerWrapper.getLogger(CreationAction::class.java).warning(
+                        "Implicitly enabling Unified Test Platform because related features " +
+                                "are specified in gradle test options. Please add " +
+                                "-Pandroid.experimental.androidTest.useUnifiedTestPlatform=true " +
+                                "to your gradle command to suppress this warning."
+                    )
+                }
                 maybeCreateUtpConfigurations(task.project)
                 task.testRunnerFactory.utpDependencies
                         .resolveDependencies(task.project.configurations)

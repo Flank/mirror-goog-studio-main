@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import static com.android.build.gradle.internal.testing.utp.RetentionConfigKt.createRetentionConfig;
+import static com.android.build.gradle.internal.testing.utp.UtpTestUtilsKt.shouldEnableUtp;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
@@ -613,10 +614,19 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             TestOptions.Execution executionEnum = extension.getTestOptions().getExecutionEnum();
             task.getTestRunnerFactory().getExecutionEnum().set(executionEnum);
-            boolean useUtp =
-                    projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM);
+            boolean useUtp = shouldEnableUtp(projectOptions, extension.getTestOptions());
             task.getTestRunnerFactory().getUnifiedTestPlatform().set(useUtp);
             if (useUtp) {
+                if (!projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
+                    LoggerWrapper.getLogger(DeviceProviderInstrumentTestTask.class)
+                            .warning(
+                                    "Implicitly enabling Unified Test Platform because related "
+                                            + "features are specified in gradle test options. "
+                                            + "Please add "
+                                            + "-Pandroid.experimental.androidTest."
+                                            + "useUnifiedTestPlatform=true "
+                                            + "to your gradle command to suppress this warning.");
+                }
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
                 UtpDependencyUtilsKt.resolveDependencies(
                         task.getTestRunnerFactory().getUtpDependencies(),
