@@ -97,7 +97,6 @@ class UtpConfigFactoryTest {
         override val launcher = FakeConfigurableFileCollection(File(""))
         override val core = FakeConfigurableFileCollection(File(""))
         override val deviceProviderLocal = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"))
-        override val deviceControllerAdb = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_CONTROLLER_ADB.jar"))
         override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
         override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"))

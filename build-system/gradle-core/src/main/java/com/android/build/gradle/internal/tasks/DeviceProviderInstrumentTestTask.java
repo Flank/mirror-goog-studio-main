@@ -642,13 +642,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                                 .getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()
-                        .getDeviceControllerAdb()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB
-                                                .getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
                         .getDriverInstrumentation()
                         .from(
                                 configurations.getByName(
