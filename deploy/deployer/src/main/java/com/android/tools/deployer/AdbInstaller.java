@@ -100,6 +100,9 @@ public class AdbInstaller implements Installer {
 
     private void logEvents(List<Deploy.Event> events) {
         for (Deploy.Event event : events) {
+            if (event.getType() == Deploy.Event.Type.TRC_END) {
+                continue;
+            }
             logger.info(
                     event.getTimestampNs() / 1000000
                             + "ms "
