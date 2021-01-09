@@ -59,7 +59,7 @@ class AbstractAndroidLocationsTest {
     }
 
     @Test
-    fun `ANDROID_SDK_HOME usage warning`() {
+    fun `ANDROID_SDK_HOME usage`() {
         val testLocation = folder.newFolder()
         val provider = FakeProvider(mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath))
         val logger = RecordingLogger()
@@ -69,11 +69,6 @@ class AbstractAndroidLocationsTest {
         Truth.assertWithMessage("Test Location")
             .that(result)
             .isEqualTo(File(testLocation, ".android"))
-
-        Truth.assertWithMessage("Emitted Warnings").that(logger.warnings).containsExactly(
-            "Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use ${AndroidLocation.ANDROID_PREFS_ROOT} instead.\n" +
-                    "Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0"
-        )
     }
 
     @Test
@@ -92,8 +87,7 @@ class AbstractAndroidLocationsTest {
         exceptionRule.expectMessage(
             """
                 Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values
-                Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0
-                Please use ANDROID_PREFS_ROOT only.
+                Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.
                 Current values:
                 ANDROID_SDK_ROOT: $androidPrefsRootLocation
                 ANDROID_SDK_HOME: $androidSdkHomeLocation
@@ -145,10 +139,7 @@ class AbstractAndroidLocationsTest {
                 ANDROID_SDK_HOME is meant to be the path of the preference folder expected by the Android tools.
                 It should NOT be set to the same as the root of your SDK.
                 To set a custom SDK Location, use ANDROID_SDK_ROOT.
-                If this is not set we default to: null""".trimIndent(),
-            """
-                Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use ${AndroidLocation.ANDROID_PREFS_ROOT} instead.
-                Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0""".trimIndent()
+                If this is not set we default to: null""".trimIndent()
         )
     }
 

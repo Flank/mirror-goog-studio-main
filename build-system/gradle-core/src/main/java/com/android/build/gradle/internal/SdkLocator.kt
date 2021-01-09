@@ -77,56 +77,104 @@ object SdkLocator {
     // Order defines the preference for matching an SDK directory.
     internal enum class SdkLocationSource(val sdkType: SdkType) {
         TEST_SDK_DIRECTORY(SdkType.TEST) {
-            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String? {
-                return sdkTestDirectory?.absolutePath
+            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): File? {
+                return sdkTestDirectory?.absolutePath?.let {
+                    validateSdkPath(it, sourceSet.projectRoot)
+                }
             }
         },
         LOCAL_SDK_DIR(SdkType.REGULAR) {
-            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String? {
-                return sourceSet.localProperties.getProperty(SdkConstants.SDK_DIR_PROPERTY)
-            }
-
-        }, LOCAL_ANDROID_DIR(SdkType.PLATFORM) { // TODO: Check if this is still used.
-            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String? {
-                return sourceSet.localProperties.getProperty(ANDROID_DIR_PROPERTY)
-            }
-
-        }, ENV_ANDROID_HOME(SdkType.REGULAR) {
-            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String? {
-                // FIXME b/162859043
-                return sourceSet.environmentProperties.getProperty(SdkConstants.ANDROID_HOME_ENV)?.also {
-                    println("""
-Usage of ANDROID_HOME to set custom SDK location is deprecated and will be removed in 6.0
-Please use ANDROID_SDK_ROOT instead.
-"""
-                    )
+            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): File? {
+                return sourceSet.localProperties.getProperty(SdkConstants.SDK_DIR_PROPERTY)?.let {
+                    validateSdkPath(it, sourceSet.projectRoot)
                 }
             }
 
-        }, ENV_SDK_ROOT(SdkType.REGULAR) {
-            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String? {
-                return sourceSet.environmentProperties.getProperty(SdkConstants.ANDROID_SDK_ROOT_ENV)
+        }, LOCAL_ANDROID_DIR(SdkType.PLATFORM) { // TODO: Check if this is still used.
+            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): File? {
+                return sourceSet.localProperties.getProperty(ANDROID_DIR_PROPERTY)?.let {
+                    validateSdkPath(it, sourceSet.projectRoot)
+                }
             }
 
-        }, SYS_ANDROID_HOME(SdkType.REGULAR) {
-            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String? {
-                return sourceSet.systemProperties.getProperty(ANDROID_HOME_SYSTEM_PROPERTY)
+        }, INJECTED_SDK_HOME(SdkType.REGULAR) {
+
+            override fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): File? {
+                // Special Handling:
+                // If the query is ANDROID_SDK_ROOT, then also query ANDROID_HOME and compare
+                // the values. If both values are set, they must match
+                val map = mutableMapOf<String, File>()
+
+                sourceSet.environmentProperties
+                    .getProperty(SdkConstants.ANDROID_SDK_ROOT_ENV)
+                    ?.let { path ->
+                        validateSdkPath(path, sourceSet.projectRoot)?.let {
+                            map[SdkConstants.ANDROID_SDK_ROOT_ENV] = it
+                        }
+                    }
+
+                sourceSet.environmentProperties
+                    .getProperty(SdkConstants.ANDROID_HOME_ENV)
+                    ?.let { path ->
+                        validateSdkPath(path, sourceSet.projectRoot)?.let {
+                            map[SdkConstants.ANDROID_HOME_ENV] = it
+                        }
+                    }
+
+                sourceSet.systemProperties.getProperty(ANDROID_HOME_SYSTEM_PROPERTY)?.let { path ->
+                    validateSdkPath(path, sourceSet.projectRoot)?.let {
+                        map[ANDROID_HOME_SYSTEM_PROPERTY] = it
+                    }
+                }
+
+                if (map.isEmpty()) {
+                    return null
+                }
+
+                if (map.size == 1) {
+                    return map.values.single()
+                }
+
+                // check if the different entries have different values.
+                val reverseMap = map.entries.groupBy { it.value }
+
+                if (reverseMap.size == 1) {
+                    // then all points to a single location
+                    return reverseMap.keys.single()
+                }
+
+                // if not, fail
+                var message =
+                        """
+Several environment variables and/or system properties contain different paths to the SDK.
+Please correct and use only one way to inject the SDK location.
+""".trimStart()
+
+                for (entry in map.entries.sortedBy { it.key }) {
+                    message = "$message\n${entry.key}: ${entry.value}"
+
+                }
+
+                message =
+                        """$message
+
+It is recommended to use ANDROID_HOME as other methods are deprecated
+""".trimIndent()
+
+                throw RuntimeException(message)
             }
         };
 
         fun getSdkLocation(sourceSet: SdkLocationSourceSet): SdkLocation? {
-            return getSdkPathProperty(sourceSet)?.let {
-                    path -> validateSdkPath(path, sourceSet.projectRoot)?.let {
-                        SdkLocation(it, sdkType)
-                    }
-            }
+            return getSdkPathProperty(sourceSet)?.let { SdkLocation(it, sdkType) }
         }
-        abstract fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): String?
+
+        abstract fun getSdkPathProperty(sourceSet: SdkLocationSourceSet): File?
 
         // Basic SDK path validation:
         // * If it's not an absolute path, uses the project rootDir as base.
         // * Check if the path points to a directory in the disk.
-        private fun validateSdkPath(path: String, rootDir: File): File? {
+        protected fun validateSdkPath(path: String, rootDir: File): File? {
             var sdk = File(path)
             if (!sdk.isAbsolute) {
                 // Canonical file transforms paths like: .../userHome/projectRoot/../AndroidSDK

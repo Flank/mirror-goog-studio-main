@@ -148,8 +148,7 @@ public final class AndroidLocation {
                         if (!path.equals(androidSdkHomePath)) {
                             throw new AndroidLocationException(
                                     "Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values\n"
-                                            + "Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0\n"
-                                            + "Please use ANDROID_PREFS_ROOT only.\n"
+                                            + "Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.\n"
                                             + "Current values:\n"
                                             + "ANDROID_SDK_ROOT: "
                                             + path
@@ -203,12 +202,6 @@ public final class AndroidLocation {
                 }
             }
 
-            // FIXME b/162859043
-            logger.warning(
-                    "Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use "
-                            + ANDROID_PREFS_ROOT
-                            + " instead.\n"
-                            + "Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0");
             return path;
         }
 

@@ -51,19 +51,19 @@ public final class SdkConstants {
     /**
      * ANDROID_HOME environment variable that specifies the installation path of an Android SDK.
      *
-     * @deprecated Use {@link #ANDROID_SDK_ROOT_ENV} instead.
      * @see <a href="https://developer.android.com/studio/command-line/variables">Android SDK
      *     environment variables</a>
      */
-    @Deprecated public static final String ANDROID_HOME_ENV = "ANDROID_HOME";
+    public static final String ANDROID_HOME_ENV = "ANDROID_HOME";
 
     /**
      * ANDROID_SDK_ROOT environment variable that specifies the installation path of an Android SDK.
      *
+     * @deprecated Use {@link #ANDROID_HOME_ENV} instead.
      * @see <a href="https://developer.android.com/studio/command-line/variables">Android SDK
      *     environment variables</a>
      */
-    public static final String ANDROID_SDK_ROOT_ENV = "ANDROID_SDK_ROOT";
+    @Deprecated public static final String ANDROID_SDK_ROOT_ENV = "ANDROID_SDK_ROOT";
 
     /** Property in local.properties file that specifies the path of the Android SDK. */
     public static final String SDK_DIR_PROPERTY = "sdk.dir";

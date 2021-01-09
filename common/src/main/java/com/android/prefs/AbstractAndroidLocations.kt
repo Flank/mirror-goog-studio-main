@@ -179,7 +179,6 @@ This is the path of preference folder expected by the Android tools."""
             // Special Handling:
             // If the query is ANDROID_PREFS_ROOT, then also query ANDROID_SDK_HOME and compare
             // the values. If both values are set, they must match
-            // FIXME b/162859043
             val androidSdkHomePath = queryFunction("ANDROID_SDK_HOME")
             if (path == null) {
                 if (androidSdkHomePath != null) {
@@ -196,8 +195,7 @@ This is the path of preference folder expected by the Android tools."""
                         throw AndroidLocationsException(
                             """
 Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values
-Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0
-Please use ANDROID_PREFS_ROOT only.
+Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.
 Current values:
 ANDROID_SDK_ROOT: $path
 ANDROID_SDK_HOME: $androidSdkHomePath""".trimIndent()
@@ -240,12 +238,6 @@ If this is not set we default to: ${
             }
         }
 
-        // FIXME b/162859043
-        logger.warning(
-            """
-Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use ${Global.ANDROID_PREFS_ROOT} instead.
-Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0""".trimIndent()
-        )
         return path
     }
 
