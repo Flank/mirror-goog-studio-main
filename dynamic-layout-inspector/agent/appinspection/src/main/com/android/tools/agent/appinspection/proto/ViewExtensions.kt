@@ -24,7 +24,10 @@ import com.android.tools.agent.appinspection.util.ThreadUtils
 import android.view.WindowManager
 import com.android.tools.agent.appinspection.framework.getChildren
 import com.android.tools.agent.appinspection.framework.getTextValue
+import com.android.tools.agent.appinspection.proto.property.PropertyCache
+import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Rect
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
@@ -94,5 +97,54 @@ fun View.createResource(stringTable: StringTable, resourceId: Int): Resource? {
     } catch (ex: Resources.NotFoundException) {
         null
     }
+}
+
+fun View.createGetPropertiesResponse(generation: Int): GetPropertiesResponse {
+    // TODO(b/177573802): WebView is a special case and should happen on the UI thread
+    ThreadUtils.assertOffMainThread()
+
+    val stringTable = StringTable()
+
+    val viewCacheMap = PropertyCache.createViewCache()
+    val layoutCacheMap = PropertyCache.createLayoutParamsCache()
+
+    val viewCache = viewCacheMap.typeOf(this)
+    val layoutCache = layoutCacheMap.typeOf(layoutParams)
+
+    val viewProperties = viewCache.properties
+    val layoutProperties = layoutCache.properties
+
+    val viewReader =
+        SimplePropertyReader(
+            stringTable,
+            this,
+            viewProperties,
+            SimplePropertyReader.PropertyCategory.VIEW
+        )
+    viewCache.readProperties(this, viewReader)
+    val layoutReader =
+        SimplePropertyReader(
+            stringTable,
+            this,
+            layoutProperties,
+            SimplePropertyReader.PropertyCategory.LAYOUT_PARAMS
+        )
+    layoutCache.readProperties(layoutParams, layoutReader)
+
+    val view = this
+    return GetPropertiesResponse.newBuilder().apply {
+        this.viewId = view.uniqueDrawingId
+        this.generation = generation
+
+        view.createResource(stringTable, sourceLayoutResId)?.let { layoutResource ->
+            layout = layoutResource
+        }
+
+        (viewProperties + layoutProperties)
+            .mapNotNull { property -> property.build(stringTable) }
+            .forEach { property -> this.addProperty(property) }
+
+        addAllStrings(stringTable.toStringEntries())
+    }.build()
 }
 

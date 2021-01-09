@@ -20,6 +20,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.android.tools.agent.appinspection.util.ThreadUtils
+import java.util.Stack
 
 fun ViewGroup.getChildren(): List<View> {
     ThreadUtils.assertOnMainThread()
@@ -32,4 +33,24 @@ fun ViewGroup.getChildren(): List<View> {
 fun View.getTextValue(): String? {
     if (this !is TextView) return null
     return text.toString()
+}
+
+/**
+ * Return a list of this view and all its children in depth-first order
+ */
+fun View.flatten(): Sequence<View> {
+    ThreadUtils.assertOnMainThread()
+
+    return sequence {
+        val toProcess = Stack<View>()
+        toProcess.push(this@flatten)
+
+        while (toProcess.isNotEmpty()) {
+            val curr = toProcess.pop()
+            yield(curr)
+            if (curr is ViewGroup) {
+                toProcess.addAll(curr.getChildren())
+            }
+        }
+    }
 }

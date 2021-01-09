@@ -105,6 +105,54 @@ message Resource {
     int32 name = 3;
 }
 
+// Handles properties whose values are bit flags, e.g. "top|left"
+message FlagValue {
+    repeated int32 flag = 1;
+}
+
+// An attribute property, e.g. "text", "
+message Property {
+    // Note: Enums kept in sync with tools/adt/idea/layout-inspector's PropertyType
+    enum Type {
+        STRING = 0;
+        BOOLEAN = 1;
+        BYTE = 2;
+        CHAR = 3;
+        DOUBLE = 4;
+        FLOAT = 5;
+        INT16 = 6;
+        INT32 = 7;
+        INT64 = 8;
+        OBJECT = 9;
+        COLOR = 10;
+        GRAVITY = 11;
+        INT_ENUM = 12;
+        INT_FLAG = 13;
+        RESOURCE = 14;
+        DRAWABLE = 15;
+        ANIM = 16;
+        ANIMATOR = 17;
+        INTERPOLATOR = 18;
+        DIMENSION = 19;
+    }
+
+    int32 namespace = 1;
+    Type type = 2;
+    int32 name = 3;
+    Resource source = 4;
+    repeated Resource resolution_stack = 5;
+    bool is_layout = 6;
+
+    oneof value {
+        int32 int32_value = 8;
+        int64 int64_value = 9;
+        double double_value = 10;
+        float float_value = 11;
+        Resource resource_value = 12;
+        FlagValue flag_value = 13;
+    }
+}
+
 // ======= COMMANDS, RESPONSES, AND EVENTS =======
 
 // Tells the inspector to start sending |LayoutEvent|s asynchronously
@@ -119,6 +167,23 @@ message StartFetchResponse {}
 // If |FetchCommand| was never called, this will be a no-op.
 message StopFetchCommand {}
 message StopFetchResponse {}
+
+// Make a request to fetch properties associated with the specified View
+message GetPropertiesCommand {
+    int64 view_id = 1;
+}
+// Data sent in response to |GetPropertiesCommand|.
+// If the query failed (e.g. the command's view ID could not be found), the response's |view_id|
+// value will be 0.
+message GetPropertiesResponse {
+    int64 view_id = 1;
+    repeated StringEntry strings = 2;
+    Resource layout = 3;
+    repeated Property property = 4;
+    // A monotonically increasing number, which can be used by the client to know when older
+    // property data it has cached may no longer be relevant.
+    int32 generation = 5;
+}
 
 // An event containing complete layout information about a single node tree
 message LayoutEvent {
@@ -152,12 +217,14 @@ message Command {
     oneof specialized {
         StartFetchCommand start_fetch_command = 1;
         StopFetchCommand stop_fetch_command = 2;
+        GetPropertiesCommand get_properties_command = 3;
     }
 }
 message Response {
     oneof specialized {
         StartFetchResponse start_fetch_response = 1;
         StopFetchResponse stop_fetch_response = 2;
+        GetPropertiesResponse get_properties_response = 3;
     }
 }
 message Event {

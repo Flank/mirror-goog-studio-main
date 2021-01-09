@@ -16,6 +16,8 @@
 
 package com.android.tools.agent.appinspection
 
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.inspector.WindowInspector
 import androidx.annotation.GuardedBy
@@ -24,9 +26,11 @@ import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
 import androidx.inspection.InspectorFactory
 import com.android.tools.agent.appinspection.framework.SkiaQWorkaround
+import com.android.tools.agent.appinspection.framework.flatten
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
+import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
 import com.android.tools.idea.protobuf.ByteString
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.*
 import java.io.ByteArrayOutputStream
@@ -42,10 +46,11 @@ class LayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_INSP
     override fun createInspector(
         connection: Connection,
         environment: InspectorEnvironment
-    ) = ViewLayoutInspector(connection)
+    ) = ViewLayoutInspector(connection, environment)
 }
 
-class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
+class ViewLayoutInspector(connection: Connection, private val environment: InspectorEnvironment) :
+    Inspector(connection) {
 
     /**
      * Context data associated with a capture of a single layout tree.
@@ -94,6 +99,10 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
                 callback
             )
             Command.SpecializedCase.STOP_FETCH_COMMAND -> handleStopFetchCommand(callback)
+            Command.SpecializedCase.GET_PROPERTIES_COMMAND -> handleGetProperties(
+                command.getPropertiesCommand,
+                callback
+            )
             else -> error("Unexpected view inspector command case: ${command.specializedCase}")
         }
     }
@@ -267,6 +276,46 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
         synchronized(contextMapLock) {
             for (context in contextMap.values) {
                 context.isLastCapture = true
+            }
+        }
+    }
+
+    private fun handleGetProperties(
+        propertiesCommand: GetPropertiesCommand,
+        callback: CommandCallback
+    ) {
+
+        Handler(Looper.getMainLooper()).post {
+            var foundView: View? = null
+            var foundViewRoot: View? = null
+
+            for (rootView in getRootViews()) {
+                foundView = rootView
+                    .flatten()
+                    .filter { view -> view.uniqueDrawingId == propertiesCommand.viewId }
+                    .firstOrNull()
+
+                if (foundView != null) {
+                    foundViewRoot = rootView
+                    break
+                }
+            }
+
+            environment.executors().primary().execute {
+                val context: CaptureContext? = if (foundViewRoot != null) {
+                    // We found a root view but perhaps due to rare timing it might not be in the
+                    // context map anymore
+                    synchronized(contextMapLock) { contextMap[foundViewRoot.uniqueDrawingId] }
+                } else {
+                    null
+                }
+
+                val response = if (foundView != null && context != null) {
+                    foundView.createGetPropertiesResponse(context.generation)
+                } else {
+                    GetPropertiesResponse.getDefaultInstance()
+                }
+                callback.reply { getPropertiesResponse = response }
             }
         }
     }
