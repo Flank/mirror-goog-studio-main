@@ -52,6 +52,7 @@ class ComposeTreeTest {
             top = 121,
             width = 421,
             height = 269,
+            bounds = intArrayOf(),
             parameters = emptyList(),
             children = listOf(
                 InspectorNode(
@@ -65,6 +66,7 @@ class ComposeTreeTest {
                     top = 121,
                     width = 189,
                     height = 111,
+                    bounds = intArrayOf(57, 120, 210, 123, 230, 200, 65, 231),
                     parameters = emptyList(),
                     children = emptyList()
                 ),
@@ -79,6 +81,7 @@ class ComposeTreeTest {
                     top = 291,
                     width = 176,
                     height = 269,
+                    bounds = intArrayOf(),
                     parameters = emptyList(),
                     children = emptyList()
                 )
@@ -173,9 +176,19 @@ class ComposeTreeTest {
         assertThat(view.y).named(name).isEqualTo(expected.top)
         assertThat(view.width).named(name).isEqualTo(expected.width)
         assertThat(view.height).named(name).isEqualTo(expected.height)
+        assertThat(view.transformedBounds.topLeftX).isEqualTo(expected.bounds.getOrZero(0))
+        assertThat(view.transformedBounds.topLeftY).isEqualTo(expected.bounds.getOrZero(1))
+        assertThat(view.transformedBounds.topRightX).isEqualTo(expected.bounds.getOrZero(2))
+        assertThat(view.transformedBounds.topRightY).isEqualTo(expected.bounds.getOrZero(3))
+        assertThat(view.transformedBounds.bottomLeftX).isEqualTo(expected.bounds.getOrZero(6))
+        assertThat(view.transformedBounds.bottomLeftY).isEqualTo(expected.bounds.getOrZero(7))
+        assertThat(view.transformedBounds.bottomRightX).isEqualTo(expected.bounds.getOrZero(4))
+        assertThat(view.transformedBounds.bottomRightY).isEqualTo(expected.bounds.getOrZero(5))
         assertThat(view.subViewCount).named(name).isEqualTo(expected.children.size)
         for (index in view.subViewList.indices) {
             checkComposeView(table, view.getSubView(index), expected.children[index])
         }
     }
+
+    private fun IntArray.getOrZero(index: Int) = this.getOrElse(index) { 0 }
 }

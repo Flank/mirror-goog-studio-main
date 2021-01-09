@@ -71,6 +71,7 @@ class PropertiesTest {
             top = 121,
             width = 421,
             height = 269,
+            bounds = intArrayOf(),
             children = listOf(
                 InspectorNode(
                     id = -2,
@@ -83,6 +84,7 @@ class PropertiesTest {
                     top = 121,
                     width = 421,
                     height = 56,
+                    bounds = intArrayOf(),
                     children = emptyList(),
                     parameters = listOf(
                         parameter("text", ParameterType.String, "Hello World")

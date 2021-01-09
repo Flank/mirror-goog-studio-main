@@ -72,6 +72,14 @@ class InspectorNode(
     val height: Int,
 
     /**
+     * The 4 corners of the node after modifier transformations.
+     * If there are no coordinate transforms the array will be empty.
+     * Otherwise the content will be 8 integers representing 4 (x,y) corners
+     * in clockwise order.
+     */
+    val bounds: IntArray,
+
+    /**
      * The parameters of this Composable.
      */
     val parameters: List<RawParameter>,

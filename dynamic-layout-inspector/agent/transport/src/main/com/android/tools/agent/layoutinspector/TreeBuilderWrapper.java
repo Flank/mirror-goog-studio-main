@@ -47,11 +47,13 @@ class TreeBuilderWrapper {
     private final Method mGetTop;
     private final Method mGetWidth;
     private final Method mGetHeight;
+    private final Method mGetBounds;
     private final Method mGetChildren;
     private final Method mGetParamName;
     private final Method mGetParamType;
     private final Method mGetParamValue;
     private final Method mGetParamElements;
+    private static final int[] EMPTY_ARRAY = {};
 
     TreeBuilderWrapper(@NonNull ClassLoader classLoader) throws ReflectiveOperationException {
         Class<?> builderClass =
@@ -76,6 +78,7 @@ class TreeBuilderWrapper {
         mGetTop = nodeClass.getDeclaredMethod("getTop");
         mGetWidth = nodeClass.getDeclaredMethod("getWidth");
         mGetHeight = nodeClass.getDeclaredMethod("getHeight");
+        mGetBounds = getOptionalMethod(nodeClass, "getBounds");
         mGetChildren = nodeClass.getDeclaredMethod("getChildren");
         mGetParamName = paramClass.getDeclaredMethod("getName");
         mGetParamType = paramClass.getDeclaredMethod("getType");
@@ -176,6 +179,10 @@ class TreeBuilderWrapper {
 
         public int getHeight() throws ReflectiveOperationException {
             return (int) mGetHeight.invoke(mInstance);
+        }
+
+        public int[] getBounds() throws ReflectiveOperationException {
+            return mGetBounds != null ? (int[]) mGetBounds.invoke(mInstance) : EMPTY_ARRAY;
         }
 
         @NonNull
