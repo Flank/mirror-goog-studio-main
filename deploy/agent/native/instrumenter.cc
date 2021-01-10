@@ -43,6 +43,7 @@ const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/InstrumentationHooks";
 
 const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
+const char* kPhaseClass = "com/android/tools/deploy/instrument/Phase";
 
 const std::string kInstrumentationJarName =
     "instruments-"_s + instrumentation_jar_hash + ".jar";
@@ -409,6 +410,10 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
                  {kDexUtilityClass, "makeInMemoryDexElements",
                   "([Ljava/nio/ByteBuffer;Ljava/util/List;)[Ljava/lang/Object;",
                   (void*)&Native_MakeInMemoryDexElements});
+
+  RegisterNative(jni, {kPhaseClass, "start", "(Ljava/lang/String;)V",
+                       (void*)&Native_Phase_Start});
+  RegisterNative(jni, {kPhaseClass, "end", "()V", (void*)&Native_Phase_End});
 
   return true;
 }

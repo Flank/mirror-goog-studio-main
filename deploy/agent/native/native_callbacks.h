@@ -65,6 +65,12 @@ void Native_LogUnhandledException(JNIEnv* jni, jobject object, jobject thread,
 jarray Native_MakeInMemoryDexElements(JNIEnv* jni, jobject object,
                                       jarray dex_files,
                                       jobject suppressed_exceptions);
+
+// This method is bound to Phase#start()
+void Native_Phase_Start(JNIEnv* jni, jobject this_object, jstring text);
+
+// This method is bound to Phase#end()
+void Native_Phase_End(JNIEnv* jni, jobject this_object);
 }  // namespace deploy
 
 #endif

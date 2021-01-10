@@ -20,6 +20,7 @@
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_object.h"
 #include "tools/base/deploy/agent/native/swapper.h"
+#include "tools/base/deploy/common/event.h"
 
 namespace deploy {
 
@@ -156,4 +157,12 @@ void Native_LogUnhandledException(JNIEnv* jni, jobject object, jobject thread,
   CrashLogger::Instance().LogUnhandledException();
 }
 
+void Native_Phase_Start(JNIEnv* jni, jobject this_object, jstring jtext) {
+  const char* ctext = jni->GetStringUTFChars(jtext, 0);
+  std::string text(ctext);
+  BeginPhase(text);
+  jni->ReleaseStringUTFChars(jtext, ctext);
+}
+
+void Native_Phase_End(JNIEnv* jni, jobject this_object) { EndPhase(); }
 }  // namespace deploy
