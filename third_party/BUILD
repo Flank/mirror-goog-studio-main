@@ -884,6 +884,22 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "net.java.dev.jna_jna",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/java/dev/jna/jna/5.6.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "net.java.dev.jna_jna-platform",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/java/dev/jna/jna-platform/5.6.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":net.java.dev.jna_jna"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "net.sf.jopt-simple_jopt-simple",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9:jar",
     visibility = ["//visibility:public"],
