@@ -34,7 +34,6 @@ import com.android.build.gradle.integration.common.fixture.model.dumpCompileComm
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.fixture.model.withCxxFileNormalizer
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.internal.cxx.configure.DEFAULT_CMAKE_VERSION
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -65,7 +64,7 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
         @Parameterized.Parameters(name = "version={0}")
         @JvmStatic
         fun data() = arrayOf(
-          arrayOf(DEFAULT_CMAKE_VERSION),
+          arrayOf("3.18.1"),
           // With the GradleTestProject fixture, CMake 3.10.2 is not available.
           arrayOf("3.10.4819442")
         )
