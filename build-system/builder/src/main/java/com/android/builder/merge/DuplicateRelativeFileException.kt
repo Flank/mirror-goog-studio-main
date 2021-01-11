@@ -19,7 +19,7 @@ package com.android.builder.merge
  * Exception by [StreamMergeAlgorithms.acceptOnlyOne] if more than one file needs to be
  * merged.
  */
-class DuplicateRelativeFileException private constructor(
+class DuplicateRelativeFileException constructor(
     private val path: String,
     private val size: Int,
     private val inputs: List<String>,

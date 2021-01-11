@@ -274,8 +274,7 @@ public class NativeSoPackagingTest {
                     GradleBuildResult result = execute("app:assembleDebug");
                     try (Scanner stdout = result.getStdout()) {
                         ScannerSubject.assertThat(stdout)
-                                .contains(
-                                        "More than one file was found with OS independent path 'lib/x86/liblibrary.so'.");
+                                .contains("2 files found for path 'lib/x86/liblibrary.so'.");
                     }
 
                     checkApk(appProject, "liblibrary.so", "new content");
@@ -510,8 +509,7 @@ public class NativeSoPackagingTest {
                     GradleBuildResult result = execute("library:assembleAT");
                     try (Scanner stdout = result.getStdout()) {
                         ScannerSubject.assertThat(stdout)
-                                .contains(
-                                        "More than one file was found with OS independent path 'lib/x86/liblibrary.so'.");
+                                .contains("2 files found for path 'lib/x86/liblibrary.so'.");
                     }
 
                     checkTestApk(libProject, "liblibrary.so", "new content");
@@ -535,8 +533,7 @@ public class NativeSoPackagingTest {
                     GradleBuildResult result = execute("library:assembleAT");
                     try (Scanner stdout = result.getStdout()) {
                         ScannerSubject.assertThat(stdout)
-                                .contains(
-                                        "More than one file was found with OS independent path 'lib/x86/liblibrary2.so'.");
+                                .contains("2 files found for path 'lib/x86/liblibrary2.so'.");
                     }
 
                     checkTestApk(libProject, "liblibrary2.so", "new content");

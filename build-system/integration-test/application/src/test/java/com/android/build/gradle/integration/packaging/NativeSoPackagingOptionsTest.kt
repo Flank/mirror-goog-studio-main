@@ -45,7 +45,10 @@ class NativeSoPackagingOptionsTest {
                     android {
                         packagingOptions {
                             jniLibs {
-                                excludes += '**/dslExclude.so'
+                                // test various supported pattern formats
+                                excludes += '**/dslExclude1.so'
+                                excludes += 'lib/*/dslExclude2.so'
+                                excludes += '/lib/*/dslExclude3.so'
                                 pickFirsts += '**/dslPickFirst.so'
                                 useLegacyPackaging = true
                             }
@@ -68,7 +71,9 @@ class NativeSoPackagingOptionsTest {
                     }
                     """.trimIndent()
             ).withFile("src/main/jniLibs/x86/appKeep.so", "foo")
-            .withFile("src/main/jniLibs/x86/dslExclude.so", "foo")
+            .withFile("src/main/jniLibs/x86/dslExclude1.so", "foo")
+            .withFile("src/main/jniLibs/x86/dslExclude2.so", "foo")
+            .withFile("src/main/jniLibs/x86/dslExclude3.so", "foo")
             .withFile("src/main/jniLibs/x86/dslPickFirst.so", "foo")
             .withFile("src/main/jniLibs/x86/debugExclude.so", "foo")
             .withFile("src/main/jniLibs/x86/releaseExclude.so", "foo")
@@ -81,7 +86,14 @@ class NativeSoPackagingOptionsTest {
             .appendToBuild(
                 """
                     android {
-                        packagingOptions.jniLibs.excludes += '**/dslExclude.so'
+                        packagingOptions {
+                            jniLibs {
+                                // test various supported pattern formats
+                                excludes += '**/dslExclude1.so'
+                                excludes += 'lib/*/dslExclude2.so'
+                                excludes += '/lib/*/dslExclude3.so'
+                            }
+                        }
                     }
                     androidComponents {
                         onVariants(selector().all(), {
@@ -93,7 +105,9 @@ class NativeSoPackagingOptionsTest {
                     }
                     """.trimIndent()
             ).withFile("src/main/jniLibs/x86/libKeep.so", "bar")
-            .withFile("src/main/jniLibs/x86/dslExclude.so", "bar")
+            .withFile("src/main/jniLibs/x86/dslExclude1.so", "bar")
+            .withFile("src/main/jniLibs/x86/dslExclude2.so", "bar")
+            .withFile("src/main/jniLibs/x86/dslExclude3.so", "bar")
             .withFile("src/main/jniLibs/x86/dslPickFirst.so", "bar")
             .withFile("src/main/jniLibs/x86/libExclude.so", "bar")
             .withFile("src/main/jniLibs/x86/variantPickFirst.so", "bar")
@@ -127,7 +141,9 @@ class NativeSoPackagingOptionsTest {
         val debugApkFile = appSubProject.getApk(DEBUG).file.toFile()
         assertThat(debugApkFile).exists()
         val debugApk = TruthHelper.assertThat(appSubProject.getApk(DEBUG))
-        debugApk.doesNotContainJavaResource("lib/x86/dslExclude.so")
+        debugApk.doesNotContainJavaResource("lib/x86/dslExclude1.so")
+        debugApk.doesNotContainJavaResource("lib/x86/dslExclude2.so")
+        debugApk.doesNotContainJavaResource("lib/x86/dslExclude3.so")
         debugApk.doesNotContainJavaResource("lib/x86/debugExclude.so")
         debugApk.containsJavaResourceWithContent("lib/x86/appKeep.so", "foo")
         debugApk.containsJavaResourceWithContent("lib/x86/dslPickFirst.so", "foo")
@@ -148,7 +164,9 @@ class NativeSoPackagingOptionsTest {
         val releaseApkFile = appSubProject.getApk(RELEASE).file.toFile()
         assertThat(releaseApkFile).exists()
         val releaseApk = TruthHelper.assertThat(appSubProject.getApk(RELEASE))
-        releaseApk.doesNotContainJavaResource("lib/x86/dslExclude.so")
+        releaseApk.doesNotContainJavaResource("lib/x86/dslExclude1.so")
+        releaseApk.doesNotContainJavaResource("lib/x86/dslExclude2.so")
+        releaseApk.doesNotContainJavaResource("lib/x86/dslExclude3.so")
         releaseApk.doesNotContainJavaResource("lib/x86/releaseExclude.so")
         releaseApk.containsJavaResourceWithContent("lib/x86/appKeep.so", "foo")
         releaseApk.containsJavaResourceWithContent("lib/x86/dslPickFirst.so", "foo")
@@ -174,7 +192,9 @@ class NativeSoPackagingOptionsTest {
         androidTestApk.containsJavaResourceWithContent("lib/x86/testKeep.so", "foo")
 
         libSubProject.assertThatAar("debug") {
-            this.doesNotContain("jni/x86/dslExclude.so")
+            this.doesNotContain("jni/x86/dslExclude1.so")
+            this.doesNotContain("jni/x86/dslExclude2.so")
+            this.doesNotContain("jni/x86/dslExclude3.so")
             this.doesNotContain("jni/x86/libExclude.so")
             this.contains("jni/x86/libKeep.so")
         }

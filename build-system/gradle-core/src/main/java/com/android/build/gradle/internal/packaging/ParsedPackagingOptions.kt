@@ -43,31 +43,17 @@ class ParsedPackagingOptions
     /**
      * Paths excluded.
      */
-    private val excludes: Set<PathMatcher> = excludePatterns.map(this::compileGlob).toSet()
+    private val excludes: Set<PathMatcher> = excludePatterns.map { compileGlob(it) }.toSet()
 
     /**
      * Paths that should do first-pick.
      */
-    private val pickFirsts: Set<PathMatcher> = pickFirstPatterns.map(this::compileGlob).toSet()
+    private val pickFirsts: Set<PathMatcher> = pickFirstPatterns.map { compileGlob(it) }.toSet()
 
     /**
      * Paths that should be merged.
      */
-    private val merges: Set<PathMatcher> = mergePatterns.map(this::compileGlob).toSet()
-
-    /**
-     * Compiles a glob pattern.
-     *
-     * @param pattern the pattern
-     * @return the matcher
-     */
-    private fun compileGlob(pattern: String): PathMatcher {
-
-        return GlobPathMatcherFactory.create(
-            if (!pattern.startsWith("/") && !pattern.startsWith("*"))
-                "/$pattern"
-            else pattern)
-    }
+    private val merges: Set<PathMatcher> = mergePatterns.map { compileGlob(it) }.toSet()
 
     /**
      * Obtains the action to perform for a path.
@@ -95,5 +81,24 @@ class ParsedPackagingOptions
             PackagingFileAction.EXCLUDE
         } else PackagingFileAction.NONE
 
+    }
+
+    companion object {
+
+        /**
+         * Compiles a glob pattern.
+         *
+         * @param pattern the pattern
+         * @return the matcher
+         */
+        @JvmStatic
+        fun compileGlob(pattern: String): PathMatcher {
+
+            return GlobPathMatcherFactory.create(
+                if (!pattern.startsWith("/") && !pattern.startsWith("*"))
+                    "/$pattern"
+                else pattern
+            )
+        }
     }
 }
