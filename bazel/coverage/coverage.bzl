@@ -43,7 +43,6 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         ],
         outs = ["{}/jacoco.xml".format(name)],
         tools = [jacoco_cli],
-        local = True,
         cmd = "$(location {cli}) report --quiet $(location {exc}) --classfiles $(location {jar}) --xml $@".format(
             cli = jacoco_cli,
             exc = "{}.JacocoExec".format(name),
