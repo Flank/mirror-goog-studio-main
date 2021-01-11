@@ -105,6 +105,46 @@ message Resource {
     int32 name = 3;
 }
 
+// Locale information, corresponds to java.util.Locale
+message Locale {
+    int32 language = 1;
+    int32 country = 2;
+    int32 variant = 3;
+    int32 script = 4;
+}
+
+// Device configuration, corresponds to android.content.res.Configuration
+message Configuration {
+    float font_scale = 1;
+    int32 country_code = 2;
+    int32 network_code = 3;
+    Locale locale = 4;
+    int32 screen_layout = 5;
+    int32 color_mode = 6;
+    int32 touch_screen = 7;
+    int32 keyboard = 8;
+    int32 keyboard_hidden = 9;
+    int32 hard_keyboard_hidden = 10;
+    int32 navigation = 11;
+    int32 navigation_hidden = 12;
+    int32 ui_mode = 13;
+    int32 smallest_screen_width = 14;
+    int32 density = 15;
+    int32 orientation = 16;
+    int32 screen_width = 17;
+    int32 screen_height = 18;
+}
+
+// Various data about the current app, which can be used to resolve resource references for the
+// device's Configuration.
+message AppContext {
+    int32 api_level = 1;
+    int32 api_code_name = 2;
+    int32 app_package_name = 3;
+    Resource theme = 4;
+    Configuration configuration = 5;
+}
+
 // Handles properties whose values are bit flags, e.g. "top|left"
 message FlagValue {
     repeated int32 flag = 1;
@@ -189,13 +229,14 @@ message GetPropertiesResponse {
 message LayoutEvent {
     // A collection of all text referenced by other fields in this message
     repeated StringEntry strings = 1;
-    ViewNode root_view = 2;
+    AppContext app_context = 2;
+    ViewNode root_view = 3;
     // The offset of the root view from the origin of the surface. Will always be 0,0 for
     // the main window, but can be positive for floating windows (e.g. dialogs).
-    Point root_offset = 3;
-    Screenshot screenshot = 4;
+    Point root_offset = 4;
+    Screenshot screenshot = 5;
     // A monotonically increasing number, which can be used by the client to ignore stale events.
-    int32 generation = 5;
+    int32 generation = 6;
 }
 
 // An event fired whenever a new root is added or an old root is removed.

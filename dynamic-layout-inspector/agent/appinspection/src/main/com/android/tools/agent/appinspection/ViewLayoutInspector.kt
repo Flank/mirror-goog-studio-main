@@ -28,6 +28,7 @@ import androidx.inspection.InspectorFactory
 import com.android.tools.agent.appinspection.framework.SkiaQWorkaround
 import com.android.tools.agent.appinspection.framework.flatten
 import com.android.tools.agent.appinspection.proto.StringTable
+import com.android.tools.agent.appinspection.proto.createAppContext
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
@@ -185,6 +186,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 }
 
                 val stringTable = StringTable()
+                val appContext = root.createAppContext(stringTable)
                 lateinit var rootView: ViewNode
                 lateinit var rootOffset: IntArray
                 run {
@@ -207,6 +209,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 connection.sendEvent {
                     layoutEvent = LayoutEvent.newBuilder().apply {
                         addAllStrings(stringTable.toStringEntries())
+                        this.appContext = appContext
                         this.rootView = rootView
                         this.rootOffset = Point.newBuilder().apply {
                             x = rootOffset[0]

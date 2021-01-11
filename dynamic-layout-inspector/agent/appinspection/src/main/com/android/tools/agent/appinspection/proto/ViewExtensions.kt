@@ -16,8 +16,10 @@
 
 package com.android.tools.agent.appinspection.proto
 
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.Point
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import com.android.tools.agent.appinspection.util.ThreadUtils
@@ -26,6 +28,8 @@ import com.android.tools.agent.appinspection.framework.getChildren
 import com.android.tools.agent.appinspection.framework.getTextValue
 import com.android.tools.agent.appinspection.proto.property.PropertyCache
 import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
+import com.android.tools.agent.appinspection.proto.resource.convert
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Rect
@@ -97,6 +101,20 @@ fun View.createResource(stringTable: StringTable, resourceId: Int): Resource? {
     } catch (ex: Resources.NotFoundException) {
         null
     }
+}
+
+fun View.createAppContext(stringTable: StringTable): AppContext {
+    return AppContext.newBuilder().apply {
+        apiLevel = Build.VERSION.SDK_INT
+        apiCodeName = stringTable.put(Build.VERSION.CODENAME)
+        appPackageName = stringTable.put(context.packageName)
+
+        // getThemeResId is @hide; stubbed in fake-android but IDE doesn't find it due to setup
+        createResource(stringTable, context.getThemeResId())?.let { themeResource ->
+            theme = themeResource
+        }
+        configuration = context.resources.configuration.convert(stringTable)
+    }.build()
 }
 
 fun View.createGetPropertiesResponse(generation: Int): GetPropertiesResponse {
