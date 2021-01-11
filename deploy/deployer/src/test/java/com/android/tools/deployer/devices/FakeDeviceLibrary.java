@@ -50,8 +50,11 @@ public class FakeDeviceLibrary {
             case API_28:
             case API_29:
             case API_30:
+            case API_31:
                 device.getShell().addCommand(new Cmd());
                 break;
+            default:
+                throw new IllegalStateException("No Shell set");
         }
 
         device.getShell().addCommand(new Am());

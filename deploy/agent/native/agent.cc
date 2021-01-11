@@ -21,6 +21,7 @@
 
 #include "tools/base/deploy/agent/native/capabilities.h"
 #include "tools/base/deploy/agent/native/crash_logger.h"
+#include "tools/base/deploy/agent/native/hidden_api_silencer.h"
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
@@ -69,23 +70,9 @@ void SendFailure(const deploy::Socket& socket,
   socket.Write(response_bytes);
 }
 
-jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
-  jvmtiEnv* jvmti;
-  JNIEnv* jni;
-
+jint HandleStartupAgent(jvmtiEnv* jvmti, JNIEnv* jni,
+                        const std::string& app_data_dir) {
   Log::V("Startup agent attached to VM");
-
-  // Set up the JVMTI and JNI environments.
-
-  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
-    ErrEvent("Error retrieving JNI function table.");
-    return JNI_OK;
-  }
-
-  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
-    ErrEvent("Error retrieving JVMTI function table.");
-    return JNI_OK;
-  }
 
   if (jvmti->AddCapabilities(&REQUIRED_CAPABILITIES) != JVMTI_ERROR_NONE) {
     ErrEvent("Error setting capabilities.");
@@ -115,10 +102,7 @@ jint HandleStartupAgent(JavaVM* vm, const std::string& app_data_dir) {
   return JNI_OK;
 }
 
-jint HandleAgentRequest(JavaVM* vm, char* socket_name) {
-  jvmtiEnv* jvmti;
-  JNIEnv* jni;
-
+jint HandleAgentRequest(jvmtiEnv* jvmti, JNIEnv* jni, char* socket_name) {
   InitEventSystem();
 
   Log::V("Prior agent invocations in this VM: %d", run_counter++);
@@ -148,20 +132,6 @@ jint HandleAgentRequest(JavaVM* vm, char* socket_name) {
   if (!request.ParseFromString(request_bytes)) {
     ErrEvent("Could not parse swap request");
     SendFailure(socket, proto::AgentResponse::REQUEST_PARSE_FAILED);
-    return JNI_OK;
-  }
-
-  // Set up the JVMTI and JNI environments. Regardless of what
-  // the agent is about to perform.
-  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
-    ErrEvent("Error retrieving JVMTI function table.");
-    SendFailure(socket, proto::AgentResponse::JVMTI_SETUP_FAILED);
-    return JNI_OK;
-  }
-
-  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
-    ErrEvent("Error retrieving JNI function table.");
-    SendFailure(socket, proto::AgentResponse::JNI_SETUP_FAILED);
     return JNI_OK;
   }
 
@@ -211,12 +181,28 @@ jint HandleAgentRequest(JavaVM* vm, char* socket_name) {
 // Event that fires when the agent hooks onto a running VM.
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
                                                  void* reserved) {
+  // Set up the JVMTI and JNI environment, regardless of what
+  // the agent is about to perform.
+  jvmtiEnv* jvmti = nullptr;
+  if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
+    ErrEvent("Error retrieving JVMTI function table.");
+    return JNI_OK;
+  }
+
+  JNIEnv* jni = nullptr;
+  if (vm->GetEnv((void**)&jni, JNI_VERSION_1_2) != JNI_OK) {
+    ErrEvent("Error retrieving JNI function table.");
+    return JNI_OK;
+  }
+
+  HiddenAPISilencer silencer(jvmti);
+
   // Startup agents are passed the path to the app data directory.
   // TODO(b/148544245): See if there's a nicer way to do this.
   if (input[0] == '/') {
-    return HandleStartupAgent(vm, input);
+    return HandleStartupAgent(jvmti, jni, input);
   } else {
-    return HandleAgentRequest(vm, input);
+    return HandleAgentRequest(jvmti, jni, input);
   }
 }
 

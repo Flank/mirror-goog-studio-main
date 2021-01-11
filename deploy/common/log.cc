@@ -60,6 +60,13 @@ void Log::E(const char* fmt, ...) {
   va_end(args);
 }
 
+void Log::T(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  Handle('I', fmt, args);
+  va_end(args);
+}
+
 void Log::Handle(const char level, const char* fmt, va_list args) {
   if (Env::IsValid() && !Env::logcat().empty()) {
     struct timeval tp;

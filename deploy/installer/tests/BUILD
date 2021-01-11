@@ -46,6 +46,7 @@ cc_binary(
     deps = [
         ":proto",
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/deploy/agent/native:jvmti_android",
         "//tools/base/deploy/common:common_lib",
         "//tools/base/deploy/common:log",
     ],

@@ -17,6 +17,7 @@
 #include "tools/base/deploy/common/log.h"
 
 #include <android/log.h>
+#include "tools/base/deploy/common/env.h"
 
 namespace deploy {
 
@@ -52,6 +53,21 @@ void Log::E(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   __android_log_vprint(ANDROID_LOG_ERROR, kTag, fmt, args);
+  va_end(args);
+}
+
+namespace {
+bool isUserBuild() { return Env::build_type() == "user"; }
+}  // namespace
+
+void Log::T(const char* fmt, ...) {
+  if (isUserBuild()) {
+    return;
+  }
+
+  va_list args;
+  va_start(args, fmt);
+  __android_log_vprint(ANDROID_LOG_INFO, kTag, fmt, args);
   va_end(args);
 }
 
