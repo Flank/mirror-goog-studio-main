@@ -83,7 +83,7 @@ dex_library(
     name = "perfa",
     jars = [
         ":perfa_java",
-        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
         "//tools/base/app-inspection/agent",
     ],
 )
