@@ -6,15 +6,15 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
-import kotlin.test.assertEquals
 
 /**
  * Integration tests for [GenerateManifestJarTask]
@@ -129,9 +129,9 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
             .walkBottomUp().filter(File::isFile).map(File::getName).toList()
         if (enableManifestClass) {
             // Contains two manifest jars (for debug and release)
-            Truth.assertThat(manifestJarExists).containsExactly("Manifest.jar", "Manifest.jar")
+            assertThat(manifestJarExists).containsExactly("Manifest.jar", "Manifest.jar")
         } else {
-            Truth.assertThat(manifestJarExists).isEmpty()
+            assertThat(manifestJarExists).isEmpty()
         }
     }
 
@@ -141,10 +141,15 @@ class GenerateManifestJarTaskTest(private val enableManifestClass : Boolean) {
             .with(BooleanOption.GENERATE_MANIFEST_CLASS, enableManifestClass)
             .run("clean", "assembleDebug")
 
-        // Check Manifest JAR has not been created.
+        // Check Manifest JAR has been created, but contains no entries
         val intermediateCompiledManifest = getManifestJarArtifact()
             .walkBottomUp().filter(File::isFile).toList()
-        Truth.assertThat(intermediateCompiledManifest).isEmpty()
+        assertThat(intermediateCompiledManifest).hasSize(if (enableManifestClass) 1 else 0)
+        intermediateCompiledManifest.forEach { manifestJar ->
+            ZipFileSubject.assertThat(manifestJar) {
+                it.entries(".*").isEmpty()
+            }
+        }
     }
 
     private fun getManifestJarArtifact() = project.getIntermediateFile(

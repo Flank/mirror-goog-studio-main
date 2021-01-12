@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.packaging.JarFlinger
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -63,6 +64,9 @@ abstract class GenerateManifestJarTask : NonIncrementalTask() {
         ).apply {
             if (customPermissions.any()) {
                 generate()
+            } else {
+                // create an empty jar
+                JarFlinger(outputJar.get().asFile.toPath()).close()
             }
         }
     }
