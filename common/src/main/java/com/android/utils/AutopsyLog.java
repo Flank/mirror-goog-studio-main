@@ -16,11 +16,11 @@
 package com.android.utils;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.GuardedBy;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
-import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Fast in-memory log utilizing a cyclic buffer of a limited size. Intended to be used when
