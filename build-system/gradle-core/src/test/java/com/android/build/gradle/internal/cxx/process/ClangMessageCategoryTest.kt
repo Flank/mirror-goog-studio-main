@@ -40,9 +40,11 @@ class ClangMessageCategoryTest {
         shouldElevate("abc.c(1,1): warning: That cat is mean")
         shouldElevate("abc.c(1,1): error: A mean cat bit you")
         shouldNotElevate("abc.c(1,1): snark: Why did you pet the mean cat?")
-        shouldElevate("ninja: Entering directory `c:\\directory'")
+        shouldNotElevate("ninja: Entering directory `c:\\directory'")
         shouldElevate("clang: error: linker command failed with exit code 1")
         shouldElevate("clang.exe: error: linker command failed with exit code 1")
         shouldElevate("In file included from another-file.cpp:11:")
+        assertThat(isNinjaWorkingDirectoryLine("blah")).isFalse()
+        assertThat(isNinjaWorkingDirectoryLine("ninja: Entering directory `c:\\directory'")).isTrue()
     }
 }

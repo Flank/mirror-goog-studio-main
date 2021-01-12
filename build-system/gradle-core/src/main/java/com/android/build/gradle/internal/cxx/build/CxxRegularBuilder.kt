@@ -337,11 +337,11 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                         .stream()
                         .map { library -> library.artifactName + "_" + library.abi }
                         .toList()
-                lifecycleln("Build multiple targets ${targetNames.joinToString(" ")}")
+                infoln("Build multiple targets ${targetNames.joinToString(" ")}")
             } else {
                 Preconditions.checkElementIndex(0, buildStep.libraries.size)
                 logFileSuffix = buildStep.libraries[0].artifactName + "_" + abiName
-                lifecycleln("Build $logFileSuffix")
+                infoln("Build $logFileSuffix")
             }
 
             abis

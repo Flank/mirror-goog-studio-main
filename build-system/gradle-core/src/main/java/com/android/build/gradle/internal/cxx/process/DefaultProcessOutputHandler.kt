@@ -40,6 +40,12 @@ class DefaultProcessOutputHandler(
     var stderr: FileOutputStream? = null
     var stdout: FileOutputStream? = null
 
+    /**
+     * The most recent line containing "ninja: Entering directory ...". When `logFullStdout` is
+     * false, this line is only printed when there is at least one output from the C/C++ compiler.
+     */
+    private var ninjaDirectoryLine: String? = null
+
     override fun createOutput(): ProcessOutput {
         val singleStderr = FileOutputStream(stderrFile, true)
         val singleStdout = FileOutputStream(stdoutFile, true)
@@ -49,9 +55,18 @@ class DefaultProcessOutputHandler(
             stderrReceivers.add(ChunkBytesToLineOutputStream(logPrefix, { lifecycleln(it) }))
         }
         if (logStdout) {
-            stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix, {
-                if (logFullStdout) lifecycleln(it)
-                else if (shouldElevateToLifeCycle(it)) lifecycleln(it)
+            stdoutReceivers.add(ChunkBytesToLineOutputStream(logPrefix, { line ->
+                if (isNinjaWorkingDirectoryLine(line)) {
+                    ninjaDirectoryLine = line
+                }
+                if (logFullStdout) lifecycleln(line)
+                else if (shouldElevateToLifeCycle(line)) {
+                    ninjaDirectoryLine?.let { ninjaDirectoryLine ->
+                        lifecycleln(ninjaDirectoryLine)
+                        this.ninjaDirectoryLine = null
+                    }
+                    lifecycleln(line)
+                }
             }))
         }
         return DefaultProcessOutput(
