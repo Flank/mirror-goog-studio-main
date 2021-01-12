@@ -60,6 +60,7 @@ jvmtiExtensionFunction const* GetExtensionFunctionVoid(
     jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.id));
     jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.params));
   }
+  jvmti->Deallocate(reinterpret_cast<unsigned char*>(infos));
   return res;
 }
 
