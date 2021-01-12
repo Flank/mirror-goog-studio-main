@@ -70,7 +70,8 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         ) {
             return Severity.IGNORE
         }
-        if (isWarningsAsErrors() && (severity === Severity.WARNING || severity == null)) {
+        val impliedSeverity = severity ?: getDefaultSeverity(issue)
+        if (isWarningsAsErrors() && impliedSeverity === Severity.WARNING) {
             if (issue === IssueRegistry.BASELINE) {
                 // Don't promote the baseline informational issue
                 // (number of issues promoted) to error
@@ -78,7 +79,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
             }
             severity = Severity.ERROR
         }
-        if (isIgnoreWarnings() && (severity === Severity.WARNING || severity == null)) {
+        if (isIgnoreWarnings() && impliedSeverity === Severity.WARNING) {
             severity = Severity.IGNORE
         }
         return severity
