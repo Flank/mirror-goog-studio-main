@@ -49,7 +49,11 @@ fun createCxxModuleModel(
             .getProperty(property) ?: return null
         return File(path)
     }
-    val ndk = sdkComponents.ndkHandler.ndkPlatform.getOrThrow()
+    val ndk = sdkComponents.versionedNdkHandler(
+        compileSdkVersion = configurationParameters.compileSdkVersion,
+        ndkVersion = configurationParameters.ndkVersion,
+        ndkPath = configurationParameters.ndkPath
+    ).ndkPlatform.getOrThrow()
     val ndkFolder = trySymlinkNdk(
             ndk.ndkDirectory,
             cxxFolder,

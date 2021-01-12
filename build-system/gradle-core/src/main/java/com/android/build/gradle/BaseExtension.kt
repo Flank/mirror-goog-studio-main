@@ -386,7 +386,14 @@ abstract class BaseExtension protected constructor(
     val ndkDirectory: File
         get() {
         // do not call this method from within the plugin code as it forces part of SDK initialization.
-            return dslServices.sdkComponents.flatMap { it.ndkDirectoryProvider }.get().asFile
+            return dslServices.sdkComponents.map {
+                it.versionedNdkHandler(
+                    compileSdkVersion
+                        ?: throw kotlin.IllegalStateException("compileSdkVersion not set in the android configuration"),
+                    ndkVersion,
+                    ndkPath
+                ).ndkPlatform.getOrThrow().ndkDirectory
+            }.get()
     }
 
     // do not call this method from within the plugin code as it forces SDK initialization.

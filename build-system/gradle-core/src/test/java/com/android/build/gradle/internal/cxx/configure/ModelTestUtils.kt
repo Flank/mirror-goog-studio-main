@@ -110,7 +110,9 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(intermediatesDir).`when`(global).intermediatesDir
     Mockito.doReturn(File("build.gradle")).`when`(project).buildFile
     Mockito.doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
-    Mockito.doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
+    Mockito.doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(
+        Mockito.anyString(), Mockito.anyString(), Mockito.anyString()
+    )
     Mockito.doReturn(sdkDirectoryProvider).`when`(sdkComponents).sdkDirectoryProvider
     Mockito.doReturn(sdkDirectory).`when`(sdkDirectoryProvider).get()
     Mockito.doReturn(File(".")).`when`(sdkDirectory).asFile

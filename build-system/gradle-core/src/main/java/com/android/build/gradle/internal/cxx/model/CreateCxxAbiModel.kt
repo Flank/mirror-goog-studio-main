@@ -53,7 +53,11 @@ fun createCxxAbiModel(
                 soRepublishFolder = join(variant.soRepublishFolder, abi.tag),
                 abiPlatformVersion =
                     sdkComponents
-                            .ndkHandler
+                            .versionedNdkHandler(
+                                compileSdkVersion = configurationParameters.compileSdkVersion,
+                                ndkVersion = configurationParameters.ndkVersion,
+                                ndkPath = configurationParameters.ndkPath
+                            )
                             .ndkPlatform
                             .getOrThrow()
                             .ndkInfo
