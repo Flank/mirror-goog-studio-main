@@ -86,9 +86,12 @@
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" />
-      <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/dynamic-layout-inspector.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/dynamic-layout-inspector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/agent/appinspection/dynamic-layout-inspector.agent.appinspection.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/agent/appinspection/dynamic-layout-inspector.agent.appinspection.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/agent/fake-android/dynamic-layout-inspector.agent.fake-android.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/agent/fake-android/dynamic-layout-inspector.agent.fake-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/agent/transport/dynamic-layout-inspector.agent.transport.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/agent/transport/dynamic-layout-inspector.agent.transport.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/common/dynamic-layout-inspector.common.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/common/dynamic-layout-inspector.common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/skia/dynamic-layout-inspector.skia.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/skia/dynamic-layout-inspector.skia.iml" />
       <module fileurl="file://$PROJECT_DIR$/fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/fakeandroid/fakeandroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/common/layout-inspector-common.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/common/layout-inspector-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/perf-logger/perf-logger.iml" filepath="$PROJECT_DIR$/perf-logger/perf-logger.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils-tests.iml" filepath="$PROJECT_DIR$/testutils/testutils-tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" filepath="$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" />

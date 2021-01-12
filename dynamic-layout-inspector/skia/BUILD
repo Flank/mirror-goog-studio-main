@@ -21,7 +21,7 @@ kotlin_test(
     ],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
-        "//tools/base/dynamic-layout-inspector/common:studio.layout-inspector-common",
+        "//tools/base/dynamic-layout-inspector/common:studio.dynamic-layout-inspector.common",
         "//tools/base/dynamic-layout-inspector/skia/proto:layout_inspector_skia_java_proto",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",

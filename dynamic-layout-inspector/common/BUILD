@@ -2,10 +2,9 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 # managed by go/iml_to_build
 iml_module(
-    name = "studio.layout-inspector-common",
+    name = "studio.dynamic-layout-inspector.common",
     srcs = ["src/main"],
-    iml_files = ["layout-inspector-common.iml"],
-    project = "unb",
+    iml_files = ["dynamic-layout-inspector.common.iml"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
