@@ -65,15 +65,6 @@ class HotSwap {
 
   // Adds new classes to the application class loader.
   void DefineNewClasses(const proto::SwapRequest& message) const;
-
-  // Save state for Jetpack Compose before activity restart.
-  void SaveStateAndDispose(jobject reloader) const;
-
-  // Load state for Jetpack Compose after activity restart.
-  void LoadStateAndCompose(jobject reloader) const;
-
-  // Create ComposeHotReload object if needed.
-  jobject GetComposeHotReload() const;
 };
 
 }  // namespace deploy

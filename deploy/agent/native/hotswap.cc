@@ -30,57 +30,13 @@
 #include "tools/base/deploy/agent/native/dex_verify.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_object.h"
+#include "tools/base/deploy/agent/native/recompose.h"
 #include "tools/base/deploy/agent/native/thread_suspend.h"
 #include "tools/base/deploy/agent/native/variable_reinit.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 
 namespace deploy {
-
-// Can be null if the application isn't a JetPack Compose application.
-jobject HotSwap::GetComposeHotReload() const {
-  jclass klass =
-      class_finder_.FindInClassLoader(class_finder_.GetApplicationClassLoader(),
-                                      "androidx/compose/HotReloader");
-  if (klass == nullptr) {
-    jni_->ExceptionClear();
-    return nullptr;
-  }
-  Log::V("GetComposeHotReload found. Starting JetPack Compose HotReload");
-  JniClass reloaderClass(jni_, klass);
-  return reloaderClass.GetStaticObjectField(
-      "Companion", "Landroidx/compose/HotReloader$Companion;");
-}
-
-void HotSwap::SaveStateAndDispose(jobject reloader) const {
-  JniObject reloader_jnio(jni_, reloader);
-  JniClass activity_thread(jni_, "android/app/ActivityThread");
-  jobject context = activity_thread.CallStaticObjectMethod(
-      "currentApplication", "()Landroid/app/Application;");
-  reloader_jnio.CallVoidMethod("saveStateAndDispose", "(Ljava/lang/Object;)V",
-                               context);
-
-  // TODO Although unlikely, we should fail hard on this.
-  if (jni_->ExceptionCheck()) {
-    jni_->ExceptionDescribe();
-    jni_->ExceptionClear();
-  }
-}
-
-void HotSwap::LoadStateAndCompose(jobject reloader) const {
-  JniObject reloader_jnio(jni_, reloader);
-  JniClass activity_thread(jni_, "android/app/ActivityThread");
-  jobject context = activity_thread.CallStaticObjectMethod(
-      "currentApplication", "()Landroid/app/Application;");
-  reloader_jnio.CallVoidMethod("loadStateAndCompose", "(Ljava/lang/Object;)V",
-                               context);
-
-  // TODO Although unlikely, we should fail hard on this.
-  if (jni_->ExceptionCheck()) {
-    jni_->ExceptionDescribe();
-    jni_->ExceptionClear();
-  }
-}
 
 jvmtiExtensionFunction const* GetExtensionFunctionVoid(
     JNIEnv* env, jvmtiEnv* jvmti, const std::string& name) {
@@ -111,13 +67,15 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   Phase p("doHotSwap");
 
   SwapResult result;
+  Recompose recompose(jvmti_, jni_);
 
   // We only try to see if we need HotReload for Apply Code Changes. Otherwise
   // activity restart would re-compose anyways.
-  jobject reloader =
-      swap_request.restart_activity() ? nullptr : GetComposeHotReload();
+  jobject reloader = swap_request.restart_activity()
+                         ? nullptr
+                         : recompose.GetComposeHotReload();
   if (reloader != nullptr) {
-    SaveStateAndDispose(reloader);
+    recompose.SaveStateAndDispose(reloader);
   }
 
   // Define new classes before redefining existing classes.
@@ -248,7 +206,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   delete[] def;
 
   if (reloader != nullptr) {
-    LoadStateAndCompose(reloader);
+    recompose.LoadStateAndCompose(reloader);
   }
 
   return result;
