@@ -21,7 +21,9 @@ import static com.android.build.gradle.internal.utils.HasConfigurableValuesKt.se
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.NdkHandlerInput;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
+import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantDslInfo;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
@@ -54,6 +56,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -85,6 +88,9 @@ public abstract class ShaderCompile extends NonIncrementalTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getSourceDir();
+
+    @Nested
+    public abstract NdkHandlerInput getNdkHandlerInput();
 
     @NonNull
     private List<String> defaultArgs = ImmutableList.of();
@@ -136,7 +142,12 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         if (!processingRequests.isEmpty()) {
             File glslcLocation =
                     ShaderProcessor.getGlslcLocation(
-                            getSdkBuildService().get().getNdkDirectoryProvider().get().getAsFile());
+                            getSdkBuildService()
+                                    .get()
+                                    .versionedNdkHandler(getNdkHandlerInput())
+                                    .getNdkPlatform()
+                                    .getOrThrow()
+                                    .getNdkDirectory());
 
             HashMap<Integer, List<ProcessingRequest>> buckets = new HashMap<>();
             int ord = 0;
@@ -289,6 +300,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
                     .setTaskInputToFinalProduct(MERGED_SHADERS.INSTANCE, task.getSourceDir());
             task.setDefaultArgs(variantDslInfo.getDefaultGlslcArgs());
             task.setScopedArgs(variantDslInfo.getScopedGlslcArgs());
+            SdkComponentsKt.initialize(task.getNdkHandlerInput(), creationConfig);
         }
     }
 }

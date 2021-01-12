@@ -66,7 +66,9 @@ abstract class CommonExtensionImpl<
             SdkComponentsImpl::class.java,
             dslServices,
             dslServices.provider(String::class.java, _compileSdkVersion),
-            dslServices.provider(Revision::class.java, buildToolsRevision)
+            dslServices.provider(Revision::class.java, buildToolsRevision),
+            dslServices.provider(String::class.java, ndkVersion),
+            dslServices.provider(String::class.java, ndkPath)
         )
     }
 

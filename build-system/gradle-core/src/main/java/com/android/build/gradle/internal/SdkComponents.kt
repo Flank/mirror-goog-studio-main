@@ -34,7 +34,6 @@ import com.android.repository.Revision
 import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
-import org.gradle.api.InvalidUserDataException
 import org.gradle.api.NonExtensible
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -49,6 +48,7 @@ import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import java.io.Closeable
@@ -238,6 +238,49 @@ abstract class SdkComponentsBuildService @Inject constructor(
         )
     }
 
+    class VersionedNdkHandler(
+        ndkLocator: NdkLocator,
+        compileSdkVersion: String,
+        objectFactory: ObjectFactory,
+        providerFactory: ProviderFactory
+    ): NdkHandler(ndkLocator, compileSdkVersion) {
+
+        val ndkDirectoryProvider: Provider<Directory> =
+            objectFactory.directoryProperty().fileProvider(providerFactory.provider {
+                ndkPlatform.getOrThrow().ndkDirectory
+            })
+
+        val objcopyExecutableMapProvider: Provider<Map<Abi, File>> = providerFactory.provider {
+            if (!ndkPlatform.isConfigured) {
+                return@provider mapOf<Abi, File>()
+            }
+            val objcopyExecutables = mutableMapOf<Abi, File>()
+            for (abi in ndkPlatform.getOrThrow().supportedAbis) {
+                objcopyExecutables[abi] =
+                    ndkPlatform.getOrThrow().ndkInfo.getObjcopyExecutable(abi)
+            }
+            return@provider objcopyExecutables
+        }
+
+        val stripExecutableFinderProvider: Provider<SymbolStripExecutableFinder> =
+            providerFactory.provider {
+                createSymbolStripExecutableFinder(this)
+            }
+    }
+
+    private fun ndkLoader(
+        ndkVersion: String?,
+        ndkPath: String?
+    ) =
+        NdkLocator(
+            parameters.issueReporter.get(),
+            ndkVersion ?: parameters.ndkVersion.orNull,
+            ndkPath ?: parameters.ndkPath.orNull,
+            parameters.projectRootDir.get().asFile,
+            sdkHandler
+        )
+
+
     fun sdkLoader(
         compileSdkVersion: Provider<String>,
         buildToolsRevision: Provider<Revision>): VersionedSdkLoader =
@@ -251,9 +294,23 @@ abstract class SdkComponentsBuildService @Inject constructor(
             compileSdkVersion,
             buildToolsRevision)
 
-    val ndkHandler: NdkHandler by lazy {
-        NdkHandler(ndkLocator, parameters.compileSdkVersion.get())
-    }
+    fun versionedNdkHandler(
+        compileSdkVersion: String,
+        ndkVersion: String?,
+        ndkPath: String?
+    ): VersionedNdkHandler =
+        VersionedNdkHandler(
+            ndkLoader(ndkVersion, ndkPath),
+            compileSdkVersion,
+            objectFactory,
+            providerFactory)
+
+    fun versionedNdkHandler(input: NdkHandlerInput) =
+        VersionedNdkHandler(
+            ndkLoader(input.ndkVersion.orNull, input.ndkPath.orNull),
+            input.compileSdkVersion.get(),
+            objectFactory,
+            providerFactory)
 
     override fun close() {
         synchronized(sdkLoadStrategy) {
@@ -288,39 +345,6 @@ abstract class SdkComponentsBuildService @Inject constructor(
         objectFactory.directoryProperty().fileProvider(providerFactory.provider {
             sdkLoadStrategy.getEmulatorLibFolder()
         })
-
-    val ndkDirectoryProvider: Provider<Directory> =
-        objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-            ndkHandler.ndkPlatform.getOrThrow().ndkDirectory
-        })
-
-    val ndkRevisionProvider: Provider<Revision> =
-        providerFactory.provider {
-            try {
-                ndkHandler.ndkPlatform.getOrThrow().revision
-            }
-            catch (e: InvalidUserDataException) {
-                parameters.issueReporter.get().reportWarning(IssueReporter.Type.GENERIC, e.message!!)
-                return@provider null
-            }
-         }
-
-    val stripExecutableFinderProvider: Provider<SymbolStripExecutableFinder> =
-        providerFactory.provider {
-            createSymbolStripExecutableFinder(ndkHandler)
-        }
-    val objcopyExecutableMapProvider: Provider<Map<Abi, File>> = providerFactory.provider {
-        val ndkHandler = ndkHandler
-        if (!ndkHandler.ndkPlatform.isConfigured) {
-            return@provider mapOf<Abi, File>()
-        }
-        val objcopyExecutables = mutableMapOf<Abi, File>()
-        for (abi in ndkHandler.ndkPlatform.getOrThrow().supportedAbis) {
-            objcopyExecutables[abi] =
-                ndkHandler.ndkPlatform.getOrThrow().ndkInfo.getObjcopyExecutable(abi)
-        }
-        return@provider objcopyExecutables
-    }
 
     // These old methods are expensive and require SDK Parsing or some kind of installation/download.
 
@@ -468,4 +492,26 @@ fun BuildToolsExecutableInput.initialize(creationConfig: ComponentCreationConfig
     this.buildToolsRevision.setDisallowChanges(
         creationConfig.globalScope.extension.buildToolsRevision
     )
+}
+
+/** This can be used by tasks requiring ndk executables as input with [org.gradle.api.tasks.Nested]. */
+@NonExtensible
+abstract class NdkHandlerInput {
+
+    @get:Input
+    abstract val compileSdkVersion: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val ndkVersion: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val ndkPath: Property<String>
+}
+
+fun NdkHandlerInput.initialize(creationConfig: ComponentCreationConfig) {
+    compileSdkVersion.setDisallowChanges(creationConfig.globalScope.extension.compileSdkVersion)
+    ndkVersion.setDisallowChanges(creationConfig.globalScope.extension.ndkVersion)
+    ndkPath.setDisallowChanges(creationConfig.globalScope.extension.ndkPath)
 }

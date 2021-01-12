@@ -27,13 +27,24 @@ import javax.inject.Inject
 open class SdkComponentsImpl @Inject constructor(
     dslServices: DslServices,
     compileSdkVersion: Provider<String>,
-    buildToolsRevision: Provider<Revision>
+    buildToolsRevision: Provider<Revision>,
+    val ndkVersion: Provider<String>,
+    val ndkPath: Provider<String>
 ) : SdkComponents {
+
     override val sdkDirectory: Provider<Directory> =
         dslServices.sdkComponents.flatMap {
             it.sdkLoader(compileSdkVersion, buildToolsRevision).sdkDirectoryProvider }
-    override val ndkDirectory: Provider<Directory> =
-        dslServices.sdkComponents.flatMap { it.ndkDirectoryProvider }
+
+    override val ndkDirectory: Provider<Directory> by lazy {
+        dslServices.sdkComponents.flatMap {
+            it.versionedNdkHandler(
+                compileSdkVersion = compileSdkVersion.get(),
+                ndkVersion = ndkVersion.get(),
+                ndkPath = ndkPath.get()
+            ).ndkDirectoryProvider
+        }
+    }
     override val adb: Provider<RegularFile> =
         dslServices.sdkComponents.flatMap {
             it.sdkLoader(compileSdkVersion, buildToolsRevision)

@@ -113,7 +113,9 @@ public class LibraryPlugin
                         SdkComponentsImpl.class,
                         dslServices,
                         project.provider(getExtension()::getCompileSdkVersion),
-                        project.provider(getExtension()::getBuildToolsRevision));
+                        project.provider(getExtension()::getBuildToolsRevision),
+                        project.provider(getExtension()::getNdkVersion),
+                        project.provider(getExtension()::getNdkPath));
 
         return project.getExtensions()
                 .create(

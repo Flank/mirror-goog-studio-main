@@ -22,6 +22,7 @@ import com.android.build.api.variant.impl.VariantBuilderImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedNdkHandler
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
@@ -67,7 +68,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
     val sdkDirectoryProvider = Mockito.mock(Provider::class.java) as Provider<Directory>
     val sdkDirectory = Mockito.mock(Directory::class.java)
-    val ndkHandler = Mockito.mock(NdkHandler::class.java)
+    val ndkHandler = Mockito.mock(VersionedNdkHandler::class.java)
     val ndkPlatform = Mockito.mock(NdkPlatform::class.java)
     val ndkInfo = Mockito.mock(NdkInfo::class.java)
     val ndkInstallStatus = NdkInstallStatus.Valid(ndkPlatform)
@@ -100,6 +101,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(extension).`when`(global).extension
     Mockito.doReturn(splits).`when`(extension).splits
     Mockito.doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
+    Mockito.doReturn("20.0.0.2").`when`(extension).compileSdkVersion
     Mockito.doReturn(cmake).`when`(externalNativeBuild).cmake
     Mockito.doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
     Mockito.doReturn(join(moduleDir, "src", "CMakeLists.txt")).`when`(cmake).path
@@ -111,7 +113,9 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(intermediatesDir).`when`(global).intermediatesDir
     Mockito.doReturn(File("build.gradle")).`when`(project).buildFile
     Mockito.doReturn(FakeGradleProvider(sdkComponents)).`when`(global).sdkComponents
-    Mockito.doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
+    Mockito.doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(
+        Mockito.anyString(), Mockito.any(), Mockito.any()
+    )
     Mockito.doReturn(sdkDirectoryProvider).`when`(sdkComponents).sdkDirectoryProvider
     Mockito.doReturn(sdkDirectory).`when`(sdkDirectoryProvider).get()
     Mockito.doReturn(File(".")).`when`(sdkDirectory).asFile
