@@ -68,6 +68,9 @@ project.ext.pomDesc = 'APIs to customize Android Gradle Builds'
 
 /** Dokka task with fixed input annotations. */
 abstract class FixedDokka extends org.jetbrains.dokka.gradle.DokkaTask {
+    @Classpath
+    abstract ConfigurableFileCollection getAdditionalDokkaClasspath()
+
     @Internal
     String outputDirectory
 
@@ -86,7 +89,10 @@ def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
     noJdkLink = true
 
     dacRoot = "/reference/tools"
-    classpath = configurations.additionalDokkaClasspath.files
+    additionalDokkaClasspath.from(configurations.additionalDokkaClasspath)
+    doFirst {
+        classpath = additionalDokkaClasspath.files
+    }
 
     // Root URL of the generated documentation to link with. The trailing slash is required!
     externalDocumentationLink {
