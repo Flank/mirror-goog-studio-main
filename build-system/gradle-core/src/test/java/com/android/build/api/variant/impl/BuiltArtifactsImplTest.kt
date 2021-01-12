@@ -401,7 +401,7 @@ class BuiltArtifactsImplTest {
             createBuiltArtifacts(
                     BuiltArtifactImpl.make(folder.absolutePath),
                     BuiltArtifactImpl.make(file.absolutePath)
-            )
+            ).saveToFile(tmpFolder.newFile())
         } catch(e: IllegalArgumentException) {
             Truth.assertThat(e.message).contains("${file.name} is a file")
             Truth.assertThat(e.message).contains("${folder.name} is a directory")
@@ -420,7 +420,7 @@ class BuiltArtifactsImplTest {
                     BuiltArtifactImpl.make(folder.absolutePath),
                     BuiltArtifactImpl.make(fileOne.absolutePath),
                     BuiltArtifactImpl.make(fileTwo.absolutePath)
-            )
+            ).saveToFile(tmpFolder.newFile())
         } catch(e: IllegalArgumentException) {
             Truth.assertThat(e.message).contains(
                     "${fileOne.name},${fileTwo.name} are files")
@@ -440,7 +440,7 @@ class BuiltArtifactsImplTest {
                     BuiltArtifactImpl.make(folderOne.absolutePath),
                     BuiltArtifactImpl.make(folderTwo.absolutePath),
                     BuiltArtifactImpl.make(file.absolutePath)
-            )
+            ).saveToFile(tmpFolder.newFile())
         } catch(e: IllegalArgumentException) {
             Truth.assertThat(e.message).contains(
                     "${folderOne.name},${folderTwo.name} are directories")
