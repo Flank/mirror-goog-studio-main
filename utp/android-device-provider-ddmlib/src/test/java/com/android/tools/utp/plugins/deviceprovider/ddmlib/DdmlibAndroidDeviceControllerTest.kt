@@ -32,6 +32,8 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.initMocks
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * Unit tests for [Ddmlibcontroller].
@@ -156,15 +158,18 @@ class DdmlibcontrollerTest {
 
     @Test
     fun executeAsyncCancelled() {
+        val handlerInitialized = CountDownLatch(1)
         lateinit var handler: CommandHandle
         `when`(
                 mockDevice.executeShellCommand(
                         eq("am instrument"), any()
                 )
         ).then {
+            handlerInitialized.await(1, TimeUnit.MINUTES)
             handler.stop()
         }
         handler = controller.executeAsync(listOf("shell", "am", "instrument")) {}
+        handlerInitialized.countDown()
         handler.waitFor()
         assertThat(handler.exitCode()).isEqualTo(-1)
         verify(mockDevice).executeShellCommand(eq("am instrument"), any())
