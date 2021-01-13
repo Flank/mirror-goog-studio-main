@@ -78,7 +78,7 @@ fun processResources(
                 errorFormatMode,
                 aaptConfig.mergeBlameDirectory,
                 aaptConfig.manifestMergeBlameFile,
-                aaptConfig.identifiedSourceSetMap ?: emptyMap(),
+                aaptConfig.identifiedSourceSetMap,
                 logger
         )
     } catch (e: Aapt2InternalException) {

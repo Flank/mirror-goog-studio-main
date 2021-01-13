@@ -71,6 +71,6 @@ class MessageRewriteTest {
         }
     }
 
-    fun checkPathInOutput(path: String, output: Scanner) =
+    private fun checkPathInOutput(path: String, output: Scanner) =
         output.use { out -> ScannerSubject.assertThat(out).contains(path) }
 }
