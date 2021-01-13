@@ -48,7 +48,10 @@ class DdmlibAndroidDevice(val ddmlibDevice: IDevice) : Device, IDevice by ddmlib
                 }
             }
         })
-        AndroidDeviceProperties(devicePropertyMap)
+        AndroidDeviceProperties(
+            devicePropertyMap,
+            avdName = avdName
+        )
     }
 
     override val serial: String

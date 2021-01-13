@@ -52,11 +52,15 @@ class DdmlibAndroidDeviceTest {
 
     @Test
     fun virtualDevice() {
+        val emulatorName = "A good name"
         `when`(mockIDevice.isEmulator).thenReturn(true)
+        `when`(mockIDevice.avdName).thenReturn(emulatorName)
 
         val device = DdmlibAndroidDevice(mockIDevice)
 
         assertThat(device.type).isEqualTo(Device.DeviceType.VIRTUAL)
+        assertThat(device.avdName).isEqualTo(emulatorName)
+        assertThat(device.properties.avdName).isEqualTo(emulatorName)
     }
 
     @Test
