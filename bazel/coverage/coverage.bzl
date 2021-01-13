@@ -31,7 +31,6 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         srcs = execs,
         outs = ["{}/jacoco.exec".format(name)],
         tools = [jacoco_cli],
-        local = True,
         cmd = "$(location {cli}) merge --quiet $(SRCS) --destfile $@".format(cli = jacoco_cli),
     )
 
@@ -58,7 +57,6 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         ],
         outs = ["{}/lcov.unfiltered".format(name)],
         tools = ["@cov//:jacoco_xml_to_lcov"],
-        local = True,
         cmd = "python $(location {xml2lcov}) {test} $(location {base}) <$(location {xml}) >$@".format(
             xml2lcov = "@cov//:jacoco_xml_to_lcov",
             test = name,
@@ -74,7 +72,6 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         srcs = ["{}.lcov.unfiltered".format(name)],
         outs = ["{}/lcov".format(name)],
         tools = [":filter_lcov"],
-        local = True,
         cmd = "python $(location :filter_lcov) <$< >$@ {} {}".format(spi, spe),
     )
 
@@ -83,7 +80,6 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         srcs = ["{}.lcov".format(name)],
         outs = ["{}/lcov.notests".format(name)],
         tools = [":merge_tests"],
-        local = True,
         cmd = "python $(location :merge_tests) <$< >$@",
     )
 
@@ -92,7 +88,6 @@ def coverage_report(name, tests, srcpath_include = [], srcpath_exclude = []):
         srcs = ["{}.lcov".format(name)],
         outs = ["{}/list".format(name)],
         tools = [":generate_list"],
-        local = True,
         cmd = "python $(location :generate_list) <$< >$@ {}".format(name),
     )
 
@@ -106,7 +101,6 @@ def combine_report_definitions(prefix, reports):
         name = "{}.list_all".format(prefix),
         srcs = ["{}.list".format(c) for c in reports],
         outs = ["{}/list".format(prefix)],
-        local = True,
         cmd = "cat $(SRCS) >$@",
     )
 
@@ -115,6 +109,5 @@ def combine_report_definitions(prefix, reports):
         srcs = ["{}.lcov".format(c) for c in reports],
         outs = ["{}/lcov".format(prefix)],
         tools = [":merge_lcov"],
-        local = True,
         cmd = "python $(location :merge_lcov) $(SRCS) >$@",
     )

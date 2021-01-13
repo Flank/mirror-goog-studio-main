@@ -28,7 +28,6 @@ def construct_baseline_processing_graph():
         srcs = ["@//{}_coverage.baseline.srcs.filtered".format(pt) for pt in pts],
         outs = ["merged-baseline-srcs.txt"],
         cmd = "cat $(SRCS) | sort | uniq >$@",
-        local = True,
         visibility = ["@cov//:__pkg__", "@results//:__pkg__"],
     )
 
