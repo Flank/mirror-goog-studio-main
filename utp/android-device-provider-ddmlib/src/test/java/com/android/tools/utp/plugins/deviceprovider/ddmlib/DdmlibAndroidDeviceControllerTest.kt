@@ -138,14 +138,14 @@ class DdmlibcontrollerTest {
     fun executeDefaultTimeout() {
         val ret = controller.execute(listOf("am", "instrument"))
         assertThat(ret.statusCode).isEqualTo(0)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any())
+        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
     }
 
     @Test
     fun executeShellCommandShouldBeRemoved() {
         val ret = controller.execute(listOf("shell", "am", "instrument"))
         assertThat(ret.statusCode).isEqualTo(0)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any())
+        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
     }
 
     @Test
@@ -153,7 +153,7 @@ class DdmlibcontrollerTest {
         val handler = controller.executeAsync(listOf("shell", "am", "instrument")) {}
         handler.waitFor()
         assertThat(handler.exitCode()).isEqualTo(0)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any())
+        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
     }
 
     @Test
@@ -162,7 +162,7 @@ class DdmlibcontrollerTest {
         lateinit var handler: CommandHandle
         `when`(
                 mockDevice.executeShellCommand(
-                        eq("am instrument"), any()
+                        eq("am instrument"), any(), eq(0L), eq(0L), any()
                 )
         ).then {
             handlerInitialized.await(1, TimeUnit.MINUTES)
@@ -172,12 +172,13 @@ class DdmlibcontrollerTest {
         handlerInitialized.countDown()
         handler.waitFor()
         assertThat(handler.exitCode()).isEqualTo(-1)
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any())
+        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
     }
 
     @Test
     fun executeAsyncOutputShouldBeProcessed() {
-        `when`(mockDevice.executeShellCommand(eq("am instrument"), any())).then {
+        `when`(mockDevice.executeShellCommand(
+                eq("am instrument"), any(), eq(0L), eq(0L), any())).then {
             val outputMessage = "This is test output message.\n".toByteArray()
             it.getArgument<MultiLineReceiver>(1).addOutput(outputMessage, 0, outputMessage.size)
         }
@@ -188,7 +189,7 @@ class DdmlibcontrollerTest {
         handler.waitFor()
         assertThat(handler.exitCode()).isEqualTo(0)
         assertThat(processedOutputMessage).isEqualTo("This is test output message.")
-        verify(mockDevice).executeShellCommand(eq("am instrument"), any())
+        verify(mockDevice).executeShellCommand(eq("am instrument"), any(), eq(0L), eq(0L), any())
     }
 
     @Test

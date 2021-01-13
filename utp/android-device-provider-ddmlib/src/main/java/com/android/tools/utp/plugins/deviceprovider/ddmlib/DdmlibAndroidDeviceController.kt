@@ -21,7 +21,6 @@ import com.google.testing.platform.api.device.CommandHandle
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
-import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.proto.api.core.TestArtifactProto.Artifact
 import com.google.testing.platform.proto.api.core.TestArtifactProto.ArtifactType.ANDROID_APK
 import kotlinx.coroutines.GlobalScope
@@ -29,6 +28,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.TimeUnit
 
 /**
  * Android specific implementation of [DeviceController] using DDMLIB.
@@ -82,14 +82,18 @@ class DdmlibAndroidDeviceController : DeviceController {
             }
         }
         val deferred = GlobalScope.async {
-            getLogger().warning("execute async: ${args}")
+            // Setting max timeout to 0 (= indefinite) because we control
+            // the timeout by the receiver.isCancelled().
             controlledDevice.executeShellCommand(
                     if (args.firstOrNull() == "shell") {
                         args.subList(1, args.size)
                     } else {
                         args
                     }.joinToString(" "),
-                    receiver
+                    receiver,
+                    /*maxTimeout=*/0,
+                    /*maxTimeToOutputResponse=*/0,
+                    TimeUnit.SECONDS
             )
             CommandResult(
                     if (receiver.isCancelled) {
