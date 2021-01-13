@@ -1,0 +1,46 @@
+/*
+ * Copyright (C) 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package com.android.tools.utp.plugins.host.device.info;
+
+option java_package = 'com.android.tools.utp.plugins.host.device.info.proto';
+option java_outer_classname = 'AndroidTestDeviceInfoProto';
+
+// Stores test device information in a test artifact, so that later it can be
+// loaded into Android Studio.
+message AndroidTestDeviceInfo {
+    /** Name of the device where the test runs. It would be the serial for
+     *  pyisical devices and avd name for emulators.
+     */
+    string name = 1;
+    /** Android API level of the device. It is usually a number, but can be a
+     * string for preview devices. */
+    string api_level = 2;
+    /** Total RAM size of the device, in bytes. */
+    uint64 ram_in_bytes = 3;
+    /** Names of processors of the device.*/
+    repeated string processors = 4;
+    /** Supported ABIs of the processors.*/
+    repeated string abis = 5;
+    /** Manufacturer name of the device. Example: "Google".*/
+    string manufacturer = 6;
+    /** Serial of the device. */
+    string serial = 7;
+    /** AVD name for virtual devices */
+    string avd_name = 8;
+}

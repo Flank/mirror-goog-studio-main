@@ -201,7 +201,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -335,7 +335,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -485,7 +485,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -637,7 +637,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -774,7 +774,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -917,7 +917,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -1060,7 +1060,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }

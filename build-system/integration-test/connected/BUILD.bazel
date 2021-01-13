@@ -870,7 +870,9 @@ maven_repo(
     name = "utp_plugins",
     # keep sorted
     artifacts = [
-        "//tools/base/utp/android-device-provider-ddmlib:android-device-provider-ddmlib",
+        "//tools/base/utp/android-device-provider-ddmlib",
+        "//tools/base/utp/android-test-plugin-host-device-info",
+        "//tools/base/utp/android-test-plugin-host-device-info-proto",
     ],
     visibility = ["__subpackages__"],
 )

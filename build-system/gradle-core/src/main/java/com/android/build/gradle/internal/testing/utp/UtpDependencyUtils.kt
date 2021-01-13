@@ -65,8 +65,10 @@ enum class UtpDependency(
             UtpDependencies::testPlugin),
     ANDROID_TEST_DEVICE_INFO_PLUGIN(
             "android-test-plugin-host-device-info",
-            "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin",
-            UtpDependencies::testDeviceInfoPlugin),
+            "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin",
+            UtpDependencies::testDeviceInfoPlugin,
+            "com.android.tools.utp",
+            ANDROID_TOOLS_BASE_VERSION),
     ANDROID_TEST_PLUGIN_HOST_RETENTION(
             "android-test-plugin-host-retention",
             "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin",
