@@ -60,10 +60,10 @@ class AvdManagerTest {
         avdFolder = fileOp.toPath("/avd")
         Files.createDirectories(avdFolder)
 
-        val sdkComponents = setupSdkComponents()
+        val versionedSdkLoader = setupVersionedSdkLoader()
         val sdkHandler = setupSdkHandler()
 
-        manager = AvdManager(fileOp.toFile(avdFolder), sdkComponents, sdkHandler)
+        manager = AvdManager(fileOp.toFile(avdFolder), versionedSdkLoader, sdkHandler)
     }
 
     @Test
@@ -152,18 +152,15 @@ class AvdManagerTest {
         assertThat(allAvds.first()).isEqualTo("device2")
     }
 
-    private fun setupSdkComponents(): SdkComponentsBuildService {
-
-        val sdkComponents = mock(SdkComponentsBuildService::class.java)
-        `when`(sdkComponents.sdkDirectoryProvider)
-            .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(sdkFolder))))
-        `when`(sdkComponents.sdkImageDirectoryProvider(anyString()))
-            .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))))
-        `when`(sdkComponents.emulatorDirectoryProvider)
-            .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(emulatorFolder))))
-
-        return sdkComponents
-    }
+    private fun setupVersionedSdkLoader(): SdkComponentsBuildService.VersionedSdkLoader =
+        mock(SdkComponentsBuildService.VersionedSdkLoader::class.java).also {
+            `when`(it.sdkDirectoryProvider)
+                .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(sdkFolder))))
+            `when`(it.sdkImageDirectoryProvider(anyString()))
+                .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))))
+            `when`(it.emulatorDirectoryProvider)
+                .thenReturn(FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(emulatorFolder))))
+        }
 
     private fun setupSdkHandler(): AndroidSdkHandler {
         fileOp.recordExistingFile(emulatorFolder.resolve("snapshots.img"))

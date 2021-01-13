@@ -327,11 +327,7 @@ abstract class LintPlugin : Plugin<Project> {
         ).execute()
         SdkComponentsBuildService.RegistrationAction(
             project,
-            projectServices.projectOptions,
-            project.provider { null },
-            project.provider { null },
-            project.provider { null },
-            project.provider { null },
+            projectServices.projectOptions
         ).execute()
         LintFixBuildService.RegistrationAction(project).execute()
     }

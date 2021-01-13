@@ -379,22 +379,27 @@ public abstract class BasePlugin<
                         project, SyncOptions.getModelQueryMode(projectOptions))
                 .execute();
         Provider<SdkComponentsBuildService> sdkComponentsBuildService =
-                new SdkComponentsBuildService.RegistrationAction(
-                                project,
-                                projectOptions,
-                                project.getProviders()
-                                        .provider(() -> extension.getCompileSdkVersion()),
-                                project.getProviders()
-                                        .provider(() -> extension.getBuildToolsRevision()),
-                                project.getProviders().provider(() -> extension.getNdkVersion()),
-                                project.getProviders().provider(() -> extension.getNdkPath()))
-                        .execute();
+                new SdkComponentsBuildService.RegistrationAction(project, projectOptions).execute();
         Provider<AvdComponentsBuildService> avdComponentsBuildService =
                 new AvdComponentsBuildService.RegistrationAction(
                                 project,
                                 getManagedDeviceAvdFolder(
                                         project.getObjects(), project.getProviders()),
-                                sdkComponentsBuildService)
+                                sdkComponentsBuildService,
+                                sdkComponentsBuildService.map(
+                                        buildService -> {
+                                            return buildService.sdkLoader(
+                                                    project.getProviders()
+                                                            .provider(
+                                                                    () ->
+                                                                            extension
+                                                                                    .getCompileSdkVersion()),
+                                                    project.getProviders()
+                                                            .provider(
+                                                                    () ->
+                                                                            extension
+                                                                                    .getBuildToolsRevision()));
+                                        }))
                         .execute();
 
         new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();

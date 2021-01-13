@@ -40,13 +40,14 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     interface Parameters : BuildServiceParameters {
         val sdkService: Property<SdkComponentsBuildService>
+        val versionedSdkLoader: Property<SdkComponentsBuildService.VersionedSdkLoader>
         val avdLocation: DirectoryProperty
     }
 
     private val avdManager: AvdManager by lazy {
         AvdManager(
             parameters.avdLocation.get().asFile,
-            parameters.sdkService.get(),
+            parameters.versionedSdkLoader.get(),
             AndroidSdkHandler.getInstance(
                 parameters.sdkService.get().sdkDirectoryProvider.get().asFile.toPath()
             ))
@@ -61,7 +62,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
      * Returns the location of the emulator.
      */
     val emulatorDirectory: Provider<Directory> =
-        parameters.sdkService.get().emulatorDirectoryProvider
+        parameters.versionedSdkLoader.get().emulatorDirectoryProvider
 
     /**
      * Returns the names of all avds currently in the shared avd folder.
@@ -94,7 +95,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
     class RegistrationAction(
         project: Project,
         private val avdFolderLocation: Provider<Directory>,
-        private val sdkService: Provider<SdkComponentsBuildService>
+        private val sdkService: Provider<SdkComponentsBuildService>,
+        private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>
     ) : ServiceRegistrationAction<AvdComponentsBuildService, Parameters>(
         project,
         AvdComponentsBuildService::class.java
@@ -103,6 +105,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         override fun configure(parameters: Parameters) {
             parameters.avdLocation.set(avdFolderLocation)
             parameters.sdkService.set(sdkService)
+            parameters.versionedSdkLoader.set(versionedSdkLoader)
         }
     }
 

@@ -51,7 +51,6 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import java.io.Closeable
 import java.io.File
 import java.lang.RuntimeException
 import java.lang.ref.SoftReference
@@ -76,19 +75,15 @@ abstract class SdkComponentsBuildService @Inject constructor(
         val enableSdkDownload: Property<Boolean>
         val androidSdkChannel: Property<Int>
         val useAndroidX: Property<Boolean>
-
-        val ndkVersion: Property<String>
-        val ndkPath: Property<String>
-
-        val compileSdkVersion: Property<String>
-        val buildToolsRevision: Property<Revision>
     }
 
     private val sdkSourceSet: SdkLocationSourceSet by lazy {
         SdkLocationSourceSet(parameters.projectRootDir.get().asFile)
     }
 
-    private val sdkHandler: SdkHandler by lazy {
+    // Trick to not initialize the sdkHandler just to call unload() on it. Using the Delegate
+    // allows to test wether or not the [SdkHandler] has been initialized.
+    private val sdkHandlerDelegate = lazy {
         SdkHandler(sdkSourceSet, parameters.issueReporter.get()).also {
             it.setSdkLibData(
                 SdkLibDataFactory(
@@ -100,12 +95,14 @@ abstract class SdkComponentsBuildService @Inject constructor(
         }
     }
 
+    private val sdkHandler: SdkHandler by sdkHandlerDelegate
+
     /**
      * map of all created [SdkLoadingStrategy] keyed by compileSdkVersion-buildToolsRevision
      * to a [SoftReference] of [SdkLoadingStrategy] that will allow caching and proper release at
      * the end of the build.
      */
-    private val sdkLoadingStrategies: MutableMap<String, SoftReference<SdkLoadingStrategy>> =
+    private val sdkLoadingStrategies: MutableMap<String, SdkLoadingStrategy> =
         mutableMapOf()
 
     /**
@@ -117,9 +114,9 @@ abstract class SdkComponentsBuildService @Inject constructor(
      * of [SdkLoadingStrategy] should be allocated wisely and closed once finished.
      */
     class VersionedSdkLoader(
-        providerFactory: ProviderFactory,
-        objectFactory: ObjectFactory,
-        sdkLoadingStrategies: MutableMap<String, SoftReference<SdkLoadingStrategy>>,
+        private val providerFactory: ProviderFactory,
+        private val objectFactory: ObjectFactory,
+        sdkLoadingStrategies: MutableMap<String, SdkLoadingStrategy>,
         private val sdkHandler: SdkHandler,
         private val sdkSourceSet: SdkLocationSourceSet,
         private val parameters: Parameters,
@@ -144,13 +141,15 @@ abstract class SdkComponentsBuildService @Inject constructor(
                         parameters.issueReporter.get()
                     )
 
-                    SoftReference(
-                        SdkLoadingStrategy(
-                            directLoadingStrategy, fullScanLoadingStrategy
-                        )
+                    SdkLoadingStrategy(
+                        directLoadingStrategy, fullScanLoadingStrategy
                     )
-                }.get()!!
+                }
             }
+        }
+
+        val sdkSetupCorrectly: Provider<Boolean> = providerFactory.provider {
+            sdkLoadStrategy.getAndroidJar() != null && sdkLoadStrategy.getBuildToolsInfo() != null
         }
 
         val targetBootClasspathProvider: Provider<List<File>> = providerFactory.provider {
@@ -206,36 +205,20 @@ abstract class SdkComponentsBuildService @Inject constructor(
         val optionalLibrariesProvider: Provider<List<OptionalLibrary>> = providerFactory.provider {
             sdkLoadStrategy.getOptionalLibraries()
         }
-    }
 
-    private val sdkLoadStrategy: SdkLoadingStrategy by lazy {
-        val fullScanLoadingStrategy = SdkFullLoadingStrategy(
-            sdkHandler,
-            parameters.compileSdkVersion.orNull,
-            parameters.buildToolsRevision.orNull,
-            parameters.useAndroidX.get()
-        )
-        val directLoadingStrategy = SdkDirectLoadingStrategy(
-            sdkSourceSet,
-            parameters.compileSdkVersion.orNull,
-            parameters.buildToolsRevision.orNull,
-            parameters.useAndroidX.get(),
-            parameters.issueReporter.get()
-        )
+        fun sdkImageDirectoryProvider(imageHash: String): Provider<Directory> =
+            objectFactory.directoryProperty().fileProvider(providerFactory.provider {
+                sdkLoadStrategy.getSystemImageLibFolder(imageHash)
+            })
 
-        SdkLoadingStrategy(
-            directLoadingStrategy, fullScanLoadingStrategy
-        )
-    }
+        val emulatorDirectoryProvider: Provider<Directory> =
+            objectFactory.directoryProperty().fileProvider(providerFactory.provider {
+                sdkLoadStrategy.getEmulatorLibFolder()
+            })
 
-    private val ndkLocator: NdkLocator by lazy {
-        NdkLocator(
-            parameters.issueReporter.get(),
-            parameters.ndkVersion.orNull,
-            parameters.ndkPath.orNull,
-            parameters.projectRootDir.get().asFile,
-            sdkHandler
-        )
+        val coreForSystemModulesProvider: Provider<File> = providerFactory.provider {
+            sdkLoadStrategy.getCoreForSystemModulesJar()
+        }
     }
 
     class VersionedNdkHandler(
@@ -274,8 +257,8 @@ abstract class SdkComponentsBuildService @Inject constructor(
     ) =
         NdkLocator(
             parameters.issueReporter.get(),
-            ndkVersion ?: parameters.ndkVersion.orNull,
-            ndkPath ?: parameters.ndkPath.orNull,
+            ndkVersion,
+            ndkPath,
             parameters.projectRootDir.get().asFile,
             sdkHandler
         )
@@ -313,19 +296,16 @@ abstract class SdkComponentsBuildService @Inject constructor(
             providerFactory)
 
     override fun close() {
-        synchronized(sdkLoadStrategy) {
-            sdkLoadStrategy.reset()
-        }
         SdkLocator.resetCache()
+        // test if the lazy property has been initialized before closing the handler.
+        if (sdkHandlerDelegate.isInitialized()) {
+            sdkHandler.unload()
+        }
         synchronized(sdkLoadingStrategies) {
-            for (reference in sdkLoadingStrategies.values) {
-                reference.get()?.reset()
+            for (sdkLoading in sdkLoadingStrategies.values) {
+                sdkLoading.reset()
             }
         }
-    }
-
-    val sdkSetupCorrectly: Provider<Boolean> = providerFactory.provider {
-        sdkLoadStrategy.getAndroidJar() != null && sdkLoadStrategy.getBuildToolsInfo() != null
     }
 
     val sdkDirectoryProvider: Provider<Directory> =
@@ -336,20 +316,6 @@ abstract class SdkComponentsBuildService @Inject constructor(
             )
         })
 
-    fun sdkImageDirectoryProvider(imageHash: String): Provider<Directory> =
-        objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-            sdkLoadStrategy.getSystemImageLibFolder(imageHash)
-        })
-
-    val emulatorDirectoryProvider: Provider<Directory> =
-        objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-            sdkLoadStrategy.getEmulatorLibFolder()
-        })
-
-    val coreForSystemModulesProvider: Provider<File> = providerFactory.provider {
-        sdkLoadStrategy.getCoreForSystemModulesJar()
-    }
-
     // These old methods are expensive and require SDK Parsing or some kind of installation/download.
 
     fun installCmake(version: String) {
@@ -359,10 +325,6 @@ abstract class SdkComponentsBuildService @Inject constructor(
     class RegistrationAction(
         project: Project,
         private val projectOptions: ProjectOptions,
-        private val compileSdkVersion: Provider<String>,
-        private val buildToolsRevision: Provider<Revision>,
-        private val ndkVersion: Provider<String>,
-        private val ndkPath: Provider<String>
     ) : ServiceRegistrationAction<SdkComponentsBuildService, Parameters>(
         project,
         SdkComponentsBuildService::class.java
@@ -376,11 +338,6 @@ abstract class SdkComponentsBuildService @Inject constructor(
             parameters.enableSdkDownload.set(projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD))
             parameters.androidSdkChannel.set(projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL))
             parameters.useAndroidX.set(projectOptions.get(BooleanOption.USE_ANDROID_X))
-
-            parameters.compileSdkVersion.set(compileSdkVersion)
-            parameters.buildToolsRevision.set(buildToolsRevision)
-            parameters.ndkVersion.set(ndkVersion)
-            parameters.ndkPath.set(ndkPath)
         }
     }
 }
