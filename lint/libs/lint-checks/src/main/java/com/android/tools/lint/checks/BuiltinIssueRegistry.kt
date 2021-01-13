@@ -216,6 +216,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 LayoutConsistencyDetector.INCONSISTENT_IDS,
                 LayoutInflationDetector.ISSUE,
                 LeakDetector.ISSUE,
+                LeanbackWifiUsageDetector.ISSUE,
                 LintDetectorDetector.CHECK_URL,
                 LintDetectorDetector.DOLLAR_STRINGS,
                 LintDetectorDetector.ID,
