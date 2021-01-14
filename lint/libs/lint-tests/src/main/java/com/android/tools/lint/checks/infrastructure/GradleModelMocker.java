@@ -29,7 +29,6 @@ import static com.android.utils.ImmutableCollectors.toImmutableList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.android.AndroidProjectTypes;
@@ -68,15 +67,12 @@ import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions;
 import com.android.ide.common.gradle.model.IdeViewBindingOptions;
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryCore;
-import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryDelegate;
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryImpl;
 import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl;
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryCore;
-import com.android.ide.common.gradle.model.impl.IdeJavaLibraryDelegate;
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryImpl;
 import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl;
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryCore;
-import com.android.ide.common.gradle.model.impl.IdeModuleLibraryDelegate;
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryImpl;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
@@ -151,9 +147,15 @@ public class GradleModelMocker {
     private IdeVariant variant;
 
     private final List<IdeVariant> variants = new ArrayList<>();
-    private final Map<IdeAndroidLibrary, IdeAndroidLibrary> androidLibraryMocks = new HashMap<>();
-    private final Map<IdeJavaLibrary, IdeJavaLibrary> javaLibraryMocks = new HashMap<>();
-    private final Map<IdeModuleLibrary, IdeModuleLibrary> moduleLibraryMocks = new HashMap<>();
+
+    private final List<File> lintRuleJars = new ArrayList<>();
+    private final Map<String, String> libraryLintJars = new HashMap<>();
+    private final Map<String, String> libraryPublicResourcesFiles = new HashMap<>();
+    private final Map<String, String> librarySymbolFiles = new HashMap<>();
+    private final Map<IdeAndroidLibrary, IdeAndroidLibrary> androidLibraryInstances =
+            new HashMap<>();
+    private final Map<IdeJavaLibrary, IdeJavaLibrary> javaLibraryInstances = new HashMap<>();
+    private final Map<IdeModuleLibrary, IdeModuleLibrary> moduleLibraryInstances = new HashMap<>();
     private final List<IdeBuildType> buildTypes = Lists.newArrayList();
     private final List<IdeAndroidLibrary> androidLibraries = Lists.newArrayList();
     private final List<IdeJavaLibrary> javaLibraries = Lists.newArrayList();
@@ -218,6 +220,33 @@ public class GradleModelMocker {
     @NonNull
     public GradleModelMocker withDependencyGraph(@NonNull String graph) {
         parseDependencyGraph(graph, graphs);
+        return this;
+    }
+
+    @NonNull
+    public GradleModelMocker withLintRuleJar(@NonNull String lintRuleJarPath) {
+        lintRuleJars.add(new File(lintRuleJarPath));
+        return this;
+    }
+
+    @NonNull
+    public GradleModelMocker withLibraryLintJar(
+            @NonNull String library, @NonNull String lintJarPath) {
+        libraryLintJars.put(library, lintJarPath);
+        return this;
+    }
+
+    @NonNull
+    public GradleModelMocker withLibraryPublicResourcesFile(
+            @NonNull String library, @NonNull String publicResourcesPath) {
+        libraryPublicResourcesFiles.put(library, publicResourcesPath);
+        return this;
+    }
+
+    @NonNull
+    public GradleModelMocker withLibrarySymbolFile(
+            @NonNull String library, @NonNull String symbolFilePath) {
+        librarySymbolFiles.put(library, symbolFilePath);
         return this;
     }
 
@@ -289,7 +318,6 @@ public class GradleModelMocker {
     public boolean hasAndroidLibraryPlugin() {
         return javaLibraryPlugin;
     }
-
     public IdeAndroidProject getProject() {
         ensureInitialized();
         return project;
@@ -359,6 +387,7 @@ public class GradleModelMocker {
 
         lintOptions = new IdeLintOptionsImpl();
         when(project.getLintOptions()).thenAnswer(invocation -> lintOptions);
+        when(project.getLintRuleJars()).thenAnswer(invocation -> lintRuleJars);
 
         compileOptions = mock(IdeJavaCompileOptions.class);
         when(compileOptions.getSourceCompatibility()).thenReturn("1.7");
@@ -2112,7 +2141,7 @@ public class GradleModelMocker {
         if (!jar.exists()) {
             createEmptyJar(jar);
         }
-        return createLibraryMock(
+        return deduplicateLibrary(
                 new IdeAndroidLibraryImpl(
                         new IdeAndroidLibraryCore(
                                 coordinate.toString(),
@@ -2128,11 +2157,12 @@ public class GradleModelMocker {
                                 "aidl",
                                 "rs",
                                 "proguard.pro",
-                                "lint.jar",
+                                libraryLintJars.getOrDefault(coordinateString, "lint.jar"),
                                 FN_ANNOTATIONS_ZIP,
-                                "public.txt",
+                                libraryPublicResourcesFiles.getOrDefault(
+                                        coordinateString, "public.txt"),
                                 "../lib.aar",
-                                "R.txt"),
+                                librarySymbolFiles.getOrDefault(coordinateString, "R.txt")),
                         isProvided));
     }
 
@@ -2173,34 +2203,31 @@ public class GradleModelMocker {
             }
         }
 
-        return createLibraryMock(
+        return deduplicateLibrary(
                 new IdeJavaLibraryImpl(
                         new IdeJavaLibraryCore(coordinate.toString(), jar), isProvided));
     }
 
     @NonNull
     private IdeModuleLibrary createModuleLibrary(@NonNull String name) {
-        return createLibraryMock(
+        return deduplicateLibrary(
                 new IdeModuleLibraryImpl(
                         new IdeModuleLibraryCore(name, "artifacts:" + name, null), false));
     }
 
     @NonNull
-    private IdeAndroidLibrary createLibraryMock(@NonNull IdeAndroidLibrary library) {
-        return androidLibraryMocks.computeIfAbsent(
-                library, it -> spy(new IdeAndroidLibraryDelegate(library)));
+    private IdeAndroidLibrary deduplicateLibrary(@NonNull IdeAndroidLibrary library) {
+        return androidLibraryInstances.computeIfAbsent(library, it -> library);
     }
 
     @NonNull
-    private IdeJavaLibrary createLibraryMock(@NonNull IdeJavaLibrary library) {
-        return javaLibraryMocks.computeIfAbsent(
-                library, it -> spy(new IdeJavaLibraryDelegate(library)));
+    private IdeJavaLibrary deduplicateLibrary(@NonNull IdeJavaLibrary library) {
+        return javaLibraryInstances.computeIfAbsent(library, it -> library);
     }
 
     @NonNull
-    private IdeModuleLibrary createLibraryMock(@NonNull IdeModuleLibrary library) {
-        return moduleLibraryMocks.computeIfAbsent(
-                library, it -> spy(new IdeModuleLibraryDelegate(library)));
+    private IdeModuleLibrary deduplicateLibrary(@NonNull IdeModuleLibrary library) {
+        return moduleLibraryInstances.computeIfAbsent(library, it -> library);
     }
 
     @NonNull

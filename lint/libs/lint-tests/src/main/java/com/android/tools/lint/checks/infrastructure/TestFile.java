@@ -50,11 +50,13 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -667,13 +669,19 @@ public class TestFile {
     }
 
     public static class GradleTestFile extends LintDetectorTest.TestFile {
-        private Map<File, GradleModelMocker> mockers = new HashMap<>();
+        private final Map<File, GradleModelMocker> mockers = new HashMap<>();
+        private final List<Consumer<GradleModelMocker>> mockerConfigurators = new ArrayList<>();
 
         public GradleTestFile(@NonNull String to, @NonNull @Language("Groovy") String source) {
             to(to).withSource(source);
             if (!to.endsWith(DOT_GRADLE)) {
                 throw new IllegalArgumentException("Expected .gradle suffix for Gradle test file");
             }
+        }
+
+        public GradleTestFile withMockerConfigurator(Consumer<GradleModelMocker> configurator) {
+            mockerConfigurators.add(configurator);
+            return this;
         }
 
         @NonNull
@@ -683,6 +691,9 @@ public class TestFile {
                 assert contents != null;
                 //noinspection LanguageMismatch
                 mocker = new GradleModelMocker(contents).withProjectDir(projectDir);
+                for (Consumer<GradleModelMocker> configurator : mockerConfigurators) {
+                    configurator.accept(mocker);
+                }
                 mockers.put(projectDir, mocker);
             }
 

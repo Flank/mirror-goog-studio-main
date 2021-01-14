@@ -566,16 +566,6 @@ public class TestLintTask {
     }
 
     /**
-     * This method allows you to add a hook which you can run on a mock builder model to tweak it,
-     * such as changing or augmenting the builder model classes
-     */
-    public TestLintTask modifyGradleMocks(@NonNull GradleMockModifier mockModifier) {
-        ensurePreRun();
-        this.mockModifier = mockModifier;
-        return this;
-    }
-
-    /**
      * Lint will try to use real production implementations of the lint infrastructure, such as
      * {@link LintModelModuleProject}. However, in a few (narrow) cases, we don't want to do this
      * because we want to simulate certain failure scenario. This flag gives tests a chance to opt

@@ -87,7 +87,10 @@ class CustomRuleTest {
                     "dependencies {\n" +
                     "    compile 'my.test.group:artifact:1.0'\n" +
                     "}\n"
-            ),
+            )
+                .withMockerConfigurator { mocker ->
+                    mocker.withLibraryLintJar("my.test.group:artifact:1.0", lintJar.path)
+                },
 
             appCompatTestSource,
             appCompatTestClass
@@ -96,11 +99,6 @@ class CustomRuleTest {
             .allowDelayedIssueRegistration()
             .issueIds("UnitTestAppCompatMethod")
             .allowObsoleteLintChecks(true)
-            .modifyGradleMocks { _, variant ->
-                val dependencies = variant.mainArtifact.level2Dependencies
-                val library = dependencies.androidLibraries.iterator().next()
-                Mockito.`when`(library.lintJar).thenReturn(lintJar.path)
-            }
             .allowMissingSdk().run().expect(expectedOutputGradle)
     }
 
@@ -143,7 +141,10 @@ class CustomRuleTest {
                     "dependencies {\n" +
                     "    compile 'my.test.group:artifact:1.0'\n" +
                     "}\n"
-            ),
+            )
+                .withMockerConfigurator { mocker ->
+                    mocker.withLintRuleJar(lintJar.path)
+                },
 
             appCompatTestSource,
             appCompatTestClass
@@ -152,9 +153,6 @@ class CustomRuleTest {
             .allowDelayedIssueRegistration()
             .issueIds("UnitTestAppCompatMethod")
             .allowObsoleteLintChecks(true)
-            .modifyGradleMocks { androidProject, _ ->
-                Mockito.`when`(androidProject.lintRuleJars).thenReturn(listOf(lintJar))
-            }
             .allowMissingSdk()
             .run()
             .expect(expectedOutputGradle)

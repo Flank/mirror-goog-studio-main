@@ -20,7 +20,6 @@ package com.android.tools.lint
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.GradleDetectorTest
-import com.android.tools.lint.checks.PrivateResourceDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
@@ -173,7 +172,6 @@ class MemoryLeakTest {
             ).indented()
         )
             // Needed to allow PrivateResourceDetector to run.
-            .modifyGradleMocks(PrivateResourceDetectorTest.mockModifier)
 
             // Needed to allow GradleDetector to run.
             .networkData(
