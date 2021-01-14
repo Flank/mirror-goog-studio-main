@@ -710,11 +710,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val alsoOutputNotCompiledResources = (creationConfig.variantType.isApk
                 && !creationConfig.variantType.isForTesting
                 && creationConfig.useResourceShrinker())
+        val includeDependencies = true
         val mergeResourcesTask = basicCreateMergeResourcesTask(
                 creationConfig,
                 MergeType.MERGE,
                 null /*outputLocation*/,
-                true /*includeDependencies*/,
+                includeDependencies,
                 processResources,
                 alsoOutputNotCompiledResources,
                 flags,
@@ -723,7 +724,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         .services
                         .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
             taskFactory.register(
-                    MapSourceSetPathsTask.CreateAction(creationConfig, mergeResourcesTask))
+                    MapSourceSetPathsTask.CreateAction(
+                        creationConfig,
+                        mergeResourcesTask,
+                        includeDependencies
+                    ))
         }
     }
 
@@ -1585,6 +1590,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val testData: AbstractTestDataImpl
         testData = if (testedVariant.variantType.isDynamicFeature) {
             BundleTestDataImpl(
+                    project.providers,
+                    androidTestProperties,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(ArtifactType.APK),
                     getFeatureName(globalScope.project.path),
@@ -1597,6 +1604,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val testedApkFileCollection =
                     project.files(testedVariant.artifacts.get(ArtifactType.APK))
             TestDataImpl(
+                    project.providers,
+                    androidTestProperties,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(ArtifactType.APK),
                     if (isLibrary) null else testedApkFileCollection)

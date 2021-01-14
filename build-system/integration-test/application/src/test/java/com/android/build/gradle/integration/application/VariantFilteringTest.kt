@@ -460,7 +460,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     fun `unit-test filtering via new api using buildtype callback`() {
         withAndroidComponents {
             """
-                |    beforeUnitTest(selector()
+                |    beforeUnitTests(selector()
                 |          .withBuildType("debug"), {
                 |        enabled = false
                 |    })
@@ -483,7 +483,7 @@ class VariantFilteringTest: AbstractReturnGivenBuildResultTest<String, VariantFi
     fun `android-test filtering via new api using buildtype callback`() {
         withAndroidComponents {
             """
-                |    beforeAndroidTest(selector()
+                |    beforeAndroidTests(selector()
                 |          .withBuildType("debug"), {
                 |        enabled = false
                 |    })

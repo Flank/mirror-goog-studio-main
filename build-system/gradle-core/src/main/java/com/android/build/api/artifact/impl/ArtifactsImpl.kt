@@ -57,7 +57,7 @@ class ArtifactsImpl(
 
     private val storageProvider = StorageProviderImpl()
     private val objects= project.objects
-    private val buildDirectory = project.layout.buildDirectory
+    internal val buildDirectory = project.layout.buildDirectory
     private val outstandingRequests = Collections.synchronizedList(ArrayList<ArtifactOperationRequest>())
 
     override fun getBuiltArtifactsLoader(): BuiltArtifactsLoader {

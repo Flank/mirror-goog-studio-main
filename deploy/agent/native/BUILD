@@ -25,6 +25,8 @@ cc_binary(
         "live_literal.h",
         "native_callbacks.cc",
         "native_callbacks.h",
+        "recompose.cc",
+        "recompose.h",
         "swapper.cc",
         "swapper.h",
         "thread_suspend.cc",

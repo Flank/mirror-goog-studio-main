@@ -17,6 +17,7 @@
 package com.android.tools.agent.layoutinspector;
 
 import android.graphics.Matrix;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,7 @@ class ComponentTree {
     private final Properties mProperties;
     private final Object mComposeLock = new Object();
     private boolean mShowComposeNodes;
+    private boolean mHideSystemNodes;
     private ComposeTree mComposeTree;
 
     public ComponentTree(@NonNull Properties properties) {
@@ -48,6 +50,13 @@ class ComponentTree {
 
     public boolean showComposeNodes() {
         return mShowComposeNodes;
+    }
+
+    public void setHideSystemNodes(boolean hideSystemNodes) {
+        mHideSystemNodes = hideSystemNodes;
+        if (mComposeTree != null) {
+            mComposeTree.setHideSystemNodes(hideSystemNodes);
+        }
     }
 
     /**
@@ -76,12 +85,81 @@ class ComponentTree {
             @Nullable ViewGroup parent,
             @Nullable int[] parentLocation)
             throws LayoutInspectorService.LayoutModifiedException {
+        Resource layout = Resource.fromResourceId(view, view.getSourceLayoutResId());
+        int[] untransformedLocation = null;
+        if (!(mHideSystemNodes && isSystemLayout(layout) && parent != null)) {
+            untransformedLocation = new int[4];
+            buffer = addViewToEvent(
+                    buffer, view, layout, untransformedLocation, parent, parentLocation);
+        }
+        if (mShowComposeNodes && COMPOSE_VIEW.equals(view.getClass().getCanonicalName())) {
+            if (mComposeTree == null) {
+                try {
+                    ClassLoader classLoader = view.getClass().getClassLoader();
+                    mComposeTree = new ComposeTree(classLoader, mStringTable);
+                    mComposeTree.setHideSystemNodes(mHideSystemNodes);
+                } catch (Throwable ex) {
+                    Log.w("Compose", "ComposeTree creation failed: ", ex);
+                }
+            }
+            if (mComposeTree != null) {
+                long parentView = buffer;
+                synchronized (mComposeLock) {
+                    boolean wasPosted = false;
+                    Handler handler = view.getHandler();
+                    if (handler != null) {
+                        wasPosted = handler.post(
+                                () -> {
+                                    try {
+                                        mComposeTree.loadComposeTree(view, parentView);
+                                    } catch (Throwable ex) {
+                                        Log.w("Compose", "loadComposeTree failed: ", ex);
+                                    } finally {
+                                        synchronized (mComposeLock) {
+                                            mComposeLock.notify();
+                                        }
+                                    }
+                                });
+                    }
+                    try {
+                        // Wait until the UI thread is done with the compose part.
+                        // If [wasPosted] is false the compose work could not be scheduled,
+                        // which could happen when the root view is being closed.
+                        if (wasPosted) {
+                            mComposeLock.wait();
+                        }
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+            }
+        }
+        if (!(view instanceof ViewGroup)) {
+            return;
+        }
+        ViewGroup group = (ViewGroup) view;
+        int count = group.getChildCount();
+        for (int index = 0; index < count; index++) {
+            if (group.getChildCount() != count) {
+                // The tree changed. Start over.
+                throw new LayoutInspectorService.LayoutModifiedException();
+            }
+            loadView(buffer, group.getChildAt(index), group, untransformedLocation);
+        }
+    }
+
+    private long addViewToEvent(
+            long buffer,
+            @NonNull View view,
+            @Nullable Resource layout,
+            @NonNull int[] untransformedLocation,
+            @Nullable ViewGroup parent,
+            @Nullable int[] parentLocation
+    ) {
         long viewId = view.getUniqueDrawingId();
         Class<? extends View> klass = view.getClass();
         int packageName = toInt(getPackageName(klass));
         int className = toInt(klass.getSimpleName());
         int textValue = toInt(getTextValue(view));
-        int[] untransformedLocation = new int[4];
         untransformedLocation[2] = view.getWidth();
         untransformedLocation[3] = view.getHeight();
         int[] transformedCorners = null;
@@ -109,8 +187,10 @@ class ComponentTree {
                     transformedCorners[i + 1] = Math.round(corners[i + 1]);
                 }
 
-                untransformedLocation[0] = view.getLeft() + parentLocation[0] - parent.getScrollX();
-                untransformedLocation[1] = view.getTop() + parentLocation[1] - parent.getScrollY();
+                untransformedLocation[0] =
+                        view.getLeft() + parentLocation[0] - parent.getScrollX();
+                untransformedLocation[1] =
+                        view.getTop() + parentLocation[1] - parent.getScrollY();
             }
         }
         int flags = 0;
@@ -132,9 +212,11 @@ class ComponentTree {
         Resource id = Resource.fromResourceId(view, view.getId());
         if (id != null) {
             addIdResource(
-                    viewBuffer, toInt(id.getNamespace()), toInt(id.getType()), toInt(id.getName()));
+                    viewBuffer,
+                    toInt(id.getNamespace()),
+                    toInt(id.getType()),
+                    toInt(id.getName()));
         }
-        Resource layout = Resource.fromResourceId(view, view.getSourceLayoutResId());
         if (layout != null) {
             addLayoutResource(
                     viewBuffer,
@@ -142,48 +224,25 @@ class ComponentTree {
                     toInt(layout.getType()),
                     toInt(layout.getName()));
         }
-        if (mShowComposeNodes && COMPOSE_VIEW.equals(klass.getCanonicalName())) {
-            if (mComposeTree == null) {
-                try {
-                    ClassLoader classLoader = view.getClass().getClassLoader();
-                    mComposeTree = new ComposeTree(classLoader, mStringTable);
-                } catch (Throwable ex) {
-                    Log.w("Compose", "ComposeTree creation failed: ", ex);
-                }
-            }
-            if (mComposeTree != null) {
-                synchronized (mComposeLock) {
-                    view.post(
-                            () -> {
-                                try {
-                                    mComposeTree.loadComposeTree(view, viewBuffer);
-                                } catch (Throwable ex) {
-                                    Log.w("Compose", "loadComposeTree failed: ", ex);
-                                } finally {
-                                    synchronized (mComposeLock) {
-                                        mComposeLock.notify();
-                                    }
-                                }
-                            });
-                    try {
-                        mComposeLock.wait();
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-            }
-        }
-        if (viewBuffer == 0 || !(view instanceof ViewGroup)) {
-            return;
-        }
-        ViewGroup group = (ViewGroup) view;
-        int count = group.getChildCount();
-        for (int index = 0; index < count; index++) {
-            if (group.getChildCount() != count) {
-                // The tree changed. Start over.
-                throw new LayoutInspectorService.LayoutModifiedException();
-            }
-            loadView(viewBuffer, group.getChildAt(index), group, untransformedLocation);
-        }
+        return viewBuffer;
+    }
+
+    /**
+     * Is the layout generated by the platform / system
+     *
+     * <ul>
+     *   <li>DecorView, ViewStub, AndroidComposeView, View will have a null layout
+     *   <li>Layouts from the "android" namespace are from the platform
+     *   <li>AppCompat will typically use an "abc_" prefix for their layout names
+     * </ul>
+     *
+     * @param layout the layout a View was found in
+     * @return true if this is a system generated layout
+     */
+    private static boolean isSystemLayout(@Nullable Resource layout) {
+        return layout == null
+                || "android".equals(layout.getNamespace())
+                || layout.getName().startsWith("abc_");
     }
 
     private void loadStringTable(long event) {

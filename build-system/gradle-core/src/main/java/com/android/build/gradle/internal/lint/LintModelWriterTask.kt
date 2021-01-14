@@ -106,7 +106,8 @@ abstract class LintModelWriterTask : NonIncrementalTask() {
             task.variantInputs.initialize(
                 variantWithoutTests,
                 // The artifact produced is only used by lint tasks with checkDependencies=true
-                checkDependencies = true
+                checkDependencies = true,
+                warnIfProjectTreatedAsExternalDependency = false
             )
         }
 

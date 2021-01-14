@@ -68,6 +68,9 @@ project.ext.pomDesc = 'APIs to customize Android Gradle Builds'
 
 /** Dokka task with fixed input annotations. */
 abstract class FixedDokka extends org.jetbrains.dokka.gradle.DokkaTask {
+    @Classpath
+    abstract ConfigurableFileCollection getAdditionalDokkaClasspath()
+
     @Internal
     String outputDirectory
 
@@ -86,7 +89,10 @@ def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
     noJdkLink = true
 
     dacRoot = "/reference/tools"
-    classpath = configurations.additionalDokkaClasspath.files
+    additionalDokkaClasspath.from(configurations.additionalDokkaClasspath)
+    doFirst {
+        classpath = additionalDokkaClasspath.files
+    }
 
     // Root URL of the generated documentation to link with. The trailing slash is required!
     externalDocumentationLink {
@@ -97,19 +103,37 @@ def fixedDokkaProvider = tasks.register("fixedDokka", FixedDokka) {
     }
 }
 
-task dokkaZip(type: Zip) {
-    dependsOn fixedDokkaProvider
-    from fixedDokkaProvider.map { it.outputDirectory }
-    def versionFile = new File(fixedDokkaProvider.map { it.outputDirectory }.get(), "version.txt")
-    doFirst {
-        versionFile.createNewFile()
-        def stream = new FileOutputStream(versionFile)
-        stream.write(rootProject.ext.buildVersion.getBytes())
-        stream.close()
+abstract class WriteVersionFile extends DefaultTask {
+    @Input
+    abstract Property<String> getBuildVersion()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDirectory()
+
+    @TaskAction
+    def writeFile() {
+        def outputDir = outputDirectory.get().asFile
+        outputDir.deleteDir()
+        outputDir.mkdir()
+        def versionFile = new File(outputDir, "version.properties")
+
+        def docsVersion = buildVersion.get().substring(0, buildVersion.get().lastIndexOf("."))
+        def properties = new Properties()
+        properties.put("androidGradlePluginVersion", buildVersion.get())
+        properties.put("docsVersion", docsVersion)
+        versionFile.withWriter {properties.store(it, null) }
     }
+}
+
+def writeVersionFileProvider = tasks.register("writeDocsVersionFile", WriteVersionFile) {
+    it.getBuildVersion().set(provider { rootProject.ext.buildVersion })
+    it.getOutputDirectory().set(project.layout.buildDirectory.dir("dokkaVersion"))
+}
+
+task dokkaZip(type: Zip) {
+    dependsOn(fixedDokkaProvider)
+    from fixedDokkaProvider.map { it.outputDirectory }
+    from writeVersionFileProvider.map { it.outputDirectory }
     destinationDirectory = layout.projectDirectory.dir("$rootDir/../out/dist")
     archiveFileName = "documentation.zip"
-    doLast {
-        versionFile.delete()
-    }
 }

@@ -92,8 +92,8 @@ class UtpConfigFactoryTest {
 
         override val launcher = FakeConfigurableFileCollection(File(""))
         override val core = FakeConfigurableFileCollection(File(""))
+        override val deviceControllerDdmlib = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"))
         override val deviceProviderGradle = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"))
-        override val deviceProviderLocal = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"))
         override val deviceProviderVirtual = FakeConfigurableFileCollection(mockFile("pathToANDROID_DEVICE_PROVIDER_VIRTUAL.jar"))
         override val driverInstrumentation = FakeConfigurableFileCollection(mockFile("pathToANDROID_DRIVER_INSTRUMENTATION.jar"))
         override val testPlugin = FakeConfigurableFileCollection(mockFile("pathToANDROID_TEST_PLUGIN.jar"))
@@ -154,9 +154,9 @@ class UtpConfigFactoryTest {
                 label {
                   label: "local_android_device_provider"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
+                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -201,7 +201,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -288,9 +288,9 @@ class UtpConfigFactoryTest {
                 label {
                   label: "local_android_device_provider"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
+                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -335,7 +335,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -425,9 +425,9 @@ class UtpConfigFactoryTest {
                 label {
                   label: "local_android_device_provider"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
+                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -485,7 +485,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -577,9 +577,9 @@ class UtpConfigFactoryTest {
                 label {
                   label: "local_android_device_provider"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
+                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -637,7 +637,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -727,9 +727,9 @@ class UtpConfigFactoryTest {
                 label {
                   label: "local_android_device_provider"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider"
+                class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
-                  path: "pathToANDROID_DEVICE_PROVIDER_LOCAL.jar"
+                  path: "pathToANDROID_DEVICE_CONTROLLER_DDMLIB.jar"
                 }
                 config {
                   type_url: "type.googleapis.com/google.testing.platform.proto.api.config.LocalAndroidDeviceProvider"
@@ -774,7 +774,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -917,7 +917,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }
@@ -1060,7 +1060,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "android_test_device_info_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin"
+                class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
                   path: "pathToANDROID_TEST_DEVICE_INFO_PLUGIN.jar"
                 }

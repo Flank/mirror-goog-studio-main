@@ -9,6 +9,7 @@ import "google/protobuf/empty.proto";
 service SkiaParserService {
   rpc GetViewTree(GetViewTreeRequest) returns (GetViewTreeResponse) {}
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Shutdown(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message RequestedNodeInfo {

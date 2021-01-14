@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package androidx.compose;
+package androidx.compose.runtime;
 
 /** Mock the Jet Pack Compose Runtime */
 public class HotReloader {

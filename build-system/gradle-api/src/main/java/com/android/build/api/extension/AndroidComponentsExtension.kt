@@ -21,6 +21,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTest
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import org.gradle.api.Action
@@ -37,6 +38,13 @@ import org.gradle.api.Incubating
 @Incubating
 interface AndroidComponentsExtension<
         VariantBuilderT: VariantBuilder, VariantT: Variant> {
+
+    /**
+     * Provides access to underlying Android SDK and build-tools components like adb.
+     *
+     * @return [SdkComponents] to access Android SDK used by Gradle.
+     */
+    val sdkComponents: SdkComponents
 
     /**
      * Creates a [VariantSelector] instance that can be configured
@@ -131,14 +139,14 @@ interface AndroidComponentsExtension<
      * are of interest. By default, all instances are of interest.
      * @param callback lambda to be called with each instance [UnitTestBuilder] of interest.
      */
-    fun beforeUnitTest(
+    fun beforeUnitTests(
             selector: VariantSelector = selector().all(),
             callback: (UnitTestBuilder) -> Unit)
 
     /**
-     * [Action] based version of [beforeUnitTest] above.
+     * [Action] based version of [beforeUnitTests] above.
      */
-    fun beforeUnitTest(
+    fun beforeUnitTests(
             selector: VariantSelector = selector().all(),
             callback: Action<UnitTestBuilder>)
 
@@ -153,14 +161,14 @@ interface AndroidComponentsExtension<
      * are of interest. By default, all instances are of interest.
      * @param callback lambda to be called with each instance [AndroidTestBuilder] of interest.
      */
-    fun beforeAndroidTest(
+    fun beforeAndroidTests(
             selector: VariantSelector = selector().all(),
             callback: (AndroidTestBuilder) -> Unit)
 
     /**
-     * [Action] based version of the [beforeAndroidTest] above.
+     * [Action] based version of the [beforeAndroidTests] above.
      */
-    fun beforeAndroidTest(
+    fun beforeAndroidTests(
             selector: VariantSelector = selector().all(),
             callback: Action<AndroidTestBuilder>)
 
@@ -181,14 +189,14 @@ interface AndroidComponentsExtension<
      * [org.gradle.api.provider.Property] can still be modified ensuring that all
      * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
-    fun unitTest(
+    fun unitTests(
             selector: VariantSelector = selector().all(),
             callback: Action<UnitTest>)
 
     /**
-     * [Action] based version of the [unitTest] above.
+     * [Action] based version of the [unitTests] above.
      */
-    fun unitTest(
+    fun unitTests(
             selector: VariantSelector = selector().all(),
             callback: (UnitTest) -> Unit)
 
@@ -209,14 +217,81 @@ interface AndroidComponentsExtension<
      * [org.gradle.api.provider.Property] can still be modified ensuring that all
      * [org.gradle.api.Task]s created by the Android Gradle Plugin use the updated value.
      */
-    fun androidTest(
+    fun androidTests(
             selector: VariantSelector = selector().all(),
             callback: Action<AndroidTest>)
 
     /**
      * [Action] based version of the [AndroidTest] above.
      */
-    fun androidTest(
+    fun androidTests(
             selector: VariantSelector = selector().all(),
             callback: (AndroidTest) -> Unit)
+
+
+    // Those API are for backward compatibility until 4.2-beta5 is released.
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeUnitTests(selector, callback)"))
+    fun beforeUnitTest(
+        selector: VariantSelector = selector().all(),
+        callback: (UnitTestBuilder) -> Unit) {
+        beforeUnitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeUnitTests(selector, callback)"))
+    fun beforeUnitTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<UnitTestBuilder>) {
+        beforeUnitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeAndroidTests(selector, callback)"))
+    fun beforeAndroidTest(
+        selector: VariantSelector = selector().all(),
+        callback: (AndroidTestBuilder) -> Unit) {
+        beforeAndroidTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("beforeAndroidTests(selector, callback)"))
+    fun beforeAndroidTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<AndroidTestBuilder>) {
+        beforeAndroidTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("unitTests(selector, callback)"))
+    fun unitTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<UnitTest>) {
+        unitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("unitTests(selector, callback)"))
+    fun unitTest(
+        selector: VariantSelector = selector().all(),
+        callback: (UnitTest) -> Unit) {
+        unitTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("androidTests(selector, callback)")
+    )
+    fun androidTest(
+        selector: VariantSelector = selector().all(),
+        callback: Action<AndroidTest>) {
+        androidTests(selector, callback)
+    }
+
+    @Deprecated("Will be removed in 4.2-beta5",
+        replaceWith = ReplaceWith("androidTests(selector, callback)"))
+    fun androidTest(
+        selector: VariantSelector = selector().all(),
+        callback: (AndroidTest) -> Unit) {
+        androidTests(selector, callback)
+    }
 }

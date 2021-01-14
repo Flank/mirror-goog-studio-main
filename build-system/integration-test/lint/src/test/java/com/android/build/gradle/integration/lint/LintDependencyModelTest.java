@@ -90,7 +90,7 @@ public class LintDependencyModelTest {
         assertThat(textReport).contains("androidlib/src/main/java/com/example/mylibrary/MyClass.java:4: Information: Do not hardcode");
         assertThat(textReport).contains("javalib/src/main/java/com/example/MyClass.java:4: Warning: Do not hardcode");
         assertThat(textReport).contains("javalib2/src/main/java/com/example2/MyClass.java:4: Warning: Do not hardcode");
-        if(lintInvocationType == LintInvocationType.REFLECTIVE_LINT_RUNNER) {
+        if(lintInvocationType != LintInvocationType.NEW_LINT_MODEL) {
             // TODO(b/160392650): Inheritance of lint severity configurations between projects
             assertThat(textReport).contains(
                     "indirectlib/src/main/java/com/example/MyClass2.java:4: Information: Do not hardcode");

@@ -80,8 +80,13 @@ The minimum Android platform supported by the current Android NDK.
 - example: 16
 - environment: android-ndk
 
+## ${ndk.moduleBuildIntermediatesBaseDir}
+The module level build base intermediates folder.
+- example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates
+- environment: android-gradle
+
 ## ${ndk.moduleBuildIntermediatesDir}
-The module level build intermediates folder.
+The module level build intermediates cxx subfolder.
 - example: $PROJECTS/MyProject/Source/Android/app1/build/intermediates/cxx
 - environment: android-gradle
 
@@ -165,6 +170,11 @@ The ABI-level folder where .so files are written.
 - example: ${ndk.moduleDir}/build/intermediates/cxx/Debug/${ndk.configurationHash}/obj/x86_64
 - environment: android-gradle
 
+## ${ndk.soRepublishDir}
+A folder with a predictable name where final build outputs (mainly .so) arehard linked or copied after the build completes. The purpose is so scripts and other external tools have a known path, with no embedded hashcode, to locate these files.
+- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
+- environment: android-gradle
+
 ## ${ndk.stlLibraryFile}
 If present, the STL .so file that needs to be distributed with the libraries built.
 - example: ${ndk.moduleNdkDir}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so
@@ -203,6 +213,11 @@ The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. May be Debu
 ## ${ndk.variantSoOutputDir}
 The variant-level folder where .so files are written.
 - example: ${ndk.moduleDir}/build/intermediates/cxx/Debug/${ndk.configurationHash}/obj
+- environment: android-gradle
+
+## ${ndk.variantSoRepublishDir}
+A folder with a predictable name where final build outputs (mainly .so) arehard linked or copied after the build completes. The purpose is so scripts and other external tools have a known path, with no embedded hashcode, to locate these files.
+- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj
 - environment: android-gradle
 
 ## ${ndk.variantStlType}

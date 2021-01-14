@@ -31,6 +31,7 @@ import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.getPackageNameFromManifest
+import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
@@ -73,11 +74,12 @@ fun processResources(
         aapt.link(aaptConfig, LoggerWrapper(logger))
     } catch (e: Aapt2Exception) {
         throw rewriteLinkException(
-            e,
-            errorFormatMode,
-            aaptConfig.mergeBlameDirectory,
-            aaptConfig.manifestMergeBlameFile,
-            logger
+                e,
+                errorFormatMode,
+                aaptConfig.mergeBlameDirectory,
+                aaptConfig.manifestMergeBlameFile,
+                aaptConfig.identifiedSourceSetMap ?: emptyMap(),
+                logger
         )
     } catch (e: Aapt2InternalException) {
         throw e

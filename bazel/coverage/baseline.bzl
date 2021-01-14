@@ -1,3 +1,5 @@
+load("@//tools/base/bazel:merge_archives.bzl", "merge_jars")
+
 def setup_bin_loop_repo():
     native.new_local_repository(
         name = "baseline",
@@ -26,16 +28,19 @@ def construct_baseline_processing_graph():
         srcs = ["@//{}_coverage.baseline.srcs.filtered".format(pt) for pt in pts],
         outs = ["merged-baseline-srcs.txt"],
         cmd = "cat $(SRCS) | sort | uniq >$@",
-        visibility = ["@results//:__pkg__"],
+        visibility = ["@cov//:__pkg__", "@results//:__pkg__"],
     )
 
-    native.genrule(
-        name = "merged-baseline-lcov",
-        tools = ["@cov//:merge_lcov"],
+    merge_jars(
+        name = "merged-baseline-jars",
         # turn `package:target`
-        # into `@//package:target_coverage.baseline.lcov`
-        srcs = ["@//{}_coverage.baseline.lcov".format(pt) for pt in pts],
-        outs = ["merged-baseline.lcov"],
-        cmd = "python $(location @cov//:merge_lcov) $(SRCS) >$@",
-        visibility = ["@cov//:__pkg__"],
+        # into `@//package:target_coverage.baseline.jar`
+        jars = ["@//{}_coverage.baseline.jar".format(pt) for pt in pts],
+        out = "merged-baseline-jars.jar",
+        # use this for now b/c of duplicate META-INF/plugin.xml
+        # theoretically allows for a duplicate class problem in Jacoco processing
+        # however, as these are all directly from non-transitive source class jars
+        # it shouldn't be a problem as we don't have overlapping source targets
+        allow_duplicates = True,
+        visibility = ["@cov//:__pkg__", "@results//:__pkg__"],
     )

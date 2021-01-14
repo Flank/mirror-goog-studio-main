@@ -33,6 +33,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.reset
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -51,6 +52,7 @@ class ComposeTreeTest {
             top = 121,
             width = 421,
             height = 269,
+            bounds = intArrayOf(),
             parameters = emptyList(),
             children = listOf(
                 InspectorNode(
@@ -64,6 +66,7 @@ class ComposeTreeTest {
                     top = 121,
                     width = 189,
                     height = 111,
+                    bounds = intArrayOf(57, 120, 210, 123, 230, 200, 65, 231),
                     parameters = emptyList(),
                     children = emptyList()
                 ),
@@ -78,6 +81,7 @@ class ComposeTreeTest {
                     top = 291,
                     width = 176,
                     height = 269,
+                    bounds = intArrayOf(),
                     parameters = emptyList(),
                     children = emptyList()
                 )
@@ -121,6 +125,36 @@ class ComposeTreeTest {
         checkComposeView(table, view.subViewList.first(), root)
     }
 
+    @Test // regression test for b/176656378
+    fun testIgnoreComposeWhenViewIsDetaching() {
+        val linearLayout = StandardView.createLinearLayoutWithComposeView()
+        val androidComposeView = linearLayout.getChildAt(0)
+        `when`(androidComposeView.getTag(eq(TREE_ENTRY))).thenReturn(listOf(root))
+        doAnswer { invocation -> edt!!.submit(invocation.getArgument(0)); true }
+            .`when`(androidComposeView).post(any())
+
+        // Setup handler to return false from post()
+        val handler = androidComposeView.handler
+        reset(handler)
+        // End setup
+
+        System.loadLibrary("jni-test")
+        val event = ComponentTreeTest.allocateEvent()
+        val properties = Properties()
+        val treeBuilder = ComponentTree(properties)
+        treeBuilder.setShowComposeNodes(true)
+        treeBuilder.writeTree(event, linearLayout)
+
+        val proto = ComponentTreeEvent.parseFrom(ComponentTreeTest.toByteArray(event))
+        val table = StringTable(proto.stringList)
+        val layout = proto.root
+        assertThat(table[layout.className]).isEqualTo(RootLinearLayout::class.java.simpleName)
+        assertThat(layout.subViewCount).isEqualTo(1)
+        val view = layout.subViewList.first()
+        assertThat(table[view.className]).isEqualTo(AndroidComposeView::class.java.simpleName)
+        assertThat(view.subViewCount).isEqualTo(0)
+    }
+
     @Test
     fun testDebugFlagsAreOffForCheckIn() {
         assertThat(Log.DEBUG_LOG_IN_TESTS).isFalse()
@@ -142,9 +176,19 @@ class ComposeTreeTest {
         assertThat(view.y).named(name).isEqualTo(expected.top)
         assertThat(view.width).named(name).isEqualTo(expected.width)
         assertThat(view.height).named(name).isEqualTo(expected.height)
+        assertThat(view.transformedBounds.topLeftX).isEqualTo(expected.bounds.getOrZero(0))
+        assertThat(view.transformedBounds.topLeftY).isEqualTo(expected.bounds.getOrZero(1))
+        assertThat(view.transformedBounds.topRightX).isEqualTo(expected.bounds.getOrZero(2))
+        assertThat(view.transformedBounds.topRightY).isEqualTo(expected.bounds.getOrZero(3))
+        assertThat(view.transformedBounds.bottomLeftX).isEqualTo(expected.bounds.getOrZero(6))
+        assertThat(view.transformedBounds.bottomLeftY).isEqualTo(expected.bounds.getOrZero(7))
+        assertThat(view.transformedBounds.bottomRightX).isEqualTo(expected.bounds.getOrZero(4))
+        assertThat(view.transformedBounds.bottomRightY).isEqualTo(expected.bounds.getOrZero(5))
         assertThat(view.subViewCount).named(name).isEqualTo(expected.children.size)
         for (index in view.subViewList.indices) {
             checkComposeView(table, view.getSubView(index), expected.children[index])
         }
     }
+
+    private fun IntArray.getOrZero(index: Int) = this.getOrElse(index) { 0 }
 }

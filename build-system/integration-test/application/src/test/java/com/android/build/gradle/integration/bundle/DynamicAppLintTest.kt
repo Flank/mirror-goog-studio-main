@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -35,6 +36,7 @@ class DynamicAppLintTest {
         .create()
 
     @Test
+    @Ignore("b/160392650 Dynamic feature support in the new lint integration TODO")
     fun testUnusedResourcesInFeatureModules() {
         project.execute("clean", "lint")
 

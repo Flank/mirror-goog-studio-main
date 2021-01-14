@@ -454,14 +454,30 @@ open class LintXmlConfiguration protected constructor(
 
         // Check location
         val file = location.file
-        var relativePath = context.project.getRelativePath(file)
+        val relativeTo = configFile.parentFile ?: context.project.dir
+        var relativePath = Project.getRelativePath(relativeTo, file)
         var checkUnixPath = false
         for (regexp in regexps) {
             val matcher = regexp.matcher(relativePath)
             if (matcher.find()) {
                 return true
-            } else if (regexp.pattern().indexOf('/') != -1) {
-                checkUnixPath = true
+            } else {
+                val pattern = regexp.pattern()
+                if (pattern.indexOf('/') != -1) {
+                    checkUnixPath = true
+                    // See issue 177044619: Users may be trying to match substrings
+                    // like ".*/src/main/java" but if the relative path from above
+                    // is "src/main/java" that won't match; so in that case we'll
+                    // match "/src/main/java" instead.
+                    if (pattern.startsWith(".*/") ||
+                        pattern.startsWith("^.*/") ||
+                        pattern.startsWith("^.*?/")
+                    ) {
+                        if (regexp.matcher("/$relativePath").find()) {
+                            return true
+                        }
+                    }
+                }
             }
         }
         if (checkUnixPath && CURRENT_PLATFORM == PLATFORM_WINDOWS) {

@@ -120,18 +120,23 @@ interface AndroidSourceSet: com.android.build.api.dsl.AndroidSourceSet {
      */
     fun renderscript(configureClosure: Closure<*>): AndroidSourceSet
 
+    /**
+     * The Android JNI source directory for this source set.
+     * @deprecated This is unused and will be removed in AGP 8.0
+     */
+    @Deprecated("Unused")
     override val jni: AndroidSourceDirectorySet
 
     /**
      * Configures the location of the Android JNI source for this set.
      *
      *
-     * The given closure is used to configure the [AndroidSourceDirectorySet]
-     * which contains the JNI source.
-     *
      * @param configureClosure The closure to use to configure the JNI source.
      * @return this
+     *
+     * @deprecated This is unused and will be removed in AGP 8.0
      */
+    @Deprecated("Unused")
     fun jni(configureClosure: Closure<*>): AndroidSourceSet
 
     override val jniLibs: AndroidSourceDirectorySet

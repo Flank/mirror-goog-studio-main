@@ -61,7 +61,8 @@ data class AaptPackageConfig(
     val emitStableIdsFile: File? = null,
     val consumeStableIdsFile: File? = null,
     val mergeBlameDirectory: File? = null,
-    val manifestMergeBlameFile: File? = null
+    val manifestMergeBlameFile: File? = null,
+    val identifiedSourceSetMap: Map<String, String> = emptyMap()
 ) : Serializable {
 
     init {
@@ -113,6 +114,7 @@ data class AaptPackageConfig(
         private var consumeStableIdsFile: File? = null
         private var mergeBlameDirectory: File? = null
         private var manifestMergeBlameFile: File? = null
+        private var identifiedSourceSetMap: Map<String, String> = emptyMap()
         /**
          * Creates a new [AaptPackageConfig] from the data already placed in the builder.
          *
@@ -153,7 +155,8 @@ data class AaptPackageConfig(
                 emitStableIdsFile = emitStableIdsFile,
                 consumeStableIdsFile = consumeStableIdsFile,
                 mergeBlameDirectory = mergeBlameDirectory,
-                manifestMergeBlameFile = manifestMergeBlameFile
+                manifestMergeBlameFile = manifestMergeBlameFile,
+                identifiedSourceSetMap = identifiedSourceSetMap
             )
         }
 
@@ -344,6 +347,11 @@ data class AaptPackageConfig(
 
         fun setManifestMergeBlameFile(manifestMergeBlameFile: File?): Builder {
             this.manifestMergeBlameFile = manifestMergeBlameFile
+            return this
+        }
+
+        fun setIdentifiedSourceSetMap(identifiedSourceSetMap: Map<String, String>) : Builder {
+            this.identifiedSourceSetMap = identifiedSourceSetMap
             return this
         }
     }

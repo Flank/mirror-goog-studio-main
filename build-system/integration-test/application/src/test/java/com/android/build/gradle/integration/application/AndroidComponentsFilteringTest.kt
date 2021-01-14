@@ -31,10 +31,10 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
             GradleTestProject.builder().fromTestProject("emptyApp").create()
 
     @Test
-    fun `before-unit-test filtering via new api using buildtype callback`() {
+    fun `before-unit-tests filtering via new api using buildtype callback`() {
         given {
             """
-                |    beforeUnitTest(selector().withBuildType("debug")) {
+                |    beforeUnitTests(selector().withBuildType("debug")) {
                 |        enabled = false
                 |    }
             """
@@ -53,10 +53,10 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     }
 
     @Test
-    fun `before-android-test filtering via new api using buildtype callback`() {
+    fun `before-android-tests filtering via new api using buildtype callback`() {
         given {
             """
-                |    beforeAndroidTest(selector().withBuildType("debug")) {
+                |    beforeAndroidTests(selector().withBuildType("debug")) {
                 |        enabled = false
                 |    }
             """
@@ -75,7 +75,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     }
 
     @Test
-    fun `before-unit-test filtering via new api using buildtype and flavor callback`() {
+    fun `before-unit-tests filtering via new api using buildtype and flavor callback`() {
         android {
             """
                 |    flavorDimensions "one"
@@ -92,7 +92,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
 
         given {
             """
-                |    beforeUnitTest(
+                |    beforeUnitTests(
                 |            selector()
                 |               .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |               .withBuildType("debug")) {
@@ -121,7 +121,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     }
 
     @Test
-    fun `before-android-test filtering via new api using buildtype and flavor callback`() {
+    fun `before-android-tests filtering via new api using buildtype and flavor callback`() {
         android {
             """
                 |    flavorDimensions "one"
@@ -138,7 +138,7 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
 
         given {
             """
-                |    beforeAndroidTest(
+                |    beforeAndroidTests(
                 |            selector()
                 |               .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |               .withBuildType("debug")) {
@@ -224,4 +224,48 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
             var unitTest: Boolean = true,
             var androidTest: Boolean = true
     )
+
+    @Test
+    fun `before-unit-test filtering via new api using buildtype callback`() {
+        given {
+            """
+                |    beforeUnitTest(selector().withBuildType("debug")) {
+                |        enabled = false
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                unitTest = false
+            }
+        }
+    }
+
+    @Test
+    fun `before-android-test filtering via new api using buildtype callback`() {
+        given {
+            """
+                |    beforeAndroidTest(selector().withBuildType("debug")) {
+                |        enabled = false
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                androidTest = false
+            }
+        }
+    }
 }

@@ -28,6 +28,12 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
     if not jar:
         jar = name
 
+    native.alias(
+        name = name + "_coverage.baseline.jar",
+        actual = jar,
+        visibility = ["@baseline//:__pkg__"],
+    )
+
     tags = tags if tags else []
     tags += [] if "no_mac" in tags else ["no_mac"]
     tags += [] if "no_windows" in tags else ["no_windows"]
@@ -48,35 +54,6 @@ def coverage_baseline(name, srcs, jar = None, tags = None):
         outs = [name + ".coverage.baseline.srcs.filtered"],
         tags = tags,
         cmd = "python $(location @cov//:ignore_files_filter) <$< >$@",
-        visibility = ["@baseline//:__pkg__"],
-    )
-
-    native.genrule(
-        name = name + "_coverage.baseline.xml",
-        tools = ["@//prebuilts/tools/common/jacoco:cli"],
-        srcs = [jar],
-        outs = [name + ".coverage.baseline.xml"],
-        tags = tags,
-        cmd = "$(location {cli}) report --quiet --classfiles $< --xml $@".format(
-            cli = "@//prebuilts/tools/common/jacoco:cli",
-        ),
-    )
-
-    native.genrule(
-        name = name + "_coverage.baseline.lcov",
-        tools = ["@cov//:jacoco_xml_to_lcov"],
-        srcs = [
-            name + "_coverage.baseline.srcs.filtered",
-            name + "_coverage.baseline.xml",
-        ],
-        outs = [name + ".coverage.baseline.lcov"],
-        tags = tags,
-        cmd = "python $(location {x2l}) {test} $(location {srcs}) <$(location {xml}) >$@".format(
-            x2l = "@cov//:jacoco_xml_to_lcov",
-            test = "baseline",
-            srcs = name + "_coverage.baseline.srcs.filtered",
-            xml = name + "_coverage.baseline.xml",
-        ),
         visibility = ["@baseline//:__pkg__"],
     )
 

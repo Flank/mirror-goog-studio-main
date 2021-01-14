@@ -20,8 +20,8 @@ import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static org.mockito.Mockito.when;
 
+import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.IdeDependencies;
-import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.detector.api.Detector;
@@ -41,7 +41,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     public static TestLintTask.GradleMockModifier mockModifier =
             (project, variant) -> {
                 IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
-                IdeLibrary library = dependencies.getAndroidLibraries().iterator().next();
+                IdeAndroidLibrary library = dependencies.getAndroidLibraries().iterator().next();
 
                 try {
                     File tempDir = TestUtils.createTempDirDeletedOnExit().toFile();

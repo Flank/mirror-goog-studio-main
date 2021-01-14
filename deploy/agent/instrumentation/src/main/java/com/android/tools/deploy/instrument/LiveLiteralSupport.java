@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -92,16 +94,11 @@ public class LiveLiteralSupport {
     public static void enable(Class<?> liveLiteralKtClass, String targetApplicationId) {
         applicationId = targetApplicationId;
         try {
-            Field enabled = liveLiteralKtClass.getDeclaredField("isLiveLiteralsEnabled");
-            if (!liveLiteralKtClass.getName().equals(LIVE_LITERAL_KT)) {
-                throw new IllegalArgumentException(
-                        "Expecting androidx.compose.runtime.internal.LiveLiteralKt but got "
-                                + liveLiteralKtClass.getName()
-                                + " class during LiveLiteralSupport.enable()");
-            }
-            enabled.setAccessible(true);
-            enabled.setBoolean(liveLiteralKtClass, true);
-        } catch (NoSuchFieldException e) {
+            Method enableMethod = liveLiteralKtClass.getMethod("enableLiveLiterals");
+            enableMethod.invoke(liveLiteralKtClass);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();

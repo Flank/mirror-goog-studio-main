@@ -28,10 +28,12 @@ import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.JarsClasspathInputsWithIdentity
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
-import com.android.build.gradle.internal.tasks.extractSingleFile
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.builder.utils.isValidZipEntryName
 import com.android.utils.FileUtils
+import com.google.common.io.ByteStreams
+import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
@@ -49,6 +51,11 @@ import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.util.regex.Pattern
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 
 /**
  * A task that instruments the project classes with the asm visitors registered via the DSL.
@@ -192,7 +199,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
         if (shouldPackageProfilerDependencies.getOrElse(false)) {
             profilingTransforms.get().forEach { path ->
                 val profilingTransformFile = File(path)
-                extractSingleFile(profilingTransformFile) { name: String ->
+                extractDependencyJars(profilingTransformFile) { name: String ->
                     FileUtils.join(
                             jarsOutputDir.get().asFile,
                             "profiler-deps",
@@ -200,6 +207,26 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                             name + DOT_JAR
                     )
                 }
+            }
+        }
+    }
+
+    private fun extractDependencyJars(inputJar: File, outputLocation: (String) -> File) {
+        // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
+        // we extract the resources directly as a zip file.
+        ZipInputStream(FileInputStream(inputJar)).use { zis ->
+            val pattern = Pattern.compile("dependencies/(.*)\\.jar")
+            var entry: ZipEntry? = zis.nextEntry
+            while (entry != null && isValidZipEntryName(entry)) {
+                val matcher = pattern.matcher(entry.name)
+                if (matcher.matches()) {
+                    val name = matcher.group(1)
+                    val outputJar: File = outputLocation.invoke(name)
+                    Files.createParentDirs(outputJar)
+                    FileOutputStream(outputJar).use { fos -> ByteStreams.copy(zis, fos) }
+                }
+                zis.closeEntry()
+                entry = zis.nextEntry
             }
         }
     }

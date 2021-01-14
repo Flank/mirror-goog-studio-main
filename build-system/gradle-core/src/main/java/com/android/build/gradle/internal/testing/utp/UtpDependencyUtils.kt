@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.Version.ANDROID_TOOLS_BASE_VERSION
 import org.gradle.api.NonExtensible
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -25,7 +26,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Optional
 
 private const val NITROGEN_MAVEN_GROUP_ID = "com.google.testing.platform"
-private const val NITROGEN_DEFAULT_VERSION = "0.0.7-dev"
+private const val NITROGEN_DEFAULT_VERSION = "0.0.8-alpha01"
 
 /**
  * Available Unified Test Platform dependencies.
@@ -33,7 +34,9 @@ private const val NITROGEN_DEFAULT_VERSION = "0.0.7-dev"
 enum class UtpDependency(
         val artifactId: String,
         val mainClass: String,
-        val mapperFunc: (UtpDependencies) -> ConfigurableFileCollection) {
+        val mapperFunc: (UtpDependencies) -> ConfigurableFileCollection,
+        private val groupId: String = NITROGEN_MAVEN_GROUP_ID,
+        private val version: String = NITROGEN_DEFAULT_VERSION) {
     LAUNCHER(
             "launcher",
             "com.google.testing.platform.launcher.Launcher",
@@ -42,10 +45,12 @@ enum class UtpDependency(
             "core",
             "com.google.testing.platform.main.MainKt",
             UtpDependencies::core),
-    ANDROID_DEVICE_PROVIDER_LOCAL(
-            "android-device-provider-local",
-            "com.google.testing.platform.runtime.android.provider.local.LocalAndroidDeviceProvider",
-            UtpDependencies::deviceProviderLocal),
+    ANDROID_DEVICE_PROVIDER_DDMLIB(
+            "android-device-provider-ddmlib",
+            "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider",
+            UtpDependencies::deviceControllerDdmlib,
+            "com.android.tools.utp",
+            ANDROID_TOOLS_BASE_VERSION),
     ANDROID_DEVICE_PROVIDER_GRADLE(
             "android-device-provider-gradle",
             "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider",
@@ -60,8 +65,10 @@ enum class UtpDependency(
             UtpDependencies::testPlugin),
     ANDROID_TEST_DEVICE_INFO_PLUGIN(
             "android-test-plugin-host-device-info",
-            "com.google.testing.platform.plugin.android.info.host.AndroidTestDeviceInfoPlugin",
-            UtpDependencies::testDeviceInfoPlugin),
+            "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin",
+            UtpDependencies::testDeviceInfoPlugin,
+            "com.android.tools.utp",
+            ANDROID_TOOLS_BASE_VERSION),
     ANDROID_TEST_PLUGIN_HOST_RETENTION(
             "android-test-plugin-host-retention",
             "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin",
@@ -69,8 +76,6 @@ enum class UtpDependency(
     ;
 
     val configurationName: String = "_internal-unified-test-platform-${artifactId}"
-    private val groupId: String = NITROGEN_MAVEN_GROUP_ID
-    private val version: String = NITROGEN_DEFAULT_VERSION
 
     /**
      * Returns a maven coordinate string to download dependencies from the Maven repository.
@@ -90,11 +95,11 @@ abstract class UtpDependencies {
 
     @get:Optional
     @get:Classpath
-    abstract val deviceProviderGradle: ConfigurableFileCollection
+    abstract val deviceControllerDdmlib: ConfigurableFileCollection
 
     @get:Optional
     @get:Classpath
-    abstract val deviceProviderLocal: ConfigurableFileCollection
+    abstract val deviceProviderGradle: ConfigurableFileCollection
 
     @get:Optional
     @get:Classpath

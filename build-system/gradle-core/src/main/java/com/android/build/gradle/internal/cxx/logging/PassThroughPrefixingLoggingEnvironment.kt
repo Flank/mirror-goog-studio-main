@@ -36,7 +36,8 @@ class PassThroughPrefixingLoggingEnvironment(
         super.log(message.copy(
             level = newLevel,
             file = newFile,
-            tag = newTag
+            tag = newTag,
+            diagnosticCode = message.diagnosticCode
         ))
     }
 }

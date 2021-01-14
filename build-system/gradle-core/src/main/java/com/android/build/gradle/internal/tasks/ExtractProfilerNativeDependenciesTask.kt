@@ -16,33 +16,30 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.dependency.JAR_JNI_PATTERN
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.utils.isValidZipEntryName
 import com.android.utils.FileUtils
-import com.google.common.io.ByteStreams
-import com.google.common.io.Files
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.lang.RuntimeException
+import java.util.function.Predicate
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 /**
- * Task to extract native libraries needed for profilers support in the IDE. Here, only jars are
- * extracted, but the actual .so files extraction happens downstream.
+ * Task to extract native libraries needed for profilers support in the IDE.
  */
 @CacheableTask
 abstract class ExtractProfilerNativeDependenciesTask : NonIncrementalTask() {
@@ -80,7 +77,7 @@ abstract class ExtractProfilerNativeDependenciesTask : NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 ExtractProfilerNativeDependenciesTask::outputDir
-            ).on(InternalArtifactType.PROFILERS_NATIVE_LIBS)
+            ).withName("out").on(InternalArtifactType.PROFILERS_NATIVE_LIBS)
         }
 
         override fun configure(
@@ -100,29 +97,68 @@ abstract class ExtractProfilerNativeDependenciesTask : NonIncrementalTask() {
         override fun run() {
             val outputDir = parameters.outputDir.get().asFile
             FileUtils.cleanOutputDir(outputDir)
-            parameters.inputJars.forEach {
-                extractSingleFile(it) { name -> outputDir.resolve(name + SdkConstants.DOT_JAR) }
+            parameters.inputJars.forEach { inputJar ->
+                ZipInputStream(FileInputStream(inputJar)).use { extractNestedNativeLibs(it) }
             }
         }
-    }
-}
 
-internal fun extractSingleFile(inputJar: File, outputLocation: (String) -> File) {
-    // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
-    // we extract the resources directly as a zip file.
-    ZipInputStream(FileInputStream(inputJar)).use { zis ->
-        val pattern = Pattern.compile("dependencies/(.*)\\.jar")
-        var entry: ZipEntry? = zis.nextEntry
-        while (entry != null && isValidZipEntryName(entry)) {
-            val matcher = pattern.matcher(entry.name)
-            if (matcher.matches()) {
-                val name = matcher.group(1)
-                val outputJar: File = outputLocation.invoke(name)
-                Files.createParentDirs(outputJar)
-                FileOutputStream(outputJar).use { fos -> ByteStreams.copy(zis, fos) }
+        private fun extractNestedNativeLibs(zipInputStream: ZipInputStream) {
+            val dependencyJarPattern = Pattern.compile("dependencies/(.*)\\.jar")
+            actOnMatchingZipEntries(
+                zipInputStream,
+                { dependencyJarPattern.matcher(it).matches() },
+                { _, dependencyJarBytes ->
+                    ZipInputStream(ByteArrayInputStream(dependencyJarBytes)).use {
+                        extractNativeLibs(it)
+                    }
+                }
+            )
+        }
+
+        private fun extractNativeLibs(zipInputStream: ZipInputStream) {
+            val outputDir = parameters.outputDir.get().asFile
+            actOnMatchingZipEntries(
+                zipInputStream,
+                { MergeNativeLibsTask.predicate.test(it.substringAfterLast('/'))
+                        && JAR_JNI_PATTERN.matcher(it).matches()
+                },
+                { zipEntry, nativeLibBytes ->
+                    // omit the "lib/" entry.name prefix in the output path
+                    val relativePath = zipEntry.name.substringAfter('/')
+                    val osRelativePath =
+                        relativePath.replace('/', File.separatorChar)
+                    val outFile = FileUtils.join(outputDir, osRelativePath)
+                    if (outFile.exists()) {
+                        throw RuntimeException(
+                            "Unexpected duplicate profiler native dependency: $relativePath"
+                        )
+                    }
+                    FileUtils.mkdirs(outFile.parentFile)
+                    outFile.writeBytes(nativeLibBytes)
+                }
+            )
+        }
+
+        /**
+         * Iterates through the zip entries and performs the specified action with each entry whose
+         * name matches the given predicate.
+         *
+         * This function does not open or close the [ZipInputStream]; it assumes the stream is
+         * already open.
+         */
+        private fun actOnMatchingZipEntries(
+            zis: ZipInputStream,
+            predicate: Predicate<String>,
+            action: (ZipEntry, ByteArray) -> Unit
+        ) {
+            var entry: ZipEntry? = zis.nextEntry
+            while (entry != null && isValidZipEntryName(entry)) {
+                if (predicate.test(entry.name)) {
+                    action(entry, zis.readBytes())
+                }
+                zis.closeEntry()
+                entry = zis.nextEntry
             }
-            zis.closeEntry()
-            entry = zis.nextEntry
         }
     }
 }

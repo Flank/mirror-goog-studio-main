@@ -114,7 +114,7 @@ public class MergedResourceWriter
      * A {@link MergeWriter} for resources, using {@link ResourceMergerItem}. Also takes care of
      * compiling resources and stripping data binding from layout files.
      *
-     * @param request a MergedResourceWriterRequest containing constants required for merge logging.
+     * @param request a MergedResourceWriterRequest containing constants for merge logging.
      */
     public MergedResourceWriter(MergedResourceWriterRequest request) {
         super(request.getRootFolder(), request.getWorkerExecutor());
@@ -172,7 +172,9 @@ public class MergedResourceWriter
                         new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService()),
                         rootFolder,
                         publicFile,
-                        blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
+                        blameLogFolder != null
+                                ? new MergingLog(blameLogFolder, moduleSourceSet)
+                                : null,
                         preprocessor,
                         CopyToOutputDirectoryResourceCompilationService.INSTANCE,
                         temporaryDirectory,

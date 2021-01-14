@@ -31,7 +31,7 @@ JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_ComposeTree_addComposeView(
     JNIEnv *env, jclass clazz, jlong jparent, jlong drawId, jint x, jint y,
     jint width, jint height, jint className, jint filename, jint packageHash,
-    jint offset, jint lineNumber) {
+    jint offset, jint lineNumber, jintArray transformed_corners) {
   View *parent = (View *)jparent;
   View *view = parent->add_sub_view();
   view->set_draw_id(drawId);
@@ -44,6 +44,19 @@ Java_com_android_tools_agent_layoutinspector_ComposeTree_addComposeView(
   view->set_compose_package_hash(packageHash);
   view->set_compose_offset(offset);
   view->set_compose_line_number(lineNumber);
+  if (env->GetArrayLength(transformed_corners) == 8) {
+    auto *corners = view->mutable_transformed_bounds();
+    jint *transformed = env->GetIntArrayElements(transformed_corners, 0);
+    corners->set_top_left_x(*transformed);
+    corners->set_top_left_y(*(transformed + 1));
+    corners->set_top_right_x(*(transformed + 2));
+    corners->set_top_right_y(*(transformed + 3));
+    corners->set_bottom_right_x(*(transformed + 4));
+    corners->set_bottom_right_y(*(transformed + 5));
+    corners->set_bottom_left_x(*(transformed + 6));
+    corners->set_bottom_left_y(*(transformed + 7));
+    env->ReleaseIntArrayElements(transformed_corners, transformed, 0);
+  }
   return (long)view;
 }
 }

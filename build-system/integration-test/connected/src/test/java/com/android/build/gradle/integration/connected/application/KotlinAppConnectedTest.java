@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.connected.application;
 
+import static com.android.testutils.truth.PathSubject.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
@@ -55,5 +57,11 @@ public class KotlinAppConnectedTest {
         project.executor()
                 .withArgument("-Dorg.gradle.unsafe.configuration-cache.max-problems=10000")
                 .run("connectedAndroidTest");
+
+        String testReportPath =
+                "build/reports/androidTests/connected/com.example.android.kotlin.html";
+        assertThat(project.file("app/" + testReportPath)).exists();
+        assertThat(project.file("library/" + testReportPath)).exists();
+        assertThat(project.file("libraryNoTests/" + testReportPath)).doesNotExist();
     }
 }

@@ -56,6 +56,14 @@ class ComposeTree {
         }
     }
 
+    public void setHideSystemNodes(boolean hideSystemNodes) {
+        try {
+            mTreeBuilder.setHideSystemNodes(hideSystemNodes);
+        } catch (ReflectiveOperationException ignore) {
+            // ignore
+        }
+    }
+
     public void resetGeneratedId() {
         try {
             mTreeBuilder.resetGeneratedId();
@@ -92,7 +100,8 @@ class ComposeTree {
                 toInt(node.getFileName()),
                 node.getPackageHash(),
                 node.getOffset(),
-                node.getLineNumber());
+                node.getLineNumber(),
+                node.getBounds());
     }
 
     private int toInt(@Nullable String value) {
@@ -111,5 +120,6 @@ class ComposeTree {
             int fileName,
             int packageHash,
             int offset,
-            int lineNumber);
+            int lineNumber,
+            int[] transformedCorners);
 }

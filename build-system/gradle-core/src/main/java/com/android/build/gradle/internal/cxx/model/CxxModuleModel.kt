@@ -44,8 +44,14 @@ data class CxxModuleModel(
     val cxxFolder : File,
 
     /**
-     * Folder for intermediates
+     * Folder for intermediates (not just C++)
      * ex, source-root/Source/Android/app/build/intermediates
+     */
+    val intermediatesBaseFolder: File,
+
+    /**
+     * cxx subfolder for intermediates
+     * ex, source-root/Source/Android/app/build/intermediates/cxx
      */
     val intermediatesFolder: File,
 
@@ -55,82 +61,82 @@ data class CxxModuleModel(
      */
     val gradleModulePathName: String,
 
-    /**
+        /**
      * Dir of the project
      *   ex, source-root/Source/Android/app
      */
     val moduleRootFolder: File,
 
-    /**
+        /**
      * The build.gradle file
      */
     val moduleBuildFile: File,
 
-    /**
+        /**
      * The makefile
      *   ex, android.externalNativeBuild.cmake.path 'CMakeLists.txt'
      */
     val makeFile: File,
 
-    /**
+        /**
      * The type of native build system
      *   ex, CMAKE
      */
     val buildSystem: NativeBuildSystem,
 
-    /**
+        /**
      * Folder path to the NDK
      *   ex, /Android/sdk/ndk/20.0.5344622
      */
     val ndkFolder: File,
 
-    /**
+        /**
      * The version of the NDK
      *   ex, 20.0.5344622-rc1
      */
     val ndkVersion: Revision,
 
-    /**
+        /**
      * ABIs supported by this NDK
      *   ex, x86, x86_64
      */
     val ndkSupportedAbiList: List<Abi>,
 
-    /**
+        /**
      * ABIs that are default for this NDK
      *   ex, x86_64
      */
     val ndkDefaultAbiList: List<Abi>,
 
-    /**
+        /**
      * The default STL that will be used by the given NDK version if the user does not select one.
      */
     val ndkDefaultStl: Stl,
 
-    /**
+        /**
      * Information about minimum and maximum platform along with mapping between platform
      * and platform code. Will be null if the NDK is so old it doesn't have meta/platforms.json.
      */
     val ndkMetaPlatforms: NdkMetaPlatforms?,
 
-    /**
+        /**
      * Information about all ABIs
      */
     val ndkMetaAbiList: List<AbiInfo>,
 
-    /**
+        /**
      * Path to the CMake toolchain in NDK after wrapping (if necessary). For NDK 15 and above,
      * this is equal to the originalCmakeToolchainFile.
      * ex, /path/to/ndk/android.toolchain.cmake
      */
     val cmakeToolchainFile: File,
 
-    /**
+        /**
      * CMake-specific settings for this Module.
      */
     val cmake: CxxCmakeModuleModel?,
 
-    /**
+        /**
      * Map describing the locations of STL shared objects for each STL/ABI pair.
      *
      * Note that no entry will be present for STLs that do not support packaging (static STLs, the
@@ -139,7 +145,7 @@ data class CxxModuleModel(
      */
     val stlSharedObjectMap: Map<Stl, Map<Abi, File>>,
 
-    /**
+        /**
      * The project for this module
      */
     val project: CxxProjectModel

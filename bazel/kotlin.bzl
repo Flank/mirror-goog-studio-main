@@ -4,6 +4,12 @@ load(":maven.bzl", "maven_pom")
 load(":merge_archives.bzl", "merge_jars")
 load(":lint.bzl", "lint_test")
 
+def test_kotlin_use_ir():
+    return select({
+        "//tools/base/bazel:kotlin_use_ir": True,
+        "//conditions:default": False,
+    })
+
 def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
     """Runs kotlinc on the given source files.
 
@@ -53,6 +59,14 @@ def kotlin_compile(ctx, name, srcs, deps, friends, out, jre):
     args.add("-jvm-target", "1.8")
     args.add("-api-version", "1.3")  # b/166582569
     args.add("-Xjvm-default=enable")
+
+    # Dependency jars may be compiled with a new kotlinc IR backend.
+    args.add("-Xallow-jvm-ir-dependencies")
+
+    # Add "use-ir" to enable the new IR backend for kotlinc tasks when the
+    # attribute "kotlin_use_ir" is set
+    if ctx.attr.kotlin_use_ir:
+        args.add("-Xuse-ir")
 
     # Use custom JRE instead of the default one picked by kotlinc.
     args.add("-no-jdk")
@@ -109,6 +123,7 @@ _kotlin_jar = rule(
         "module_name": attr.string(
             default = "unnamed",
         ),
+        "kotlin_use_ir": attr.bool(),
         "_bootclasspath": attr.label(
             # Use JDK 8 because AGP still needs to support it (b/166472930).
             default = Label("//prebuilts/studio/jdk:bootclasspath"),
@@ -178,6 +193,7 @@ def kotlin_library(
             visibility = visibility,
             testonly = testonly,
             module_name = module_name,
+            kotlin_use_ir = test_kotlin_use_ir(),
         )
 
     java_name = name + ".java"

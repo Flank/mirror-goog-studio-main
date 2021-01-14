@@ -62,7 +62,7 @@ class NativeSoPackagingOptionsTest {
                         onVariants(selector().all(), {
                             packaging.jniLibs.pickFirsts.add('**/variantPickFirst.so')
                         })
-                        androidTest(selector().all(), {
+                        androidTests(selector().all(), {
                             packaging.jniLibs.excludes.add('**/testExclude.so')
                         })
                     }
@@ -87,7 +87,7 @@ class NativeSoPackagingOptionsTest {
                         onVariants(selector().all(), {
                             packaging.jniLibs.excludes.add('**/libExclude.so')
                         })
-                        androidTest(selector().all(), {
+                        androidTests(selector().all(), {
                             packaging.jniLibs.excludes.add('**/testExclude.so')
                         })
                     }

@@ -124,7 +124,7 @@ class RelativeResourcesUtilsTest {
     fun `test should convert relative path format to absolute path format`() {
         val sourceSetPathMap =
                 mapOf("com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main/")
-        val testRelativePath = "com.foobar.myproject.app-0:res/layout/activity_map_tv.xml"
+        val testRelativePath = "com.foobar.myproject.app-0:/res/layout/activity_map_tv.xml"
         val expectedAbsolutePath = "/usr/a/b/c/d/myproject/src/main/res/layout/activity_map_tv.xml"
 
         assertThat(relativeResourcePathToAbsolutePath(testRelativePath, sourceSetPathMap))
@@ -150,7 +150,7 @@ class RelativeResourcesUtilsTest {
     fun `test should throw NoSuchElementException if there is no matching id to absolute path`() {
         val sourceSetPathMap =
                 mapOf("com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main/")
-        val invalidRelativePath = "invalid-id:res/layout/activity_map_tv.xml"
+        val invalidRelativePath = "invalid-id:/res/layout/activity_map_tv.xml"
         relativeResourcePathToAbsolutePath(invalidRelativePath, sourceSetPathMap)
     }
 

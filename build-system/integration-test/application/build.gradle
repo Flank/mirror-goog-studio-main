@@ -93,9 +93,7 @@ configure([test, testPrebuilts]) {
             categories = categories.collect { it.charAt(0).isUpperCase() ? defaultPackage + it : it }
             includeCategories categories as String[]
         }
-        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
         excludeCategories "com.android.build.gradle.integration.common.category.OnlineTests"
-        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
     }
 
     exclude "com/android/build/gradle/integration/automatic/**"
@@ -172,19 +170,6 @@ configure(allConnectedTestTasks) {
     maxParallelForks = count
 
     exclude "com/android/build/gradle/integration/automatic/**"
-}
-
-configure([connectedIntegrationTest, connectedIntegrationTestPrebuilts]) {
-    useJUnit {
-        includeCategories "com.android.build.gradle.integration.common.category.DeviceTests"
-        excludeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
-    }
-}
-
-configure([connectedIntegrationTestQuarantine, connectedIntegrationTestPrebuiltsQuarantine]) {
-    useJUnit {
-        includeCategories "com.android.build.gradle.integration.common.category.DeviceTestsQuarantine"
-    }
 }
 
 configure([test, testPrebuilts, onlineTest, connectedIntegrationTest,

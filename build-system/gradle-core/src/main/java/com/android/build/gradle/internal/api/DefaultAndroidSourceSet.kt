@@ -54,6 +54,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
     final override val res: AndroidSourceDirectorySet
     final override val aidl: AndroidSourceDirectorySet
     final override val renderscript: AndroidSourceDirectorySet
+    @Deprecated("Unused")
     final override val jni: AndroidSourceDirectorySet
     final override val jniLibs: AndroidSourceDirectorySet
     final override val shaders: AndroidSourceDirectorySet

@@ -17,6 +17,7 @@ package com.android.testutils
 
 import org.junit.rules.ExternalResource
 import org.mockito.ArgumentMatchers
+import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import kotlin.reflect.KMutableProperty
@@ -45,10 +46,15 @@ object MockitoKt {
    */
   fun <T> argThat(arg: (T) -> Boolean): T = Mockito.argThat(arg)
 
-    /**
+  /**
    * Convenience wrapper around [Mockito.mock] that allows the type to be inferred.
    */
   inline fun <reified T> mock(): T = Mockito.mock(T::class.java)
+
+  /**
+   * Convenience wrapper around [Mockito.mockStatic] that allows the type to be inferred.
+   */
+  inline fun <reified T> mockStatic(): MockedStatic<T> = Mockito.mockStatic(T::class.java)
 
   /**
    * Convenience wrapper around [InvocationOnMock.getArgument] that allows the type to be inferred.

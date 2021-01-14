@@ -20,10 +20,9 @@ import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurationKey
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
-import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
 import java.io.File
-import java.util.*
+import java.util.Locale
 
 /**
  * Construct a [CxxVariantModel]
@@ -50,6 +49,7 @@ fun createCxxVariantModel(
         val isDebuggable = configurationParameters.isDebuggable
         val variantName = configurationParameters.variantName
         val intermediates = join(intermediatesFolder, build, variantName)
+        val intermediatesBase = join(intermediatesBaseFolder, build, variantName)
 
         return CxxVariantModel(
                 buildTargetSet = configurationParameters.nativeVariantConfig.targets,
@@ -71,6 +71,7 @@ fun createCxxVariantModel(
                 prefabPackageDirectoryListFileCollection = configurationParameters.prefabPackageDirectoryList,
                 intermediatesFolder = intermediates,
                 soFolder = join(intermediates, ifCMake { "obj" } ?: "obj/local"),
+                soRepublishFolder = join(intermediatesBase, ifCMake { "obj" } ?: "obj/local"),
                 stlType = determineUsedStl(arguments).argumentName,
                 optimizationTag = run {
                     val lower = variantName.toLowerCase(Locale.ROOT)

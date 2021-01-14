@@ -45,7 +45,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.tasks.createCxxConfigureTask
-import com.android.build.gradle.tasks.createNopCxxBuildTask
+import com.android.build.gradle.tasks.createRepublishCxxBuildTask
 import com.android.build.gradle.tasks.createVariantCxxCleanTask
 import com.android.build.gradle.tasks.createWorkingCxxBuildTask
 import com.android.builder.errors.IssueReporter
@@ -97,8 +97,11 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
                         val variant = variantMap.getValue(task.variantName)
                         val configuration = task.representatives.toConfigurationModel()
                         val task =
-                                if (task.isNop) createNopCxxBuildTask(task.representatives.toConfigurationModel(), variant, name)
-                                else createWorkingCxxBuildTask(global, task.representatives.toConfigurationModel(), name)
+                                if (task.isRepublishOnly) {
+                                    createRepublishCxxBuildTask(task.representatives.toConfigurationModel(), variant, name)
+                                } else {
+                                    createWorkingCxxBuildTask(global, task.representatives.toConfigurationModel(), name)
+                                }
                         val buildTask = taskFactory.register(task)
                         variant.taskContainer.cxxConfigurationModel = configuration
                         variant.taskContainer.externalNativeBuildTask = buildTask

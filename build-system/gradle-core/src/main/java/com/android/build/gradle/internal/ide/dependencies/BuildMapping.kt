@@ -30,6 +30,8 @@ import org.gradle.api.invocation.Gradle
 typealias BuildMapping = ImmutableMap<String, String>
 
 private const val CURRENT_BUILD_NAME = "__current_build__"
+// For Gradle source dependencies we cannot get a name, so use this one.
+const val UNKNOWN_BUILD_NAME = "__unknown__"
 
 fun ProjectComponentIdentifier.getBuildId(
     mapping: BuildMapping
@@ -75,3 +77,5 @@ fun Gradle.computeBuildMapping(): BuildMapping {
 
     return builder.build()
 }
+
+val BuildMapping.currentBuild: String get() = this[CURRENT_BUILD_NAME]!!

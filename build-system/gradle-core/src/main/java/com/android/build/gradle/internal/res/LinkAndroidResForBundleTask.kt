@@ -39,6 +39,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -134,6 +135,9 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         val compiledDependenciesResourcesDirs =
             getCompiledDependenciesResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
 
+        val identifiedSourceSetMap =
+                mergeIdentifiedSourceSetFiles(sourceSetMaps.files.filterNotNull())
+
         val config = AaptPackageConfig(
             androidJarPath = androidJarInput.getAndroidJar().get().absolutePath,
             generateProtos = true,
@@ -153,7 +157,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             // This will result in smaller release bundles
             excludeSources = excludeResSourcesForReleaseBundles.get() && debuggable.get().not(),
             mergeBlameDirectory = mergeBlameLogFolder.get().asFile,
-            manifestMergeBlameFile = manifestMergeBlameFile.orNull?.asFile
+            manifestMergeBlameFile = manifestMergeBlameFile.orNull?.asFile,
+            identifiedSourceSetMap = identifiedSourceSetMap
         )
         if (logger.isInfoEnabled) {
             logger.info("Aapt output file {}", outputFile.absolutePath)

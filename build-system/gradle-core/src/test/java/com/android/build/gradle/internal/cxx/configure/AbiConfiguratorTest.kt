@@ -84,7 +84,7 @@ class AbiConfiguratorTest {
             externalNativeBuildAbiFilters = setOf("x86"))
         assertThat(logger.errors).isEmpty()
         assertThat(logger.warnings.first().toString()).isEqualTo(
-            "This app only has 32-bit [x86] native libraries. Beginning August 1, " +
+            "[CXX5202] This app only has 32-bit [x86] native libraries. Beginning August 1, " +
                     "2019 Google Play store requires that all apps that include native " +
                     "libraries must provide 64-bit versions. For more information, " +
                     "visit https://g.co/64-bit-requirement")
@@ -116,7 +116,7 @@ class AbiConfiguratorTest {
         val configurator = configure(
             externalNativeBuildAbiFilters = setOf("x87"))
         assertThat(logger.errors.first().toString()).isEqualTo(
-                "ABIs [x87] are not supported for platform. Supported ABIs " +
+                "[CXX1201] ABIs [x87] are not supported for platform. Supported ABIs " +
                 "are [$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).isEmpty()
         assertThat(configurator.allAbis).containsExactlyElementsIn(Sets.newHashSet("x87"))
@@ -137,7 +137,7 @@ class AbiConfiguratorTest {
         val configurator = configure(
             splitsFilterAbis = setOf("x87"))
         assertThat(logger.errors).containsExactly(
-                "ABIs [x87] are not supported for platform. Supported ABIs are "
+                "[CXX1201] ABIs [x87] are not supported for platform. Supported ABIs are "
                 + "[$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).isEmpty()
         assertThat(configurator.allAbis).containsExactly("x87")
@@ -150,7 +150,7 @@ class AbiConfiguratorTest {
             externalNativeBuildAbiFilters = setOf("x86"),
             splitsFilterAbis = setOf())
         assertThat(logger.errors).containsExactly(
-                "ABIs [x86] are not supported for platform. " +
+                "[CXX1201] ABIs [x86] are not supported for platform. " +
                 "Supported ABIs are [x86_64].")
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
         assertThat(configurator.allAbis).containsExactly("x86")
@@ -194,7 +194,7 @@ class AbiConfiguratorTest {
             ideBuildTargetAbi = "bogus,x86")
 
         assertThat(logger.warnings).containsExactly(
-            "ABIs [bogus,x86] set by 'android.injected.build.abi' gradle flag contained " +
+            "[CXX5200] ABIs [bogus,x86] set by 'android.injected.build.abi' gradle flag contained " +
                     "'bogus' which is invalid.")
         assertThat(logger.errors).isEmpty()
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
@@ -207,7 +207,7 @@ class AbiConfiguratorTest {
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "bogus")
         assertThat(logger.errors).containsExactly(
-                "ABIs [bogus] set by 'android.injected.build.abi' gradle " +
+                "[CXX1201] ABIs [bogus] set by 'android.injected.build.abi' gradle " +
                 "flag is not supported. Supported ABIs are " +
                 "[$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
@@ -263,7 +263,7 @@ class AbiConfiguratorTest {
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = null)
         assertThat(logger.errors).containsExactly(
-            "ABIs [misp] are not supported for platform. Supported ABIs are [arm64-v8a, " +
+            "[CXX1201] ABIs [misp] are not supported for platform. Supported ABIs are [arm64-v8a, " +
                     "armeabi-v7a, x86, x86_64].")
         assertThat(logger.warnings).isEmpty()
         assertThat(configurator.validAbis).isEmpty()
@@ -279,7 +279,7 @@ class AbiConfiguratorTest {
             ideBuildTargetAbi = "armeabi-v7a,armeabi")
         assertThat(logger.errors).isEmpty()
         assertThat(logger.infos).containsExactly(
-            "ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
+            "C/C++: ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI, ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly()
     }
@@ -293,7 +293,7 @@ class AbiConfiguratorTest {
             ideBuildTargetAbi = "armeabi-v7a,armeabi")
         assertThat(logger.errors).isEmpty()
         assertThat(logger.infos).containsExactly(
-            "ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
+            "C/C++: ABIs [armeabi-v7a,armeabi] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI, ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly()
     }
@@ -310,7 +310,7 @@ class AbiConfiguratorTest {
             ideBuildTargetAbi = "armeabi-v7a,x86_64")
         assertThat(logger.errors).isEmpty()
         assertThat(logger.infos).containsExactly(
-            "ABIs [armeabi-v7a,x86_64] set by 'android.injected.build.abi' gradle flag " +
+            "C/C++: ABIs [armeabi-v7a,x86_64] set by 'android.injected.build.abi' gradle flag " +
                     "contained 'ARMEABI_V7A' not targeted by this project.")
         assertThat(configurator.validAbis).containsExactly(Abi.X86_64)
     }

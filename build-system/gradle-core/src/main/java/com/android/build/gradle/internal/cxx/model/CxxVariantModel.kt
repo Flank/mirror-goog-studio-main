@@ -56,19 +56,26 @@ data class CxxVariantModel(
 
     /**
      * Base folder for .so files
-     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
+     *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}/obj
      */
     val soFolder: File,
 
     /**
+     * An extra .cxx folder where build outputs are copied or symlinked too. This is also the
+     * old location where actual builds happened before configuration folding was implemented.
+     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
+     */
+    val soRepublishFolder: File,
+
+    /**
      * The .cxx build folder
-     *   ex, $moduleRootFolder/.cxx/ndkBuild/debug
+     *   ex, $moduleRootFolder/.cxx/Debug/${hashcode}
      */
     val cxxBuildFolder: File,
 
     /**
      * The folder of intermediates.
-     *   ex, $moduleRootFolder/build/intermediates/cxx/debug
+     *   ex, $moduleRootFolder/build/intermediates/cxx/Debug/{hashcode}
      */
     val intermediatesFolder: File,
 

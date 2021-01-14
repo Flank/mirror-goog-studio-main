@@ -23,13 +23,26 @@ import com.android.ide.common.blame.parser.PatternAwareOutputParser;
 import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.utils.ILogger;
 import java.util.List;
+import java.util.Map;
 
 /** Parses AAPT2 output. */
 public class Aapt2OutputParser implements PatternAwareOutputParser {
 
-    private static final AbstractAaptOutputParser[] PARSERS = {
-        new Aapt2ErrorParser(), new Aapt2ErrorNoPathParser()
-    };
+    private final AbstractAaptOutputParser[] parsers;
+
+    public Aapt2OutputParser() {
+        parsers =
+                new AbstractAaptOutputParser[] {
+                    new Aapt2ErrorParser(), new Aapt2ErrorNoPathParser()
+                };
+    }
+
+    public Aapt2OutputParser(Map<String, String> identifiedSourceSets) {
+        parsers =
+                new AbstractAaptOutputParser[] {
+                    new Aapt2ErrorParser(identifiedSourceSets), new Aapt2ErrorNoPathParser()
+                };
+    }
 
     @Override
     public boolean parse(
@@ -38,7 +51,7 @@ public class Aapt2OutputParser implements PatternAwareOutputParser {
             @NonNull List<Message> messages,
             @NonNull ILogger logger) {
         String trimmedLine = line.trim();
-        for (AbstractAaptOutputParser parser : PARSERS) {
+        for (AbstractAaptOutputParser parser : parsers) {
             try {
                 if (parser.parse(trimmedLine, reader, messages, logger)) {
                     return true;

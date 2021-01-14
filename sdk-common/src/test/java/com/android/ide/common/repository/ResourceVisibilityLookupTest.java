@@ -27,7 +27,6 @@ import com.android.ide.common.gradle.model.IdeAndroidArtifact;
 import com.android.ide.common.gradle.model.IdeAndroidLibrary;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.gradle.model.IdeDependencies;
-import com.android.ide.common.gradle.model.IdeLibrary;
 import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -43,7 +42,7 @@ import junit.framework.TestCase;
 
 public class ResourceVisibilityLookupTest extends TestCase {
     public void test() throws IOException {
-        IdeLibrary library =
+        IdeAndroidLibrary library =
                 createMockLibrary(
                         "com.android.tools:test-library:1.0.0",
                         ""
@@ -119,7 +118,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
     }
 
     public void testAllPrivate() throws IOException {
-        IdeLibrary library =
+        IdeAndroidLibrary library =
                 createMockLibrary(
                         "com.android.tools:test-library:1.0.0",
                         ""
@@ -143,7 +142,8 @@ public class ResourceVisibilityLookupTest extends TestCase {
     }
 
     public void testNotDeclared() throws IOException {
-        IdeLibrary library = createMockLibrary("com.android.tools:test-library:1.0.0", "", null);
+        IdeAndroidLibrary library =
+                createMockLibrary("com.android.tools:test-library:1.0.0", "", null);
 
         ResourceVisibilityLookup visibility = ResourceVisibilityLookup.create(library);
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
@@ -155,7 +155,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
     }
 
     public void testCombined() throws IOException {
-        IdeLibrary library1 =
+        IdeAndroidLibrary library1 =
                 createMockLibrary(
                         "com.android.tools:test-library:1.0.0",
                         ""
@@ -168,7 +168,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "int string app_name 0x7f040001\n"
                                 + "int string hello_world 0x7f040002",
                         "string hello_world");
-        IdeLibrary library2 =
+        IdeAndroidLibrary library2 =
                 createMockLibrary(
                         "com.android.tools:test-library2:1.0.0",
                         ""
@@ -180,7 +180,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "int string hello_world 0x7f040003",
                         "" + "layout foo\n");
 
-        List<IdeLibrary> androidLibraries = Arrays.asList(library1, library2);
+        List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
         ResourceVisibilityLookup visibility =
                 ResourceVisibilityLookup.create(androidLibraries, null);
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
@@ -195,7 +195,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
     }
 
     public void testDependency() throws IOException {
-        IdeLibrary library1 =
+        IdeAndroidLibrary library1 =
                 createMockLibrary(
                         "com.android.tools:test-library:1.0.0",
                         ""
@@ -208,7 +208,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "int string app_name 0x7f040001\n"
                                 + "int string hello_world 0x7f040002",
                         "");
-        IdeLibrary library2 =
+        IdeAndroidLibrary library2 =
                 createMockLibrary(
                         "com.android.tools:test-library2:1.0.0",
                         "" + "int layout foo 0x7f030001\n" + "int layout bar 0x7f060000\n",
@@ -216,7 +216,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "layout foo\n" /*,
                                                  Collections.singletonList(library1)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
-        List<IdeLibrary> androidLibraries = Arrays.asList(library1, library2);
+        List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2);
         ResourceVisibilityLookup visibility =
                 ResourceVisibilityLookup.create(androidLibraries, null);
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_horizontal_margin"));
@@ -262,7 +262,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
         // take the presence of a resource (imported) and the absence of a public.txt declaration
         // (for the imported symbol in the dependent library) as evidence that this is a private
         // resource.
-        IdeLibrary library1 =
+        IdeAndroidLibrary library1 =
                 createMockLibrary(
                         "com.android.tools:test-library:1.0.0",
                         ""
@@ -273,7 +273,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "dimen public_library1_resource1\n"
                                 + "dimen public_library1_resource2\n");
 
-        IdeLibrary library2 =
+        IdeAndroidLibrary library2 =
                 createMockLibrary(
                         "com.android.tools:test-library2:1.0.0",
                         ""
@@ -281,7 +281,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "int dimen public_library2_resource2 0x7f030001\n",
                         null // nothing marked as private: everything exposed
                         );
-        IdeLibrary library3 =
+        IdeAndroidLibrary library3 =
                 createMockLibrary(
                         "com.android.tools:test-library3:1.0.0",
                         ""
@@ -299,7 +299,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
                                 + "dimen public_library2_resource1\n" /*,
                                                                       Arrays.asList(library1, library2)*/); // TODO(b/158836360): Review when the dependency hierarchy is available.
 
-        List<IdeLibrary> androidLibraries = Arrays.asList(library1, library2, library3);
+        List<IdeAndroidLibrary> androidLibraries = Arrays.asList(library1, library2, library3);
         ResourceVisibilityLookup visibility =
                 ResourceVisibilityLookup.create(androidLibraries, null);
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "private_library1_resource"));
@@ -398,7 +398,6 @@ public class ResourceVisibilityLookupTest extends TestCase {
             Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
         }
         IdeAndroidLibrary library = mock(IdeAndroidLibrary.class);
-        when(library.getType()).thenReturn(IdeLibrary.LibraryType.LIBRARY_ANDROID);
         when(library.getPublicResources()).thenReturn(publicTxtFile.getPath());
         when(library.getSymbolFile()).thenReturn(rFile.getPath());
 

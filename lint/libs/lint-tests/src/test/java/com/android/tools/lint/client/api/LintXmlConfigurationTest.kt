@@ -30,9 +30,9 @@ import com.android.tools.lint.checks.SecureRandomGeneratorDetector
 import com.android.tools.lint.checks.TooManyViewsDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
-import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Location.Companion.create
@@ -40,12 +40,17 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.File.separator
 import java.util.Arrays
 import java.util.Locale
 
 class LintXmlConfigurationTest : AbstractCheckTest() {
+    @get:Rule
+    var temporaryFolder = TemporaryFolder()
+
     // Sample included via @sample in the KDoc for LintXmlConfiguration
     fun sampleFile() =
         // Not indented plus .trimIndent() because the IDE support for
@@ -85,6 +90,11 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     </issue>
 </lint>
 """
+
+    override fun setUp() {
+        super.setUp()
+        temporaryFolder.create()
+    }
 
     fun testBasic() {
         val configuration = getConfiguration(
@@ -352,7 +362,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     }
 
     fun testPathIgnore() {
-        val projectDir = getProjectDir(null, mOnclick, mOnclick2, mOnclick3)
+        val projectDir = getProjectDir(mOnclick, mOnclick2, mOnclick3)
         val client: LintClient = createClient()
         val project = Project.create(client, projectDir, projectDir)
         val request = LintRequest(client, emptyList())
@@ -460,7 +470,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     }
 
     fun testPatternIgnore() {
-        val projectDir = getProjectDir(null, mOnclick, mOnclick2, mOnclick3)
+        val projectDir = getProjectDir(mOnclick, mOnclick2, mOnclick3)
         val client: LintClient = createClient()
         val project = Project.create(client, projectDir, projectDir)
         val request = LintRequest(client, emptyList())
@@ -552,8 +562,77 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         )
     }
 
+    fun testPatternIgnore2() {
+        // 177044619: Test globbing and patterns
+        val projectDir = getProjectDir(
+            java(
+                "src/main/java/com/domain/android/lever/RepositoryShould.java",
+                "" +
+                    "package com.domain.android.lever" +
+                    "class RepositoryShould() { }"
+            ),
+            java(
+                "src/androidTest/java/com/domain/android/lever2/RepositoryShould2.java",
+                "" +
+                    "package com.domain.android.lever2" +
+                    "class RepositoryShould2() { }"
+            )
+        )
+
+        val client: LintClient = createClient()
+        val project = Project.create(client, projectDir, projectDir)
+        val request = LintRequest(client, emptyList())
+        val driver = LintDriver(TestIssueRegistry(), client, request)
+        val plainFile = File(
+            projectDir,
+            "src/androidTest/java/com/domain/android/lever2/RepositoryShould2.java"
+        )
+        val context = Context(driver, project, project, plainFile, null)
+        val location = create(plainFile)
+        val message = "This is the message"
+
+        val configDir = File(projectDir, "configdir")
+        configDir.mkdirs()
+
+        val configuration1 = getConfiguration(
+            """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <lint>
+                <issue id="ObsoleteLayoutParam" severity="error">
+                    <ignore regexp=".*/src/androidTest"/>
+                </issue>
+            </lint>
+            """.trimIndent()
+        )
+        assertTrue(configuration1.isIgnored(context, ObsoleteLayoutParamsDetector.ISSUE, location, message))
+
+        val configuration2 = getConfiguration(
+            """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <lint>
+                <issue id="ObsoleteLayoutParam" severity="error">
+                    <ignore regexp=".*/src/androidTest/.*"/>
+                </issue>
+            </lint>
+            """.trimIndent()
+        )
+        assertTrue(configuration2.isIgnored(context, ObsoleteLayoutParamsDetector.ISSUE, location, message))
+
+        val configuration3 = getConfiguration(
+            """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <lint>
+                <issue id="ObsoleteLayoutParam" severity="error">
+                    <ignore path="*/src/androidTest*"/>
+                </issue>
+            </lint>
+            """.trimIndent()
+        )
+        assertTrue(configuration3.isIgnored(context, ObsoleteLayoutParamsDetector.ISSUE, location, message))
+    }
+
     fun testGlobbing() {
-        val projectDir = getProjectDir(null, mOnclick, mOnclick2, mOnclick3)
+        val projectDir = getProjectDir(mOnclick, mOnclick2, mOnclick3)
         val client: LintClient = createClient()
         val project = Project.create(client, projectDir, projectDir)
         val request = LintRequest(client, emptyList())
@@ -591,7 +670,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             <lint>
                 <issue id="ObsoleteLayoutParam">
                     <ignore path="**/layout-x*/onclick.xml" />
-                    <ignore path="res/*/activation.xml" />
+                    <ignore path="app/res/*/activation.xml" />
                     <ignore path="**/res2/**" />
                 </issue>
             </lint>
@@ -635,7 +714,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
     }
 
     fun testMessagePatternIgnore() {
-        val projectDir = getProjectDir(null, mOnclick)
+        val projectDir = getProjectDir(mOnclick)
         val client: LintClient = createClient()
         val project = Project.create(client, projectDir, projectDir)
         val request = LintRequest(client, emptyList())
@@ -774,23 +853,23 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         xml: String,
         projectLevel: Boolean = false,
         create: (File) -> Unit = {},
-        dir: File? = null
+        initialDir: File? = null
     ): LintXmlConfiguration {
         val client: LintClient = createClient()
-        val lintFile =
-            if (dir != null) {
-                val file = File(dir, "lintconfig.xml")
-                dir.mkdirs()
-                file.deleteOnExit()
-                file
-            } else {
-                File.createTempFile("lintconfig", ".xml")
-            }
+        val dir = initialDir ?: temporaryFolder.root
+        dir.mkdirs()
+        val lintFile = File(dir, "lintconfig.xml")
         lintFile.writeText(xml)
         create(lintFile)
         val configuration = client.configurations.getConfigurationForFile(lintFile)
         configuration.fileLevel = !projectLevel
         return configuration as LintXmlConfiguration
+    }
+
+    private fun getProjectDir(vararg testFiles: TestFile?): File {
+        val root = temporaryFolder.root
+        lint().files(*testFiles).createProjects(root)
+        return File(root, "app")
     }
 
     override fun getDetector(): Detector {
@@ -817,7 +896,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             </lint>
             """.trimIndent()
         )
-        val projectDir = getProjectDir(null, mOnclick4, mOnclick5, mOnclick6, mOnclick7)
+        val projectDir = getProjectDir(mOnclick4, mOnclick5, mOnclick6, mOnclick7)
         val client: LintClient = object : TestLintClient() {
             override fun getResourceFolders(project: Project): List<File> {
                 return Arrays.asList(
@@ -986,7 +1065,6 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
 
     fun testSeverityImpliesIgnore() {
         val projectDir = getProjectDir(
-            null,
             image("src/main/res/drawable/abc.png", 48, 48),
             source("build/generated/R.java", "class R { };")
         )
@@ -1008,7 +1086,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             """.trimIndent(),
             // Place the configuration file in the project directory to make sure that
             // relative paths are resolved relative to the config file
-            dir = projectDir
+            initialDir = projectDir
         )
         val client: LintClient = TestLintClient()
         val project = Project.create(client, projectDir, projectDir)
@@ -1056,7 +1134,6 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
 
     fun testIgnoreRelativePath() {
         val projectDir = getProjectDir(
-            null,
             image("src/main/res/drawable/abc.png", 48, 48),
             source("build/generated/R.java", "class R { };")
         )
@@ -1074,7 +1151,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             """.trimIndent(),
             // Place the configuration file in somewhere in the project to make sure
             // relative paths are resolved relative to the config file
-            dir = File(projectDir, "src/main/res")
+            initialDir = File(projectDir, "src/main/res")
         )
         val client: LintClient = TestLintClient()
         val project = Project.create(client, projectDir, projectDir)

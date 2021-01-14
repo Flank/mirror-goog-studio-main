@@ -116,6 +116,14 @@ interface TestData {
     val testDirectories: ConfigurableFileCollection
 
     /**
+     * Returns true if there are at least one test classes in the test APK. Non test related
+     * classes such as R, BuildConfig and AndroidManifest classes are excluded.
+     * This input is used to check the presence of tests before deploying anything.
+     */
+    @get:Internal
+    val hasTests: Provider<Boolean>
+
+    /**
      * Resolves all providers and returns a static version of this class
      *
      * @return [StaticTestData] version of this class

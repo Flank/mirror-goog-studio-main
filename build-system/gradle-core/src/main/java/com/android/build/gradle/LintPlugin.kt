@@ -101,7 +101,7 @@ abstract class LintPlugin : Plugin<Project> {
             projectServices.projectOptions
         )
         val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
-        val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig, dslServices!!, project.path)
+        val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
         BasePlugin.createLintClasspathConfiguration(project)
         if (useNewLintModel) {
             registerTasks(

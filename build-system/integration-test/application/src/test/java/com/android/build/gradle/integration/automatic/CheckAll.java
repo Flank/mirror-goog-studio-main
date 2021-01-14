@@ -85,9 +85,6 @@ public class CheckAll {
                         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                         .withKotlinVersion( // Compose alpha08 required 1.4.20
                                 "composeHelloWorld".equals(projectName) ? "1.4.21" : null)
-                        .addGradleProperties(
-                                BooleanOption.USE_NEW_LINT_MODEL.getPropertyName()
-                                        + "=true") // b/146208910
                         .create();
     }
 
@@ -159,6 +156,7 @@ public class CheckAll {
                     "lintCustomRules", // contains integ test for lint itself
                     "lintCustomLocalAndPublishRules", // contains integ test for lint itself
                     "simpleCompositeBuild", // broken composite build project.
-                    "multiCompositeBuild" // too complex composite build project to setup
+                    "multiCompositeBuild", // too complex composite build project to setup
+                    "sourceDependency" // not set up fully, just used for sync tests
                     );
 }

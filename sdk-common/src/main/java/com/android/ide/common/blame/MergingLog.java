@@ -18,12 +18,14 @@ package com.android.ide.common.blame;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.RelativeResourceUtils;
 import com.android.utils.FileUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
@@ -75,11 +77,16 @@ public class MergingLog {
     @NonNull
     private final File mOutputFolder;
 
+    @NonNull private final Map<String, String> mSourceSetPaths;
 
     public MergingLog(@NonNull File outputFolder) {
-        mOutputFolder = outputFolder;
+        this(outputFolder, Collections.EMPTY_MAP);
     }
 
+    public MergingLog(@NonNull File outputFolder, @NonNull Map<String, String> sourceSetPaths) {
+        mOutputFolder = outputFolder;
+        mSourceSetPaths = sourceSetPaths;
+    }
     /**
      * Store the source of a file in the merging log.
      *
@@ -166,25 +173,42 @@ public class MergingLog {
         }
     }
 
-    /**
-     * Find the original source file corresponding to an intermediate file.
-     */
+    /** Find the original source file corresponding to an intermediate file. */
     @NonNull
     public SourceFile find(@NonNull SourceFile mergedFile) {
-        SourceFile sourceFile = getWholeFileMap(mergedFile).get(mergedFile);
+        Map<SourceFile, SourceFile> blameMap = getWholeFileMap(mergedFile);
+        // Handle blame files which use relative resource paths.
+        if (!blameMap.isEmpty()
+                && !mSourceSetPaths.isEmpty()
+                && mergedFile.getSourcePath() != null) {
+            String relativePath =
+                    RelativeResourceUtils.getRelativeSourceSetPath(
+                            new File(mergedFile.getSourcePath()), mSourceSetPaths);
+            SourceFile relativeMergedSourceFile = new SourceFile(new File(relativePath));
+            relativeMergedSourceFile.setOverrideSourcePath(relativePath);
+            SourceFile relativeSourceFile = blameMap.get(relativeMergedSourceFile);
+            if (relativeSourceFile != null && relativeSourceFile.getSourcePath() != null) {
+                String absoluteSourcePath =
+                        RelativeResourceUtils.relativeResourcePathToAbsolutePath(
+                                relativeSourceFile.getSourcePath(), mSourceSetPaths);
+                return new SourceFile(new File(absoluteSourcePath));
+            }
+        }
+        SourceFile sourceFile = blameMap.get(mergedFile);
+
         return sourceFile != null ? sourceFile : mergedFile;
     }
 
     /**
      * Find the original source file and position for a position in an intermediate merged file.
      *
-     * <p>Returns the original position if none found.
+     * @param mergedFilePosition merged source set file with position.
      */
     @NonNull
     public SourceFilePosition find(@NonNull final SourceFilePosition mergedFilePosition) {
         SourceFile mergedSourceFile = mergedFilePosition.getFile();
         Map<SourcePosition, SourceFilePosition> positionMap =
-                getMergedFileMap(mergedSourceFile).get(mergedSourceFile);
+                getPositionMap(mergedSourceFile, mSourceSetPaths);
         if (positionMap == null) {
             SourceFile sourceFile = find(mergedSourceFile);
             return new SourceFilePosition(sourceFile, mergedFilePosition.getPosition());
@@ -192,6 +216,20 @@ public class MergingLog {
         SourceFilePosition position = find(mergedFilePosition.getPosition(), positionMap);
         // we failed to find a link, return where we are.
         return position != null ? position : mergedFilePosition;
+    }
+
+    @Nullable
+    protected Map<SourcePosition, SourceFilePosition> getPositionMap(
+            @NonNull final SourceFile mergedSourceFile,
+            @NonNull final Map<String, String> sourceSetPaths) {
+        if (!sourceSetPaths.isEmpty()) {
+            String relativePath =
+                    RelativeResourceUtils.getRelativeSourceSetPath(
+                            mergedSourceFile.getSourceFile(), sourceSetPaths);
+            SourceFile mergedAbsoluteSourceFile = new SourceFile(new File(relativePath));
+            return getMergedFileMap(mergedAbsoluteSourceFile).get(mergedAbsoluteSourceFile);
+        }
+        return getMergedFileMap(mergedSourceFile).get(mergedSourceFile);
     }
 
     /**
@@ -262,7 +300,6 @@ public class MergingLog {
         }
 
         return candidate.getValue();
-
     }
 
     @NonNull

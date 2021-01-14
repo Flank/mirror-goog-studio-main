@@ -13,39 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "server.h"
 #include <grpc++/grpc++.h>
+#include <future>
+#include <mutex>
+#include <thread>
 #include "skia.grpc.pb.h"
 #include "tree_building_canvas.h"
 
-class SkiaParserServiceImpl final
-    : public ::layoutinspector::proto::SkiaParserService::Service {
-  ::grpc::Status GetViewTree(
-      ::grpc::ServerContext* context,
-      const ::layoutinspector::proto::GetViewTreeRequest* request,
-      ::layoutinspector::proto::GetViewTreeResponse* response) override {
-    v1::TreeBuildingCanvas::ParsePicture(
-        request->skp().data(), request->skp().length(), request->version(),
-        &request->requested_nodes(),
-        request->scale() == 0 ? 1 : request->scale(), response->mutable_root());
-    return ::grpc::Status::OK;
-  }
+::grpc::Status SkiaParserServiceImpl::Ping(::grpc::ServerContext*,
+                                           const google::protobuf::Empty*,
+                                           google::protobuf::Empty*) {
+  return ::grpc::Status::OK;
+}
 
-  ::grpc::Status Ping(::grpc::ServerContext*, const google::protobuf::Empty*,
-                      google::protobuf::Empty*) {
-    return ::grpc::Status::OK;
-  }
-};
+::grpc::Status SkiaParserServiceImpl::Shutdown(::grpc::ServerContext*,
+                                               const google::protobuf::Empty*,
+                                               google::protobuf::Empty*) {
+  exit_requested.set_value();
+  return ::grpc::Status::OK;
+}
 
-void RunServer(char* port) {
-  std::string server_address("0.0.0.0:");
-  server_address.append(port);
-  SkiaParserServiceImpl service;
-
-  ::grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, ::grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
-  std::unique_ptr<::grpc::Server> server(builder.BuildAndStart());
-  server->Wait();
+::grpc::Status SkiaParserServiceImpl::GetViewTree(
+    ::grpc::ServerContext*,
+    const ::layoutinspector::proto::GetViewTreeRequest* request,
+    ::layoutinspector::proto::GetViewTreeResponse* response) {
+  v1::TreeBuildingCanvas::ParsePicture(
+      request->skp().data(), request->skp().length(), request->version(),
+      &request->requested_nodes(), request->scale() == 0 ? 1 : request->scale(),
+      response->mutable_root());
+  return ::grpc::Status::OK;
 }
 
 int main(int argc, char* argv[]) {
@@ -54,6 +51,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  RunServer(argv[1]);
+  SkiaParserServiceImpl::RunServer(std::string(argv[1]));
   return 0;
 }

@@ -35,4 +35,8 @@ public class Looper {
     public static Looper getMainLooper() {
         return mInstance;
     }
+
+    public boolean isCurrentThread() {
+        return true;
+    }
 }

@@ -21,10 +21,12 @@ import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.UnitTestBuilder
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.AndroidComponentsExtension
 import com.android.build.api.extension.VariantSelector
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.gradle.internal.dsl.SdkComponentsImpl
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 
@@ -32,6 +34,9 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         private val dslServices: DslServices,
         private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
 ): AndroidComponentsExtension<VariantBuilderT, VariantT> {
+
+    override val sdkComponents: SdkComponents =
+        dslServices.newInstance(SdkComponentsImpl::class.java, dslServices)
 
     override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
         variantApiOperations.variantBuilderOperations.addOperation({
@@ -56,7 +61,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
     override fun selector(): VariantSelectorImpl =
             dslServices.newInstance(VariantSelectorImpl::class.java) as VariantSelectorImpl
 
-    override fun beforeUnitTest(
+    override fun beforeUnitTests(
             selector: VariantSelector,
             callback: Action<UnitTestBuilder>) {
         variantApiOperations.unitTestBuilderOperations.addOperation(
@@ -64,7 +69,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
                 selector)
     }
 
-    override fun beforeUnitTest(
+    override fun beforeUnitTests(
             selector: VariantSelector,
             callback: (UnitTestBuilder) -> Unit) {
         variantApiOperations.unitTestBuilderOperations.addOperation(
@@ -75,7 +80,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         )
     }
 
-    override fun beforeAndroidTest(
+    override fun beforeAndroidTests(
             selector: VariantSelector,
             callback: Action<AndroidTestBuilder>) {
         variantApiOperations.androidTestBuilderOperations.addOperation(
@@ -84,7 +89,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         )
     }
 
-    override fun beforeAndroidTest(
+    override fun beforeAndroidTests(
             selector: VariantSelector,
             callback: (AndroidTestBuilder) -> Unit) {
         variantApiOperations.androidTestBuilderOperations.addOperation(
@@ -95,7 +100,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         )
     }
 
-    override fun unitTest(
+    override fun unitTests(
             selector: VariantSelector,
             callback: Action<UnitTest>) {
         variantApiOperations.unitTestOperations.addOperation(
@@ -104,7 +109,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         )
     }
 
-    override fun unitTest(
+    override fun unitTests(
             selector: VariantSelector,
             callback: (UnitTest) -> Unit) {
         variantApiOperations.unitTestOperations.addOperation(
@@ -115,7 +120,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         )
     }
 
-    override fun androidTest(
+    override fun androidTests(
             selector: VariantSelector,
             callback: Action<AndroidTest>) {
         variantApiOperations.androidTestOperations.addOperation(
@@ -124,7 +129,7 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
         )
     }
 
-    override fun androidTest(
+    override fun androidTests(
             selector: VariantSelector,
             callback: (AndroidTest) -> Unit) {
         variantApiOperations.androidTestOperations.addOperation(

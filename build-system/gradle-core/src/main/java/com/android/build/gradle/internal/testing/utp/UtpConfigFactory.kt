@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
-import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_DDMLIB
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
@@ -36,10 +36,7 @@ import com.google.testing.platform.proto.api.config.ExecutorProto
 import com.google.testing.platform.proto.api.config.FixtureProto
 import com.google.testing.platform.proto.api.config.GradleManagedAndroidDeviceProviderProto
 import com.google.testing.platform.proto.api.config.LocalAndroidDeviceProviderProto
-import com.google.testing.platform.proto.api.config.NetworkTypeProto
-import com.google.testing.platform.proto.api.config.OpenGlDriverProto
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
-import com.google.testing.platform.proto.api.config.VirtualAndroidDeviceProviderConfigProto
 import com.google.testing.platform.proto.api.core.ExtensionProto
 import com.google.testing.platform.proto.api.core.LabelProto
 import com.google.testing.platform.proto.api.core.PathProto
@@ -168,8 +165,8 @@ class UtpConfigFactory {
             label = LabelProto.Label.newBuilder().apply {
                 label = "local_android_device_provider"
             }.build()
-            className = ANDROID_DEVICE_PROVIDER_LOCAL.mainClass
-            addAllJar(utpDependencies.deviceProviderLocal.files.map {
+            className = ANDROID_DEVICE_PROVIDER_DDMLIB.mainClass
+            addAllJar(utpDependencies.deviceControllerDdmlib.files.map {
                 PathProto.Path.newBuilder().apply {
                     path = it.absolutePath
                 }.build()

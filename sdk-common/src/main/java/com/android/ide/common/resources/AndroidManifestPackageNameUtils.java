@@ -34,8 +34,8 @@ import org.xmlpull.v1.XmlPullParserException;
 /** Methods for extracting package name from Android manifests. */
 public class AndroidManifestPackageNameUtils {
     /**
-     * Reads package name from the AndroidManifest.xml file in the given directory. The the
-     * AndroidManifest.xml file can be in either text or proto format.
+     * Reads package name from the AndroidManifest.xml file in the given directory.
+     * The AndroidManifest.xml file can be in either text or proto format.
      *
      * @param manifestFile the AndroidManifest.xml file
      * @return the package name from the manifest

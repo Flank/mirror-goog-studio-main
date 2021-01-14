@@ -64,9 +64,17 @@ interface AndroidSourceSet : Named {
     /** The Android RenderScript source directory for this source set. */
     fun renderscript(action: AndroidSourceDirectorySet.() -> Unit)
 
-    /** The Android JNI source directory for this source set. */
+    /**
+     * The Android JNI source directory for this source set.
+     * @deprecated This is unused and will be removed in AGP 8.0
+     */
+    @Deprecated("Unused")
     val jni: AndroidSourceDirectorySet
-    /** The Android JNI source directory for this source set. */
+    /**
+     * The Android JNI source directory for this source set.
+     * @deprecated This is unused and will be removed in AGP 8.0
+     */
+    @Deprecated("Unused")
     fun jni(action: AndroidSourceDirectorySet.() -> Unit)
 
     /** The Android JNI libs directory for this source-set */

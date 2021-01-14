@@ -6,6 +6,7 @@ the allowlisted targets below can set "flaky" to true.
 
 APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/application:tests__GradlePluginMemoryLeakTest",  # b/153972155
+    "//tools/base/build-system/integration-test/connected:UtpConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:TestWithSameDepAsAppConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:TestingSupportLibraryConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:SigningConnectedTest",  # b/148626301
@@ -37,16 +38,20 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:MigratedConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:LibTestDepConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:LibsTestConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:LibMinifyLibDepConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:LibMinifyJarDepConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:KotlinAppConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:JarsInLibrariesConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:JacocoConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:FlavorsConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavorlibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavoredlibConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:FlavoredConnectedTest",  # b/148626301
-    "//tools/base/build-system/integration-test/connected:DataBindingExternalArtifactDependencyConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:DynamicFeatureConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:DependenciesConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:DensitySplitConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:DataBindingIntegrationTestAppsConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:DataBindingExternalArtifactDependencyConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:D8DesugaringConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:CoreLibraryDesugarConversionConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:ComposeHelloWorldConnectedTest",  # b/148626301
@@ -57,8 +62,9 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:ApiConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AnnotationProcessorConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AndroidTestResourcesConnectedTest",  # b/148626301
-    "//tools/base/build-system/integration-test/connected:UtpConnectedTest",  # b/148626301
+    "//tools/base/build-system/integration-test/connected:AdditionalTestOutputConnectedTest",  # b/148626301
     "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",  # b/172521726
+    "//tools/base/ddmlib:studio.android.sdktools.ddmlib.integration.tests_tests",  # b/175217297
 ]
 
 FAILURE_MESSAGE = """Test target {} has flaky set to true.

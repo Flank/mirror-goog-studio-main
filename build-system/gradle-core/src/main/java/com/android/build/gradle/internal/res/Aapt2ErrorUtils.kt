@@ -33,7 +33,6 @@ import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.blame.parser.aapt.AbstractAaptOutputParser
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.tools.build.bundletool.model.utils.files.FileUtils
-import com.android.utils.ILogger
 import com.android.utils.StdLogger
 import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
@@ -111,7 +110,8 @@ fun rewriteLinkException(
     errorFormatMode: SyncOptions.ErrorFormatMode,
     mergeBlameFolder: File?,
     manifestMergeBlameFile: File?,
-    logger: Logger
+    identifiedSourceSetMap: Map<String, String>,
+    logger: Logger,
 ): Aapt2Exception {
     if (mergeBlameFolder == null && manifestMergeBlameFile == null) {
         return rewriteException(e, errorFormatMode, false, logger) {
@@ -120,7 +120,7 @@ fun rewriteLinkException(
     }
     var mergingLog: MergingLog? = null
     if (mergeBlameFolder != null) {
-        mergingLog = MergingLog(mergeBlameFolder)
+        mergingLog = MergingLog(mergeBlameFolder, identifiedSourceSetMap)
     }
 
     var manifestMergeBlameContents: List<String>? = null
@@ -128,7 +128,7 @@ fun rewriteLinkException(
         manifestMergeBlameContents = manifestMergeBlameFile.readLines(Charsets.UTF_8)
     }
 
-    return rewriteException(e, errorFormatMode, true, logger) {
+    return rewriteException(e, errorFormatMode, true, logger, identifiedSourceSetMap) {
         var newFile = it
         if (mergingLog != null) {
             newFile = mergingLog.find(it)
@@ -186,12 +186,13 @@ private fun rewriteException(
     errorFormatMode: SyncOptions.ErrorFormatMode,
     rewriteFilePositions: Boolean,
     logger: Logger,
+    identifiedSourceSetMap: Map<String, String> = emptyMap(),
     blameLookup: (SourceFilePosition) -> SourceFilePosition
 ): Aapt2Exception {
     try {
         var messages =
                 ToolOutputParser(
-                        Aapt2OutputParser(),
+                        Aapt2OutputParser(identifiedSourceSetMap),
                         Message.Kind.SIMPLE,
                         StdLogger(StdLogger.Level.INFO)
                 ).parseToolOutput(e.output ?: "", true)

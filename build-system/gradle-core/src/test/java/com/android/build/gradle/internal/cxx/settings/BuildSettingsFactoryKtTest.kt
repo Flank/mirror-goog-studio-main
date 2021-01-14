@@ -55,7 +55,7 @@ class BuildSettingsFactoryKtTest {
         PassThroughDeduplicatingLoggingEnvironment().apply {
             val model = createBuildSettingsFromJson(invalidJson)
 
-            assertThat(errors.single()).isEqualTo("Json is empty")
+            assertThat(errors.single()).isEqualTo("C/C++: Json is empty")
             assertThat(model).isEqualTo(BuildSettingsConfiguration())
             assertThat(model.environmentVariables?.size).isEqualTo(0)
         }

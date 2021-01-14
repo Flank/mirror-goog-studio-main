@@ -1,7 +1,7 @@
 ## Users should never need to load this file outside the toplevel WORKSPACE.
 ## It sets up a bazel repo in bazel-testlogs and constructs a build graph for
-## generating test target lcov tracefiles from test coverage data outputs.
-## Those tracefiles will eventually be used by coverage report rules in @cov//
+## generating test target Jacoco execfiles from test coverage data outputs.
+## Those execfiles will eventually be used by coverage report rules in @cov//
 
 # Create the bazel repo in bazel-testlogs
 # Its BUILD file only constructs the result processing graph
@@ -48,36 +48,12 @@ def test_shard_split_dict():
             ret[k] = None
     return ret
 
-def coverage_class_jar(test):
-    target_formatted = ":".join(test.rsplit("/", 1))
-    incl = [
-        "com/android/*.class",
-        "org/jetbrains/android/*.class",
-        "org/jetbrains/kotlin/android/*.class",
-    ]
-    excl = [
-        "com/android/aapt/*.class",
-        "com/android/i18n/*.class",
-        "com/android/internal/*.class",
-        "com/android/tools/r8/*.class",
-    ]
-    native.genrule(
-        name = "{}.CovClsJar".format(test),
-        srcs = ["@//{}_deploy.jar".format(target_formatted)],
-        outs = ["{}/coverage.jar".format(test)],
-        # zip -U copies from one zip to another
-        # We use it to extract the classes we care about for coverage
-        cmd = "zip -q -U $< --out $@ {incl} -x {excl}".format(
-            incl = " ".join(incl),
-            excl = " ".join(excl),
-        ),
-    )
-
 def extract_exec_files(path):
     native.genrule(
         name = "{}.JacocoExec".format(path),
         srcs = ["{}/test.outputs/outputs.zip".format(path)],
         outs = ["{}/jacoco.exec".format(path)],
+        visibility = ["@cov//:__pkg__"],
         # Unzipping multiple .exec files to a pipe is equivalent
         # to unzipping each and then using jacoco to merge them.
         # This method allows us to blindly support tests that produce
@@ -96,45 +72,14 @@ def jacoco_exec_file(test, shards):
             tools = [jacoco_cli],
             srcs = ["{}/shard_{}_of_{}.JacocoExec".format(test, s, shards) for s in range(1, shards + 1)],
             outs = ["{}/jacoco.exec".format(test)],
+            visibility = ["@cov//:__pkg__"],
             cmd = "$(location {cli}) merge --quiet $(SRCS) --destfile $@".format(cli = jacoco_cli),
         )
     else:  # unsharded test
         extract_exec_files(test)
 
-def jacoco_xml_report(test):
-    native.genrule(
-        name = "{}.JacocoXML".format(test),
-        tools = [jacoco_cli],
-        srcs = [
-            "{}.JacocoExec".format(test),
-            "{}.CovClsJar".format(test),
-        ],
-        outs = ["{}/jacoco.xml".format(test)],
-        cmd = "$(location {cli}) report --quiet $(location {exc}) --classfiles $(location {jar}) --xml $@".format(
-            cli = jacoco_cli,
-            exc = "{}.JacocoExec".format(test),
-            jar = "{}.CovClsJar".format(test),
-        ),
-    )
-
-def lcov_tracefile(test):
-    native.genrule(
-        name = "{}.LCOVTracefile".format(test),
-        tools = ["@cov//:jacoco_xml_to_lcov"],
-        srcs = [
-            "@baseline//:merged-baseline-srcs",
-            "{}.JacocoXML".format(test),
-        ],
-        outs = ["{}/lcov".format(test)],
-        visibility = ["@cov//:__pkg__"],
-        cmd = "python $(location @cov//:jacoco_xml_to_lcov) {} $(location @baseline//:merged-baseline-srcs) <$(location {}.JacocoXML) >$@".format(test, test),
-    )
-
 def test_target_pipeline(test, shards):
-    coverage_class_jar(test)
     jacoco_exec_file(test, shards)
-    jacoco_xml_report(test)
-    lcov_tracefile(test)
 
 def construct_result_processing_graph():
     ts = test_shard_split_dict()
@@ -143,12 +88,12 @@ def construct_result_processing_graph():
             for s in ts[k]:
                 test_target_pipeline("{}__{}".format(k, s), ts[k][s])
             native.genrule(
-                name = "{}.LCOVTracefile".format(k),
-                tools = ["@cov//:merge_lcov"],
-                srcs = ["{}__{}.LCOVTracefile".format(k, s) for s in ts[k]],
-                outs = ["{}/lcov".format(k)],
+                name = "{}.JacocoExec".format(k),
+                tools = [jacoco_cli],
+                srcs = ["{}__{}.JacocoExec".format(k, s) for s in ts[k]],
+                outs = ["{}/jacoco.exec".format(k)],
                 visibility = ["@cov//:__pkg__"],
-                cmd = "python $(location @cov//:merge_lcov) $(SRCS) >$@",
+                cmd = "$(location {cli}) merge --quiet $(SRCS) --destfile $@".format(cli = jacoco_cli),
             )
         else:
             test_target_pipeline(k, ts[k])

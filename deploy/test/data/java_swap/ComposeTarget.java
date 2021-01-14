@@ -18,6 +18,6 @@ package app;
 /** Simulate an @composable swap. */
 public class ComposeTarget {
     public static String getStatus() {
-        return "ComposeTarget" + androidx.compose.HotReloader.state + " JUST SWAPPED";
+        return "ComposeTarget" + androidx.compose.runtime.HotReloader.state + " JUST SWAPPED";
     }
 }

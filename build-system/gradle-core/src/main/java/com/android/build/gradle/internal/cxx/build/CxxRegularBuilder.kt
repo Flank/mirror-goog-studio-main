@@ -215,42 +215,6 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
     }
 
     /**
-     * Hard link [source] to [destination].
-     */
-    private fun hardLinkOrCopy(source: File, destination: File) {
-        // Dependencies within the same project will also show up as runtimeFiles, and
-        // will have the same source and destination. Can skip those.
-        if (FileUtils.isSameFile(source, destination)) {
-            // This happens if source and destination are lexically the same
-            // --or-- if one is a hard link to the other.
-            // Either way, no work to do.
-            return
-        }
-
-        if(destination.exists()) {
-            destination.delete()
-        }
-
-        // CMake can report runtime files that it doesn't later produce.
-        // Don't try to copy these. Also, don't warn because hard-link/copy
-        // is not the correct location to diagnose why the *original*
-        // runtime file was not created.
-        if(!source.exists()) {
-            return
-        }
-
-        try {
-            Files.createLink(destination.toPath(), source.toPath().toRealPath())
-            infoln("linked $source to $destination")
-        } catch (e: IOException) {
-            // This can happen when hard linking from one drive to another on Windows
-            // In this case, copy the file instead.
-            com.google.common.io.Files.copy(source, destination)
-            infoln("copied $source to $destination")
-        }
-    }
-
-    /**
      * Verifies that all targets provided by the user will be built. Throws GradleException if it
      * detects an unexpected target.
      */
@@ -448,5 +412,41 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                     artifactNames +
                     buildTargetsCommandComponents.takeLastWhile { it != BUILD_TARGETS_PLACEHOLDER }
         }
+    }
+}
+
+/**
+ * Hard link [source] to [destination].
+ */
+internal fun hardLinkOrCopy(source: File, destination: File) {
+    // Dependencies within the same project will also show up as runtimeFiles, and
+    // will have the same source and destination. Can skip those.
+    if (FileUtils.isSameFile(source, destination)) {
+        // This happens if source and destination are lexically the same
+        // --or-- if one is a hard link to the other.
+        // Either way, no work to do.
+        return
+    }
+
+    if (destination.exists()) {
+        destination.delete()
+    }
+
+    // CMake can report runtime files that it doesn't later produce.
+    // Don't try to copy these. Also, don't warn because hard-link/copy
+    // is not the correct location to diagnose why the *original*
+    // runtime file was not created.
+    if (!source.exists()) {
+        return
+    }
+
+    try {
+        Files.createLink(destination.toPath(), source.toPath().toRealPath())
+        infoln("linked $source to $destination")
+    } catch (e: IOException) {
+        // This can happen when hard linking from one drive to another on Windows
+        // In this case, copy the file instead.
+        com.google.common.io.Files.copy(source, destination)
+        infoln("copied $source to $destination")
     }
 }

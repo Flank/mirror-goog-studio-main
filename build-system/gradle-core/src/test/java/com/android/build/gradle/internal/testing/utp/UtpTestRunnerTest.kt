@@ -75,8 +75,8 @@ class UtpTestRunnerTest {
     private val utpDependencies = object: UtpDependencies() {
         override val launcher = FakeConfigurableFileCollection(File("/pathToLAUNCHER.jar"))
         override val core = FakeConfigurableFileCollection(File("/pathToCORE.jar"))
+        override val deviceControllerDdmlib = FakeConfigurableFileCollection(File(""))
         override val deviceProviderGradle = FakeConfigurableFileCollection(File(""))
-        override val deviceProviderLocal = FakeConfigurableFileCollection(File(""))
         override val deviceProviderVirtual = FakeConfigurableFileCollection(File(""))
         override val driverInstrumentation = FakeConfigurableFileCollection(File(""))
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(File(""))

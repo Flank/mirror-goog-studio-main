@@ -133,6 +133,36 @@ const char* MemTagToString(MemTag tag) {
   }
 }
 
+void ClassGlobalRefs::Preserve(JNIEnv* jni, jclass klass) {
+  tail_pos_ = (tail_pos_ + 1) % ClassGlobalRefs::kBucketSize;
+  if (tail_pos_ == 0) {
+    jni->PushLocalFrame(1);
+    // Allocate a new bucket.
+    jobjectArray next_local =
+        jni->NewObjectArray(ClassGlobalRefs::kBucketSize,
+                            jni->FindClass("java/lang/Object"), nullptr);
+    if (jni->ExceptionOccurred()) {
+      // Some sort of failure occurred. Fallback to using global-refs directly
+      Log::W(Log::Tag::PROFILER, "Failed to allocate global-ref list segment");
+      tail_pos_ = ClassGlobalRefs::kBucketSize - 1;
+      jni->ExceptionClear();
+      jni->NewGlobalRef(klass);
+      jni->PopLocalFrame(nullptr);
+      return;
+    }
+    jobjectArray prev_head = list_head_;
+    list_head_ = static_cast<jobjectArray>(jni->NewGlobalRef(next_local));
+    jni->SetObjectArrayElement(next_local, 0, prev_head);
+    if (prev_head != nullptr) {
+      // Cleanup old segments. The array element will keep it live.
+      jni->DeleteGlobalRef(prev_head);
+    }
+    tail_pos_++;
+    jni->PopLocalFrame(nullptr);
+  }
+  jni->SetObjectArrayElement(list_head_, tail_pos_, klass);
+}
+
 MemoryTrackingEnv* MemoryTrackingEnv::Instance(
     JavaVM* vm, const AgentConfig::MemoryConfig& mem_config) {
   if (g_env == nullptr) {
@@ -559,9 +589,7 @@ const AllocatedClass& MemoryTrackingEnv::RegisterNewClass(jvmtiEnv* jvmti,
 
     // Cache the class object so that they will never be gc.
     // This ensures that any jmethodID/jfieldID will never become invalid.
-    // TODO: Investigate any memory implications - presumably the number of
-    // classes won't be enormous. (e.g. < (1<<16))
-    class_global_refs_.push_back(jni->NewGlobalRef(klass));
+    class_global_refs_.Preserve(jni, klass);
   }
 
   if (klass_info.class_name.compare(kClassClass) == 0) {

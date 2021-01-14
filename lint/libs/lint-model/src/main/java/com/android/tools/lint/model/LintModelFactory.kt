@@ -21,18 +21,21 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.LintOptions
 import com.android.ide.common.gradle.model.IdeAaptOptions
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
+import com.android.ide.common.gradle.model.IdeAndroidLibrary
 import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeApiVersion
 import com.android.ide.common.gradle.model.IdeBaseArtifact
 import com.android.ide.common.gradle.model.IdeBuildType
 import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeJavaArtifact
+import com.android.ide.common.gradle.model.IdeJavaLibrary
 import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeSourceProvider
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeLibrary
+import com.android.ide.common.gradle.model.IdeModuleLibrary
 import com.android.ide.common.gradle.model.impl.ModelCache
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
@@ -140,77 +143,73 @@ class LintModelFactory : LintModelModuleLoader {
         )
     )
 
-    private fun getLibrary(library: IdeLibrary): LintModelLibrary {
-        return when (library.type) {
-            IdeLibrary.LibraryType.LIBRARY_ANDROID -> {
-                // TODO: Construct file objects lazily!
-                DefaultLintModelAndroidLibrary(
-                    artifactAddress = library.getMavenArtifactAddress(),
-                    manifest = File(library.manifest),
-                    // TODO - expose compile jar vs impl jar?
-                    jarFiles = (library.localJars + library.jarFile).map { File(it) },
-                    folder = library.folder!!, // Needed for workaround for b/66166521
-                    resFolder = File(library.resFolder),
-                    assetsFolder = File(library.assetsFolder),
-                    lintJar = File(library.lintJar!!),
-                    publicResources = File(library.publicResources),
-                    symbolFile = File(library.symbolFile),
-                    externalAnnotations = File(library.externalAnnotations),
-                    provided = library.isProvided,
-                    resolvedCoordinates = library.getMavenName(),
-                    proguardRules = File(library.proguardRules)
-                )
-            }
-            IdeLibrary.LibraryType.LIBRARY_JAVA -> {
-                DefaultLintModelJavaLibrary(
-                    artifactAddress = library.getMavenArtifactAddress(),
-                    // TODO - expose compile jar vs impl jar?
-                    jarFiles = listOf(library.artifact),
-                    provided = library.isProvided,
-                    resolvedCoordinates = library.getMavenName()
-                )
-            }
-            IdeLibrary.LibraryType.LIBRARY_MODULE -> {
-                val projectPath = library.projectPath ?: "unknown:unknown:unknown"
-                DefaultLintModelModuleLibrary(
-                    artifactAddress = library.getMavenArtifactAddress(),
-                    projectPath = projectPath,
-                    lintJar = library.lintJar?.let(::File),
-                    provided = library.isProvided
-                )
-            }
-            else -> {
-                error("Unexpected library type ${library.type}")
-            }
-        }
+    private fun getLibrary(library: IdeAndroidLibrary): LintModelLibrary {
+        // TODO: Construct file objects lazily!
+        return DefaultLintModelAndroidLibrary(
+            artifactAddress = library.getMavenArtifactAddress(),
+            manifest = File(library.manifest),
+            // TODO - expose compile jar vs impl jar?
+            jarFiles = (library.localJars + library.jarFile).map { File(it) },
+            folder = library.folder!!, // Needed for workaround for b/66166521
+            resFolder = File(library.resFolder),
+            assetsFolder = File(library.assetsFolder),
+            lintJar = File(library.lintJar!!),
+            publicResources = File(library.publicResources),
+            symbolFile = File(library.symbolFile),
+            externalAnnotations = File(library.externalAnnotations),
+            provided = library.isProvided,
+            resolvedCoordinates = library.getMavenName(),
+            proguardRules = File(library.proguardRules)
+        )
     }
 
-    private fun IdeLibrary.getArtifactName(): String {
-        return when (type) {
-            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:$projectPath"
-            else -> getMavenName().let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" }
-        }
+    private fun getLibrary(library: IdeJavaLibrary): LintModelLibrary {
+        return DefaultLintModelJavaLibrary(
+            artifactAddress = library.getMavenArtifactAddress(),
+            // TODO - expose compile jar vs impl jar?
+            jarFiles = listOf(library.artifact),
+            provided = library.isProvided,
+            resolvedCoordinates = library.getMavenName()
+        )
     }
 
-    private fun IdeLibrary.getMavenName(): LintModelMavenName {
-        return getMavenName(artifactAddress)
+    private fun getLibrary(library: IdeModuleLibrary): LintModelLibrary {
+        val projectPath = library.projectPath ?: "unknown:unknown:unknown"
+        return DefaultLintModelModuleLibrary(
+            artifactAddress = library.getMavenArtifactAddress(),
+            projectPath = projectPath,
+            lintJar = library.lintJar?.let(::File),
+            provided = library.isProvided
+        )
     }
 
-    private fun IdeLibrary.getMavenArtifactAddress(): String {
-        return when (type) {
-            IdeLibrary.LibraryType.LIBRARY_MODULE -> "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
-            else -> artifactAddress.substringBefore("@")
-        }
-    }
+    private fun IdeAndroidLibrary.getArtifactName(): String =
+        getMavenName().let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" }
 
-    private fun getGraphItem(library: IdeLibrary): LintModelDependency {
-        val artifactAddress = library.getMavenArtifactAddress()
+    private fun IdeJavaLibrary.getArtifactName(): String =
+        getMavenName().let { mavenName -> "${mavenName.groupId}:${mavenName.artifactId}" }
 
+    private fun IdeModuleLibrary.getArtifactName(): String = "artifacts:$projectPath"
+
+    private fun IdeLibrary.getMavenName(): LintModelMavenName = getMavenName(artifactAddress)
+
+    private fun IdeAndroidLibrary.getMavenArtifactAddress(): String = artifactAddress.substringBefore("@")
+
+    private fun IdeJavaLibrary.getMavenArtifactAddress(): String = artifactAddress.substringBefore("@")
+
+    private fun IdeModuleLibrary.getMavenArtifactAddress(): String= "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
+
+    private fun getGraphItem(
+        artifactName: String,
+        artifactAddress: String,
+        lintModelLibrary: () -> LintModelLibrary
+    ): LintModelDependency {
+        @Suppress("UNUSED_VARIABLE")
         val lintLibrary = libraryResolverMap[artifactAddress]
-            ?: getLibrary(library).also { libraryResolverMap[artifactAddress] = it }
+            ?: lintModelLibrary().also { libraryResolverMap[artifactAddress] = it }
 
         return DefaultLintModelDependency(
-            artifactName = library.getArtifactName(),
+            artifactName = artifactName,
             artifactAddress = artifactAddress,
             requestedCoordinates = null, // Always null in builder models and not present in Ide* models.
             // Deep copy
@@ -225,9 +224,10 @@ class LintModelFactory : LintModelModuleLoader {
         val compileItems = mutableListOf<LintModelDependency>()
         val packagedItems = mutableListOf<LintModelDependency>()
         val dependencies = artifact.level2Dependencies
+
         for (dependency in dependencies.androidLibraries) {
             if (dependency.isValid()) {
-                val lintModelDependency = getGraphItem(dependency)
+                val lintModelDependency = getGraphItem(dependency.getArtifactName(), dependency.getMavenArtifactAddress()) { getLibrary(dependency) }
                 compileItems.add(lintModelDependency)
                 if (!dependency.isProvided) {
                     packagedItems.add(lintModelDependency)
@@ -236,7 +236,7 @@ class LintModelFactory : LintModelModuleLoader {
         }
         for (dependency in dependencies.javaLibraries) {
             if (dependency.isValid()) {
-                val lintModelDependency = getGraphItem(dependency)
+                val lintModelDependency = getGraphItem(dependency.getArtifactName(), dependency.getMavenArtifactAddress()) { getLibrary(dependency) }
                 compileItems.add(lintModelDependency)
                 if (!dependency.isProvided) {
                     packagedItems.add(lintModelDependency)
@@ -246,7 +246,7 @@ class LintModelFactory : LintModelModuleLoader {
 
         for (dependency in dependencies.moduleDependencies) {
             if (dependency.isValid()) {
-                val lintModelDependency = getGraphItem(dependency)
+                val lintModelDependency = getGraphItem(dependency.getArtifactName(), dependency.getMavenArtifactAddress()) { getLibrary(dependency) }
                 compileItems.add(lintModelDependency)
                 if (!dependency.isProvided) {
                     packagedItems.add(lintModelDependency)

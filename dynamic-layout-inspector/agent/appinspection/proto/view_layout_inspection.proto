@@ -1,0 +1,169 @@
+/*
+ * Copyright 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+package layoutinspector.view.inspection;
+option java_package = "layoutinspector.view.inspection";
+option java_outer_classname = "LayoutInspectorViewProtocol";
+option optimize_for = LITE_RUNTIME;
+
+// ======= MESSAGES =======
+
+// A mapping of |string| to |int32|, so strings can be efficiently reused across nodes
+// Any time a text value in any of these messages has an |int32| type, it means it will do a
+// lookup in a string table on the client.
+message StringEntry {
+    int32 id = 1;
+    string str = 2;
+}
+
+message Point {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+message Rect {
+    int32 x = 1;
+    int32 y = 2;
+    int32 w = 3;
+    int32 h = 4;
+}
+
+// A Quad will be the result of a Rect after applying some affine or perspective transformations.
+// While the transformed points can be skewed in a complex manner, the untransformed Rect source of
+// the coordinates will always be consistent:
+// 0 = top left, 1 = top right, 2 = bot left, 3 = bot right
+message Quad {
+    sint32 x0 = 1;
+    sint32 y0 = 2;
+    sint32 x1 = 3;
+    sint32 y1 = 4;
+    sint32 x2 = 5;
+    sint32 y2 = 6;
+    sint32 x3 = 7;
+    sint32 y3 = 8;
+}
+
+message Bounds {
+    // The bounds of some element in the layout tree
+    Rect layout = 1;
+    // Bounds transformed in preparation for final rendering
+    Quad render = 2;
+}
+
+message ViewNode {
+    // General node properties
+    int64 id = 1;
+    repeated ViewNode children = 2;
+
+    // Resource reference associated with the view itself inside a layout
+    Resource resource = 3;
+    int32 package_name = 4;
+    int32 class_name = 5;
+
+    Bounds bounds = 6;
+
+    // Resource reference associated with view's layout
+    Resource layout_resource = 7;
+    int32 layout_flags = 8;
+
+    // Type-specific node properties
+    int32 text_value = 101; // For TextView, etc.
+}
+
+message Screenshot {
+    enum Type {
+        UNKNOWN = 0;
+        NONE = 1;
+        SKP = 2;
+    }
+    Type type = 1;
+    bytes bytes = 2;
+}
+
+// In Android, a resource id is a simple integer. This class holds the namespace, type, and name
+// of such a resource id.
+// For example, with "@android:id/textView":
+//   type: id
+//   namespace: android
+//   name: textView
+message Resource {
+    int32 type = 1;
+    int32 namespace = 2;
+    int32 name = 3;
+}
+
+// ======= COMMANDS, RESPONSES, AND EVENTS =======
+
+// Tells the inspector to start sending |LayoutEvent|s asynchronously
+message StartFetchCommand {
+    // If continuous, layout events will keep coming until a |StopFetchCommand| is sent.
+    // Otherwise, only a single |LayoutEvent| will be sent.
+    bool continuous = 1;
+}
+message StartFetchResponse {}
+
+// Command to fire to stop |LayoutEvent|s from being returned.
+// If |FetchCommand| was never called, this will be a no-op.
+message StopFetchCommand {}
+message StopFetchResponse {}
+
+// An event containing complete layout information about a single node tree
+message LayoutEvent {
+    // A collection of all text referenced by other fields in this message
+    repeated StringEntry strings = 1;
+    ViewNode root_view = 2;
+    // The offset of the root view from the origin of the surface. Will always be 0,0 for
+    // the main window, but can be positive for floating windows (e.g. dialogs).
+    Point root_offset = 3;
+    Screenshot screenshot = 4;
+    // A monotonically increasing number, which can be used by the client to ignore stale events.
+    int32 generation = 5;
+}
+
+// An event fired whenever a new root is added or an old root is removed.
+// Host is guaranteed to receive this at least once before the first |LayoutEvent|
+message WindowRootsEvent {
+    repeated int64 ids = 1;
+}
+
+// An event for reporting an error message, particularly for crashes that happen off the inspector
+// thread.
+// TODO(b/176993981): The inspector framework handles crashes that happen on the inspector thread,
+//  but no support for non-inspector threads at this point. We can stop using this custom message
+//  when such support is added, however.
+message ErrorEvent {
+    string message = 1;
+}
+
+message Command {
+    oneof specialized {
+        StartFetchCommand start_fetch_command = 1;
+        StopFetchCommand stop_fetch_command = 2;
+    }
+}
+message Response {
+    oneof specialized {
+        StartFetchResponse start_fetch_response = 1;
+        StopFetchResponse stop_fetch_response = 2;
+    }
+}
+message Event {
+    oneof specialized {
+        ErrorEvent error_event = 1;
+        WindowRootsEvent roots_event = 2;
+        LayoutEvent layout_event = 3;
+    }
+}

@@ -168,7 +168,7 @@ class AsmTransformApiFixFramesTest {
                 // language=kotlin
                 """
             val androidComponentsExt = project.extensions.getByType(AndroidComponentsExtension::class.java)
-            androidComponentsExt.unitTest {
+            androidComponentsExt.unitTests {
                     it.transformClassesWith(
                             FramesBreakingClassVisitorFactory::class.java,
                             InstrumentationScope.PROJECT

@@ -22,6 +22,8 @@ import java.io.File
 import java.io.IOException
 import java.lang.IllegalStateException
 
+private const val separator: String = ":/"
+
 /**
  * Determines a resource file path relative to the source set containing the resource.
  *
@@ -47,8 +49,8 @@ fun getRelativeSourceSetPath(resourceFile: File, moduleSourceSets: Map<String, S
 /**
  * Converts a source set identified relative resource path to an absolute path.
  *
- * The source set identifier before the ':' separator is replaced with the absolute source set
- * path and then concatenated with the path after the ':' separator.
+ * The source set identifier before the separator is replaced with the absolute source set
+ * path and then concatenated with the path after the separator.
  */
 fun relativeResourcePathToAbsolutePath(
         relativePath: String,
@@ -58,14 +60,15 @@ fun relativeResourcePathToAbsolutePath(
                 """Unable to get absolute path from $relativePath
                    because no relative root paths are present.""")
     }
-    val separatorIndex = relativePath.indexOf(':')
+    val separatorIndex = relativePath.indexOf(separator)
     if (separatorIndex == -1) {
         throw IllegalArgumentException(
-                """Source set identifier and relative path must be separated by a ':'character.
+                """Source set identifier and relative path must be separated by a "$separator".
                    Relative path: $relativePath""")
     }
     val sourceSetPrefix = relativePath.substring(0, separatorIndex)
-    val resourcePathFromSourceSet = relativePath.substring(separatorIndex + 1, relativePath.length)
+    val resourcePathFromSourceSet =
+        relativePath.substring(separatorIndex + separator.length, relativePath.length)
     val absolutePath = sourceSetPathMap[sourceSetPrefix]
             ?: throw NoSuchElementException(
                     """Unable to get absolute path from $relativePath
@@ -104,6 +107,20 @@ fun writeIdentifiedSourceSetsFile(
     }
 }
 
+/**
+ * Using a list of files following the format produced by writeIdentifiedSourceSetsFile,
+ * contents of each file are added to a single table which maps the source set identifier
+ * to the absolute path of the source set.
+ */
+fun mergeIdentifiedSourceSetFiles(sourceSetFiles: List<File>) : Map<String, String> {
+    return mutableMapOf<String,String>()
+            .also { identifiedSourceMap ->
+                sourceSetFiles
+                        .map { readFromSourceSetPathsFile(it) }
+                        .forEach { identifiedSourceMap.putAll(it) }
+            }
+}
+
 fun getIdentifiedSourceSetMap(
         resourceSourceSets: List<File>,
         namespace: String,
@@ -122,3 +139,5 @@ fun getIdentifiedSourceSetMap(
                 appId to sourceSet.absolutePath
             }
 }
+
+fun relativeResourceSeparator(): String = separator

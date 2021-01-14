@@ -50,6 +50,7 @@ fun createCxxAbiModel(
                 info = module.ndkMetaAbiList.single { it.abi == abi },
                 cxxBuildFolder = join(variant.cxxBuildFolder, abi.tag),
                 soFolder = join(variant.soFolder, abi.tag),
+                soRepublishFolder = join(variant.soRepublishFolder, abi.tag),
                 abiPlatformVersion =
                     sdkComponents
                             .ndkHandler

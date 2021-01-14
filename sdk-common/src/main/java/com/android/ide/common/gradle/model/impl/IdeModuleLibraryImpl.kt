@@ -38,9 +38,8 @@ data class IdeModuleLibraryImpl(
 data class IdeModuleLibraryCore(
   override val artifactAddress: String,
   override val buildId: String?,
-  override val projectPath: String?,
+  override val projectPath: String,
   override val variant: String?,
-  override val folder: File?,
   override val lintJar: String?
 
 ) : IdeModuleLibrary, Serializable {
@@ -49,9 +48,8 @@ data class IdeModuleLibraryCore(
   constructor() : this(
     artifactAddress = "",
     buildId = null,
-    projectPath = null,
+    projectPath = "",
     variant = null,
-    folder = null,
     lintJar = null
   )
 
@@ -64,54 +62,11 @@ data class IdeModuleLibraryCore(
     buildId = buildId,
     projectPath = projectPath,
     variant = null,
-    folder = null,
     lintJar = null
   )
 
   override val artifact: File
     get() = throw unsupportedMethodForModuleLibrary("getArtifact()")
-
-  override val manifest: String
-    get() = throw unsupportedMethodForModuleLibrary("getManifest")
-
-  override val jarFile: String
-    get() = throw unsupportedMethodForModuleLibrary("getJarFile")
-
-  override val compileJarFile: String
-    get() = throw unsupportedMethodForModuleLibrary("getCompileJarFile")
-
-  override val resFolder: String
-    get() = throw unsupportedMethodForModuleLibrary("getResFolder")
-
-  override val resStaticLibrary: File?
-    get() = throw unsupportedMethodForModuleLibrary("getResStaticLibrary")
-
-  override val assetsFolder: String
-    get() = throw unsupportedMethodForModuleLibrary("getAssetsFolder")
-
-  override val localJars: Collection<String>
-    get() = throw unsupportedMethodForModuleLibrary("getLocalJars")
-
-  override val jniFolder: String
-    get() = throw unsupportedMethodForModuleLibrary("getJniFolder")
-
-  override val aidlFolder: String
-    get() = throw unsupportedMethodForModuleLibrary("getAidlFolder")
-
-  override val renderscriptFolder: String
-    get() = throw unsupportedMethodForModuleLibrary("getRenderscriptFolder")
-
-  override val proguardRules: String
-    get() = throw unsupportedMethodForModuleLibrary("getProguardRules")
-
-  override val externalAnnotations: String
-    get() = throw unsupportedMethodForModuleLibrary("getExternalAnnotations")
-
-  override val publicResources: String
-    get() = throw unsupportedMethodForModuleLibrary("getPublicResources")
-
-  override val symbolFile: String
-    get() = throw unsupportedMethodForModuleLibrary("getSymbolFile")
 
   override val isProvided: Nothing
     get() = error("abstract")

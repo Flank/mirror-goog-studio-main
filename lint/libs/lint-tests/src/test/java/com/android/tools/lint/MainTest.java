@@ -669,7 +669,6 @@ public class MainTest extends AbstractCheckTest {
         checkDriver(
                 ""
                         + "Scanning MainTest_testWerror: ..\n"
-                        + "Scanning MainTest_testWerror (Phase 2): .\n"
                         + "src/Test.java:2: Error: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                         + "    String s = \"/sdcard/path\";\n"
                         + "               ~~~~~~~~~~~~~~\n"
@@ -687,9 +686,24 @@ public class MainTest extends AbstractCheckTest {
 
     public void testNoWarn() throws Exception {
         File project =
-                getProjectDir(null, java("class Test {\n    String s = \"/sdcard/path\";\n}"));
+                getProjectDir(
+                        null,
+                        java("" + "class Test {\n    String s = \"/sdcard/path\";\n}"),
+                        xml(
+                                "res/layout/test.xml",
+                                ""
+                                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                                        + "    <Button android:id='@+id/duplicated'/>\n"
+                                        + "    <Button android:id='@+id/duplicated'/>\n"
+                                        + "</LinearLayout>\n"));
         checkDriver(
-                "No issues found.",
+                ""
+                        + "Scanning MainTest_testNoWarn: ....\n"
+                        + "res/layout/test.xml:3: Error: Duplicate id @+id/duplicated, already defined earlier in this layout [DuplicateIds]\n"
+                        + "    <Button android:id='@+id/duplicated'/>\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/layout/test.xml:2: Duplicate id @+id/duplicated originally defined here\n"
+                        + "1 errors, 0 warnings",
                 "",
 
                 // Expected exit code

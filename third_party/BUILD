@@ -350,8 +350,25 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.google.testing.platform_android-device-provider-local",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/android-device-provider-local/0.0.8-alpha01:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.testing.platform_core-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.7-dev:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.8-alpha01:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.google.testing.platform_launcher",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/launcher/0.0.8-alpha01:jar",
+    neverlink = 1,
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -884,6 +901,22 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "net.java.dev.jna_jna",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/java/dev/jna/jna/5.6.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "net.java.dev.jna_jna-platform",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/java/dev/jna/jna-platform/5.6.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":net.java.dev.jna_jna"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "net.sf.jopt-simple_jopt-simple",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9:jar",
     visibility = ["//visibility:public"],
@@ -1334,7 +1367,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.8-rc-5:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/6.8:jar",
     visibility = ["//visibility:public"],
     exports = [":org.slf4j_slf4j-api"],
 )
@@ -1780,7 +1813,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.mockito_mockito-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/3.0.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/3.4.6:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":net.bytebuddy_byte-buddy",

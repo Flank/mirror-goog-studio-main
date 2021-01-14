@@ -26,7 +26,7 @@ find bazel-bin/ -name '*.coverage.baseline*' | xargs rm -fv || exit $?
 echo "Generate baseline coverage file lists"
 bazel build --config=dynamic --build_tag_filters="coverage-sources" -- //tools/... || exit $?
 echo "Run tests to generate coverage data"
-bazel test --define agent_coverage=true --config=dynamic -- "@cov//:${report_name}.suite" || exit $?
+bazel test --define agent_coverage=true --config=dynamic -- "@cov//:${report_name}.suite" @baseline//... || exit $?
 echo "Processing raw coverage data"
 bazel build --config=dynamic -- "@cov//:${report_name}.lcov.notests" || exit $?
 echo "Generating HTML report in ${html_dir}"
