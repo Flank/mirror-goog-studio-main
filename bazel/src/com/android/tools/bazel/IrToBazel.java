@@ -284,14 +284,6 @@ public class IrToBazel {
             }
         }
 
-        for (Package pkg : bazel.getPackages()) {
-            for (BazelRule rule : pkg.getRules()) {
-                if (config.shouldSuppress(rule)) {
-                    rule.suppress();
-                }
-            }
-        }
-
         logger.info("Updating BUILD files...");
         CountingListener listener = new CountingListener(logger, config.dryRun);
         bazel.generate(listener);
