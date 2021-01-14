@@ -90,12 +90,22 @@ public class LiveLiteralSupport {
      *     in from a JVMTI class search because this class will be loaded in the boot classloader
      *     and will not be able to find the application classes.
      * @param targetApplicationId The package name of the application.
+     * @return True if this invocation enabled Live Literal from inactive to active state. False
+     *     otherwise.
      */
-    public static void enable(Class<?> liveLiteralKtClass, String targetApplicationId) {
+    public static boolean enable(Class<?> liveLiteralKtClass, String targetApplicationId) {
         applicationId = targetApplicationId;
         try {
-            Method enableMethod = liveLiteralKtClass.getMethod("enableLiveLiterals");
-            enableMethod.invoke(liveLiteralKtClass);
+            Field enabled = liveLiteralKtClass.getDeclaredField("isLiveLiteralsEnabled");
+            enabled.setAccessible(true);
+            boolean started = enabled.getBoolean(liveLiteralKtClass);
+            if (!started) {
+                Method enableMethod = liveLiteralKtClass.getMethod("enableLiveLiterals");
+                enableMethod.invoke(liveLiteralKtClass);
+                return true;
+            }
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
@@ -103,6 +113,7 @@ public class LiveLiteralSupport {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     /**
