@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
+import com.android.build.gradle.tasks.SourceSetInputs
 import com.android.builder.core.BuilderConstants
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceSet
@@ -30,6 +31,7 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.MapProperty
 import java.io.File
 
 class DependencyResourcesComputer {
@@ -96,10 +98,8 @@ class DependencyResourcesComputer {
      */
     @JvmOverloads
     fun compute(
-        precompileDependenciesResources: Boolean = false,
-        aaptEnv: String?
-    ): List<ResourceSet> {
-        val sourceFolderSets = getResSet(aaptEnv)
+        precompileDependenciesResources: Boolean = false, aaptEnv: String?): List<ResourceSet> {
+        val sourceFolderSets = getResSet(resources, aaptEnv)
         var size = sourceFolderSets.size
         libraries?.let {
             size += it.artifacts.size
@@ -107,21 +107,22 @@ class DependencyResourcesComputer {
 
         val resourceSetList = ArrayList<ResourceSet>(size)
 
-        addLibraryResources(libraries, resourceSetList, precompileDependenciesResources, aaptEnv)
+        addLibraryResources(
+            libraries,
+            resourceSetList,
+            precompileDependenciesResources,
+            aaptEnv
+        )
 
         // add the folder based next
         resourceSetList.addAll(sourceFolderSets)
 
         // We add the generated folders to the main set
-        val generatedResFolders = java.util.ArrayList<File>()
+        val generatedResFolders = mutableListOf<File>()
 
-        renderscriptResOutputDir?.let {
-            generatedResFolders.addAll(it.files)
-        }
+        generatedResFolders.addAll(renderscriptResOutputDir.files)
 
-        generatedResOutputDir?.let {
-            generatedResFolders.addAll(it.files)
-        }
+        generatedResFolders.addAll(generatedResOutputDir.files)
 
         extraGeneratedResFolders?.let {
             generatedResFolders.addAll(it.files)
@@ -144,41 +145,40 @@ class DependencyResourcesComputer {
         return resourceSetList
     }
 
-    private fun getResSet(aaptEnv: String?): List<ResourceSet> {
-        val builder = ImmutableList.builder<ResourceSet>()
-        resources?.let {
-            for ((key, value) in it) {
-                val resourceSet = ResourceSet(
-                    key, ResourceNamespace.RES_AUTO, null, validateEnabled, aaptEnv)
-                resourceSet.addSources(value.files)
-                builder.add(resourceSet)
-            }
+    private fun getResSet(
+        resourcesMap: Map<String, FileCollection> = resources, aaptEnv: String?)
+    : List<ResourceSet> {
+        return resourcesMap.map {
+            val resourceSet = ResourceSet(
+                it.key, ResourceNamespace.RES_AUTO, null, validateEnabled, aaptEnv)
+            resourceSet.addSources(it.value.files)
+            resourceSet
         }
-        return builder.build()
     }
 
-    fun initFromVariantScope(creationConfig: ComponentCreationConfig, includeDependencies: Boolean) {
+    fun initFromVariantScope(
+        creationConfig: ComponentCreationConfig,
+        sourceSetInputs: SourceSetInputs,
+        microApkResDir: FileCollection,
+        libraryDependencies: ArtifactCollection?) {
         val projectOptions = creationConfig.services.projectOptions
-        val variantData = creationConfig.variantData
-        val project = creationConfig.services.projectInfo.getProject()
-        val paths = creationConfig.paths
+        val services = creationConfig.services
 
         validateEnabled = !projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
+        this.libraries = libraryDependencies
 
-        if (includeDependencies) {
-            this.libraries = creationConfig.variantDependencies.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
-        }
+        resources = sourceSetInputs.localResources.forUseAtConfigurationTime().get()
 
-        resources = variantData.androidResources
+        extraGeneratedResFolders = sourceSetInputs.extraGeneratedResDir
+        renderscriptResOutputDir = services.fileCollection(
+            File(sourceSetInputs.renderscriptResOutputDir.forUseAtConfigurationTime().get()))
 
-        extraGeneratedResFolders = variantData.extraGeneratedResFolders
-        renderscriptResOutputDir = project.files(paths.renderscriptResOutputDir)
-
-        generatedResOutputDir = project.files(paths.generatedResOutputDir)
+        generatedResOutputDir = services.fileCollection(
+            File(sourceSetInputs.generatedResDir.forUseAtConfigurationTime().get()))
 
         if (creationConfig.taskContainer.generateApkDataTask != null) {
-            microApkResDirectory =
-                    project.files(creationConfig.artifacts.get(InternalArtifactType.MICRO_APK_RES))
+            microApkResDirectory = microApkResDir
+
         }
     }
 }

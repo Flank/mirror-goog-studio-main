@@ -125,7 +125,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setInstallOptions",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setTimeOutInMs",
                 "com.android.build.gradle.internal.tasks.LintCompile::setOutputDirectory",
-                "com.android.build.gradle.tasks.MapSourceSetPathsTask::setResourceComputer",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceCleanTask::setPreserveDefinedOption",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask::setDisplayEmulatorOption",
                 "com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask::setIgnoreFailures",
