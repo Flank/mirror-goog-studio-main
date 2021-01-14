@@ -46,6 +46,8 @@ import org.mockito.Mockito.mock
 import java.util.Collections
 import java.util.concurrent.TimeUnit
 
+private fun topLevelFunction() {}
+
 class PropertiesTest {
 
     @get:Rule
@@ -56,8 +58,44 @@ class PropertiesTest {
 
     private val fontId = 17
 
-    private val lambdaValue = {}
+    private val lambdaValue = arrayOf({})
     private val lambdaLine = Thread.currentThread().stackTrace[1].lineNumber - 1
+
+    private val functionRefValue1 = arrayOf(::before, "before")
+    private val functionRefLine1 = Thread.currentThread().stackTrace[1].lineNumber - 1
+
+    private val functionRefValue2 = arrayOf(::topLevelFunction, "topLevelFunction")
+    private val functionRefLine2 = Thread.currentThread().stackTrace[1].lineNumber - 1
+
+    private val lambdaValueHolder = LambdaValueHolder(
+        packageName = "com.android.tools.agent.layoutinspector",
+        lambdaName = "lambdaValue\$1",
+        functionName = "",
+        fileName = "PropertiesTest.kt",
+        startLine = lambdaLine,
+        endLine = lambdaLine,
+        type = Type.LAMBDA
+    )
+
+    private val functionRefValue1Holder = LambdaValueHolder(
+        packageName = "com.android.tools.agent.layoutinspector",
+        lambdaName = "functionRefValue1\$1",
+        functionName = "before",
+        fileName = "PropertiesTest.kt",
+        startLine = functionRefLine1,
+        endLine = functionRefLine1,
+        type = Type.FUNCTION_REFERENCE
+    )
+
+    private val functionRefValue2Holder = LambdaValueHolder(
+        packageName = "com.android.tools.agent.layoutinspector",
+        lambdaName = "functionRefValue2\$1",
+        functionName = "topLevelFunction",
+        fileName = "PropertiesTest.kt",
+        startLine = functionRefLine2,
+        endLine = functionRefLine2,
+        type = Type.FUNCTION_REFERENCE
+    )
 
     private val node =
         InspectorNode(
@@ -109,7 +147,9 @@ class PropertiesTest {
                         NodeParameter("y", ParameterType.DimensionDp, 2.0f)
                     )
                 ),
-                parameter("lambda", ParameterType.Lambda, lambdaValue)
+                parameter("lambda", ParameterType.Lambda, lambdaValue),
+                parameter("ref1", ParameterType.FunctionReference, functionRefValue1),
+                parameter("ref2", ParameterType.FunctionReference, functionRefValue2),
             )
         )
 
@@ -265,15 +305,9 @@ class PropertiesTest {
             check(index, 0, "x", Type.DIMENSION_DP, 2.0f)
             check(index, 1, "y", Type.DIMENSION_DP, 2.0f)
             check(index++, "rect", Type.STRING, "Rect")
-            val holder =
-                LambdaValueHolder(
-                    packageName = "com.android.tools.agent.layoutinspector",
-                    lambdaName = "lambdaValue\$1",
-                    fileName = "PropertiesTest.kt",
-                    startLine = lambdaLine,
-                    endLine = lambdaLine
-                )
-            check(index++, "lambda", Type.LAMBDA, holder)
+            check(index++, "lambda", Type.LAMBDA, lambdaValueHolder)
+            check(index++, "ref1", Type.FUNCTION_REFERENCE, functionRefValue1Holder)
+            check(index++, "ref2", Type.FUNCTION_REFERENCE, functionRefValue2Holder)
             assertThat(size).isEqualTo(index)
         }
     }
@@ -324,15 +358,9 @@ class PropertiesTest {
             check(index, 0, "x", Type.DIMENSION_DP, 2.0f)
             check(index, 1, "y", Type.DIMENSION_DP, 2.0f)
             check(index++, "rect", Type.STRING, "Rect")
-            val holder =
-                LambdaValueHolder(
-                    packageName = "com.android.tools.agent.layoutinspector",
-                    lambdaName = "lambdaValue\$1",
-                    fileName = "PropertiesTest.kt",
-                    startLine = lambdaLine,
-                    endLine = lambdaLine
-                )
-            check(index++, "lambda", Type.LAMBDA, holder)
+            check(index++, "lambda", Type.LAMBDA, lambdaValueHolder)
+            check(index++, "ref1", Type.FUNCTION_REFERENCE, functionRefValue1Holder)
+            check(index++, "ref2", Type.FUNCTION_REFERENCE, functionRefValue2Holder)
             assertThat(size).isEqualTo(index)
         }
     }
@@ -382,11 +410,13 @@ class PropertiesTest {
                     property.flagValue.flagList.map { id: Int? -> table[id!!] }
                 ).containsExactlyElementsIn(value as Set<String>)
                 Type.RESOURCE -> assertThat(table[property.resourceValue]).isEqualTo(value)
+                Type.FUNCTION_REFERENCE,
                 Type.LAMBDA -> {
                     val lambda = property.lambdaValue
                     val holder = value as LambdaValueHolder
                     assertThat(table[lambda.packageName]).isEqualTo(holder.packageName)
                     assertThat(table[lambda.lambdaName]).isEqualTo(holder.lambdaName)
+                    assertThat(table[lambda.functionName]).isEqualTo(holder.functionName)
                     assertThat(table[lambda.fileName]).isEqualTo(holder.fileName)
                     assertThat(lambda.startLineNumber).isEqualTo(holder.startLine)
                     assertThat(lambda.endLineNumber).isEqualTo(holder.endLine)
@@ -400,7 +430,9 @@ class PropertiesTest {
 private class LambdaValueHolder(
     val packageName: String,
     val lambdaName: String,
+    val functionName: String,
     val fileName: String,
     val startLine: Int,
-    val endLine: Int
+    val endLine: Int,
+    val type: Type,
 )
