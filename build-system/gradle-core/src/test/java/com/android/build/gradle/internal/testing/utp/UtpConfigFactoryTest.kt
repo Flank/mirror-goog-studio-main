@@ -463,7 +463,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "icebox_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin"
+                class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
                 }
@@ -615,7 +615,7 @@ class UtpConfigFactoryTest {
                 label {
                   label: "icebox_plugin"
                 }
-                class_name: "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin"
+                class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
                   path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
                 }

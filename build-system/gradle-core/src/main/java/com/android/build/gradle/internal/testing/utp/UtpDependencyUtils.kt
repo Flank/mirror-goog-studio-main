@@ -25,8 +25,10 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Optional
 
-private const val NITROGEN_MAVEN_GROUP_ID = "com.google.testing.platform"
-private const val NITROGEN_DEFAULT_VERSION = "0.0.8-alpha01"
+private const val UTP_MAVEN_GROUP_ID = "com.google.testing.platform"
+private const val UTP_DEFAULT_VERSION = "0.0.8-alpha01"
+private const val ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID = "com.android.tools.utp"
+private val ANDROID_TOOLS_UTP_PLUGIN_VERSION = ANDROID_TOOLS_BASE_VERSION
 
 /**
  * Available Unified Test Platform dependencies.
@@ -35,8 +37,8 @@ enum class UtpDependency(
         val artifactId: String,
         val mainClass: String,
         val mapperFunc: (UtpDependencies) -> ConfigurableFileCollection,
-        private val groupId: String = NITROGEN_MAVEN_GROUP_ID,
-        private val version: String = NITROGEN_DEFAULT_VERSION) {
+        private val groupId: String = UTP_MAVEN_GROUP_ID,
+        private val version: String = UTP_DEFAULT_VERSION) {
     LAUNCHER(
             "launcher",
             "com.google.testing.platform.launcher.Launcher",
@@ -49,8 +51,8 @@ enum class UtpDependency(
             "android-device-provider-ddmlib",
             "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider",
             UtpDependencies::deviceControllerDdmlib,
-            "com.android.tools.utp",
-            ANDROID_TOOLS_BASE_VERSION),
+            ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
+            ANDROID_TOOLS_UTP_PLUGIN_VERSION),
     ANDROID_DEVICE_PROVIDER_GRADLE(
             "android-device-provider-gradle",
             "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider",
@@ -67,12 +69,14 @@ enum class UtpDependency(
             "android-test-plugin-host-device-info",
             "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin",
             UtpDependencies::testDeviceInfoPlugin,
-            "com.android.tools.utp",
-            ANDROID_TOOLS_BASE_VERSION),
+            ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
+            ANDROID_TOOLS_UTP_PLUGIN_VERSION),
     ANDROID_TEST_PLUGIN_HOST_RETENTION(
             "android-test-plugin-host-retention",
-            "com.google.testing.platform.plugin.android.icebox.host.IceboxPlugin",
-            UtpDependencies::testPluginHostRetention),
+            "com.android.tools.utp.plugins.host.icebox.IceboxPlugin",
+            UtpDependencies::testPluginHostRetention,
+            ANDROID_TOOLS_UTP_PLUGIN_MAVEN_GROUP_ID,
+            ANDROID_TOOLS_UTP_PLUGIN_VERSION),
     ;
 
     val configurationName: String = "_internal-unified-test-platform-${artifactId}"

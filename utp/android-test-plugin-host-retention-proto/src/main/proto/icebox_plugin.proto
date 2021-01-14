@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package com.android.tools.utp.plugins.host.icebox.proto;
+option java_package = 'com.android.tools.utp.plugins.host.icebox.proto';
+option java_outer_classname = 'IceboxPluginProto';
+
+// Compression formats for snapshot.
+enum Compression {
+    NONE = 0;
+    TARGZ = 1;
+}
+
+// Sets the following icebox args on the device. The args will be read by icebox
+// plogin. It tells icebox which package to track, as well as the emulator grpc
+// address/port.
+message IceboxPlugin {
+    // Test APP package name
+    string app_package = 1;
+
+    // The emulator gRPC address
+    string emulator_grpc_address = 2;
+
+    // The emulator gRPC port
+    int32 emulator_grpc_port = 3;
+
+    // Set to true to skip taking snapshots.
+    bool skip_snapshot = 4;
+
+    // Maximum number of snapshots Icebox can take. Set skip_snapshot=false and
+    // max_snapshot_number=0 for unlimited snapshots. Unused when
+    // skip_snapshot=true.
+    int32 max_snapshot_number = 5;
+
+    // The Android Studio ddmlib port to send the disconnect process message.
+    int32 android_studio_ddmlib_port = 6;
+
+    // Compress the icebox snapshot or not. The compression is slow.
+    Compression snapshot_compression = 7;
+}
