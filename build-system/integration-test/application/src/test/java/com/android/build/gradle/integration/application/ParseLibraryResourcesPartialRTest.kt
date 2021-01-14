@@ -16,7 +16,7 @@ import java.nio.charset.Charset
 /**
  * Tests to verify that library partial-r files are updated appropriately.
  */
-class ParseLibraryResourcesPartialRTest() {
+class ParseLibraryResourcesPartialRTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
@@ -40,7 +40,7 @@ class ParseLibraryResourcesPartialRTest() {
         val partialRFiles = partialRIntermediateDir.listFiles()
                 ?: error("No partial-r files generated.")
         checkLibPartialRFiles(partialRFiles.toList())
-        val originalTimeStamps = partialRFiles.sorted().map { it.lastModified() }
+        val originalTimeStamps = partialRFiles.map(File::lastModified)
 
         //Incremental build with no changes.
         val incrementalBuildResult = executor.run("assembleDebug")
