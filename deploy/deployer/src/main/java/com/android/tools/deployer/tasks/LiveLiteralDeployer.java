@@ -33,9 +33,6 @@ import java.util.Collection;
  * effort on respond time instead.
  */
 public class LiveLiteralDeployer {
-
-    private static final Object LOCK = new Object();
-
     public static class UpdateLiveLiteralParam {
         final String key;
         final String type;
@@ -79,17 +76,7 @@ public class LiveLiteralDeployer {
         Deploy.LiveLiteralUpdateRequest request = requestBuilder.build();
 
         try {
-            synchronized (LOCK) {
-                // All of the installer pipeline should be thread (multi-process) safe except how we
-                // interact with DDMLib. For that communication, all request shares the same socket
-                // so we could potentially end up reading part of a reply for a different request.
-                //
-                // This is very unlikely to happen. While recoverable, we still want to avoid this
-                // as much as possible. Therefore we are going to have a global lock on the quest.
-                //
-                // TODO: This can possible race with a real deployment (one of them would fail)
-                installer.updateLiveLiterals(request);
-            }
+            installer.updateLiveLiterals(request);
         } catch (IOException e) {
             e.printStackTrace();
         }
