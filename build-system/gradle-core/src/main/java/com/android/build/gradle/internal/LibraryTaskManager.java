@@ -327,7 +327,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         // Add a task to create the AAR metadata file
         taskFactory.register(new AarMetadataTask.CreationAction(libraryVariant));
 
-        createLintTasks(libraryVariant, allVariants);
         createBundleTask(libraryVariant);
     }
 

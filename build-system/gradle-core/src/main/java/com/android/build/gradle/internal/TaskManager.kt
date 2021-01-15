@@ -174,8 +174,6 @@ import com.android.build.gradle.tasks.JavaCompileCreationAction
 import com.android.build.gradle.tasks.JavaPreCompileTask
 import com.android.build.gradle.tasks.LintFixTask
 import com.android.build.gradle.tasks.LintGlobalTask
-import com.android.build.gradle.tasks.LintPerVariantTask
-import com.android.build.gradle.tasks.LintPerVariantTask.VitalCreationAction
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MapSourceSetPathsTask
 import com.android.build.gradle.tasks.MergeResources
@@ -1376,63 +1374,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createConnectedTestForVariant(androidTestProperties)
     }
 
-    /**
-     * Add tasks for running lint on individual variants. We've already added a lint task earlier
-     * which runs on all variants.
-     */
-    open fun createLintTasks(
-            variantProperties: VariantT,
-            allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
-        if (lintTaskManager.useNewLintModel) {
-            return
-        }
-        taskFactory.register(
-                LintPerVariantTask.CreationAction(
-                        variantProperties,
-                        allVariants.stream()
-                                .map(ComponentInfo<VariantBuilderT, VariantT>::variant)
-                                .collect(Collectors.toList())))
-    }
-
     /** Returns the full path of a task given its name.  */
     private fun getTaskPath(taskName: String): String {
         return if (project.rootProject === project) ":$taskName" else project.path + ':' + taskName
-    }
-
-    open fun maybeCreateLintVitalTask(
-            variant: VariantT,
-            allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
-        if (lintTaskManager.useNewLintModel) {
-            return;
-        }
-        if (variant.debuggable
-                || !extension.lintOptions.isCheckReleaseBuilds()) {
-            return
-        }
-        val lintReleaseCheck = taskFactory.register(
-                VitalCreationAction(
-                        variant,
-                        allVariants.stream()
-                                .map(ComponentInfo<VariantBuilderT, VariantT>::variant)
-                                .collect(Collectors.toList())),
-                null,
-                object : TaskConfigAction<Task> {
-                    override fun configure(task: Task) {
-                        task.dependsOn(variant.taskContainer.javacTask)
-                    }
-                },
-                null)
-        variant.taskContainer.assembleTask.dependsOn(lintReleaseCheck)
-
-        // If lint is being run, we do not need to run lint vital.
-        project.gradle
-                .taskGraph
-                .whenReady { taskGraph: TaskExecutionGraph ->
-                    if (taskGraph.hasTask(getTaskPath(LINT))) {
-                        project.tasks
-                                .getByName(lintReleaseCheck.name).enabled = false
-                    }
-                }
     }
 
     private fun createRunUnitTestTask(unitTestCreationConfig: UnitTestCreationConfig) {

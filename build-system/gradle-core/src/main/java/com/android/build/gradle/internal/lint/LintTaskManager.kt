@@ -1,15 +1,12 @@
 package com.android.build.gradle.internal.lint
 
-import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
 import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
@@ -19,10 +16,7 @@ import com.android.build.gradle.tasks.LintGlobalTask
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
 import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaBasePlugin
-import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 

@@ -144,24 +144,6 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    public void createLintTasks(
-            @NotNull TestVariantImpl variantProperties,
-            @NotNull
-                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
-                            allVariants) {
-        // do nothing
-    }
-
-    @Override
-    public void maybeCreateLintVitalTask(
-            @NonNull TestVariantImpl variant,
-            @NonNull
-                    List<? extends ComponentInfo<TestVariantBuilderImpl, TestVariantImpl>>
-                            allVariants) {
-        // do nothing
-    }
-
-    @Override
     protected void configureGlobalLintTask() {
         // do nothing
     }
