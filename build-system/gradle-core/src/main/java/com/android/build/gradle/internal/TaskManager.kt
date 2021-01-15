@@ -172,8 +172,6 @@ import com.android.build.gradle.tasks.GenerateTestConfig
 import com.android.build.gradle.tasks.GenerateTestConfig.TestConfigInputs
 import com.android.build.gradle.tasks.JavaCompileCreationAction
 import com.android.build.gradle.tasks.JavaPreCompileTask
-import com.android.build.gradle.tasks.LintFixTask
-import com.android.build.gradle.tasks.LintGlobalTask
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MapSourceSetPathsTask
 import com.android.build.gradle.tasks.MergeResources
@@ -272,11 +270,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      */
     fun createTasks(
             variantType: VariantType, variantModel: VariantModel) {
-        // this is call before all the variants are created since they are all going to depend
+        // this is called before all the variants are created since they are all going to depend
         // on the global LINT_PUBLISH_JAR task output
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
-        taskFactory.register(PrepareLintJarForPublish.CreationAction(globalScope))
+        createPrepareLintJarForPublishTask()
 
         // create a lifecycle task to build the lintChecks dependencies
         taskFactory.register(COMPILE_LINT_CHECKS_TASK) { task: Task ->
@@ -322,8 +320,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // configure Kotlin compilation if needed.
         configureKotlinPluginTasksIfNecessary()
 
-        // create the global lint task that depends on all the variants
-        configureGlobalLintTask()
         createAnchorAssembleTasks(extension.productFlavors.size, extension.flavorDimensionList.size)
     }
 
@@ -422,26 +418,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    // this is run after all the variants are created.
-    protected open fun configureGlobalLintTask() {
-        if (lintTaskManager.useNewLintModel) {
-            return;
-        }
-        // configure the global lint tasks.
-        taskFactory.configure(
-                LINT,
-                LintGlobalTask::class.java
-        ) { task: LintGlobalTask ->
-            LintGlobalTask.GlobalCreationAction(globalScope, variantPropertiesList)
-                    .configure(task)
-        }
-        taskFactory.configure(
-                LINT_FIX,
-                LintFixTask::class.java
-        ) { task: LintFixTask ->
-            LintFixTask.GlobalCreationAction(globalScope, variantPropertiesList)
-                    .configure(task)
-        }
+    protected open fun createPrepareLintJarForPublishTask() {
+        taskFactory.register(PrepareLintJarForPublish.CreationAction(globalScope))
     }
 
     private fun configureKotlinPluginTasksIfNecessary() {

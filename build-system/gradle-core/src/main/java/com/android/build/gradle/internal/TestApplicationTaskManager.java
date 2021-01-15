@@ -144,11 +144,6 @@ public class TestApplicationTaskManager
     }
 
     @Override
-    protected void configureGlobalLintTask() {
-        // do nothing
-    }
-
-    @Override
     protected void maybeCreateJavaCodeShrinkerTask(
             @NonNull ConsumableCreationConfig creationConfig) {
         final CodeShrinker codeShrinker = creationConfig.getCodeShrinker();

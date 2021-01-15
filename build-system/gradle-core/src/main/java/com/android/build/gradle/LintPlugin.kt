@@ -96,26 +96,14 @@ abstract class LintPlugin : Plugin<Project> {
     }
     private fun registerTasks(project: Project) {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
-        val useNewLintModel = LintTaskManager.computeUseNewLintModel(
-            project,
-            projectServices.projectOptions
-        )
         val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
         BasePlugin.createLintClasspathConfiguration(project)
-        if (useNewLintModel) {
-            registerTasks(
-                project,
-                javaConvention,
-                customLintChecks
-            )
-        } else {
-            registerLegacyTasks(
-                project,
-                javaConvention,
-                customLintChecksConfig
-            )
-        }
+        registerTasks(
+            project,
+            javaConvention,
+            customLintChecks
+        )
     }
 
     private fun registerTasks(
@@ -197,43 +185,6 @@ abstract class LintPlugin : Plugin<Project> {
                 }
             }
 
-        }
-    }
-
-    private fun registerLegacyTasks(
-        project: Project,
-        javaConvention: JavaPluginConvention,
-        customLintChecksConfig: Configuration
-    ) {
-        val projectName = project.name
-        val task = registerLegacyTask(
-            "lint",
-            "Run Android Lint analysis on project `$projectName`",
-            project,
-            javaConvention,
-            customLintChecksConfig
-        )
-        // Make the check task depend on the lint
-        project.tasks.named(JavaBasePlugin.CHECK_TASK_NAME)
-            .configure { t: Task -> t.dependsOn(task) }
-        val lintVital = registerLegacyTask(
-            "lintVital",
-            "Runs lint on just the fatal issues in the project `$projectName`",
-            project,
-            javaConvention,
-            customLintChecksConfig
-        )
-        lintVital.configure { it.fatalOnly = true }
-        registerLegacyTask(
-            "lintFix",
-            "Runs lint on `$projectName` and applies any safe suggestions to " +
-                    "the source code.",
-            project,
-            javaConvention,
-            customLintChecksConfig
-        ).configure {
-            it.autoFix = true
-            it.group = "cleanup"
         }
     }
 

@@ -530,8 +530,8 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     }
 
     @Override
-    protected void configureGlobalLintTask() {
-        super.configureGlobalLintTask();
+    protected void createPrepareLintJarForPublishTask() {
+        super.createPrepareLintJarForPublishTask();
 
         // publish the local lint.jar to all the variants.
         // This takes the global jar (output of PrepareLintJar) and publishes to each variants
