@@ -60,6 +60,7 @@ import com.android.ide.common.repository.GradleVersion
 import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
 import com.android.projectmodel.ARTIFACT_NAME_MAIN
 import com.android.projectmodel.ARTIFACT_NAME_UNIT_TEST
+import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.detector.api.Severity
@@ -268,6 +269,20 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         return _project
     }
 
+    val buildTargetHash: String?
+        get() {
+            return project
+                .compileTarget
+                .takeUnless { it.isEmpty() }
+        }
+
+    val buildSdk: Int?
+        get() {
+            return buildTargetHash
+                ?.let { AndroidTargetHash.getPlatformVersion(it) }
+                ?.apiLevel
+        }
+
     val variant: IdeVariant get() {
         ensureInitialized()
         return _variant
@@ -277,6 +292,16 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         ensureInitialized()
         return _variants
     }
+
+    val generatedSourceFolders: Collection<File>
+        get() {
+            return variant.mainArtifact.generatedSourceFolders
+        }
+
+    val generatedResourceFolders: Collection<File>
+        get() {
+            return variant.mainArtifact.generatedResourceFolders
+        }
 
     fun syncFlagsTo(to: LintCliFlags) {
         ensureInitialized()

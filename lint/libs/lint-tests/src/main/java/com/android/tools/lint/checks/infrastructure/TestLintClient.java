@@ -47,8 +47,6 @@ import com.android.ide.common.resources.ResourceSet;
 import com.android.ide.common.resources.TestResourceRepository;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
-import com.android.sdklib.AndroidTargetHash;
-import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.LintCliClient;
@@ -1554,13 +1552,9 @@ public class TestLintClient extends LintCliClient {
         @Override
         public int getBuildSdk() {
             if (mocker != null) {
-                String compileTarget = mocker.getProject().getCompileTarget();
-                //noinspection ConstantConditions
-                if (compileTarget != null && !compileTarget.isEmpty()) {
-                    AndroidVersion version = AndroidTargetHash.getPlatformVersion(compileTarget);
-                    if (version != null) {
-                        return version.getApiLevel();
-                    }
+                Integer buildSdk = mocker.getBuildSdk();
+                if (buildSdk != null) {
+                    return buildSdk;
                 }
             }
 
@@ -1571,10 +1565,9 @@ public class TestLintClient extends LintCliClient {
         @Override
         public String getBuildTargetHash() {
             if (mocker != null) {
-                String compileTarget = mocker.getProject().getCompileTarget();
-                //noinspection ConstantConditions
-                if (compileTarget != null && !compileTarget.isEmpty()) {
-                    return compileTarget;
+                String buildTargetHash = mocker.getBuildTargetHash();
+                if (buildTargetHash != null) {
+                    return buildTargetHash;
                 }
             }
 
@@ -1711,8 +1704,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedSourceFolders =
-                            mocker.getVariant().getMainArtifact().getGeneratedSourceFolders()
-                                    .stream()
+                            mocker.getGeneratedSourceFolders().stream()
                                     .filter(File::exists)
                                     .collect(Collectors.toList());
                 }
@@ -1745,8 +1737,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedResourceFolders =
-                            mocker.getVariant().getMainArtifact().getGeneratedResourceFolders()
-                                    .stream()
+                            mocker.getGeneratedSourceFolders().stream()
                                     .filter(File::exists)
                                     .collect(Collectors.toList());
                 }
