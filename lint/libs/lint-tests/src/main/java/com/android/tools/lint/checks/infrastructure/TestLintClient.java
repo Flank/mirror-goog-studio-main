@@ -402,7 +402,7 @@ public class TestLintClient extends LintCliClient {
         }
         LintCliFlags flags = getFlags();
         if (mocker != null && mocker.getProject() != null) {
-            if (mocker.primary) {
+            if (mocker.getPrimary()) {
                 mocker.syncFlagsTo(flags);
                 flags.setFatalOnly(task.vital);
 
@@ -543,7 +543,7 @@ public class TestLintClient extends LintCliClient {
         // to do it early before the driver is initialized
         if (!files.isEmpty()) {
             GradleModelMocker mocker = task.projectMocks.get(files.get(0));
-            if (mocker != null && mocker.primary) {
+            if (mocker != null && mocker.getPrimary()) {
                 mocker.syncFlagsTo(getFlags());
             }
         }
