@@ -52,12 +52,16 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
     abstract val renderscriptSources: DirectoryProperty
 
     override fun doTaskAction() {
-        IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use {
-            val generator : CxxMetadataGenerator =
-                    createCxxMetadataGenerator(
-                            configurationModel,
-                            analyticsService = analyticsService.get()
-                    )
+        IssueReporterLoggingEnvironment(
+            DefaultIssueReporter(LoggerWrapper(logger)),
+            analyticsService.get(),
+            configurationModel
+        ).use {
+            val generator: CxxMetadataGenerator =
+                createCxxMetadataGenerator(
+                    configurationModel,
+                    analyticsService = analyticsService.get()
+                )
             generator.generate(ops, false, null)
         }
     }

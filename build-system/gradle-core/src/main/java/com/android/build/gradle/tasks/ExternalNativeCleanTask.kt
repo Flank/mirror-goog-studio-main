@@ -51,7 +51,9 @@ abstract class ExternalNativeCleanTask @Inject constructor(private val ops: Exec
 
     override fun doTaskAction() {
         IssueReporterLoggingEnvironment(
-                DefaultIssueReporter(LoggerWrapper(logger))
+            DefaultIssueReporter(LoggerWrapper(logger)),
+            analyticsService.get(),
+            configurationModel
         ).use {
             infoln("starting clean")
             infoln("finding existing JSONs")

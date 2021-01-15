@@ -44,19 +44,28 @@ abstract class ExternalNativeBuildTask @Inject constructor(@get:Internal val ops
         UnsafeOutputsTask("External Native Build task is always run as incrementality is left to the external build system.") {
 
     @get:Internal
-    internal lateinit var builder : CxxBuilder
+    internal lateinit var builder: CxxBuilder
 
     @get:Internal
     abstract val sdkComponents: Property<SdkComponentsBuildService>
 
-    @get:OutputDirectory
-    val objFolder get() = builder.objFolder
+    @get:Internal
+    internal lateinit var configurationModel: CxxConfigurationModel
 
     @get:OutputDirectory
-    val soFolder get() = builder.soFolder
+    val objFolder
+        get() = builder.objFolder
+
+    @get:OutputDirectory
+    val soFolder
+        get() = builder.soFolder
 
     override fun doTaskAction() {
-        IssueReporterLoggingEnvironment(DefaultIssueReporter(LoggerWrapper(logger))).use {
+        IssueReporterLoggingEnvironment(
+            DefaultIssueReporter(LoggerWrapper(logger)),
+            analyticsService.get(),
+            configurationModel
+        ).use {
             builder.build(ops)
         }
     }
@@ -78,6 +87,7 @@ fun createRepublishCxxBuildTask(
         super.configure(task)
         task.builder = CxxRepublishBuilder(configurationModel)
         task.sdkComponents.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
+        task.configurationModel = configurationModel
     }
 }
 
@@ -96,5 +106,6 @@ fun createWorkingCxxBuildTask(
         super.configure(task)
         task.builder = CxxRegularBuilder(configurationModel)
         task.variantName = configurationModel.variant.variantName
+        task.configurationModel = configurationModel
     }
 }
