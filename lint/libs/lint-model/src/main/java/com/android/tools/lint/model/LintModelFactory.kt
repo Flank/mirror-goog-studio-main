@@ -197,7 +197,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun IdeJavaLibrary.getMavenArtifactAddress(): String = artifactAddress.substringBefore("@")
 
-    private fun IdeModuleLibrary.getMavenArtifactAddress(): String= "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
+    private fun IdeModuleLibrary.getMavenArtifactAddress(): String = "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
 
     private fun getGraphItem(
         artifactName: String,

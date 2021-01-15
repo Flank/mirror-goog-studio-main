@@ -2087,5 +2087,5 @@ abstract class LintClient {
     /** True if lint should print the full stacktrace of internal errors. */
     open val printInternalErrorStackTrace: Boolean
         get() = SdkConstants.VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE") ||
-                SdkConstants.VALUE_TRUE == System.getProperty("lint.print-stacktrace")
+            SdkConstants.VALUE_TRUE == System.getProperty("lint.print-stacktrace")
 }

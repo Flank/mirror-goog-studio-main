@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.model
 
-import com.android.ide.common.gradle.model.IdeVariant
 import com.android.sdklib.AndroidVersion
 import java.io.File
 

@@ -313,9 +313,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
         //       you also need to mark that local resource as a deliberate override,
         //       but if not you'll get a warning in the XML file where the override is
         //       defined.)
-        lint().files(manifest().pkg("test.pkg"), rClass, cls, strings, gradle)
-                .run()
-                .expectClean();
+        lint().files(manifest().pkg("test.pkg"), rClass, cls, strings, gradle).run().expectClean();
     }
 
     public void testAllowLocalOverridesWithResourceRepository() {

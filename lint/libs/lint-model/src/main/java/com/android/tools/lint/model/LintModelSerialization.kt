@@ -20,7 +20,6 @@ package com.android.tools.lint.model
 
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.VALUE_TRUE
-import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
 import com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter

@@ -29,7 +29,6 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
 import java.io.File
 
 class CustomRuleTest {

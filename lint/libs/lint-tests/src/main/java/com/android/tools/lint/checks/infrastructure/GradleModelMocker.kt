@@ -18,7 +18,10 @@ package com.android.tools.lint.checks.infrastructure
 import com.android.AndroidProjectTypes
 import com.android.SdkConstants
 import com.android.build.FilterData
-import com.android.builder.model.*
+import com.android.builder.model.AndroidLibrary
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.JavaLibrary
+import com.android.builder.model.LintOptions
 import com.android.builder.model.level2.GraphItem
 import com.android.builder.model.level2.Library
 import com.android.ide.common.gradle.model.IdeAaptOptions
@@ -65,7 +68,12 @@ import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 import com.google.common.base.Splitter
-import com.google.common.collect.*
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.Lists
+import com.google.common.collect.Maps
+import com.google.common.collect.Multimap
+import com.google.common.collect.Sets
 import com.google.common.hash.Hashing
 import com.google.common.io.ByteStreams
 import junit.framework.TestCase
@@ -74,8 +82,15 @@ import org.jetbrains.annotations.Contract
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
-import java.io.*
-import java.util.*
+import java.io.BufferedOutputStream
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.PrintStream
+import java.util.ArrayDeque
+import java.util.Deque
+import java.util.Locale
 import java.util.jar.Attributes
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
@@ -160,21 +175,24 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     }
 
     fun withLibraryLintJar(
-        library: String, lintJarPath: String
+        library: String,
+        lintJarPath: String
     ): GradleModelMocker {
         libraryLintJars[library] = lintJarPath
         return this
     }
 
     fun withLibraryPublicResourcesFile(
-        library: String, publicResourcesPath: String
+        library: String,
+        publicResourcesPath: String
     ): GradleModelMocker {
         libraryPublicResourcesFiles[library] = publicResourcesPath
         return this
     }
 
     fun withLibrarySymbolFile(
-        library: String, symbolFilePath: String
+        library: String,
+        symbolFilePath: String
     ): GradleModelMocker {
         librarySymbolFiles[library] = symbolFilePath
         return this
@@ -237,8 +255,8 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     }
 
     val isLibrary: Boolean
-        get() = (project.projectType == AndroidProjectTypes.PROJECT_TYPE_LIBRARY
-                || project.projectType == PROJECT_TYPE_JAVA_LIBRARY)
+        get() = project.projectType == AndroidProjectTypes.PROJECT_TYPE_LIBRARY ||
+            project.projectType == PROJECT_TYPE_JAVA_LIBRARY
 
     /** Whether the Gradle file applied the java-library plugin  */
     fun hasAndroidLibraryPlugin(): Boolean {
@@ -585,9 +603,9 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                         .thenReturn(
                             File(
                                 projectDir,
-                                "build/intermediates/javac/"
-                                        + variantName
-                                        + "/classes"
+                                "build/intermediates/javac/" +
+                                    variantName +
+                                    "/classes"
                             )
                         )
                     Mockito.`when`(artifact.additionalClassesFolders)
@@ -692,13 +710,15 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     ) {
         for (library in libraries) {
             val coordinates = library.resolvedCoordinates
-            val name = (coordinates.groupId
-                    + ':'
-                    + coordinates.artifactId
-                    + ':'
-                    + coordinates.version
-                    + '@'
-                    + coordinates.packaging)
+            val name = (
+                coordinates.groupId +
+                    ':' +
+                    coordinates.artifactId +
+                    ':' +
+                    coordinates.version +
+                    '@' +
+                    coordinates.packaging
+                )
             if (fullDependencies || !seen.contains(name)) {
                 seen.add(name)
                 val item = Mockito.mock(
@@ -733,13 +753,15 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             Library::class.java
         )
         val coordinates = library.resolvedCoordinates
-        val name = (coordinates.groupId
-                + ':'
-                + coordinates.artifactId
-                + ':'
-                + coordinates.version
-                + '@'
-                + coordinates.packaging)
+        val name = (
+            coordinates.groupId +
+                ':' +
+                coordinates.artifactId +
+                ':' +
+                coordinates.version +
+                '@' +
+                coordinates.packaging
+            )
         Mockito.`when`(lib.artifactAddress).thenReturn(name)
         if (library is AndroidLibrary) {
             val folder = library.folder
@@ -936,17 +958,19 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                 return
             } else {
                 // Group/artifact/version syntax?
-                if (line.contains("group:")
-                    && line.contains("name:")
-                    && line.contains("version:")
+                if (line.contains("group:") &&
+                    line.contains("name:") &&
+                    line.contains("version:")
                 ) {
                     var group: String? = null
                     var artifact: String? = null
                     var version: String? = null
-                    for (part in Splitter.on(',')
-                        .trimResults()
-                        .omitEmptyStrings()
-                        .split(line.substring(line.indexOf(' ') + 1))) {
+                    for (
+                        part in Splitter.on(',')
+                            .trimResults()
+                            .omitEmptyStrings()
+                            .split(line.substring(line.indexOf(' ') + 1))
+                    ) {
                         if (part.startsWith("group:")) {
                             group = getUnquotedValue(part)
                         } else if (part.startsWith("name:")) {
@@ -1069,14 +1093,14 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                 Mockito.`when`(options!!.useSupportLibrary).thenReturn(true)
             }
         } else if (key.startsWith(
-                "android.compileOptions.sourceCompatibility JavaVersion.VERSION_"
-            )
+            "android.compileOptions.sourceCompatibility JavaVersion.VERSION_"
+        )
         ) {
             val s = key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
             Mockito.`when`(compileOptions.sourceCompatibility).thenReturn(s)
         } else if (key.startsWith(
-                "android.compileOptions.targetCompatibility JavaVersion.VERSION_"
-            )
+            "android.compileOptions.targetCompatibility JavaVersion.VERSION_"
+        )
         ) {
             val s = key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
             Mockito.`when`(compileOptions.targetCompatibility).thenReturn(s)
@@ -1089,14 +1113,14 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                     Mockito.`when`(project.modelVersion).thenReturn(gc.revision)
                 }
             } // else ignore other class paths
-        } else if (key.startsWith("android.defaultConfig.testInstrumentationRunner ")
-            || key.contains(".proguardFiles ")
-            || key == "dependencies.compile fileTree(dir: 'libs', include: ['*.jar'])" || key.startsWith("dependencies.androidTestCompile('")
+        } else if (key.startsWith("android.defaultConfig.testInstrumentationRunner ") ||
+            key.contains(".proguardFiles ") ||
+            key == "dependencies.compile fileTree(dir: 'libs', include: ['*.jar'])" || key.startsWith("dependencies.androidTestCompile('")
         ) {
             // Ignored for now
-        } else if (line.startsWith("manifestPlaceholders [")
-            && key.startsWith("android.")
-            && line.endsWith("]")
+        } else if (line.startsWith("manifestPlaceholders [") &&
+            key.startsWith("android.") &&
+            line.endsWith("]")
         ) {
             // Example:
             // android.defaultConfig.manifestPlaceholders [
@@ -1196,8 +1220,8 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             Mockito.`when`(field.type).thenReturn(type)
             Mockito.`when`(field.value).thenReturn(value)
             resValues.put(fieldName!!, field)
-        } else if (context.startsWith("android.splits.")
-            && context.indexOf('.', "android.splits.".length) == -1
+        } else if (context.startsWith("android.splits.") &&
+            context.indexOf('.', "android.splits.".length) == -1
         ) {
             val type = context.substring("android.splits.".length).toUpperCase(Locale.ROOT)
             if (line == "reset") {
@@ -1350,7 +1374,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             lintConfig ?: lintOptions!!.lintConfig,
             severities ?: severityOverrides,
             tests ?: lintOptions!!.isCheckTestSources,
-            dependencies ?: lintOptions!!.isCheckDependencies,  // TODO: Allow these to be customized by model mocker
+            dependencies ?: lintOptions!!.isCheckDependencies, // TODO: Allow these to be customized by model mocker
             lintOptions!!.enable,
             lintOptions!!.disable,
             lintOptions!!.check,
@@ -1388,8 +1412,8 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
 
     private fun file(gradle: String, reportError: Boolean): File {
         var gradle = gradle
-        if (gradle.startsWith("file(\"") && gradle.endsWith("\")")
-            || gradle.startsWith("file('") && gradle.endsWith("')")
+        if (gradle.startsWith("file(\"") && gradle.endsWith("\")") ||
+            gradle.startsWith("file('") && gradle.endsWith("')")
         ) {
             val path = gradle.substring(6, gradle.length - 2)
             return File(projectDir, path)
@@ -1476,13 +1500,13 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         context: String
     ) {
         if ("android.productFlavors" == context && buildTypes.stream()
-                .noneMatch { flavor: IdeBuildType -> flavor.name == name }
+            .noneMatch { flavor: IdeBuildType -> flavor.name == name }
         ) {
             // Defining new product flavors
             createProductFlavor(name)
         }
         if ("android.buildTypes" == context && buildTypes.stream()
-                .noneMatch { buildType: IdeBuildType -> buildType.name == name }
+            .noneMatch { buildType: IdeBuildType -> buildType.name == name }
         ) {
             // Defining new build types
             createBuildType(name)
@@ -1804,12 +1828,12 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         } else {
             File(
                 projectDir,
-                "build/intermediates/exploded-aar/"
-                        + coordinate.groupId
-                        + "/"
-                        + coordinate.artifactId
-                        + "/"
-                        + coordinate.revision
+                "build/intermediates/exploded-aar/" +
+                    coordinate.groupId +
+                    "/" +
+                    coordinate.artifactId +
+                    "/" +
+                    coordinate.revision
             )
         }
         if (jar == null) {
@@ -1824,8 +1848,8 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                     coordinate.toString(),
                     dir,
                     SdkConstants.FN_ANDROID_MANIFEST_XML,
-                    jar.path,  // non relative path is fine here too.
-                    jar.path,  // non relative path is fine here too.
+                    jar.path, // non relative path is fine here too.
+                    jar.path, // non relative path is fine here too.
                     "res",
                     null,
                     "assets", emptyList(),
@@ -1861,19 +1885,19 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         if (jar == null) {
             jar = File(
                 projectDir,
-                "caches/modules-2/files-2.1/"
-                        + coordinate.groupId
-                        + "/"
-                        + coordinate.artifactId
-                        + "/"
-                        + coordinate.revision
-                        +  // Usually some hex string here, but keep same to keep test
-                        // behavior stable
-                        "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/"
-                        + coordinate.artifactId
-                        + "-"
-                        + coordinate.revision
-                        + SdkConstants.DOT_JAR
+                "caches/modules-2/files-2.1/" +
+                    coordinate.groupId +
+                    "/" +
+                    coordinate.artifactId +
+                    "/" +
+                    coordinate.revision +
+                    // Usually some hex string here, but keep same to keep test
+                    // behavior stable
+                    "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/" +
+                    coordinate.artifactId +
+                    "-" +
+                    coordinate.revision +
+                    SdkConstants.DOT_JAR
             )
             if (!jar.exists()) {
                 createEmptyJar(jar)
@@ -1954,7 +1978,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
      *
      * <pre>
      * $ ./gradlew :app:dependencies
-    </pre> *
+     </pre> *
      *
      *
      * Sample graph:
@@ -1976,7 +2000,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
      * |    \--- org.hamcrest:hamcrest-library:1.3 (*)
      * +--- com.google.code.findbugs:jsr305:2.0.1
      * \--- javax.annotation:javax.annotation-api:1.2
-    </pre> *
+     </pre> *
      *
      * @param graph the graph
      * @return the corresponding dependencies
@@ -2209,7 +2233,8 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         }
 
         private fun createAndroidArtifactOutput(
-            filterType: String, identifier: String
+            filterType: String,
+            identifier: String
         ): IdeAndroidArtifactOutput {
             val artifactOutput = Mockito.mock(
                 IdeAndroidArtifactOutput::class.java
@@ -2228,7 +2253,8 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         }
 
         private fun createSourceProvider(
-            root: File, name: String
+            root: File,
+            name: String
         ): IdeSourceProvider {
             val provider = Mockito.mock(IdeSourceProvider::class.java)
             Mockito.`when`(provider.name).thenReturn(name)
@@ -2257,26 +2283,28 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         private fun isJavaLibrary(declaration: String): Boolean {
             if (declaration.startsWith("com.android.support:support-annotations:")) {
                 return true
-            } else if (declaration.startsWith("com.android.support:support-v4:")
-                || declaration.startsWith("com.android.support:support-v13:")
+            } else if (declaration.startsWith("com.android.support:support-v4:") ||
+                declaration.startsWith("com.android.support:support-v13:")
             ) {
                 // Jar prior to to v20
-                return (declaration.contains(":13")
-                        || declaration.contains(":18")
-                        || declaration.contains(":19"))
+                return (
+                    declaration.contains(":13") ||
+                        declaration.contains(":18") ||
+                        declaration.contains(":19")
+                    )
             } else if (declaration.startsWith("com.google.guava:guava:")) {
                 return true
             } else if (declaration.startsWith("com.google.android.wearable:wearable:")) {
                 return true
             } else if (declaration.startsWith(
-                    "com.android.support.constraint:constraint-layout-solver:"
-                )
+                "com.android.support.constraint:constraint-layout-solver:"
+            )
             ) {
                 return true
             } else if (declaration.startsWith("junit:junit:")) {
                 return true
-            } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-")
-                || declaration.startsWith("org.jetbrains:annotations")
+            } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-") ||
+                declaration.startsWith("org.jetbrains:annotations")
             ) {
                 return true
             }
