@@ -598,7 +598,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     }
 
 
-    private companion object {
-        const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
+    companion object {
+        private const val LINT_PRINT_STACKTRACE_ENVIRONMENT_VARIABLE = "LINT_PRINT_STACKTRACE"
+        const val LINT_CLASS_PATH = "lintClassPath"
     }
 }

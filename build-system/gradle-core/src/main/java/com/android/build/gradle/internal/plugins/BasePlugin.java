@@ -68,6 +68,7 @@ import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCache
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService;
 import com.android.build.gradle.internal.ide.v2.GlobalLibraryBuildService;
 import com.android.build.gradle.internal.ide.v2.NativeModelBuilder;
+import com.android.build.gradle.internal.lint.AndroidLintTask;
 import com.android.build.gradle.internal.lint.LintFixBuildService;
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService;
 import com.android.build.gradle.internal.profile.AnalyticsService;
@@ -101,7 +102,6 @@ import com.android.build.gradle.options.ProjectOptionService;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.model.v2.ide.ProjectType;
@@ -455,7 +455,7 @@ public abstract class BasePlugin<
 
     /** Creates a lint class path Configuration for the given project */
     public static void createLintClasspathConfiguration(@NonNull Project project) {
-        Configuration config = project.getConfigurations().create(LintBaseTask.LINT_CLASS_PATH);
+        Configuration config = project.getConfigurations().create(AndroidLintTask.LINT_CLASS_PATH);
         config.setVisible(false);
         config.setTransitive(true);
         config.setCanBeConsumed(false);

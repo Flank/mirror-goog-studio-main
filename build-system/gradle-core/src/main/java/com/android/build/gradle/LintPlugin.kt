@@ -41,11 +41,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.services.DslServicesImpl
-import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
-import com.android.build.gradle.internal.tasks.LintStandaloneTask
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
@@ -54,7 +51,6 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Category
 import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.component.ConfigurationVariantDetails
@@ -63,9 +59,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.build.event.BuildEventsListenerRegistry
-import java.util.function.BiConsumer
 import javax.inject.Inject
 
 /**
@@ -194,24 +188,6 @@ abstract class LintPlugin : Plugin<Project> {
 
     private fun withJavaPlugin(project: Project, action: Action<Plugin<*>>) {
         project.plugins.withType(JavaBasePlugin::class.java, action)
-    }
-
-    private fun registerLegacyTask(
-        taskName: String,
-        description: String,
-        project: Project,
-        javaConvention: JavaPluginConvention,
-        customLintChecksConfig: Configuration
-    ): TaskProvider<LintStandaloneTask> {
-        return project.tasks.register(taskName, LintStandaloneTask::class.java) { task ->
-            task.group = JavaBasePlugin.VERIFICATION_GROUP
-            task.description = description
-            task.reportDir = javaConvention.testResultsDir
-            task.lintOptions = lintOptions
-            task.lintChecks = customLintChecksConfig
-            task.outputs.upToDateWhen { false }
-            task.lintClassLoader.set(LintClassLoaderBuildService.RegistrationAction(project).execute())
-        }
     }
 
     private fun getJavaPluginConvention(project: Project): JavaPluginConvention? {

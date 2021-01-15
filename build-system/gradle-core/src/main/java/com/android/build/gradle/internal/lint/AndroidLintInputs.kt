@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheB
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
+import com.android.build.gradle.internal.lint.AndroidLintTask.Companion.LINT_CLASS_PATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
@@ -108,7 +109,7 @@ abstract class LintTool {
 
     fun initialize(project: Project, projectOptions: ProjectOptions) {
         // TODO(b/160392650) Clean this up to use a detached configuration
-        classpath.fromDisallowChanges(project.configurations.getByName("lintClassPath"))
+        classpath.fromDisallowChanges(project.configurations.getByName(LINT_CLASS_PATH))
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
     }
 
