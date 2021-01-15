@@ -1610,6 +1610,11 @@ public class TestLintClient extends LintCliClient {
                         break;
                     }
                 }
+                if (cachedLintVariant != null) {
+                    if (cachedLintVariant != module.findVariant(mocker.getVariant().getName())) {
+                        throw new IllegalStateException("Variants do not match: " + mocker.getVariant().getName());
+                    }
+                }
                 if (cachedLintVariant == null) {
                     cachedLintVariant = module.findVariant(mocker.getVariant().getName());
                 }
