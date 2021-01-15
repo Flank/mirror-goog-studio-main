@@ -23,8 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
@@ -32,29 +30,13 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Checks if fatal lint errors stop the release build. */
-@RunWith(FilterableParameterized.class)
 public class LintVitalTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
-
     @Rule
-    public final GradleTestProject project;
-
-    private LintInvocationType lintInvocationType;
-
-    public LintVitalTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestApp(HelloWorldApp.noBuildFile())
-                .create();
-        this.lintInvocationType = lintInvocationType;
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
 
     @Before
     public void setUp() throws Exception {
@@ -97,15 +79,7 @@ public class LintVitalTest {
         // We make this assertion to ensure that lint is actually run and runs as expected. Without
         // this, it's possible that we break the execution in some other way and the test still
         // passes.
-        final String expectedFailedTaskPath;
-        if (lintInvocationType == LintInvocationType.NEW_LINT_MODEL) {
-            expectedFailedTaskPath = ":lintDebug";
-        } else {
-            expectedFailedTaskPath = ":lint";
-        }
-
-        TaskStateList.TaskInfo task = result.getTask(expectedFailedTaskPath);
-        assertThat(task).failed();
+        assertThat(result.getTask(":lintDebug")).failed();
     }
 
     @Test

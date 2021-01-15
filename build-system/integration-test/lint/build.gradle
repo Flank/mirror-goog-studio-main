@@ -1,4 +1,3 @@
-import com.android.tools.internal.testing.DevicePool;
 
 apply plugin: 'com.android.tools.java'
 apply plugin: 'com.android.tools.kotlin'

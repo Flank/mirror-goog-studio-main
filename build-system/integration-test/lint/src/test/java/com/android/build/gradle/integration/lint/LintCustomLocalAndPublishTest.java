@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
@@ -31,32 +30,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test for publishing a custom jar in a library model, used by a consuming app, as well as having a
  * local lint jar.
  */
-@RunWith(FilterableParameterized.class)
 public class LintCustomLocalAndPublishTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
-
-    @Rule public final GradleTestProject project;
-    private final LintInvocationType lintInvocationType;
-
-    public LintCustomLocalAndPublishTest(LintInvocationType lintInvocationType) {
-        this.project =
-                lintInvocationType
-                        .testProjectBuilder(2)
-                        .fromTestProject("lintCustomLocalAndPublishRules")
-                        .create();
-        this.lintInvocationType = lintInvocationType;
-    }
+    @Rule public final GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("lintCustomLocalAndPublishRules")
+                    .withConfigurationCacheMaxProblems(2)
+                    .create();
 
     @Test
     public void checkCustomLint() throws Exception {

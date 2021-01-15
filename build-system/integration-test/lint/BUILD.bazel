@@ -1,17 +1,5 @@
 load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
-
-kotlin_library(
-    name = "framework",
-    srcs = glob([
-        "src/main/java/**/*.kt",
-        "src/main/java/**/*.java",
-    ]),
-    deps = [
-        "//tools/base/build-system/integration-test/framework",
-    ],
-)
 
 gradle_integration_test(
     name = "tests",
@@ -50,7 +38,6 @@ gradle_integration_test(
     resources = glob(["src/test/resources/**"]),
     shard_count = 4,
     deps = [
-        ":framework",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",
         "//tools/base/build-system/builder",

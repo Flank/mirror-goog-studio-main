@@ -16,36 +16,26 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
-import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Test for the standalone lint plugin.
  *
+ * <p>Tip: To execute just this test run:
  *
- * To run just this test:
- * ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintStandaloneVitalTest
+ * <pre>
+ *     $ cd tools
+ *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintStandaloneVitalTest
+ * </pre>
  */
-@RunWith(FilterableParameterized::class)
-class LintStandaloneVitalTest(private val lintInvocationType: LintInvocationType) {
+class LintStandaloneVitalTest {
 
-    companion object {
-        @get:JvmStatic
-        @get:Parameterized.Parameters(name = "{0}")
-        val params get() = LintInvocationType.values()
-    }
-
-    @Rule
-    @JvmField
-    var project = lintInvocationType
-        .testProjectBuilder()
-        .fromTestProject("lintStandaloneVital")
-        .create()
+    @get:Rule
+    val project =
+        GradleTestProject.builder().fromTestProject("lintStandaloneVital").create()
 
     @Test
     fun checkStandaloneLintVital() {
@@ -67,16 +57,9 @@ class LintStandaloneVitalTest(private val lintInvocationType: LintInvocationType
             )
         }
 
-        if (lintInvocationType == LintInvocationType.NEW_LINT_MODEL) {
-            result.stderr.use {
-                assertThat(it).contains("MyClass.java:5: Error: Use Boolean.valueOf(true) instead")
-                assertThat(it).contains("1 errors, 0 warnings")
-            }
-        } else {
-            val file = project.file("lint-results.txt")
-            assertThat(file).exists()
-            assertThat(file).contains("MyClass.java:5: Error: Use Boolean.valueOf(true) instead")
-            assertThat(file).contains("1 errors, 0 warnings")
+        result.stderr.use {
+            assertThat(it).contains("MyClass.java:5: Error: Use Boolean.valueOf(true) instead")
+            assertThat(it).contains("1 errors, 0 warnings")
         }
     }
 }

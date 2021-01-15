@@ -24,28 +24,19 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Integration test for the lintFix target on the synthetic accessor warnings found in the Kotlin
  * project.
  */
-@RunWith(Parameterized.class)
 public class LintFixTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
-
     @Rule
-    public final GradleTestProject project;
-
-    public LintFixTest(LintInvocationType lintInvocationType) {
-        this.project =
-                lintInvocationType.testProjectBuilder(66).fromTestProject("lintKotlin").create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("lintKotlin")
+                    .withConfigurationCacheMaxProblems(66)
+                    .create();
 
     @Test
     public void checkFindNestedResult() throws Exception {

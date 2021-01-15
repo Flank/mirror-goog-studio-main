@@ -21,29 +21,19 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Integration test for lint analyzing Kotlin code from Gradle. */
-@RunWith(FilterableParameterized.class)
 public class LintKotlinTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
-
     @Rule
-    public final GradleTestProject project;
-
-    public LintKotlinTest(LintInvocationType lintInvocationType) {
-        this.project =
-                lintInvocationType.testProjectBuilder(4).fromTestProject("lintKotlin").create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("lintKotlin")
+                    .withConfigurationCacheMaxProblems(4)
+                    .create();
 
     @Test
     public void checkFindErrors() throws Exception {

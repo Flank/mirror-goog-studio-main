@@ -26,24 +26,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** Integration test for lint analyzing Kotlin code from Gradle. */
-@RunWith(Parameterized.class)
 public class LintInstantiateTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
-
     @Rule
-    public final GradleTestProject project;
-
-    public LintInstantiateTest(LintInvocationType lintInvocationType) {
-        this.project =
-                lintInvocationType
-                        .testProjectBuilder(87)
-                        .fromTestProject("lintInstantiate")
-                        .create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("lintInstantiate")
+                    .withConfigurationCacheMaxProblems(87)
+                    .create();
 
     @Test
     public void checkFindErrors() throws Exception {
