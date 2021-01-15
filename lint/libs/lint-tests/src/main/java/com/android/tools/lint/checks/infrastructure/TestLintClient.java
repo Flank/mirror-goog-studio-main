@@ -418,9 +418,6 @@ public class TestLintClient extends LintCliClient {
             } else if (description != null && description.getVariantName() != null) {
                 mocker.setVariantName(description.getVariantName());
             }
-            if (task.mockModifier != null) {
-                task.mockModifier.modify(mocker.getProject(), mocker.getVariant());
-            }
         }
         if (task.baselineFile != null) {
             flags.setBaselineFile(task.baselineFile);

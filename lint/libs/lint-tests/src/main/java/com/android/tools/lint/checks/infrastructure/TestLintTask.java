@@ -94,7 +94,6 @@ public class TestLintTask {
     boolean allowDelayedIssueRegistration;
     public File sdkHome;
     List<LintListener> listeners = new ArrayList<>();
-    GradleMockModifier mockModifier;
     LintDriverConfigurator driverConfigurator;
     OptionSetter optionSetter;
     ErrorMessageChecker messageChecker;
@@ -1122,20 +1121,6 @@ public class TestLintTask {
     public TestLintTask reportFrom(@Nullable ProjectDescription project) {
         this.reportFrom = project;
         return this;
-    }
-
-    /**
-     * Interface to implement to modify the Gradle builder model that is mocked from a {@link
-     * TestFiles#gradle(String)} test file.
-     *
-     * <p>Register this modifier via {@link #modifyGradleMocks(GradleMockModifier)}.
-     *
-     * @deprecated Builder-model is going away
-     */
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    @Deprecated
-    public interface GradleMockModifier {
-        void modify(@NonNull IdeAndroidProject project, @NonNull IdeVariant variant);
     }
 
     /**
