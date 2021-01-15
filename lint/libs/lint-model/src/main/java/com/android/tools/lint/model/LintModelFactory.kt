@@ -320,7 +320,6 @@ class LintModelFactory : LintModelModuleLoader {
             androidTestArtifact = getAndroidTestArtifact(variant),
             mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
             manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
-            oldVariant = variant,
             `package` = null, // not in the old builder model
             minSdkVersion = variant.mergedFlavor.minSdkVersion?.toAndroidVersion(),
             targetSdkVersion = variant.mergedFlavor.targetSdkVersion?.toAndroidVersion(),
@@ -793,8 +792,6 @@ class LintModelFactory : LintModelModuleLoader {
             get() = variant.name
         override val useSupportLibraryVectorDrawables: Boolean
             get() = useSupportLibraryVectorDrawables(variant)
-        override val oldVariant: IdeVariant?
-            get() = variant
         override val mergedManifest: File? get() = null // Injected by legacy AGP lint runner
         override val manifestMergeReport: File? get() = null // Injected by legacy AGP lint runner
         override val `package`: String?

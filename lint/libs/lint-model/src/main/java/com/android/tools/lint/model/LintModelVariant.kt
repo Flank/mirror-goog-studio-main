@@ -32,9 +32,6 @@ interface LintModelVariant {
     val mergedManifest: File?
     val manifestMergeReport: File?
 
-    // For temporary backwards compatibility
-    val oldVariant: IdeVariant?
-
     // In builder-model these are coming from the merged flavor, plus buildType merged in
     val `package`: String?
     val minSdkVersion: AndroidVersion?
@@ -100,9 +97,6 @@ class DefaultLintModelVariant(
     override val shrinkable: Boolean,
     override val buildFeatures: LintModelBuildFeatures,
     override val libraryResolver: LintModelLibraryResolver,
-
-    // For temporary backwards compatibility
-    override val oldVariant: IdeVariant?
 ) : LintModelVariant {
     override fun toString(): String = name
 }

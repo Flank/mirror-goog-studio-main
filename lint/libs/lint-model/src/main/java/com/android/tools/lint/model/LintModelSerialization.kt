@@ -1658,8 +1658,6 @@ private class LintModelVariantReader(
             var androidTestArtifact: LintModelAndroidArtifact? = null
             val mergedManifest: File? = getOptionalFile("mergedManifest")
             val manifestMergeReport: File? = getOptionalFile("manifestMergeReport")
-            val oldVariant: IdeVariant? = null
-
             val packageName = getOptionalAttribute("package")
             val minSdkVersion = getOptionalAttribute("minSdkVersion")?.toApiVersion()
             val targetSdkVersion = getOptionalAttribute("targetSdkVersion")?.toApiVersion()
@@ -1717,7 +1715,6 @@ private class LintModelVariantReader(
                 testArtifact = testArtifact,
                 mergedManifest = mergedManifest,
                 manifestMergeReport = manifestMergeReport,
-                oldVariant = oldVariant,
                 `package` = packageName,
                 minSdkVersion = minSdkVersion,
                 targetSdkVersion = targetSdkVersion,

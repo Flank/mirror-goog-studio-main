@@ -546,8 +546,7 @@ abstract class VariantInputs {
             debuggable = debuggable.get(),
             shrinkable = false, //FIXME
             buildFeatures = buildFeatures.toLintModel(),
-            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap),
-            oldVariant = null
+            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap)
         )
     }
 
