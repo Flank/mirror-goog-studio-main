@@ -468,7 +468,7 @@ class UtpConfigFactoryTest {
                   path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.icebox.host.proto.IceboxPlugin"
+                  type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
                   value: "\n\027com.example.application\022\tlocalhost\030\352B"
                 }
               }
@@ -620,7 +620,7 @@ class UtpConfigFactoryTest {
                   path: "pathToANDROID_TEST_PLUGIN_HOST_RETENTION.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.icebox.host.proto.IceboxPlugin"
+                  type_url: "type.googleapis.com/com.android.tools.utp.plugins.host.icebox.proto.IceboxPlugin"
                   value: "\n\027com.example.application\022\tlocalhost\030\352B(\0028\001"
                 }
               }

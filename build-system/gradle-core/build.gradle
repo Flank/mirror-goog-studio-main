@@ -129,6 +129,7 @@ dependencies {
     implementation project(':dataBinding:baseLibrarySupport')
     implementation project(':base:builder-test-api')
     implementation project(':base:layoutlib-api')
+    implementation project(':base:utp:android-test-plugin-host-retention-proto')
 
     implementation libs.kotlin_stdlib
     implementation libs.transform_api_deprecated

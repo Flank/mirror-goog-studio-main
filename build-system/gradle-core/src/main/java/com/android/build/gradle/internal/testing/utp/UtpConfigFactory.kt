@@ -26,9 +26,9 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
+import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
+import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin
 import com.google.protobuf.Any
-import com.google.testing.platform.plugin.android.icebox.host.proto.IceboxPluginProto
-import com.google.testing.platform.plugin.android.icebox.host.proto.IceboxPluginProto.IceboxPlugin
 import com.google.testing.platform.proto.api.config.AndroidInstrumentationDriverProto
 import com.google.testing.platform.proto.api.config.DeviceProto
 import com.google.testing.platform.proto.api.config.EnvironmentProto

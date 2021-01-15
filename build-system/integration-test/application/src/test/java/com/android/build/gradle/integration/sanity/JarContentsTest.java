@@ -1367,6 +1367,20 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
 
+        expected.putAll(
+                "com/android/tools/utp/android-test-plugin-host-retention-proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/host/",
+                "com/android/tools/utp/plugins/host/icebox/",
+                "com/android/tools/utp/plugins/host/icebox/proto/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
         if (TestUtils.runningFromBazel()) {
             // TODO: fix these. (b/64921827)
             ImmutableSet<String> bazelNotImplementedYet =

@@ -5,6 +5,7 @@ java_proto_library(
     name = "android-test-plugin-host-retention-proto",
     srcs = glob(["src/main/proto/*.proto"]),
     pom = ":pom",
+    resource_strip_prefix = "tools/base/utp/android-test-plugin-host-retention-proto",
     visibility = ["//visibility:public"],
 )
 
