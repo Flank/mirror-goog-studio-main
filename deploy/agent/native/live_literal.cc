@@ -353,15 +353,6 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
 }
 
 void LiveLiteral::InstrumentHelper(const std::string& helper) {
-  if (helper.empty()) {
-    // TODO: WORK AROUND FOR UNIT TESTS
-    // This should NOT happen. The request should always give
-    // us a helper. This is only here because the unit test isn't
-    // completely set up with the helpers yet.
-    Log::V("Skipping InstrumentHelper because helper class name not given.");
-    return;
-  }
-
   // First chech if we already instrumented this at least once.
   if (instrumented_helpers.find(helper) != instrumented_helpers.end()) {
     Log::V("Already Instrumented %s", helper.c_str());

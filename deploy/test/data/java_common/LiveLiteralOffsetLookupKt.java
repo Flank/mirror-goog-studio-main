@@ -32,4 +32,44 @@ public final class LiveLiteralOffsetLookupKt {
     private static int Int_func_foo_bar_LiveLiteral_variable() {
         return 1;
     }
+
+    @LiveLiteralInfo(key = "key1", offset = 10001)
+    private static String String_func_foo_bar_LiveLiteral_variable_key1() {
+        return "value0";
+    }
+
+    @LiveLiteralInfo(key = "key2", offset = 10002)
+    private static byte Byte_func_foo_bar_LiveLiteral_variable_key2() {
+        return 0;
+    }
+
+    @LiveLiteralInfo(key = "key3", offset = 10003)
+    private static char Char_func_foo_bar_LiveLiteral_variable_key3() {
+        return '0';
+    }
+
+    @LiveLiteralInfo(key = "key4", offset = 10004)
+    private static long Long_func_foo_bar_LiveLiteral_variable_key4() {
+        return 0;
+    }
+
+    @LiveLiteralInfo(key = "key5", offset = 10005)
+    private static short Short_func_foo_bar_LiveLiteral_variable_key5() {
+        return 0;
+    }
+
+    @LiveLiteralInfo(key = "key6", offset = 10006)
+    private static float Float_func_foo_bar_LiveLiteral_variable_key6() {
+        return 0f;
+    }
+
+    @LiveLiteralInfo(key = "key7", offset = 10007)
+    private static double Double_func_foo_bar_LiveLiteral_variable_key7() {
+        return 0d;
+    }
+
+    @LiveLiteralInfo(key = "key8", offset = 10008)
+    private static boolean Boolean_func_foo_bar_LiveLiteral_variable_key8() {
+        return false;
+    }
 }
