@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -78,33 +77,29 @@ import java.util.function.Predicate;
  */
 public final class AndroidSdkHandler {
 
-    /**
-     * Schema module containing the package type information to be used in addon repos.
-     */
-    private static final SchemaModule<AddonFactory> ADDON_MODULE = new SchemaModule<>(
-            "com.android.sdklib.repository.generated.addon.v%d.ObjectFactory",
-            "sdk-addon-%02d.xsd", AndroidSdkHandler.class);
+    /** Schema module containing the package type information to be used in addon repos. */
+    private static final SchemaModule<AddonFactory> ADDON_MODULE =
+            new SchemaModule<>(
+                    "com.android.sdklib.repository.generated.addon.v%d.ObjectFactory",
+                    "/xsd/sdk-addon-%02d.xsd", AndroidSdkHandler.class);
 
-    /**
-     * Schema module containing the package type information to be used in the primary repo.
-     */
-    private static final SchemaModule<RepoFactory> REPOSITORY_MODULE = new SchemaModule<>(
-            "com.android.sdklib.repository.generated.repository.v%d.ObjectFactory",
-            "sdk-repository-%02d.xsd", AndroidSdkHandler.class);
+    /** Schema module containing the package type information to be used in the primary repo. */
+    private static final SchemaModule<RepoFactory> REPOSITORY_MODULE =
+            new SchemaModule<>(
+                    "com.android.sdklib.repository.generated.repository.v%d.ObjectFactory",
+                    "/xsd/sdk-repository-%02d.xsd", AndroidSdkHandler.class);
 
-    /**
-     * Schema module containing the package type information to be used in system image repos.
-     */
-    private static final SchemaModule<SysImgFactory> SYS_IMG_MODULE = new SchemaModule<>(
-            "com.android.sdklib.repository.generated.sysimg.v%d.ObjectFactory",
-            "sdk-sys-img-%02d.xsd", AndroidSdkHandler.class);
+    /** Schema module containing the package type information to be used in system image repos. */
+    private static final SchemaModule<SysImgFactory> SYS_IMG_MODULE =
+            new SchemaModule<>(
+                    "com.android.sdklib.repository.generated.sysimg.v%d.ObjectFactory",
+                    "/xsd/sdk-sys-img-%02d.xsd", AndroidSdkHandler.class);
 
-    /**
-     * Common schema module used by the other sdk-specific modules.
-     */
-    private static final SchemaModule<SdkCommonFactory> COMMON_MODULE = new SchemaModule<>(
-            "com.android.sdklib.repository.generated.common.v%d.ObjectFactory",
-            "sdk-common-%02d.xsd", AndroidSdkHandler.class);
+    /** Common schema module used by the other sdk-specific modules. */
+    private static final SchemaModule<SdkCommonFactory> COMMON_MODULE =
+            new SchemaModule<>(
+                    "com.android.sdklib.repository.generated.common.v%d.ObjectFactory",
+                    "/xsd/sdk-common-%02d.xsd", AndroidSdkHandler.class);
 
     /**
      * The URL of the official Google sdk-repository site. The URL ends with a /, allowing easy
@@ -538,7 +533,7 @@ public final class AndroidSdkHandler {
     @Nullable
     public LocalSourceProvider getUserSourceProvider(@NonNull ProgressIndicator progress) {
         if (mUserSourceProvider == null && mAndroidFolder != null) {
-            mUserSourceProvider = RepoConfig.createUserSourceProvider(mFop, mAndroidFolder);
+            mUserSourceProvider = RepoConfig.createUserSourceProvider(mAndroidFolder);
             synchronized (MANAGER_LOCK) {
                 if (mRepoManager != null) {
                     // If the repo already exists cause it to be reloaded, so the userSourceProvider
@@ -597,9 +592,10 @@ public final class AndroidSdkHandler {
          */
         public RepoConfig(@NonNull ProgressIndicator progress) {
             // Schema module for the list of update sites we download
-            SchemaModule<?> addonListModule = new SchemaModule<>(
-                    "com.android.sdklib.repository.sources.generated.v%d.ObjectFactory",
-                    "sdk-sites-list-%d.xsd", RemoteSiteType.class);
+            SchemaModule<?> addonListModule =
+                    new SchemaModule<>(
+                            "com.android.sdklib.repository.sources.generated.v%d.ObjectFactory",
+                            "/xsd/sources/sdk-sites-list-%d.xsd", RemoteSiteType.class);
 
             try {
                 // Specify what modules are allowed to be used by what sites.
@@ -632,8 +628,7 @@ public final class AndroidSdkHandler {
 
         /** Creates a customizable {@link RepositorySourceProvider}. */
         @NonNull
-        public static LocalSourceProvider createUserSourceProvider(
-                @NonNull FileOp fileOp, @NonNull Path androidFolder) {
+        public static LocalSourceProvider createUserSourceProvider(@NonNull Path androidFolder) {
             return new LocalSourceProvider(
                     androidFolder.resolve(LOCAL_ADDONS_FILENAME),
                     ImmutableList.of(SYS_IMG_MODULE, ADDON_MODULE));
@@ -725,28 +720,6 @@ public final class AndroidSdkHandler {
 
             return result;
         }
-    }
-
-    /**
-     * Returns the highest available version of the given package that is contained by the given
-     * range, or null if no such version was found.
-     */
-    @Nullable
-    public LocalPackage getPackageInRange(
-            @NonNull String prefix,
-            @NonNull Range<Revision> range,
-            @NonNull ProgressIndicator progressIndicator) {
-
-        Collection<LocalPackage> allBuildTools =
-                getSdkManager(progressIndicator)
-                        .getPackages()
-                        .getLocalPackagesForPrefix(prefix);
-
-        // Consider highest versions first:
-        return allBuildTools.stream()
-                .filter(p -> range.contains(p.getVersion()))
-                .max(Comparator.comparing(LocalPackage::getVersion))
-                .orElse(null);
     }
 
     /**

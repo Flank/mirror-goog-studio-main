@@ -9,6 +9,7 @@ iml_module(
     name = "studio.android.sdktools.repository",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.repository.iml"],
+    resources = ["src/main/resources"],
     test_resources = ["src/test/resources"],
     test_srcs = [
         "src/test/java",
@@ -31,18 +32,9 @@ iml_module(
 
 fileset(
     name = "tools.resources",
-    # TODO: Why are the xml files not under resources?
-    srcs = glob(
-        include = [
-            "src/main/java/**",
-        ],
-        exclude = [
-            "**/*.java",
-            "**/*.kt",
-        ],
-    ),
+    srcs = glob(["src/main/resources/**"]),
     mappings = {
-        "src/main/java/": "",
+        "src/main/resources/": "",
     },
 )
 

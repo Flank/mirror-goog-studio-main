@@ -10,6 +10,7 @@ iml_module(
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdklib.iml"],
     lint_baseline = "lint_baseline.xml",
+    resources = ["src/main/resources"],
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -36,21 +37,12 @@ iml_module(
 
 fileset(
     name = "tools.resources",
-    # TODO: Why are the xml files not under resources?
-    srcs = glob(
-        include = [
-            "src/main/java/**/*.xml",
-            "src/main/java/**/*.xsd",
-            "src/main/java/**/*.xjb",
-            "src/main/java/com/android/sdklib/repository/README.txt",
-            "src/main/java/com/android/sdklib/internal/build/BuildConfig.template",
-        ],
-        exclude = [
-            "**/*.java",
-            "**/*.kt",
-        ],
-    ),
+    srcs = glob([
+        "src/main/resources/**",
+        "src/main/java/com/android/sdklib/devices/*.xml",
+    ]),
     mappings = {
+        "src/main/resources/": "",
         "src/main/java/": "",
     },
 )

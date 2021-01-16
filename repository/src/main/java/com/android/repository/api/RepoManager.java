@@ -67,10 +67,8 @@ public abstract class RepoManager {
      */
     public static final long DEFAULT_EXPIRATION_PERIOD_MS = TimeUnit.DAYS.toMillis(1);
 
-    /**
-     * Pattern for name of the xsd file used in {@link #sCommonModule}.
-     */
-    private static final String COMMON_XSD_PATTERN = "repo-common-%02d.xsd";
+    /** Pattern for name of the xsd file used in {@link #sCommonModule}. */
+    private static final String COMMON_XSD_PATTERN = "/xsd/repo-common-%02d.xsd";
 
     /**
      * Pattern for fully-qualified name of the {@code ObjectFactory} used in {@link
@@ -79,10 +77,8 @@ public abstract class RepoManager {
     private static final String COMMON_OBJECT_FACTORY_PATTERN
             = "com.android.repository.impl.generated.v%d.ObjectFactory";
 
-    /**
-     * Pattern for name of the xsd file used in {@link #sCommonModule}.
-     */
-    private static final String GENERIC_XSD_PATTERN = "generic-%02d.xsd";
+    /** Pattern for name of the xsd file used in {@link #sCommonModule}. */
+    private static final String GENERIC_XSD_PATTERN = "/xsd/generic-%02d.xsd";
 
     /**
      * Pattern for fully-qualified name of the {@code ObjectFactory} used in {@link
