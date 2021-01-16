@@ -36,4 +36,7 @@ message IceboxPlugin {
 
     // Compress the icebox snapshot or not. The compression is slow.
     Compression snapshot_compression = 7;
+
+    // The emulator gRPC token
+    string emulator_grpc_token = 8;
 }

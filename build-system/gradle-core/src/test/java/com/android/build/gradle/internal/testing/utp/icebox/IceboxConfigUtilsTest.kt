@@ -17,11 +17,36 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.nio.charset.Charset
 
 class IceboxConfigUtilsTest {
+    @get:Rule
+    val testDir = TemporaryFolder()
+
     @Test
     fun defaultPortTest() {
-        assertThat(findGrpcPort("")).isEqualTo(DEFAULT_EMULATOR_GRPC_PORT)
+        val grpcInfo = findGrpcInfo("")
+        assertThat(grpcInfo.port).isEqualTo(DEFAULT_EMULATOR_GRPC_PORT)
+        assertThat(grpcInfo.token).isNull()
+    }
+
+    @Test
+    fun parseConfigTest() {
+        val serial = "5556"
+        val port = 1234
+        val token = "token"
+        val testFile = testDir.newFile()
+        testFile.printWriter(Charset.defaultCharset()).use {
+            it.println("port.serial=$serial")
+            it.println("grpc.port=$port")
+            it.println("grpc.token=$token")
+        }
+        val grpcInfo = findGrpcInfo("emulator-$serial", testFile.toPath())
+        assertThat(grpcInfo).isNotNull()
+        assertThat(grpcInfo!!.port).isEqualTo(port)
+        assertThat(grpcInfo!!.token).isEqualTo(token)
     }
 }

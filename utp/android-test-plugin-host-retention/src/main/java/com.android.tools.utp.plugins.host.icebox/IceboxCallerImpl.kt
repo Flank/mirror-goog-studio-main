@@ -25,13 +25,17 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.runtime.android.controller.ext.deviceShell
+import io.grpc.CallCredentials
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.grpc.Metadata
+import io.grpc.Status
 import java.io.File
 import java.io.OutputStream
 import java.net.ConnectException
 import java.net.Socket
 import java.time.Duration
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 import kotlin.system.measureTimeMillis
@@ -47,6 +51,7 @@ import kotlinx.coroutines.runBlocking
  */
 class IceboxCallerImpl public constructor(
         private val managedChannelBuilder: ManagedChannelBuilder<*>,
+        private val grpcToken: String,
         private val coroutineScope: CoroutineScope
 ) : IceboxCaller {
     public class IceboxException(message: String) : Exception(message)
@@ -61,6 +66,25 @@ class IceboxCallerImpl public constructor(
 
     init {
         setupGrpc()
+    }
+
+    private class TokenCallCredentials(private val token: String) : CallCredentials() {
+        override fun applyRequestMetadata(requestInfo: RequestInfo, executor: Executor, applier: MetadataApplier) {
+            executor.execute {
+                try {
+                    val headers = Metadata()
+                    headers.put(AUTHORIZATION_METADATA_KEY, "Bearer $token")
+                    applier.apply(headers)
+                }
+                catch (e: Throwable) {
+                    logger.severe(e.toString())
+                    applier.fail(Status.UNAUTHENTICATED.withCause(e))
+                }
+            }
+        }
+
+        override fun thisUsesUnstableApi() {
+        }
     }
 
     @VisibleForTesting
@@ -91,7 +115,13 @@ class IceboxCallerImpl public constructor(
     private fun setupGrpc() {
         try {
             this.managedChannel = managedChannelBuilder.build()
-            snapshotService = SnapshotServiceGrpc.newBlockingStub(managedChannel)
+            if (grpcToken == "") {
+                snapshotService = SnapshotServiceGrpc.newBlockingStub(managedChannel)
+            } else {
+                val credentials = TokenCallCredentials(grpcToken)
+                snapshotService = SnapshotServiceGrpc.newBlockingStub(managedChannel)
+                    .withCallCredentials(credentials)
+            }
         } catch (e: Throwable) {
             logger.warning("icebox grpc failed: $e")
             shutdownGrpc()
@@ -257,3 +287,6 @@ suspend fun notifyAndroidStudio(deviceSerial: String, pid: Long, port: Int, logg
         logger?.info("Android Studio not found: $exception")
     }
 }
+
+private val AUTHORIZATION_METADATA_KEY =
+    Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER)

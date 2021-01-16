@@ -59,5 +59,6 @@ interface IceboxCaller {
 /** Creates default instance of Icebox */
 fun IceboxCaller(
         managedChannelBuilder: ManagedChannelBuilder<*>,
+        grpcToken: String,
         coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default)
-): IceboxCaller = IceboxCallerImpl(managedChannelBuilder, coroutineScope)
+): IceboxCaller = IceboxCallerImpl(managedChannelBuilder, grpcToken, coroutineScope)

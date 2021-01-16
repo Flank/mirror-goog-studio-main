@@ -121,7 +121,7 @@ class IceboxPluginTest {
                 "snapshot-$testClass-$testMethod-failure0.tar.gz"
         )
         iceboxCallerCreated = false
-        iceboxPlugin = IceboxPlugin { _, _ ->
+        iceboxPlugin = IceboxPlugin { _, _, _ ->
             iceboxCallerCreated = true
             mockIceboxCaller
         }

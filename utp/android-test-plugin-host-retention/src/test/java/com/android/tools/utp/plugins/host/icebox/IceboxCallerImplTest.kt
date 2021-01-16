@@ -143,7 +143,7 @@ class IceboxCallerImplTest {
         ).thenReturn(managedChannel)
         `when`(mockDeviceController.getDevice()).thenReturn(mockDevice)
         `when`(mockDevice.serial).thenReturn(serial)
-        iceboxCaller = IceboxCallerImpl(mockManagedChannelBuilder, driverScope)
+        iceboxCaller = IceboxCallerImpl(mockManagedChannelBuilder, "", driverScope)
     }
 
     @After

@@ -85,10 +85,12 @@ class UtpConfigFactory {
         useOrchestrator: Boolean
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
+            val grpcInfo = findGrpcInfo(device.serialNumber)
             addDevice(createLocalDevice(device, testData, utpDependencies))
             addTestFixture(
                 createTestFixture(
-                    findGrpcPort(device.serialNumber),
+                    grpcInfo.port,
+                    grpcInfo.token,
                     apks,
                     testData,
                     utpDependencies,
@@ -126,7 +128,7 @@ class UtpConfigFactory {
             addDevice(createGradleManagedDevice(device, testData, utpDependencies))
             addTestFixture(
                 createTestFixture(
-                    null, apks, testData, utpDependencies, versionedSdkLoader,
+                    null, null, apks, testData, utpDependencies, versionedSdkLoader,
                     outputDir, tmpDir, testLogDir, retentionConfig, useOrchestrator
                 )
             )
@@ -228,6 +230,7 @@ class UtpConfigFactory {
 
     private fun createTestFixture(
         grpcPort: Int?,
+        grpcToken: String?,
         apks: Iterable<File>,
         testData: StaticTestData,
         utpDependencies: UtpDependencies,
@@ -277,6 +280,7 @@ class UtpConfigFactory {
                         // TODO(155308548): query device for the following fields
                         emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
                         emulatorGrpcPort = grpcPort
+                        emulatorGrpcToken = grpcToken?:""
                         snapshotCompression = if (retentionConfig.compressSnapshots) {
                             IceboxPluginProto.Compression.TARGZ
                         } else {

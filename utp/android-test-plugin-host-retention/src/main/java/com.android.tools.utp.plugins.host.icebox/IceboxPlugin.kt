@@ -49,10 +49,11 @@ import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxP
  * failure snapshot.
  */
 class IceboxPlugin @VisibleForTesting constructor(
-        private val iceboxCallerFactory: (ManagedChannelBuilder<*>, CoroutineScope) -> IceboxCaller
+        private val iceboxCallerFactory:
+            (ManagedChannelBuilder<*>, String, CoroutineScope) -> IceboxCaller
 ) : HostPlugin {
     /** No-arg primary constructor for [AutoService] */
-    constructor() : this({ mcb, cs -> IceboxCaller(mcb, cs) })
+    constructor() : this({ mcb, token, cs -> IceboxCaller(mcb, token, cs) })
     private companion object {
         @JvmStatic
         val logger = getLogger()
@@ -96,6 +97,7 @@ class IceboxPlugin @VisibleForTesting constructor(
                         iceboxPluginConfig.emulatorGrpcAddress,
                         iceboxPluginConfig.emulatorGrpcPort
                 ).usePlaintext(),
+                iceboxPluginConfig.emulatorGrpcToken,
                 CoroutineScope(Dispatchers.Default)
         )
     }
