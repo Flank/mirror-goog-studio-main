@@ -21,22 +21,8 @@
     This schema can be extended to provide other siteTypes, potentially associated with different
     RepositorySchemaModules.
 
-    JAXB-usable classes can be generated from this schema using the "xjc (common source list)"
-    run target in the tools/base IntelliJ project, or from the commandline as follows:
-    java com.sun.tools.xjc.Driver \
-         -episode repository/src/main/java/com/android/repository/api/list-common.xjb \
-         -p com.android.repository.impl.sources.generated.v1 \
-         repository/src/main/java/com/android/repository/api/repo-sites-common-1.xsd \
-         -extension -Xandroid-inheritance -d repository/src/main/java/ \
-         -b repository/src/main/java/com/android/repository/api/global.xjb \
-         -b repository/src/main/java/com/android/repository/impl/sources/repo-sites-common-custom.xjb \
-         -no-header
-
-    from tools/base with jaxb-inheritance-plugin.jar, repository classes, guava, and the
-    transitive dependencies of org.glassfish.jaxb:jaxb-xjc:17.0 on the classpath.
-
-    Note that you cannot use the xjc executable, as it does not support 3rd-party plugins.
-
+    JAXB-usable classes can be generated from this schema by building
+    //tools/base/repository:repo-sites-common-1
 -->
 
 <xsd:schema

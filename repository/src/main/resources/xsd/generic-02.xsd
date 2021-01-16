@@ -17,27 +17,14 @@
 <!--
     Extension to repo-common containing a trivial generic typeDetails implementation.
 
-    JAXB-usable classes can be generated from this schema as follows:
-    java com.sun.tools.internal.xjc.Driver \
-         -episode repository/src/main/java/com/android/repository/api/generic.xjb \
-         -catalog repository/src/main/java/com/android/repository/api/catalog.xml \
-         -b repository/src/main/java/com/android/repository/api/common.xjb \
-         -p com.android.repository.impl.generated.generic.v1 \
-         repository/src/main/java/com/android/repository/api/generic-01.xsd \
-         -extension -Xandroid-inheritance \
-         -b repository/src/main/java/com/android/repository/api/global.xjb \
-         -b repository/src/main/java/com/android/repository/impl/meta/generic-custom.xjb \
-         -d repository/src/main/java/ \
-         -no-header
-
-    from tools/base with jaxb-inheritance-plugin.jar, repository classes, guava, and the
-    transitive dependencies of org.glassfish.jaxb:jaxb-xjc:17.0 on the classpath.
+    JAXB-usable classes can be generated from this schema by building
+    //tools/base/repository:generic-2
 -->
 
 <xsd:schema
-        targetNamespace="http://schemas.android.com/repository/android/generic/01"
+        targetNamespace="http://schemas.android.com/repository/android/generic/02"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-        xmlns:common="http://schemas.android.com/repository/android/common/01"
+        xmlns:common="http://schemas.android.com/repository/android/common/02"
         elementFormDefault="unqualified"
         attributeFormDefault="unqualified"
         xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
@@ -46,7 +33,7 @@
         version="1"
         jaxb:version="2.0">
 
-    <xsd:import namespace="http://schemas.android.com/repository/android/common/01"/>
+    <xsd:import namespace="http://schemas.android.com/repository/android/common/02"/>
 
     <!-- The root element -->
     <xsd:element name="repository" type="common:repositoryType"/>

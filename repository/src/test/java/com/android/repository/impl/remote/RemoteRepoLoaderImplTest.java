@@ -136,14 +136,23 @@ public class RemoteRepoLoaderImplTest extends TestCase {
     }
 
     public void testFallback() throws Exception {
-        RepositorySource source = new SimpleRepositorySource("http://www.example.com",
-                "Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource source =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "Source UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         final String legacyUrl = "http://www.example.com/legacy";
-        RepositorySource legacySource = new SimpleRepositorySource(legacyUrl,
-                "Legacy UI Name", true, ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource legacySource =
+                new SimpleRepositorySource(
+                        legacyUrl,
+                        "Legacy UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         downloader.registerUrl(new URL("http://www.example.com"),
                 getClass().getResourceAsStream("/testRepo.xml"));
@@ -170,17 +179,27 @@ public class RemoteRepoLoaderImplTest extends TestCase {
     }
 
     public void testNonFallbackPreferred() throws Exception {
-        RepositorySource source = new SimpleRepositorySource("http://www.example.com",
-                "Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource source =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "Source UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         final String legacyUrl = "http://www.example.com/legacy";
-        RepositorySource legacySource = new SimpleRepositorySource(legacyUrl,
-                "Legacy UI Name", true, ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource legacySource =
+                new SimpleRepositorySource(
+                        legacyUrl,
+                        "Legacy UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
-        downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("/testRepo.xml"));
+        downloader.registerUrl(
+                new URL("http://www.example.com"),
+                getClass().getResourceAsStream("/testRepo2.xml"));
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -275,17 +294,27 @@ public class RemoteRepoLoaderImplTest extends TestCase {
     }
 
     public void testNewerFallbackPreferred() throws Exception {
-        RepositorySource source = new SimpleRepositorySource("http://www.example.com",
-                "Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource source =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "Source UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         final String legacyUrl = "http://www.example.com/legacy";
-        RepositorySource legacySource = new SimpleRepositorySource(legacyUrl,
-                "Legacy UI Name", true, ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource legacySource =
+                new SimpleRepositorySource(
+                        legacyUrl,
+                        "Legacy UI Name",
+                        true,
+                        ImmutableSet.of(
+                                RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                        null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
-        downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("/testRepo.xml"));
+        downloader.registerUrl(
+                new URL("http://www.example.com"),
+                getClass().getResourceAsStream("/testRepo2.xml"));
         downloader.registerUrl(new URL(legacyUrl),
                 "foo".getBytes());
         FakeProgressIndicator progress = new FakeProgressIndicator(true);

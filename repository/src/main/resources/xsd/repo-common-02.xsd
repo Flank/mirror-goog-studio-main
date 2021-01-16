@@ -21,26 +21,15 @@
     For an example XML document implmenting this schema, see
     src/test/java/com/android/repository/impl/testData/testRepo.xml
 
-    JAXB-usable classes can be generated from this schema from the commandline as follows:
-    java com.sun.tools.xjc.Driver \
-         -episode repository/src/main/java/com/android/repository/api/common.xjb \
-         -p com.android.repository.impl.generated.v1 \
-         repository/src/main/java/com/android/repository/api/repo-common-01.xsd \
-         -extension -Xandroid-inheritance -d repository/src/main/java/ \
-         -b repository/src/main/java/com/android/repository/api/global.xjb \
-         -b repository/src/main/java/com/android/repository/impl/meta/common-custom.xjb \
-         -no-header
-    from tools/base with jaxb-inheritance-plugin.jar, repository classes, guava, and the
-    transitive dependencies of org.glassfish.jaxb:jaxb-xjc:17.0 on the classpath.
-
-    Note that you cannot use the xjc executable, as it does not support 3rd-party plugins.
+    JAXB-usable classes can be generated from this schema by building
+    //tools/base/repository:repo-common-2
 -->
 <xsd:schema
-        targetNamespace="http://schemas.android.com/repository/android/common/01"
+        targetNamespace="http://schemas.android.com/repository/android/common/02"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         elementFormDefault="unqualified"
         attributeFormDefault="unqualified"
-        xmlns:repo="http://schemas.android.com/repository/android/common/01"
+        xmlns:repo="http://schemas.android.com/repository/android/common/02"
         xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
         xmlns:plugin="http://schemas.android.com/android/jaxb/plugin/1"
         jaxb:extensionBindingPrefixes="plugin"

@@ -24,7 +24,7 @@
           xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
           xmlns:plugin="http://schemas.android.com/android/jaxb/plugin/1"
           extensionBindingPrefixes="plugin">
-    <bindings schemaLocation="../../api/generic-01.xsd" node="/xsd:schema">
+    <bindings schemaLocation="generic-02.xsd" node="/xsd:schema">
         <bindings node="//xsd:complexType[@name='genericDetailsType']">
             <plugin:super name="com.android.repository.impl.meta.TypeDetails$GenericType"/>
         </bindings>

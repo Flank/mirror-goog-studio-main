@@ -20,7 +20,7 @@
           xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
           xmlns:plugin="http://schemas.android.com/android/jaxb/plugin/1"
           extensionBindingPrefixes="plugin">
-    <bindings schemaLocation="sdk-common-01.xsd" node="/xsd:schema">
+    <bindings schemaLocation="sdk-common-02.xsd" node="/xsd:schema">
         <bindings node="//xsd:complexType[@name='apiDetailsType']">
             <plugin:super name="com.android.sdklib.repository.meta.DetailsTypes$ApiDetailsType"/>
         </bindings>
