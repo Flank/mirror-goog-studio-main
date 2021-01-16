@@ -872,6 +872,8 @@ maven_repo(
     # keep sorted
     artifacts = [
         "//tools/base/utp/android-device-provider-ddmlib",
+        "//tools/base/utp/android-device-provider-gradle",
+        "//tools/base/utp/android-device-provider-gradle-proto",
         "//tools/base/utp/android-test-plugin-host-device-info",
         "//tools/base/utp/android-test-plugin-host-device-info-proto",
         "//tools/base/utp/android-test-plugin-host-retention",

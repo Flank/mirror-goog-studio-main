@@ -870,13 +870,13 @@ class UtpConfigFactoryTest {
                 label {
                   label: "gradle_managed_android_device_provider_config"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider"
+                class_name: "com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
                   path: "pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.GradleManagedAndroidDeviceProviderConfig"
-                  value: "\nT\n\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*\022\n\020path/to/emulator\020\255\'"
+                  type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
+                  value: "\n\332\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator\020\255\'"
                 }
               }
             }
@@ -1013,13 +1013,13 @@ class UtpConfigFactoryTest {
                 label {
                   label: "gradle_managed_android_device_provider_config"
                 }
-                class_name: "com.google.testing.platform.runtime.android.provider.gradle.GradleManagedAndroidDeviceProvider"
+                class_name: "com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
                   path: "pathToANDROID_DEVICE_PROVIDER_GRADLE.jar"
                 }
                 config {
-                  type_url: "type.googleapis.com/google.testing.platform.proto.api.config.GradleManagedAndroidDeviceProviderConfig"
-                  value: "\nT\n\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*\022\n\020path/to/emulator\020\255\'"
+                  type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
+                  value: "\n\332\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator\020\255\'"
                 }
               }
             }

@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
+import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin
 import com.google.protobuf.Any
@@ -34,7 +35,6 @@ import com.google.testing.platform.proto.api.config.DeviceProto
 import com.google.testing.platform.proto.api.config.EnvironmentProto
 import com.google.testing.platform.proto.api.config.ExecutorProto
 import com.google.testing.platform.proto.api.config.FixtureProto
-import com.google.testing.platform.proto.api.config.GradleManagedAndroidDeviceProviderProto
 import com.google.testing.platform.proto.api.config.LocalAndroidDeviceProviderProto
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.ExtensionProto
@@ -211,15 +211,15 @@ class UtpConfigFactory {
                         .GradleManagedAndroidDeviceProviderConfig
                             .newBuilder().apply {
                                 managedDeviceBuilder.apply {
-                                    avdFolder = PathProto.Path.newBuilder().apply {
+                                    avdFolder = Any.pack(PathProto.Path.newBuilder().apply {
                                         path = deviceInfo.avdFolder
-                                    }.build()
+                                    }.build())
                                     avdName = deviceInfo.avdName
                                     avdId = deviceInfo.id
                                     enableDisplay = deviceInfo.displayEmulator
-                                    emulatorPath = PathProto.Path.newBuilder().apply {
+                                    emulatorPath = Any.pack(PathProto.Path.newBuilder().apply {
                                         path = deviceInfo.emulatorPath
-                                    }.build()
+                                    }.build())
                                 }
                                 adbServerPort = DEFAULT_ADB_SERVER_PORT
                             }.build())

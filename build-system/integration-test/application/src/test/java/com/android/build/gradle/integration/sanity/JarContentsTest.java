@@ -1368,6 +1368,20 @@ public class JarContentsTest {
                 "NOTICE");
 
         expected.putAll(
+                "com/android/tools/utp/android-device-provider-gradle-proto",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/utp/",
+                "com/android/tools/utp/plugins/",
+                "com/android/tools/utp/plugins/deviceprovider/",
+                "com/android/tools/utp/plugins/deviceprovider/gradle/",
+                "com/android/tools/utp/plugins/deviceprovider/gradle/proto/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+
+        expected.putAll(
                 "com/android/tools/utp/android-test-plugin-host-retention-proto",
                 "com/",
                 "com/android/",
