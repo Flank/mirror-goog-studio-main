@@ -54,6 +54,10 @@ public class MockFileOp extends FileOp {
         mFileSystem = InMemoryFileSystems.createInMemoryFileSystem();
     }
 
+    public MockFileOp(@NonNull FileSystem fileSystem) {
+        mFileSystem = fileSystem;
+    }
+
     @Override
     public FileSystem getFileSystem() {
         return mFileSystem;

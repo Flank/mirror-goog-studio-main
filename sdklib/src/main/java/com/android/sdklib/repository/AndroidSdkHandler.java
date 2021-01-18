@@ -217,12 +217,6 @@ public final class AndroidSdkHandler {
      */
     @NonNull
     public static AndroidSdkHandler getInstance(@Nullable Path localPath) {
-        return getInstance(localPath, FileOpUtils.create());
-    }
-
-    @VisibleForTesting
-    @NonNull
-    public static AndroidSdkHandler getInstance(@Nullable Path localPath, @NonNull FileOp fop) {
         Path key = localPath == null ? NULL_PATH : localPath;
         synchronized (sInstances) {
             return sInstances.computeIfAbsent(
@@ -234,7 +228,8 @@ public final class AndroidSdkHandler {
                         } catch (AndroidLocation.AndroidLocationException e) {
                             androidFolder = null;
                         }
-                        return new AndroidSdkHandler(localPath, androidFolder, fop);
+                        return new AndroidSdkHandler(
+                                localPath, androidFolder, FileOpUtils.create(localPath));
                     });
         }
     }
