@@ -80,11 +80,6 @@ class LintModelFactory : LintModelModuleLoader {
      * of lazy lookup.
      */
     fun create(project: IdeAndroidProject, variants: Collection<IdeVariant>, dir: File, deep: Boolean = true): LintModelModule {
-        val cached = project.getClientProperty(CACHE_KEY) as? LintModelModule
-        if (cached != null) {
-            return cached
-        }
-
         val gradleVersion = getGradleVersion(project)
 
         return if (deep) {
@@ -122,8 +117,6 @@ class LintModelFactory : LintModelModuleLoader {
                 dir = dir,
                 gradleVersion = gradleVersion
             )
-        }.also { module ->
-            project.putClientProperty(CACHE_KEY, module)
         }
     }
 

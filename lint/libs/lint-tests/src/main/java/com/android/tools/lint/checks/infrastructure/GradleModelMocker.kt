@@ -328,19 +328,6 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
 
     private fun initialize() {
         _project = Mockito.mock(IdeAndroidProject::class.java)
-        val clientProperties: MutableMap<String, Any> = HashMap()
-        Mockito.`when`(project.getClientProperty(ArgumentMatchers.anyString()))
-            .thenAnswer { invocation: InvocationOnMock ->
-                val key = invocation.getArgument<String>(0)
-                clientProperties[key]
-            }
-        Mockito.`when`(project.putClientProperty(ArgumentMatchers.anyString(), ArgumentMatchers.any()))
-            .thenAnswer { invocation: InvocationOnMock ->
-                val key = invocation.getArgument<String>(0)
-                val value = invocation.getArgument<Any>(1)
-                clientProperties[key] = value
-                null
-            }
         Mockito.`when`(project.modelVersion).thenReturn(modelVersion.toString())
         val apiVersion = if (modelVersion.major >= 2) 3 else 2
         Mockito.`when`(project.apiVersion).thenReturn(apiVersion)

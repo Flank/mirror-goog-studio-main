@@ -202,18 +202,6 @@ interface IdeAndroidProject : Serializable {
    */
   val lintRuleJars: List<File>?
 
-  /**
-   * Temporary storage of named data associated with this project. Intended for purposes such as
-   * caching data associated with a project. A null value deletes the associated entry. Note that
-   * the data is transient and will not be kept across sessions.
-   */
-  fun putClientProperty(key: String, value: Any?): Any?
-
-  /**
-   * Retrieves named data that was previously stored via [.putClientProperty].
-   */
-  fun getClientProperty(key: String): Any?
-
   companion object {
     const val PROJECT_TYPE_APP = 0
     const val PROJECT_TYPE_LIBRARY = 1

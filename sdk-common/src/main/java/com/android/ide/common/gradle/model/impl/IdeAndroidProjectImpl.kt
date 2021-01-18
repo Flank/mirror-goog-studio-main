@@ -28,7 +28,6 @@ import com.android.ide.common.gradle.model.IdeVariantBuildInformation
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
 import java.io.File
 import java.io.Serializable
-import java.util.HashMap
 
 data class IdeAndroidProjectImpl(
   override val modelVersion: String,
@@ -58,31 +57,4 @@ data class IdeAndroidProjectImpl(
   override val agpFlags: IdeAndroidGradlePluginProjectFlags,
   override val variantsBuildInformation: Collection<IdeVariantBuildInformation>,
   override val lintRuleJars: List<File>?
-) : IdeAndroidProject, Serializable {
-  @Transient
-  private var clientProperties: MutableMap<String, Any>? = null
-
-  override fun putClientProperty(key: String, value: Any?): Any? {
-    if (value == null) {
-      if (clientProperties != null) {
-        clientProperties!!.remove(key)
-      }
-    }
-    else {
-      if (clientProperties == null) {
-        clientProperties = HashMap()
-      }
-      clientProperties!![key] = value
-    }
-    return value
-  }
-
-  override fun getClientProperty(key: String): Any? {
-    return if (clientProperties == null) {
-      null
-    }
-    else {
-      clientProperties!![key]
-    }
-  }
-}
+) : IdeAndroidProject, Serializable
