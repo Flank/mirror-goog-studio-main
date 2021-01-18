@@ -399,7 +399,7 @@ public class TestLintClient extends LintCliClient {
             mocker = task.projectMocks.get(dir);
         }
         LintCliFlags flags = getFlags();
-        if (mocker != null && mocker.getProject() != null) {
+        if (mocker != null) {
             if (mocker.getPrimary()) {
                 mocker.syncFlagsTo(flags);
                 flags.setFatalOnly(task.vital);
@@ -1589,14 +1589,7 @@ public class TestLintClient extends LintCliClient {
                 return cachedLintVariant;
             }
             if (mocker != null) {
-                LintModelModule module =
-                        new LintModelFactory()
-                                .create(
-                                        mocker.getProject(),
-                                        mocker.getVariants(),
-                                        mocker.getProjectDir(),
-                                        true);
-                cachedLintVariant = module.findVariant(mocker.getVariant().getName());
+                cachedLintVariant = mocker.getLintVariant();
             }
 
             return cachedLintVariant;

@@ -1299,15 +1299,11 @@ class LintModelSerializationTest {
         mocker: GradleModelMocker,
         expectedXml: Map<String, String>
     ) {
-        val project = mocker.project
-        val variants = mocker.variants
-        val dir = mocker.projectDir
-
         val path = mocker.projectDir.path
         fun String.cleanup() = replace(path, "＄ROOT").trim()
 
         // Test lint model stuff
-        val module = LintModelFactory().create(project, variants, dir)
+        val module = mocker.getLintModule()
         val xml = writeModule(module)
 
         // Make sure all the generated XML is valid

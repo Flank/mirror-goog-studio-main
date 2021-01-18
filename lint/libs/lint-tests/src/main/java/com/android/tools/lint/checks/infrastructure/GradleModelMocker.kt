@@ -64,6 +64,9 @@ import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.LintCliFlags
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.model.LintModelFactory
+import com.android.tools.lint.model.LintModelModule
+import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
@@ -80,6 +83,7 @@ import com.google.common.io.ByteStreams
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import org.jetbrains.annotations.Contract
+import org.jetbrains.annotations.TestOnly
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
@@ -264,6 +268,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         return javaLibraryPlugin
     }
 
+    @get:VisibleForTesting
     val project: IdeAndroidProject get() {
         ensureInitialized()
         return _project
@@ -283,12 +288,13 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                 ?.apiLevel
         }
 
+    @get:VisibleForTesting
     val variant: IdeVariant get() {
         ensureInitialized()
         return _variant
     }
 
-    val variants: Collection<IdeVariant> get() {
+    private val variants: Collection<IdeVariant> get() {
         ensureInitialized()
         return _variants
     }
@@ -324,6 +330,14 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         to.lintConfig = flags.lintConfig
         to.isExplainIssues = flags.isExplainIssues
         to.baselineFile = flags.baselineFile
+    }
+
+    fun getLintVariant(): LintModelVariant? {
+        return getLintModule().findVariant(variant.name)
+    }
+
+    fun getLintModule(): LintModelModule {
+        return LintModelFactory().create(project, variants, projectDir, true)
     }
 
     private fun initialize() {
