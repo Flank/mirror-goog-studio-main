@@ -47,14 +47,17 @@ import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
 import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactOutputImpl
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryCore
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryImpl
+import com.android.ide.common.gradle.model.impl.IdeApiVersionImpl
 import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryCore
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryImpl
 import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryCore
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryImpl
+import com.android.ide.common.gradle.model.impl.IdeSourceProviderImpl
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
@@ -1566,22 +1569,29 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     }
 
     private fun createApiVersion(value: String): IdeApiVersion {
-        val version = Mockito.mock(IdeApiVersion::class.java)
         val s = value.substring(value.indexOf(' ') + 1)
         if (s.startsWith("'")) {
             val codeName = getUnquotedValue(s)
             val sdkVersion = SdkVersionInfo.getVersion(codeName, null)
             if (sdkVersion != null) {
-                Mockito.`when`(version.codename).thenReturn(sdkVersion.codename)
-                Mockito.`when`(version.apiString).thenReturn(sdkVersion.apiString)
-                Mockito.`when`(version.apiLevel).thenReturn(sdkVersion.apiLevel)
+                return IdeApiVersionImpl(
+                    codename = sdkVersion.codename,
+                    apiString = sdkVersion.apiString,
+                    apiLevel = sdkVersion.apiLevel,
+                )
             }
         } else {
-            Mockito.`when`(version.apiString).thenReturn(s)
-            Mockito.`when`(version.codename).thenReturn(null)
-            Mockito.`when`(version.apiLevel).thenReturn(s.toInt())
+            return IdeApiVersionImpl(
+                apiString = s,
+                codename = null,
+                apiLevel = s.toInt(),
+            )
         }
-        return version
+        return IdeApiVersionImpl(
+            apiString = "",
+            codename = null,
+            apiLevel = 0,
+        )
     }
 
     private fun addDependency(declaration: String, artifact: String?, isProvided: Boolean) {
@@ -2262,43 +2272,45 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             filterType: String,
             identifier: String
         ): IdeAndroidArtifactOutput {
-            val artifactOutput = Mockito.mock(
-                IdeAndroidArtifactOutput::class.java
+            return IdeAndroidArtifactOutputImpl(
+                filters =
+                if (filterType.isEmpty()) emptyList()
+                else listOf(
+                    object : FilterData {
+                        override fun getIdentifier() = identifier
+                        override fun getFilterType() = filterType
+                    }
+                ),
+                versionCode = 0,
+                outputFile = File("")
             )
-            if (filterType.isEmpty()) {
-                Mockito.`when`(artifactOutput.filters).thenReturn(emptyList())
-            } else {
-                val filters: MutableList<FilterData?> = mutableListOf()
-                val filter = Mockito.mock(FilterData::class.java)
-                Mockito.`when`(filter.filterType).thenReturn(filterType)
-                Mockito.`when`(filter.identifier).thenReturn(identifier)
-                filters.add(filter)
-                Mockito.`when`(artifactOutput.filters).thenReturn(filters)
-            }
-            return artifactOutput
         }
 
         private fun createSourceProvider(
             root: File,
             name: String
         ): IdeSourceProvider {
-            val provider = Mockito.mock(IdeSourceProvider::class.java)
-            Mockito.`when`(provider.name).thenReturn(name)
-            Mockito.`when`(provider.manifestFile)
-                .thenReturn(File(root, "src/" + name + "/" + SdkConstants.ANDROID_MANIFEST_XML))
-            val resDirectories: MutableList<File> = Lists.newArrayListWithCapacity(2)
-            val javaDirectories: MutableList<File> = Lists.newArrayListWithCapacity(2)
-            val assetsDirectories: MutableList<File> = Lists.newArrayListWithCapacity(1)
-            resDirectories.add(File(root, "src/$name/res"))
-            javaDirectories.add(File(root, "src/$name/java"))
-            javaDirectories.add(File(root, "src/$name/kotlin"))
-            assetsDirectories.add(File(root, "src/$name/assets"))
-            Mockito.`when`(provider.resDirectories).thenReturn(resDirectories)
-            Mockito.`when`(provider.javaDirectories).thenReturn(javaDirectories)
-            Mockito.`when`(provider.assetsDirectories).thenReturn(assetsDirectories)
-
-            // TODO: other file types
-            return provider
+            return IdeSourceProviderImpl(
+                myName = name,
+                myFolder = root,
+                myManifestFile = File(root, "src/" + name + "/" + SdkConstants.ANDROID_MANIFEST_XML).path,
+                myJavaDirectories = listOf(
+                    File(root, "src/$name/java").path,
+                    File(root, "src/$name/kotlin").path
+                ),
+                myResDirectories = listOf(
+                    File(root, "src/$name/res").path
+                ),
+                myAssetsDirectories = listOf(
+                    File(root, "src/$name/assets").path
+                ),
+                myResourcesDirectories = emptyList(),
+                myAidlDirectories = emptyList(),
+                myRenderscriptDirectories = emptyList(),
+                myJniLibsDirectories = emptyList(),
+                myShadersDirectories = emptyList(),
+                myMlModelsDirectories = emptyList()
+            )
         }
 
         /**
