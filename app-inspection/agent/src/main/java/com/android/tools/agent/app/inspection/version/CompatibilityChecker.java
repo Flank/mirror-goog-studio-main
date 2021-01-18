@@ -114,7 +114,8 @@ public final class CompatibilityChecker {
         int prefixCount = groupId.startsWith(ANDROIDX_PREFIX) ? ANDROIDX_PREFIX.length() : 0;
         groupId = groupId.substring(prefixCount);
 
-        // get first token in artifactId, e.g work-runtime => work
+        // get first token in artifactId, e.g work-runtime => work.
+        // There may not always be a hyphen in the artifact, e.g. "compose.ui:ui" => "ui"
         String artifactPrefix = coordinate.artifactId.split("-")[0];
 
         // remove clashing term in the beginning of artifact and the end of group, e.g.:
@@ -128,14 +129,13 @@ public final class CompatibilityChecker {
         // e.g "foundation-layout" => "foundation.layout"
         artifactId = artifactId.replace('-', '.');
 
-        String className =
+        String packageName =
                 INSPECTION_PACKAGE
-                        + "."
-                        + groupId
-                        + "."
-                        + artifactId
-                        + "."
-                        + PROGUARD_DETECTOR_CLASS;
+                        + ("." + groupId)
+                        + (!artifactId.equals("") ? "." + artifactId : "");
+
+        String className = packageName + "." + PROGUARD_DETECTOR_CLASS;
+
         try {
             ClassLoaderUtils.mainThreadClassLoader().loadClass(className);
             return false;
