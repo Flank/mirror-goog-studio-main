@@ -25,11 +25,9 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getDesugarLibJarFromMaven
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.dexing.KeepRulesConfig
 import com.android.builder.dexing.runL8
 import com.android.builder.model.CodeShrinker
@@ -156,7 +154,7 @@ fun setDesugarLibKeepRules(
     if (enableDexingArtifactTransform) {
         keepRulesFiles.from(
             creationConfig.variantDependencies.getArtifactCollection(
-                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.KEEP_RULES,
                 attributes
@@ -171,7 +169,7 @@ fun setDesugarLibKeepRules(
 
         keepRulesFiles.from(
             creationConfig.variantDependencies.getArtifactCollection(
-                AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                 artifactScope,
                 AndroidArtifacts.ArtifactType.KEEP_RULES,
                 attributes
