@@ -19,9 +19,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.api.transform.QualifiedContent.ScopeType
 import com.android.builder.files.KeyedFileCache
 import com.android.builder.files.IncrementalRelativeFileSets
 import com.android.builder.files.RelativeFile
@@ -214,18 +213,15 @@ private fun computeFilesFromDir(dir: File): Set<RelativeFile> {
  * @param full is this a full build? If not, then it is an incremental build; in full builds
  * the output is not cleaned, it is the responsibility of the caller to ensure the output
  * is properly set up; `full` cannot be `false` if changedInputs is null
- * @param contentType the ContentType of files being merged
- * @param contentMap if not `null`, receives a mapping from all generated inputs to
- * [QualifiedContent] they came from
+ * @param scopeMap receives a mapping from all generated inputs to their scopes
  */
 fun toInputs(
-    inputMap: MutableMap<File, in Scope>,
+    inputMap: MutableMap<File, ScopeType>,
     changedInputs: Map<File, FileStatus>?,
     zipCache: KeyedFileCache,
     cacheUpdates: MutableList<Runnable>,
     full: Boolean,
-    contentType: ContentType,
-    contentMap: MutableMap<IncrementalFileMergerInput, QualifiedContent>?
+    scopeMap: MutableMap<IncrementalFileMergerInput, ScopeType>
 ): ImmutableList<IncrementalFileMergerInput> {
     if (full) {
         cacheUpdates.add(IOExceptionRunnable.asRunnable { zipCache.clear() })
@@ -244,18 +240,8 @@ fun toInputs(
 
         fileMergerInput?.let {
             builder.add(it)
-            // Add mapping of fileMergerInput to qualifiedContent if contentMap != null
-            contentMap?.let { contentMap ->
-                val qualifiedContent =
-                    object: QualifiedContent {
-                        override fun getName() = "file-merger-qualified-content"
-                        override fun getFile() = input
-                        override fun getContentTypes() = mutableSetOf(contentType)
-                        override fun getScopes() = mutableSetOf(scope)
-                    }
-
-                contentMap[it] = qualifiedContent
-            }
+            // Add mapping of fileMergerInput to its scope
+            scopeMap[it] = scope
         }
     }
 
