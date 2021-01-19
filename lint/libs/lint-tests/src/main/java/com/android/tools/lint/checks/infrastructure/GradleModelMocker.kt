@@ -110,6 +110,13 @@ import java.util.zip.ZipEntry
  * dependencies etc)
  */
 class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") private val gradle: String) {
+
+    private class DepConf {
+        val androidLibraries: MutableSet<IdeAndroidLibrary> = mutableSetOf()
+        val javaLibraries: MutableSet<IdeJavaLibrary> = mutableSetOf()
+        val moduleLibraries: MutableSet<IdeModuleLibrary> = mutableSetOf()
+    }
+
     private lateinit var _project: IdeAndroidProject
     private lateinit var _variant: IdeVariant
     private val _variants: MutableList<IdeVariant> = ArrayList()
@@ -121,15 +128,9 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     private val javaLibraryInstances: MutableMap<IdeJavaLibrary, IdeJavaLibrary> = HashMap()
     private val moduleLibraryInstances: MutableMap<IdeModuleLibrary, IdeModuleLibrary> = HashMap()
     private val buildTypes: MutableList<IdeBuildType> = mutableListOf()
-    private val androidLibraries: MutableList<IdeAndroidLibrary> = mutableListOf()
-    private val javaLibraries: MutableList<IdeJavaLibrary> = mutableListOf()
-    private val moduleLibraries: MutableList<IdeModuleLibrary> = mutableListOf()
-    private val testAndroidLibraries: MutableList<IdeAndroidLibrary> = mutableListOf()
-    private val testJavaLibraries: MutableList<IdeJavaLibrary> = mutableListOf()
-    private val testModuleLibraries: MutableList<IdeModuleLibrary> = mutableListOf()
-    private val androidTestAndroidLibraries: MutableList<IdeAndroidLibrary> = mutableListOf()
-    private val androidTestJavaLibraries: MutableList<IdeJavaLibrary> = mutableListOf()
-    private val androidTestModuleLibraries: MutableList<IdeModuleLibrary> = mutableListOf()
+    private val main = DepConf()
+    private val test = DepConf()
+    private val androidTest = DepConf()
     private var mergedFlavor: IdeProductFlavor? = null
     private var defaultFlavor: IdeProductFlavor? = null
     private var lintOptions: IdeLintOptions? = null
@@ -360,17 +361,17 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         var dependencies = Mockito.mock(IdeDependencies::class.java)
         val testDependencies = Mockito.mock(IdeDependencies::class.java)
         val androidTestDependencies = Mockito.mock(IdeDependencies::class.java)
-        Mockito.`when`(dependencies.androidLibraries).thenReturn(androidLibraries)
+        Mockito.`when`(dependencies.androidLibraries).thenReturn(main.androidLibraries)
         addLocalLibs(File(projectDir, "libs"))
-        Mockito.`when`(testDependencies.androidLibraries).thenReturn(testAndroidLibraries)
-        Mockito.`when`(androidTestDependencies.androidLibraries).thenReturn(androidTestAndroidLibraries)
-        Mockito.`when`(dependencies.javaLibraries).thenReturn(javaLibraries)
-        Mockito.`when`(testDependencies.javaLibraries).thenReturn(testJavaLibraries)
-        Mockito.`when`(androidTestDependencies.javaLibraries).thenReturn(androidTestJavaLibraries)
-        Mockito.`when`(dependencies.moduleDependencies).thenReturn(moduleLibraries)
-        Mockito.`when`(testDependencies.moduleDependencies).thenReturn(testModuleLibraries)
+        Mockito.`when`(testDependencies.androidLibraries).thenReturn(test.androidLibraries)
+        Mockito.`when`(androidTestDependencies.androidLibraries).thenReturn(androidTest.androidLibraries)
+        Mockito.`when`(dependencies.javaLibraries).thenReturn(main.javaLibraries)
+        Mockito.`when`(testDependencies.javaLibraries).thenReturn(test.javaLibraries)
+        Mockito.`when`(androidTestDependencies.javaLibraries).thenReturn(androidTest.javaLibraries)
+        Mockito.`when`(dependencies.moduleDependencies).thenReturn(main.moduleLibraries)
+        Mockito.`when`(testDependencies.moduleDependencies).thenReturn(test.moduleLibraries)
         Mockito.`when`(androidTestDependencies.moduleDependencies)
-            .thenReturn(androidTestModuleLibraries)
+            .thenReturn(androidTest.moduleLibraries)
         mergedFlavor = getProductFlavor("mergedFlavor", true)
         productFlavors.remove(mergedFlavor) // create mock but don't store as a separate flavor
         Mockito.`when`(variant.mergedFlavor).thenReturn(mergedFlavor)
@@ -670,7 +671,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                                     .replace("/", ":")
                                     .replace("\\", ":")
                                 val library = createAndroidLibrary(coordinateString, null, false, lib)
-                                androidLibraries.add(library)
+                                main.androidLibraries.add(library)
                                 return
                             }
                         }
@@ -680,11 +681,11 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
                         }
                         if (index != -1) {
                             val library = createAndroidLibrary(coordinateString, null, false, lib)
-                            androidLibraries.add(library)
+                            main.androidLibraries.add(library)
                             return
                         }
                         val library = createJavaLibrary(coordinateString, null, false, lib)
-                        javaLibraries.add(library)
+                        main.javaLibraries.add(library)
                     }
                 }
             }
@@ -1600,32 +1601,30 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         } else {
             // Look for the library in the dependency graph provided
             val dep = graphs[declaration]
-            dep?.let { addLibrary(it, artifact) }
-                ?: if (isJavaLibrary(declaration)) {
+            if (dep != null) {
+                addLibrary(dep, artifact)
+            } else {
+                val artifactDeps = artifactByName(artifact)
+                if (isJavaLibrary(declaration)) {
                     // Not found in dependency graphs: create a single Java library
                     val library = createJavaLibrary(declaration, isProvided)
-                    if (artifact == null || artifact.isEmpty()) {
-                        javaLibraries.add(library)
-                    } else if (artifact == "test") {
-                        testJavaLibraries.add(library)
-                    } else if (artifact == "androidTest") {
-                        androidTestJavaLibraries.add(library)
-                    } else {
-                        error("Unrecognized artifact name: $artifact")
-                    }
+                    artifactDeps?.javaLibraries?.add(library)
                 } else {
                     // Not found in dependency graphs: create a single Android library
                     val library = createAndroidLibrary(declaration, isProvided)
-                    if (artifact == null || artifact.isEmpty()) {
-                        androidLibraries.add(library)
-                    } else if (artifact == "test") {
-                        testAndroidLibraries.add(library)
-                    } else if (artifact == "androidTest") {
-                        androidTestAndroidLibraries.add(library)
-                    } else {
-                        error("Unrecognized artifact name: $artifact")
-                    }
+                    artifactDeps?.androidLibraries?.add(library)
                 }
+            }
+        }
+    }
+
+    private fun artifactByName(artifact: String?) = when (artifact) {
+        null, "" -> main
+        "test" -> test
+        "androidTest" -> androidTest
+        else -> {
+            error("Unrecognized artifact name: $artifact")
+            null
         }
     }
 
@@ -1636,42 +1635,13 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     }
 
     private fun addLibrary(dep: Dep, artifact: String?) {
-        val androidLibraries: MutableList<IdeAndroidLibrary>
-        val javaLibraries: MutableList<IdeJavaLibrary>
-        val moduleLibraries: MutableList<IdeModuleLibrary>
-        if (artifact == null || artifact.isEmpty()) {
-            androidLibraries = this.androidLibraries
-            javaLibraries = this.javaLibraries
-            moduleLibraries = this.moduleLibraries
-        } else if (artifact == "test") {
-            androidLibraries = testAndroidLibraries
-            javaLibraries = testJavaLibraries
-            moduleLibraries = testModuleLibraries
-        } else if (artifact == "androidTest") {
-            androidLibraries = androidTestAndroidLibraries
-            javaLibraries = androidTestJavaLibraries
-            moduleLibraries = androidTestModuleLibraries
-        } else {
-            error("Unrecognized artifact name: $artifact")
-            return
-        }
+        val artifactDeps = artifactByName(artifact) ?: return
         val libraries = dep.createLibrary()
         for (library in libraries) {
-            if (library is IdeAndroidLibrary) {
-                val androidLibrary = library
-                if (!androidLibraries.contains(androidLibrary)) {
-                    androidLibraries.add(androidLibrary)
-                }
-            } else if (library is IdeJavaLibrary) {
-                val javaLibrary = library
-                if (!javaLibraries.contains(javaLibrary)) {
-                    javaLibraries.add(javaLibrary)
-                }
-            } else {
-                val moduleLibrary = library as IdeModuleLibrary
-                if (!moduleLibraries.contains(moduleLibrary)) {
-                    moduleLibraries.add(moduleLibrary)
-                }
+            when (library) {
+                is IdeAndroidLibrary -> artifactDeps.androidLibraries.add(library)
+                is IdeJavaLibrary -> artifactDeps.javaLibraries.add(library)
+                is IdeModuleLibrary -> artifactDeps.moduleLibraries.add(library)
             }
         }
     }
