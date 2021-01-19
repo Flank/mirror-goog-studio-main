@@ -163,21 +163,10 @@ class UtpConfigFactory {
         device: DeviceConnector,
         utpDependencies: UtpDependencies
     ): ExtensionProto.Extension {
-        return ExtensionProto.Extension.newBuilder().apply {
-            label = LabelProto.Label.newBuilder().apply {
-                label = "local_android_device_provider"
-            }.build()
-            className = ANDROID_DEVICE_PROVIDER_DDMLIB.mainClass
-            addAllJar(utpDependencies.deviceControllerDdmlib.files.map {
-                PathProto.Path.newBuilder().apply {
-                    path = it.absolutePath
-                }.build()
-            })
-            config =
-                Any.pack(LocalAndroidDeviceProviderProto.LocalAndroidDeviceProvider.newBuilder().apply {
-                    serial = device.serialNumber
-                }.build())
-        }.build()
+        val config = Any.pack(LocalAndroidDeviceProviderProto.LocalAndroidDeviceProvider.newBuilder().apply {
+            serial = device.serialNumber
+        }.build())
+        return ANDROID_DEVICE_PROVIDER_DDMLIB.toExtensionProto(utpDependencies, config)
     }
 
     private fun createGradleManagedDevice(
@@ -197,35 +186,25 @@ class UtpConfigFactory {
         deviceInfo: UtpManagedDevice,
         utpDependencies: UtpDependencies
     ): ExtensionProto.Extension {
-        return ExtensionProto.Extension.newBuilder().apply {
-            label = LabelProto.Label.newBuilder().apply {
-                label = "gradle_managed_android_device_provider_config"
-            }.build()
-            className = ANDROID_DEVICE_PROVIDER_GRADLE.mainClass
-            addAllJar(utpDependencies.deviceProviderGradle.files.map {
-                PathProto.Path.newBuilder().apply {
-                    path = it.absolutePath
-                }.build()
-            })
-            config =
+        val config =
                 Any.pack(
-                    GradleManagedAndroidDeviceProviderProto
-                        .GradleManagedAndroidDeviceProviderConfig
-                            .newBuilder().apply {
-                                managedDeviceBuilder.apply {
-                                    avdFolder = Any.pack(PathProto.Path.newBuilder().apply {
-                                        path = deviceInfo.avdFolder
-                                    }.build())
-                                    avdName = deviceInfo.avdName
-                                    avdId = deviceInfo.id
-                                    enableDisplay = deviceInfo.displayEmulator
-                                    emulatorPath = Any.pack(PathProto.Path.newBuilder().apply {
-                                        path = deviceInfo.emulatorPath
-                                    }.build())
-                                }
-                                adbServerPort = DEFAULT_ADB_SERVER_PORT
-                            }.build())
-        }.build()
+                        GradleManagedAndroidDeviceProviderProto
+                                .GradleManagedAndroidDeviceProviderConfig
+                                .newBuilder().apply {
+                                    managedDeviceBuilder.apply {
+                                        avdFolder = Any.pack(PathProto.Path.newBuilder().apply {
+                                            path = deviceInfo.avdFolder
+                                        }.build())
+                                        avdName = deviceInfo.avdName
+                                        avdId = deviceInfo.id
+                                        enableDisplay = deviceInfo.displayEmulator
+                                        emulatorPath = Any.pack(PathProto.Path.newBuilder().apply {
+                                            path = deviceInfo.emulatorPath
+                                        }.build())
+                                    }
+                                    adbServerPort = DEFAULT_ADB_SERVER_PORT
+                                }.build())
+        return ANDROID_DEVICE_PROVIDER_GRADLE.toExtensionProto(utpDependencies, config)
     }
 
     private fun createTestFixture(
@@ -270,36 +249,9 @@ class UtpConfigFactory {
                 testDriver = createTestDriver(
                     retentionTestData, utpDependencies, useOrchestrator
                 )
-                addHostPlugin(ExtensionProto.Extension.newBuilder().apply {
-                    label = LabelProto.Label.newBuilder().apply {
-                        label = "icebox_plugin"
-                    }.build()
-                    className = ANDROID_TEST_PLUGIN_HOST_RETENTION.mainClass
-                    config = Any.pack(IceboxPlugin.newBuilder().apply {
-                        appPackage = testData.testedApplicationId
-                        // TODO(155308548): query device for the following fields
-                        emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
-                        emulatorGrpcPort = grpcPort
-                        emulatorGrpcToken = grpcToken?:""
-                        snapshotCompression = if (retentionConfig.compressSnapshots) {
-                            IceboxPluginProto.Compression.TARGZ
-                        } else {
-                            IceboxPluginProto.Compression.NONE
-                        }
-                        skipSnapshot = false
-                        maxSnapshotNumber = if (retentionConfig.retainAll) {
-                            0
-                        } else {
-                            retentionConfig.maxSnapshots
-                        }
-                    }.build())
-                    addAllJar(
-                        utpDependencies.testPluginHostRetention.files.map {
-                            PathProto.Path.newBuilder().apply {
-                                path = it.absolutePath
-                            }.build()
-                        })
-                }.build())
+                addHostPlugin(
+                        createIceboxPlugin(
+                                grpcPort, grpcToken, testData, utpDependencies, retentionConfig))
             } else {
                 if (retentionConfig.enabled) {
                     if (useOrchestrator) {
@@ -316,6 +268,34 @@ class UtpConfigFactory {
             addHostPlugin(createAndroidTestPlugin(utpDependencies))
             addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
         }.build()
+    }
+
+    private fun createIceboxPlugin(
+            grpcPort: Int,
+            grpcToken: String?,
+            testData: StaticTestData,
+            utpDependencies: UtpDependencies,
+            retentionConfig: RetentionConfig,
+    ): ExtensionProto.Extension {
+        val config = Any.pack(IceboxPlugin.newBuilder().apply {
+            appPackage = testData.testedApplicationId
+            // TODO(155308548): query device for the following fields
+            emulatorGrpcAddress = DEFAULT_EMULATOR_GRPC_ADDRESS
+            emulatorGrpcPort = grpcPort
+            emulatorGrpcToken = grpcToken?:""
+            snapshotCompression = if (retentionConfig.compressSnapshots) {
+                IceboxPluginProto.Compression.TARGZ
+            } else {
+                IceboxPluginProto.Compression.NONE
+            }
+            skipSnapshot = false
+            maxSnapshotNumber = if (retentionConfig.retainAll) {
+                0
+            } else {
+                retentionConfig.maxSnapshots
+            }
+        }.build())
+        return ANDROID_TEST_PLUGIN_HOST_RETENTION.toExtensionProto(utpDependencies, config)
     }
 
     private fun createEnvironment(
@@ -363,59 +343,28 @@ class UtpConfigFactory {
         utpDependencies: UtpDependencies,
         useOrchestrator: Boolean
     ): ExtensionProto.Extension {
-        return ExtensionProto.Extension.newBuilder().apply {
-            className = ANDROID_DRIVER_INSTRUMENTATION.mainClass
-            labelBuilder.apply {
-                label = ANDROID_DRIVER_INSTRUMENTATION.name
+        val config = Any.pack(AndroidInstrumentationDriverProto.AndroidInstrumentationDriver.newBuilder().apply {
+            androidInstrumentationRuntimeBuilder.apply {
+                instrumentationInfoBuilder.apply {
+                    appPackage = testData.testedApplicationId
+                    testPackage = testData.applicationId
+                    testRunnerClass = testData.instrumentationRunner
+                }
+                instrumentationArgsBuilder.apply {
+                    putAllArgsMap(testData.instrumentationRunnerArguments)
+                }
             }
-            addAllJar(utpDependencies.driverInstrumentation.files.map {
-                PathProto.Path.newBuilder().apply {
-                    path = it.absolutePath
-                }.build()
-            })
-            config =
-                Any.pack(AndroidInstrumentationDriverProto.AndroidInstrumentationDriver.newBuilder().apply {
-                    androidInstrumentationRuntimeBuilder.apply {
-                        instrumentationInfoBuilder.apply {
-                            appPackage = testData.testedApplicationId
-                            testPackage = testData.applicationId
-                            testRunnerClass = testData.instrumentationRunner
-                        }
-                        instrumentationArgsBuilder.apply {
-                            putAllArgsMap(testData.instrumentationRunnerArguments)
-                        }
-                    }
-                    this.useOrchestrator = useOrchestrator
-                }.build())
-        }.build()
+            this.useOrchestrator = useOrchestrator
+        }.build())
+        return ANDROID_DRIVER_INSTRUMENTATION.toExtensionProto(utpDependencies, config)
     }
 
     private fun createAndroidTestPlugin(utpDependencies: UtpDependencies): ExtensionProto.Extension {
-        return ExtensionProto.Extension.newBuilder().apply {
-            label = LabelProto.Label.newBuilder().apply {
-                label = "android_device_plugin"
-            }.build()
-            className = ANDROID_TEST_PLUGIN.mainClass
-            addAllJar(utpDependencies.testPlugin.files.map {
-                PathProto.Path.newBuilder().apply {
-                    path = it.absolutePath
-                }.build()
-            })
-        }.build()
+        return ANDROID_TEST_PLUGIN.toExtensionProto(utpDependencies)
     }
 
     private fun createAndroidTestDeviceInfoPlugin(utpDependencies: UtpDependencies): ExtensionProto.Extension {
-        return ExtensionProto.Extension.newBuilder().apply {
-            label = LabelProto.Label.newBuilder().apply {
-                label = "android_test_device_info_plugin"
-            }.build()
-            className = ANDROID_TEST_DEVICE_INFO_PLUGIN.mainClass
-            addAllJar(utpDependencies.testDeviceInfoPlugin.files.map {
-                PathProto.Path.newBuilder().apply {
-                    path = it.absolutePath
-                }.build()
-            })
-        }.build()
+        return ANDROID_TEST_DEVICE_INFO_PLUGIN.toExtensionProto(utpDependencies)
     }
 
     private fun createSingleDeviceExecutor(identifier: String): ExecutorProto.SingleDeviceExecutor {
@@ -429,5 +378,28 @@ class UtpConfigFactory {
                 }
             }
         }.build()
+    }
+
+    /**
+     * Creates [ExtensionProto.Extension] for the given [UtpDependency] with a config.
+     */
+    private fun UtpDependency.toExtensionProto(
+            utpDependencies: UtpDependencies,
+            config: Any? = null): ExtensionProto.Extension {
+        val builder = ExtensionProto.Extension.newBuilder().apply {
+            label = LabelProto.Label.newBuilder().apply {
+                label = name
+            }.build()
+            className = mainClass
+            addAllJar(mapperFunc(utpDependencies).files.map {
+                PathProto.Path.newBuilder().apply {
+                    path = it.absolutePath
+                }.build()
+            })
+        }
+        if (config != null) {
+            builder.config = config
+        }
+        return builder.build()
     }
 }

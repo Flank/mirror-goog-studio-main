@@ -152,7 +152,7 @@ class UtpConfigFactoryTest {
               }
               provider {
                 label {
-                  label: "local_android_device_provider"
+                  label: "ANDROID_DEVICE_PROVIDER_DDMLIB"
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
@@ -190,7 +190,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_device_plugin"
+                  label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
@@ -199,7 +199,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_test_device_info_plugin"
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
@@ -286,7 +286,7 @@ class UtpConfigFactoryTest {
               }
               provider {
                 label {
-                  label: "local_android_device_provider"
+                  label: "ANDROID_DEVICE_PROVIDER_DDMLIB"
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
@@ -324,7 +324,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_device_plugin"
+                  label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
@@ -333,7 +333,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_test_device_info_plugin"
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
@@ -423,7 +423,7 @@ class UtpConfigFactoryTest {
               }
               provider {
                 label {
-                  label: "local_android_device_provider"
+                  label: "ANDROID_DEVICE_PROVIDER_DDMLIB"
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
@@ -461,7 +461,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "icebox_plugin"
+                  label: "ANDROID_TEST_PLUGIN_HOST_RETENTION"
                 }
                 class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
@@ -474,7 +474,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_device_plugin"
+                  label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
@@ -483,7 +483,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_test_device_info_plugin"
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
@@ -575,7 +575,7 @@ class UtpConfigFactoryTest {
               }
               provider {
                 label {
-                  label: "local_android_device_provider"
+                  label: "ANDROID_DEVICE_PROVIDER_DDMLIB"
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
@@ -613,7 +613,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "icebox_plugin"
+                  label: "ANDROID_TEST_PLUGIN_HOST_RETENTION"
                 }
                 class_name: "com.android.tools.utp.plugins.host.icebox.IceboxPlugin"
                 jar {
@@ -626,7 +626,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_device_plugin"
+                  label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
@@ -635,7 +635,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_test_device_info_plugin"
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
@@ -725,7 +725,7 @@ class UtpConfigFactoryTest {
               }
               provider {
                 label {
-                  label: "local_android_device_provider"
+                  label: "ANDROID_DEVICE_PROVIDER_DDMLIB"
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.ddmlib.DdmlibAndroidDeviceProvider"
                 jar {
@@ -763,7 +763,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_device_plugin"
+                  label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
@@ -772,7 +772,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_test_device_info_plugin"
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
@@ -868,7 +868,7 @@ class UtpConfigFactoryTest {
               }
               provider {
                 label {
-                  label: "gradle_managed_android_device_provider_config"
+                  label: "ANDROID_DEVICE_PROVIDER_GRADLE"
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
@@ -906,7 +906,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_device_plugin"
+                  label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
@@ -915,7 +915,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_test_device_info_plugin"
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
@@ -1011,7 +1011,7 @@ class UtpConfigFactoryTest {
               }
               provider {
                 label {
-                  label: "gradle_managed_android_device_provider_config"
+                  label: "ANDROID_DEVICE_PROVIDER_GRADLE"
                 }
                 class_name: "com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceProvider"
                 jar {
@@ -1049,7 +1049,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_device_plugin"
+                  label: "ANDROID_TEST_PLUGIN"
                 }
                 class_name: "com.google.testing.platform.plugin.android.AndroidDevicePlugin"
                 jar {
@@ -1058,7 +1058,7 @@ class UtpConfigFactoryTest {
               }
               host_plugin {
                 label {
-                  label: "android_test_device_info_plugin"
+                  label: "ANDROID_TEST_DEVICE_INFO_PLUGIN"
                 }
                 class_name: "com.android.tools.utp.plugins.host.device.info.AndroidTestDeviceInfoPlugin"
                 jar {
