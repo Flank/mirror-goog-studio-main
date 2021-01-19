@@ -37,7 +37,7 @@ class LiveLiteralUpdateCommand : public AgentInteractionCommand {
   proto::LiveLiteralUpdateRequest request_;
 
   // Copied from BaseSwap
-  InstallClient* client_ = nullptr;
+  std::unique_ptr<InstallClient> client_;
   std::string package_name_;
   std::vector<int> process_ids_;
   std::string agent_path_;
@@ -46,7 +46,7 @@ class LiveLiteralUpdateCommand : public AgentInteractionCommand {
   void Update(const proto::LiveLiteralUpdateRequest& request,
               proto::LiveLiteralUpdateResponse* responsea);
   void FilterProcessIds(std::vector<int>* process_ids);
-  proto::LiveLiteralUpdateResponse::Status ListenForAgents();
+  proto::LiveLiteralUpdateResponse::Status ListenForAgents() const;
   void ProcessResponse(proto::LiveLiteralUpdateResponse* response);
   void PrepareAndBuildRequest(proto::LiveLiteralUpdateResponse* response);
   void GetAgentLogs(proto::LiveLiteralUpdateResponse* response);

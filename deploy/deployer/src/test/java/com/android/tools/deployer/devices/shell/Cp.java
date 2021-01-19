@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +35,6 @@ public class Cp extends ShellCommand {
         String dest = null;
         boolean recursive = false;
         boolean deleteBefore = false;
-        boolean no_clobber = false;
 
         int start = 0;
         if (args[0].startsWith("-")) {
@@ -45,9 +42,6 @@ public class Cp extends ShellCommand {
                 char flag = args[0].charAt(j);
                 switch (flag) {
                   case 'r': recursive = true; break;
-                    case 'n':
-                        no_clobber = true;
-                        break;
                   case 'F': deleteBefore = true; break;
                   default:
                       stdout.println("cp: Unknown option " + flag + "(see \"cp --help\")");
@@ -98,9 +92,6 @@ public class Cp extends ShellCommand {
                 if (destDirectory) {
                     context.getDevice().copyFile(source, dest + "/" + name);
                 } else {
-                    if (no_clobber && Files.exists(Paths.get(dest))) {
-                        continue;
-                    }
                     context.getDevice().copyFile(source, dest);
                 }
             }

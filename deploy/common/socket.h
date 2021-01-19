@@ -49,7 +49,7 @@ class Socket : public MessagePipeWrapper {
   bool Connect(const std::string& socket_name);
 
   // Default socket binding address.
-  static const std::string kDefaultAddressPrefix;
+  static constexpr auto kDefaultAddress = "irsocket";
 
   static constexpr size_t kAcceptTimeoutMs = 3000;
   static constexpr size_t kConnectRetryMs = 100;

@@ -123,6 +123,7 @@ public abstract class AgentBasedClassRedefinerTestBase extends AgentTestBase {
                             .build();
             Deploy.InstallServerRequest serverRequest =
                     Deploy.InstallServerRequest.newBuilder()
+                            .setType(Deploy.InstallServerRequest.Type.HANDLE_REQUEST)
                             .setSendRequest(agentRequest)
                             .build();
             redefine(serverRequest.toByteArray());

@@ -28,7 +28,7 @@
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
-#include "tools/base/deploy/installer/server/app_servers.h"
+#include "tools/base/deploy/installer/server/install_server.h"
 
 namespace {
 // These values are based on FIRST_APPLICATION_UID and LAST_APPLICATION_UID in
@@ -36,6 +36,11 @@ namespace {
 // changed since 2012.
 const int kFirstAppUid = 10000;
 const int kLastAppUid = 19999;
+
+bool isUserDebug() {
+  return deploy::Env::build_type().find("userdebug") != std::string::npos;
+}
+
 }  // namespace
 
 namespace deploy {
@@ -50,8 +55,20 @@ void BaseSwapCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  client_ = AppServers::Get(package_name_, workspace_.GetTmpFolder(),
-                            workspace_.GetVersion());
+  client_ = StartInstallServer(
+      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
+      package_name_, kInstallServer + "-" + workspace_.GetVersion());
+
+  if (!client_) {
+    if (isUserDebug()) {
+      swap_response->set_status(
+          proto::SwapResponse::START_SERVER_FAILED_USERDEBUG);
+    } else {
+      swap_response->set_status(proto::SwapResponse::START_SERVER_FAILED);
+    }
+    swap_response->set_extra(kInstallServer);
+    return;
+  }
 
   std::unique_ptr<proto::SwapRequest> request = PrepareAndBuildRequest();
   if (request == nullptr) {
@@ -182,10 +199,10 @@ void BaseSwapCommand::FilterProcessIds(std::vector<int>* process_ids) {
   }
 }
 
-proto::SwapResponse::Status BaseSwapCommand::ListenForAgents() {
+proto::SwapResponse::Status BaseSwapCommand::ListenForAgents() const {
   Phase("ListenForAgents");
   proto::OpenAgentSocketRequest req;
-  req.set_socket_name(GetSocketName());
+  req.set_socket_name(Socket::kDefaultAddress);
 
   auto resp = client_->OpenAgentSocket(req);
   if (!resp) {

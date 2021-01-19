@@ -53,8 +53,6 @@ socklen_t InitAddr(const std::string& socket_name, struct sockaddr_un* addr) {
 
 }  // namespace
 
-const std::string Socket::kDefaultAddressPrefix = "irsocket-";
-
 bool Socket::Open() {
   fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
   return fd_ != -1;

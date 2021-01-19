@@ -188,6 +188,7 @@ public class LiveLiteralUpdateTest extends AgentTestBase {
                             .build();
             Deploy.InstallServerRequest serverRequest =
                     Deploy.InstallServerRequest.newBuilder()
+                            .setType(Deploy.InstallServerRequest.Type.HANDLE_REQUEST)
                             .setSendRequest(agentRequest)
                             .build();
             callInstaller(serverRequest.toByteArray());

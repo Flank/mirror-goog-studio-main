@@ -16,154 +16,47 @@
 
 #include "tools/base/deploy/installer/server/install_client.h"
 
-#include <signal.h>
 #include <sys/wait.h>
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
-#include "tools/base/deploy/installer/executor/runas_executor.h"
-#include "tools/base/deploy/sites/sites.h"
 
 using ServerResponse = proto::InstallServerResponse;
 
 namespace deploy {
 
-InstallClient::InstallClient(const std::string& package_name,
-                             const std::string& serverBinaryPath,
-                             const std::string& version, Executor& executor)
-    : package_name_(package_name),
-      server_binary_path_(serverBinaryPath),
-      version_(version),
-      executor_(package_name, executor) {}
-
-InstallClient::~InstallClient() { StopServer(); }
-
-std::string InstallClient::AppServerPath() {
-  return Sites::AppCodeCache(package_name_) + kInstallServer + "-" + version_;
-}
-
-bool InstallClient::SpawnServer() {
-  Phase p("InstallClient::SpawnServer");
-
-  const std::string& server_path = AppServerPath();
-  if (!executor_.ForkAndExec(server_path, {package_name_}, &output_fd_,
-                             &input_fd_, &err_fd_, &server_pid_)) {
-    ErrEvent("SpawnServer failed to fork and exec");
+bool InstallClient::WaitForStatus(ServerResponse::Status status) {
+  ServerResponse message;
+  if (!Read(&message)) {
+    ErrEvent("Expected server status "_s + to_string(status) +
+             " but did not receive a response.");
+    return false;
+  }
+  if (message.status() != status) {
+    ErrEvent("Expected server status "_s + to_string(status) +
+             " but received status " + to_string(message.status()));
     return false;
   }
   return true;
 }
 
-bool InstallClient::StartServer() {
-  Phase p("InstallClient::StartServer");
-
-  StopServer();
-  if (!SpawnServer()) {
-    ErrEvent("Unable to bring up AppServer");
+bool InstallClient::KillServerAndWait(proto::InstallServerResponse* response) {
+  proto::InstallServerRequest request;
+  request.set_type(proto::InstallServerRequest::SERVER_EXIT);
+  if (!Write(request)) {
     return false;
   }
-  return true;
+  output_.Close();
+
+  int status;
+  waitpid(server_pid_, &status, 0);
+  return Read(response);
 }
 
-void InstallClient::StopServer() {
-  Phase p("InstallClient::StopServer");
-
-  ResetFD(&output_fd_);
-  ResetFD(&input_fd_);
-  ResetFD(&err_fd_);
-
-  if (server_pid_ != UNINITIALIZED) {
-    LogEvent("kill(" + to_string(server_pid_) +
-             ") this=" + to_string(getpid()));
-    kill(server_pid_, SIGKILL);
-    waitpid(server_pid_, nullptr, WNOHANG);
-
-    server_pid_ = UNINITIALIZED;
-  }
-}
-
-void InstallClient::ResetFD(int* fd) {
-  if (*fd == UNINITIALIZED) {
-    return;
-  }
-  close(*fd);
-  *fd = UNINITIALIZED;
-}
-
-bool InstallClient::CopyServer() {
-  Phase p("InstallClient::CopyServer");
-  const std::string& src = server_binary_path_;
-  const std::string& dst = AppServerPath();
-
-  std::string cp_output;
-  std::string cp_error;
-  // Use -n to no-clobber and improve runtime.
-  if (executor_.Run("cp", {"-n", src, dst}, &cp_output, &cp_error)) {
-    return true;
-  }
-
-  // We don't need to check the output of this. It will fail if the code_cache
-  // already exists; if the code_cache doesn't exist and we can't create it,
-  // that failure will be caught when we try to copy the server.
-  executor_.Run("mkdir", {"-p", Sites::AppCodeCache(package_name_)}, nullptr,
-                nullptr);
-
-  // Use -n to no-clobber improve runtime.
-  if (executor_.Run("cp", {"-n", src, dst}, &cp_output, &cp_error)) {
-    return true;
-  }
-
-  ErrEvent("InstallClient: Could not copy '" + src + "' to '" + dst +
-           ": out='" + cp_output + "', err='" + cp_error + "'");
-  return false;
-}
-
-void InstallClient::RetrieveErr() const {
-  fcntl(err_fd_, F_SETFL, O_NONBLOCK);
-  constexpr size_t txt_size = 128;
-  char* txt = new char[txt_size]();
-  int size = read(err_fd_, txt, txt_size - 1);
-  if (size > 0) {
-    std::string msg(txt, 0, size);
-    ErrEvent(msg);
-  }
-  delete[] txt;
-}
-
+// TODO: This is where we will retry with install_serverd
 std::unique_ptr<proto::InstallServerResponse> InstallClient::Send(
     proto::InstallServerRequest& req) {
-  // # 1 Write to the pipe, without knowing if the other end is live.
-  auto resp = SendOnce(req);
-  if (resp != nullptr) {
-    return resp;
-  }
-
-  // #2 Was the other end terminated by Android platform?
-  // Let's just try to start it and Send again.
-  if (!StartServer()) {
-    return nullptr;
-  }
-  resp = SendOnce(req);
-  if (resp != nullptr) {
-    return resp;
-  }
-
-  // #3 The binary is likely missing. Copy it, start the server
-  // and attempt to Send again.
-  CopyServer();
-  if (!StartServer()) {
-    return nullptr;
-  }
-  resp = SendOnce(req);
-  if (resp == nullptr) {
-    RetrieveErr();
-  }
-
-  return resp;
-}
-
-std::unique_ptr<proto::InstallServerResponse> InstallClient::SendOnce(
-    proto::InstallServerRequest& req) {
+  req.set_type(proto::InstallServerRequest::HANDLE_REQUEST);
   if (!Write(req)) {
     return nullptr;
   }
@@ -242,22 +135,4 @@ InstallClient::SendAgentMessage(const proto::SendAgentMessageRequest& req) {
       resp->release_send_response());
 }
 
-// Writes a serialized protobuf message to the connected client.
-bool InstallClient::Write(const proto::InstallServerRequest& request) const {
-  ProtoPipe output(output_fd_);
-  return output.Write(request);
-}
-
-bool InstallClient::Read(proto::InstallServerResponse* response) {
-  ProtoPipe input(input_fd_);
-  if (input.Read(kDefaultTimeoutMs, response)) {
-    // Convert remote events to local events.
-    for (int i = 0; i < response->events_size(); i++) {
-      const proto::Event& event = response->events(i);
-      AddRawEvent(ConvertProtoEventToEvent(event));
-    }
-    return true;
-  }
-  return false;
-}
 }  // namespace deploy

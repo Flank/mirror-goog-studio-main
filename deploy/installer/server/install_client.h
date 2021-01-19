@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "tools/base/deploy/common/proto_pipe.h"
-#include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -31,10 +30,8 @@ namespace deploy {
 // Client object for communicating with an install server.
 class InstallClient {
  public:
-  InstallClient(const std::string& package_name,
-                const std::string& serverBinaryPath, const std::string& version,
-                Executor& executor = Executor::Get());
-  ~InstallClient();
+  InstallClient(int server_pid, int input_fd, int output_fd)
+      : server_pid_(server_pid), input_(input_fd), output_(output_fd) {}
 
   std::unique_ptr<proto::CheckSetupResponse> CheckSetup(
       const proto::CheckSetupRequest& req);
@@ -47,46 +44,34 @@ class InstallClient {
   std::unique_ptr<proto::SendAgentMessageResponse> SendAgentMessage(
       const proto::SendAgentMessageRequest& req);
 
+  // Waits indefinitely for the server to start.
+  bool WaitForStart() {
+    return WaitForStatus(proto::InstallServerResponse::SERVER_STARTED);
+  }
+
+  // Sends a server exit request and waits indefinitely for the server to exit.
+  bool KillServerAndWait(proto::InstallServerResponse* response);
 
  private:
-  std::string AppServerPath();
-  bool SpawnServer();
-  bool StartServer();
-  void StopServer();
-  bool CopyServer();
-
-  static constexpr auto UNINITIALIZED = -1;
-  int server_pid_ = UNINITIALIZED;
-  int output_fd_ = UNINITIALIZED;
-  int input_fd_ = UNINITIALIZED;
-  int err_fd_ = UNINITIALIZED;
-  static void ResetFD(int* fd);
-  void RetrieveErr() const;
-
+  int server_pid_;
+  ProtoPipe input_;
+  ProtoPipe output_;
   const int kDefaultTimeoutMs = 5000;
 
-  // Send optimistically with increasingly expensive methods.
-  // 1. Write request/ Read response to pipe.
-  // 2. Start Server and do #1.
-  // 3. Copy Server, and do #2.
-  // 4. Fail.
+  bool WaitForStatus(proto::InstallServerResponse::Status status);
   std::unique_ptr<proto::InstallServerResponse> Send(
       proto::InstallServerRequest& req);
 
-  std::unique_ptr<proto::InstallServerResponse> SendOnce(
-      proto::InstallServerRequest& req);
-
-  const std::string package_name_;
-  const std::string server_binary_path_;
-  const std::string version_;
-  RunasExecutor executor_;
-
   // Writes a serialized protobuf message to the connected client.
-  bool Write(const proto::InstallServerRequest& request) const;
+  bool Write(const proto::InstallServerRequest& request) {
+    return output_.Write(request);
+  }
 
   // Waits up for a message to be available from the client, then attempts to
   // parse the data read into the specified proto.
-  bool Read(proto::InstallServerResponse* response);
+  bool Read(proto::InstallServerResponse* response) {
+    return input_.Read(kDefaultTimeoutMs, response);
+  }
 };
 
 }  // namespace deploy

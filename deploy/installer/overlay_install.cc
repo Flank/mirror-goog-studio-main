@@ -24,7 +24,8 @@
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
-#include "tools/base/deploy/installer/server/app_servers.h"
+#include "tools/base/deploy/installer/server/install_client.h"
+#include "tools/base/deploy/installer/server/install_server.h"
 #include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
@@ -57,8 +58,17 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  client_ = AppServers::Get(request_.package_name(), workspace_.GetTmpFolder(),
-                            workspace_.GetVersion());
+  const std::string server_name =
+      kInstallServer + "-" + workspace_.GetVersion();
+  client_ = StartInstallServer(Executor::Get(),
+                               workspace_.GetTmpFolder() + kInstallServer,
+                               request_.package_name(), server_name);
+
+  if (!client_) {
+    overlay_response->set_status(
+        proto::OverlayInstallResponse::START_SERVER_FAILED);
+    return;
+  }
 
   if (!SetUpAgent(agent, overlay_response)) {
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
@@ -68,6 +78,15 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
 
   UpdateOverlay(overlay_response);
   GetAgentLogs(overlay_response);
+
+  proto::InstallServerResponse install_response;
+  if (!client_->KillServerAndWait(&install_response)) {
+    overlay_response->set_status(
+        proto::OverlayInstallResponse::INSTALL_SERVER_COM_ERR);
+    return;
+  }
+
+  ConvertProtoEventsToEvents(install_response.events());
 }
 
 bool OverlayInstallCommand::SetUpAgent(

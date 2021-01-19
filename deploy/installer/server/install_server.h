@@ -22,7 +22,8 @@
 
 #include "tools/base/deploy/common/proto_pipe.h"
 #include "tools/base/deploy/common/socket.h"
-#include "tools/base/deploy/installer/server/canary.h"
+#include "tools/base/deploy/installer/executor/executor.h"
+#include "tools/base/deploy/installer/server/install_client.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -30,10 +31,8 @@ namespace deploy {
 // Object that can be used to run an install server in the current process.
 class InstallServer {
  public:
-  InstallServer(int input_fd, int output_fd, const Canary& canary)
-      : input_(input_fd), output_(output_fd), canary_(canary) {}
-
-  ~InstallServer();
+  InstallServer(int input_fd, int output_fd)
+      : input_(input_fd), output_(output_fd) {}
 
   // Runs an install server in this process. This blocks until the server
   // finishes running.
@@ -43,7 +42,9 @@ class InstallServer {
   ProtoPipe input_;
   ProtoPipe output_;
   Socket agent_server_;
-  const Canary& canary_;
+
+  void Acknowledge();
+  void Pump();
 
   void HandleRequest(const proto::InstallServerRequest& request);
 
@@ -71,10 +72,13 @@ class InstallServer {
 
   bool DoesOverlayIdMatch(const std::string& overlay_folder,
                           const std::string& expected_id) const;
-
-  // Close input and output stream
-  void Close();
 };
+
+// Starts an install server in a new process. Returns nullptr if the install
+// server can't be started for any reason.
+std::unique_ptr<InstallClient> StartInstallServer(
+    Executor& executor, const std::string& server_path,
+    const std::string& package_name, const std::string& exec_name);
 
 }  // namespace deploy
 

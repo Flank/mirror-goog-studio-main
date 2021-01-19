@@ -25,8 +25,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
@@ -148,11 +146,16 @@ public class AgentTestBase {
 
         void startServer() throws IOException {
             System.out.println("Starting install server");
-            server = new ProcessBuilder(SERVER_LOCATION, "fakeAppId").start();
+            server = new ProcessBuilder(SERVER_LOCATION).start();
+            if (getServerResponse().getStatus()
+                    != Deploy.InstallServerResponse.Status.SERVER_STARTED) {
+                System.err.println("Did not receive startup ack from install server");
+            }
             Deploy.OpenAgentSocketRequest socketRequest =
                     Deploy.OpenAgentSocketRequest.newBuilder().setSocketName(socketName).build();
             Deploy.InstallServerRequest serverRequest =
                     Deploy.InstallServerRequest.newBuilder()
+                            .setType(Deploy.InstallServerRequest.Type.HANDLE_REQUEST)
                             .setSocketRequest(socketRequest)
                             .build();
             sendMessage(serverRequest.toByteArray());
@@ -162,46 +165,47 @@ public class AgentTestBase {
             }
         }
 
-        private static boolean readIntoBuffer(byte[] array, InputStream stream) throws IOException {
-            ReadableByteChannel channel = Channels.newChannel(stream);
-            ByteBuffer b = ByteBuffer.wrap(array);
-            while (b.remaining() != 0 && channel.read(b) != -1) {}
-            return b.remaining() == 0;
-        }
-
         protected Deploy.InstallServerResponse getServerResponse()
                 throws IOException, InvalidProtocolBufferException {
             InputStream stdout = server.getInputStream();
 
             byte[] magicBytes = new byte[MAGIC_NUMBER.length];
-            if (!readIntoBuffer(magicBytes, stdout)) {
-                return null;
-            }
 
-            if (!Arrays.equals(magicBytes, MAGIC_NUMBER)) {
-                return null;
+            int offset = 0;
+            while (offset < magicBytes.length) {
+                offset += stdout.read(magicBytes, offset, magicBytes.length - offset);
             }
 
             byte[] sizeBytes = new byte[Integer.BYTES];
-            if (!readIntoBuffer(sizeBytes, stdout)) {
-                return null;
+
+            offset = 0;
+            while (offset < sizeBytes.length) {
+                offset += stdout.read(sizeBytes, offset, sizeBytes.length - offset);
             }
 
             int size = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
             byte[] messageBytes = new byte[size];
-            if (!readIntoBuffer(messageBytes, stdout)) {
-                return null;
-            }
 
+            offset = 0;
+            while (offset < messageBytes.length) {
+                offset += stdout.read(messageBytes, offset, messageBytes.length - offset);
+            }
             return Deploy.InstallServerResponse.parseFrom(messageBytes);
         }
 
         protected void stopServer() {
             try {
                 System.out.println("Waiting for server to exit");
-                server.getInputStream().close();
+                if (server != null) {
+                    Deploy.InstallServerRequest request =
+                            Deploy.InstallServerRequest.newBuilder()
+                                    .setType(Deploy.InstallServerRequest.Type.SERVER_EXIT)
+                                    .build();
+                    sendMessage(request.toByteArray());
+                    server.waitFor();
+                }
                 System.out.println("Server exited");
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 System.err.println(e);
             }
         }

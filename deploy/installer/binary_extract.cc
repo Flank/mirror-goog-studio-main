@@ -27,8 +27,8 @@
 namespace {
 const int kRwFileMode =
     S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
-const int kRwxFileMode = S_IRUSR | S_IXUSR | S_IWUSR | S_IRGRP | S_IXGRP |
-                         S_IWGRP | S_IROTH | S_IXOTH | S_IWOTH;
+const int kRxFileMode =
+    S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 }  // namespace
 
 namespace deploy {
@@ -88,7 +88,7 @@ bool WriteArrayToDisk(const unsigned char* array, uint64_t array_len,
     return false;
   }
 
-  IO::chmod(dst_path, kRwxFileMode);
+  IO::chmod(dst_path, kRxFileMode);
   return true;
 }
 

@@ -29,6 +29,7 @@
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/socket.h"
 #include "tools/base/deploy/common/utils.h"
+#include "tools/base/deploy/installer/executor/runas_executor.h"
 #include "tools/base/deploy/installer/overlay/overlay.h"
 #include "tools/base/deploy/sites/sites.h"
 
@@ -37,34 +38,100 @@ using ServerResponse = proto::InstallServerResponse;
 
 namespace deploy {
 
-InstallServer::~InstallServer() { Close(); }
+namespace {
 
-void InstallServer::Close() {
-  input_.Close();
-  output_.Close();
+// Attempts to start the server and connect an InstallClient to it. If this
+// operation sets the value of result to SUCCESS, returns a unique_ptr to an
+// InstallClient; otherwise the pointer is nullptr.
+//
+// If the return value is nullptr, error_message points to a string describing
+// the failure.
+std::unique_ptr<InstallClient> TryStartServer(const Executor& executor,
+                                              const std::string& exec_path,
+                                              std::string* error_message) {
+  int stdin_fd;
+  int stdout_fd;
+  int stderr_fd;
+  int pid;
+  if (!executor.ForkAndExec(exec_path, {}, &stdin_fd, &stdout_fd, &stderr_fd,
+                            &pid)) {
+    // ForkAndExec only returns false if the pipe creation fails.
+    *error_message = "Could not ForkAndExec when starting server";
+    return nullptr;
+  }
+
+  // Wait for server startup acknowledgement. Note that when creating the
+  // client, the server's output is the clients's input and vice-versa.
+  std::unique_ptr<InstallClient> client(
+      new InstallClient(pid, stdout_fd, stdin_fd));
+  if (client->WaitForStart()) {
+    close(stderr_fd);
+    return client;
+  }
+
+  // The server failed to start, so wait for the process to exit.
+  waitpid(pid, nullptr, 0);
+
+  // If no server startup ack is present, read from stderr. The server never
+  // writes to stderr, so we know that anything in stderr is from run-as.
+  char err_buffer[128] = {'\0'};
+  ssize_t count = read(stderr_fd, err_buffer, 127);
+
+  close(stdout_fd);
+  close(stderr_fd);
+
+  if (count > 0) {
+    *error_message = err_buffer;
+  }
+
+  return nullptr;
 }
+}  // namespace
 
 void InstallServer::Run() {
+  Acknowledge();
+  Pump();
+
+  ServerResponse response;
+
+  // Consume traces and proto events.
+  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
+  for (Event& event : *events) {
+    ConvertEventToProtoEvent(event, response.add_events());
+  }
+
+  // Send the final server response.
+  response.set_status(ServerResponse::SERVER_EXITED);
+  if (!output_.Write(response)) {
+    ErrEvent("Could not write server exit message");
+  }
+}
+
+void InstallServer::Acknowledge() {
+  Phase("InstallServer::Acknowledge");
+  ServerResponse response;
+
+  response.set_status(ServerResponse::SERVER_STARTED);
+  if (!output_.Write(response)) {
+    ErrEvent("Could not write server start message");
+    return;
+  }
+}
+
+void InstallServer::Pump() {
+  Phase("InstallServer::Pump");
   ServerRequest request;
   while (input_.Read(-1, &request)) {
-    // Check canary before doing anything else.
-    if (!canary_.Tweet()) {
-      // The canary has died. Likely the app was uninstalled.
-      // The uid does not have access to /data/data/<PKG_NAME> anymore.
-      // The only option is to stop operating.
-      Log::E("Stopping appserverd since canary has died\"");
+    if (request.type() == ServerRequest::HANDLE_REQUEST) {
+      HandleRequest(request);
+    } else if (request.type() == ServerRequest::SERVER_EXIT) {
       break;
     }
-
-    HandleRequest(request);
   }
-  Close();
 }
 
 void InstallServer::HandleRequest(const ServerRequest& request) {
-  ResetEvents();
   ServerResponse response;
-  response.set_status(ServerResponse::REQUEST_COMPLETED);
 
   switch (request.message_case()) {
     case ServerRequest::MessageCase::kSocketRequest:
@@ -92,29 +159,19 @@ void InstallServer::HandleRequest(const ServerRequest& request) {
       ErrEvent("Cannot process InstallServer request without message");
       response.set_status(ServerResponse::ERROR);
       break;
-    default:
-      response.set_status(ServerResponse::ERROR);
-      break;
   }
 
-  // Consume traces and proto events.
-  std::unique_ptr<std::vector<Event>> events = ConsumeEvents();
-  for (Event& event : *events) {
-    ConvertEventToProtoEvent(event, response.add_events());
-  }
-
+  response.set_status(ServerResponse::REQUEST_COMPLETED);
   output_.Write(response);
 }
 
 void InstallServer::HandleOpenSocket(
     const proto::OpenAgentSocketRequest& request,
     proto::OpenAgentSocketResponse* response) {
-  agent_server_.Close();
   if (agent_server_.Open() &&
       agent_server_.BindAndListen(request.socket_name())) {
     response->set_status(proto::OpenAgentSocketResponse::OK);
   } else {
-    ErrEvent("Unable to bind socket '" + request.socket_name() + "'");
     response->set_status(proto::OpenAgentSocketResponse::BIND_SOCKET_FAILED);
   }
 }
@@ -182,11 +239,13 @@ void InstallServer::HandleOverlayUpdate(
     const proto::OverlayUpdateRequest& request,
     proto::OverlayUpdateResponse* response) const {
   const std::string overlay_folder = request.overlay_path();
+
   if (request.wipe_all_files()) {
-    if (nftw(overlay_folder.c_str(),
-             [](const char* path, const struct stat* sbuf, int type,
-                struct FTW* ftwb) { return remove(path); },
-             10 /*max FD*/, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) != 0) {
+    if (nftw(
+            overlay_folder.c_str(),
+            [](const char* path, const struct stat* sbuf, int type,
+               struct FTW* ftwb) { return remove(path); },
+            10 /*max FD*/, FTW_DEPTH | FTW_MOUNT | FTW_PHYS) != 0) {
       response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);
       response->set_error_message("Could not wipe existing overlays");
     }
@@ -264,6 +323,31 @@ void InstallServer::HandleGetAgentExceptionLog(
   closedir(dir);
 }
 
+namespace {
+bool TryCopyServer(const RunasExecutor& run_as, const std::string& server_path,
+                   const std::string& exec_path, const std::string& exec_name) {
+  std::string cp_output;
+  std::string cp_error;
+  if (run_as.Run("cp", {server_path, exec_path + exec_name}, &cp_output,
+                 &cp_error)) {
+    return true;
+  }
+
+  // We don't need to check the output of this. It will fail if the code_cache
+  // already exists; if the code_cache doesn't exist and we can't create it,
+  // that failure will be caught when we try to copy the server.
+  run_as.Run("mkdir", {exec_path}, nullptr, nullptr);
+
+  if (run_as.Run("cp", {server_path, exec_path + exec_name}, &cp_output,
+                 &cp_error)) {
+    return true;
+  }
+
+  ErrEvent("Could not copy binary: " + cp_error);
+  return false;
+}
+}  // namespace
+
 bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
                                        const std::string& expected_id) const {
   // If the overlay folder is not present, expected id must be empty.
@@ -274,4 +358,27 @@ bool InstallServer::DoesOverlayIdMatch(const std::string& overlay_folder,
   // If the overlay folder is present, the correct id must be present.
   return Overlay::Exists(overlay_folder, expected_id);
 }
+
+std::unique_ptr<InstallClient> StartInstallServer(
+    Executor& executor, const std::string& server_path,
+    const std::string& package_name, const std::string& exec_name) {
+  Phase p("InstallServer::StartServer");
+  const std::string exec_path = Sites::AppCodeCache(package_name);
+  const RunasExecutor run_as(package_name, executor);
+  std::string error_message;
+
+  auto client = TryStartServer(run_as, exec_path + exec_name, &error_message);
+  if (client != nullptr) {
+    return client;
+  }
+
+  LogEvent("Copying install-server to " + exec_path);
+  if (TryCopyServer(run_as, server_path, exec_path, exec_name)) {
+    return TryStartServer(run_as, exec_path + exec_name, &error_message);
+  }
+
+  ErrEvent("Could not start install server: " + error_message);
+  return nullptr;
+}
+
 }  // namespace deploy
