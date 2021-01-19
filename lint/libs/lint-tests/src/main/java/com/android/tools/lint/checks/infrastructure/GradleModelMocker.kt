@@ -1590,159 +1590,11 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         //
         // To compute these graphs, put the dependency you're interested into
         // a test project and then run ./gradlew app:dependencies
-        if (declaration.startsWith("com.android.support:appcompat-v7:")) {
-            val version = declaration.substring("com.android.support:appcompat-v7:".length)
+        val wellKnownLibrary = wellKnownLibraries.firstOrNull { declaration.startsWith(it.groupAndName + ":") }
+        if (wellKnownLibrary != null) {
+            val version = declaration.substring(wellKnownLibrary.groupAndName.length + 1)
             addTransitiveLibrary(
-                """
-+--- com.android.support:appcompat-v7:VERSION
-|    +--- com.android.support:support-v4:VERSION
-|    |    +--- com.android.support:support-compat:VERSION
-|    |    |    \--- com.android.support:support-annotations:VERSION
-|    |    +--- com.android.support:support-media-compat:VERSION
-|    |    |    \--- com.android.support:support-compat:VERSION (*)
-|    |    +--- com.android.support:support-core-utils:VERSION
-|    |    |    \--- com.android.support:support-compat:VERSION (*)
-|    |    +--- com.android.support:support-core-ui:VERSION
-|    |    |    \--- com.android.support:support-compat:VERSION (*)
-|    |    \--- com.android.support:support-fragment:VERSION
-|    |         +--- com.android.support:support-compat:VERSION (*)
-|    |         +--- com.android.support:support-media-compat:VERSION (*)
-|    |         +--- com.android.support:support-core-ui:VERSION (*)
-|    |         \--- com.android.support:support-core-utils:VERSION (*)
-|    +--- com.android.support:support-vector-drawable:VERSION
-|    |    \--- com.android.support:support-compat:VERSION (*)
-|    \--- com.android.support:animated-vector-drawable:VERSION
-|         \--- com.android.support:support-vector-drawable:VERSION (*)
-"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("com.android.support:support-v4:")) {
-            val version = declaration.substring("com.android.support:support-v4:".length)
-            addTransitiveLibrary(
-                """
-+--- com.android.support:support-v4:VERSION
-|    +--- com.android.support:support-compat:VERSION
-|    |    \--- com.android.support:support-annotations:VERSION
-|    +--- com.android.support:support-media-compat:VERSION
-|    |    \--- com.android.support:support-compat:VERSION (*)
-|    +--- com.android.support:support-core-utils:VERSION
-|    |    \--- com.android.support:support-compat:VERSION (*)
-|    +--- com.android.support:support-core-ui:VERSION
-|    |    \--- com.android.support:support-compat:VERSION (*)
-|    \--- com.android.support:support-fragment:VERSION
-|         +--- com.android.support:support-compat:VERSION (*)
-|         +--- com.android.support:support-media-compat:VERSION (*)
-|         +--- com.android.support:support-core-ui:VERSION (*)
-|         \--- com.android.support:support-core-utils:VERSION (*)
-"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("com.android.support.constraint:constraint-layout:")) {
-            val version = declaration.substring(
-                "com.android.support.constraint:constraint-layout:".length
-            )
-            addTransitiveLibrary(
-                """
-+--- com.android.support.constraint:constraint-layout:VERSION
-     \--- com.android.support.constraint:constraint-layout-solver:VERSION
-"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("com.firebase:firebase-client-android:")) {
-            val version = declaration.substring("com.firebase:firebase-client-android:".length)
-            addTransitiveLibrary(
-                """
-\--- com.firebase:firebase-client-android:VERSION
-     \--- com.firebase:firebase-client-jvm:VERSION
-          +--- com.fasterxml.jackson.core:jackson-databind:2.2.2
-          |    +--- com.fasterxml.jackson.core:jackson-annotations:2.2.2
-          |    \--- com.fasterxml.jackson.core:jackson-core:2.2.2
-          \--- com.firebase:tubesock:0.0.12"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("com.android.support:design:")) {
-            // Design library
-            val version = declaration.substring("com.android.support:design:".length)
-            addTransitiveLibrary(
-                """
-+--- com.android.support:design:VERSION
-|    +--- com.android.support:recyclerview-v7:VERSION
-|    |    +--- com.android.support:support-annotations:VERSION
-|    |    \--- com.android.support:support-v4:VERSION (*)
-|    +--- com.android.support:appcompat-v7:VERSION (*)
-|    \--- com.android.support:support-v4:VERSION (*)"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("com.google.android.gms:play-services-analytics:")) {
-            // Analytics
-            val version = declaration.substring(
-                "com.google.android.gms:play-services-analytics:".length
-            )
-            addTransitiveLibrary(
-                """
-+--- com.google.android.gms:play-services-analytics:VERSION
-|    \--- com.google.android.gms:play-services-basement:VERSION
-|         \--- com.android.support:support-v4:23.0.0 -> 23.4.0
-|              \--- com.android.support:support-annotations:23.4.0"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("com.google.android.gms:play-services-gcm:")) {
-            // GMS
-            val version = declaration.substring("com.google.android.gms:play-services-gcm:".length)
-            addTransitiveLibrary(
-                """
-+--- com.google.android.gms:play-services-gcm:VERSION
-|    +--- com.google.android.gms:play-services-base:VERSION (*)
-|    \--- com.google.android.gms:play-services-measurement:VERSION
-|         \--- com.google.android.gms:play-services-basement:VERSION (*)"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("com.google.android.gms:play-services-appindexing:")) {
-            // App Indexing
-            val version = declaration.substring(
-                "com.google.android.gms:play-services-appindexing:".length
-            )
-            addTransitiveLibrary(
-                """
-+--- com.google.android.gms:play-services-appindexing:VERSION
-|    \--- com.google.android.gms:play-services-base:VERSION
-|         \--- com.google.android.gms:play-services-basement:VERSION (*)"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk7:")) {
-            // Kotlin
-            val version = declaration.substring("org.jetbrains.kotlin:kotlin-stdlib-jdk7:".length)
-            addTransitiveLibrary(
-                """
-+--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION
-|    \--- org.jetbrains.kotlin:kotlin-stdlib:VERSION
-|         +--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION
-|         \--- org.jetbrains:annotations:13.0
-+--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)
-+--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION"""
-                    .replace("VERSION", version),
-                artifact
-            )
-        } else if (declaration.startsWith("org.jetbrains.kotlin:kotlin-stdlib-jdk8:")) {
-            // Kotlin
-            val version = declaration.substring("org.jetbrains.kotlin:kotlin-stdlib-jdk8:".length)
-            addTransitiveLibrary(
-                """
-+--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:VERSION
-|    +--- org.jetbrains.kotlin:kotlin-stdlib:VERSION
-|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION
-|    |    \--- org.jetbrains:annotations:13.0
-|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION
-|         \--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)"""
-                    .replace("VERSION", version),
+                wellKnownLibrary.dependencies.replace("VERSION", version),
                 artifact
             )
         } else {
@@ -1895,18 +1747,18 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             jar = File(
                 projectDir,
                 "caches/modules-2/files-2.1/" +
-                    coordinate.groupId +
-                    "/" +
-                    coordinate.artifactId +
-                    "/" +
-                    coordinate.revision +
-                    // Usually some hex string here, but keep same to keep test
-                    // behavior stable
-                    "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/" +
-                    coordinate.artifactId +
-                    "-" +
-                    coordinate.revision +
-                    SdkConstants.DOT_JAR
+                        coordinate.groupId +
+                        "/" +
+                        coordinate.artifactId +
+                        "/" +
+                        coordinate.revision +
+                        // Usually some hex string here, but keep same to keep test
+                        // behavior stable
+                        "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/" +
+                        coordinate.artifactId +
+                        "-" +
+                        coordinate.revision +
+                        SdkConstants.DOT_JAR
             )
             if (!jar.exists()) {
                 createEmptyJar(jar)
@@ -1987,7 +1839,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
      *
      * <pre>
      * $ ./gradlew :app:dependencies
-     </pre> *
+    </pre> *
      *
      *
      * Sample graph:
@@ -2009,7 +1861,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
      * |    \--- org.hamcrest:hamcrest-library:1.3 (*)
      * +--- com.google.code.findbugs:jsr305:2.0.1
      * \--- javax.annotation:javax.annotation-api:1.2
-     </pre> *
+    </pre> *
      *
      * @param graph the graph
      * @return the corresponding dependencies
@@ -2299,17 +2151,17 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             ) {
                 // Jar prior to to v20
                 return (
-                    declaration.contains(":13") ||
-                        declaration.contains(":18") ||
-                        declaration.contains(":19")
-                    )
+                        declaration.contains(":13") ||
+                                declaration.contains(":18") ||
+                                declaration.contains(":19")
+                        )
             } else if (declaration.startsWith("com.google.guava:guava:")) {
                 return true
             } else if (declaration.startsWith("com.google.android.wearable:wearable:")) {
                 return true
             } else if (declaration.startsWith(
-                "com.android.support.constraint:constraint-layout-solver:"
-            )
+                    "com.android.support.constraint:constraint-layout-solver:"
+                )
             ) {
                 return true
             } else if (declaration.startsWith("junit:junit:")) {
@@ -2341,3 +2193,125 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         flags.severityOverrides = HashMap()
     }
 }
+
+private data class WellKnownLib(
+    val groupAndName: String,
+    val dependencies: String,
+)
+
+private val wellKnownLibraries = listOf(
+    WellKnownLib(
+        "com.android.support:appcompat-v7",
+        """
++--- com.android.support:appcompat-v7:VERSION
+|    +--- com.android.support:support-v4:VERSION
+|    |    +--- com.android.support:support-compat:VERSION
+|    |    |    \--- com.android.support:support-annotations:VERSION
+|    |    +--- com.android.support:support-media-compat:VERSION
+|    |    |    \--- com.android.support:support-compat:VERSION (*)
+|    |    +--- com.android.support:support-core-utils:VERSION
+|    |    |    \--- com.android.support:support-compat:VERSION (*)
+|    |    +--- com.android.support:support-core-ui:VERSION
+|    |    |    \--- com.android.support:support-compat:VERSION (*)
+|    |    \--- com.android.support:support-fragment:VERSION
+|    |         +--- com.android.support:support-compat:VERSION (*)
+|    |         +--- com.android.support:support-media-compat:VERSION (*)
+|    |         +--- com.android.support:support-core-ui:VERSION (*)
+|    |         \--- com.android.support:support-core-utils:VERSION (*)
+|    +--- com.android.support:support-vector-drawable:VERSION
+|    |    \--- com.android.support:support-compat:VERSION (*)
+|    \--- com.android.support:animated-vector-drawable:VERSION
+|         \--- com.android.support:support-vector-drawable:VERSION (*)
+"""
+    ),
+    WellKnownLib(
+        "com.android.support:support-v4",
+        """
++--- com.android.support:support-v4:VERSION
+|    +--- com.android.support:support-compat:VERSION
+|    |    \--- com.android.support:support-annotations:VERSION
+|    +--- com.android.support:support-media-compat:VERSION
+|    |    \--- com.android.support:support-compat:VERSION (*)
+|    +--- com.android.support:support-core-utils:VERSION
+|    |    \--- com.android.support:support-compat:VERSION (*)
+|    +--- com.android.support:support-core-ui:VERSION
+|    |    \--- com.android.support:support-compat:VERSION (*)
+|    \--- com.android.support:support-fragment:VERSION
+|         +--- com.android.support:support-compat:VERSION (*)
+|         +--- com.android.support:support-media-compat:VERSION (*)
+|         +--- com.android.support:support-core-ui:VERSION (*)
+|         \--- com.android.support:support-core-utils:VERSION (*)
+"""
+    ),
+    WellKnownLib(
+        "com.android.support.constraint:constraint-layout",
+        """
++--- com.android.support.constraint:constraint-layout:VERSION
+     \--- com.android.support.constraint:constraint-layout-solver:VERSION
+"""
+    ),
+    WellKnownLib(
+        "com.firebase:firebase-client-android",
+        """
+\--- com.firebase:firebase-client-android:VERSION
+     \--- com.firebase:firebase-client-jvm:VERSION
+          +--- com.fasterxml.jackson.core:jackson-databind:2.2.2
+          |    +--- com.fasterxml.jackson.core:jackson-annotations:2.2.2
+          |    \--- com.fasterxml.jackson.core:jackson-core:2.2.2
+          \--- com.firebase:tubesock:0.0.12"""
+    ),
+    WellKnownLib(
+        "com.android.support:design",
+        """
++--- com.android.support:design:VERSION
+|    +--- com.android.support:recyclerview-v7:VERSION
+|    |    +--- com.android.support:support-annotations:VERSION
+|    |    \--- com.android.support:support-v4:VERSION (*)
+|    +--- com.android.support:appcompat-v7:VERSION (*)
+|    \--- com.android.support:support-v4:VERSION (*)"""
+    ),
+    WellKnownLib(
+        "com.google.android.gms:play-services-analytics",
+        """
++--- com.google.android.gms:play-services-analytics:VERSION
+|    \--- com.google.android.gms:play-services-basement:VERSION
+|         \--- com.android.support:support-v4:23.0.0 -> 23.4.0
+|              \--- com.android.support:support-annotations:23.4.0"""
+    ),
+    WellKnownLib(
+        "com.google.android.gms:play-services-gcm",
+        """
++--- com.google.android.gms:play-services-gcm:VERSION
+|    +--- com.google.android.gms:play-services-base:VERSION (*)
+|    \--- com.google.android.gms:play-services-measurement:VERSION
+|         \--- com.google.android.gms:play-services-basement:VERSION (*)"""
+    ),
+    WellKnownLib(
+        "com.google.android.gms:play-services-appindexing",
+        """
++--- com.google.android.gms:play-services-appindexing:VERSION
+|    \--- com.google.android.gms:play-services-base:VERSION
+|         \--- com.google.android.gms:play-services-basement:VERSION (*)"""
+    ),
+    WellKnownLib(
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7",
+        """
++--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION
+|    \--- org.jetbrains.kotlin:kotlin-stdlib:VERSION
+|         +--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION
+|         \--- org.jetbrains:annotations:13.0
++--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)
++--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION"""
+    ),
+    WellKnownLib(
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8",
+        """
++--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:VERSION
+|    +--- org.jetbrains.kotlin:kotlin-stdlib:VERSION
+|    |    +--- org.jetbrains.kotlin:kotlin-stdlib-common:VERSION
+|    |    \--- org.jetbrains:annotations:13.0
+|    \--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:VERSION
+|         \--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)"""
+    ),
+)
+
