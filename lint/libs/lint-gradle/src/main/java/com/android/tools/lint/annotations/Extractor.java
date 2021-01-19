@@ -47,7 +47,6 @@ import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.AnnotationLookup;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Lint;
-import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Splitter;
@@ -2863,7 +2862,7 @@ public class Extractor {
                                             + ": The typedef annotation should have "
                                             + "@Retention(RetentionPolicy.SOURCE)";
                             if (strictTypedefRetention) {
-                                throw new ReflectiveLintRunner.ExtractErrorException(message);
+                                throw new ExtractErrorException(message);
                             } else {
                                 Extractor.warning(message);
                             }
@@ -2895,6 +2894,12 @@ public class Extractor {
             }
 
             return false;
+        }
+    }
+
+    public static class ExtractErrorException extends RuntimeException {
+        public ExtractErrorException(String message) {
+            super(message);
         }
     }
 }

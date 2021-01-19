@@ -85,7 +85,6 @@ import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.DslServicesImpl;
-import com.android.build.gradle.internal.services.LintClassLoaderBuildService;
 import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.StringCachingBuildService;
 import com.android.build.gradle.internal.services.SymbolTableBuildService;
@@ -365,8 +364,6 @@ public abstract class BasePlugin<
         new GlobalLibraryBuildService.RegistrationAction(
                 project, mavenCoordinatesCacheBuildService
         ).execute();
-
-        new LintClassLoaderBuildService.RegistrationAction(project).execute();
 
         extraModelInfo = new ExtraModelInfo(mavenCoordinatesCacheBuildService);
 
