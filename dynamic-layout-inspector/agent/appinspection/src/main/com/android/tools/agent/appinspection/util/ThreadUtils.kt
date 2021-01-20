@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.appinspection.util
 
+import android.os.Handler
 import android.os.Looper
 
 object ThreadUtils {
@@ -38,5 +39,9 @@ object ThreadUtils {
         if (Looper.getMainLooper().isCurrentThread) {
             error("This work is required off the main thread")
         }
+    }
+
+    fun runOnMainThread(block: () -> Unit) {
+        Handler.createAsync(Looper.getMainLooper()).post(block)
     }
 }

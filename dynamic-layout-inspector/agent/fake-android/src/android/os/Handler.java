@@ -38,6 +38,10 @@ public class Handler {
         mMessages = new HashMap<>();
     }
 
+    public static Handler createAsync(Looper looper) {
+        return new Handler(looper);
+    }
+
     public Looper getLooper() {
         return mLooper;
     }

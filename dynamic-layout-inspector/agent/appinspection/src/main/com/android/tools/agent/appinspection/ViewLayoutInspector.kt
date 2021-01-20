@@ -16,8 +16,6 @@
 
 package com.android.tools.agent.appinspection
 
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.inspector.WindowInspector
 import androidx.annotation.GuardedBy
@@ -29,9 +27,9 @@ import com.android.tools.agent.appinspection.framework.SkiaQWorkaround
 import com.android.tools.agent.appinspection.framework.flatten
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.createAppContext
+import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
-import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
 import com.android.tools.idea.protobuf.ByteString
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.*
 import java.io.ByteArrayOutputStream
@@ -288,7 +286,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         callback: CommandCallback
     ) {
 
-        Handler(Looper.getMainLooper()).post {
+        ThreadUtils.runOnMainThread {
             var foundView: View? = null
             var foundViewRoot: View? = null
 
