@@ -45,6 +45,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.net.NoRouteToHostException
 
 /*
  * IceboxCallerImpl implements the IceboxCaller interface.
@@ -275,7 +276,7 @@ class IceboxCallerImpl public constructor(
  * @param port: the port number of Android Studio DDM module.
  */
 @VisibleForTesting
-suspend fun notifyAndroidStudio(deviceSerial: String, pid: Long, port: Int, logger: Logger?) {
+fun notifyAndroidStudio(deviceSerial: String, pid: Long, port: Int, logger: Logger?) {
     try {
         Socket("localhost", port).use {
             val message = "disconnect:$deviceSerial:$pid"
@@ -284,6 +285,8 @@ suspend fun notifyAndroidStudio(deviceSerial: String, pid: Long, port: Int, logg
             )
         }
     } catch (exception: ConnectException) {
+        logger?.info("Android Studio not found: $exception")
+    } catch (exception: NoRouteToHostException) {
         logger?.info("Android Studio not found: $exception")
     }
 }
