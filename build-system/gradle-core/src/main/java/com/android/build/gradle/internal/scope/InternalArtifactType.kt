@@ -466,6 +466,11 @@ InternalArtifactType<T : FileSystemLocation>(
     // File containing app metadata to be included in the APK and .aab files for analytics.
     object APP_METADATA: InternalArtifactType<RegularFile>(FILE), Replaceable
 
+    // Micro APK manifest file
+    object MICRO_APK_MANIFEST_FILE: InternalArtifactType<RegularFile>(FILE)
+    // Micro APK res directory
+    object MICRO_APK_RES: InternalArtifactType<Directory>(DIRECTORY)
+
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()
     }
