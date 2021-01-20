@@ -64,6 +64,10 @@ class UtpTestRunner @JvmOverloads constructor(
             coverageDir: File,
             logger: ILogger): MutableList<TestResult> {
         return apksForDevice.map { (deviceConnector, apks) ->
+            val testResultListenerServer = requireNotNull(UtpTestResultListenerServer.startServer()) {
+                "Unable to start the UTP test results listener gRPC server."
+            }
+
             val utpOutputDir = resultsDir
             val utpTmpDir = Files.createTempDir()
             val utpTestRunLogDir = Files.createTempDir()
@@ -78,16 +82,20 @@ class UtpTestRunner @JvmOverloads constructor(
                             utpOutputDir,
                             utpTmpDir,
                             retentionConfig,
-                            useOrchestrator).writeTo(writer)
+                            useOrchestrator,
+                            testResultListenerServer.port).writeTo(writer)
                 }
             }
-            val resultsProto = runUtpTestSuite(
-                runnerConfigProtoFile,
-                utpOutputDir,
-                configFactory,
-                utpDependencies,
-                javaProcessExecutor,
-                logger)
+
+            val resultsProto = testResultListenerServer.use {
+                runUtpTestSuite(
+                        runnerConfigProtoFile,
+                        utpOutputDir,
+                        configFactory,
+                        utpDependencies,
+                        javaProcessExecutor,
+                        logger)
+            }
 
             resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 

@@ -42,6 +42,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyIterable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
@@ -82,6 +83,7 @@ class UtpTestRunnerTest {
         override val testDeviceInfoPlugin = FakeConfigurableFileCollection(File(""))
         override val testPlugin = FakeConfigurableFileCollection(File(""))
         override val testPluginHostRetention = FakeConfigurableFileCollection(File(""))
+        override val testPluginResultListenerGradle = FakeConfigurableFileCollection(File(""))
     }
 
     @Before
@@ -103,7 +105,8 @@ class UtpTestRunnerTest {
                 any(File::class.java),
                 any(File::class.java),
                 any(RetentionConfig::class.java),
-                anyBoolean())).then {
+                anyBoolean(),
+                anyInt())).then {
             utpOutputDir = it.getArgument<File>(5)
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }

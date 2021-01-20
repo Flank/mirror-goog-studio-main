@@ -869,6 +869,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "javax.annotation_javax.annotation-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/javax/annotation/javax.annotation-api/1.3.2:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "javax.inject_javax.inject",
     export_artifact = "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
     visibility = ["//visibility:public"],

@@ -24,11 +24,13 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_DEVICE_INFO_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
+import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin
+import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidTestResultListenerConfigProto.GradleAndroidTestResultListenerConfig
 import com.google.protobuf.Any
 import com.google.testing.platform.proto.api.config.AndroidInstrumentationDriverProto
 import com.google.testing.platform.proto.api.config.DeviceProto
@@ -84,7 +86,8 @@ class UtpConfigFactory {
         outputDir: File,
         tmpDir: File,
         retentionConfig: RetentionConfig,
-        useOrchestrator: Boolean
+        useOrchestrator: Boolean,
+        testResultListenerServerPort: Int
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
             val grpcInfo = findGrpcInfo(device.serialNumber)
@@ -104,7 +107,18 @@ class UtpConfigFactory {
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.serialNumber)
+            addTestResultListener(
+                    createTestResultListener(utpDependencies, testResultListenerServerPort))
         }.build()
+    }
+
+    fun createTestResultListener(
+            utpDependencies: UtpDependencies,
+            testResultListenerServerPort: Int): ExtensionProto.Extension {
+        val config = Any.pack(GradleAndroidTestResultListenerConfig.newBuilder().apply {
+            resultListenerServerPort = testResultListenerServerPort
+        }.build())
+        return ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE.toExtensionProto(utpDependencies, config)
     }
 
     /**

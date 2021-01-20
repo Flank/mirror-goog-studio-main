@@ -100,6 +100,7 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-util",
         "//tools/base/utp/android-device-provider-gradle-proto",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
         "//tools/base/zipflinger",
         "//tools/data-binding:tools.compilerCommon",
         "//tools/base/third_party:org.tensorflow_tensorflow-lite-metadata",  # For mlkit-common
@@ -196,6 +197,7 @@ kotlin_test(
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
+        "//tools/base/third_party:io.grpc_grpc-testing",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",

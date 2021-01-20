@@ -899,6 +899,8 @@ maven_repo(
         "//tools/base/utp/android-test-plugin-host-device-info-proto",
         "//tools/base/utp/android-test-plugin-host-retention",
         "//tools/base/utp/android-test-plugin-host-retention-proto",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle",
+        "//tools/base/utp/android-test-plugin-result-listener-gradle-proto",
     ],
     visibility = ["__subpackages__"],
 )
