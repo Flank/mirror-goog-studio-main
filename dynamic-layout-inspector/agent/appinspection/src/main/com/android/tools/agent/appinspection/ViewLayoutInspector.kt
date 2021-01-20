@@ -66,13 +66,22 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         var isLastCapture: Boolean = false
     )
 
-    private val contextMapLock = Any()
+    private class InspectorState {
+        /**
+         * A mapping of root view IDs to data that should be accessed across multiple threads.
+         */
+        val contextMap = mutableMapOf<Long, CaptureContext>()
 
-    /**
-     * A mapping of root view IDs to data that should be accessed across multiple threads.
-     */
-    @GuardedBy("contextMapLock")
-    private val contextMap = mutableMapOf<Long, CaptureContext>()
+        /**
+         * When true, future layout events should exclude System views, only returning trees of
+         * views created by the user's app.
+         */
+        var skipSystemViews: Boolean = false
+    }
+
+    private val stateLock = Any()
+    @GuardedBy("stateLock")
+    private val state = InspectorState()
 
     /**
      * A snapshot of the current list of view root IDs.
@@ -125,9 +134,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 }.build()
             }
 
-            synchronized(contextMapLock) {
+            synchronized(stateLock) {
                 for (toRemove in removed) {
-                    contextMap.remove(toRemove)?.handle?.close()
+                    state.contextMap.remove(toRemove)?.handle?.close()
                 }
                 if (captureNewRoots) {
                     for (toAdd in added) {
@@ -140,11 +149,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 
     private fun forceStopAllCaptures() {
-        synchronized(contextMapLock) {
-            for (context in contextMap.values) {
+        synchronized(stateLock) {
+            for (context in state.contextMap.values) {
                 context.handle.close()
             }
-            contextMap.clear()
+            state.contextMap.clear()
         }
     }
 
@@ -157,13 +166,15 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         val captureExecutor = Executor { command ->
             sequentialExecutor.execute {
                 var context: CaptureContext
-                synchronized(contextMapLock) {
+                var skipSystemViews: Boolean
+                synchronized(stateLock) {
+                    skipSystemViews = state.skipSystemViews
                     // We might get some lingering captures even though we already finished
                     // listening earlier (this would be indicated by no context). Just abort
                     // early in that case.
-                    context = contextMap[root.uniqueDrawingId] ?: return@execute
+                    context = state.contextMap[root.uniqueDrawingId] ?: return@execute
                     if (context.isLastCapture) {
-                        contextMap.remove(root.uniqueDrawingId)
+                        state.contextMap.remove(root.uniqueDrawingId)
                     }
                 }
 
@@ -183,7 +194,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // Get layout info on the view thread, to avoid races
                     val future = CompletableFuture<Unit>()
                     root.post {
-                        rootView = root.toNode(stringTable)
+                        rootView = root.toNode(stringTable, skipSystemViews)
                         rootOffset = IntArray(2)
                         root.getLocationInSurface(rootOffset)
 
@@ -221,14 +232,14 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             if (!root.isAttachedToWindow) return@post
 
             try {
-                synchronized(contextMapLock) {
+                synchronized(stateLock) {
                     val handle =
                         SkiaQWorkaround.startRenderingCommandsCapture(
                             root,
                             captureExecutor
                         ) { os }
                     if (handle != null) {
-                        contextMap[root.uniqueDrawingId] =
+                        state.contextMap[root.uniqueDrawingId] =
                             CaptureContext(handle, isLastCapture = (!continuous))
                     }
                 }
@@ -253,6 +264,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
 
         forceStopAllCaptures()
+
+        synchronized(stateLock) {
+            state.skipSystemViews = startFetchCommand.skipSystemViews
+        }
         for (root in getRootViews()) {
             startCapturing(root, startFetchCommand.continuous)
         }
@@ -263,8 +278,8 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             stopFetchResponse = StopFetchResponse.getDefaultInstance()
         }
 
-        synchronized(contextMapLock) {
-            for (context in contextMap.values) {
+        synchronized(stateLock) {
+            for (context in state.contextMap.values) {
                 context.isLastCapture = true
             }
         }
@@ -278,6 +293,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         ThreadUtils.runOnMainThread {
             val foundView = getRootViews()
                 .asSequence()
+                .filter { it.uniqueDrawingId == propertiesCommand.rootViewId }
                 .flatMap { rootView -> rootView.flatten() }
                 .filter { view -> view.uniqueDrawingId == propertiesCommand.viewId }
                 .firstOrNull()
