@@ -41,7 +41,7 @@ sourceSets {
 
 task sdkManagerStartScripts(type: CreateStartScripts) {
     classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
-            project.getConfigurations().getByName("runtime"))
+            project.getConfigurations().getByName("runtimeClasspath"))
     outputDir new File(project.getBuildDir(), "scripts")
 
     description "Creates OS specific scripts to start the sdk manager CLI"
@@ -57,7 +57,7 @@ task sdkManagerStartScripts(type: CreateStartScripts) {
 
 task avdManagerStartScripts(type: CreateStartScripts) {
     classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
-            project.getConfigurations().getByName('runtime'))
+            project.getConfigurations().getByName('runtimeClasspath'))
     outputDir new File(project.getBuildDir(), 'scripts')
 
     description 'Creates OS specific scripts to start avdmanager'

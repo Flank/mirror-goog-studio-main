@@ -10,7 +10,7 @@ sdkJar.manifest.attributes('Main-Class': 'com.android.archquery.Main')
 
 task archQueryStartScripts(type: CreateStartScripts) {
     classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
-            project.getConfigurations().getByName('runtime'))
+            project.getConfigurations().getByName('runtimeClasspath'))
     outputDir new File(project.getBuildDir(), 'scripts')
 
     description 'Creates OS specific scripts to start archQuery'
