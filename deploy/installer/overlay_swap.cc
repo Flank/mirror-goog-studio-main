@@ -127,6 +127,8 @@ void OverlaySwapCommand::BuildOverlayUpdateRequest(
   request->set_expected_overlay_id(request_.expected_overlay_id());
 
   const std::string pkg = request_.package_name();
+  request->set_package_name(pkg);
+
   const std::string overlay_path = Sites::AppOverlays(pkg);
   request->set_overlay_path(overlay_path);
 

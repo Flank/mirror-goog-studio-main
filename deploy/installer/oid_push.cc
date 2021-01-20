@@ -58,6 +58,7 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   update_request.set_expected_overlay_id(request_.prev_oid());
   update_request.set_overlay_id(request_.next_oid());
   const std::string pkg = request_.package_name();
+  update_request.set_package_name(pkg);
   update_request.set_overlay_path(Sites::AppOverlays(pkg));
   update_request.set_wipe_all_files(request_.wipe_overlays());
 

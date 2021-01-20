@@ -204,6 +204,12 @@ void InstallServer::HandleOverlayUpdate(
     return;
   }
 
+  // Live Literal instrumentation, while persistent across restarts, are not
+  // considered part of the APK's install. We want all installs to nuke
+  // all live literals information and the source of truth of all literal
+  // updates will be based on this last install.
+  overlay.DeleteDirectory(Sites::AppLiveLiteral(request.package_name()));
+
   for (const std::string& file : request.files_to_delete()) {
     if (!overlay.DeleteFile(file)) {
       response->set_status(proto::OverlayUpdateResponse::UPDATE_FAILED);

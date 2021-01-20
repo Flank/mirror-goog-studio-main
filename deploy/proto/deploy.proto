@@ -507,6 +507,7 @@ message OverlayUpdateRequest {
   repeated OverlayFile files_to_write = 4;
   repeated string files_to_delete = 5;
   bool wipe_all_files = 6;
+  string package_name = 7;
 }
 
 message OverlayFile {

@@ -16,6 +16,7 @@
 
 #include "tools/base/deploy/installer/server/install_server.h"
 #include "tools/base/deploy/common/event.h"
+#include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/server/canary.h"
@@ -378,6 +379,79 @@ TEST_F(InstallServerTest, TestAllStartsFail) {
   }
   // Make sure we consumed all the exec results.
   EXPECT_TRUE(success.empty());
+};
+
+TEST_F(InstallServerTest, FlushLiveLiteralDex) {
+  std::thread server_thread;
+  std::deque<bool> success = {true, true};
+  FakeExecutor fake_exec(server_thread, success);
+
+  proto::InstallServerResponse foo;
+
+  // Start the server and create an overlay
+  {
+    auto client = InstallClient("fakepkg", "fakepath", "iwi", fake_exec);
+
+    proto::OverlayUpdateRequest req;
+    req.set_overlay_id("id");
+    req.set_overlay_path(kOverlayFolder);
+    proto::OverlayFile* added = req.add_files_to_write();
+    added->set_path("apk/hello.txt");
+    added->set_content("hello world");
+
+    auto resp = client.UpdateOverlay(req);
+    EXPECT_TRUE(resp != nullptr);
+
+    EXPECT_EQ(proto::OverlayUpdateResponse::OK, resp->status());
+  }
+
+  fake_exec.JoinServerThread();
+
+  std::string content;
+  EXPECT_TRUE(deploy::ReadFile(kOverlayFolder + "apk/hello.txt", &content));
+  EXPECT_EQ("hello world", content);
+
+  // Pretend there was a LL request and we wrote some dex to persist.
+  std::string dex = "fake dex content";
+  EXPECT_TRUE(IO::mkpath(kOverlayFolder + ".ll/", 0777));
+  EXPECT_TRUE(deploy::WriteFile(kOverlayFolder + ".ll/a.dex", dex));
+  EXPECT_TRUE(deploy::WriteFile(kOverlayFolder + ".ll/b.dex", dex));
+
+  {
+    // Start the server and overwrite and delete a file
+    auto client = InstallClient("fakepkg", "fakepath", "iwi", fake_exec);
+
+    proto::OverlayUpdateRequest req1;
+    req1.set_expected_overlay_id("id");
+    req1.set_overlay_id("next-id");
+    req1.set_overlay_path(kOverlayFolder);
+    req1.clear_files_to_write();
+
+    proto::OverlayFile* added = req1.add_files_to_write();
+    added->set_path("apk/hello_2.txt");
+    added->set_content("hello again world");
+    req1.add_files_to_delete("apk/hello.txt");
+
+    auto resp1 = client.UpdateOverlay(req1);
+    EXPECT_TRUE(resp1 != nullptr);
+
+    EXPECT_EQ(proto::OverlayUpdateResponse::OK, resp1->status());
+  }
+
+  fake_exec.JoinServerThread();
+
+  content.clear();
+  EXPECT_FALSE(deploy::ReadFile(kOverlayFolder + "apk/hello.txt", &content));
+  EXPECT_TRUE(content.empty());
+
+  content.clear();
+  EXPECT_TRUE(deploy::ReadFile(kOverlayFolder + "apk/hello_2.txt", &content));
+  EXPECT_EQ("hello again world", content);
+
+  // Make sure LL directory was nuked.
+  DIR* dir = opendir((kOverlayFolder + ".ll/").c_str());
+  EXPECT_TRUE(ENOENT == errno);
+  closedir(dir);
 };
 
 }  // namespace deploy

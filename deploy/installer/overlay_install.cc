@@ -153,13 +153,6 @@ void OverlayInstallCommand::UpdateOverlay(
     overlay_request.add_files_to_delete(deleted_file);
   }
 
-  // Live Literal instrumentation, while persistent across restarts, are not
-  // considered part of the APK's install. We want all installs to nuke
-  // all live literals information and the source of truth of all literal
-  // updates will be based on this last install.
-  std::string live_literal_dir = Sites::AppOverlays(request_.package_name());
-  overlay_request.add_files_to_delete(live_literal_dir);
-
   auto resp = client_->UpdateOverlay(overlay_request);
   if (!resp) {
     ErrEvent("Could send update to install server");

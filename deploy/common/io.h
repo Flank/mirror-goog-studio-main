@@ -55,6 +55,9 @@ class IO {
   static int open(const std::string& pathname, int flags, mode_t mode);
   static DIR* opendir(const std::string& name);
   static int unlink(const std::string& pathname);
+
+  // remove a directory and its content NOT recursively (no need for it yet)
+  static int rmdir(const std::string& pathname);
 };
 
 }  // namespace deploy

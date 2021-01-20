@@ -154,4 +154,27 @@ int IO::unlink(const std::string& pathname) {
   return ::unlink(ResolvePath(pathname).c_str());
 }
 
+int IO::rmdir(const std::string& pathname) {
+  std::string path = ResolvePath(pathname);
+  DIR* dir = ::opendir(path.c_str());
+  if (dir == nullptr) {
+    return 1;
+  }
+
+  dirent* ent;
+  while ((ent = readdir(dir)) != nullptr) {
+    if (ent->d_type == DT_REG) {
+      std::string full_path = path + "/" + ent->d_name;
+      int status = ::unlink(full_path.c_str());
+      if (status) {
+        closedir(dir);
+        return status;
+      }
+    }
+    // No use case for recursive rmdir yet.
+  }
+  closedir(dir);
+  return ::rmdir(path.c_str());
+}
+
 }  // namespace deploy
