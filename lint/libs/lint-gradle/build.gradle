@@ -27,7 +27,6 @@ dependencies {
     implementation project(':base:uast')
     implementation project(':base:manifest-merger')
     implementation project(':base:lint-cli')
-    api project(':base:lint-gradle-api')
     implementation project(':base:zipflinger')
     implementation project(':base:repository')
     compileOnly gradleApi()

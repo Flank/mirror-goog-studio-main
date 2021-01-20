@@ -199,44 +199,6 @@ maven_pom(
 )
 
 kotlin_library(
-    name = "tools.lint-gradle-api",
-    # TODO: move resources out of java?
-    srcs = glob([
-        "libs/lint-gradle-api/src/main/java/**/*.kt",
-        "libs/lint-gradle-api/src/main/java/**/*.java",
-    ]),
-    lint_baseline = "libs/lint-gradle-api/lint_baseline.xml",
-    module_name = "lint-gradle-api",
-    pom = "lint-gradle-api.pom",
-    resource_strip_prefix = "tools/base/lint/libs/lint-gradle-api",
-    resources = glob(
-        include = ["libs/lint-gradle-api/src/main/java/**"],
-        exclude = [
-            "libs/lint-gradle-api/src/main/java/**/*.java",
-            "libs/lint-gradle-api/src/main/java/**/*.kt",
-        ],
-    ) + ["libs/lint-gradle-api/NOTICE"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":tools.lint-model",
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api_neverlink",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
-    ],
-)
-
-maven_pom(
-    name = "lint-gradle-api.pom",
-    artifact = "lint-gradle-api",
-    group = "com.android.tools.lint",
-    source = "//tools/buildSrc/base:base_version",
-)
-
-kotlin_library(
     name = "tools.lint-gradle",
     # TODO: move resources out of java?
     srcs = glob([
@@ -261,7 +223,6 @@ kotlin_library(
         # so update both in sync
         ":tools.lint-api",
         ":tools.lint-checks",
-        ":tools.lint-gradle-api",
         ":tools.lint-model",
         "//prebuilts/tools/common/lint-psi/intellij-core",
         "//prebuilts/tools/common/lint-psi/kotlin-compiler",
