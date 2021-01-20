@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.cMakeListsTxt
+import com.android.tools.idea.wizard.template.deriveNativeLibraryName
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
 import com.android.tools.idea.wizard.template.impl.activities.common.addViewBindingSupport
 import com.android.tools.idea.wizard.template.impl.activities.common.generateManifest
@@ -57,20 +58,23 @@ fun RecipeExecutor.generateCppEmptyActivity(
   val simpleActivityPath = srcOut.resolve("$activityClass.$ktOrJavaExt")
 
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
+  val libraryName = packageName.deriveNativeLibraryName()
   val simpleActivity = when (projectData.language) {
     Language.Kotlin -> cppEmptyActivityKt(
       packageName = packageName,
       activityClass = activityClass,
       layoutName = layoutName,
       useAndroidX = useAndroidX,
-      isViewBindingSupported = isViewBindingSupported
+      isViewBindingSupported = isViewBindingSupported,
+      libraryName = libraryName,
     )
     Language.Java -> cppEmptyActivityJava(
       packageName = packageName,
       activityClass = activityClass,
       layoutName = layoutName,
       useAndroidX = useAndroidX,
-      isViewBindingSupported = isViewBindingSupported
+      isViewBindingSupported = isViewBindingSupported,
+      libraryName = libraryName,
     )
   }
   save(simpleActivity, simpleActivityPath)
@@ -78,7 +82,7 @@ fun RecipeExecutor.generateCppEmptyActivity(
   val nativeSrcOut = moduleData.rootDir.resolve("src/main/cpp")
   val nativeLibCpp = "native-lib.cpp"
   save(nativeLibCpp(packageName, activityClass), nativeSrcOut.resolve(nativeLibCpp))
-  save(cMakeListsTxt(nativeLibCpp, packageName.split('.').last()), nativeSrcOut.resolve("CMakeLists.txt"))
+    save(cMakeListsTxt(nativeLibCpp, libraryName), nativeSrcOut.resolve("CMakeLists.txt"))
 
   open(simpleActivityPath)
 }
