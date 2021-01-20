@@ -351,7 +351,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.testing.platform_core-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.4-dev:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/platform/core-proto/0.0.8-alpha01:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -880,6 +880,22 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.9.10:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "net.java.dev.jna_jna",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/java/dev/jna/jna/5.6.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "net.java.dev.jna_jna-platform",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/java/dev/jna/jna-platform/5.6.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":net.java.dev.jna_jna"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.

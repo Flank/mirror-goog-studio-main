@@ -25,13 +25,17 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.AndroidArchive
 import com.android.testutils.apk.Dex
+import com.android.testutils.generateAarWithContent
 import com.android.testutils.truth.DexSubject
 import com.android.utils.FileUtils
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalTime
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.fail
@@ -41,12 +45,26 @@ class CoreLibraryDesugarDynamicFeatureTest {
     private val streamClass = "Lj$/util/stream/Stream;"
     private val monthClass = "Lj$/time/Month;"
     private val yearClass = "Lj$/time/Year;"
+    private val localTimeClass = "Lj$/time/LocalTime;"
 
     private lateinit var app: GradleTestProject
     private lateinit var feature: GradleTestProject
 
+    private val aar = generateAarWithContent(
+        packageName = "com.example.myaar",
+        mainJar = TestInputsGenerator.jarWithClasses(listOf(LocalTimeClass::class.java))
+    )
+
+    private val mavenRepo = MavenRepoGenerator(
+        listOf(
+            MavenRepoGenerator.Library("com.example:myaar:1", "aar", aar)
+        )
+    )
+
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(setUpTestProject())
+    val project = GradleTestProject.builder()
+        .withAdditionalMavenRepo(mavenRepo)
+        .fromTestApp(setUpTestProject())
         .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
         // http://b/149978740
         .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=1")
@@ -110,6 +128,20 @@ class CoreLibraryDesugarDynamicFeatureTest {
             ?: fail("Failed to find the dex with class name $streamClass")
         DexSubject.assertThat(desugarLibDex).containsClasses(monthClass)
         DexSubject.assertThat(desugarLibDex).doesNotContainClasses(yearClass)
+    }
+
+    @Test
+    fun testKeepRuleFromDynamicFeatureExternalLib() {
+        feature.buildFile.appendText("""
+
+            dependencies {
+                implementation 'com.example:myaar:1'
+            }
+        """.trimIndent())
+
+        project.executor().run(":app:assembleRelease")
+        val appApk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        assertNotNull(getDexWithSpecificClass(localTimeClass, appApk.allDexes))
     }
 
     private fun getDexWithSpecificClass(className: String, dexes: Collection<Dex>) : Dex? =
@@ -217,4 +249,8 @@ class CoreLibraryDesugarDynamicFeatureTest {
         private const val DESUGAR_DEPENDENCY
                 = "com.android.tools:desugar_jdk_libs:$DESUGAR_DEPENDENCY_VERSION"
     }
+}
+
+class LocalTimeClass {
+    val time: LocalTime = LocalTime.MIDNIGHT
 }

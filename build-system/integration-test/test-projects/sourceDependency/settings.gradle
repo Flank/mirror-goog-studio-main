@@ -1,0 +1,11 @@
+include 'app'
+
+sourceControl {
+    gitRepository(file("./simple-git-repo").toURI()) {
+        producesModule("com.example:library")
+    }
+    gitRepository(file("./simple-git-repo-2").toURI()) {
+        producesModule("com.example2:library")
+    }
+}
+

@@ -22,6 +22,7 @@ import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
 import com.android.build.api.variant.impl.ApplicationVariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -296,7 +297,9 @@ class ApplicationTaskManager(
     }
 
     override fun createInstallTask(creationConfig: ApkCreationConfig) {
-        if (extension is BaseAppModuleExtension && extension.dynamicFeatures.isEmpty()) {
+        if ((extension is BaseAppModuleExtension && extension.dynamicFeatures.isEmpty()) ||
+            creationConfig is AndroidTestCreationConfig
+        ) {
             // no dynamic features means we can just use the standard install task
             super.createInstallTask(creationConfig)
         } else {

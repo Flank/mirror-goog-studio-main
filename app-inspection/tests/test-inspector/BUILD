@@ -6,7 +6,7 @@ java_library(
     srcs = glob(["src/**/*.java"]),
     deps = [
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
-        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
+        "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
         "//tools/base/app-inspection/tests/test-inspector/api:test-inspector-api",
         "//tools/base/fakeandroid:android-mock",
     ],

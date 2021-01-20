@@ -97,6 +97,7 @@ import com.android.build.gradle.internal.tasks.CompressAssetsTask
 import com.android.build.gradle.internal.tasks.D8MainDexListTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.DesugarTask
+import com.android.build.gradle.internal.tasks.DesugarLibKeepRulesMergeTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
@@ -1564,6 +1565,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val testData: AbstractTestDataImpl
         testData = if (testedVariant.variantType.isDynamicFeature) {
             BundleTestDataImpl(
+                    project.providers,
+                    androidTestProperties,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(ArtifactType.APK),
                     getFeatureName(globalScope.project.path),
@@ -1576,6 +1579,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             val testedApkFileCollection =
                     project.files(testedVariant.artifacts.get(ArtifactType.APK))
             TestDataImpl(
+                    project.providers,
+                    androidTestProperties,
                     androidTestProperties,
                     androidTestProperties.artifacts.get(ArtifactType.APK),
                     if (isLibrary) null else testedApkFileCollection)
@@ -1716,7 +1721,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         maybeCreateJavaCodeShrinkerTask(creationConfig)
         if (creationConfig.codeShrinker == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(creationConfig)
-            maybeCreateDexDesugarLibTask(creationConfig, false)
+            maybeCreateDesugarLibTask(creationConfig, false)
             return
         }
 
@@ -1818,7 +1823,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         taskFactory.register(
                 DexArchiveBuilderTask.CreationAction(
                         dexOptions, enableDexingArtifactTransform, creationConfig))
-        maybeCreateDexDesugarLibTask(creationConfig, enableDexingArtifactTransform)
+        maybeCreateDesugarLibTask(creationConfig, enableDexingArtifactTransform)
         createDexMergingTasks(creationConfig, dexingType, enableDexingArtifactTransform)
     }
 
@@ -2744,7 +2749,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    private fun maybeCreateDexDesugarLibTask(
+    private fun maybeCreateDesugarLibTask(
             apkCreationConfig: ApkCreationConfig,
             enableDexingArtifactTransform: Boolean) {
         val separateFileDependenciesDexingTask =
@@ -2756,6 +2761,18 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             apkCreationConfig,
                             enableDexingArtifactTransform,
                             separateFileDependenciesDexingTask))
+        }
+
+        if(apkCreationConfig.variantType.isDynamicFeature
+            && apkCreationConfig.needsShrinkDesugarLibrary
+        ) {
+            taskFactory.register(
+                DesugarLibKeepRulesMergeTask.CreationAction(
+                    apkCreationConfig,
+                    enableDexingArtifactTransform,
+                    separateFileDependenciesDexingTask
+                )
+            )
         }
     }
 

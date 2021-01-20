@@ -58,6 +58,7 @@ import com.android.build.gradle.internal.ide.dependencies.LibraryDependencyCache
 import com.android.build.gradle.internal.ide.dependencies.LibraryUtils;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
+import com.android.build.gradle.internal.lint.CustomLintCheckUtils;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -414,7 +415,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 ImmutableList.of(),
                 extension.getCompileOptions(),
                 lintOptions,
-                ImmutableList.copyOf(globalScope.getLocalCustomLintChecks().getFiles()),
+                CustomLintCheckUtils.getLocalCustomLintChecksForModel(project, syncIssueReporter),
                 project.getBuildDir(),
                 extension.getResourcePrefix(),
                 ImmutableList.of(),

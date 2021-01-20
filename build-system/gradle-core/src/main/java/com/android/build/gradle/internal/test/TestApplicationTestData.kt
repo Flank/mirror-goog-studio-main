@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.test
 
+import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
@@ -25,15 +26,20 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import java.io.File
 import java.util.stream.Collectors
 
 /** Implementation of [TestData] for separate test modules.  */
 class TestApplicationTestData constructor(
+    providerFactory: ProviderFactory,
+    componentImpl: ComponentImpl,
     creationConfig: TestVariantCreationConfig,
     testApkDir: Provider<Directory>,
     testedApksDir: FileCollection?
 ) : AbstractTestDataImpl(
+    providerFactory,
+    componentImpl,
     creationConfig,
     creationConfig.variantSources,
     testApkDir,

@@ -1,0 +1,4 @@
+#!/bin/sh
+if [ -x /usr/lib/git-core/google_hook ]; then
+  /usr/lib/git-core/google_hook pre-commit "$@"
+fi

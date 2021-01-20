@@ -60,15 +60,18 @@ fun convertLibrary(source: IdeLibrary): ExternalLibrary? {
 }
 
 private abstract class ExternalLibraryWrapper(protected val lib: IdeLibrary) : ExternalLibrary {
+
+  private val libArtifact = lib.artifact
+
   @Suppress("FileComparisons")
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
-    return lib.artifact == (other as? ExternalLibraryWrapper)?.lib?.artifact
+    return libArtifact == (other as? ExternalLibraryWrapper)?.libArtifact
   }
 
   override fun hashCode(): Int {
-    return lib.artifact.hashCode()
+    return libArtifact.hashCode()
   }
 }
 

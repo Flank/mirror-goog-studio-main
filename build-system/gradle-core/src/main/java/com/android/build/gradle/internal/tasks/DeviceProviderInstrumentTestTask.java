@@ -360,12 +360,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
      * @return true if there are some tests to run, false otherwise
      */
     private boolean testsFound() {
-        // For now we check if there is a test APK. We could inspect the test classes and
-        // apply JUnit logic to see if there's something to run, but that would not catch the case
-        // where user makes a typo in a test name or forgets to inherit from a JUnit class.
-        // Be aware that there may be a compiler generated code and don't simply check if
-        // the java source directory is empty. See b/173770818.
-        return getTestData().get().getTestApk().get().exists();
+        return getTestData().get().getHasTests().get();
     }
 
     @OutputDirectory
@@ -639,13 +634,6 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .from(
                                 configurations.getByName(
                                         UtpDependency.ANDROID_DEVICE_PROVIDER_LOCAL
-                                                .getConfigurationName()));
-                task.getTestRunnerFactory()
-                        .getUtpDependencies()
-                        .getDeviceControllerAdb()
-                        .from(
-                                configurations.getByName(
-                                        UtpDependency.ANDROID_DEVICE_CONTROLLER_ADB
                                                 .getConfigurationName()));
                 task.getTestRunnerFactory()
                         .getUtpDependencies()

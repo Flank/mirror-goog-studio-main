@@ -1087,6 +1087,15 @@ class DynamicAppTest {
         }
     }
 
+    // Regression test for https://issuetracker.google.com/171462060
+    @Test
+    fun `test installing AndroidTest variant apk`() {
+       val result = project.executor()
+           .expectFailure()
+           .run(":app:installDebugAndroidTest")
+        assertThat(result.failureMessage).isEqualTo("No connected devices!")
+    }
+
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()

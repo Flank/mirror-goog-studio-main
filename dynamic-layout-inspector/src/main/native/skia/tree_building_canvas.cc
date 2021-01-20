@@ -401,7 +401,6 @@ void TreeBuildingCanvas::onDrawAnnotation(const SkRect&, const char* key,
         newImageInfo,
         const_cast<void*>(reinterpret_cast<const void*>(bytes.data())),
         imageInfo.bytesPerPixel() * newImageInfo.width(), rect.x(), rect.y());
-    // TODO: _allocated_ or move?
     node->set_image(std::move(bytes));
     node->set_width(rect.width());
     node->set_height(rect.height());
