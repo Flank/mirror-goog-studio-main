@@ -62,7 +62,7 @@ public class TransformApiTest {
                 // uploadArchives is not compatible
                 .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .withFailOnWarning(false)
-                .run("uploadArchives");
+                .run("publish");
 
         wholeProject
                 .getSubproject("androidproject")

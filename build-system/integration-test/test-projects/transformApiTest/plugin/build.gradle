@@ -2,7 +2,7 @@ apply from: '../../commonBuildScript.gradle'
 apply from: '../../commonLocalRepo.gradle'
 
 apply plugin: 'java-library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 dependencies {
     api gradleApi()
@@ -12,13 +12,18 @@ dependencies {
     api 'com.google.guava:guava:19.0'
 }
 
-uploadArchives {
+publishing {
     repositories {
-        mavenDeployer {
-            repository(url: uri("../testrepo"))
-            pom.version = '0.1'
-            pom.groupId = 'com.example.transformapi'
-            pom.artifactId = 'jarjarplugin'
+        maven {
+            url = uri("../testrepo")
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'com.example.transformapi'
+            artifactId = 'jarjarplugin'
+            version = '0.1'
         }
     }
 }
