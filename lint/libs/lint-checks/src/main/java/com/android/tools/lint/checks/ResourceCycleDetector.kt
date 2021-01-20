@@ -67,7 +67,6 @@ import com.google.common.collect.Sets
 import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import java.util.Arrays
 import java.util.TreeMap
 
 /**
@@ -114,8 +113,8 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             )
     }
 
-    override fun getApplicableElements(): Collection<String>? {
-        return Arrays.asList(
+    override fun getApplicableElements(): Collection<String> {
+        return listOf(
             VIEW_INCLUDE,
             TAG_STYLE,
             TAG_COLOR,

@@ -441,19 +441,15 @@ open class DefaultUastParser(
     }
 
     /**
-     * Like [.getRangeLocation]
-     * but both offsets are relative to the starting offset of the given node. This is
-     * sometimes more convenient than operating relative to the ending offset when you
+     * Like [getRangeLocation] but both offsets are relative to the
+     * starting offset of the given node. This is sometimes more
+     * convenient than operating relative to the ending offset when you
      * have a fixed range in mind.
      *
      * @param context information about the file being parsed
-     *
      * @param from the AST node to get a starting location from
-     *
      * @param fromDelta Offset delta to apply to the starting offset
-     *
      * @param toDelta Offset delta to apply to the starting offset
-     *
      * @return a location for the given node
      */
     override fun getRangeLocation(

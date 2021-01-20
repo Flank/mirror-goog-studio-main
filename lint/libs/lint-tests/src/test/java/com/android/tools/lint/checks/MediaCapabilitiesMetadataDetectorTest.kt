@@ -441,37 +441,32 @@ class MediaCapabilitiesMetadataDetectorTest : AbstractCheckTest() {
         ).indented()
 
         private const val EXPECTED_LINT_WARNINGS =
-            (
-                "AndroidManifest.xml:8: Warning: The app accesses MediaStore.Video, but is missing " +
-                    "a <meta-data> tag with a android.content.MEDIA_CAPABILITIES " +
-                    "declaration [MediaCapabilities]\n" +
-                    "    <application\n" +
-                    "    ^\n" +
-                    "0 errors, 1 warnings"
-                )
-
-        private const val BASE64_JAR_WITH_VIDEO_USAGE = (
             "" +
-                "H4sIAAAAAAAAAAvwZmbhYgCBnb1dgQxIgIVBhiE5P1c/NISTgXlfwKX480Bc" +
-                "WsHNwMji3MHCwBIcz8gQANe9G003D1R3akVibkFOKsSUQ4RMOYhmigiaKYl5" +
-                "KUX5mSkQ004RMu0wmmnqOExLzMvLL0ksyczPK05JLShJLS6BWHAWtwUiQOM4" +
-                "GBgTugI996RMMWBiYNBhYWAwJd4Cr8SyxBAgQy85J7G4GGzdxv8X429hWjc1" +
-                "5L6/sKPAv2nbZKYwc4VsaGJqCnKwDLyf5eOzmHOZSJBXfI3C7d2cMjvvXdub" +
-                "G/xfp/bAi+b6hvophe8WXOnoeHf4zJvt98/UWH9//Lt//X0Gm+ObdXTOpBm2" +
-                "316s8cBP7HOExOHYO5s3ZCR6Jvxolf/1bKnDqh33BDymT3VnmixqvyRr+VWV" +
-                "2OlnGya+7CpKvTDhVv938YRbc35MPFB2NFS3vWrTVb4TExcun/p+I//UicfC" +
-                "E58E3g5ImbN9k/ZrmSk75hq6JSyMeHk5VlSKqze4r/b8lCRTzetfWLiuF7EU" +
-                "7U7xm7Jdf2vORMWzWZvYVy2OrXp8nOv4b93tfpYbDJsCuU+bvUs+eohZ+vWN" +
-                "DRsyHwvKRd/Y9DAh5MDP86839OzYJXziw42b2fMmnb5wx3RR5ZTjKaeeJ/Qq" +
-                "iZZ4cq8Ruf6/5izjypTE6IS157Oyr361vXROr3KfjYHX5axmxq2zGJhmpqgn" +
-                "vG9RfFmksLijwm5m9+M/flv/7QqrDbXUel8YslZe9loZyzK91JaUOc5vP08R" +
-                "zw845nq/3KNe4IXY+iX7V/O0FSdskZebvk7pv4uUz4nJbmapLn47Fysv9d7f" +
-                "83u78rRnbFpK3P6s0/LnzD3wJ94i4phBfcBHqaaOeLVtkfcs37D+PnMsvaP/" +
-                "5EeJ2w9ZZBrPXrNTT5AR9mz0fDJDVP29cX5Hbd1nHuf5E4T2nJvwr6nnwIJr" +
-                "LEE5m98UzzgYElT8zeb9prR5HzPfGQuXP3KfqfJcuJo7+81yy6ijwjZP5js2" +
-                "LlbismcM8GZkkmPGlacloCwBhheOIBqSw1khORwjoSNMwszfyCbZQU1C5HZW" +
-                "SG7HYyJmXkc2sQXNRETOZ4XkfDwmY+Z7ZJMv4TAZaynACikFsFqGqwyQgFu8" +
-                "oNGYkWjL0EsEVkiJgGE1KxvIaFYgvAc0/BIziAcA9BuWBcYFAAA="
-            )
+                "AndroidManifest.xml:8: Warning: The app accesses MediaStore.Video, but is missing a <meta-data> tag with a android.content.MEDIA_CAPABILITIES declaration [MediaCapabilities]\n" +
+                "    <application\n" +
+                "     ~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings"
+
+        private const val BASE64_JAR_WITH_VIDEO_USAGE = "" +
+            "H4sIAAAAAAAAAAvwZmbhYgCBnb1dgQxIgIVBhiE5P1c/NISTgXlfwKX480Bc" +
+            "WsHNwMji3MHCwBIcz8gQANe9G003D1R3akVibkFOKsSUQ4RMOYhmigiaKYl5" +
+            "KUX5mSkQ004RMu0wmmnqOExLzMvLL0ksyczPK05JLShJLS6BWHAWtwUiQOM4" +
+            "GBgTugI996RMMWBiYNBhYWAwJd4Cr8SyxBAgQy85J7G4GGzdxv8X429hWjc1" +
+            "5L6/sKPAv2nbZKYwc4VsaGJqCnKwDLyf5eOzmHOZSJBXfI3C7d2cMjvvXdub" +
+            "G/xfp/bAi+b6hvophe8WXOnoeHf4zJvt98/UWH9//Lt//X0Gm+ObdXTOpBm2" +
+            "316s8cBP7HOExOHYO5s3ZCR6Jvxolf/1bKnDqh33BDymT3VnmixqvyRr+VWV" +
+            "2OlnGya+7CpKvTDhVv938YRbc35MPFB2NFS3vWrTVb4TExcun/p+I//UicfC" +
+            "E58E3g5ImbN9k/ZrmSk75hq6JSyMeHk5VlSKqze4r/b8lCRTzetfWLiuF7EU" +
+            "7U7xm7Jdf2vORMWzWZvYVy2OrXp8nOv4b93tfpYbDJsCuU+bvUs+eohZ+vWN" +
+            "DRsyHwvKRd/Y9DAh5MDP86839OzYJXziw42b2fMmnb5wx3RR5ZTjKaeeJ/Qq" +
+            "iZZ4cq8Ruf6/5izjypTE6IS157Oyr361vXROr3KfjYHX5axmxq2zGJhmpqgn" +
+            "vG9RfFmksLijwm5m9+M/flv/7QqrDbXUel8YslZe9loZyzK91JaUOc5vP08R" +
+            "zw845nq/3KNe4IXY+iX7V/O0FSdskZebvk7pv4uUz4nJbmapLn47Fysv9d7f" +
+            "83u78rRnbFpK3P6s0/LnzD3wJ94i4phBfcBHqaaOeLVtkfcs37D+PnMsvaP/" +
+            "5EeJ2w9ZZBrPXrNTT5AR9mz0fDJDVP29cX5Hbd1nHuf5E4T2nJvwr6nnwIJr" +
+            "LEE5m98UzzgYElT8zeb9prR5HzPfGQuXP3KfqfJcuJo7+81yy6ijwjZP5js2" +
+            "LlbismcM8GZkkmPGlacloCwBhheOIBqSw1khORwjoSNMwszfyCbZQU1C5HZW" +
+            "SG7HYyJmXkc2sQXNRETOZ4XkfDwmY+Z7ZJMv4TAZaynACikFsFqGqwyQgFu8" +
+            "oNGYkWjL0EsEVkiJgGE1KxvIaFYgvAc0/BIziAcA9BuWBcYFAAA="
     }
 }

@@ -29,9 +29,11 @@ import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
@@ -74,7 +76,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
      */
     private var mAlreadyWarned: MutableSet<Any?>? = null
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(
             "ofInt",
             "ofArgb",
@@ -484,7 +486,9 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
     }
 
     private fun isShrinking(context: Context): Boolean {
-        val model = context.mainProject.buildModule
+        val project = if (context.isGlobalAnalysis())
+            context.mainProject else context.project
+        val model = project.buildModule
         return if (model != null) {
             !model.neverShrinking()
         } else {
@@ -500,7 +504,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
         return folderType == LAYOUT || folderType == XML
     }
 
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return listOf(MOTION_LAYOUT.oldName(), MOTION_LAYOUT.newName(), "CustomAttribute")
     }
 
@@ -587,7 +591,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
 
                             val location = context.getValueLocation(attribute)
                             val javaContext = JavaContext(
-                                context.driver, context.project, context.mainProject,
+                                context.driver, context.project, context.project,
                                 VfsUtilCore.virtualToIoFile(targetClass.containingFile.virtualFile)
                             )
                             location.withSecondary(
@@ -602,7 +606,7 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                             // TODO: Add a quickfix here (which should be trivial except
                             // that the lint fix verifier does not handle fixes in different
                             // files.)
-                            context.report(
+                            val incident = Incident(
                                 MISSING_KEEP, element, location,
                                 "" +
                                     "This attribute references a method or property in " +
@@ -611,11 +615,16 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
                                     "ensure that it is not discarded or renamed in " +
                                     "release builds"
                             )
+                            context.report(incident, map())
                         }
                     }
                 }
             }
         }
+    }
+
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        return isShrinking(context)
     }
 
     companion object {

@@ -101,7 +101,7 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
 
     // ---- implements SourceCodeScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(ViewHolderDetector.INFLATE)
     }
 
@@ -144,6 +144,9 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
 
     private fun hasLayoutParams(context: JavaContext, name: String): Boolean {
         val client = context.client
+        if (!context.isGlobalAnalysis()) {
+            return true // not certain
+        }
         val project = context.project
         val resources = client.getResources(project, LOCAL_DEPENDENCIES)
         val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT, name)

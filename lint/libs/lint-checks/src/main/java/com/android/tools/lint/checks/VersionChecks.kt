@@ -513,7 +513,10 @@ class VersionChecks(
                 if (validFromAnnotation != null) {
                     return validFromAnnotation
                 }
-
+                val validFromInferredAnnotation = getValidFromInferredAnnotation(field)
+                if (validFromInferredAnnotation != null) {
+                    return validFromInferredAnnotation
+                }
                 val modifierList = field.modifierList
                 if (modifierList != null && modifierList.hasExplicitModifier(PsiModifier.STATIC)) {
                     val initializer = UastFacade.getInitializerBody(field)
@@ -569,6 +572,37 @@ class VersionChecks(
         return atMost(value)
     }
 
+    /**
+     * When we come across SDK_INT comparisons in library, we'll store
+     * that as an implied @ChecksSdkIntAtLeast annotation (to match the
+     * existing support for actual @ChecksSdkIntAtLeast annotations).
+     * Here, when looking up version checks we'll check the given method
+     * or field and see if we've stashed any implied version checks when
+     * analyzing the dependencies.
+     */
+    private fun getValidFromInferredAnnotation(
+        owner: PsiModifierListOwner,
+        call: UCallExpression? = null
+    ): ApiConstraint? {
+        if (!client.supportsPartialAnalysis()) {
+            return null
+        }
+        if (project == null || owner !is PsiCompiledElement) {
+            return null
+        }
+        val annotation = when (owner) {
+            is PsiMethod ->
+                SdkIntDetector.findSdkIntAnnotation(client, evaluator, project, owner)
+                    ?: return null
+            is PsiField ->
+                SdkIntDetector.findSdkIntAnnotation(client, evaluator, project, owner)
+                    ?: return null
+            else -> return null
+        }
+        val value = annotation.getApiLevel(evaluator, owner, call) ?: return null
+        return atMost(value)
+    }
+
     private fun getValidVersionCall(
         and: Boolean,
         call: UCallExpression
@@ -598,6 +632,11 @@ class VersionChecks(
         val validFromAnnotation = getValidFromAnnotation(method, callExpression)
         if (validFromAnnotation != null) {
             return validFromAnnotation
+        }
+
+        val validFromInferredAnnotation = getValidFromInferredAnnotation(method, callExpression)
+        if (validFromInferredAnnotation != null) {
+            return validFromInferredAnnotation
         }
 
         val name = method.name

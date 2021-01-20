@@ -124,8 +124,7 @@ class MissingPrefixDetectorTest : AbstractCheckTest() {
 
     fun testManifest() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
 
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -473,10 +472,7 @@ class MissingPrefixDetectorTest : AbstractCheckTest() {
             ).indented()
         )
             .sdkHome(TestUtils.getSdk().toFile())
-            // The built-in AGP test repository does not model libraries correctly,
-            // though it could -- TODO
             .skipTestModes(TestMode.RESOURCE_REPOSITORIES)
-            .incremental("src/main/res/layout/app_compat.xml")
             .run()
             .expectClean()
     }

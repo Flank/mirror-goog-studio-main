@@ -91,8 +91,7 @@ class JavaScriptInterfaceDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             projectProperties().compileSdk(19),
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.bytecode"

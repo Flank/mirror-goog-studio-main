@@ -578,7 +578,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "\n" +
                     "    public static final Uri COMBINED_URI = Uri.withAppendedPath(BOOKMARKS_URI, \"bookmarks\");\n" +
                     "    \n" +
-                    "    public static void activities1(Activity activity) {\n" +
+                    "    public static void activities1(Activity activity) throws SecurityException {\n" +
                     "        Intent intent = new Intent(Intent.ACTION_CALL);\n" +
                     "        intent.setData(Uri.parse(\"tel:1234567890\"));\n" +
                     "        // This one will only be flagged if we have framework metadata on Intent.ACTION_CALL\n" +
@@ -586,12 +586,12 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "        //activity.startActivity(intent);\n" +
                     "    }\n" +
                     "\n" +
-                    "    public static void activities2(Activity activity) {\n" +
+                    "    public static void activities2(Activity activity) throws SecurityException {\n" +
                     "        Intent intent = new Intent(ACTION_CALL);\n" +
                     "        intent.setData(Uri.parse(\"tel:1234567890\"));\n" +
                     "        activity.startActivity(intent);\n" +
                     "    }\n" +
-                    "    public static void activities3(Activity activity) {\n" +
+                    "    public static void activities3(Activity activity) throws SecurityException {\n" +
                     "        Intent intent;\n" +
                     "        intent = new Intent(ACTION_CALL);\n" +
                     "        intent.setData(Uri.parse(\"tel:1234567890\"));\n" +
@@ -604,7 +604,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "        activity.startNextMatchingActivity(intent);\n" +
                     "    }\n" +
                     "\n" +
-                    "    public static void broadcasts(Context context) {\n" +
+                    "    public static void broadcasts(Context context) throws SecurityException {\n" +
                     "        Intent intent;\n" +
                     "        intent = new Intent(ACTION_CALL);\n" +
                     "        context.sendBroadcast(intent);\n" +
@@ -613,7 +613,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "        context.sendStickyBroadcast(intent);\n" +
                     "    }\n" +
                     "\n" +
-                    "    public static void contentResolvers(Context context, ContentResolver resolver) {\n" +
+                    "    public static void contentResolvers(Context context, ContentResolver resolver) throws SecurityException {\n" +
                     "        // read\n" +
                     "        resolver.query(BOOKMARKS_URI, null, null, null, null);\n" +
                     "\n" +
@@ -638,7 +638,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "    public static void myWriteResolverMethod(@RequiresPermission.Read(@RequiresPermission) Uri uri) {\n" +
                     "    }\n" +
                     "    \n" +
-                    "    public static void testCustomMethods() {\n" +
+                    "    public static void testCustomMethods() throws SecurityException {\n" +
                     "        myStartActivity(\"\", null, new Intent(ACTION_CALL));\n" +
                     "        myReadResolverMethod(\"\", BOOKMARKS_URI);\n" +
                     "        myWriteResolverMethod(BOOKMARKS_URI);\n" +
@@ -1066,7 +1066,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "import android.support.annotation.RequiresPermission;\n" +
                     "\n" +
                     "public class X {\n" +
-                    "    public void something() {\n" +
+                    "    public void something() throws SecurityException {\n" +
                     "        methodRequiresCarrierOrP2();\n" +
                     "    }\n" +
                     "\n" +
@@ -1392,4 +1392,71 @@ class PermissionDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testHasPermissionMultiProject() {
+        // Like testHasPermission, but here the permissions are not available from the
+        // library usage perspective, but is present in the app module
+        lint().files(
+            getManifestWithPermissions(14),
+            mPermissionTest,
+            mLocationManagerStub,
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR,
+
+            // App skeleton
+            getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION").to("../app/AndroidManifest.xml")
+        ).run().expectClean()
+    }
+
+    fun testHasPermissionsAcrossModulesInMultiProject() {
+        // Like testHasPermission, but here we have a method which requires multiple
+        // permissions and they are *partially* satisfied in the library, and the remaining
+        // permissions are supplied in the app module
+        lint().files(
+            getManifestWithPermissions(
+                14,
+                "android.permission.BLUETOOTH"
+            ),
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.RequiresPermission;
+                import static android.Manifest.permission.ACCEPT_HANDOVER;
+                import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+                import static android.Manifest.permission.BLUETOOTH;
+                import static android.Manifest.permission.CALL_PHONE;
+
+                public class Test {
+                    @RequiresPermission(allOf = {ACCESS_FINE_LOCATION, CALL_PHONE, ACCEPT_HANDOVER, BLUETOOTH})
+                    public void myMethod() {
+                        // TODO
+                    }
+
+                    @RequiresPermission(CALL_PHONE)
+                    public void test() {
+                        // We implicitly have CALL_PHONE from above @RequiresPermission.
+                        // In this project we're already holding the BLUETOOTH permission.
+                        // In the app module we'll provide ACCESS_FINE_LOCATION.
+                        // That means we're missing one thing: the ACCEPT_HANDOVER permission.
+                        myMethod();
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR,
+
+            // App skeleton
+            getManifestWithPermissions(14, "android.permission.ACCESS_FINE_LOCATION").to("../app/AndroidManifest.xml")
+        ).run().expect(
+            "" +
+                "../lib/src/test/pkg/Test.java:21: Error: Missing permissions required by Test.myMethod: android.permission.ACCEPT_HANDOVER [MissingPermission]\n" +
+                "        myMethod();\n" +
+                "        ~~~~~~~~~~\n" +
+                "1 errors, 0 warnings"
+        )
+    }
+
+    // TODO: Add revocable tests
 }

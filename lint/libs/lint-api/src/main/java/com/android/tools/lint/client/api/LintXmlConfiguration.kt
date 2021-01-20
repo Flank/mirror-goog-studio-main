@@ -24,6 +24,7 @@ import com.android.ide.common.util.PathString
 import com.android.tools.lint.client.api.ConfigurationHierarchy.Companion.getLintXmlFile
 import com.android.tools.lint.client.api.LintClient.Companion.report
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
@@ -252,23 +253,21 @@ open class LintXmlConfiguration protected constructor(
         return false
     }
 
-    override fun isIgnored(
-        context: Context,
-        issue: Issue,
-        location: Location?,
-        message: String
-    ): Boolean {
-        if (location == null) {
-            return parent?.isIgnored(context, issue, location, message) ?: false
+    override fun isIgnored(context: Context, incident: Incident): Boolean {
+        val location = incident.location
+        if (location == Location.NONE) {
+            return parent?.isIgnored(context, incident) ?: false
         }
 
-        if (isPathIgnored(issue.id, location, context) ||
-            isPatternIgnored(issue.id, message, location, context)
+        val id = incident.issue.id
+        val message = incident.message
+        if (isPathIgnored(id, location, context) ||
+            isPatternIgnored(id, message, location, context)
         ) {
             return true
         }
 
-        return parent?.isIgnored(context, issue, location, message) ?: false
+        return parent?.isIgnored(context, incident) ?: false
     }
 
     override fun getOption(
@@ -493,15 +492,38 @@ open class LintXmlConfiguration protected constructor(
         return false
     }
 
-    override fun getIssueConfigLocation(
-        issue: String,
-        specificOnly: Boolean,
-        severityOnly: Boolean
-    ): Location? {
-        overrides?.getIssueConfigLocation(issue, specificOnly, severityOnly)?.let {
-            return it
+    override fun addConfiguredIssues(
+        targetMap: MutableMap<String, Severity>,
+        registry: IssueRegistry,
+        specificOnly: Boolean
+    ) {
+        parent?.addConfiguredIssues(targetMap, registry, specificOnly)
+
+        val issueMaps = getIssueMaps()
+        // First handle VALUE_ALL, then handle specific id's afterwards as overrides
+        for (issueMap in issueMaps) {
+            val issueData = issueMap[VALUE_ALL] ?: continue
+            val severity = issueData.severity ?: continue // not setting severity by (say) options
+            for (issue in registry.issues) {
+                targetMap[issue.id] = severity
+            }
+        }
+        for (issueMap in issueMaps) {
+            for ((id, issueData) in issueMap) {
+                val severity = issueData.severity ?: continue
+                targetMap[id] = severity
+            }
         }
 
+        overrides?.addConfiguredIssues(targetMap, registry, specificOnly)
+    }
+
+    override fun getLocalIssueConfigLocation(
+        issue: String,
+        specificOnly: Boolean,
+        severityOnly: Boolean,
+        source: Configuration
+    ): Location? {
         val issueMaps = getIssueMaps()
 
         for (issueMap in issueMaps) {
@@ -524,7 +546,7 @@ open class LintXmlConfiguration protected constructor(
             }
         }
 
-        return parent?.getIssueConfigLocation(issue, specificOnly, severityOnly)
+        return parent?.getLocalIssueConfigLocation(issue, specificOnly, severityOnly, source)
     }
 
     override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
@@ -1484,10 +1506,11 @@ open class LintXmlConfiguration protected constructor(
         private val RES_PATH_START_LEN = RES_PATH_START.length
 
         /**
-         * Creates a new [LintXmlConfiguration] for the given lint config file, not affiliated
-         * with a project. This is used for global configurations.
+         * Creates a new [LintXmlConfiguration] for the given lint
+         * config file, not affiliated with a project. This is used for
+         * global configurations.
          *
-         * @param client the client to report errors to etc
+         * @param configurations the configuration manager
          * @param lintFile the lint file containing the configuration
          * @return a new configuration
          */

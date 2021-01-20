@@ -66,7 +66,7 @@ class HdpiDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableMethodNames(): List<String>? = listOf("scale", "scaleFontSize")
+    override fun getApplicableMethodNames(): List<String> = listOf("scale", "scaleFontSize")
 
     override fun visitMethodCall(
         context: JavaContext,

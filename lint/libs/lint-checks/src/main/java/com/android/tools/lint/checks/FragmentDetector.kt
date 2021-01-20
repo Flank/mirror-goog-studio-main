@@ -69,7 +69,7 @@ class FragmentDetector : Detector(), SourceCodeScanner {
 
     // ---- implements SourceCodeScanner ----
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         // Note: We are deliberately NOT including: CLASS_V4_FRAGMENT.newName() here:
         // androidx Fragments are allowed to use non-default constructors (see issue 119675579)
         return listOf(CLASS_FRAGMENT, CLASS_V4_FRAGMENT.oldName())

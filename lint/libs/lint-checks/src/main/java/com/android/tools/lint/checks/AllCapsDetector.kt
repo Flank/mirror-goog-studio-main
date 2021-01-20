@@ -59,7 +59,7 @@ class AllCapsDetector : LayoutDetector() {
         )
     }
 
-    override fun getApplicableAttributes(): Collection<String>? = listOf("textAllCaps")
+    override fun getApplicableAttributes(): Collection<String> = listOf("textAllCaps")
 
     override fun visitAttribute(context: XmlContext, attribute: Attr) {
         if (ANDROID_URI != attribute.namespaceURI) {
@@ -81,7 +81,8 @@ class AllCapsDetector : LayoutDetector() {
         }
 
         val client = context.client
-        val project = context.mainProject
+        val full = context.isGlobalAnalysis()
+        val project = if (full) context.mainProject else context.project
         val repository = client.getResources(project, ALL_DEPENDENCIES)
         val items = repository.getResources(ResourceNamespace.TODO(), url.type, url.name)
         if (items.isEmpty()) {

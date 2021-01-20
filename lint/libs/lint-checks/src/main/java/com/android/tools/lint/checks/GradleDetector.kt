@@ -44,8 +44,10 @@ import com.android.tools.lint.detector.api.GradleContext.Companion.isNonNegative
 import com.android.tools.lint.detector.api.GradleContext.Companion.isStringLiteral
 import com.android.tools.lint.detector.api.GradleScanner
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
@@ -487,17 +489,9 @@ open class GradleDetector : Detector(), GradleScanner {
 
                         // Check dependencies without the PSI read lock, because we
                         // may need to make network requests to retrieve version info.
-                        context.driver.runLaterOutsideReadAction(
-                            Runnable {
-                                checkDependency(
-                                    context,
-                                    gc,
-                                    isResolved,
-                                    valueCookie,
-                                    statementCookie
-                                )
-                            }
-                        )
+                        context.driver.runLaterOutsideReadAction {
+                            checkDependency(context, gc, isResolved, valueCookie, statementCookie)
+                        }
                     }
                     if (hasLifecycleAnnotationProcessor(dependency) &&
                         targetJava8Plus(context.project)
@@ -842,15 +836,14 @@ open class GradleDetector : Detector(), GradleScanner {
                         (version.major != newerVersion.major || version.minor != newerVersion.minor)
                     ) {
                         safeReplacement = getGoogleMavenRepoVersion(
-                            context, dependency,
-                            Predicate { filterVersion ->
-                                filterVersion.major == version.major &&
-                                    filterVersion.minor == version.minor &&
-                                    filterVersion.micro > version.micro &&
-                                    !filterVersion.isPreview &&
-                                    filterVersion < newerVersion!!
-                            }
-                        )
+                            context, dependency
+                        ) { filterVersion ->
+                            filterVersion.major == version.major &&
+                                filterVersion.minor == version.minor &&
+                                filterVersion.micro > version.micro &&
+                                !filterVersion.isPreview &&
+                                filterVersion < newerVersion!!
+                        }
                     }
                     if (newerVersion != null && newerVersion > version) {
                         agpVersionCheckInfo = AgpVersionCheckInfo(
@@ -957,11 +950,10 @@ open class GradleDetector : Detector(), GradleScanner {
         if (blockedDependencies != null) {
             val path = blockedDependencies.checkDependency(groupId, artifactId, true)
             if (path != null) {
-                val message = getBlockedDependencyMessage(context, path)
-                if (message != null) {
-                    val fix = fix().name("Delete dependency").replace().all().build()
-                    report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
-                }
+                val message = getBlockedDependencyMessage(path)
+                val fix = fix().name("Delete dependency").replace().all().build()
+                // Provisional: have to check consuming app's targetSdkVersion
+                report(context, statementCookie, DUPLICATE_CLASSES, message, fix, partial = true)
             }
         }
 
@@ -1213,7 +1205,9 @@ open class GradleDetector : Detector(), GradleScanner {
             artifactId != "support-annotations"
         ) {
             mCheckedSupportLibs = true
-            if (!context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
+            if (!context.scope.contains(Scope.ALL_RESOURCE_FILES) &&
+                context.isGlobalAnalysis()
+            ) {
                 // Incremental editing: try flagging them in this file!
                 checkConsistentSupportLibraries(context, cookie)
             }
@@ -1327,7 +1321,9 @@ open class GradleDetector : Detector(), GradleScanner {
                 // Incremental analysis only? If so, tie the check to
                 // a specific GMS play dependency if only, such that it's highlighted
                 // in the editor
-                if (!context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
+                if (!context.scope.contains(Scope.ALL_RESOURCE_FILES) &&
+                    context.isGlobalAnalysis()
+                ) {
                     // Incremental editing: try flagging them in this file!
                     checkConsistentPlayServices(context, cookie)
                 }
@@ -1338,7 +1334,9 @@ open class GradleDetector : Detector(), GradleScanner {
                 // Incremental analysis only? If so, tie the check to
                 // a specific GMS play dependency if only, such that it's highlighted
                 // in the editor
-                if (!context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
+                if (!context.scope.contains(Scope.ALL_RESOURCE_FILES) &&
+                    context.isGlobalAnalysis()
+                ) {
                     // Incremental editing: try flagging them in this file!
                     checkConsistentWearableLibraries(context, cookie, statementCookie)
                 }
@@ -1389,11 +1387,8 @@ open class GradleDetector : Detector(), GradleScanner {
             if (cookie != null) {
                 reportNonFatalCompatibilityIssue(context, cookie, message)
             } else {
-                reportNonFatalCompatibilityIssue(
-                    context,
-                    guessGradleLocation(context.project),
-                    message
-                )
+                val location = getDependencyLocation(context, usesOldSupportLib, usesAndroidX)
+                reportNonFatalCompatibilityIssue(context, location, message)
             }
         }
     }
@@ -1429,17 +1424,17 @@ open class GradleDetector : Detector(), GradleScanner {
                 ANDROID_WEAR_GROUP_ID == coordinates.groupId
             ) {
                 if (!library.provided) {
+                    var message =
+                        "This dependency should be marked as `compileOnly`, not `compile`"
                     if (statementCookie != null) {
-                        val message =
-                            "This dependency should be marked as `compileOnly`, not `compile`"
-
                         reportFatalCompatibilityIssue(context, statementCookie, message)
                     } else {
-                        val message =
-                            "The $ANDROID_WEAR_GROUP_ID:$WEARABLE_ARTIFACT_ID dependency should be marked as `compileOnly`, not `compile`"
-                        reportFatalCompatibilityIssue(
-                            context, guessGradleLocation(context.project), message
-                        )
+                        val location = getDependencyLocation(context, coordinates)
+                        if (location.start == null) {
+                            message =
+                                "The $ANDROID_WEAR_GROUP_ID:$WEARABLE_ARTIFACT_ID dependency should be marked as `compileOnly`, not `compile`"
+                        }
+                        reportFatalCompatibilityIssue(context, location, message)
                     }
                 }
                 wearableVersions.add(coordinates.version)
@@ -1457,9 +1452,11 @@ open class GradleDetector : Detector(), GradleScanner {
                 if (cookie != null) {
                     reportFatalCompatibilityIssue(context, cookie, message)
                 } else {
-                    reportFatalCompatibilityIssue(
-                        context, guessGradleLocation(context.project), message
+                    val location = getDependencyLocation(
+                        context, GOOGLE_SUPPORT_GROUP_ID,
+                        WEARABLE_ARTIFACT_ID, first
                     )
+                    reportFatalCompatibilityIssue(context, location, message)
                 }
             } else {
                 // Check that they have the same versions
@@ -1484,9 +1481,12 @@ open class GradleDetector : Detector(), GradleScanner {
                     if (cookie != null) {
                         reportFatalCompatibilityIssue(context, cookie, message)
                     } else {
-                        reportFatalCompatibilityIssue(
-                            context, guessGradleLocation(context.project), message
+                        val location = getDependencyLocation(
+                            context, GOOGLE_SUPPORT_GROUP_ID,
+                            WEARABLE_ARTIFACT_ID, sortedSupportVersions[0], ANDROID_WEAR_GROUP_ID,
+                            WEARABLE_ARTIFACT_ID, supportedWearableVersions[0]
                         )
+                        reportFatalCompatibilityIssue(context, location, message)
                     }
                 }
             }
@@ -1595,34 +1595,8 @@ open class GradleDetector : Detector(), GradleScanner {
             if (cookie != null) {
                 reportNonFatalCompatibilityIssue(context, cookie, message)
             } else {
-                val projectDir = context.project.dir
-                var location1 = guessGradleLocation(context.client, projectDir, example1)
-                val location2 = guessGradleLocation(context.client, projectDir, example2)
-                if (location1.start != null) {
-                    if (location2.start != null) {
-                        location1.secondary = location2
-                    }
-                } else {
-                    if (location2.start == null) {
-                        location1 = guessGradleLocation(
-                            context.client,
-                            projectDir,
-                            // Probably using version variable
-                            c1.groupId + ":" + c1.artifactId + ":"
-                        )
-                        if (location1.start == null) {
-                            location1 = guessGradleLocation(
-                                context.client,
-                                projectDir,
-                                // Probably using version variable
-                                c2.groupId + ":" + c2.artifactId + ":"
-                            )
-                        }
-                    } else {
-                        location1 = location2
-                    }
-                }
-                reportNonFatalCompatibilityIssue(context, location1, message)
+                val location = getDependencyLocation(context, c1, c2)
+                reportNonFatalCompatibilityIssue(context, location, message)
             }
         }
     }
@@ -1634,17 +1608,14 @@ open class GradleDetector : Detector(), GradleScanner {
 
     override fun afterCheckRootProject(context: Context) {
         val project = context.project
-        if (project === context.mainProject &&
-            // Full analysis? Don't tie check to any specific Gradle DSL element
-            context.scope.contains(Scope.ALL_RESOURCE_FILES)
-        ) {
-            checkConsistentPlayServices(context, null)
-            checkConsistentSupportLibraries(context, null)
-            checkConsistentWearableLibraries(context, null, null)
-        }
-
         // Check for disallowed dependencies
         checkBlockedDependencies(context, project)
+    }
+
+    private fun checkLibraryConsistency(context: Context) {
+        checkConsistentPlayServices(context, null)
+        checkConsistentSupportLibraries(context, null)
+        checkConsistentWearableLibraries(context, null, null)
     }
 
     override fun afterCheckFile(context: Context) {
@@ -1760,23 +1731,16 @@ open class GradleDetector : Detector(), GradleScanner {
         val dependencies = blockedDependencies.getForbiddenDependencies()
         if (dependencies.isNotEmpty()) {
             for (path in dependencies) {
-                val message = getBlockedDependencyMessage(context, path) ?: continue
+                val message = getBlockedDependencyMessage(path) ?: continue
                 val projectDir = context.project.dir
-                // No need to use requestedCoordinates since they'll differ only in
-                // version and here we only match by group and artifact id
-                val mavenName = path[0].artifactName
-                var location = guessGradleLocation(
-                    context.client,
-                    projectDir,
-                    mavenName
-                )
-                if (location.start == null) {
-                    val artifactId = path[0].getArtifactId()
-                    location = guessGradleLocation(
-                        context.client, projectDir, artifactId
-                    )
+                val gc = LintModelMavenName.parse(path[0].artifactAddress)
+                val location = if (gc != null) {
+                    getDependencyLocation(context, gc.groupId, gc.artifactId, gc.version)
+                } else {
+                    val mavenName = path[0].artifactName
+                    guessGradleLocation(context.client, projectDir, mavenName)
                 }
-                context.report(DUPLICATE_CLASSES, location, message)
+                context.report(Incident(DUPLICATE_CLASSES, location, message), map())
             }
         }
         this.blockedDependencies.remove(project)
@@ -1787,7 +1751,8 @@ open class GradleDetector : Detector(), GradleScanner {
         cookie: Any,
         issue: Issue,
         message: String,
-        fix: LintFix? = null
+        fix: LintFix? = null,
+        partial: Boolean = false
     ) {
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
@@ -1804,28 +1769,37 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
 
                     val location = context.getLocation(cookie)
-                    context.report(issue, location, message, fix)
+                    val incident = Incident(issue, location, message, fix)
+                    if (partial) {
+                        context.report(incident, map())
+                    } else {
+                        context.report(incident)
+                    }
                 }
             }
         )
     }
 
     /**
-     * Normally, all warnings reported for a given issue will have the same severity, so it isn't
-     * possible to have some of them reported as errors and others as warnings. And this is
-     * intentional, since users should get to designate whether an issue is an error or a warning
-     * (or ignored for that matter).
+     * Normally, all warnings reported for a given issue will have the
+     * same severity, so it isn't possible to have some of them reported
+     * as errors and others as warnings. And this is intentional, since
+     * users should get to designate whether an issue is an error or a
+     * warning (or ignored for that matter).
      *
-     *
-     * However, for [.COMPATIBILITY] we want to treat some issues as fatal (breaking the
-     * build) but not others. To achieve this we tweak things a little bit. All compatibility issues
-     * are now marked as fatal, and if we're *not* in the "fatal only" mode, all issues are reported
-     * as before (with severity fatal, which has the same visual appearance in the IDE as the
-     * previous severity, "error".) However, if we're in a "fatal-only" build, then we'll stop
-     * reporting the issues that aren't meant to be treated as fatal. That's what this method does;
-     * issues reported to it should always be reported as fatal. There is a corresponding method,
-     * [.reportNonFatalCompatibilityIssue] which can be used to
-     * report errors that shouldn't break the build; those are ignored in fatal-only mode.
+     * However, for [COMPATIBILITY] we want to treat some issues as
+     * fatal (breaking the build) but not others. To achieve this we
+     * tweak things a little bit. All compatibility issues are now
+     * marked as fatal, and if we're *not* in the "fatal only" mode, all
+     * issues are reported as before (with severity fatal, which has
+     * the same visual appearance in the IDE as the previous severity,
+     * "error".) However, if we're in a "fatal-only" build, then we'll
+     * stop reporting the issues that aren't meant to be treated as
+     * fatal. That's what this method does; issues reported to it should
+     * always be reported as fatal. There is a corresponding method,
+     * [reportNonFatalCompatibilityIssue] which can be used to report
+     * errors that shouldn't break the build; those are ignored in
+     * fatal-only mode.
      */
     private fun reportFatalCompatibilityIssue(
         context: Context,
@@ -1844,7 +1818,7 @@ open class GradleDetector : Detector(), GradleScanner {
         report(context, cookie, COMPATIBILITY, message, fix)
     }
 
-    /** See [.reportFatalCompatibilityIssue] for an explanation. */
+    /** See [reportFatalCompatibilityIssue] for an explanation. */
     private fun reportNonFatalCompatibilityIssue(
         context: Context,
         cookie: Any,
@@ -1865,14 +1839,12 @@ open class GradleDetector : Detector(), GradleScanner {
     ) {
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
-        context.client.runReadAction(
-            Runnable {
-                context.report(COMPATIBILITY, location, message)
-            }
-        )
+        context.client.runReadAction {
+            context.report(COMPATIBILITY, location, message)
+        }
     }
 
-    /** See [.reportFatalCompatibilityIssue] for an explanation. */
+    /** See [reportFatalCompatibilityIssue] for an explanation. */
     private fun reportNonFatalCompatibilityIssue(
         context: Context,
         location: Location,
@@ -1884,11 +1856,9 @@ open class GradleDetector : Detector(), GradleScanner {
 
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
-        context.client.runReadAction(
-            Runnable {
-                context.report(COMPATIBILITY, location, message)
-            }
-        )
+        context.client.runReadAction {
+            context.report(COMPATIBILITY, location, message)
+        }
     }
 
     private fun getSdkVersion(value: String): Int {
@@ -2041,14 +2011,22 @@ open class GradleDetector : Detector(), GradleScanner {
         return Collections.min(coordinates) { o1, o2 -> o1.toString().compareTo(o2.toString()) }
     }
 
-    private fun getBlockedDependencyMessage(
-        context: Context,
-        path: List<LintModelDependency>
-    ): String? {
-        if (context.mainProject.minSdkVersion.apiLevel >= 23 && !usesLegacyHttpLibrary(context.mainProject)) {
-            return null
-        }
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        assert(incident.issue === DUPLICATE_CLASSES)
+        return context.mainProject.minSdk < 23 || usesLegacyHttpLibrary(context.mainProject)
+    }
 
+    override fun checkMergedProject(context: Context) {
+        if (context.isGlobalAnalysis() && context.driver.isIsolated()) {
+            // Already performed on occurrences in the file being edited
+            return
+        }
+        checkLibraryConsistency(context)
+    }
+
+    private fun getBlockedDependencyMessage(
+        path: List<LintModelDependency>
+    ): String {
         val direct = path.size == 1
         val message: String
         val resolution = "Solutions include " +
@@ -2782,6 +2760,82 @@ open class GradleDetector : Detector(), GradleScanner {
          * accepted by Google Play is 2100000000
          */
         private const val VERSION_CODE_HIGH_THRESHOLD = 2000000000
+
+        /**
+         * Returns the best guess for where a dependency is declared in
+         * the given project
+         */
+        fun getDependencyLocation(context: Context, c: LintModelMavenName): Location {
+            return getDependencyLocation(context, c.groupId, c.artifactId, c.version)
+        }
+
+        /**
+         * Returns the best guess for where a dependency is declared in
+         * the given project
+         */
+        fun getDependencyLocation(
+            context: Context,
+            groupId: String,
+            artifactId: String,
+            version: String
+        ): Location {
+            val client = context.client
+            val projectDir = context.project.dir
+            val withoutQuotes = "$groupId:$artifactId:$version"
+            var location = guessGradleLocation(client, projectDir, withoutQuotes)
+            if (location.start != null) return location
+            // Try with just the group+artifact (relevant for example when using
+            // version variables)
+            location = guessGradleLocation(client, projectDir, "$groupId:$artifactId:")
+            if (location.start != null) return location
+            // Just the artifact -- important when using the other dependency syntax,
+            // e.g. variations of
+            //   group: 'comh.android.support', name: 'support-v4', version: '21.0.+'
+            location = guessGradleLocation(client, projectDir, artifactId)
+            if (location.start != null) return location
+            // just the group: less precise but better than just the gradle file
+            location = guessGradleLocation(client, projectDir, groupId)
+            return location
+        }
+
+        /**
+         * Returns the best guess for where two dependencies are
+         * declared in a project
+         */
+        fun getDependencyLocation(
+            context: Context,
+            address1: LintModelMavenName,
+            address2: LintModelMavenName
+        ): Location {
+            return getDependencyLocation(
+                context, address1.groupId, address1.artifactId,
+                address1.version, address2.groupId, address2.artifactId, address2.version
+            )
+        }
+
+        /**
+         * Returns the best guess for where two dependencies are
+         * declared in a project
+         */
+        fun getDependencyLocation(
+            context: Context,
+            groupId1: String,
+            artifactId1: String,
+            version1: String,
+            groupId2: String,
+            artifactId2: String,
+            version2: String,
+            message: String? = null
+        ): Location {
+            val location1 = getDependencyLocation(context, groupId1, artifactId1, version1)
+            val location2 = getDependencyLocation(context, groupId2, artifactId2, version2)
+            //noinspection FileComparisons
+            if (location2.start != null || location1.file != location2.file) {
+                location1.secondary = location2
+                message?.let { location2.message = it }
+            }
+            return location1
+        }
 
         /** TODO: Cache these results somewhere! */
         @JvmStatic

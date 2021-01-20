@@ -178,7 +178,7 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
                 expressions to increase accuracy across method boundaries.
                 """,
             moreInfo = "https://developer.android.com/guide/components/processes-and-threads.html#Threads",
-            /*priority*/ category = Category.CORRECTNESS,
+            category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.ERROR,
             enabledByDefault = false,

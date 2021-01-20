@@ -28,7 +28,7 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -101,7 +101,24 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
         if (!foundVideoUsage) {
             return
         }
+        if (context.isGlobalAnalysis()) {
+            if (context.project === context.mainProject) {
+                checkManifest(context)
+            }
+        } else {
+            context.getPartialResults(ISSUE).map().put("hasVideoUsage", true)
+        }
+    }
 
+    override fun checkPartialResults(
+        context: Context,
+        partialResults: PartialResult
+    ) {
+        // hasVideoUsage = true, or we wouldn't have been called
+        checkManifest(context)
+    }
+
+    private fun checkManifest(context: Context) {
         val mergedManifest = context.mainProject.mergedManifest ?: return
         val application = getFirstSubTagByName(
             mergedManifest.documentElement, TAG_APPLICATION
@@ -114,16 +131,14 @@ class MediaCapabilitiesMetadataDetector : Detector(), SourceCodeScanner, ClassSc
         if (metadataElement == null) {
             context.report(
                 ISSUE,
-                context.client.findManifestSourceLocation(application)
-                    ?: Location.create(context.project.manifestFiles[0] ?: context.project.dir),
+                context.getLocation(application),
                 "The app accesses `MediaStore.Video`, but is missing a `<meta-data>` tag " +
                     "with a `$VALUE_MEDIA_CAPABILITIES` declaration"
             )
         } else if (!metadataElement.hasAttributeNS(ANDROID_URI, ATTR_RESOURCE)) {
             context.report(
                 ISSUE,
-                context.client.findManifestSourceLocation(metadataElement)
-                    ?: Location.create(context.project.manifestFiles[0] ?: context.project.dir),
+                context.getLocation(metadataElement),
                 "The `$VALUE_MEDIA_CAPABILITIES` `<meta-data>` tag is missing the" +
                     " `android:resource` attribute pointing to a valid XML file"
             )

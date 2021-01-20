@@ -26,7 +26,9 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
@@ -56,34 +58,43 @@ class ScopedStorageDetector : Detector(), XmlScanner {
 
         // WRITE_EXTERNAL_STORAGE.
         if (permission.value == "android.permission.WRITE_EXTERNAL_STORAGE") {
-            val sdk = minOf(context.mainProject.targetSdk, getMaxSdk(element))
-            if (sdk < VersionCodes.Q) {
-                return
-            }
-            val permissions = getStoragePermissions(context) ?: return
-            if (permissions.canManageStorage) {
-                return
-            }
-            if (sdk == VersionCodes.Q && permissions.requestedLegacyStorage) {
-                return
-            }
-            var msg = "WRITE_EXTERNAL_STORAGE no longer provides write access when targeting "
-            msg += when {
-                permissions.requestedLegacyStorage -> "Android 11+, even when using `requestLegacyExternalStorage`"
-                sdk == VersionCodes.Q -> "Android 10, unless you use `requestLegacyExternalStorage`"
-                else -> "Android 10+"
-            }
-            context.report(ISSUE, context.getValueLocation(permission), msg)
+            val maxSdk = getMaxSdk(element)
+            val incident = Incident(ISSUE, context.getValueLocation(permission), "")
+            context.report(incident, map().put(ATTR_MAX_SDK, maxSdk))
         }
 
         // MANAGE_EXTERNAL_STORAGE.
         if (permission.value == "android.permission.MANAGE_EXTERNAL_STORAGE") {
-            context.report(
+            val incident = Incident(
                 ISSUE,
                 context.getValueLocation(permission),
                 "Most apps are not allowed to use MANAGE_EXTERNAL_STORAGE"
             )
+            context.report(incident)
         }
+    }
+
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        val maxSdk = map.getInt(ATTR_MAX_SDK, Integer.MAX_VALUE) ?: return false
+        val sdk = minOf(context.mainProject.targetSdk, maxSdk)
+        if (sdk < VersionCodes.Q) {
+            return false
+        }
+        val permissions = getStoragePermissions(context) ?: return false
+        if (permissions.canManageStorage) {
+            return false
+        }
+        if (sdk == VersionCodes.Q && permissions.requestedLegacyStorage) {
+            return false
+        }
+        var msg = "WRITE_EXTERNAL_STORAGE no longer provides write access when targeting "
+        msg += when {
+            permissions.requestedLegacyStorage -> "Android 11+, even when using `requestLegacyExternalStorage`"
+            sdk == VersionCodes.Q -> "Android 10, unless you use `requestLegacyExternalStorage`"
+            else -> "Android 10+"
+        }
+        incident.message = msg
+        return true
     }
 
     // See https://developer.android.com/guide/topics/manifest/uses-permission-element#maxSdk.
@@ -121,6 +132,8 @@ class ScopedStorageDetector : Detector(), XmlScanner {
     }
 
     companion object {
+        private const val ATTR_MAX_SDK = "maxSdk"
+
         @JvmField
         val ISSUE = Issue.create(
             id = "ScopedStorage",

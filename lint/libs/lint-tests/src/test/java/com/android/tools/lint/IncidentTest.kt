@@ -110,7 +110,7 @@ class IncidentTest : AbstractCheckTest() {
                 )
                 configureDriver(driver)
                 driver.analyze()
-                holder.set(incidents)
+                holder.set(definiteIncidents)
                 return "<unused>"
             }
         }

@@ -88,9 +88,7 @@ class JavaEvaluator {
 
     private var relevantAnnotations: Set<String>? = null
 
-    /**
-     * Cache for [.getLibrary]
-     */
+    /** Cache for [getLibrary] */
     private var jarToGroup: MutableMap<String, LintModelMavenName>? = null
 
     abstract fun extendsClass(
@@ -130,8 +128,9 @@ class JavaEvaluator {
     }
 
     /**
-     * Checks whether the class extends a super class or implements a given interface. Like calling
-     * both [.extendsClass] and [.implementsInterface].
+     * Checks whether the class extends a super class or implements
+     * a given interface. Like calling both [extendsClass] and
+     * [implementsInterface].
      */
     open fun inheritsFrom(
         cls: PsiClass?,

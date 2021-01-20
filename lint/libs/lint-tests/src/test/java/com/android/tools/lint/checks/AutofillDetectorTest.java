@@ -43,7 +43,8 @@ public class AutofillDetectorTest extends AbstractCheckTest {
                                         + "        <requestFocus/>\n"
                                         + "    </EditText>\n"
                                         + "\n"
-                                        + "</LinearLayout>"))
+                                        + "</LinearLayout>"),
+                        manifest().targetSdk(22).to("../app/AndroidManifest.xml"))
                 .run()
                 .expectClean();
     }

@@ -23,7 +23,6 @@ import com.android.tools.lint.checks.SdCardDetector;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
-import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
 import com.intellij.codeInsight.CustomExceptionHandler;
 import com.intellij.openapi.extensions.Extensions;
@@ -122,7 +121,6 @@ public class LintCliClientTest extends AbstractCheckTest {
         lint().projects(project)
                 .rootDirectory(projectDir)
                 .clientFactory(factory)
-                .testModes(TestMode.DEFAULT)
                 .run()
                 .expect(
                         "Relative Path found: bin/classes.jar. All paths should be absolute.",

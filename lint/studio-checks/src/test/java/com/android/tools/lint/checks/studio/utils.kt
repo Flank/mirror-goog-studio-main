@@ -21,9 +21,11 @@ import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 
 /**
- * Returns a [TestLintTask] to be used by checks that run on Studio source code.
+ * Returns a [TestLintTask] to be used by checks that run on Studio
+ * source code.
  *
  * TODO: upstream this to lint itself, for test of java-only checks.
+ * TODO: Rename the file
  */
 internal fun studioLint(): TestLintTask {
     val task = object : TestLintTask() {

@@ -35,6 +35,7 @@ import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.tools.lint.detector.api.Constraints.targetSdkLessThan;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.tools.lint.detector.api.LintFix.TODO;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
@@ -44,9 +45,9 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintFix;
@@ -232,18 +233,33 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         }
     }
 
-    public static boolean getExported(Context context, Element element) {
+    /**
+     * Returns true if the given manifest element explicitly set exported to true, false if it's
+     * explicitly set to false, and null if the exported attribute is not specified.
+     */
+    @Nullable
+    public static Boolean getExplicitExported(@NonNull Element element) {
         // Used to check whether an activity, service or broadcast receiver is exported.
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
         if (exportValue != null && !exportValue.isEmpty()) {
             return Boolean.parseBoolean(exportValue);
-        } else if (context.getMainProject().getTargetSdk() < 31) {
-            // Starting in Android S, the exported flag will always be specified,
-            // so no need for this inference.
-            for (Element child : XmlUtils.getSubTags(element)) {
-                if (child.getTagName().equals(TAG_INTENT_FILTER)) {
-                    return true;
-                }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Specifying an intent filter implicitly exports the parent activity if it does not explicitly
+     * set the exported attribute. As of Android 12, activities are never implicitly exported. (This
+     * method will not check for an explicit {@code exported} attribute, so to check whether an
+     * element is exported, call both methods (and filter by the targetSdkVersion for S).
+     */
+    public static boolean isImplicitlyExportedPreS(@NonNull Element element) {
+        // Starting in Android S, the exported flag will always be specified,
+        // so no need for this inference.
+        for (Element child : XmlUtils.getSubTags(element)) {
+            if (child.getTagName().equals(TAG_INTENT_FILTER)) {
+                return true;
             }
         }
 
@@ -329,22 +345,35 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     }
 
     private static void checkReceiver(XmlContext context, Element element) {
-        if (getExported(context, element)
-                && isUnprotectedByPermission(element)
-                && !isStandardReceiver(element)) {
+        Boolean explicitlyExported = getExplicitExported(element);
+        boolean exported =
+                explicitlyExported != null && explicitlyExported
+                        || explicitlyExported == null && isImplicitlyExportedPreS(element);
+        if (exported && isUnprotectedByPermission(element) && !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
             LintFix fix = LintFix.create().set().todo(ANDROID_URI, ATTR_PERMISSION).build();
-            context.report(
-                    EXPORTED_RECEIVER,
-                    element,
-                    context.getNameLocation(element),
-                    "Exported receiver does not require permission",
-                    fix);
+            Incident incident =
+                    new Incident(
+                            EXPORTED_RECEIVER,
+                            element,
+                            context.getNameLocation(element),
+                            "Exported receiver does not require permission",
+                            fix);
+            if (explicitlyExported == null) {
+                // Implicitly exported; only an issue if targetSdkVersion < 31
+                context.report(incident, targetSdkLessThan(31));
+            } else {
+                context.report(incident);
+            }
         }
     }
 
     private static void checkService(XmlContext context, Element element) {
-        if (getExported(context, element)
+        Boolean explicitlyExported = getExplicitExported(element);
+        boolean exported =
+                explicitlyExported != null && explicitlyExported
+                        || explicitlyExported == null && isImplicitlyExportedPreS(element);
+        if (exported
                 && isUnprotectedByPermission(element)
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
@@ -352,12 +381,19 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
             LintFix fix2 = LintFix.create().set(ANDROID_URI, ATTR_EXPORTED, VALUE_FALSE).build();
             LintFix both = LintFix.create().alternatives(fix1, fix2);
 
-            context.report(
-                    EXPORTED_SERVICE,
-                    element,
-                    context.getNameLocation(element),
-                    "Exported service does not require permission",
-                    both);
+            Incident incident =
+                    new Incident(
+                            EXPORTED_SERVICE,
+                            element,
+                            context.getNameLocation(element),
+                            "Exported service does not require permission",
+                            both);
+            if (explicitlyExported == null) {
+                // Implicitly exported; only an issue if targetSdkVersion < 31
+                context.report(incident, targetSdkLessThan(31));
+            } else {
+                context.report(incident);
+            }
         }
     }
 
@@ -385,7 +421,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         // Content providers are exported by default
         boolean exported = true;
         if (exportValue != null && !exportValue.isEmpty()) {
-            exported = Boolean.valueOf(exportValue);
+            exported = Boolean.parseBoolean(exportValue);
         }
 
         if (exported) {

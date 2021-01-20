@@ -174,7 +174,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                     // Not relevant when running in the IDE and analyzing a single
                     // file; no point highlighting matches in other files (which
                     // will be cleared when you visit them.
-                    if (!Scope.checkSingleFile(context.getDriver().getScope())) {
+                    if (!context.getDriver().isIsolated()) {
                         for (ResourceItem item : items) {
                             if (!list.contains(item.getConfiguration().getQualifierString())) {
                                 continue;

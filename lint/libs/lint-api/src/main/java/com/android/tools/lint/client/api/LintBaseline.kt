@@ -24,6 +24,7 @@ import com.android.SdkConstants.ATTR_MESSAGE
 import com.android.SdkConstants.TAG_ISSUE
 import com.android.SdkConstants.TAG_ISSUES
 import com.android.SdkConstants.TAG_LOCATION
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Position
@@ -61,8 +62,8 @@ class LintBaseline(
     private val client: LintClient?,
 
     /**
-     * The file to read the baselines from, and if [.writeOnClose] is set, to write
-     * to when the baseline is [.close]'ed.
+     * The file to read the baselines from, and if [writeOnClose] is
+     * set, to write to when the baseline is [close]'ed.
      */
     val file: File
 ) {
@@ -208,34 +209,30 @@ class LintBaseline(
     }
 
     /**
-     * Checks whether the given warning (of the given issue type, message and location)
-     * is present in this baseline, and if so marks it as used such that a second call will
-     * not find it.
+     * Checks whether the given [incident] is present in this baseline,
+     * and if so marks it as used such that a second call will not find
+     * it.
      *
+     * When issue analysis is done you can call [foundErrorCount] and
+     * [foundWarningCount] to get a count of the warnings or errors that
+     * were matched during the run, and [fixedCount] to get a count
+     * of the issues that were present in the baseline that were not
+     * matched (e.g. have been fixed.)
      *
-     * When issue analysis is done you can call [.getFoundErrorCount] and
-     * [.getFoundWarningCount] to get a count of the warnings or errors that were
-     * matched during the run, and [.getFixedCount] to get a count of the issues
-     * that were present in the baseline that were not matched (e.g. have been fixed.)
-     *
-     * @param issue the issue type
-     * @param location the location of the error
-     * @param message the exact error message (in [TextFormat.RAW] format)
-     * @param severity the severity of the issue, used to count baseline match as error or warning
-     * @param project the relevant project, if any
-     * @return true if this error was found in the baseline and marked as used, and false if this
-     * issue is not part of the baseline
+     * Returns true if this error was found in the baseline and marked
+     * as used, and false if this issue is not already part of the
+     * baseline.
      */
-    fun findAndMark(
-        issue: Issue,
-        location: Location,
-        message: String,
-        severity: Severity?,
-        project: Project?
-    ): Boolean {
+    fun findAndMark(incident: Incident): Boolean {
+        val issue = incident.issue
+        val location = incident.location
+        val message = incident.message
+        val severity = incident.severity
         val found = findAndMark(issue, location, message, severity, 0)
+
         if (writeOnClose && (!removeFixed || found)) {
             if (entriesToWrite != null && issue.id != IssueRegistry.BASELINE.id) {
+                val project = incident.project
                 entriesToWrite!!.add(ReportedEntry(issue, project, location, message))
             }
         }

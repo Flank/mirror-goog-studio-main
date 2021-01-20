@@ -281,7 +281,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             }
             val apiLookup = ApiLookup.get(
                 context.client,
-                context.mainProject.buildTarget
+                context.project.buildTarget
             ) ?: return
             isInternal = !apiLookup.containsClass(value)
         }

@@ -30,7 +30,7 @@ import org.w3c.dom.Element
  * wrong parent.
  */
 class BottomAppBarDetector : LayoutDetector() {
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return listOf(OLD_BOTTOM_APP_BAR, NEW_BOTTOM_APP_BAR)
     }
 

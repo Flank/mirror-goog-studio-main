@@ -41,11 +41,16 @@ import com.android.prefs.AndroidLocationsException
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo
+import com.android.tools.lint.detector.api.Constraint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Desugaring
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
@@ -113,7 +118,7 @@ abstract class LintClient {
 
     /** Configurations referenced by this client */
     @Suppress("LeakingThis")
-    open val configurations = ConfigurationHierarchy(this)
+    open val configurations: ConfigurationHierarchy = ConfigurationHierarchy(this)
 
     /**
      * Returns a configuration for use by the given project. The configuration
@@ -139,25 +144,36 @@ abstract class LintClient {
         configurations.getConfigurationForFolder(file.parentFile)
 
     /**
-     * Report the given issue. This method will only be called if the configuration
-     * provided by [.getConfiguration] has reported the corresponding
-     * issue as enabled and has not filtered out the issue with its
-     * [Configuration.ignore] method.
+     * Report the given issue. This method will only be called if the
+     * configuration provided by [getConfiguration] has reported the
+     * corresponding issue as enabled and has not filtered out the issue
+     * with its [Configuration.ignore] method.
      *
-     * @param context the context used by the detector when the issue was found
+     * @param context the context used by the detector when the issue
+     *     was found
      * @param issue the issue that was found
      * @param severity the severity of the issue
      * @param location the location of the issue
      * @param message the associated user message
-     * @param format the format of the description and location descriptions
-     * @param fix an optional set of extra data provided by the detector for this issue; this
-     *                 is intended to pass metadata to the IDE to help construct quickfixes without
-     *                 having to parse error messages (which is brittle) or worse having to include
-     *                 information in the error message (for later parsing) which is required by the
-     *                 quickfix but not really helpful in the error message itself (such as the
-     *                 maxVersion for a permission tag to be added to the
+     * @param format the format of the description and location
+     *     descriptions
+     * @param fix an optional set of extra data provided by the detector
+     *     for this issue; this is intended to pass metadata to
+     *     the IDE to help construct quickfixes without having
+     *     to parse error messages (which is brittle) or worse
+     *     having to include information in the error message (for
+     *     later parsing) which is required by the quickfix but
+     *     not really helpful in the error message itself (such as
+     *     the maxVersion for a permission tag to be added to the
      */
-    abstract fun report(
+    @Deprecated(
+        "Use the new report(Incident) method instead",
+        ReplaceWith(
+            "report(context, Incident(issue, message, location, fix), format)",
+            "com.android.tools.lint.detector.api.Incident"
+        )
+    )
+    fun report(
         context: Context,
         issue: Issue,
         severity: Severity,
@@ -165,16 +181,112 @@ abstract class LintClient {
         message: String,
         format: TextFormat,
         fix: LintFix?
-    )
+    ) {
+        val incident = Incident(issue, message, location, fix)
+        incident.severity = severity
+        report(context, incident, format)
+    }
+
+    /** Report the given [incident] */
+    abstract fun report(context: Context, incident: Incident, format: TextFormat = TextFormat.RAW)
 
     /**
-     * Send an exception or error message (with warning severity) to the log
+     * Reports the given incident to lint as a conditional
+     * incident, meaning that it is not yet conclusive.
+     * The [constraint] specifies a condition to check in
+     * the reporting project's context. For example, using
+     * [com.android.tools.lint.detector.api.minSdkAtLeast](23) will
+     * only report this incident in consuming projects where the
+     * minSdkVersion is 23 or higher.
+     */
+    open fun report(context: Context, incident: Incident, constraint: Constraint) {
+    }
+
+    /**
+     * Reports the given incident to lint as a provisional incident,
+     * meaning that it is not yet conclusive. Lint will later call back
+     * to the detector (corresponding to the reported incident) and ask
+     * it via the [Detector.filterIncident] method to decide whether
+     * the incident should really be reported or not, and optionally
+     * to customize the incident such as updating the message.
+     *
+     * The purpose of this is to allow lint to process source files in
+     * libraries once (and report potential errors via this method), and
+     * then later, when generating reports in downstream modules such as
+     * the app module, quickly consider (in [Detector.filterIncident])
+     * all the potential methods and simply filter them by the
+     * local environment, such as the real app minSdkVersion.
+     *
+     * This allows lint to only analyze the library once, and then reuse
+     * those results multiple times, for each transitive usage of the
+     * library.
+     */
+    open fun report(context: Context, incident: Incident, map: LintMap) {
+    }
+
+    /**
+     * Returns a partial result where a [Detector] can store state for
+     * later analysis in [Detector.checkPartialResults].
+     */
+    open fun getPartialResults(project: Project, issue: Issue): PartialResult {
+        // the default client does not support partial analysis so just return an empty result
+        return PartialResult(issue, mutableMapOf())
+    }
+
+    /**
+     * Whether this client supports the "partial analysis" mechanism.
+     * When this is true, a module is analyzed by lint in isolation (the
+     * detectors are not allowed to query information outside of that
+     * library, such as downstream information about minSdkVersions
+     * in the consuming app module), and then the results can be
+     * reported **provisionally** (via [Context.report] with either
+     * a [Constraint] or [LintMap]). Lint will store these results,
+     * and later when the app module report is generated, load the
+     * provisional errors and give the detectors a chance to (cheaply)
+     * filter their previously provisionally reported incidents given
+     * the actual minSdkVersion, merged manifest, etc, of the consuming
+     * module. For conditions, this is handled automatically; for
+     * manual logic via [LintMap], override [Detector.filterIncident]
+     * which returns the persisted map with state to consider.
+     *
+     * In the IDE, for example, where we have always have access to
+     * all the project metadata, this returns false. When this returns
+     * false, all provisionally reported issues are directly passed over
+     * to the conditions or [Detector.filterIncident] for immediate
+     * filtering and reporting. This lets detectors handle both
+     * scenarios in a single way.
+     */
+    open fun supportsPartialAnalysis(): Boolean = false
+
+    /**
+     * After partial analysis has completed, lint will call this method
+     * to store the (partial) results.
+     *
+     * How and where the incidents are stored is left up to the client.
+     *
+     * Only intended for lint's own usage.
+     */
+    open fun storeState(project: Project) {
+        error("This client does not support partial lint analysis.")
+    }
+
+    /**
+     * After partial analysis has completed for all dependencies,
+     * lint will call this method during error reporting to merge and
+     * validate the partial results. Only intended for lint's own usage.
+     */
+    open fun mergeState(root: Project, driver: LintDriver) {
+        error("This client does not support partial lint analysis.")
+    }
+
+    /**
+     * Send an exception or error message (with warning severity) to the
+     * log
      *
      * @param exception the exception, possibly null
-     *
-     * @param format the error message using [java.lang.String.format] syntax, possibly null
-     *    (though in that case the exception should not be null)
-     *
+     * @param format the error message using [java.lang.String.format]
+     *     syntax, possibly null (though in that
+     *     case the exception should not be null)
      * @param args any arguments for the format string
      */
     open fun log(
@@ -187,12 +299,10 @@ abstract class LintClient {
      * Send an exception or error message to the log
      *
      * @param severity the severity of the warning
-     *
      * @param exception the exception, possibly null
-     *
-     * @param format the error message using [java.lang.String.format] syntax, possibly null
-     *    (though in that case the exception should not be null)
-     *
+     * @param format the error message using [java.lang.String.format]
+     *     syntax, possibly null (though in that
+     *     case the exception should not be null)
      * @param args any arguments for the format string
      */
     abstract fun log(
@@ -827,7 +937,7 @@ abstract class LintClient {
 
     /**
      * Returns the list of known projects (projects registered via
-     * [.getProject]
+     * [getProject]).
      *
      * @return a collection of projects in any order
      */
@@ -1310,7 +1420,7 @@ abstract class LintClient {
         return connection
     }
 
-    /** Closes a connection previously returned by [.openConnection]  */
+    /** Closes a connection previously returned by [openConnection] */
     open fun closeConnection(connection: URLConnection) {
         (connection as? HttpURLConnection)?.disconnect()
     }
@@ -1383,7 +1493,9 @@ abstract class LintClient {
             val primary = manifestFiles[0]
             try {
                 val xml = primary.readText()
-                return XmlUtils.parseDocumentSilently(xml, true)
+                val document = XmlUtils.parseDocumentSilently(xml, true)
+                document?.setUserData(File::class.java.name, primary, null)
+                return document
             } catch (e: IOException) {
                 log(Severity.ERROR, e, "Could not read manifest $primary")
             }
@@ -1405,22 +1517,21 @@ abstract class LintClient {
     }
 
     /**
-     * Returns true if the given node is part of a merged manifest document
-     * (already configured via [.resolveMergeManifestSources])
+     * Returns true if the given node is part of a merged manifest
+     * document (already configured via [resolveMergeManifestSources])
      *
      * @param node the node to look up
-     *
      * @return true if this node is part of a merged manifest document
      */
     fun isMergeManifestNode(node: Node): Boolean =
         node.ownerDocument?.getUserData(MERGED_MANIFEST) != null
 
-    /** Cache used by [.findManifestSourceNode]  */
+    /** Cache used by [findManifestSourceNode] */
     @Suppress("MemberVisibilityCanBePrivate")
     protected val reportFileCache: MutableMap<Any, BlameFile> =
         Maps.newHashMap<Any, BlameFile>()
 
-    /** Cache used by [.findManifestSourceNode]  */
+    /** Cache used by [findManifestSourceNode] */
     @Suppress("MemberVisibilityCanBePrivate")
     protected val sourceNodeCache: MutableMap<Node, Pair<File, out Node>> =
         Maps.newIdentityHashMap<Node, Pair<File, out Node>>()
@@ -1448,7 +1559,6 @@ abstract class LintClient {
     open fun findManifestSourceNode(mergedNode: Node): Pair<File, out Node>? {
         val doc = mergedNode.ownerDocument ?: return null
         val report = doc.getUserData(MERGED_MANIFEST) ?: return null
-
         val cached = sourceNodeCache[mergedNode]
         if (cached != null) {
             if (cached === NOT_FOUND) {
@@ -1502,9 +1612,9 @@ abstract class LintClient {
     }
 
     /**
-     * Returns the location for a given node from a merged manifest file. Convenience
-     * wrapper around [.findManifestSourceNode] and
-     * [XmlParser.getLocation]
+     * Returns the location for a given node from a merged manifest
+     * file. Convenience wrapper around [findManifestSourceNode] and
+     * [XmlParser.getLocation].
      */
     open fun findManifestSourceLocation(mergedNode: Node): Location? {
         val source = findManifestSourceNode(mergedNode)
@@ -1591,11 +1701,10 @@ abstract class LintClient {
     ): ResourceRepository
 
     /**
-     * For a lint client which supports resource items (via [.supportsProjectResources])
-     * return a handle for a resource item
+     * For a lint client which supports resource items (via
+     * [supportsProjectResources]) return a handle for a resource item.
      *
      * @param item the resource item to look up a location handle for
-     *
      * @return a corresponding handle
      */
     open fun createResourceItemHandle(
@@ -1645,9 +1754,11 @@ abstract class LintClient {
     /** Returns the display name of this lint client, if known */
     open fun getClientDisplayName(): String = clientName
 
-    /** Returns the version number of this lint client, if known. This is the one
-     * meant to be displayed to users; e.g. for Studio, client revision may be
-     * "3.4.0.0" and display revision might be "3.4 Canary 1".
+    /**
+     * Returns the version number of this lint client, if known. This is
+     * the one meant to be displayed to users; e.g. for Studio, client
+     * revision may be "3.4.0.0" and display revision might be "3.4
+     * Canary 1".
      */
     open fun getClientDisplayRevision(): String? = getClientRevision()
 
@@ -1807,12 +1918,13 @@ abstract class LintClient {
         private val PROP_BIN_DIR = "com.android.tools.lint.bindir"
 
         /**
-         * Returns the File corresponding to the system property or the environment variable
-         * for [.PROP_BIN_DIR].
-         * This property is typically set by the SDK/tools/lint[.bat] wrapper.
-         * It denotes the path of the wrapper on disk.
+         * Returns the File corresponding to the system property or
+         * the environment variable for [PROP_BIN_DIR]. This property
+         * is typically set by the SDK/cmdline-tools/latest/bin/lint
+         * wrapper. It denotes the path of the wrapper on disk.
          *
-         * @return A new File corresponding to [LintClient.PROP_BIN_DIR] or null.
+         * @return A new File corresponding to [LintClient.PROP_BIN_DIR]
+         *     or null.
          */
         private val lintBinDir: File?
             get() {
@@ -1846,56 +1958,57 @@ abstract class LintClient {
          * is used to automatically resolve reported errors on the merged manifest
          * back to the corresponding source locations, when possible.)
          */
-        private const val MERGED_MANIFEST = "lint-merged-manifest"
+        const val MERGED_MANIFEST = "lint-merged-manifest"
 
         @JvmField
         protected val NOT_FOUND: Pair<File, Node> = Pair.of<File, Node>(null, null)
 
         /**
-         * The client name returned by [.getClientName] when running in
-         * Android Studio/IntelliJ IDEA
+         * The client name returned by [clientName] when running in
+         * Android Studio/IntelliJ IDEA.
          */
         @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_STUDIO = "studio"
 
         /**
-         * The client name returned by [.getClientName] when running in
-         * Gradle
+         * The client name returned by [clientName] when running in
+         * Gradle.
          */
         const val CLIENT_GRADLE = "gradle"
 
         /**
-         * The client name returned by [.getClientName] when running in
-         * the CLI (command line interface) version of lint, `lint`
+         * The client name returned by [clientName] when running in the
+         * CLI (command line interface) version of lint, `lint`.
          */
         const val CLIENT_CLI = "cli"
 
         /**
-         * The client name returned by [.getClientName] when running in
-         * unit tests
+         * The client name returned by [clientName] when running in unit
+         * tests.
          */
         @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_UNIT_TESTS = "test"
 
         /**
-         * The client name returned by [.getClientName] when running in
-         * some unknown client
+         * The client name returned by [clientName] when running in some
+         * unknown client.
          */
         @Suppress("MemberVisibilityCanBePrivate")
         const val CLIENT_UNKNOWN = "unknown"
 
         /**
          * The name of the embedding client. It could be not just
-         * [.CLIENT_STUDIO], [.CLIENT_GRADLE], [.CLIENT_CLI]
-         * etc but other values too as lint is integrated in other embedding contexts.
+         * [CLIENT_STUDIO], [CLIENT_GRADLE], [CLIENT_CLI] etc but other
+         * values too as lint is integrated in other embedding contexts.
          *
          * This is only intended to be set by the lint infrastructure.
          *
-         * Note that if you are getting an UninitializedPropertyAccessException here,
-         * you're accessing code which should only be run after the lint client
-         * name has been initialized. This should be performed early in the
-         * initialization of each integration of lint in a tool such as Gradle,
-         * Android Studio, etc.
+         * Note that if you are getting an
+         * [UninitializedPropertyAccessException] here, you're accessing
+         * code which should only be run after the lint client name
+         * has been initialized. This should be performed early in the
+         * initialization of each integration of lint in a tool such as
+         * Gradle, Android Studio, etc.
          *
          * @return the name of the embedding client
          */
@@ -2056,6 +2169,7 @@ abstract class LintClient {
                 else -> issue.defaultSeverity
             }
 
+            // Create a context to report this issue against
             val realContext = when {
                 context != null -> context
                 else -> {
@@ -2079,8 +2193,9 @@ abstract class LintClient {
                 }
             }
 
-            // Create a context to report this issue against
-            client.report(realContext, issue, realSeverity, realLocation, message, format, fix)
+            val incident = Incident(issue, realLocation, message, fix)
+            incident.severity = realSeverity
+            client.report(realContext, incident, format)
         }
 
         /**

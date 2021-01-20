@@ -44,6 +44,14 @@ internal class ProjectDescriptionList(
     /** Original number of projects in the list*/
     val originalSize = projects.size
 
+    /**
+     * If the project set was constructed implicitly (via
+     * ../module/path) file names, this property will point to the
+     * implicit "main" (or app) project.
+     */
+    var implicitReportFrom: ProjectDescription? = null
+        private set
+
     /** Number of projects in the list */
     val size: Int get() = projects.size
 
@@ -102,12 +110,14 @@ internal class ProjectDescriptionList(
                         if (name.startsWith("lib") || name.startsWith("Lib")) {
                             project.dependsOn(newProject)
                             newProject.type = ProjectDescription.Type.LIBRARY
+                            implicitReportFrom = project
                         } else {
                             // Projects not named "lib" something are assumed to be
                             // consuming projects depending on this project (and the
                             // dependency project is assumed to be a library)
                             newProject.dependsOn(project)
                             newProject.type = ProjectDescription.Type.APP
+                            implicitReportFrom = newProject
                             if (project.name.isEmpty()) {
                                 project.type = ProjectDescription.Type.LIBRARY
                                 pickUniqueName(getProjectNames(), project)
@@ -124,6 +134,9 @@ internal class ProjectDescriptionList(
                     // move the test file over and update target path
                     newProject.files = Lists.asList(file, newProject.files).toTypedArray()
                     file.targetRelativePath = file.targetRelativePath.substring(name.length + 4)
+                    if (file is CompiledSourceFile && file.source.targetRelativePath.startsWith("../$name/")) {
+                        file.source.targetRelativePath = file.source.targetRelativePath.substring(name.length + 4)
+                    }
                 } else {
                     filtered.add(file)
                 }
@@ -142,7 +155,7 @@ internal class ProjectDescriptionList(
      * explicitly listed in the project list, so if not intended, call
      * [expandProjects] first.
      */
-    private fun getProjectNames(): Set<String> {
+    fun getProjectNames(): Set<String> {
         val names: MutableSet<String> = HashSet()
         for (project in projects) {
             val projectName = project.name
@@ -181,8 +194,20 @@ internal class ProjectDescriptionList(
     }
 
     /**
-     * Finds a unique name for the given project, not conflicting with any of the existing names
-     * passed in.
+     * Assigns a unique name to the given project if it has not already
+     * been named
+     */
+    fun assignProjectName(project: ProjectDescription) {
+        val usedNames: Set<String> = HashSet(getProjectNames())
+        if (project.name.isEmpty()) {
+            val name = pickUniqueName(usedNames, project)
+            project.name = name
+        }
+    }
+
+    /**
+     * Finds a unique name for the given project, not conflicting with
+     * any of the existing names passed in.
      */
     private fun pickUniqueName(usedNames: Set<String>, project: ProjectDescription): String {
         val root = when (project.type) {

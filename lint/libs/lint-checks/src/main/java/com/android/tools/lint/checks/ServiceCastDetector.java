@@ -20,6 +20,7 @@ import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.SdkConstants.CLASS_APPLICATION;
 import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_VIEW;
+import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 
 import com.android.annotations.NonNull;
@@ -28,6 +29,7 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
@@ -302,7 +304,7 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
 
     private void reportWifiServiceLeak(
             @NonNull Issue issue, @NonNull JavaContext context, @NonNull UCallExpression call) {
-        if (context.getMainProject().getMinSdk() >= 24) {
+        if (context.getProject().getMinSdk() >= 24) {
             // Bug is fixed in Nougat
             return;
         }
@@ -336,7 +338,8 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                             .build();
         }
 
-        context.report(issue, call, context.getLocation(call), message, fix);
+        Incident incident = new Incident(issue, call, context.getLocation(call), message, fix);
+        context.report(incident, minSdkLessThan(24));
     }
 
     private static boolean isClipboard(@NonNull String cls) {

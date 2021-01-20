@@ -50,11 +50,14 @@ import com.android.tools.lint.detector.api.BinaryResourceScanner;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.PartialResult;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -97,12 +100,14 @@ import org.w3c.dom.Node;
 public class UnusedResourceDetector extends ResourceXmlDetector
         implements SourceCodeScanner, BinaryResourceScanner, XmlScanner {
 
+    public static final String KEY_RESOURCE_FIELD = "field";
+    private static final String KEY_MODEL = "model";
+
     private static final Implementation IMPLEMENTATION;
 
+    // TODO: Switch to configuration property!
     public static final String EXCLUDE_TESTS_PROPERTY = "lint.unused-resources.exclude-tests";
     public static final String INCLUDE_TESTS_PROPERTY = "lint.unused-resources.include-tests";
-
-    public static final String KEY_RESOURCE_FIELD = "field";
 
     static {
         EnumSet<Scope> scopeSet =
@@ -234,16 +239,69 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     }
 
     @Override
-    public void afterCheckRootProject(@NonNull Context context) {
-        if (context.getMainProject().isLibrary() && LintClient.isGradle()) {
-            // In Gradle, don't report unused resources for a library project;
-            // these are usually processed separately (without the main app
-            // module) and results in a lot of false positives. To get unused
-            // resources accounted correctly, run the check on the app project,
-            // preferably with checkDependencies true.
+    public void checkPartialResults(
+            @NonNull Context context, @NonNull PartialResult partialResults) {
+        // We need to pull the resource graph along because a reference in
+        // main could then result in a bunch of other resources being
+        // references
+        // For example, let's say @layout/foo includes @layout/bar, and in
+        // the library both are unused. Then in the app module, we have a
+        // reference to @layout/foo. We can't just filter out the explicitly
+        // referenced resources when analyzing the app module; we have to
+        // apply the resource graph such that we also notice this implies
+        // @layout/bar is used.
+
+        ResourceUsageModel model = null;
+        for (Map.Entry<Project, LintMap> entry : partialResults) {
+            LintMap map = entry.getValue();
+            String serialized = map.getString(KEY_MODEL, "");
+            ResourceUsageModel newModel = ResourceUsageModel.deserialize(serialized);
+            if (model == null) {
+                model = newModel;
+            } else {
+                model.merge(newModel);
+            }
+        }
+        if (model == null) {
             return;
         }
 
+        Set<Resource> unused = findUnused(context, model);
+        if (unused.isEmpty()) {
+            return;
+        }
+
+        for (Resource resource : unused) {
+            String field = resource.getField();
+            String message = String.format("The resource `%1$s` appears to be unused", field);
+
+            Location location = null;
+
+            for (Map.Entry<Project, ? extends LintMap> entry : partialResults) {
+                LintMap lintMap = entry.getValue();
+                Location resourceLocation = lintMap.getLocation(resource.getField());
+                if (resourceLocation != null) {
+                    location = resourceLocation;
+                    break;
+                }
+            }
+
+            if (location == null) {
+                if (resource.declarations != null) {
+                    location = Location.create(resource.declarations.get(0).toFile());
+                }
+                if (location == null) {
+                    location = Location.create(context.getProject().getDir());
+                }
+            }
+
+            LintFix fix = fix().data(KEY_RESOURCE_FIELD, field);
+            context.report(new Incident(getIssue(resource), location, message, fix));
+        }
+    }
+
+    @Override
+    public void afterCheckRootProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             Project project = context.getProject();
 
@@ -260,29 +318,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
             }
 
             addDynamicResources(context);
-            model.processToolsAttributes();
-
-            List<Resource> unusedResources = model.findUnused();
-            Set<Resource> unused = Sets.newHashSetWithExpectedSize(unusedResources.size());
-            for (Resource resource : unusedResources) {
-                if (resource.isDeclared()
-                        && !resource.isPublic()
-                        && resource.type != ResourceType.PUBLIC) {
-                    unused.add(resource);
-                }
-            }
-
-            // Remove id's if the user has disabled reporting issue ids
-            if (!unused.isEmpty() && !context.isEnabled(ISSUE_IDS)) {
-                // Remove all R.id references
-                List<Resource> ids = Lists.newArrayList();
-                for (Resource resource : unused) {
-                    if (resource.type == ResourceType.ID) {
-                        ids.add(resource);
-                    }
-                }
-                unused.removeAll(ids);
-            }
+            Set<Resource> unused = findUnused(context, model);
 
             if (!unused.isEmpty()) {
                 model.unused = unused;
@@ -290,6 +326,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                 // Request another pass, and in the second pass we'll gather location
                 // information for all declaration locations we've found
                 context.requestRepeat(this, Scope.ALL_RESOURCES_SCOPE);
+            } else if (!context.isGlobalAnalysis()) {
+                // No unused resources here, but still may have unused resources when
+                // merging in library partial results, and in that case we'll need
+                // the resource reference graph to cross check
+                storeSerializedModel(context);
             }
         } else {
             assert context.getPhase() == 2;
@@ -334,7 +375,8 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                             }
                         }
                         if (!folders.isEmpty()) {
-                            // Process folders in alphabetical order such that we process
+                            //
+                            //  folders in alphabetical order such that we process
                             // based folders first: we want the locations in base folder
                             // order
                             folders.sort(Comparator.comparing(File::getName));
@@ -357,8 +399,18 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     }
                 }
 
+                // TODO: IF we don't store locations along the way, there's no need to
+                // defer this for a second phase!
+                LintMap lintMap = null;
+                if (!context.isGlobalAnalysis()) {
+                    lintMap = storeSerializedModel(context);
+                    // Not exiting yet; instead of reporting directly, we'll
+                    // inject incidents into the storage as well, such that we have
+                    // locations etc
+                }
+
                 List<Resource> sorted = Lists.newArrayList(unused);
-                Collections.sort(sorted);
+                Collections.sort(sorted); // TODO: Why does order matter here?
 
                 Boolean skippedLibraries = null;
 
@@ -389,16 +441,68 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     }
 
                     String field = resource.getField();
-                    String message =
-                            String.format("The resource `%1$s` appears to be unused", field);
                     if (location == null) {
                         location = Location.create(context.getProject().getDir());
                     }
-                    LintFix fix = fix().data(KEY_RESOURCE_FIELD, field);
-                    context.report(getIssue(resource), location, message, fix);
+
+                    if (context.isGlobalAnalysis()) {
+                        String message =
+                                String.format("The resource `%1$s` appears to be unused", field);
+
+                        // Lint fix data for the IDE which will start the resource removal
+                        // refactoring
+                        // with this resource field preselected
+                        LintFix fix = fix().data(KEY_RESOURCE_FIELD, field);
+
+                        Incident incident =
+                                new Incident(getIssue(resource), location, message, fix);
+                        context.report(incident);
+                    } else {
+                        assert lintMap != null;
+                        lintMap.put(field, location);
+                    }
                 }
             }
         }
+    }
+
+    @NonNull
+    private static Set<Resource> findUnused(
+            @NonNull Context context, @NonNull ResourceUsageModel model) {
+        model.processToolsAttributes();
+
+        List<Resource> unusedResources = model.findUnused();
+        Set<Resource> unused = Sets.newHashSetWithExpectedSize(unusedResources.size());
+        for (Resource resource : unusedResources) {
+            if (resource.isDeclared()
+                    && !resource.isPublic()
+                    && resource.type != ResourceType.PUBLIC) {
+                unused.add(resource);
+            }
+        }
+
+        // Remove id's if the user has disabled reporting issue ids
+        if (!unused.isEmpty() && !context.isEnabled(ISSUE_IDS)) {
+            // Remove all R.id references
+            List<Resource> ids = Lists.newArrayList();
+            for (Resource resource : unused) {
+                if (resource.type == ResourceType.ID) {
+                    ids.add(resource);
+                }
+            }
+            unused.removeAll(ids);
+        }
+        return unused;
+    }
+
+    private LintMap storeSerializedModel(@NonNull Context context) {
+        // We don't need resource values; this is only used when shrinking resources
+        // by looking at compiled code and needing to map back from inlined R constants
+        boolean includeValues = false;
+
+        //noinspection ConstantConditions
+        String serialized = model.serialize(includeValues);
+        return context.getPartialResults(ISSUE).map().put(KEY_MODEL, serialized);
     }
 
     private void recordInactiveJavaReferences(@NonNull File resDir) {

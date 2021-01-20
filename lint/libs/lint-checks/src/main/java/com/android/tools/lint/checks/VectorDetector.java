@@ -29,17 +29,21 @@ import com.android.ide.common.repository.GradleVersion;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceUrl;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintMap;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelVariant;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Locale;
 import java.util.function.Predicate;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -69,6 +73,11 @@ public class VectorDetector extends ResourceXmlDetector {
                     5,
                     Severity.WARNING,
                     new Implementation(VectorDetector.class, Scope.RESOURCE_FILE_SCOPE));
+
+    private static final String KEY_CONTAINS_GRADIENT = "containsGradient";
+    private static final String KEY_CONTAINS_FILL_TYPE = "containsFillType";
+    private static final String KEY_FOLDER_VERSION = "folderVersion";
+    private static final String KEY_MESSAGE = "message";
 
     /** Constructs a new {@link VectorDetector} */
     public VectorDetector() {}
@@ -121,61 +130,96 @@ public class VectorDetector extends ResourceXmlDetector {
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         checkSize(context, document);
 
-        // If minSdkVersion >= 24, we're not generating compatibility bitmap icons.
-        int apiThreshold = 24;
-        Project project = context.getMainProject();
-        if (project.getMinSdkVersion().getFeatureLevel() >= apiThreshold) {
-            return;
-        }
-
-        // Vector generation is only done for Gradle projects
-        if (!project.isGradleProject()) {
-            return;
-        }
-
-        // Not using a Gradle plugin that supports vector image generation?
-        if (!isVectorGenerationSupported(project)) {
-            return;
-        }
-
         Element root = document.getDocumentElement();
         // If this is not actually a vector icon, nothing to do in this detector
         if (root == null || !root.getTagName().equals(TAG_VECTOR)) {
             return;
         }
 
+        // If minSdkVersion >= 24, we're not generating compatibility bitmap icons.
+        int apiThreshold = 24;
+
         // If this vector asset is in a -v24 folder, we're not generating bitmap icons.
         if (context.getFolderVersion() >= apiThreshold) {
-            return;
-        }
-
-        if (usingSupportLibVectors(project)) {
             return;
         }
 
         // TODO: Check to see if there already is a -?dpi version of the file; if so,
         // we also won't be generating a bitmap image.
 
-        boolean generationDueToGradient =
-                containsGradient(document) && isVectorGenerationSupportedForGradient(project);
+        checkSupported(context, root);
+    }
 
+    private void reportConditional(
+            @NonNull XmlContext context,
+            @NonNull Node node,
+            @NonNull Location location,
+            @NonNull String formatString) {
+
+        Incident incident = new Incident(ISSUE, node, location, "");
+        Document document = context.document;
+        boolean containsGradient = containsGradient(document);
+        LintMap map =
+                map().put(KEY_MESSAGE, formatString)
+                        .put(KEY_CONTAINS_GRADIENT, containsGradient)
+                        .put(
+                                KEY_CONTAINS_FILL_TYPE,
+                                !containsGradient && containsFillType(document))
+                        .put(KEY_FOLDER_VERSION, context.getFolderVersion());
+        context.report(incident, map);
+    }
+
+    @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        // If minSdkVersion >= 24, we're not generating compatibility bitmap icons.
+        int apiThreshold = 24;
+        Project project = context.getMainProject();
+        if (project.getMinSdkVersion().getFeatureLevel() >= apiThreshold) {
+            return false;
+        }
+
+        // Vector generation is only done for Gradle projects
+        if (!project.isGradleProject()) {
+            return false;
+        }
+
+        // Not using a Gradle plugin that supports vector image generation?
+        if (!isVectorGenerationSupported(project)) {
+            return false;
+        }
+
+        if (usingSupportLibVectors(project)) {
+            return false;
+        }
+
+        // TODO: Check to see if there already is a -?dpi version of the file; if so,
+        // we also won't be generating a bitmap image.
+
+        boolean generationDueToGradient =
+                map.getBoolean(KEY_CONTAINS_GRADIENT, false)
+                        && isVectorGenerationSupportedForGradient(project);
         if (!generationDueToGradient) {
             boolean generationDueToFillType =
-                    containsFillType(document) && isVectorGenerationSupportedForFillType(project);
+                    map.getBoolean(KEY_CONTAINS_FILL_TYPE, false)
+                            && isVectorGenerationSupportedForFillType(project);
             if (!generationDueToFillType) {
                 apiThreshold = 21;
                 // If minSdkVersion >= 21, we're not generating compatibility bitmap icons.
                 if (project.getMinSdkVersion().getFeatureLevel() >= apiThreshold) {
-                    return;
+                    return false;
                 }
                 // If this vector asset is in a -v21 folder, we're not generating bitmap icons.
-                if (context.getFolderVersion() >= apiThreshold) {
-                    return;
+                if (map.getInt(KEY_FOLDER_VERSION, -1) >= apiThreshold) {
+                    return false;
                 }
             }
         }
 
-        checkSupported(context, root, apiThreshold);
+        String format = map.getString(KEY_MESSAGE, "");
+        String message = String.format(Locale.US, format, apiThreshold);
+        incident.setMessage(message);
+        return true;
     }
 
     private static void checkSize(XmlContext context, Document document) {
@@ -271,28 +315,14 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     /** Recursive element check for unsupported attributes and tags */
-    private static void checkSupported(
-            @NonNull XmlContext context, @NonNull Element element, int apiThreshold) {
+    private void checkSupported(@NonNull XmlContext context, @NonNull Element element) {
         // Unsupported tags
         String tag = element.getTagName();
         if (TAG_CLIP_PATH.equals(tag)) {
             String message =
-                    String.format(
-                            "This tag is not supported in images generated from this vector icon for "
-                                    + "API < %d; check generated icon to make sure it looks acceptable",
-                            apiThreshold);
-            context.report(ISSUE, element, context.getLocation(element), message);
-        } else if ("group".equals(tag)) {
-            LintModelModule model = context.getMainProject().getBuildModule();
-            if (model != null
-                    && model.getGradleVersion() != null
-                    && model.getGradleVersion().getMajor() == 1
-                    && model.getGradleVersion().getMinor() == 4) {
-                String message =
-                        "Update Gradle plugin version to 1.5+ to correctly handle "
-                                + "`<group>` tags in generated bitmaps";
-                context.report(ISSUE, element, context.getElementLocation(element), message);
-            }
+                    "This tag is not supported in images generated from this vector icon for "
+                            + "API < %1$d; check generated icon to make sure it looks acceptable";
+            reportConditional(context, element, context.getLocation(element), message);
         }
 
         NamedNodeMap attributes = element.getAttributes();
@@ -305,22 +335,18 @@ public class VectorDetector extends ResourceXmlDetector {
                             || "trimPathOffset".equals(name))
                     && ANDROID_URI.equals(attr.getNamespaceURI())) {
                 String message =
-                        String.format(
-                                "This attribute is not supported in images generated from this vector icon "
-                                        + "for API < %d; check generated icon to make sure it looks acceptable",
-                                apiThreshold);
-                context.report(ISSUE, attr, context.getNameLocation(attr), message);
+                        "This attribute is not supported in images generated from this vector icon "
+                                + "for API < %1$d; check generated icon to make sure it looks acceptable";
+                reportConditional(context, attr, context.getNameLocation(attr), message);
             }
 
             String value = attr.getValue();
             if (ResourceUrl.parse(value) != null) {
                 String message =
-                        String.format(
-                                "Resource references will not work correctly in images generated for this "
-                                        + "vector icon for API < %d; check generated icon to make sure it looks "
-                                        + "acceptable",
-                                apiThreshold);
-                context.report(ISSUE, attr, context.getValueLocation(attr), message);
+                        "Resource references will not work correctly in images generated for this "
+                                + "vector icon for API < %1$d; check generated icon to make sure it looks "
+                                + "acceptable";
+                reportConditional(context, attr, context.getValueLocation(attr), message);
             }
         }
 
@@ -328,7 +354,7 @@ public class VectorDetector extends ResourceXmlDetector {
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                checkSupported(context, (Element) child, apiThreshold);
+                checkSupported(context, (Element) child);
             }
         }
     }

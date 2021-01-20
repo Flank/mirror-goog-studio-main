@@ -20,14 +20,17 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_CLICKABLE;
 import static com.android.SdkConstants.ATTR_FOCUSABLE;
 import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -68,10 +71,11 @@ public class KeyboardNavigationDetector extends LayoutDetector {
         }
         if (SdkConstants.VALUE_TRUE.equals(attribute.getValue())
                 // Starting with O, clickable already implies focusable.
-                && context.getMainProject().getMinSdkVersion().getApiLevel() < 26) {
+                && context.getProject().getMinSdkVersion().getApiLevel() < 26) {
             LintFix fix = fix().set(ANDROID_URI, ATTR_FOCUSABLE, VALUE_TRUE).build();
-
-            context.report(ISSUE, attribute, context.getLocation(attribute), MESSAGE, fix);
+            Location location = context.getLocation(attribute);
+            Incident incident = new Incident(ISSUE, attribute, location, MESSAGE, fix);
+            context.report(incident, minSdkLessThan(26));
         }
     }
 }

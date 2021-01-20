@@ -283,18 +283,15 @@ import org.jetbrains.uast.UReferenceExpression
 interface SourceCodeScanner : FileScanner {
 
     /**
-     * Return the list of method names this detector is interested in, or
-     * null. If this method returns non-null, then any AST nodes that match
-     * a method call in the list will be passed to the
-     * [.visitMethodCall] method for processing. The visitor created by
-     * [.createPsiVisitor] is also passed to that
-     * method, although it can be null.
+     * Return the list of method names this detector is interested in,
+     * or null. If this method returns non-null, then any AST nodes
+     * that match a method call in the list will be passed to the
+     * [visitMethodCall] method for processing.
      *
-     *
-     * This makes it easy to write detectors that focus on some fixed calls.
-     * For example, the StringFormatDetector uses this mechanism to look for
-     * "format" calls, and when found it looks around (using the AST's
-     * [PsiElement.getParent] method) to see if it's called on
+     * This makes it easy to write detectors that focus on some fixed
+     * calls. For example, the StringFormatDetector uses this mechanism
+     * to look for "format" calls, and when found it looks around (using
+     * the AST's [PsiElement.getParent] method) to see if it's called on
      * a String class instance, and if so do its normal processing. Note
      * that since it doesn't need to do any other AST processing, that
      * detector does not actually supply a visitor.
@@ -343,15 +340,13 @@ interface SourceCodeScanner : FileScanner {
     )
 
     /**
-     * Return the list of constructor types this detector is interested in, or
-     * null. If this method returns non-null, then any AST nodes that match
-     * a constructor call in the list will be passed to the
-     * [.visitConstructor]
-     * method for processing. The visitor created by
-     * [.createJavaVisitor] is also passed to that
-     * method, although it can be null.
+     * Return the list of constructor types this detector is interested
+     * in, or null. If this method returns non-null, then any AST nodes
+     * that match a constructor call in the list will be passed to the
+     * [visitConstructor] method for processing.
      *
-     * This makes it easy to write detectors that focus on some fixed constructors.
+     * This makes it easy to write detectors that focus on some fixed
+     * constructors.
      *
      * @return a set of applicable fully qualified types, or null.
      */
@@ -377,13 +372,13 @@ interface SourceCodeScanner : FileScanner {
     )
 
     /**
-     * Return the list of reference names types this detector is interested in, or null. If this
-     * method returns non-null, then any AST elements that match a reference in the list will be
-     * passed to the [.visitReference] method for processing. The visitor created by
-     * [.createJavaVisitor] is also passed to that method, although it can be
-     * null.
+     * Return the list of reference names types this detector is
+     * interested in, or null. If this method returns non-null, then any
+     * AST elements that match a reference in the list will be passed to
+     * the [visitReference] method for processing.
      *
-     * This makes it easy to write detectors that focus on some fixed references.
+     * This makes it easy to write detectors that focus on some fixed
+     * references.
      *
      * @return a set of applicable reference names, or null.
      */
@@ -407,16 +402,14 @@ interface SourceCodeScanner : FileScanner {
     )
 
     /**
-     * Returns whether this detector cares about Android resource references
-     * (such as `R.layout.main` or `R.string.app_name`). If it
-     * does, then the visitor will look for these patterns, and if found, it
-     * will invoke [.visitResourceReference] passing the resource type
-     * and resource name. It also passes the visitor, if any, that was
-     * created by [.createJavaVisitor], such that a
-     * detector can do more than just look for resources.
+     * Returns whether this detector cares about Android resource
+     * references (such as `R.layout.main` or `R.string.app_name`).
+     * If it does, then the visitor will look for these patterns, and
+     * if found, it will invoke [visitResourceReference] passing the
+     * resource type and resource name.
      *
      * @return true if this detector wants to be notified of R resource
-     * identifiers found in the code.
+     *     identifiers found in the code.
      */
     fun appliesToResourceRefs(): Boolean
 
@@ -441,12 +434,12 @@ interface SourceCodeScanner : FileScanner {
     )
 
     /**
-     * Returns a list of fully qualified names for super classes that this
-     * detector cares about. If not null, this detector will **only** be called
-     * if the current class is a subclass of one of the specified superclasses.
-     * Lint will invoke [.visitClass] (and sometimes
-     * [.visitClass] when it encounters
-     * subclasses and lambdas for these types.
+     * Returns a list of fully qualified names for super classes that
+     * this detector cares about. If not null, this detector will
+     * **only** be called if the current class is a subclass of one of
+     * the specified superclasses. Lint will invoke [visitClass] (and
+     * sometimes [visitClass] when it encounters subclasses and lambdas
+     * for these types.
      *
      * @return a list of fully qualified names
      */
@@ -469,19 +462,20 @@ interface SourceCodeScanner : FileScanner {
     fun visitClass(context: JavaContext, declaration: UClass)
 
     /**
-     * Like [.visitClass], but used for lambdas in
-     * SAM (single abstract method) types. For example, if you have
-     * have this method:
+     * Like [visitClass], but used for lambdas in SAM (single abstract
+     * method) types. For example, if you have have this method:
+     *
      * <pre>
      * void enqueue(Runnable runnable) { ... }
      * ...
      * enqueue({ something(); })
-     </pre> *
-     * then the lambda being passed to the call can be thought of as a class
-     * implementing the Runnable interface.
+     * </pre>
      *
+     * then the lambda being passed to the call can be thought of as a
+     * class implementing the Runnable interface.
      *
-     * The set of target types for the lambda are provided in [.applicableSuperClasses]
+     * The set of target types for the lambda are provided in
+     * [applicableSuperClasses]
      *
      * @param context the lint scanning context
      * @param lambda the lambda
@@ -489,12 +483,12 @@ interface SourceCodeScanner : FileScanner {
     fun visitClass(context: JavaContext, lambda: ULambdaExpression)
 
     /**
-     * Returns a list of fully qualified names for super classes that this
-     * detector cares about. If not null, this detector will **only** be called
-     * if the current class is a subclass of one of the specified superclasses.
-     * Lint will invoke [.visitClass] (and sometimes
-     * [.visitClass] when it encounters
-     * subclasses and lambdas for these types.
+     * Returns a list of fully qualified names for super classes that
+     * this detector cares about. If not null, this detector will
+     * **only** be called if the current class is a subclass of one of
+     * the specified superclasses. Lint will invoke [visitClass] (and
+     * sometimes [visitClass] when it encounters subclasses and lambdas
+     * for these types.
      *
      * @return a list of fully qualified names
      */
@@ -570,14 +564,16 @@ interface SourceCodeScanner : FileScanner {
 
     @Suppress("DEPRECATION") // Delegating to deprecated API
     /**
-     * Called whenever the given element references an element that has been annotated with one
-     * of the annotations returned from [.applicableAnnotations].
+     * Called whenever the given element references an element that
+     * has been annotated with one of the annotations returned from
+     * [applicableAnnotations].
      *
-     * The element itself may not be annotated; it can also be a member in a class which has
-     * been annotated, or a package which has been annotated.
+     * The element itself may not be annotated; it can also be a member
+     * in a class which has been annotated, or a package which has been
+     * annotated.
      *
-     * The call is handed the annotations found at each level (member, class, package) so that
-     * it can decide how to handle them.
+     * The call is handed the annotations found at each level (member,
+     * class, package) so that it can decide how to handle them.
      *
      * @param context the lint scanning context
      * @param usage the element to be checked
@@ -585,26 +581,28 @@ interface SourceCodeScanner : FileScanner {
      * @param annotation the annotation this detector is interested in
      * @param qualifiedName the annotation's qualified name
      * @param method the method, if any
-     * @param referenced the referenced referenced element (method, field, etc), if any
-     * @param annotations the annotations to check. These are the annotations
-     * you've registered an interest in with
-     * [.applicableAnnotations], whether they were
-     * specified as a parameter annotation, method annotation,
-     * class annotation or package annotation. The various
-     * annotations available in those contexts are also supplied.
-     * This lets you not only see where an annotation was
-     * specified, but you can check the relative priorities
-     * of annotations. For example, let's say you have a
-     * `@WorkerThread` annotation on a class. If you also
-     * happen to have a `@UiThread` annotation on a member
-     * you shouldn't enforce worker thread semantics on the
-     * member.
-     * @param allMemberAnnotations all member annotations (may include other annotations
-     * than the ones you've registered an interest in with
-     * [.applicableAnnotations])
-     * @param allClassAnnotations all annotations in the target surrounding class
-     * @param allPackageAnnotations all annotations in the target surrounding package
-     * @deprecated This method is missing the referenced parameter; use the other method instead
+     * @param referenced the referenced referenced element (method,
+     *     field, etc), if any
+     * @param annotations the annotations to check. These are the
+     *     annotations you've registered an interest in with
+     *     [.applicableAnnotations], whether they were specified as a
+     *     parameter annotation, method annotation, class annotation
+     *     or package annotation. The various annotations available in
+     *     those contexts are also supplied. This lets you not only see
+     *     where an annotation was specified, but you can check the
+     *     relative priorities of annotations. For example, let's say
+     *     you have a `@WorkerThread` annotation on a class. If you
+     *     also happen to have a `@UiThread` annotation on a member you
+     *     shouldn't enforce worker thread semantics on the member.
+     * @param allMemberAnnotations all member annotations (may include
+     *     other annotations than the ones you've registered
+     *     an interest in with [.applicableAnnotations])
+     * @param allClassAnnotations all annotations in the target
+     *     surrounding class
+     * @param allPackageAnnotations all annotations in the target
+     *     surrounding package
+     * @deprecated This method is missing the referenced parameter; use
+     *     the other method instead
      */
     fun visitAnnotationUsage(
         context: JavaContext,
@@ -643,22 +641,21 @@ interface SourceCodeScanner : FileScanner {
     /**
      * Create a parse tree visitor to process the parse tree. All
      * [SourceCodeScanner] detectors must provide a visitor, unless they
-     * either return true from [.appliesToResourceRefs] or return
-     * non null from [.getApplicableMethodNames].
+     * either return true from [appliesToResourceRefs] or return non
+     * null from [getApplicableMethodNames].
      *
      * If you return specific AST node types from
-     * [.getApplicableUastTypes] ()}, then the visitor will **only**
-     * be called for the specific requested node types. This is more
-     * efficient, since it allows many detectors that apply to only a small
-     * part of the AST (such as method call nodes) to share iteration of the
-     * majority of the parse tree.
+     * [getApplicableUastTypes], then the visitor will **only** be
+     * called for the specific requested node types. This is more
+     * efficient, since it allows many detectors that apply to only
+     * a small part of the AST (such as method call nodes) to share
+     * iteration of the majority of the parse tree.
      *
-     * If you return null from [.getApplicableUastTypes] ()}, then your
+     * If you return null from [getApplicableUastTypes], then your
      * visitor will be called from the top and all node types visited.
      *
      * Note that a new visitor is created for each separate compilation
      * unit, so you can store per file state in the visitor.
-     *
      *
      * @param context the [Context] for the file being analyzed
      * @return a visitor, or null.
@@ -667,14 +664,14 @@ interface SourceCodeScanner : FileScanner {
 
     /**
      * Whether this implementation wants to access the global call graph
-     * with a call to [.analyzeCallGraph].
+     * with a call to [analyzeCallGraph].
      *
      * **NOTE: Highly experimental as well as resource intensive!**
      */
     fun isCallGraphRequired(): Boolean
 
     /**
-     * Analyze the call graph requested with [.isCallGraphRequired]
+     * Analyze the call graph requested with [isCallGraphRequired]
      *
      * **NOTE: Highly experimental as well as resource intensive!**
      */

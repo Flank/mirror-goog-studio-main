@@ -1018,7 +1018,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
             ).indented(),
             // Trigger src/main/java source sets
             gradle("")
-        ).run().expect(
+        ).skipTestModes(TestMode.PARTIAL).run().expect(
             """
             src/main/kotlin/test/pkg1/lint.xml:2: Warning: lintJar can only be specified for lint.xml files at the module level or higher [LintWarning]
             <lint lintJars='notallowed.jar'>

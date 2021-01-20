@@ -42,6 +42,7 @@ import com.android.tools.lint.client.api.LintXmlConfiguration;
 import com.android.tools.lint.client.api.Vendor;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintModelModuleProject;
@@ -161,6 +162,8 @@ public class Main {
     private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
     private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
     private static final String ARG_PRINT_INTERNAL_ERROR_STACKTRACE = "--stacktrace";
+    private static final String ARG_ANALYZE_ONLY = "--analyze-only";
+    private static final String ARG_REPORT_ONLY = "--report-only";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_WARN_2 = "--nowarn";
@@ -211,6 +214,7 @@ public class Main {
         // Mapping from file path prefix to URL. Applies only to HTML reports
         @Nullable String urlMap = null;
         @NonNull List<File> files = new ArrayList<>();
+        @NonNull LintDriver.DriverMode mode = LintDriver.DriverMode.GLOBAL;
     }
 
     /**
@@ -239,7 +243,19 @@ public class Main {
             return exitCode;
         }
         LintRequest lintRequest = createLintRequest(client, argumentState);
-        return run(client, lintRequest);
+        exitCode = run(client, lintRequest, argumentState);
+
+        // If the user has not asked for the exit code to be set, don't
+        // fail the build on errors. However, this only applies to the
+        // found-errors exit code; for things like incorrect arguments
+        // or baseline created, we always set the exit code.
+        if (exitCode == ERRNO_ERRORS
+                && (!client.getFlags().isSetExitCode()
+                        || argumentState.mode == LintDriver.DriverMode.ANALYSIS_ONLY)) {
+            exitCode = ERRNO_SUCCESS;
+        }
+
+        return exitCode;
     }
 
     private LintCliClient createClient(ArgumentState argumentState) {
@@ -256,6 +272,11 @@ public class Main {
 
         private Pattern mAndroidAnnotationPattern;
         private Project unexpectedGradleProject = null;
+
+        @Override
+        public boolean supportsPartialAnalysis() {
+            return argumentState.mode != LintDriver.DriverMode.GLOBAL;
+        }
 
         @Override
         @NonNull
@@ -335,13 +356,10 @@ public class Main {
                     }
 
                     @Override
-                    public boolean isIgnored(
-                            @NonNull Context context,
-                            @NonNull Issue issue,
-                            @Nullable Location location,
-                            @NonNull String message) {
+                    public boolean isIgnored(@NonNull Context context, @NonNull Incident incident) {
                         // If you've deliberately ignored IssueRegistry.LINT_ERROR
                         // don't flag that one either
+                        Issue issue = incident.getIssue();
                         if (issue == IssueRegistry.LINT_ERROR
                                 && new LintCliClient(flags, LintClient.getClientName())
                                         .isSuppressed(IssueRegistry.LINT_ERROR)) {
@@ -784,7 +802,11 @@ public class Main {
                     flags.getReporters()
                             .add(
                                     Reporter.createXmlReporter(
-                                            client, output, false, flags.isIncludeXmlFixes()));
+                                            client,
+                                            output,
+                                            flags.isIncludeXmlFixes()
+                                                    ? XmlFileType.REPORT_WITH_FIXES
+                                                    : XmlFileType.REPORT));
                 } catch (IOException e) {
                     log(e, null);
                     return ERRNO_INVALID_ARGS;
@@ -931,8 +953,8 @@ public class Main {
                 for (Reporter reporter : flags.getReporters()) {
                     if (reporter instanceof XmlReporter) {
                         XmlReporter xmlReporter = (XmlReporter) reporter;
-                        if (!xmlReporter.isIntendedForBaseline()) {
-                            xmlReporter.setIncludeFixes(true);
+                        if (xmlReporter.getType() == XmlFileType.REPORT) {
+                            xmlReporter.setType(XmlFileType.REPORT_WITH_FIXES);
                         }
                     }
                 }
@@ -1190,6 +1212,10 @@ public class Main {
                 flags.setAllowSuppress(false);
             } else if (arg.equals(ARG_PRINT_INTERNAL_ERROR_STACKTRACE)) {
                 flags.setPrintInternalErrorStackTrace(true);
+            } else if (arg.equals(ARG_ANALYZE_ONLY)) {
+                argumentState.mode = LintDriver.DriverMode.ANALYSIS_ONLY;
+            } else if (arg.equals(ARG_REPORT_ONLY)) {
+                argumentState.mode = LintDriver.DriverMode.MERGE;
             } else if (arg.startsWith("--")) {
                 System.err.println("Invalid argument " + arg + "\n");
                 printUsage(System.err);
@@ -1206,7 +1232,6 @@ public class Main {
 
         List<LintModelModule> modules = argumentState.modules;
         List<File> files = argumentState.files;
-        String variantName = argumentState.variantName;
         if (!modules.isEmpty()) {
             if (!files.isEmpty()) {
                 System.err.println(
@@ -1215,7 +1240,7 @@ public class Main {
             }
 
             // Sync the first lint model's lint options.
-            SyncOptions.syncTo(modules.get(0), client, flags, variantName, null, true);
+            SyncOptions.syncTo(modules.get(0), flags);
         }
 
         if (files.isEmpty() && modules.isEmpty() && flags.getProjectDescriptorOverride() == null) {
@@ -1333,11 +1358,20 @@ public class Main {
         return lintRequest;
     }
 
-    private int run(LintCliClient client, LintRequest lintRequest) {
+    private int run(LintCliClient client, LintRequest lintRequest, ArgumentState argumentState) {
         try {
             // Not using globalIssueRegistry; LintClient will do its own registry merging
             // also including project rules.
-            return client.run(new BuiltinIssueRegistry(), lintRequest);
+            switch (argumentState.mode) {
+                case GLOBAL:
+                    return client.run(new BuiltinIssueRegistry(), lintRequest);
+                case ANALYSIS_ONLY:
+                    return client.analyzeOnly(new BuiltinIssueRegistry(), lintRequest);
+                case MERGE:
+                    return client.mergeOnly(new BuiltinIssueRegistry(), lintRequest);
+                default:
+                    throw new IllegalStateException("Unexpected value: " + argumentState.mode);
+            }
         } catch (IOException e) {
             log(e, null);
             return ERRNO_INVALID_ARGS;

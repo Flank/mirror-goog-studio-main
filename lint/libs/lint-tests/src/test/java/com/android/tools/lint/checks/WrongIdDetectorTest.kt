@@ -373,30 +373,6 @@ class WrongIdDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
-    fun testIncremental() {
-        lint().files(
-            mLayout1, mLayout2, mIds
-        )
-            .incremental("res/layout/layout1.xml")
-            .run().expect(
-                """
-                res/layout/layout1.xml:14: Error: The id "button5" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]
-                        android:layout_alignBottom="@+id/button5"
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/layout/layout1.xml:17: Error: The id "my_id3" is not defined anywhere. Did you mean one of {my_id0, my_id1, my_id2} ? [UnknownId]
-                        android:layout_alignRight="@+id/my_id3"
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/layout/layout1.xml:18: Error: The id "my_id1" is defined but not assigned to any views. Did you mean one of {my_id0, my_id2, my_id3} ? [UnknownId]
-                        android:layout_alignTop="@id/my_id1"
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/layout/layout1.xml:15: Warning: The id "my_id2" is not referring to any views in this layout [UnknownIdInLayout]
-                        android:layout_alignLeft="@+id/my_id2"
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                3 errors, 1 warnings
-                """
-            )
-    }
-
     fun testMissingNamespace() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=227687
         // Make sure we properly handle a missing namespace

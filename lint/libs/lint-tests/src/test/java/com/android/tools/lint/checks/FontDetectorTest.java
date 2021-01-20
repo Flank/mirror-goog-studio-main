@@ -23,6 +23,7 @@ import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_DEVELOPMEN
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_NAME;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_PACKAGE_NAME;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_URL;
+import static com.android.tools.lint.checks.FontDetector.FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -134,10 +135,14 @@ public class FontDetectorTest extends AbstractCheckTest {
     }
 
     public void testAppAttributesPresentOnLaterApi() {
+        if (FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK
+                == Integer.MAX_VALUE - 1) {
+            return;
+        }
         String expected =
                 ""
                         + "res/font/font1.xml:8: Warning: For minSdkVersion="
-                        + FontDetector.FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK
+                        + FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK
                         + " only android: attributes should be used [FontValidationWarning]\n"
                         + "    app:fontProviderCerts=\"@array/certs\">\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -153,8 +158,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest()
                                 .minSdk(
-                                        FontDetector
-                                                .FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
+                                        FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
                         xml(
                                 "res/font/font1.xml",
                                 ""
@@ -183,7 +187,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n";
         String expectedFix =
                 ""
-                        + "Fix for res/font/font1.xml line 7: Delete fontProviderAuthority:\n"
+                        + "Fix for res/font/font1.xml line 8: Delete fontProviderAuthority:\n"
                         + "@@ -4 +4\n"
                         + "-     android:fontProviderAuthority=\"com.google.android.gms.fonts\"\n";
         lint().files(
@@ -224,8 +228,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest()
                                 .minSdk(
-                                        FontDetector
-                                                .FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
+                                        FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
                         xml(
                                 "res/font/font1.xml",
                                 ""
@@ -257,8 +260,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest()
                                 .minSdk(
-                                        FontDetector
-                                                .FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
+                                        FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
                         xml(
                                 "res/font/font1.xml",
                                 ""
@@ -352,8 +354,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         lint().files(
                         manifest()
                                 .minSdk(
-                                        FontDetector
-                                                .FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
+                                        FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
                         xml(
                                 "res/font/font1.xml",
                                 ""
@@ -412,15 +413,14 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings";
         String expectedFix =
                 ""
-                        + "Fix for res/font/font1.xml line 3: Replace with com.google.android.gms:\n"
+                        + "Fix for res/font/font1.xml line 4: Replace with com.google.android.gms:\n"
                         + "@@ -4 +4\n"
                         + "-     android:fontProviderPackage=\"com.google.android.gms.fonts\"\n"
                         + "+     android:fontProviderPackage=\"com.google.android.gms\"\n";
         lint().files(
                         manifest()
                                 .minSdk(
-                                        FontDetector
-                                                .FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
+                                        FUTURE_API_VERSION_WHERE_DOWNLOADABLE_FONTS_WORK_IN_FRAMEWORK),
                         xml(
                                 "res/font/font1.xml",
                                 ""

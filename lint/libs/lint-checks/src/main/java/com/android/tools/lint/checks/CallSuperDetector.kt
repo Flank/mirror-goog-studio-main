@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.support.AndroidxName
+import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
@@ -66,6 +67,60 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         private val CALL_SUPER_ANNOTATION = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CallSuper")
         private const val ON_DETACHED_FROM_WINDOW = "onDetachedFromWindow"
         private const val ON_VISIBILITY_CHANGED = "onVisibilityChanged"
+
+        /**
+         * Checks whether the given method overrides a method which
+         * requires the super method to be invoked, and if so, returns
+         * it (otherwise returns null)
+         */
+        fun getRequiredSuperMethod(
+            evaluator: JavaEvaluator,
+            method: PsiMethod
+        ): PsiMethod? {
+
+            val directSuper = evaluator.getSuperMethod(method) ?: return null
+
+            val name = method.name
+            if (ON_DETACHED_FROM_WINDOW == name) {
+                // No longer annotated on the framework method since it's
+                // now handled via onDetachedFromWindowInternal, but overriding
+                // is still dangerous if supporting older versions so flag
+                // this for now (should make annotation carry metadata like
+                // compileSdkVersion >= N).
+                if (!evaluator.isMemberInSubClassOf(method, CLASS_VIEW, false)) {
+                    return null
+                }
+                return directSuper
+            } else if (ON_VISIBILITY_CHANGED == name) {
+                // From Android Wear API; doesn't yet have an annotation
+                // but we want to enforce this right away until the AAR
+                // is updated to supply it once @CallSuper is available in
+                // the support library
+                if (!evaluator.isMemberInSubClassOf(
+                    method,
+                    "android.support.wearable.watchface.WatchFaceService.Engine", false
+                )
+                ) {
+                    return null
+                }
+                return directSuper
+            }
+
+            val annotations = evaluator.getAllAnnotations(directSuper, true)
+            for (annotation in annotations) {
+                val signature = annotation.qualifiedName
+                if (CALL_SUPER_ANNOTATION.isEquals(signature) || signature != null &&
+                    (
+                        signature.endsWith(".OverrideMustInvoke") ||
+                            signature.endsWith(".OverridingMethodsMustInvokeSuper")
+                        )
+                ) {
+                    return directSuper
+                }
+            }
+
+            return null
+        }
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =
@@ -74,7 +129,8 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
     override fun createUastHandler(context: JavaContext): UElementHandler? =
         object : UElementHandler() {
             override fun visitMethod(node: UMethod) {
-                val superMethod = getRequiredSuperMethod(context, node) ?: return
+                val evaluator = context.evaluator
+                val superMethod = getRequiredSuperMethod(evaluator, node) ?: return
                 val visitor = SuperCallVisitor(superMethod)
                 node.accept(visitor)
                 val count = visitor.callsSuperCount
@@ -91,60 +147,6 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 }
             }
         }
-
-    /**
-     * Checks whether the given method overrides a method which requires the super method
-     * to be invoked, and if so, returns it (otherwise returns null)
-     */
-    private fun getRequiredSuperMethod(
-        context: JavaContext,
-        method: UMethod
-    ): PsiMethod? {
-
-        val evaluator = context.evaluator
-        val directSuper = evaluator.getSuperMethod(method) ?: return null
-
-        val name = method.name
-        if (ON_DETACHED_FROM_WINDOW == name) {
-            // No longer annotated on the framework method since it's
-            // now handled via onDetachedFromWindowInternal, but overriding
-            // is still dangerous if supporting older versions so flag
-            // this for now (should make annotation carry metadata like
-            // compileSdkVersion >= N).
-            if (!evaluator.isMemberInSubClassOf(method, CLASS_VIEW, false)) {
-                return null
-            }
-            return directSuper
-        } else if (ON_VISIBILITY_CHANGED == name) {
-            // From Android Wear API; doesn't yet have an annotation
-            // but we want to enforce this right away until the AAR
-            // is updated to supply it once @CallSuper is available in
-            // the support library
-            if (!evaluator.isMemberInSubClassOf(
-                method,
-                "android.support.wearable.watchface.WatchFaceService.Engine", false
-            )
-            ) {
-                return null
-            }
-            return directSuper
-        }
-
-        val annotations = evaluator.getAllAnnotations(directSuper, true)
-        for (annotation in annotations) {
-            val signature = annotation.qualifiedName
-            if (CALL_SUPER_ANNOTATION.isEquals(signature) || signature != null &&
-                (
-                    signature.endsWith(".OverrideMustInvoke") ||
-                        signature.endsWith(".OverridingMethodsMustInvokeSuper")
-                    )
-            ) {
-                return directSuper
-            }
-        }
-
-        return null
-    }
 
     /** Visits a method and determines whether the method calls its super method  */
     private class SuperCallVisitor constructor(private val targetMethod: PsiMethod) :

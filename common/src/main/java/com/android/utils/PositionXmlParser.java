@@ -59,7 +59,7 @@ import static com.android.SdkConstants.UTF_8;
 public class PositionXmlParser {
     private static final String UTF_16 = "UTF_16";
     private static final String UTF_16LE = "UTF_16LE";
-    private static final String CONTENT_KEY = "contents";
+    public static final String CONTENT_KEY = "contents";
     private static final String POS_KEY = "offsets";
     /** See http://www.w3.org/TR/REC-xml/#NT-EncodingDecl */
     private static final Pattern ENCODING_PATTERN =

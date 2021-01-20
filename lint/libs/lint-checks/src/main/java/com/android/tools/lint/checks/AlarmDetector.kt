@@ -60,7 +60,7 @@ class AlarmDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableMethodNames(): List<String>? = listOf("setRepeating")
+    override fun getApplicableMethodNames(): List<String> = listOf("setRepeating")
 
     override fun visitMethodCall(
         context: JavaContext,

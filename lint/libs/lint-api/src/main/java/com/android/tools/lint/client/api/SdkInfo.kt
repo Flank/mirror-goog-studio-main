@@ -63,12 +63,12 @@ abstract class SdkInfo {
     abstract fun getParentViewClass(fqcn: String): String?
 
     /**
-     * Returns the class name of the parent view, or null if the view is the
-     * root android.view.View class. This is the same as the
-     * [.getParentViewClass] but without the package.
+     * Returns the class name of the parent view, or null if the view
+     * is the root android.view.View class. This is the same as the
+     * [getParentViewClass] but without the package.
      *
-     * @param name the view class name to look up the parent for (not including
-     *             package)
+     * @param name the view class name to look up the parent for (not
+     *     including package)
      * @return the view name of the parent
      */
     abstract fun getParentViewName(name: String): String?

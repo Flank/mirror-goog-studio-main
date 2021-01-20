@@ -21,6 +21,8 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
+import static com.android.tools.lint.detector.api.Constraints.notLibraryProject;
+import static com.android.tools.lint.detector.api.Constraints.targetSdkAtLeast;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_REQUIRED;
 import static com.android.xml.AndroidManifest.NODE_APPLICATION;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
@@ -29,9 +31,11 @@ import static com.android.xml.AndroidManifest.NODE_USES_FEATURE;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
+import com.android.tools.lint.detector.api.Constraint;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
@@ -118,7 +122,7 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
             if ("android.hardware.type.watch".equals(attrName)) {
                 sawWearUsesFeature = true;
                 Attr requiredAttr = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
-                if (requiredAttr != null && !Boolean.valueOf(requiredAttr.getValue())) {
+                if (requiredAttr != null && !Boolean.parseBoolean(requiredAttr.getValue())) {
                     // required=false is not supported for the android.hardware.type.watch feature
                     context.report(
                             INVALID_WEAR_FEATURE_ATTRIBUTE,
@@ -166,24 +170,23 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
 
     @Override
     public void afterCheckFile(@NonNull Context context) {
-        if (context.getMainProject().isLibrary()) {
-            return;
-        }
-
         if (sawWearUsesFeature
                 && !sawStandaloneMetadata
-                && context.getMainProject().getTargetSdk() >= 23) {
+                && context.getProject().getTargetSdk() >= 23) {
             XmlContext xmlContext = (XmlContext) context;
             Element root = xmlContext.document.getDocumentElement();
             Element application = XmlUtils.getFirstSubTagByName(root, NODE_APPLICATION);
             if (application != null) {
-                xmlContext.report(
-                        WEAR_STANDALONE_APP_ISSUE,
-                        application,
-                        xmlContext.getNameLocation(application),
-                        "Missing `<meta-data android:name="
-                                + "\"com.google.android.wearable.standalone\" ../>` element",
-                        fix().data(KEY_QFX_EXTRA_MISSING_META_DATA, true));
+                Incident incident =
+                        new Incident(
+                                WEAR_STANDALONE_APP_ISSUE,
+                                application,
+                                xmlContext.getNameLocation(application),
+                                "Missing `<meta-data android:name="
+                                        + "\"com.google.android.wearable.standalone\" ../>` element",
+                                fix().data(KEY_QFX_EXTRA_MISSING_META_DATA, true));
+                Constraint constraint = targetSdkAtLeast(23).and(notLibraryProject());
+                xmlContext.report(incident, constraint);
             }
         }
     }

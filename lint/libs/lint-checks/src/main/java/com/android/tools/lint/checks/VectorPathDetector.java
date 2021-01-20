@@ -18,7 +18,10 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.TAG_VECTOR;
+import static com.android.tools.lint.checks.VectorDetector.isVectorGenerationSupported;
+import static com.android.tools.lint.checks.VectorDetector.usingSupportLibVectors;
 import static com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES;
+import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,6 +33,7 @@ import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
@@ -140,16 +144,19 @@ public class VectorPathDetector extends ResourceXmlDetector {
 
         String message =
                 String.format(
+                        Locale.getDefault(),
                         "Very long vector path (%1$d characters), which is bad for "
                                 + "performance. Considering reducing precision, removing minor details or "
                                 + "rasterizing vector.",
                         value.length());
-        context.report(PATH_LENGTH, attribute, context.getValueLocation(attribute), message);
+        Incident incident =
+                new Incident(PATH_LENGTH, attribute, context.getValueLocation(attribute), message);
+        context.report(incident, minSdkLessThan(21));
     }
 
     private static boolean isRasterizingVector(XmlContext context) {
         // If minSdkVersion >= 21, we're not generating compatibility vector icons
-        Project project = context.getMainProject();
+        Project project = context.getProject();
         if (project.getMinSdkVersion().getFeatureLevel() >= 21) {
             return false;
         }
@@ -160,11 +167,11 @@ public class VectorPathDetector extends ResourceXmlDetector {
         }
 
         // Not using a plugin that supports vector image generation?
-        if (!VectorDetector.isVectorGenerationSupported(context.getMainProject())) {
+        if (!isVectorGenerationSupported(context.getProject())) {
             return false;
         }
 
-        if (VectorDetector.usingSupportLibVectors(project)) {
+        if (usingSupportLibVectors(project)) {
             return false;
         }
 
@@ -178,7 +185,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
      */
     public void validatePath(
             @NonNull XmlContext context, @NonNull Attr attribute, @NonNull String path) {
-        if (context.getMainProject().getMinSdkVersion().getFeatureLevel() >= 23) {
+        if (context.getProject().getMinSdkVersion().getFeatureLevel() >= 23) {
             // Fixed in lollipop
             return;
         }
@@ -264,7 +271,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
             if (hasExponential
                     && startPosition < currentIndex
                     // This was fixed in Lollipop
-                    && context.getMainProject().getMinSdkVersion().getFeatureLevel() < 21) {
+                    && context.getProject().getMinSdkVersion().getFeatureLevel() < 21) {
                 String number = s.substring(startPosition, currentIndex);
 
                 String converted = null;
@@ -298,14 +305,14 @@ public class VectorPathDetector extends ResourceXmlDetector {
                         number,
                         converted,
                         message,
-                        "Replace scientific notation");
+                        "Replace scientific notation",
+                        21);
             }
 
             if ((s.startsWith(".", startPosition)
                     || s.startsWith("-.", startPosition)
                             // This was fixed in Marshmallow
-                            && context.getMainProject().getMinSdkVersion().getFeatureLevel()
-                                    < 23)) {
+                            && context.getProject().getMinSdkVersion().getFeatureLevel() < 23)) {
                 String number = s.substring(startPosition, currentIndex);
                 String replace =
                         number.startsWith(".") ? ("0" + number) : ("-0." + number.substring(2));
@@ -335,7 +342,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
                         number,
                         replace,
                         message,
-                        "Add leading 0");
+                        "Add leading 0",
+                        23);
             }
 
             int endPosition = currentIndex;
@@ -357,7 +365,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
             @NonNull String number,
             @Nullable String replace,
             @NonNull String message,
-            @NonNull String sharedName) {
+            @NonNull String sharedName,
+            int minApiLessThan) {
         Location location = context.getValueLocation(attribute);
         Position startPos = location.getStart();
         assert startPos != null;
@@ -385,7 +394,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
             }
         }
 
-        context.report(PATH_VALID, attribute, location, message, lintFix);
+        Incident incident = new Incident(PATH_VALID, attribute, location, message, lintFix);
+        context.report(incident, minSdkLessThan(minApiLessThan));
     }
 
     private static int findNextStart(String s, int end) {

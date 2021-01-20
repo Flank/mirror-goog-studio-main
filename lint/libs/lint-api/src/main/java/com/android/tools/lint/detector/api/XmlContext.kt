@@ -50,14 +50,15 @@ open class XmlContext(
     project: Project,
 
     /**
-     * The "main" project. For normal projects, this is the same as [.project],
-     * but for library projects, it's the root project that includes (possibly indirectly)
-     * the various library projects and their library projects.
+     * The "main" project. For normal projects, this is the same as
+     * [project], but for library projects, it's the root project that
+     * includes (possibly indirectly) the various library projects and
+     * their library projects.
      *
-     * Note that this is a property on the [Context], not the
-     * [Project], since a library project can be included from multiple
-     * different top level projects, so there isn't **one** main project,
-     * just one per main project being analyzed with its library projects.
+     * Note that this is a property on the [Context], not the [Project],
+     * since a library project can be included from multiple different
+     * top level projects, so there isn't **one** main project, just
+     * one per main project being analyzed with its library projects.
      */
     main: Project?,
     /** the file being checked */
@@ -185,52 +186,8 @@ open class XmlContext(
         message: String,
         quickfixData: LintFix? = null
     ) {
-        if (scope != null && driver.isSuppressed(this, issue, scope)) {
-            return
-        }
-        super.doReport(issue, location, message, quickfixData)
-    }
-
-    @Deprecated(
-        "Here for temporary compatibility; the new typed quickfix data parameter " +
-            "should be used instead",
-        ReplaceWith("report(issue, scope, location, message)")
-    )
-    fun report(
-        issue: Issue,
-        scope: Node?,
-        location: Location,
-        message: String,
-        quickfixData: Any?
-    ) = report(issue, scope, location, message)
-
-    override fun report(
-        issue: Issue,
-        location: Location,
-        message: String,
-        quickfixData: LintFix?
-    ) {
-        val source = location.source
-        if (source is Node) {
-            // Detector accidentally invoked scope-less report method inherited
-            // from generic Context, but we remember the actual node from the
-            // location construction, so use it to find the best suppress scope
-            report(issue, source, location, message, quickfixData)
-            return
-        }
-
-        // Warn if clients use the non-scoped form? No, there are cases where an
-        //  XML detector's error isn't applicable to one particular location (or it's
-        //  not feasible to compute it cheaply)
-        // driver.getClient().log(null, "Warning: Issue " + issue
-        //        + " was reported without a scope node: Can't be suppressed.");
-
-        // For now just check the document root itself
-        if (driver.isSuppressed(this, issue, document)) {
-            return
-        }
-
-        super.report(issue, location, message, quickfixData)
+        val incident = Incident(issue, message, location, scope, quickfixData)
+        driver.client.report(this, incident)
     }
 
     override val suppressCommentPrefix: String?

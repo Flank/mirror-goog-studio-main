@@ -62,7 +62,7 @@ class SharedPrefsDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf("getStringSet")
     }
 

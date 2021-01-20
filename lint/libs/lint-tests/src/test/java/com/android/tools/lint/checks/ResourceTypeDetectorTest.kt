@@ -1455,8 +1455,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "        //noinspection ResourceType\n" +
                     "        checkMe(); // SUPPRESSED\n" +
                     "        //noinspection ResourceType\n" +
-                    "        requiresPermission(); // SUPPRESSED\n" +
-                    "        //noinspection ResourceType\n" +
                     "        requiresUiThread(); // SUPPRESSED\n" +
                     "        //noinspection ResourceType\n" +
                     "        setDuration(5); // SUPPRESSED\n" +
@@ -1483,7 +1481,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "        printBetweenFromInclusiveToInclusive(1.0f); // SUPPRESSED\n" +
                     "        printMinMultiple(new int[] { 1, 2, 3, 4, 5, 6, 7, 8 }); // SUPPRESSED\n" +
                     "        checkMe(); // SUPPRESSED\n" +
-                    "        requiresPermission(); // SUPPRESSED\n" +
                     "        requiresUiThread(); // SUPPRESSED\n" +
                     "        setDuration(5); // SUPPRESSED\n" +
                     "    }\n" +

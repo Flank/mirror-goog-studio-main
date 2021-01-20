@@ -231,10 +231,10 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         if (visibleSeverity == null || visibleSeverity === Severity.IGNORE) {
             visibleSeverity = issue.defaultSeverity
             if (visibleSeverity === Severity.IGNORE) {
-                if (isWarningsAsErrors()) {
-                    visibleSeverity = Severity.ERROR
+                visibleSeverity = if (isWarningsAsErrors()) {
+                    Severity.ERROR
                 } else {
-                    visibleSeverity = Severity.WARNING
+                    Severity.WARNING
                 }
             }
         }
@@ -289,15 +289,90 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         parent?.validateIssueIds(client, driver, project, registry)
     }
 
-    override fun getIssueConfigLocation(
+    override fun addConfiguredIssues(
+        targetMap: MutableMap<String, Severity>,
+        registry: IssueRegistry,
+        specificOnly: Boolean
+    ) {
+        parent?.addConfiguredIssues(targetMap, registry, specificOnly)
+
+        val suppress = disabledIds()
+        val disabledCategories: Set<Category>? = disabledCategories()
+        val enabled = enabledIds()
+        val exact = exactCheckedIds()
+        val enabledCategories = enabledCategories()
+        val exactCategories = exactCategories()
+
+        for (issue in registry.issues) {
+            if (issue.suppressNames != null && !allowSuppress()) {
+                continue
+            }
+
+            // Issue not allowed to be suppressed?
+            val id = issue.id
+            if (suppress.contains(id)) {
+                targetMap[issue.id] = Severity.IGNORE
+                continue
+            }
+
+            if (disabledCategories != null) {
+                val category = issue.category
+                if (disabledCategories.contains(category) ||
+                    category.parent != null && disabledCategories.contains(category.parent)
+                ) {
+                    targetMap[issue.id] = Severity.IGNORE
+                    continue
+                }
+            }
+
+            val manual = severityOverride(issue)
+            if (manual != null) {
+                targetMap[issue.id] = manual
+                continue
+            }
+
+            val category = issue.category
+            if (exact != null) {
+                if (exact.contains(id)) {
+                    targetMap[issue.id] = issue.defaultSeverity
+                    continue
+                } else if (category !== Category.LINT) {
+                    targetMap[issue.id] = Severity.IGNORE
+                    continue
+                }
+            }
+            if (exactCategories != null) {
+                if (exactCategories.contains(category) ||
+                    category.parent != null && exactCategories.contains(category.parent)
+                ) {
+                    targetMap[issue.id] = issue.defaultSeverity
+                    continue
+                } else if (category !== Category.LINT ||
+                    disabledCategories()?.contains(Category.LINT) == true
+                ) {
+                    targetMap[issue.id] = Severity.IGNORE
+                    continue
+                }
+            }
+            if (enabled.contains(id) ||
+                enabledCategories != null && (
+                    enabledCategories.contains(category) ||
+                        category.parent != null && enabledCategories.contains(category.parent)
+                    )
+            ) {
+                targetMap[issue.id] = issue.defaultSeverity
+            }
+
+            overrides?.addConfiguredIssues(targetMap, registry, specificOnly)
+        }
+    }
+
+    override fun getLocalIssueConfigLocation(
         issue: String,
         specificOnly: Boolean,
-        severityOnly: Boolean
+        severityOnly: Boolean,
+        source: Configuration
     ): Location? {
-        overrides?.getIssueConfigLocation(issue, specificOnly, severityOnly)?.let {
-            return it
-        }
-
         if (associatedLocation != null) {
             val file = associatedLocation?.file
             if (file != null) {
@@ -305,7 +380,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
             }
         }
 
-        return parent?.getIssueConfigLocation(issue, specificOnly, severityOnly)
+        return parent?.getLocalIssueConfigLocation(issue, specificOnly, severityOnly, source)
             ?: associatedLocation
     }
 }

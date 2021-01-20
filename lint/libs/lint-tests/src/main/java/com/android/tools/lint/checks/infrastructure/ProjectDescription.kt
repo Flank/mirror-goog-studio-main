@@ -92,6 +92,9 @@ class ProjectDescription : Comparable<ProjectDescription> {
     fun dependsOn(library: ProjectDescription): ProjectDescription {
         if (!dependsOn.contains(library)) {
             dependsOn.add(library)
+            if (library.type == Type.APP) {
+                library.type = Type.LIBRARY
+            }
         }
         return this
     }

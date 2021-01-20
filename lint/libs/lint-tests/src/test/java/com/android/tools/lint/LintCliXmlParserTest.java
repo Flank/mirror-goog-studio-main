@@ -19,19 +19,16 @@ package com.android.tools.lint;
 import static com.android.tools.lint.client.api.LintClient.CLIENT_UNIT_TESTS;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.io.BufferedWriter;
@@ -205,14 +202,8 @@ public class LintCliXmlParserTest extends TestCase {
 
         @Override
         public void report(
-                @NonNull Context context,
-                @NonNull Issue issue,
-                @NonNull Severity severity,
-                @NonNull Location location,
-                @NonNull String message,
-                @NonNull TextFormat format,
-                @Nullable LintFix fix) {
-            System.out.println(location + ":" + message);
+                @NonNull Context context, @NonNull Incident incident, @NonNull TextFormat format) {
+            System.out.println(incident.getLocation() + ":" + incident.getMessage());
         }
     }
 }

@@ -18,8 +18,11 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.isAndroidProject
+import com.android.tools.lint.detector.api.targetSdkAtLeast
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
@@ -42,7 +45,7 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
 
     // ---- implements SourceCodeScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(ADD_JAVASCRIPT_INTERFACE)
     }
 
@@ -51,10 +54,6 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         method: PsiMethod
     ) {
-        if (context.mainProject.targetSdk < 17) {
-            return
-        }
-
         val arguments = node.valueArguments
         if (arguments.size != 2) {
             return
@@ -77,7 +76,8 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
             val message = "None of the methods in the added interface (${cls.name}) have " +
                 "been annotated with `@android.webkit.JavascriptInterface`; they will not " +
                 "be visible in API 17"
-            context.report(ISSUE, node, location, message)
+            val incident = Incident(ISSUE, node, location, message)
+            context.report(incident, targetSdkAtLeast(17))
         }
     }
 
@@ -85,10 +85,6 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
         listOf(UDeclaration::class.java)
 
     override fun createUastHandler(context: JavaContext): UElementHandler? {
-        if (!context.mainProject.isAndroidProject) {
-            return null
-        }
-
         return object : UElementHandler() {
             override fun visitDeclaration(node: UDeclaration) {
                 val modifierList = node.modifierList ?: return
@@ -97,10 +93,11 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
                 }
                 for (annotation in node.uAnnotations) {
                     if (annotation.qualifiedName == JAVASCRIPT_INTERFACE_CLS) {
-                        context.report(
+                        val incident = Incident(
                             ISSUE, node as UElement, context.getNameLocation(node),
                             "Must be public when using `@JavascriptInterface`"
                         )
+                        context.report(incident, isAndroidProject())
                     }
                 }
             }

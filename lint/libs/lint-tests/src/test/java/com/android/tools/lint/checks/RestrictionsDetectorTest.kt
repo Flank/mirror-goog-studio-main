@@ -31,8 +31,7 @@ class RestrictionsDetectorTest : AbstractCheckTest() {
         // Sample from https://developer.android.com/samples/AppRestrictionSchema/index.html
         // We expect no warnings.
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                             package="com.example.android.apprestrictionschema"

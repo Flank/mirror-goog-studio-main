@@ -256,21 +256,21 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "LibraryProject/src/main/res/values/strings.xml:4: Error: Resource named 'app_name' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_app_name' ? [ResourceName]\n"
+                        + "src/main/res/values/strings.xml:4: Error: Resource named 'app_name' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_app_name' ? [ResourceName]\n"
                         + "    <string name=\"app_name\">LibraryProject</string>\n"
                         + "            ~~~~~~~~~~~~~~~\n"
-                        + "LibraryProject/src/main/res/values/strings.xml:5: Error: Resource named 'string1' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string1' ? [ResourceName]\n"
+                        + "src/main/res/values/strings.xml:5: Error: Resource named 'string1' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string1' ? [ResourceName]\n"
                         + "    <string name=\"string1\">String 1</string>\n"
                         + "            ~~~~~~~~~~~~~~\n"
-                        + "LibraryProject/src/main/res/values/strings.xml:6: Error: Resource named 'string2' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string2' ? [ResourceName]\n"
+                        + "src/main/res/values/strings.xml:6: Error: Resource named 'string2' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string2' ? [ResourceName]\n"
                         + "    <string name=\"string2\">String 2</string>\n"
                         + "            ~~~~~~~~~~~~~~\n"
-                        + "LibraryProject/src/main/res/values/strings.xml:7: Error: Resource named 'string3' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string3' ? [ResourceName]\n"
+                        + "src/main/res/values/strings.xml:7: Error: Resource named 'string3' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_string3' ? [ResourceName]\n"
                         + "    <string name=\"string3\">String 3</string>\n"
                         + "            ~~~~~~~~~~~~~~\n"
-                        + "4 errors, 0 warnings\n";
+                        + "4 errors, 0 warnings";
 
-        lint().projects(main, library).run().expect(expected);
+        lint().projects(main, library).reportFrom(library).run().expect(expected);
     }
 
     public void testSuppressGeneratedRs() {

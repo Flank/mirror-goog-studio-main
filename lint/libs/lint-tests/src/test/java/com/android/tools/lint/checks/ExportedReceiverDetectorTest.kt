@@ -25,8 +25,7 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
 
     fun testNoExportReceiver() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="test.pkg">
@@ -51,14 +50,16 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                      ~~~~~~~~
             0 errors, 1 warnings
             """.trimIndent()
-        ).expectFixDiffs("""
+        ).expectFixDiffs(
+            """
             Fix for AndroidManifest.xml line 7: Set exported:
             @@ -8 +8
             -         <receiver android:name="com.google.android.c2dm.C2DMBroadcastReceiver" >
             +         <receiver
             +             android:name="com.google.android.c2dm.C2DMBroadcastReceiver"
             +             android:exported="[TODO]|" >
-        """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     fun testNoExportActivity() {
@@ -89,20 +90,21 @@ class ExportedReceiverDetectorTest : AbstractCheckTest() {
                      ~~~~~~~~
             0 errors, 1 warnings
             """.trimIndent()
-        ).expectFixDiffs("""
+        ).expectFixDiffs(
+            """
             Fix for AndroidManifest.xml line 7: Set exported:
             @@ -8 +8
             -         <activity android:name="com.example.MainActivity" >
             +         <activity
             +             android:name="com.example.MainActivity"
             +             android:exported="[TODO]|" >
-        """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     fun testExport() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="test.pkg">

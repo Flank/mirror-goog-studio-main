@@ -341,6 +341,7 @@ protected constructor() {
         map[LINT_WARNING.id] = LINT_WARNING
         map[BASELINE.id] = BASELINE
         map[UNKNOWN_ISSUE_ID.id] = UNKNOWN_ISSUE_ID
+        map[CANNOT_ENABLE_HIDDEN.id] = CANNOT_ENABLE_HIDDEN
         map[OBSOLETE_LINT_CHECK.id] = OBSOLETE_LINT_CHECK
         return map
     }
@@ -507,8 +508,34 @@ protected constructor() {
         )
 
         /**
-         * Issue reported by lint for various other issues which prevents lint from
-         * running normally when it's not necessarily an error in the user's code base.
+         * When lint runs in partial analysis mode, any issues that are
+         * turned off in a library cannot be re-enabled in the main
+         * project.
+         */
+        @JvmField
+        val CANNOT_ENABLE_HIDDEN = Issue.create(
+            id = "CannotEnableHidden",
+            briefDescription = "Issue Already Disabled",
+            explanation =
+                """
+                Any issues that are specifically disabled in a library cannot be re-enabled \
+                in a dependent project. To fix this you need to also enable the issue in \
+                the library project.
+
+                (This also applies for issues that are off by default; they cannot just be \
+                enabled in a dependent project; they must also be enabled in all the \
+                libraries the project depends on.)
+                """,
+            category = Category.LINT,
+            priority = 1,
+            severity = Severity.WARNING,
+            implementation = EMPTY_IMPLEMENTATION
+        )
+
+        /**
+         * Issue reported by lint for various other issues which
+         * prevents lint from running normally when it's not necessarily
+         * an error in the user's code base.
          */
         @JvmField // temporarily
         val BASELINE = Issue.create(

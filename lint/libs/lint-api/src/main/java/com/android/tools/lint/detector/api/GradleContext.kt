@@ -59,21 +59,19 @@ class GradleContext(
     fun getPropertyPairCookie(cookie: Any): Any = cookie
 
     /**
-     * Reports an issue applicable to a given source location. The source location is used as the
-     * scope to check for suppress lint annotations.
+     * Reports an issue applicable to a given source location. The
+     * source location is used as the scope to check for suppress lint
+     * annotations.
      *
      * @param issue the issue to report
-     *
-     * @param cookie the node scope the error applies to. The lint infrastructure will
-     *                     check whether there are suppress annotations on this node (or its
-     *                     enclosing nodes) and if so suppress the warning without involving the
-     *                     client.
-     *
+     * @param cookie the node scope the error applies to. The lint
+     *     infrastructure will check whether there are suppress
+     *     annotations on this node (or its enclosing nodes) and if
+     *     so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
-     *
      * @param message the message for this warning
-     *
-     * @param fix optional data to pass to the IDE for use by a quickfix.
+     * @param fix optional data to pass to the IDE for use by a
+     *     quickfix.
      */
     fun report(
         issue: Issue,
@@ -82,22 +80,8 @@ class GradleContext(
         message: String,
         fix: LintFix? = null
     ) {
-        val context = this
-        if (context.isEnabled(issue)) {
-            // Suppressed?
-            // Temporarily unconditionally checking for suppress comments in Gradle files
-            // since Studio insists on an AndroidLint id prefix
-            val checkComments = /*context.getClient().checkForSuppressComments() &&*/
-                context.containsCommentSuppress()
-            if (checkComments) {
-                val startOffset = gradleVisitor.getStartOffset(context, cookie)
-                if (startOffset >= 0 && context.isSuppressedWithComment(startOffset, issue)) {
-                    return
-                }
-            }
-
-            super.doReport(issue, location, message, fix)
-        }
+        val incident = Incident(issue, cookie, location, message, fix)
+        driver.client.report(this, incident)
     }
 
     companion object {

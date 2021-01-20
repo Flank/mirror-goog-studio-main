@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 import org.intellij.lang.annotations.Language;
 
@@ -123,9 +124,6 @@ public class VectorDetectorTest extends AbstractCheckTest {
                         + "src/main/res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/main/res/drawable/foo.xml:11: Warning: Update Gradle plugin version to 1.5+ to correctly handle <group> tags in generated bitmaps [VectorRaster]\n"
-                        + "    <group\n"
-                        + "     ~~~~~\n"
                         + "src/main/res/drawable/foo.xml:19: Warning: Resource references will not work correctly in images generated for this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "            android:strokeColor=\"@color/white\"\n"
                         + "                                 ~~~~~~~~~~~~\n"
@@ -138,7 +136,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                         + "src/main/res/drawable/foo.xml:25: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "            android:trimPathStart=\"0\" />\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 8 warnings";
+                        + "0 errors, 7 warnings";
 
         //noinspection all // Sample code
         lint().files(
@@ -215,19 +213,28 @@ public class VectorDetectorTest extends AbstractCheckTest {
 
     public void testNoWarningsWithSupportLibVectors() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=206005
-        lint().files(
-                        manifest().minSdk(14),
-                        xml("src/main/res/drawable/foo.xml", VECTOR),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
-                .run()
-                .expectClean();
+        ProjectDescription library =
+                project(
+                                manifest().minSdk(14),
+                                xml("src/main/res/drawable/foo.xml", VECTOR),
+                                gradle("// Gradle dependencies"))
+                        .name("library");
+
+        ProjectDescription main =
+                project(
+                                manifest().minSdk(23),
+                                gradle(
+                                        ""
+                                                + "buildscript {\n"
+                                                + "    dependencies {\n"
+                                                + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                                                + "    }\n"
+                                                + "}\n"
+                                                + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
+                        .name("App")
+                        .dependsOn(library);
+
+        lint().projects(library, main).run().expectClean();
     }
 
     public void testWarnWithGradient() {
@@ -242,21 +249,29 @@ public class VectorDetectorTest extends AbstractCheckTest {
                         + "src/main/res/drawable/foo.xml:10: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 3 warnings\n";
+                        + "0 errors, 3 warnings";
 
-        //noinspection all // Sample code
-        lint().files(
-                        manifest().minSdk(23),
-                        xml("src/main/res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
-                                        + "    }\n"
-                                        + "}\n"))
-                .run()
-                .expect(expected);
+        ProjectDescription library =
+                project(
+                                manifest().minSdk(23),
+                                xml("src/main/res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
+                                gradle("// Gradle dependencies"))
+                        .name("library");
+
+        ProjectDescription main =
+                project(
+                                manifest().minSdk(23),
+                                gradle(
+                                        ""
+                                                + "buildscript {\n"
+                                                + "    dependencies {\n"
+                                                + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                                                + "    }\n"
+                                                + "}\n"))
+                        .name("App")
+                        .dependsOn(library);
+
+        lint().projects(library, main).reportFrom(library).run().expect(expected);
     }
 
     public void testNoWarningsWithGradientAndMinSdk24() {
@@ -287,21 +302,29 @@ public class VectorDetectorTest extends AbstractCheckTest {
                         + "src/main/res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                         + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 3 warnings\n";
+                        + "0 errors, 3 warnings";
 
-        //noinspection all // Sample code
-        lint().files(
-                        manifest().minSdk(23),
-                        xml("src/main/res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
-                        gradle(
-                                ""
-                                        + "buildscript {\n"
-                                        + "    dependencies {\n"
-                                        + "        classpath 'com.android.tools.build:gradle:3.2.0-alpha1'\n"
-                                        + "    }\n"
-                                        + "}\n"))
-                .run()
-                .expect(expected);
+        ProjectDescription library =
+                project(
+                                manifest().minSdk(23),
+                                xml("src/main/res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
+                                gradle("// Gradle dependencies"))
+                        .name("library");
+
+        ProjectDescription main =
+                project(
+                                manifest().minSdk(23),
+                                gradle(
+                                        ""
+                                                + "buildscript {\n"
+                                                + "    dependencies {\n"
+                                                + "        classpath 'com.android.tools.build:gradle:3.2.0-alpha1'\n"
+                                                + "    }\n"
+                                                + "}\n"))
+                        .name("App")
+                        .dependsOn(library);
+
+        lint().projects(library, main).reportFrom(library).run().expect(expected);
     }
 
     public void testNoWarningsWithFillTypeAndMinSdk24() {

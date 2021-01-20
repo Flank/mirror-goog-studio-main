@@ -116,17 +116,27 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
     }
 
     fun testBasic1() {
-        val expected = (
-            "" +
-                "src/test/pkg/WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button [WrongViewCast]\n" +
-                "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
-                "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "    src/test/pkg/WrongCastActivity.java:13: Id bound to a Button in casts.xml\n" +
-                "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
-                "                                                                ~~~~~~~~~~~\n" +
-                "1 errors, 0 warnings\n"
+        lint().files(casts, wrongCastActivity, rClass)
+            .run()
+            .expect(
+                """
+                src/test/pkg/WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button [WrongViewCast]
+                        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
+                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    src/test/pkg/WrongCastActivity.java:13: Id bound to a Button in casts.xml
+                        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
+                                                                                ~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
             )
-        lint().files(casts, wrongCastActivity, rClass).run().expect(expected)
+            .expectFixDiffs(
+                """
+                Fix for src/test/pkg/WrongCastActivity.java line 13: Cast to Button:
+                @@ -13 +13
+                -         ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
+                +         ToggleButton toggleButton = (Button) findViewById(R.id.button);
+                """
+            )
     }
 
     fun testBasic2() {
@@ -263,32 +273,6 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                     "}\n"
             )
         ).run().expectClean()
-    }
-
-    fun testIncremental() {
-        val expected = (
-            "" +
-                "src/test/pkg/WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button [WrongViewCast]\n" +
-                "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
-                "                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "    src/test/pkg/WrongCastActivity.java:13: Id bound to a Button in casts.xml\n" +
-                "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n" +
-                "                                                                ~~~~~~~~~~~\n" +
-                "1 errors, 0 warnings"
-            )
-
-        lint().files(casts, wrongCastActivity, rClass)
-            .incremental("src/test/pkg/WrongCastActivity.java")
-            .run()
-            .expect(expected)
-            .expectFixDiffs(
-                """
-                Fix for src/test/pkg/WrongCastActivity.java line 13: Cast to Button:
-                @@ -13 +13
-                -         ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);
-                +         ToggleButton toggleButton = (Button) findViewById(R.id.button);
-                """
-            )
     }
 
     fun testQuickFix() {

@@ -42,6 +42,8 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
+import static com.android.tools.lint.detector.api.Constraints.minSdkAtLeast;
+import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 import static com.android.tools.lint.detector.api.Lint.endsWith;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
@@ -61,9 +63,11 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceEvaluator;
@@ -129,6 +133,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     // TODO: Use the new merged manifest model
 
     private static final boolean INCLUDE_LDPI;
+
+    private static final String KEY_MIN_API = "minSdk";
 
     static {
         boolean includeLdpi = false;
@@ -489,7 +495,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     fileSizes = new HashMap<>();
                 }
                 if (context.isEnabled(NOTIFICATION_ICON_COMPATIBILITY)
-                        && context.getMainProject().getMinSdk() < 21) {
+                        && context.getProject().getMinSdk() < 21) {
                     notificationIconFiles = new HashMap<>();
                 }
                 Map<File, Set<String>> folderToNames = new HashMap<>();
@@ -553,7 +559,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                 // use API level 17 to determine whether WebP is safe since that also includes
                 // 4.2.0)
 
-                if (checkWebp && context.getMainProject().getMinSdkVersion().getApiLevel() >= 18) {
+                if (checkWebp) {
                     // (1) See if we have any png or jpeg images
                     // (2) Use the location of the largest such image
                     File largest = null;
@@ -583,7 +589,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                 "One or more images in this project can be converted to "
                                         + "the WebP format which typically results in smaller file sizes, "
                                         + "even for lossless conversion";
-                        context.report(WEBP_ELIGIBLE, location, message);
+                        Incident incident = new Incident(WEBP_ELIGIBLE, location, message);
+                        context.report(incident, minSdkAtLeast(18));
                     }
                 }
             }
@@ -599,7 +606,9 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                             + "Android versions below 5.0 (API 21)",
                                     entry.getKey());
                     Location location = Location.create(file);
-                    context.report(NOTIFICATION_ICON_COMPATIBILITY, location, message);
+                    Incident incident =
+                            new Incident(NOTIFICATION_ICON_COMPATIBILITY, location, message);
+                    context.report(incident, minSdkLessThan(21));
                 }
             }
         }
@@ -1594,7 +1603,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         // all files in this folder have the same folder minSdkVersion
         int minSdk =
                 Math.max(
-                        context.getMainProject().getMinSdk(),
+                        context.getProject().getMinSdk(),
                         context.getDriver().getResourceFolderVersion(files[0]));
         if (minSdk >= 18) {
             return;
@@ -1610,7 +1619,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             if (isAdaptiveIconLayer(baseName)) {
                 Location location = Location.create(file);
                 String message = "Adaptive icon bitmaps must be in PNG format";
-                context.report(WEBP_UNSUPPORTED, location, message);
+                Incident incident = new Incident(WEBP_UNSUPPORTED, location, message);
+                context.report(incident, minSdkLessThan(18));
                 continue;
             }
 
@@ -1624,11 +1634,31 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                             simpleFormat
                                     ? "WebP requires Android 4.0 (API 15)"
                                     : "WebP extended or lossless format requires Android 4.2.1 (API 18)";
-                    message += "; current minSdkVersion is " + minSdk;
-                    context.report(WEBP_UNSUPPORTED, location, message);
+                    message += "; current minSdkVersion is %1$s";
+                    Incident incident = new Incident(WEBP_UNSUPPORTED, location, message);
+                    // With folder versions, could be higher than the app minSdkVersion
+                    context.report(incident, map().put(KEY_MIN_API, minSdk));
                 }
             }
         }
+    }
+
+    @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        assert incident.getIssue() == WEBP_UNSUPPORTED;
+        int minSdk = context.getMainProject().getMinSdk();
+        if (minSdk < 18) {
+            // include minSdkVersion in the message
+            String message = incident.getMessage();
+            assert message.contains("%");
+            int fileMin = map.getInt(KEY_MIN_API, 1);
+            int actualMinSdk = Math.max(minSdk, fileMin);
+            incident.setMessage(String.format(message, actualMinSdk));
+            return true;
+        }
+
+        return false;
     }
 
     /** Check that launcher icons do not fill every pixel in the image */
@@ -2005,21 +2035,23 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
             String baseName = getBaseName(name);
 
             if (isLauncherIcon(folderName, baseName)) {
+                // TODO: Update according to
+                // https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive
                 // Launcher icons
-                checkSize(context, folderName, file, 48, 48, true, /*exact*/ folderConfig);
+                checkSize(context, folderName, file, 48, 48, true, folderConfig);
             } else if (isActionBarIcon(folderName, baseName)) {
-                checkSize(context, folderName, file, 32, 32, true, /*exact*/ folderConfig);
+                checkSize(context, folderName, file, 32, 32, true, folderConfig);
             } else if (name.startsWith("ic_dialog_")) {
                 // Dialog
-                checkSize(context, folderName, file, 32, 32, true, /*exact*/ folderConfig);
+                checkSize(context, folderName, file, 32, 32, true, folderConfig);
             } else if (name.startsWith("ic_tab_")) {
                 // Tab icons
-                checkSize(context, folderName, file, 32, 32, true, /*exact*/ folderConfig);
+                checkSize(context, folderName, file, 32, 32, true, folderConfig);
             } else if (isNotificationIcon(baseName)) {
                 // Notification icons
-                checkSize(context, folderName, file, 24, 24, true, /*exact*/ folderConfig);
+                checkSize(context, folderName, file, 24, 24, true, folderConfig);
             } else if (isAdaptiveIconLayer(baseName)) {
-                checkSize(context, folderName, file, 108, 108, true, /*exact*/ folderConfig);
+                checkSize(context, folderName, file, 108, 108, true, folderConfig);
             } else if (name.startsWith("ic_menu_")) {
                 // Menu icons (<=2.3 only: Replaced by action bar icons (ic_action_ in 3.0).
                 // However the table halfway down the page on

@@ -21,16 +21,20 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.sdklib.AndroidVersion
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.targetSdkAtLeast
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
-import com.android.utils.XmlUtils
+import com.android.utils.iterator
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.w3c.dom.Element
@@ -55,11 +59,9 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
     override fun getApplicableElements(): Collection<String> = listOf(TAG_USES_PERMISSION)
 
     override fun visitElement(context: XmlContext, element: Element) {
-        if (context.mainProject.targetSdk < INITIAL_API) return
-        if (element.tagName != TAG_USES_PERMISSION) return
         val permission = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
         if (permission.value == "android.permission.QUERY_ALL_PACKAGES") {
-            context.report(
+            val incident = Incident(
                 QUERY_ALL_PACKAGES_PERMISSION,
                 context.getLocation(permission),
                 """
@@ -67,6 +69,7 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
                 see https://g.co/dev/packagevisibility for details
                 """.trimIndent()
             )
+            context.report(incident, targetSdkAtLeast(INITIAL_API))
         }
     }
 
@@ -89,7 +92,6 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
     }
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
-        if (context.mainProject.targetSdk < INITIAL_API) return
         if (!context.isEnabled(QUERY_PERMISSIONS_NEEDED)) return
 
         val methodName = node.methodName
@@ -108,23 +110,20 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
         }
         if (!context.evaluator.isMemberInSubClassOf(method, intendedOwner)) return
 
-        val permissions = getQueryPermissions(context) ?: return
-
         if (methodName == "getInstalledPackages" || methodName == "getInstalledApplications") {
             // Special case: these methods generally imply the ability to query *all* packages.
-            if (!permissions.canQueryAllPackages) {
-                context.report(
-                    QUERY_PERMISSIONS_NEEDED,
-                    node.methodIdentifier ?: node,
-                    context.getLocation(node.methodIdentifier ?: node),
-                    """
-                    As of Android 11, this method no longer returns information about all apps; \
-                    see https://g.co/dev/packagevisibility for details
-                    """.trimIndent()
-                )
-            }
-        } else if (!permissions.canQuerySomePackages) {
-            context.report(
+            val incident = Incident(
+                QUERY_PERMISSIONS_NEEDED,
+                node.methodIdentifier ?: node,
+                context.getLocation(node.methodIdentifier ?: node),
+                """
+                As of Android 11, this method no longer returns information about all apps; \
+                see https://g.co/dev/packagevisibility for details
+                """.trimIndent()
+            )
+            context.report(incident, map().put(KEY_REQ_QUERY_ALL, true))
+        } else {
+            val incident = Incident(
                 QUERY_PERMISSIONS_NEEDED,
                 node.methodIdentifier ?: node,
                 context.getLocation(node.methodIdentifier ?: node),
@@ -133,17 +132,33 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
                 method; see https://g.co/dev/packagevisibility for details
                 """.trimIndent()
             )
+            context.report(incident, map().put(KEY_REQ_QUERY_ALL, false))
         }
     }
 
-    private fun getQueryPermissions(context: JavaContext): QueryPermissions? {
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        if (context.mainProject.targetSdk >= INITIAL_API) {
+            val requirePermissions = map.getBoolean(KEY_REQ_QUERY_ALL, null)
+                ?: return true
+            val permissions = getQueryPermissions(context) ?: return false
+            return !(
+                if (requirePermissions)
+                    permissions.canQueryAllPackages
+                else
+                    permissions.canQuerySomePackages
+                )
+        }
+        return false
+    }
+
+    private fun getQueryPermissions(context: Context): QueryPermissions? {
         cachedQueryPermissions?.let { return it }
 
         val manifest = context.mainProject.mergedManifest ?: return null
         var canQuerySomePackages = false
         var canQueryAllPackages = false
 
-        for (tag in XmlUtils.getSubTags(manifest.documentElement)) {
+        for (tag in manifest.documentElement) {
             when (tag.nodeName) {
                 "queries" -> {
                     canQuerySomePackages = true
@@ -165,6 +180,8 @@ class PackageVisibilityDetector : Detector(), XmlScanner, SourceCodeScanner {
     companion object {
         /** The API version in which package visibility restrictions were introduced. */
         private const val INITIAL_API = AndroidVersion.VersionCodes.R
+
+        private const val KEY_REQ_QUERY_ALL = "queryAll"
 
         @JvmField
         val QUERY_ALL_PACKAGES_PERMISSION = Issue.create(

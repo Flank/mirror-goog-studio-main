@@ -57,7 +57,7 @@ class XmlReporterTest {
         @Language("XML")
         val expected =
             """
-                <issues format="5" by="lint unittest">
+                <issues format="6" by="lint unittest">
 
                     <issue
                         id="UsesMinSdkAttributes"
@@ -118,16 +118,16 @@ class XmlReporterTest {
             .run()
             .checkXmlReport(
                 TestResultChecker { xml ->
-                    val testRoot = currentClient!!.knownProjects
-                        .iterator()
-                        .next()
-                        .dir
-                        .parent
-                    val actual = xml.replace(testRoot, "TESTROOT").replace('\\', '/')
+                    val testRoot = currentClient?.knownProjects?.firstOrNull()?.dir?.parent
+                    val actual = if (testRoot != null) {
+                        xml.replace(testRoot, "TESTROOT").replace('\\', '/')
+                    } else {
+                        xml
+                    }
                     @Language("XML")
                     val expected =
                         """
-                        <issues format="5" by="lint unittest">
+                        <issues format="6" by="lint unittest">
 
                             <issue
                                 id="UsesMinSdkAttributes"
@@ -178,7 +178,7 @@ class XmlReporterTest {
         @Language("XML")
         val expected =
             """
-            <issues format="5" by="lint unittest">
+            <issues format="6" by="lint unittest">
 
                 <issue
                     id="TypographyFractions"
@@ -222,7 +222,7 @@ class XmlReporterTest {
         @Language("XML")
         val expected =
             """
-            <issues format="5" by="lint unittest">
+            <issues format="6" by="lint unittest" type="baseline">
 
                 <issue
                     id="UsesMinSdkAttributes"
@@ -254,7 +254,7 @@ class XmlReporterTest {
             .run()
             .expectXml(
                 xmlPrologue + expected.trimIndent() + "\n",
-                intendedForBaseline = true
+                reportType = XmlFileType.BASELINE
             )
     }
 
@@ -263,7 +263,7 @@ class XmlReporterTest {
         @Language("XML")
         val expected =
             """
-            <issues format="5" by="lint unittest">
+            <issues format="6" by="lint unittest" type="report_with_fixes">
 
                 <issue
                     id="WakelockTimeout"
@@ -319,7 +319,7 @@ class XmlReporterTest {
             .run()
             .expectXml(
                 xmlPrologue + expected.trimIndent(),
-                includeFixes = true
+                reportType = XmlFileType.REPORT_WITH_FIXES
             )
     }
 
@@ -331,7 +331,7 @@ class XmlReporterTest {
         @Language("XML")
         val expected =
             """
-            <issues format="5" by="lint unittest">
+            <issues format="6" by="lint unittest" type="report_with_fixes">
 
                 <issue
                     id="Typos"
@@ -400,7 +400,7 @@ class XmlReporterTest {
             .run()
             .expectXml(
                 xmlPrologue + expected.trimIndent(),
-                includeFixes = true
+                reportType = XmlFileType.REPORT_WITH_FIXES
             )
     }
 
@@ -411,7 +411,7 @@ class XmlReporterTest {
         @Language("XML")
         val expected =
             """
-            <issues format="5" by="lint unittest">
+            <issues format="6" by="lint unittest" type="report_with_fixes">
 
                 <issue
                     id="EllipsizeMaxLines"
@@ -449,7 +449,8 @@ class XmlReporterTest {
                     <location
                         file="res/layout/sample.xml"
                         line="8"
-                        column="9"/>
+                        column="9"
+                        message="&lt;No location-specific message"/>
                 </issue>
 
             </issues>
@@ -477,7 +478,7 @@ class XmlReporterTest {
             .run()
             .expectXml(
                 xmlPrologue + expected.trimIndent(),
-                includeFixes = true
+                reportType = XmlFileType.REPORT_WITH_FIXES
             )
     }
 

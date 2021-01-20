@@ -20,6 +20,7 @@ import com.android.SdkConstants.DOT_XML
 import com.android.tools.lint.LintStats
 import com.android.tools.lint.Reporter
 import com.android.tools.lint.UastEnvironment
+import com.android.tools.lint.XmlFileType
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.LintBaseline
 import com.android.tools.lint.detector.api.Incident
@@ -42,7 +43,6 @@ import java.io.File
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.regex.Pattern.MULTILINE
@@ -103,7 +103,9 @@ class TestLintResult internal constructor(
         transformer: TestResultTransformer = TestResultTransformer { it },
         testMode: TestMode = defaultMode
     ): TestLintResult {
-        val throwable = states[testMode]?.firstThrowable
+        val state = states[testMode]
+            ?: error("Used expect(testMode=$testMode) with a TestMode not included in lint().testModes()")
+        val throwable = state.firstThrowable
         if (expectedException == null && !task.allowExceptions && throwable != null) {
             throw throwable
         }
@@ -296,7 +298,7 @@ class TestLintResult internal constructor(
                             message = TextFormat.RAW.convertTo(message, TextFormat.TEXT)
                         }
                         if (isXml) {
-                            val tag = incident.severity.description.toLowerCase(Locale.ROOT)
+                            val tag = incident.severity.toName()
                             startMarker = "<?$tag message=\"$message\"?>"
                             endMarker = "<?$tag?>"
                         } else {
@@ -510,9 +512,8 @@ class TestLintResult internal constructor(
     ): TestLintResult {
         return checkReport(
             html = true,
-            includeFixes = false,
             fullPaths = false,
-            intendedForBaseline = false,
+            xmlReportType = XmlFileType.REPORT,
             transformer = transformer,
             checkers = *checkers
         )
@@ -555,9 +556,8 @@ class TestLintResult internal constructor(
     ): TestLintResult {
         return checkReport(
             xml = true,
-            includeFixes = false,
             fullPaths = false,
-            intendedForBaseline = false,
+            xmlReportType = XmlFileType.REPORT,
             transformer = transformer,
             checkers = *checkers
         )
@@ -594,16 +594,14 @@ class TestLintResult internal constructor(
      */
     fun checkXmlReport(
         vararg checkers: TestResultChecker,
-        includeFixes: Boolean = false,
         fullPaths: Boolean = false,
-        intendedForBaseline: Boolean = false,
+        reportType: XmlFileType = XmlFileType.REPORT,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         return checkReport(
             xml = true,
-            includeFixes = includeFixes,
             fullPaths = fullPaths,
-            intendedForBaseline = intendedForBaseline,
+            xmlReportType = reportType,
             transformer = transformer,
             checkers = *checkers
         )
@@ -616,14 +614,13 @@ class TestLintResult internal constructor(
      */
     fun expectXml(
         @Language("XML") expected: String,
-        includeFixes: Boolean = false,
         fullPaths: Boolean = false,
-        intendedForBaseline: Boolean = false,
+        reportType: XmlFileType = XmlFileType.REPORT,
         transformer: TestResultTransformer = TestResultTransformer { it }
     ): TestLintResult {
         val trimmed = normalizeOutput(expected.trimIndent())
         return checkXmlReport(
-            checkers = *arrayOf(
+            checkers = arrayOf(
                 TestResultChecker { actual ->
                     val s = normalizeOutput(actual.trimIndent())
                     if (s != trimmed && s.replace('\\', '/') == trimmed) {
@@ -636,9 +633,8 @@ class TestLintResult internal constructor(
                     }
                 }
             ),
-            includeFixes = includeFixes,
             fullPaths = fullPaths,
-            intendedForBaseline = intendedForBaseline,
+            reportType = reportType,
             transformer = transformer
         )
     }
@@ -699,9 +695,8 @@ class TestLintResult internal constructor(
         xml: Boolean = false,
         html: Boolean = false,
         sarif: Boolean = false,
-        includeFixes: Boolean = false,
+        xmlReportType: XmlFileType = XmlFileType.REPORT,
         fullPaths: Boolean = false,
-        intendedForBaseline: Boolean = false,
         transformer: TestResultTransformer = TestResultTransformer { it },
         vararg checkers: TestResultChecker
     ): TestLintResult {
@@ -744,16 +739,7 @@ class TestLintResult internal constructor(
             file.parentFile.mkdirs()
             val reporter = when {
                 html -> Reporter.createHtmlReporter(client, file, client.flags)
-                xml -> {
-                    Reporter.createXmlReporter(client, file, false, includeFixes).also {
-                        if (includeFixes) {
-                            it.includeFixes = true
-                        }
-                        if (intendedForBaseline) {
-                            it.isIntendedForBaseline = true
-                        }
-                    }
-                }
+                xml -> Reporter.createXmlReporter(client, file, xmlReportType)
                 else -> Reporter.createSarifReporter(client, file)
             }
 

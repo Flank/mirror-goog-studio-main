@@ -360,6 +360,11 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
     ) {
         // Incremental mode
         val client = context.client
+        // TODO: Get rid of the non-incremental version! One complication is how to flag
+        // collate results and how to avoid repeatedly reporting them
+        if (!context.isGlobalAnalysis()) {
+            return
+        }
         val resources = client.getResources(context.mainProject, LOCAL_DEPENDENCIES)
         val namespace = context.project.resourceNamespace
         // See https://issuetracker.google.com/147213347

@@ -288,7 +288,8 @@ public class WrongIdDetector extends LayoutDetector {
         }
 
         LintClient client = context.getClient();
-        Project project = context.getMainProject();
+        boolean full = context.isGlobalAnalysis();
+        Project project = full ? context.getMainProject() : context.getProject();
         ResourceRepository resources = client.getResources(project, LOCAL_DEPENDENCIES);
         List<ResourceItem> layouts =
                 resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT, included);

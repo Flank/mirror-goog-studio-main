@@ -106,7 +106,7 @@ class NotificationTrampolineDetector : Detector(), SourceCodeScanner {
             .addMoreInfo("https://developer.android.com/guide/topics/ui/notifiers/notifications?hl=en")
     }
 
-    override fun getApplicableMethodNames(): List<String>? = listOf(
+    override fun getApplicableMethodNames(): List<String> = listOf(
         "setContentIntent", "setFullScreenIntent", "addAction"
     )
 

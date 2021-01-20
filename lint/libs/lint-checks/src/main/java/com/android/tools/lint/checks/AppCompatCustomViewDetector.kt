@@ -46,12 +46,12 @@ import org.jetbrains.uast.UClass
 /** Looks for subclasses of custom widgets in projects using app compat */
 class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return listOf(CLASS_VIEW)
     }
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
-        val project = context.mainProject
+        val project = if (context.isGlobalAnalysis()) context.mainProject else context.project
         val dependsOnAppCompat = project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
         if (dependsOnAppCompat != null && dependsOnAppCompat != true) {
             return

@@ -27,10 +27,12 @@ import static com.android.tools.lint.checks.RtlDetector.ATTRIBUTES;
 import static com.android.tools.lint.checks.RtlDetector.convertNewToOld;
 import static com.android.tools.lint.checks.RtlDetector.convertOldToNew;
 import static com.android.tools.lint.checks.RtlDetector.convertToOppositeDirection;
+import static com.android.tools.lint.checks.RtlDetector.getFolderVersion;
 import static com.android.tools.lint.checks.RtlDetector.isRtlAttributeName;
 
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
+import java.io.File;
 
 @SuppressWarnings("javadoc")
 public class RtlDetectorTest extends AbstractCheckTest {
@@ -83,19 +85,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
 
     public void testTarget14() {
         lint().files(projectProperties().compileSdk(17), mMinsdk5targetsdk14).run().expectClean();
-    }
-
-    public void testOlderCompilationTarget() {
-        lint().files(
-                        source(
-                                "project.properties",
-                                ""
-                                        + "target=android-14\n"
-                                        + "proguard.config=${sdk.dir}/foo.cfg:${user.home}/bar.pro;myfile.txt\n"),
-                        manifest().minSdk(5).targetSdk(17),
-                        mRtl)
-                .run()
-                .expectClean();
     }
 
     public void testUseStart() {
@@ -494,6 +483,24 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         mRtlQuickFixed)
                 .issues(RtlDetector.USE_START)
                 .run()
+                .expect(
+                        ""
+                                + "res/layout/rtl_quick_fixed.xml:10: Warning: Consider replacing android:layout_marginLeft with android:layout_marginStart=\"35dip\" to better support right-to-left layouts [RtlHardcoded]\n"
+                                + "        android:layout_marginLeft=\"35dip\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/rtl_quick_fixed.xml:11: Warning: Consider replacing android:layout_marginRight with android:layout_marginEnd=\"40dip\" to better support right-to-left layouts [RtlHardcoded]\n"
+                                + "        android:layout_marginRight=\"40dip\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/rtl_quick_fixed.xml:12: Warning: Consider replacing android:paddingLeft with android:paddingStart=\"25dip\" to better support right-to-left layouts [RtlHardcoded]\n"
+                                + "        android:paddingLeft=\"25dip\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/rtl_quick_fixed.xml:13: Warning: Consider replacing android:paddingRight with android:paddingEnd=\"20dip\" to better support right-to-left layouts [RtlHardcoded]\n"
+                                + "        android:paddingRight=\"20dip\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~\n"
+                                + "res/layout/rtl_quick_fixed.xml:18: Warning: Redundant attribute layout_marginLeft; already defining layout_marginStart with targetSdkVersion 17 [RtlHardcoded]\n"
+                                + "        android:layout_marginLeft=\"35dip\"\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 5 warnings\n")
                 .verifyFixes()
                 .window(1)
                 .expectFixDiffs(
@@ -612,13 +619,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
     public void testOk1() {
         // targetSdkVersion < 17
         lint().files(mRtl).run().expectClean();
-    }
-
-    public void testOk2() {
-        // build target < 14
-        lint().files(projectProperties().compileSdk(10), manifest().minSdk(5).targetSdk(17), mRtl)
-                .run()
-                .expectClean();
     }
 
     public void testNullLocalName() {
@@ -849,7 +849,6 @@ public class RtlDetectorTest extends AbstractCheckTest {
                         + "                       ~~~~\n"
                         + "0 errors, 1 warnings\n";
         lint().files(
-                        projectProperties().compileSdk(17),
                         manifest().minSdk(5).targetSdk(17),
                         java(
                                 ""
@@ -884,6 +883,23 @@ public class RtlDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expect(expected);
+    }
+
+    public void testGetFolderVersion() {
+        checkFolderVersion(-1, "");
+        checkFolderVersion(-1, "fo-o");
+        checkFolderVersion(-1, "foo/bar");
+        checkFolderVersion(-1, "layout/main.xml");
+        checkFolderVersion(-1, "layout-land/main.xml");
+        checkFolderVersion(11, "layout-land-v11/main.xml");
+        checkFolderVersion(11, "/layout-land-v11/main.xml");
+        checkFolderVersion(11, "layout-land-v11/main.xml-");
+        checkFolderVersion(11, "/path/to/layout-land-v11/main.xml");
+        checkFolderVersion(11, "C:\\path\\to\\layout-land-v11\\main.xml");
+    }
+
+    private void checkFolderVersion(int version, String path) {
+        assertEquals(version, getFolderVersion(new File(path)));
     }
 
     @SuppressWarnings("all") // Sample code

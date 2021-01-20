@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
+
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
@@ -956,6 +959,54 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testLibraryActivityConsumedFromTargetPreS() {
+        // Check that implicitly exported via intent filter works for target < 31
+        ProjectDescription lib = project(noExportButIntentFilter).type(LIBRARY);
+        ProjectDescription app = project(manifest().minSdk(16).targetSdk(19)).dependsOn(lib);
+
+        lint().projects(lib, app)
+                .run()
+                .expect(
+                        ""
+                                + "../lib/AndroidManifest.xml:11: Warning: Exported service does not require permission [ExportedService]\n"
+                                + "        <service\n"
+                                + "         ~~~~~~~\n"
+                                + "0 errors, 1 warnings");
+    }
+
+    public void testLibraryActivityConsumedFromTargetS() {
+        // Check that not implicitly exported via intent filter for target >= 31
+        ProjectDescription lib = project(noExportButIntentFilter).type(LIBRARY);
+        ProjectDescription app = project(manifest().minSdk(16).targetSdk(31)).dependsOn(lib);
+        lint().projects(lib, app).run().expectClean();
+    }
+
+    private final TestFile noExportButIntentFilter =
+            manifest(
+                    ""
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    package=\"foo.bar2\"\n"
+                            + "    android:versionCode=\"1\"\n"
+                            + "    android:versionName=\"1.0\" >\n"
+                            + "\n"
+                            + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                            + "\n"
+                            + "    <application\n"
+                            + "        android:icon=\"@drawable/ic_launcher\"\n"
+                            + "        android:label=\"@string/app_name\" >\n"
+                            + "        <service\n"
+                            + "            android:label=\"@string/app_name\"\n"
+                            + "            android:name=\"com.sample.service.serviceClass\"\n"
+                            + "            android:process=\":remote\" >\n"
+                            + "            <intent-filter >\n"
+                            + "                <action android:name=\"com.sample.service.serviceClass\" >\n"
+                            + "                </action>\n"
+                            + "            </intent-filter>\n"
+                            + "        </service>\n"
+                            + "    </application>\n"
+                            + "\n"
+                            + "</manifest>\n");
 
     @SuppressWarnings("all") // Sample code
     private TestFile mStrings =

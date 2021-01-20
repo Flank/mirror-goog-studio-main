@@ -24,13 +24,13 @@ import org.w3c.dom.Element
 interface XmlScanner : FileScanner, XmlScannerConstants {
 
     /**
-     * Returns the list of elements that this detector wants to analyze. If non
-     * null, this detector will be called (specifically, the
-     * [.visitElement] method) for each matching element in the document.
+     * Returns the list of elements that this detector wants to analyze.
+     * If non null, this detector will be called (specifically, the
+     * [visitElement] method) for each matching element in the document.
      *
      * @return a collection of elements, or null, or the special
-     * [XmlScannerConstants.ALL] marker to indicate that every single
-     * element should be analyzed.
+     *     [XmlScannerConstants.ALL] marker to indicate
+     *     that every single element should be analyzed.
      */
     fun getApplicableElements(): Collection<String>?
 
@@ -49,13 +49,14 @@ interface XmlScanner : FileScanner, XmlScannerConstants {
     fun visitElementAfter(context: XmlContext, element: Element)
 
     /**
-     * Returns the list of attributes that this detector wants to analyze. If non
-     * null, this detector will be called (specifically, the
-     * [.visitAttribute] method) for each matching attribute in the document.
+     * Returns the list of attributes that this detector wants to
+     * analyze. If non null, this detector will be called (specifically,
+     * the [visitAttribute] method) for each matching attribute in the
+     * document.
      *
      * @return a collection of attributes, or null, or the special
-     * [XmlScannerConstants.ALL] marker to indicate that every single
-     * attribute should be analyzed.
+     *     [XmlScannerConstants.ALL] marker to indicate
+     *     that every single attribute should be analyzed.
      */
     fun getApplicableAttributes(): Collection<String>?
 

@@ -30,7 +30,6 @@ import static com.android.utils.BuildScriptUtil.findGradleBuildFile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.JavaEvaluator;
@@ -49,7 +48,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.tools.lint.model.LintModelModule;
 import com.android.tools.lint.model.LintModelModuleType;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
@@ -105,25 +103,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
      * instant app module
      */
     private static boolean isInstantApp(@NonNull Context context) {
-        Project mainProject = context.getMainProject();
-        LintModelModule model = mainProject.getBuildModule();
-        if (model == null) {
-            return false;
-        }
-        GradleVersion modelVersion = mainProject.getGradleModelVersion();
-        if (modelVersion == null) {
-            return false;
-        }
-        if (!modelVersion.isAtLeast(2, 4, 0, "alpha", 1, false)) {
-            return false;
-        }
-
-        if (isInstantApp(mainProject)) {
-            return true;
-        }
-
-        Project project = context.getProject();
-        return project != mainProject && isInstantApp(project);
+        return isInstantApp(context.getProject());
     }
 
     /** Checks whether the given project is an instant app module */
@@ -154,6 +134,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
                     break;
                 }
 
+                // This check is probably not relevant anymore
             case TAG_USES_SDK:
                 {
                     Attr targetSdkVersionNode =
@@ -212,7 +193,11 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
     }
 
     @Override
-    public void afterCheckRootProject(@NonNull Context context) {
+    public void checkMergedProject(@NonNull Context context) {
+        checkMergedManifest(context);
+    }
+
+    private static void checkMergedManifest(@NonNull Context context) {
         if (context.getProject() != context.getMainProject()) {
             return;
         }

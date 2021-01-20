@@ -18,6 +18,7 @@ package com.android.tools.lint.detector.api
 
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
@@ -165,7 +166,7 @@ abstract class Detector {
      */
     open fun beforeCheckEachProject(context: Context) {
         // preserve old semantics of afterCheckLibraryProject
-        if (context.project != context.mainProject) {
+        if (context.project !== context.mainProject) {
             @Suppress("DEPRECATION")
             beforeCheckLibraryProject(context)
         }
@@ -337,11 +338,11 @@ abstract class Detector {
     open fun afterCheckFile(context: Context) {}
 
     /**
-     * Returns the expected speed of this detector.
-     * The issue parameter is made available for subclasses which analyze multiple issues
-     * and which need to distinguish implementation cost by issue. If the detector does
-     * not analyze multiple issues or does not vary in speed by issue type, just override
-     * [.getSpeed] instead.
+     * Returns the expected speed of this detector. The issue parameter
+     * is made available for subclasses which analyze multiple issues
+     * and which need to distinguish implementation cost by issue. If
+     * the detector does not analyze multiple issues or does not vary in
+     * speed by issue type, just override [getSpeed] instead.
      *
      * @param issue the issue to look up the analysis speed for
      * @return the expected speed of this detector
@@ -625,4 +626,79 @@ abstract class Detector {
 
     /** Creates a lint fix builder. Just a convenience wrapper around [LintFix.create].  */
     protected open fun fix(): LintFix.Builder = LintFix.create()
+
+    /**
+     * Creates a [LintMap]. This is here for convenience to make the
+     * syntax for reporting incidents with maps concise, e.g.
+     *
+     *     context.report(incident, map().put(KEY_REQ_QUERY_ALL, false))
+     *
+     * (and is similar to the existing [fix] method.)
+     */
+    protected fun map(): LintMap = LintMap()
+
+    /**
+     * Callback to detectors that add partial results (by adding entries
+     * to the map returned by [LintClient.getPartialResults]). This is
+     * where the data should be analyzed and merged and results reported
+     * (via [Context.report]) to lint.
+     */
+    open fun checkPartialResults(context: Context, partialResults: PartialResult) {
+        // Don't call super.processPartialResults! This is here to make sure you
+        // don't accidentally forget to override this if your detector reports
+        // partial results.
+        error(
+            this.javaClass.simpleName +
+                ": You must override " +
+                "Detector.processPartialResults(Context, data: List<LintMap>) " +
+                "when you report data via Context.reportPartialResult (and don't " +
+                "call super.processPartialResults!)"
+        )
+    }
+
+    /**
+     * Lint is aggregating provisional data; perform any additional
+     * checks which are allowed now (looking at global data like
+     * [Project.getMergedManifest] etc. This serves a similar purpose
+     * to [afterCheckRootProject], but is a separate method because
+     * this method will **not** be invoked on the same instance of
+     * the detector, so you cannot accumulate state while looking at
+     * other files and then process it in this method; instead, any
+     * state storage has to go through [LintClient.getPartialResults],
+     * and then handle that data in [Detector.checkPartialResults].
+     *
+     * However, there are cases where you don't actually depend on any
+     * earlier results; you simply want to look at state which is only
+     * available when the merged project is known, such as the merged
+     * manifest.
+     *
+     * You could add some fake partial results to trigger a callback
+     * to [Detector.checkPartialResults], but that's not very clean.
+     * Therefore, you can instead override this method, which will be
+     * called for all detectors when merging in partial results, and
+     * where you can report any issues discovered in the merged project
+     * context.
+     */
+    open fun checkMergedProject(context: Context) {
+    }
+
+    /**
+     * Filter which looks at incidents previously reported via
+     * [Context.report] with a [LintMap], and returns false if the issue
+     * does not apply in the current reporting project context, or true
+     * if the issue should be reported. For issues that are accepted,
+     * the detector is also allowed to mutate the issue, such as
+     * customizing the error message further.
+     */
+    open fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        // Don't call super.accept! This is here to make sure you
+        // don't accidentally forget to override this if your detector reports
+        // issues conditionally.
+        error(
+            this.javaClass.simpleName +
+                ": You must override " +
+                "Detector.filterIncident(Context, Incident, LintMap) " +
+                "when you report conditional incidents via Context.report(Incident, LintMap)"
+        )
+    }
 }

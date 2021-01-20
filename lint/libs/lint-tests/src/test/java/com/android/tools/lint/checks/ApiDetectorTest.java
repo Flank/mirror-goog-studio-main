@@ -20,6 +20,7 @@ import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOT
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
 import static com.android.tools.lint.checks.ApiDetector.KEY_REQUIRES_API;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
+import static com.android.tools.lint.checks.infrastructure.TestMode.PARTIAL;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -187,6 +188,59 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        window.decorView.systemUiVisibility = SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR\n"
                                         + "    }\n"
                                         + "\n"
+                                        + "}"))
+                .run()
+                .expectClean();
+    }
+
+    public void testDesugaring() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import java.io.FileWriter;\n"
+                                        + "import java.io.IOException;\n"
+                                        + "import java.util.Objects;\n"
+                                        + "\n"
+                                        + "import static java.lang.Long.compare;\n"
+                                        + "\n"
+                                        + "public class DesugaringTest {\n"
+                                        + "    public void simple(Object parameter1, long long1, long long2) {\n"
+                                        + "        Objects.requireNonNull(parameter1);\n"
+                                        + "        int result = compare(long1, long2);\n"
+                                        + "        try {\n"
+                                        + "           new FileWriter(\"whatever\");\n"
+                                        + "        }\n"
+                                        + "        catch(IOException e){\n"
+                                        + "            RuntimeException re= new RuntimeException(e.getMessage());\n"
+                                        + "            re.addSuppressed(e);\n"
+                                        + "            throw re;\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        // Use AGP < 2.4.0: no desugaring in the library
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        // ...but in the app module, we use it:
+                        gradle(
+                                "../main/build.gradle",
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:4.0.0'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "android {\n"
+                                        + "    compileOptions {\n"
+                                        + "        sourceCompatibility JavaVersion.VERSION_1_8\n"
+                                        + "        targetCompatibility JavaVersion.VERSION_1_8\n"
+                                        + "    }\n"
                                         + "}"))
                 .run()
                 .expectClean();
@@ -584,16 +638,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // Regression test for b/37137262
         String expected =
                 ""
-                        + "res/layout/linear.xml:8: Warning: Attribute android:foreground has no effect on API levels lower than 23 (current min is 21) [UnusedAttribute]\n"
+                        + "../lib/res/layout/linear.xml:8: Warning: Attribute android:foreground has no effect on API levels lower than 23 (current min is 21) [UnusedAttribute]\n"
                         + "    android:foreground=\"?selectableItemBackground\"\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "res/layout/linear.xml:25: Warning: Attribute android:foreground has no effect on API levels lower than 23 (current min is 21) [UnusedAttribute]\n"
+                        + "../lib/res/layout/linear.xml:25: Warning: Attribute android:foreground has no effect on API levels lower than 23 (current min is 21) [UnusedAttribute]\n"
                         + "  <test.pkg.MyCustomView android:foreground=\"?selectableItemBackground\"\n"
                         + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings";
 
         lint().files(
-                        manifest().minSdk(21),
+                        manifest().minSdk(15),
+                        manifest().to("../app/AndroidManifest.xml").minSdk(21),
                         xml(
                                 "res/layout/linear.xml",
                                 ""
@@ -782,6 +837,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(manifest().minSdk(11), mAttribute2)
+                // Lint check will include extra comment about how it the attribute is only
+                // relevant for minSdkVersion >= 11. In theory the provisional support should
+                // defer this computation until the reporting phase, but given that "all"
+                // minSdkVersions are >= 15 at this point it isn't worth the trouble.
+                .skipTestModes(PARTIAL)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -2530,6 +2590,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "1 errors, 1 warnings\n";
         lint().files(manifest().minSdk(10), projectProperties().compileSdk(19), mStyles2_class)
                 .checkMessage(this::checkReportedError)
+                .skipTestModes(PARTIAL)
                 .run()
                 .expect(expected);
     }
@@ -3615,56 +3676,58 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // 97006: Gradle lint does not recognize Context.getDrawable() as API 21+
         String expected =
                 ""
-                        + "app/src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.content.Context#getDrawable [NewApi]\n"
+                        + "src/test/pkg/MyFragment.java:10: Error: Call requires API level 21 (current min is 14): android.content.Context#getDrawable [NewApi]\n"
                         + "        getActivity().getDrawable(R.color.my_color);\n"
                         + "                      ~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
-        lint().files(
-                        manifest().pkg("foo.main").minSdk(14),
-                        projectProperties()
-                                .property("android.library.reference.1", "../LibraryProject"),
-                        java(
-                                ""
-                                        + "package foo.main;\n"
-                                        + "\n"
-                                        + "public class MainCode {\n"
-                                        + "    static {\n"
-                                        + "        System.out.println(R.string.string2);\n"
-                                        + "    }\n"
-                                        + "}\n"),
-                        java(
-                                ""
-                                        + "package foo.main;\n"
-                                        + "public class R {\n"
-                                        + "    public static class color {\n"
-                                        + "        public static final int my_color = 0x7f070031;\n"
-                                        + "    }\n"
-                                        + "    public static class string {\n"
-                                        + "        public static final int string2 = 0x7f070032;\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + ""),
-                        java(
-                                ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "import android.support.v4.app.Fragment;\n"
-                                        + "\n"
-                                        + "public class MyFragment extends Fragment {\n"
-                                        + "    public MyFragment() {\n"
-                                        + "    }\n"
-                                        + "\n"
-                                        + "    public void test() {\n"
-                                        + "        getActivity().getDrawable(R.color.my_color);\n"
-                                        + "    }\n"
-                                        + "}\n"),
-                        manifest()
-                                .pkg("foo.library")
-                                .minSdk(14)
-                                .to("../LibraryProject/AndroidManifest.xml"),
+                        + "1 errors, 0 warnings";
+
+        ProjectDescription app =
+                project(
+                                manifest().pkg("foo.main").minSdk(14),
+                                java(
+                                        ""
+                                                + "package foo.main;\n"
+                                                + "\n"
+                                                + "public class MainCode {\n"
+                                                + "    static {\n"
+                                                + "        System.out.println(R.string.string2);\n"
+                                                + "    }\n"
+                                                + "}\n"),
+                                java(
+                                        ""
+                                                + "package foo.main;\n"
+                                                + "public class R {\n"
+                                                + "    public static class color {\n"
+                                                // "Wrong casing for 'my_color'" presubmit warning
+                                                // is incorrect here: b/176242084
+                                                + "        public static final int my_color = 0x7f070031;\n"
+                                                + "    }\n"
+                                                + "    public static class string {\n"
+                                                + "        public static final int string2 = 0x7f070032;\n"
+                                                + "    }\n"
+                                                + "}\n"
+                                                + ""),
+                                java(
+                                        ""
+                                                + "package test.pkg;\n"
+                                                + "\n"
+                                                + "import android.support.v4.app.Fragment;\n"
+                                                + "\n"
+                                                + "public class MyFragment extends Fragment {\n"
+                                                + "    public MyFragment() {\n"
+                                                + "    }\n"
+                                                + "\n"
+                                                + "    public void test() {\n"
+                                                + "        getActivity().getDrawable(R.color.my_color);\n"
+                                                + "    }\n"
+                                                + "}\n"))
+                        .name("app");
+
+        ProjectDescription lib =
+                project(
+                        manifest().pkg("foo.library").minSdk(14).to("AndroidManifest.xml"),
                         source(
-                                "../LibraryProject/project.properties",
+                                "project.properties",
                                 ""
                                         + "# This file is automatically generated by Android Tools.\n"
                                         + "# Do not modify this file -- YOUR CHANGES WILL BE ERASED!\n"
@@ -3697,7 +3760,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}\n"
                                         + ""),
                         xml(
-                                "../LibraryProject/res/values/strings.xml",
+                                "res/values/strings.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<resources>\n"
@@ -3746,7 +3809,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "zTBGBhbn/JRURgZ+n8y8VL/S3KTUopDEpBygCFdwfmlRcqpbJogj6laUmJ6b"
                                         + "mlfimFySWZZZUqmXlViWyMPAwsDKyKCemJdSlJ+Zol9cWlCQX1SiX2ain1hQ"
                                         + "oI+uh5FBBKYSJA0TZlBkYAI6EAQYgRBoJJBkA/JkwXwGBlat7QyMG8HS7ECS"
-                                        + "DSIIJDmANBMDJwAfXa/p6QAAAA=="))
+                                        + "DSIIJDmANBMDJwAfXa/p6QAAAA=="));
+        app.dependsOn(lib);
+        lint().projects(app)
+                .reportFrom(app)
                 .allowCompilationErrors(true)
                 .allowSystemErrors(false)
                 .checkMessage(this::checkReportedError)
@@ -4585,7 +4651,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                                         + "    reader.close();\n"
                                                         + "  }\n"
                                                         + "}\n"))
-                                .type(ProjectDescription.Type.JAVA))
+                                .type(ProjectDescription.Type.JAVA)
+                                .name("lib"),
+                        project().type(ProjectDescription.Type.JAVA).dependsOn("lib"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
@@ -5025,7 +5093,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "        if (Build.VERSION.SDK_INT < 23) { }\n"
                         + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 12 warnings";
-        //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(23),
                         java(
@@ -5066,6 +5133,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         mSupportClasspath,
                         mSupportJar)
                 .checkMessage(this::checkReportedError)
+                // We *don't* want to use provisional computation for this:
+                // limit suggestions around SDK_INT checks to those implied
+                // by the minSdkVersion of the library.
+                .skipTestModes(PARTIAL)
                 .run()
                 .expect(expected);
     }
@@ -5140,6 +5211,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         xml("res/layout/my_activity.xml", "<merge/>"),
                         xml("res/layout-v5/my_activity.xml", "<merge/>"))
                 .checkMessage(this::checkReportedError)
+                // We *don't* want to use provisional computation for this:
+                // limit suggestions around SDK_INT checks to those implied
+                // by the minSdkVersion of the library.
+                .skipTestModes(PARTIAL)
                 .run()
                 .expect(expected);
     }

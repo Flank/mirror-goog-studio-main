@@ -35,9 +35,11 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -82,6 +84,9 @@ public class LabelForDetector extends LayoutDetector {
             "provide either a view with an "
                     + "`android:labelFor` that references this view or provide an `android:hint`";
 
+    private static final String KEY_HINT = "hint";
+    private static final String KEY_LABEL = "label";
+
     private Set<String> mLabels;
     private List<Element> mEditableTextFields;
 
@@ -120,40 +125,59 @@ public class LabelForDetector extends LayoutDetector {
                     labelForProvided = mLabels.contains(NEW_ID_PREFIX + stripIdPrefix(id));
                 }
 
+                // Note: if only android:hint is provided, no need for a warning.
+                if ((!hintProvided || !labelForProvided)
+                        && (hintProvided || labelForProvided)
+                        && (!labelForProvided || context.getProject().getMinSdk() >= 17)) {
+                    return;
+                }
+
                 XmlContext xmlContext = (XmlContext) context;
-                String message = "";
                 Location location = xmlContext.getElementLocation(element);
-                int minSdk = context.getMainProject().getMinSdk();
-
-                if (hintProvided && labelForProvided) {
-                    // Note: labelFor no-ops below 17.
-                    if (minSdk >= 17) {
-                        message = PROVIDE_LABEL_FOR_OR_HINT + ", but not both";
-                    }
-                } else if (!hintProvided && !labelForProvided) {
-                    if (minSdk < 17) {
-                        message = PROVIDE_HINT;
-                    } else {
-                        message = PROVIDE_LABEL_FOR_OR_HINT;
-                    }
-                } else {
-                    // Note: if only android:hint is provided, no need for a warning.
-
-                    if (labelForProvided) {
-                        if (minSdk < 17) {
-                            message = PROVIDE_HINT;
-                        }
-                    }
-                }
-
-                if (!message.isEmpty()) {
-                    xmlContext.report(ISSUE, element, location, messageWithPrefix(message));
-                }
+                Incident incident = new Incident(ISSUE, element, location, "");
+                xmlContext.report(
+                        incident,
+                        map().put(KEY_HINT, hintProvided).put(KEY_LABEL, labelForProvided));
             }
         }
 
         mLabels = null;
         mEditableTextFields = null;
+    }
+
+    @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        boolean hintProvided = map.getBoolean(KEY_HINT, false);
+        boolean labelForProvided = map.getBoolean(KEY_LABEL, false);
+        String message = "";
+        int minSdk = context.getMainProject().getMinSdk();
+        if (hintProvided && labelForProvided) {
+            // Note: labelFor no-ops below 17.
+            if (minSdk >= 17) {
+                message = PROVIDE_LABEL_FOR_OR_HINT + ", but not both";
+            }
+        } else if (!hintProvided && !labelForProvided) {
+            if (minSdk < 17) {
+                message = PROVIDE_HINT;
+            } else {
+                message = PROVIDE_LABEL_FOR_OR_HINT;
+            }
+        } else {
+            // Note: if only android:hint is provided, no need for a warning.
+            if (labelForProvided) {
+                if (minSdk < 17) {
+                    message = PROVIDE_HINT;
+                }
+            }
+        }
+
+        if (message.isEmpty()) {
+            return false;
+        }
+
+        incident.setMessage(messageWithPrefix(message));
+        return true;
     }
 
     @Override

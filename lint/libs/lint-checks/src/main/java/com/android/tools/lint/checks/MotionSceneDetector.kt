@@ -47,6 +47,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.utils.XmlUtils
+import com.android.utils.iterator
 import org.w3c.dom.Element
 
 /**
@@ -61,7 +62,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
     override fun getApplicableElements() = listOf(MOTION_SCENE)
 
     override fun visitElement(context: XmlContext, element: Element) {
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 CONSTRAINT_SET -> visitConstraintSet(context, child)
                 TRANSITION -> visitTransition(context, child)
@@ -71,7 +72,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
     }
 
     private fun visitConstraintSet(context: XmlContext, element: Element) {
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 CONSTRAINT -> visitConstraint(context, child)
             }
@@ -80,7 +81,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
 
     private fun visitConstraint(context: XmlContext, element: Element) {
         customAttributeNames.clear()
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 LAYOUT -> visitLayout(context, child)
                 MOTION -> visitMotion(context, child)
@@ -141,7 +142,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
 
     private fun visitTransition(context: XmlContext, element: Element) {
         checkMultipleOnClicks(context, element)
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 KEY_FRAME_SET -> visitKeyFrameSet(context, child)
                 ON_SWIPE -> visitOnSwipe(context, child)
@@ -169,7 +170,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
     }
 
     private fun visitKeyFrameSet(context: XmlContext, element: Element) {
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 KEY_ATTRIBUTE -> visitKeyAttribute(context, child)
                 KEY_POSITION -> visitKeyPosition(context, child)
@@ -182,7 +183,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
 
     private fun visitKeyAttribute(context: XmlContext, element: Element) {
         customAttributeNames.clear()
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 CUSTOM_ATTRIBUTE -> visitCustomAttribute(context, child)
             }
@@ -195,7 +196,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
 
     private fun visitKeyCycle(context: XmlContext, element: Element) {
         customAttributeNames.clear()
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 CUSTOM_ATTRIBUTE -> visitCustomAttribute(context, child)
             }
@@ -204,7 +205,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
 
     private fun visitKeyTimeCycle(context: XmlContext, element: Element) {
         customAttributeNames.clear()
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 CUSTOM_ATTRIBUTE -> visitCustomAttribute(context, child)
             }
@@ -224,7 +225,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
     }
 
     private fun visitStateSet(context: XmlContext, element: Element) {
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 STATE -> visitState(context, child)
             }
@@ -232,7 +233,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
     }
 
     private fun visitState(context: XmlContext, element: Element) {
-        for (child in XmlUtils.getSubTags(element)) {
+        for (child in element) {
             when (child.tagName) {
                 VARIANT -> visitVariant(context, child)
             }
@@ -244,7 +245,7 @@ class MotionSceneDetector : ResourceXmlDetector() {
     }
 
     private fun checkNoSubTags(context: XmlContext, element: Element) {
-        XmlUtils.getSubTags(element).forEach { subTag ->
+        for (subTag in element) {
             context.report(
                 MOTION_SCENE_FILE_VALIDATION_ERROR,
                 subTag,

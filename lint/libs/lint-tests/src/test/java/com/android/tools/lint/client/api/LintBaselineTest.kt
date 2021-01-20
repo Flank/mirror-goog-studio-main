@@ -25,6 +25,8 @@ import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.client.api.LintBaseline.Companion.isSamePathSuffix
 import com.android.tools.lint.client.api.LintBaseline.Companion.stringsEquivalent
 import com.android.tools.lint.detector.api.DefaultPosition
+import com.android.tools.lint.detector.api.Incident
+import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
@@ -52,6 +54,20 @@ class LintBaselineTest {
         override fun getSdkHome(): File? {
             return TestUtils.getSdk().toFile()
         }
+    }
+
+    private fun LintBaseline.findAndMark(
+        issue: Issue,
+        location: Location,
+        message: String,
+        severity: Severity?,
+        project: Project?
+    ): Boolean {
+        val incident = Incident(issue, location, message).apply {
+            severity?.let { this.severity = it }
+            project?.let { this.project = it }
+        }
+        return findAndMark(incident)
     }
 
     @Test

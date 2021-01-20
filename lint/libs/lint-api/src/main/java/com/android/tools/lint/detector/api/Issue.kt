@@ -68,18 +68,18 @@ class Issue private constructor(
     val priority: Int,
 
     /**
-     * Returns the default severity of the issues found by this detector (some
-     * tools may allow the user to specify custom severities for detectors).
+     * Returns the default severity of the issues found by this detector
+     * (some tools may allow the user to specify custom severities for
+     * detectors).
      *
-     *
-     * Note that even though the normal way for an issue to be disabled is for
-     * the [Configuration] to return [Severity.IGNORE], there is a
-     * [.isEnabledByDefault] method which can be used to turn off issues
-     * by default. This is done rather than just having the severity as the only
-     * attribute on the issue such that an issue can be configured with an
-     * appropriate severity (such as [Severity.ERROR]) even when issues
-     * are disabled by default for example because they are experimental or not
-     * yet stable.
+     * Note that even though the normal way for an issue to be disabled
+     * is for the [Configuration] to return [Severity.IGNORE], there
+     * is a [isEnabledByDefault] method which can be used to turn
+     * off issues by default. This is done rather than just having
+     * the severity as the only attribute on the issue such that an
+     * issue can be configured with an appropriate severity (such as
+     * [Severity.ERROR]) even when issues are disabled by default
+     * for example because they are experimental or not yet stable.
      *
      * @return the severity of the issues found by this detector
      */
@@ -203,10 +203,10 @@ class Issue private constructor(
     }
 
     /**
-     * Describes the error found by this rule, e.g.
-     * "Buttons must define contentDescriptions". Preferably the explanation
-     * should also contain a description of how the problem should be solved.
-     * Additional info can be provided via [.getMoreInfo].
+     * Describes the error found by this rule, e.g. "Buttons must
+     * define contentDescriptions". Preferably the explanation should
+     * also contain a description of how the problem should be solved.
+     * Additional info can be provided via [moreInfo].
      *
      * @param format the format to write the format as
      * @return an explanation of the issue, never null, never empty

@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** Detector looking for Toast.makeText() without a corresponding show() call */
 class ToastDetector : Detector(), SourceCodeScanner {
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf("makeText", "make")
     }
 

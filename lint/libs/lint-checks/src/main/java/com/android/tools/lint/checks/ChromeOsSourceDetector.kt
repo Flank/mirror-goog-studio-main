@@ -29,7 +29,7 @@ import org.jetbrains.uast.UReferenceExpression
 
 class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(
             "setRequestedOrientation",
             "hasSystemFeature"

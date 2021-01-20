@@ -31,7 +31,7 @@ class TestConfiguration(
     configurations: ConfigurationHierarchy
 ) : Configuration(configurations) {
 
-    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity? {
+    override fun getDefinedSeverity(issue: Issue, source: Configuration): Severity {
         val override = overrideSeverity(task, issue)
         if (override != null) {
             return override
@@ -52,6 +52,38 @@ class TestConfiguration(
             getNonIgnoredSeverity(issue.defaultSeverity, issue)
         else
             Severity.IGNORE
+    }
+
+    override fun addConfiguredIssues(
+        targetMap: MutableMap<String, Severity>,
+        registry: IssueRegistry,
+        specificOnly: Boolean
+    ) {
+        parent?.addConfiguredIssues(targetMap, registry, specificOnly)
+
+        for (issue in registry.issues) {
+            val override = overrideSeverity(task, issue)
+            if (override != null) {
+                targetMap[issue.id] = override
+                continue
+            }
+            val inherited = parent?.getDefinedSeverity(issue, this)
+            if (inherited != null) {
+                targetMap[issue.id] = inherited
+            }
+        }
+
+        // In unit tests, include issues that are ignored by default
+        for (id in task.issueIds ?: emptyArray()) {
+            val issue = registry.getIssue(id)
+            if (issue != null) {
+                targetMap[id] = getNonIgnoredSeverity(issue.defaultSeverity, issue)
+            } else {
+                targetMap[id] = Severity.WARNING
+            }
+        }
+
+        overrides?.addConfiguredIssues(targetMap, registry, specificOnly)
     }
 
     override fun ignore(

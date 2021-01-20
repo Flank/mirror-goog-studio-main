@@ -31,6 +31,7 @@ import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.client.api.LintDriver
@@ -55,8 +56,7 @@ class ProjectInitializerTest {
     fun testManualProject() {
 
         val library = project(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="foo.bar2"
@@ -107,8 +107,7 @@ class ProjectInitializerTest {
         ).type(LIBRARY).name("Library")
 
         val main = project(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="foo.bar2"
@@ -458,8 +457,7 @@ class ProjectInitializerTest {
                       }
                     }"""
             ).indented(),
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="com.android.tools.lint.test"
@@ -604,8 +602,7 @@ class ProjectInitializerTest {
                     }
                     """
             ).indented(),
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="com.android.tools.lint.test"
@@ -679,8 +676,7 @@ class ProjectInitializerTest {
         // an AAR dependency and make its way into the merged manifest.
         val root = temp.newFolder()
         val projects = lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                         package="com.android.tools.lint.test"
@@ -1442,8 +1438,7 @@ class ProjectInitializerTest {
     fun testLintXmlOutside() {
 
         val library = project(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="foo.bar2"
@@ -1466,8 +1461,7 @@ class ProjectInitializerTest {
         ).type(LIBRARY).name("Library")
 
         val main = project(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="foo.bar2"

@@ -164,7 +164,7 @@ document.getElementById(id).style.display = 'none';
       <span class="mdl-layout-title">Lint Report: 4 warnings</span>
       <div class="mdl-layout-spacer"></div>
       <nav class="mdl-navigation mdl-layout--large-screen-only">
-Check performed at ${"$"}DATE</nav>
+Check performed at ＄DATE</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
@@ -218,7 +218,7 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="app/AndroidManifest.xml">AndroidManifest.xml</a>:4</span>: <span class="message"><code>&lt;uses-sdk></code> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with <code>android:targetSdkVersion="?"</code></span><br /><pre class="errorlines">
+<span class="location"><a href="../default/app/AndroidManifest.xml">AndroidManifest.xml</a>:4</span>: <span class="message"><code>&lt;uses-sdk></code> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with <code>android:targetSdkVersion="?"</code></span><br /><pre class="errorlines">
 <span class="lineno"> 1 </span>
 <span class="lineno"> 2 </span>              <span class="tag">&lt;manifest</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
 <span class="lineno"> 3 </span>                  <span class="attribute">package</span>=<span class="value">"test.pkg"</span>>
@@ -264,11 +264,11 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="app/res/drawable-hdpi/icon4.png">res/drawable-hdpi/icon4.png</a></span>: <span class="message">The following unrelated icon files have identical contents: icon2.png, icon3.png, icon4.png</span><br />
-<ul><span class="location"><a href="app/res/drawable-hdpi/icon3.png">res/drawable-hdpi/icon3.png</a></span>: <span class="message">&lt;No location-specific message</span><br /><span class="location"><a href="app/res/drawable-hdpi/icon2.png">res/drawable-hdpi/icon2.png</a></span>: <span class="message">&lt;No location-specific message</span><br /></ul><table>
-<tr><td><a href="app/res/drawable-hdpi/icon2.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon2.png" /></a>
-</td><td><a href="app/res/drawable-hdpi/icon3.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon3.png" /></a>
-</td><td><a href="app/res/drawable-hdpi/icon4.png"><img border="0" align="top" src="app/res/drawable-hdpi/icon4.png" /></a>
+<span class="location"><a href="../default/app/res/drawable-hdpi/icon4.png">res/drawable-hdpi/icon4.png</a></span>: <span class="message">The following unrelated icon files have identical contents: icon2.png, icon3.png, icon4.png</span><br />
+<ul><span class="location"><a href="../default/app/res/drawable-hdpi/icon3.png">res/drawable-hdpi/icon3.png</a></span>: <span class="message">&lt;No location-specific message></span><br /><span class="location"><a href="../default/app/res/drawable-hdpi/icon2.png">res/drawable-hdpi/icon2.png</a></span>: <span class="message">&lt;No location-specific message></span><br /></ul><table>
+<tr><td><a href="../default/app/res/drawable-hdpi/icon2.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon2.png" /></a>
+</td><td><a href="../default/app/res/drawable-hdpi/icon3.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon3.png" /></a>
+</td><td><a href="../default/app/res/drawable-hdpi/icon4.png"><img border="0" align="top" src="../default/app/res/drawable-hdpi/icon4.png" /></a>
 </td></tr><tr><th>hdpi</th><th>hdpi</th><th>hdpi</th></tr>
 </table>
 </div>
@@ -311,14 +311,14 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="app/res/layout/main.xml">res/layout/main.xml</a>:4</span>: <span class="message">Hardcoded string "Fooo", should use <code>@string</code> resource</span><br /><pre class="errorlines">
+<span class="location"><a href="../default/app/res/layout/main.xml">res/layout/main.xml</a>:4</span>: <span class="message">Hardcoded string "Fooo", should use <code>@string</code> resource</span><br /><pre class="errorlines">
 <span class="lineno"> 1 </span>
 <span class="lineno"> 2 </span>                <span class="tag">&lt;Button</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
 <span class="lineno"> 3 </span>                    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
 <span class="caretline"><span class="lineno"> 4 </span>                    <span class="warning"><span class="prefix">android:</span><span class="attribute">text</span>=<span class="value">"Fooo"</span></span> />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 <span class="lineno"> 5 </span>                </pre>
 
-<span class="location"><a href="app/res/layout/main2.xml">res/layout/main2.xml</a>:4</span>: <span class="message">Hardcoded string "Bar", should use <code>@string</code> resource</span><br /><pre class="errorlines">
+<span class="location"><a href="../default/app/res/layout/main2.xml">res/layout/main2.xml</a>:4</span>: <span class="message">Hardcoded string "Bar", should use <code>@string</code> resource</span><br /><pre class="errorlines">
 <span class="lineno"> 1 </span>
 <span class="lineno"> 2 </span>                <span class="tag">&lt;Button</span><span class="attribute"> </span><span class="prefix">xmlns:</span><span class="attribute">android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
 <span class="lineno"> 3 </span>                    <span class="prefix">android:</span><span class="attribute">id</span>=<span class="value">"@+id/button1"</span>
@@ -451,7 +451,7 @@ The format of the <code>lint.xml</code> file is something like the following:<br
 </pre>
 <br/>
 To suppress lint checks from the command line, pass the --ignore flag with a comma separated list of ids to be suppressed, such as:<br/>
-<code>${'$'} lint --ignore UnusedResources,UselessLeaf /my/project/path</code><br/>
+<code>＄ lint --ignore UnusedResources,UselessLeaf /my/project/path</code><br/>
 <br/>
 For more information, see <a href="https://developer.android.com/studio/write/lint.html#config">https://developer.android.com/studio/write/lint.html#config</a><br/>
 

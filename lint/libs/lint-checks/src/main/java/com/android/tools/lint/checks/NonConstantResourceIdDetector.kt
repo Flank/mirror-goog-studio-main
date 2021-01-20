@@ -41,7 +41,7 @@ import org.jetbrains.uast.java.JavaUSwitchExpression
  */
 class NonConstantResourceIdDetector : Detector(), SourceCodeScanner {
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
+    override fun getApplicableUastTypes(): List<Class<out UElement>> {
         return listOf<Class<out UElement?>>(
             UAnnotation::class.java,
             USwitchExpression::class.java

@@ -46,7 +46,7 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
 
     // ---- implements SourceCodeScanner ----
 
-    override fun applicableSuperClasses(): List<String>? {
+    override fun applicableSuperClasses(): List<String> {
         return listOf(
             "android.support.v7.util.DiffUtil.ItemCallback",
             "androidx.recyclerview.widget.DiffUtil.ItemCallback",

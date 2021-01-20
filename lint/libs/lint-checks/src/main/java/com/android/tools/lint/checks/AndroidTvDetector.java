@@ -40,7 +40,6 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -62,10 +61,10 @@ import org.w3c.dom.Node;
 
 /** Detects various issues for Android TV. */
 public class AndroidTvDetector extends Detector implements XmlScanner {
-    public static final String KEY_FEATURE_NAME = "featureName";
-
     private static final Implementation IMPLEMENTATION =
             new Implementation(AndroidTvDetector.class, Scope.MANIFEST_SCOPE);
+
+    public static final String KEY_FEATURE_NAME = "featureName";
 
     /** Using hardware unsupported by TV */
     public static final Issue UNSUPPORTED_TV_HARDWARE =
@@ -248,10 +247,10 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
         mAllUnsupportedTvUsesFeatures = Sets.newHashSetWithExpectedSize(2);
 
         // Check gradle dependency
-        Project mainProject = context.getMainProject();
         mHasLeanbackDependency =
-                (mainProject.isGradleProject()
-                        && Boolean.TRUE.equals(mainProject.dependsOn(ANDROIDX_LEANBACK_ARTIFACT)));
+                context.getProject().isGradleProject()
+                        && Boolean.TRUE.equals(
+                                context.getProject().dependsOn(ANDROIDX_LEANBACK_ARTIFACT));
     }
 
     @Override
@@ -259,7 +258,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
         boolean isTvApp =
                 mHasLeanbackSupport || mHasLeanbackDependency || mHasLeanbackLauncherActivity;
 
-        if (!context.getMainProject().isLibrary() && isTvApp) {
+        if (isTvApp) {
             XmlContext xmlContext = (XmlContext) context;
             // Report an error if there's not at least one leanback launcher intent filter activity
             if (!mHasLeanbackLauncherActivity && xmlContext.isEnabled(MISSING_LEANBACK_LAUNCHER)) {
@@ -379,7 +378,6 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                                                 + "android:name=\"%1$s\" required=\"false\">` tag",
                                         unsupportedHardwareName);
                         LintFix fix = fix().data(KEY_FEATURE_NAME, unsupportedHardwareName);
-
                         xmlContext.report(
                                 PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
                                 permissionElement,

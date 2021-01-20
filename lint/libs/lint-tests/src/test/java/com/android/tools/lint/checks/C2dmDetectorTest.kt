@@ -26,8 +26,7 @@ class C2dmDetectorTest : AbstractCheckTest() {
     fun testPattern1() {
         // See b/112195797
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.pkg">
@@ -58,8 +57,7 @@ class C2dmDetectorTest : AbstractCheckTest() {
 
     fun testPattern2() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.pkg">
@@ -92,8 +90,7 @@ class C2dmDetectorTest : AbstractCheckTest() {
 
     fun testSuppress() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:tools="http://schemas.android.com/tools"
@@ -119,8 +116,7 @@ class C2dmDetectorTest : AbstractCheckTest() {
 
     fun testMissingAction() {
         lint().files(
-            xml(
-                "AndroidManifest.xml",
+            manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                     package="test.pkg">

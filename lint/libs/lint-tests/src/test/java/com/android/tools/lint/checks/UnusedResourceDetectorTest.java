@@ -274,11 +274,14 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(
                         ""
-                                + "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
+                                + "../LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
                                 + "    <string name=\"string3\">String 3</string>\n"
                                 + "            ~~~~~~~~~~~~~~\n"
                                 + "0 errors, 1 warnings");
     }
+
+    // TODO: Make sure I test the situation where UnusedIds is enabled in one project but not
+    // the other; we have to make sure we catch and handle that.
 
     public void testMultiProject() {
         // Library defines string1 and string2, but only references string1.
@@ -293,7 +296,61 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
         ProjectDescription main =
                 project(mMainCode, manifest().minSdk(15)).name("App").dependsOn(library);
 
-        lint().projects(main, library).run().expectClean();
+        lint().projects(main, library).reportFrom(main).run().expectClean();
+    }
+
+    public void testMultiProject2() {
+        // Add some unused resources both in the library and in the main module
+        // to make sure that we correctly compute locations
+
+        // This test also adds a tools:keep wildcard in the app module and makes
+        // sure it takes effect to filter out unused candidates from the library
+        // such as @string/kept1
+        ProjectDescription library =
+                project(
+                                // Library project
+                                mLibraryManifest,
+                                mLibraryCode,
+                                mLibraryStrings,
+                                xml(
+                                        "res/values/strings2.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<resources>\n"
+                                                + "    <string name=\"unused1\">Unused 1</string>\n"
+                                                + "    <string name=\"kept1\">Kept1 1</string>\n"
+                                                + "</resources>\n"))
+                        .type(LIBRARY)
+                        .name("LibraryProject");
+
+        ProjectDescription main =
+                project(
+                                mMainCode,
+                                manifest().minSdk(15),
+                                xml(
+                                        "res/values/strings2.xml",
+                                        ""
+                                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                                + "<resources\n"
+                                                + "    xmlns:tools=\"http://schemas.android.com/tools\" "
+                                                + "    tools:keep=\"@string/ke*\">\n"
+                                                + "    <string name=\"unused2\">Unused 2</string>\n"
+                                                + "</resources>\n"))
+                        .name("App")
+                        .dependsOn(library);
+
+        lint().projects(main, library)
+                .reportFrom(main)
+                .run()
+                .expect(
+                        ""
+                                + "../LibraryProject/res/values/strings2.xml:3: Warning: The resource R.string.unused1 appears to be unused [UnusedResources]\n"
+                                + "    <string name=\"unused1\">Unused 1</string>\n"
+                                + "            ~~~~~~~~~~~~~~\n"
+                                + "res/values/strings2.xml:4: Warning: The resource R.string.unused2 appears to be unused [UnusedResources]\n"
+                                + "    <string name=\"unused2\">Unused 2</string>\n"
+                                + "            ~~~~~~~~~~~~~~\n"
+                                + "0 errors, 2 warnings");
     }
 
     public void testFqcnReference() {
@@ -761,8 +818,8 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     public void testDynamicResources() {
         String expected =
                 ""
-                        + "app/build.gradle: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
-                        + "app/build.gradle: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
+                        + "build.gradle: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
+                        + "build.gradle: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
                         // Note: R.string.foo should not be here since it is not present in
                         // `release` variant.
                         + "0 errors, 2 warnings\n";
@@ -817,6 +874,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
         lint().projects(app, lib)
                 .variant("release")
+                .reportFrom(app)
                 .issues(UnusedResourceDetector.ISSUE) // skip UnusedResourceDetector.ISSUE_IDS
                 .allowCompilationErrors()
                 .run()
@@ -1747,6 +1805,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    /* Now enabled!
     public void testNoWarningsInGradleLibraries() {
         // Regression test for
         // 78320922: Lint: UnusedResources false positive in library module
@@ -1764,6 +1823,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+    */
 
     public void testSyntheticImports() {
         // Regression test for https://issuetracker.google.com/110175594

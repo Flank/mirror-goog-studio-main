@@ -80,6 +80,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import org.intellij.lang.annotations.Language;
@@ -535,8 +536,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * and without source access. In the provisional reporting situation (where each module is
      * analyzed independently) you don't get to look at upstream dependency source code. Lint can
      * simulate this by taking these files and checking in both scenarios (e.g. in {@link
-     * TestMode#PROVISIONAL} it can check for projects that contain compiled files and move these
-     * into their own module.)
+     * TestMode#PARTIAL} it can check for projects that contain compiled files and move these into
+     * their own module.)
      *
      * <p>The reason you need to provide the compiled contents is that we don't want to have to
      * recompile the sources every time the test runs, and besides, the compilation environment
@@ -795,12 +796,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return super.getSuperClass(project, name);
         }
 
-        @Override
-        public void reset() {
-            super.reset();
-            writer.getBuffer().setLength(0);
-        }
-
         @NonNull
         @Override
         protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
@@ -836,7 +831,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             for (File dir : sorted) {
                 if (result.contains(dir.getPath())) {
-                    result = result.replace(dir.getPath(), "/TESTROOT");
+                    result =
+                            result.replace(dir.getPath(), "/TESTROOT")
+                                    .replace("/TESTROOT/", "")
+                                    .replace("\\TESTROOT\\", "");
                 }
             }
 
@@ -896,14 +894,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @Override
         public void report(
-                @NonNull Context context,
-                @NonNull Issue issue,
-                @NonNull Severity severity,
-                @NonNull Location location,
-                @NonNull String message,
-                @NonNull TextFormat format,
-                @Nullable LintFix fix) {
+                @NonNull Context context, @NonNull Incident incident, @NonNull TextFormat format) {
+            Location location = incident.getLocation();
+            Issue issue = incident.getIssue();
             assertNotNull(location);
+            Severity severity = incident.getSeverity();
 
             if (ignoreSystemErrors() && issue == IssueRegistry.LINT_ERROR) {
                 return;
@@ -914,12 +909,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     issue,
                     severity,
                     location,
-                    format.convertTo(message, TextFormat.TEXT),
-                    fix);
+                    format.convertTo(incident.getMessage(), TextFormat.TEXT),
+                    incident.getFix());
 
             if (severity == Severity.FATAL) {
                 // Treat fatal errors like errors in the golden files.
-                severity = Severity.ERROR;
+                incident.setSeverity(Severity.ERROR);
             }
 
             // For messages into all secondary locations to ensure they get
@@ -940,15 +935,15 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 }
             }
 
-            super.report(context, issue, severity, location, message, format, fix);
+            super.report(context, incident, format);
 
             // Make sure errors are unique!
             Incident prev = null;
-            for (Incident incident : getIncidents()) {
-                assertNotSame(incident, prev);
+            for (Incident curr : getDefiniteIncidents()) {
+                assertNotSame(curr, prev);
                 //noinspection PointlessNullCheck
-                assert prev == null || !incident.equals(prev) : incident;
-                prev = incident;
+                assert prev == null || !curr.equals(prev) : curr;
+                prev = curr;
             }
         }
 
@@ -1083,7 +1078,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             // Check compare contract
             Incident prev = null;
-            List<Incident> incidents = getIncidents();
+            List<Incident> incidents = getDefiniteIncidents();
             for (Incident incident : incidents) {
                 if (prev != null) {
                     boolean equals = incident.equals(prev);
@@ -1184,6 +1179,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public boolean isEnabled(@NonNull Issue issue) {
             return LintDetectorTest.this.isEnabled(issue);
         }
+
+        @Override
+        public void addConfiguredIssues(
+                @NonNull Map<String, Severity> targetMap,
+                @NonNull IssueRegistry registry,
+                boolean specificOnly) {}
 
         @Nullable
         @Override

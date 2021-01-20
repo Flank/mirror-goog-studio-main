@@ -83,7 +83,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
 
     // ---- Implements XmlScanner ----
 
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return ALL
     }
 
@@ -263,7 +263,7 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
 
         var ok = checkedClasses[fqcn]
         if (ok == null) {
-            val parser = context.client.getUastParser(context.mainProject)
+            val parser = context.client.getUastParser(context.project)
             val evaluator = parser.evaluator
             val cls = evaluator.findClass(fqcn.replace('$', '.'))
             if (cls != null) {

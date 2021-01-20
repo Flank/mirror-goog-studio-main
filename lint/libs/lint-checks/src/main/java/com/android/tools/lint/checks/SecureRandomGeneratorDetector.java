@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -26,6 +27,7 @@ import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
@@ -46,7 +48,6 @@ import org.objectweb.asm.tree.MethodNode;
 public class SecureRandomGeneratorDetector extends Detector implements ClassScanner {
     private static final String OWNER_SECURE_RANDOM = "java/security/SecureRandom";
 
-    @SuppressWarnings("SpellCheckingInspection")
     private static final String BLOG_URL =
             "https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html";
 
@@ -194,10 +195,11 @@ public class SecureRandomGeneratorDetector extends Detector implements ClassScan
         }
 
         if (warn) {
+            //noinspection VariableNotUsedInsideIf
             if (mLocation != null) {
                 return;
             }
-            if (context.getMainProject().getMinSdk() > 18) {
+            if (context.getProject().getMinSdk() > 18) {
                 // Fix no longer needed
                 mIgnore = true;
                 return;
@@ -239,7 +241,7 @@ public class SecureRandomGeneratorDetector extends Detector implements ClassScan
                             + "Read "
                             + BLOG_URL
                             + " for more info.";
-            context.report(ISSUE, mLocation, message);
+            context.report(new Incident(ISSUE, mLocation, message), minSdkLessThan(19));
         }
     }
 }

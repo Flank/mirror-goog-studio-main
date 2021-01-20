@@ -84,7 +84,10 @@ public class TextFieldDetector extends LayoutDetector {
             String style = element.getAttribute(ATTR_STYLE);
             if (style != null && !style.isEmpty()) {
                 LintClient client = context.getClient();
-                Project project = context.getMainProject();
+                Project project =
+                        context.isGlobalAnalysis()
+                                ? context.getMainProject()
+                                : context.getProject();
                 List<ResourceValue> styles =
                         Lint.getStyleAttributes(
                                 project, client, style, ANDROID_URI, ATTR_INPUT_TYPE, false);

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER;
 import static com.android.ide.common.resources.configuration.LocaleQualifier.BCP_47_PREFIX;
+import static com.android.tools.lint.detector.api.Constraints.minSdkLessThan;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -33,9 +34,11 @@ import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.Incident;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
+import com.android.tools.lint.detector.api.LintMap;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceFolderScanner;
@@ -183,6 +186,8 @@ public class LocaleFolderDetector extends Detector
                                     EnumSet.of(Scope.RESOURCE_FOLDER, Scope.JAVA_FILE)))
                     .setAndroidSpecific(true);
 
+    private static final String KEY_MESSAGE = "message";
+
     private Map<String, File> mBcp47Folders;
 
     private List<File> threeLetterLocales;
@@ -235,7 +240,8 @@ public class LocaleFolderDetector extends Detector
                                         + "called \"`%2$s`\" instead; see the "
                                         + "`java.util.Locale` documentation",
                                 language, replace);
-                context.report(DEPRECATED_CODE, Location.create(context.file), message);
+                context.report(
+                        new Incident(DEPRECATED_CODE, Location.create(context.file), message));
             }
 
             if (language.length() == 3) {
@@ -247,7 +253,8 @@ public class LocaleFolderDetector extends Detector
                                     "For compatibility, should use 2-letter "
                                             + "language codes when available; use `%1$s` instead of `%2$s`",
                                     languageAlpha2, language);
-                    context.report(USE_ALPHA_2, Location.create(context.file), message);
+                    context.report(
+                            new Incident(USE_ALPHA_2, Location.create(context.file), message));
                 }
             }
 
@@ -260,7 +267,8 @@ public class LocaleFolderDetector extends Detector
                                     "For compatibility, should use 2-letter "
                                             + "region codes when available; use `%1$s` instead of `%2$s`",
                                     regionAlpha2, region);
-                    context.report(USE_ALPHA_2, Location.create(context.file), message);
+                    context.report(
+                            new Incident(USE_ALPHA_2, Location.create(context.file), message));
                 }
             }
 
@@ -286,7 +294,8 @@ public class LocaleFolderDetector extends Detector
                                     LocaleManager.getRegionName(region),
                                     language,
                                     Joiner.on(", ").join(suggestions));
-                    context.report(WRONG_REGION, Location.create(context.file), message);
+                    context.report(
+                            new Incident(WRONG_REGION, Location.create(context.file), message));
                 }
             }
         }
@@ -302,7 +311,7 @@ public class LocaleFolderDetector extends Detector
                         String.format(
                                 "Invalid resource folder; did you mean `%1$s` ?", bcpSuggestion);
             }
-            context.report(INVALID_FOLDER, Location.create(context.file), message);
+            context.report(new Incident(INVALID_FOLDER, Location.create(context.file), message));
         } else if (locale != null
                 && folderName.contains(BCP_47_PREFIX)
                 && config != null
@@ -399,7 +408,7 @@ public class LocaleFolderDetector extends Detector
         // Ensure that if a language has multiple scripts, either minSdkVersion >= 21 or
         // at most one folder does not have -v21 among the script options
         if (mBcp47Folders != null
-                && !context.getMainProject().getMinSdkVersion().isGreaterOrEqualThan(21)) {
+                && !context.getProject().getMinSdkVersion().isGreaterOrEqualThan(21)) {
             Map<FolderConfiguration, File> configToFile = Maps.newHashMap();
             Multimap<String, FolderConfiguration> languageToConfigs = ArrayListMultimap.create();
             for (String folderName : mBcp47Folders.keySet()) {
@@ -466,7 +475,8 @@ public class LocaleFolderDetector extends Detector
                                     "Multiple locale folders for language `%1$s` map to a single folder in versions < API 21: %2$s",
                                     language, Joiner.on(", ").join(folderNames));
                     assert location != null; // because we will iterate at least once in the loop
-                    context.report(INVALID_FOLDER, location, message);
+                    Incident incident = new Incident(INVALID_FOLDER, location, message);
+                    context.report(incident, minSdkLessThan(21));
                 }
             }
         }
@@ -518,7 +528,7 @@ public class LocaleFolderDetector extends Detector
             @NonNull JavaContext context,
             @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
-        if (threeLetterLocales == null || context.getMainProject().getMinSdk() >= 21) {
+        if (threeLetterLocales == null || context.getProject().getMinSdk() >= 21) {
             return;
         }
 
@@ -535,13 +545,13 @@ public class LocaleFolderDetector extends Detector
             prev = Location.create(file).withSecondary(prev, "Locale folder here", false);
             folderNames.add(file.getName());
         }
-        String message =
-                String.format(
-                        "The app will crash on platforms older than v21 "
-                                + "(minSdkVersion is %1$d) because `AssetManager#getLocales` is called and it "
-                                + "contains one or more v21-style (3-letter or BCP47 locale) folders: %2$s",
-                        context.getMainProject().getMinSdk(), Joiner.on(", ").join(folderNames));
-        context.report(GET_LOCALES, call, location, message);
+        Incident incident = new Incident(GET_LOCALES, call, location, "");
+        String formatString =
+                "The app will crash on platforms older than v21 "
+                        + "(minSdkVersion is %1$d) because `AssetManager#getLocales` is called and it "
+                        + "contains one or more v21-style (3-letter or BCP47 locale) folders: "
+                        + Joiner.on(", ").join(folderNames);
+        context.report(incident, map().put(KEY_MESSAGE, formatString));
     }
 
     // Implements ClassScanner
@@ -552,7 +562,7 @@ public class LocaleFolderDetector extends Detector
     @Override
     public void checkClass(@NonNull final ClassContext context, @NonNull ClassNode classNode) {
         if (threeLetterLocales == null
-                || context.getMainProject().getMinSdk() >= 21
+                || context.getProject().getMinSdk() >= 21
                 || foundGetLocaleCall) {
             return;
         }
@@ -578,23 +588,40 @@ public class LocaleFolderDetector extends Detector
                         File jarFile = context.getJarFile();
                         LintClient client = context.getClient();
                         for (File file : threeLetterLocales) {
-                            String message =
-                                    String.format(
-                                            "The app will crash on platforms older "
-                                                    + "than v21 (minSdkVersion is %1$d) because"
-                                                    + " `AssetManager#getLocales()` is called (from the library "
-                                                    + "jar file %2$s) and this folder resource name only works "
-                                                    + "on v21 or later with that call present in the app",
-                                            context.getMainProject().getMinSdk(),
-                                            jarFile != null
-                                                    ? Lint.getFileNameWithParent(client, jarFile)
-                                                    : "?");
+                            String jarPath =
+                                    jarFile != null
+                                            ? Lint.getFileNameWithParent(client, jarFile)
+                                            : "?";
                             Location location = Location.create(file);
-                            context.report(GET_LOCALES, location, message);
+                            Incident incident = new Incident(GET_LOCALES, location, "");
+                            String formatString =
+                                    "The app will crash on platforms older "
+                                            + "than v21 (minSdkVersion is %1$d) because"
+                                            + " `AssetManager#getLocales()` is called (from the library "
+                                            + "jar file "
+                                            + jarPath
+                                            + ") and this folder resource name only works "
+                                            + "on v21 or later with that call present in the app";
+                            context.report(incident, map().put(KEY_MESSAGE, formatString));
                         }
                     }
                 }
             }
         }
+    }
+
+    @Override
+    public boolean filterIncident(
+            @NonNull Context context, @NonNull Incident incident, @NonNull LintMap map) {
+        assert (incident.getIssue() == GET_LOCALES);
+        if (context.getMainProject().getMinSdk() < 21) {
+            int minSdk = context.getMainProject().getMinSdk();
+            assert minSdk < 21;
+            String formatString = map.getString(KEY_MESSAGE, "");
+            String message = String.format(Locale.getDefault(), formatString, minSdk);
+            incident.setMessage(message);
+            return true;
+        }
+        return false;
     }
 }

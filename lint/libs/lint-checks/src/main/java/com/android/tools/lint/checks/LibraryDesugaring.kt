@@ -16,7 +16,7 @@
 package com.android.tools.lint.checks
 
 import com.android.sdklib.AndroidVersion
-import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.Project
 
 /**
  * Utilities for handling library desugaring. This refers to a feature
@@ -29,7 +29,7 @@ import com.android.tools.lint.detector.api.JavaContext
  * the library rewriter. This file contains calls which looks up whether
  * a given class/member reference is referencing an API that is rewritten.
  */
-fun isApiDesugared(context: JavaContext, cls: String, name: String?): Boolean {
+fun isApiDesugared(project: Project, cls: String, name: String?): Boolean {
     // The specific set of APIs that are handled are described here:
     // https://github.com/bazelbuild/bazel/blob/master/tools/android/desugar.sh
     // The code below is based on the that file as of this revision:
@@ -66,14 +66,14 @@ fun isApiDesugared(context: JavaContext, cls: String, name: String?): Boolean {
             "java.util.Collection" -> {
                 // All but parallelStream allowed, and parallel requires L
                 if (name == "parallelStream") {
-                    return context.mainProject.minSdk >= AndroidVersion.VersionCodes.LOLLIPOP
+                    return project.minSdk >= AndroidVersion.VersionCodes.LOLLIPOP
                 }
                 return true
             }
             "java.util.stream.BaseStream" -> {
                 // All but parallel allowed, and it requires L
                 if (name == "parallel") {
-                    return context.mainProject.minSdk >= AndroidVersion.VersionCodes.LOLLIPOP
+                    return project.minSdk >= AndroidVersion.VersionCodes.LOLLIPOP
                 }
                 return true
             }

@@ -1590,11 +1590,21 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testSupportLibraryConsistencyNonIncremental() {
         val expected = "" +
+            "" +
             "build.gradle:6: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:animated-vector-drawable:24.2 [GradleCompatible]\n" +
             "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n" +
             "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "    build.gradle:4: <No location-specific message>\n" +
+            "    compile \"com.android.support:appcompat-v7:24.2\"\n" +
+            "             ~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings\n"
         lint().files(
+            gradle(
+                "../lib/build.gradle",
+                "" +
+                    "buildscript {\n" +
+                    "}"
+            ),
             gradle(
                 "" +
                     "apply plugin: 'android'\n" +
@@ -1632,10 +1642,10 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testPlayServiceConsistencyNonIncremental() {
         val expected = "" +
-            "build.gradle:4: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n" +
+            "build.gradle:5: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n" +
             "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
             "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "    build.gradle:5: <No location-specific message>\n" +
+            "    build.gradle:4: <No location-specific message>\n" +
             "    compile 'com.google.android.gms:play-services-location:7.3.0'\n" +
             "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "1 errors, 0 warnings"
@@ -1643,11 +1653,20 @@ class GradleDetectorTest : AbstractCheckTest() {
         lint().files(
             gradle(
                 "" +
+                    "apply plugin: 'android-library'\n" +
+                    "\n" +
+                    "dependencies {\n" +
+                    "    compile 'com.google.android.gms:play-services-location:7.3.0'\n" +
+                    "}\n"
+            ),
+            gradle(
+                "../app/build.gradle",
+                "" +
                     "apply plugin: 'android'\n" +
                     "\n" +
                     "dependencies {\n" +
-                    "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
                     "    compile 'com.google.android.gms:play-services-location:7.3.0'\n" +
+                    "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n" +
                     "}\n"
             )
         ).issues(COMPATIBILITY).run().expect(expected)
@@ -2842,10 +2861,22 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testAndroidxMixedDependencies() {
         val expected =
             """
-            build.gradle: Error: Dependencies using groupId com.android.support and androidx.* can not be combined but found __ and __ incompatible dependencies [GradleCompatible]
-            1 errors, 0 warnings"""
+            build.gradle:10: Error: Dependencies using groupId com.android.support and androidx.* can not be combined but found TEST_VERSION1 and TEST_VERSION2 incompatible dependencies [GradleCompatible]
+                compile 'com.android.support:recyclerview-v7:28.0.0'
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:11: <No location-specific message>
+                compile 'androidx.appcompat:appcompat:1.0.0'
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
 
         lint().files(
+            gradle(
+                "../lib/build.gradle",
+                "" +
+                    "buildscript {\n" +
+                    "}"
+            ),
             gradle(
                 "" +
                     "buildscript {\n" +
@@ -2869,7 +2900,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 transformer = TestResultTransformer {
                     it.replace(
                         Regex("found .* and .* incompatible"),
-                        "found __ and __ incompatible"
+                        "found TEST_VERSION1 and TEST_VERSION2 incompatible"
                     )
                 }
             )

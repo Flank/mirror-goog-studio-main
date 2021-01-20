@@ -16,11 +16,15 @@
 package com.android.tools.lint.detector.api
 
 import com.android.tools.lint.client.api.Configuration
+import com.android.tools.lint.client.api.IssueRegistry
 import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Sets
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
-import org.jetbrains.annotations.Contract
+import com.intellij.psi.PsiMethod
+import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UMethod
 import org.w3c.dom.Node
 import java.io.File
 import java.util.Comparator
@@ -33,7 +37,7 @@ import java.util.HashSet
  */
 class Incident(
     /** The [Issue] corresponding to the incident */
-    val issue: Issue,
+    var issue: Issue,
 
     /**
      * The message to display to the user. This message should typically include the
@@ -56,12 +60,19 @@ class Incident(
      * etc) for suppress annotations or comments. In a Kotlin or Java file, this would be
      * the nearest [UElement] or [PsiElement]; in an XML document it's the [Node], etc.
      */
-    val scope: Any? = null,
+    var scope: Any? = location.source,
 
     /** A quickfix descriptor, if any, capable of addressing this issue */
-    val fix: LintFix? = null
+    var fix: LintFix? = null
 ) : Comparable<Incident> {
-    /** Secondary constructor for convenience from Java where default arguments are not available */
+
+    // This class has a large number of secondary constructors in order to make it
+    // trivial to convert a context.report(args) call into context.report(Incident(args))
+
+    /**
+     * Secondary constructor for convenience from Java where default
+     * arguments are not available
+     */
     constructor(issue: Issue, message: String, location: Location) :
         this(issue, message, location, null, null)
 
@@ -155,65 +166,139 @@ class Incident(
     var applicableVariants: ApplicableVariants? = null
 
     /**
-     * Notes related to this incident. This is intended to be used by
-     * detectors when asked to merge previously reported results from
-     * upstream modules.
-     *
-     * This is limited to a few primitive data types (because it needs
-     * to be safely persisted across lint invocations.)
+     * Data related to this incident. This is intended to be used
+     * internally by lint.
      */
-    var notes: LintMap? = null
+    var clientProperties: LintMap? = null
+
+    // Constructor chaining builders
 
     /**
-     * Records a string note related to this incident.
-     *
-     * This is intended to be used by detectors when asked to merge
-     * previously reported results from upstream modules.
+     * Associated context. This is ONLY used for the chained
+     * construction of incidents, allowing convenient location lookup
+     * and reporting; it's not persisted across lint invocations etc.
      */
-    fun put(key: String, value: String): Incident {
-        val map = notes ?: LintMap().also { notes = it }
-        map.put(key, value)
+    @Transient
+    internal var context: Context? = null
+
+    /**
+     * Constructs an [Incident], to be customized with [issue],
+     * [message], etc.
+     */
+    constructor() : this(IssueRegistry.LINT_ERROR, "<missing>", Location.NONE)
+
+    /** Sets the [issue] property */
+    fun issue(issue: Issue): Incident {
+        this.issue = issue
         return this
     }
 
-    /** Like [put] but for integers */
-    fun put(key: String, value: Int): Incident {
-        val map = notes ?: LintMap().also { notes = it }
-        map.put(key, value)
+    /** Sets the [message] property */
+    fun message(message: String): Incident {
+        this.message = message
         return this
     }
 
-    /** Like [put] but for booleans */
-    fun put(key: String, value: Boolean): Incident {
-        val map = notes ?: LintMap().also { notes = it }
-        map.put(key, value)
+    /** Sets the [location] property */
+    fun location(location: Location): Incident {
+        this.location = location
         return this
     }
 
-    /** Returns a note previously stored as a String by [put] */
-    @Contract("_, !null -> !null")
-    fun getString(key: String, default: String? = null): String? {
-        return notes?.getString(key, default)
+    /** Sets the [location] and [scope] properties */
+    fun at(scope: Any): Incident {
+        val context = this.context
+            ?: error("This method can only be used when the Incident(context) is used")
+        this.scope = scope
+        location = when (scope) {
+            is UElement -> {
+                val javaContext = context as? JavaContext
+                    ?: error("Associated context must be a JavaContext")
+                if (scope is UClass || scope is UMethod) {
+                    javaContext.getNameLocation(scope)
+                } else {
+                    javaContext.getLocation(scope)
+                }
+            }
+            is PsiElement -> {
+                val javaContext = context as? JavaContext
+                    ?: error("Associated context must be a JavaContext")
+                if (scope is PsiClass || scope is PsiMethod) {
+                    javaContext.getNameLocation(scope)
+                } else {
+                    javaContext.getLocation(scope)
+                }
+                javaContext.getLocation(scope)
+            }
+            is Node -> {
+                val xmlContext = context as? XmlContext
+                    ?: error("Associated context must be a JavaContext")
+                xmlContext.getLocation(scope)
+            }
+            else -> {
+                if (context is GradleContext) {
+                    context.getLocation(scope)
+                } else {
+                    error(
+                        "Could not compute a location for scope element $scope; " +
+                            "if necessary use one of the Context.getLocation methods"
+                    )
+                }
+            }
+        }
+        return this
     }
 
-    /** Returns a note previously stored as an integer by [put] */
-    @Contract("_, !null -> !null")
-    fun getInt(key: String, default: Int? = null): Int? {
-        return notes?.getInt(key, default)
+    /** Sets the [location] property */
+    fun scope(scope: Any?): Incident {
+        this.scope = scope
+        return this
     }
 
-    /** Returns an API level previously stored as an integer or string by [put] */
-    @Contract("_, !null -> !null")
-    fun getApi(key: String, default: Int? = null): Int? {
-        return notes?.getApi(key, default)
+    /** Sets the [project] property */
+    fun project(project: Project?): Incident {
+        this.project = project
+        return this
     }
 
-    /** Returns a note previously stored as a boolean by [put] */
-    @Contract("_, !null -> !null")
-    fun getBoolean(key: String, default: Boolean? = null): Boolean? {
-        return notes?.getBoolean(key, default)
+    /** Sets the [fix] property */
+    fun fix(fix: LintFix?): Incident {
+        this.fix = fix
+        return this
     }
 
+    /**
+     * Reports this incident. This is a method here to make it possible
+     * to report issues like this:
+     *
+     *     Incident()
+     *       .issue(MY_ISSUE)
+     *       .message("This is the message")
+     *       .scope(element)
+     *       .location(context.getLocation(element)
+     *       .report(context)
+     */
+    fun report(context: Context) {
+        context.report(this)
+    }
+
+    /**
+     * Reports this incident. This is a method here to make it possible
+     * to report issues like this:
+     *
+     *     Incident(context)
+     *       .issue(MY_ISSUE)
+     *       .message("This is the message")
+     *       .at(element)
+     *       .report()
+     */
+    fun report() {
+        val context = this.context
+            ?: error("This method can only be used when the Incident(context) is used")
+        context.report(this)
+    }
+
+    // This comparator is used for example to sort incidents in the text and XML reports
     override fun compareTo(other: Incident): Int {
         val fileName1 = file.name
         val fileName2 = other.file.name
@@ -276,7 +361,7 @@ class Incident(
     }
 
     override fun toString(): String {
-        return "Incident(issue='$issue', message='$message', file=${project?.getDisplayPath(file) ?: file}, line=$line)"
+        return "Incident(\n issue='$issue',\n message='$message',\n file=${project?.getDisplayPath(file) ?: file},\n line=$line\n)"
     }
 }
 
@@ -326,4 +411,22 @@ class ApplicableVariants(
             val excluded: Set<String> = Sets.difference(applicableVariants, included)
             return excluded.asSequence().sorted().toList()
         }
+}
+
+/** Constructs an incident associated with the given [context] */
+fun Incident(context: Context): Incident {
+    val incident = Incident()
+    incident.context = context
+    return incident
+}
+
+/**
+ * Constructs an incident associated with the given [context] and
+ * [issue] type
+ */
+fun Incident(context: Context, issue: Issue): Incident {
+    val incident = Incident()
+    incident.issue = issue
+    incident.context = context
+    return incident
 }

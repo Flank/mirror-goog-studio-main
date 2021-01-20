@@ -57,7 +57,7 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableMethodNames(): List<String>? = listOf("intern")
+    override fun getApplicableMethodNames(): List<String> = listOf("intern")
 
     override fun visitMethodCall(
         context: JavaContext,

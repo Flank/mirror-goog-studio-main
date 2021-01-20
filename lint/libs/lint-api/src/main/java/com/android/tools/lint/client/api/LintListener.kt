@@ -28,30 +28,38 @@ import com.google.common.annotations.Beta
  */
 @Beta
 interface LintListener {
-    /** The various types of events provided to lint listeners  */
+    /** The various types of events provided to lint listeners */
     enum class EventType {
         REGISTERED_PROJECT,
 
-        /** A lint check is about to begin  */
+        /** A lint check is about to begin */
         STARTING,
 
-        /** Lint is about to check the given project  */
+        /** Lint is about to check the given project */
         SCANNING_PROJECT,
 
-        /** Lint is about to check the given library project  */
+        /** Lint is about to check the given library project */
         SCANNING_LIBRARY_PROJECT,
 
-        /** Lint is about to check the given file, see [Context.file]  */
+        /**
+         * Lint is about to check the given file, see [Context.file]
+         */
         SCANNING_FILE,
 
-        /** A new pass was initiated  */
+        /** A new pass was initiated */
         NEW_PHASE,
 
-        /** The lint check was canceled  */
+        /** The lint check was canceled */
         CANCELED,
 
-        /** The lint check is done  */
-        COMPLETED
+        /** Lint is about to merge results */
+        MERGING,
+
+        /** The lint check is done */
+        COMPLETED,
+
+        /** Lint ran into a problem or was canceled */
+        ABORTED
     }
 
     /**

@@ -61,12 +61,13 @@ open class LintRequest(
     protected var releaseMode: Boolean? = null
 
     /**
-     * The projects for the lint requests. This is optional; if not provided lint will search
-     * the [.getFiles] directories and look for projects via [LintClient.isProjectDirectory].
-     * However, this method allows a lint client to
-     * set up all the projects ahead of time, and associate those projects with native resources
-     * (in an IDE for example, each lint project can be associated with the corresponding IDE
-     * project).
+     * The projects for the lint requests. This is optional; if not
+     * provided lint will search the [files] directories and look for
+     * projects via [LintClient.isProjectDirectory]. However, this
+     * method allows a lint client to set up all the projects ahead of
+     * time, and associate those projects with native resources (in an
+     * IDE for example, each lint project can be associated with the
+     * corresponding IDE project).
      */
     @JvmField
     protected var projects: Collection<Project>? = null

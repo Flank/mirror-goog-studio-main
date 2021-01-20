@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.RestrictToDetector.Companion.sameLibraryGroupPrefix
+import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Project
 import java.io.File
@@ -234,7 +235,7 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).name("lib")
+        ).name("lib").type(ProjectDescription.Type.LIBRARY)
 
         val app = project().files(
             kotlin(
@@ -254,14 +255,14 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
-        ).dependsOn(library)
+        ).dependsOn(library).name("app")
 
         lint().projects(library, app).run().expect(
             """
-            app/src/com/example/myapplication/test.kt:7: Error: LibraryCode.method2 can only be called from within the same library (lib) [RestrictedApi]
+            src/com/example/myapplication/test.kt:7: Error: LibraryCode.method2 can only be called from within the same library (lib) [RestrictedApi]
                 LibraryCode.method2()
                             ~~~~~~~
-            app/src/com/example/myapplication/test.kt:10: Error: LibraryCode.FIELD2 can only be accessed from within the same library (lib) [RestrictedApi]
+            src/com/example/myapplication/test.kt:10: Error: LibraryCode.FIELD2 can only be accessed from within the same library (lib) [RestrictedApi]
                 val f2 = LibraryCode.FIELD2
                                      ~~~~~~
             2 errors, 0 warnings
@@ -1949,25 +1950,30 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                     }
                 }
             }
-        assertEquals("APP:lib1", library.toString())
+        assertEquals("LIBRARY:lib1", library.toString())
 
-        lint().projects(library, library2).clientFactory(factory).run().expect(
-            """
-            lib2/src/main/kotlin/com/example/myapplication/test.kt:8: Error: LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library) [RestrictedApi]
+        lint()
+            .projects(library, library2)
+            .reportFrom(library2)
+            .clientFactory(factory)
+            .run()
+            .expect(
+                """
+            src/main/kotlin/com/example/myapplication/test.kt:8: Error: LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library) [RestrictedApi]
                 LibraryCode.method3()
                             ~~~~~~~
-            lib2/src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+            src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
                 LibraryCode.method4()
                             ~~~~~~~
-            lib2/src/main/kotlin/com/example/myapplication/test.kt:12: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (groupId=test.pkg.library) [RestrictedApi]
+            src/main/kotlin/com/example/myapplication/test.kt:12: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (groupId=test.pkg.library) [RestrictedApi]
                 val f3 = LibraryCode.FIELD3
                                      ~~~~~~
-            lib2/src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+            src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
                 val f4 = LibraryCode.FIELD4
                                      ~~~~~~
             4 errors, 0 warnings
             """
-        )
+            )
 
         // Make sure project directories are laid out correctly
         assertTrue(libDir2!!.parentFile.path == libDir1!!.path)

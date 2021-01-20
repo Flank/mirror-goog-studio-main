@@ -94,7 +94,7 @@ class PackageVisibilityDetectorTest : AbstractCheckTest() {
                 """<?xml version="1.0" encoding="utf-8"?>
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
                     <uses-sdk android:targetSdkVersion="30"/>
-                    <uses-permission/><!-- Test for NPEs -->
+                    <!-- breaks manifest merging <uses-permission/> --><!-- Test for NPEs -->
                     <uses-permission android:name="android.permission.CAMERA"/><!-- OK -->
                     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/><!-- ERROR -->
                 </manifest>

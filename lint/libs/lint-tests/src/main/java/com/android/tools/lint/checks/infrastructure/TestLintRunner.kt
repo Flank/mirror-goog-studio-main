@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Companion.populateProjectDirectory
+import com.android.tools.lint.checks.infrastructure.TestMode.TestModeContext
 import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.ConfigurationHierarchy
 import com.android.tools.lint.client.api.LintClient
@@ -36,7 +37,10 @@ import org.junit.Assert
 import org.junit.Assert.assertEquals
 import java.io.File
 import java.io.IOException
+import java.util.ArrayList
 import java.util.EnumSet
+import java.util.HashMap
+import java.util.HashSet
 import javax.annotation.CheckReturnValue
 
 /**
@@ -48,7 +52,8 @@ import javax.annotation.CheckReturnValue
  */
 class TestLintRunner(private val task: TestLintTask) {
     /** Whether the [.run] method has already been invoked */
-    private var alreadyRun = false
+    var alreadyRun = false
+        private set
 
     /** Returns all the platforms encountered by the given issues */
     private fun computePlatforms(issues: List<Issue>): EnumSet<Platform> {
@@ -59,11 +64,14 @@ class TestLintRunner(private val task: TestLintTask) {
         return platforms
     }
 
+    /** The test mode currently being checked */
+    var currentTestMode: TestMode = TestMode.DEFAULT
+
     /**
      * Performs the lint check, returning the results of the lint check.
-     * Note that this does not assert anything about the result; for that,
-     * you'll want to call [TestLintResult.expect] or one or more of the other
-     * check result methods.
+     * Note that this does not assert anything about the result; for
+     * that, you'll want to call [TestLintResult.expect] or one or more
+     * of the other check result methods.
      */
     @CheckReturnValue
     fun run(): TestLintResult {
@@ -91,7 +99,7 @@ class TestLintRunner(private val task: TestLintTask) {
             if (platforms == null) {
                 platforms = computePlatforms(checkedIssues)
             }
-            if (impliedProject &&
+            if (projects.implicitReportFrom != null &&
                 platforms.contains(Platform.JDK) &&
                 !platforms.contains(Platform.ANDROID)
             ) {
@@ -103,17 +111,22 @@ class TestLintRunner(private val task: TestLintTask) {
             projects.addProject(reportFrom)
             val projectMap: MutableMap<String, List<File>> = HashMap()
             val results: MutableMap<TestMode, TestResultState> = HashMap()
+            val notApplicable = HashSet<TestMode>()
             return try {
                 // Note that the test types are taken care of in enum order.
                 // This allows a test type to decide if it applies based on
                 // an earlier test type (for example, resource repository
                 // tests may only apply if we discovered in the default test
                 // mode that the test actually consults the resource repository.)
-                for (mode in testModes()) {
+                for (mode in task.testModes) {
+                    currentTestMode = mode
+
                     // Run lint with a specific test type?
                     // For example, the UInjectionHost tests are only relevant
                     // if the project contains Kotlin source files.
-                    if (!mode.applies(this, projects.projects)) {
+                    val projectList = projects.projects
+                    if (!mode.applies(TestModeContext(this, projectList, emptyList(), null))) {
+                        notApplicable.add(mode)
                         continue
                     }
 
@@ -126,9 +139,13 @@ class TestLintRunner(private val task: TestLintTask) {
                     var files = projectMap[folderName]
                     if (files == null) {
                         files = this@TestLintRunner.createProjects(root)
+                        if (TestLintTask.duplicateFinder != null && task.testName != null) {
+                            TestLintTask.duplicateFinder.recordTestProject(task.testName, task, mode, files)
+                        }
                         projectMap[folderName] = files
                     }
-                    val clientState: Any? = mode.before(task, files)
+                    val beforeState = TestModeContext(this, projectList, files, null)
+                    val clientState: Any? = mode.before(beforeState)
                     var listener: LintListener? = null
                     try {
                         val lintClient: TestLintClient = createClient()
@@ -141,13 +158,17 @@ class TestLintRunner(private val task: TestLintTask) {
                                         project: Project?,
                                         context: Context?
                                     ) {
-                                        it.invoke(type, clientState)
+                                        val testContext = TestModeContext(
+                                            task, projectList, files,
+                                            clientState, driver, context
+                                        )
+                                        it.invoke(testContext, type, clientState)
                                     }
                                 }
                             listeners.add(listener)
                         }
 
-                        val testResult: TestResultState = checkLint(lintClient, root, files)
+                        val testResult: TestResultState = checkLint(lintClient, root, files, mode)
                         results[mode] = testResult
                         if (projectInspector != null) {
                             val knownProjects = lintClient.knownProjects
@@ -157,13 +178,27 @@ class TestLintRunner(private val task: TestLintTask) {
                             projectInspector.inspect(driver, projects)
                         }
                     } finally {
-                        mode.after(task, clientState)
+                        val afterState = TestModeContext(this, projectList, files, clientState)
+                        mode.after(afterState)
                         if (listener != null) {
                             listeners.remove(listener)
                         }
                     }
                 }
                 checkConsistentOutput(results)
+
+                // If you specifically configure a test mode which is not applicable
+                // in this test, produce a fake result which pinpoints the problem:
+                for (mode in notApplicable) {
+                    results[mode] = TestResultState(
+                        createClient(), rootDir,
+                        "No output because the configured test mode $mode is not " +
+                            "applicable in this project context",
+                        emptyList(),
+                        null
+                    )
+                }
+
                 val defaultMode = pickDefaultMode(results)
                 TestLintResult(this, results, defaultMode)
             } catch (e: Throwable) {
@@ -183,13 +218,14 @@ class TestLintRunner(private val task: TestLintTask) {
     private fun checkLint(
         client: TestLintClient,
         rootDir: File,
-        files: List<File>
+        files: List<File>,
+        mode: TestMode
     ): TestResultState {
         client.addCleanupDir(rootDir)
         client.setLintTask(task)
         return try {
             task.optionSetter?.set(client.flags)
-            client.checkLint(rootDir, files, task.checkedIssues)
+            client.checkLint(rootDir, files, task.checkedIssues, mode)
         } finally {
             client.setLintTask(null)
         }
@@ -201,9 +237,12 @@ class TestLintRunner(private val task: TestLintTask) {
                 return mode
             }
         }
-        throw RuntimeException(
-            "Invalid testModes configuration: ${task.testModes} and $results"
-        )
+
+        // The test mode is not one of the built-in test modes; just use one of them
+        return task.testModes.firstOrNull()
+            ?: throw RuntimeException(
+                "Invalid testModes configuration: ${task.testModes} and $results"
+            )
     }
 
     private fun checkConsistentOutput(results: Map<TestMode, TestResultState>) {
@@ -345,6 +384,17 @@ class TestLintRunner(private val task: TestLintTask) {
             projectMocks.clear()
             projects.assignProjectNames()
             projects.expandProjects()
+
+            if (task.reportFrom == null) {
+                projects.implicitReportFrom?.let { task.reportFrom(it) }
+            }
+
+            // Pick a report-from project to ensure the analysis relative to something
+            if (task.reportFrom == null) {
+                val app = projects.firstOrNull { it.type == ProjectDescription.Type.APP }
+                    ?: projects.firstOrNull()
+                app?.let { task.reportFrom(it) }
+            }
 
             // Sort into dependency order such that dependencies are always listed before
             // their dependents. Stable order is also useful for stable test output.

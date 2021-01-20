@@ -73,7 +73,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
 
     // ---- implements SourceCodeScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? {
+    override fun getApplicableMethodNames(): List<String> {
         return listOf(
             // FragmentManager commit check
             BEGIN_TRANSACTION,
@@ -106,7 +106,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableConstructorTypes(): List<String>? {
+    override fun getApplicableConstructorTypes(): List<String> {
         return listOf(
             SURFACE_TEXTURE_CLS,
             SURFACE_CLS,

@@ -71,7 +71,8 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                         + "public class TestService extends Service {\n"
                         + "             ~~~~~~~~~~~\n"
                         + "0 errors, 5 warnings\n";
-        lint().files(
+        ProjectDescription desc =
+                project(
                         // no manifest
                         mApplication,
                         mTestActivity,
@@ -79,7 +80,12 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                         mTestProvider,
                         mTestProvider2,
                         mTestReceiver,
-                        mSuppressedApplication)
+                        mSuppressedApplication);
+        lint().projects(desc)
+                // TODO: Make it possible to test it directly as provisional.
+                // This requires me to finally clean up the separation between analysis and
+                // reporting.
+                //                .provisional(desc)
                 .run()
                 .expect(expected);
     }

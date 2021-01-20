@@ -18,7 +18,9 @@ package com.android.tools.lint.checks.infrastructure
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
 import com.android.tools.lint.checks.infrastructure.TestMode.Companion.UI_INJECTION_HOST
+import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.LintListener
+import com.android.tools.lint.detector.api.Context
 import java.io.File
 
 /**
@@ -33,7 +35,13 @@ open class TestMode(
      * Display name of this test type. Included in diffs if the output
      * varies by test type to annotate the two output versions.
      */
-    val description: String
+    val description: String,
+    /**
+     * The qualified name of the canonical field referencing this test
+     * mode. This is used by test output to provide guidance on how to
+     * run with or without this test mode.
+     */
+    val fieldName: String
 ) : Iterable<TestMode> {
     /**
      * Folder name to write the test project into. By passing the same
@@ -43,38 +51,39 @@ open class TestMode(
     open val folderName: String = "default"
 
     /**
-     * Whether the test type is applicable for the given [task] and test [projects].
-     * For example, the [UI_INJECTION_HOST] type will skip projects without Kotlin
-     * source files.
+     * Whether the test type is applicable for the given [context]. For
+     * example, the [UI_INJECTION_HOST] type will skip projects without
+     * Kotlin source files.
      */
-    open fun applies(task: TestLintTask, projects: List<ProjectDescription>) = true
+    open fun applies(context: TestModeContext) = true
 
     /**
-     * Optional hook to run before running lint on the given list of project directories.
-     * The hook can return a state object of some sort, which will be passed back
-     * to the [after] hook.
+     * Optional hook to run before running lint on the given list of
+     * project directories. The hook can return a state object of some
+     * sort, which will be passed back to the [after] hook.
      */
-    open fun before(task: TestLintTask, projectFolders: List<File>): Any? = null
+    open fun before(context: TestModeContext): Any? = null
 
     /**
-     * Optional hook to run after the test type has finished, which an perform
-     * any appropriate test cleanup. For example, the [UI_INJECTION_HOST] test
-     * type will set a global flag to change the behavior of UAST, so this method
-     * lets the test type clean this up.
+     * Optional hook to run after the test type has finished, which
+     * an perform any appropriate test cleanup. For example, the
+     * [UI_INJECTION_HOST] test type will set a global flag to change
+     * the behavior of UAST, so this method lets the test type clean
+     * this up.
      */
-    open fun after(task: TestLintTask, setupValue: Any?) {
+    open fun after(context: TestModeContext) {
     }
 
     /**
-     * Optional hook to register to be notified of events triggered by lint.
-     * It will pass back the state object optionally created by the [before]
-     * hook.
+     * Optional hook to register to be notified of events triggered by
+     * lint. It will pass back the state object optionally created by
+     * the [before] hook.
      */
-    open val eventListener: ((LintListener.EventType, Any?) -> Unit)? = null
+    open val eventListener: ((TestModeContext, LintListener.EventType, Any?) -> Unit)? = null
 
     /**
-     * Custom explanation to show when the output is different than a previous
-     * test type
+     * Custom explanation to show when the output is different than a
+     * previous test type
      */
     open val diffExplanation: String? = null
 
@@ -87,13 +96,16 @@ open class TestMode(
     companion object {
         /** The default type of lint execution */
         @JvmField
-        val DEFAULT = TestMode(description = "Default")
+        val DEFAULT = TestMode(description = "Default", "TestMode.DEFAULT")
 
         /** Run lint with UI injection host mode turned on */
         @JvmField
-        val UI_INJECTION_HOST = object : TestMode("UInjectionHost Enabled") {
-            override fun applies(task: TestLintTask, projects: List<ProjectDescription>): Boolean {
-                return projects.any { project ->
+        val UI_INJECTION_HOST = object : TestMode(
+            "UInjectionHost Enabled",
+            "TestMode.UI_INJECTION_HOST"
+        ) {
+            override fun applies(context: TestModeContext): Boolean {
+                return context.projects.any { project ->
                     project.files.any {
                         it.targetRelativePath.endsWith(DOT_KT) ||
                             it.targetRelativePath.endsWith(DOT_KTS)
@@ -101,11 +113,11 @@ open class TestMode(
                 }
             }
 
-            override fun before(task: TestLintTask, projectFolders: List<File>) {
+            override fun before(context: TestModeContext): Any {
                 return TestLintTask.setForceUiInjection(true)
             }
 
-            override fun after(task: TestLintTask, setupValue: Any?) {
+            override fun after(context: TestModeContext) {
                 TestLintTask.setForceUiInjection(false)
             }
 
@@ -127,19 +139,22 @@ open class TestMode(
         }
 
         @JvmField
-        val RESOURCE_REPOSITORIES = object : TestMode("AGP Resource Repository") {
+        val RESOURCE_REPOSITORIES = object : TestMode(
+            "AGP Resource Repository",
+            "TestMode.RESOURCE_REPOSITORIES"
+        ) {
 
-            override fun applies(task: TestLintTask, projects: List<ProjectDescription>): Boolean {
-                return task.requestedResourceRepository
+            override fun applies(context: TestModeContext): Boolean {
+                return context.task.requestedResourceRepository
             }
 
-            override fun before(task: TestLintTask, projectFolders: List<File>): Any? {
-                task.forceAgpResourceRepository = true
+            override fun before(context: TestModeContext): Any? {
+                context.task.forceAgpResourceRepository = true
                 return null
             }
 
-            override fun after(task: TestLintTask, setupValue: Any?) {
-                task.forceAgpResourceRepository = false
+            override fun after(context: TestModeContext) {
+                context.task.forceAgpResourceRepository = false
             }
 
             override val diffExplanation: String =
@@ -150,8 +165,50 @@ open class TestMode(
                 """.trimIndent()
         }
 
+        /**
+         * Provisional testing support which attempts to find errors
+         * in partial analysis handling from detectors. For single
+         * project tests, it will first drop the minSdkVersion down to
+         * 1 and run lint in analysis-mode only; it will then revert
+         * the minSdkVersion and run it in merge mode. This will not
+         * only find lint checks which are incorrectly deferring
+         * minSdkVersion calculations to the merge stage; it will also
+         * cause any detectors which are calling illegal methods during
+         * analysis mode (such as getMainProject) to be caught. (Note
+         * that this isn't limited to minSdkVersion, it will also modify
+         * targetSdkVersion, and potentially additional elements in
+         * the manifest, such as moving all permissions into the main
+         * module, though that is not yet implemented.)
+         *
+         * For multi-module projects it will pick the "main" module
+         * (e.g. app), and then run analysis-only on all the modules,
+         * then merge on the main module.
+         */
+        @JvmField
+        val PARTIAL: TestMode = PartialTestMode()
+
         /** Returns all default included test modes */
         @JvmStatic
-        fun values(): List<TestMode> = listOf(DEFAULT, UI_INJECTION_HOST, RESOURCE_REPOSITORIES)
+        fun values(): List<TestMode> = listOf(
+            DEFAULT,
+            UI_INJECTION_HOST,
+            RESOURCE_REPOSITORIES,
+            PARTIAL
+        )
     }
+
+    /**
+     * State passed to test modes. This is encapsulated in a separate
+     * object such that it can vary over time without breaking any
+     * third party test modes which extend [TestMode] and implement its
+     * methods.
+     */
+    class TestModeContext(
+        val task: TestLintTask,
+        val projects: List<ProjectDescription>,
+        val projectFolders: List<File>,
+        val clientState: Any?,
+        val driver: LintDriver? = null,
+        val lintContext: Context? = null
+    )
 }

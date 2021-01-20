@@ -49,21 +49,21 @@ abstract class UastParser {
     abstract val evaluator: JavaEvaluator
 
     /**
-     * Prepare to parse the given contexts. This method will be called before
-     * a series of [.parse] calls, which allows some
-     * parsers to do up front global computation in case they want to more
-     * efficiently process multiple files at the same time. This allows a single
-     * type-attribution pass for example, which is a lot more efficient than
-     * performing global type analysis over and over again for each individual
-     * file
+     * Prepare to parse the given contexts. This method will be called
+     * before a series of [parse] calls, which allows some parsers to do
+     * up front global computation in case they want to more efficiently
+     * process multiple files at the same time. This allows a single
+     * type-attribution pass for example, which is a lot more efficient
+     * than performing global type analysis over and over again for each
+     * individual file
      *
      * @param contexts a list of production source contexts to be parsed
-     * @param testContexts a list of test source contexts to be parsed
-     * @param javaLanguageLevel the language level to parse Java programming language
-     *          files with
-     * @param kotlinLanguageLevel the language level settings to parse Kotlin source
-     *          files with
-     * @return true if the preparation succeeded; false if there were errors
+     * @param javaLanguageLevel the language level to parse Java
+     *     programming language files with
+     * @param kotlinLanguageLevel the language level settings to parse
+     *     Kotlin source files with
+     * @return true if the preparation succeeded; false if there were
+     *     errors
      */
     open fun prepare(
         contexts: List<JavaContext>,
@@ -137,9 +137,9 @@ abstract class UastParser {
     ): Location
 
     /**
-     * Like [.getRangeLocation]
-     * but both offsets are relative to the starting offset of the given node. This is
-     * sometimes more convenient than operating relative to the ending offset when you
+     * Like [getRangeLocation] but both offsets are relative to the
+     * starting offset of the given node. This is sometimes more
+     * convenient than operating relative to the ending offset when you
      * have a fixed range in mind.
      *
      * @param context information about the file being parsed

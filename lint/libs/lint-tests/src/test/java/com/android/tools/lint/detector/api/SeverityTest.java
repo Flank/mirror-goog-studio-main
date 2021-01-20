@@ -31,6 +31,17 @@ public class SeverityTest extends TestCase {
         assertThat(Severity.WARNING.getDescription()).isEqualTo("Warning");
     }
 
+    public void testName() {
+        assertThat(Severity.ERROR.toName()).isEqualTo("error");
+        assertThat(Severity.INFORMATIONAL.toName()).isEqualTo("informational");
+    }
+
+    public void testFromName() {
+        for (Severity severity : Severity.values()) {
+            assertThat(Severity.fromName(severity.toName())).isEqualTo(severity);
+        }
+    }
+
     public void testFromString() {
         assertThat(Severity.fromName("ERROR")).isSameAs(Severity.ERROR);
         assertThat(Severity.fromName("error")).isSameAs(Severity.ERROR);
