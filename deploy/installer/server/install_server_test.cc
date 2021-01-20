@@ -89,8 +89,6 @@ class FakeExecutor : public Executor {
         Canary canary("foo");
         InstallServer server(stdin[0], stdout[1], canary);
         server.Run();
-        close(stdin[0]);
-        close(stdout[1]);
         close(stderr[1]);
       });
     } else {
