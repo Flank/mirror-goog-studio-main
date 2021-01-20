@@ -220,9 +220,6 @@ message GetPropertiesResponse {
     repeated StringEntry strings = 2;
     Resource layout = 3;
     repeated Property property = 4;
-    // A monotonically increasing number, which can be used by the client to know when older
-    // property data it has cached may no longer be relevant.
-    int32 generation = 5;
 }
 
 // An event containing complete layout information about a single node tree
@@ -235,8 +232,6 @@ message LayoutEvent {
     // the main window, but can be positive for floating windows (e.g. dialogs).
     Point root_offset = 4;
     Screenshot screenshot = 5;
-    // A monotonically increasing number, which can be used by the client to ignore stale events.
-    int32 generation = 6;
 }
 
 // An event fired whenever a new root is added or an old root is removed.

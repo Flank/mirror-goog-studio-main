@@ -16,19 +16,18 @@
 
 package com.android.tools.agent.appinspection.proto
 
-import android.content.Context
 import android.content.res.Resources
 import android.graphics.Point
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
-import com.android.tools.agent.appinspection.util.ThreadUtils
 import android.view.WindowManager
 import com.android.tools.agent.appinspection.framework.getChildren
 import com.android.tools.agent.appinspection.framework.getTextValue
 import com.android.tools.agent.appinspection.proto.property.PropertyCache
 import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
 import com.android.tools.agent.appinspection.proto.resource.convert
+import com.android.tools.agent.appinspection.util.ThreadUtils
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
@@ -117,7 +116,7 @@ fun View.createAppContext(stringTable: StringTable): AppContext {
     }.build()
 }
 
-fun View.createGetPropertiesResponse(generation: Int): GetPropertiesResponse {
+fun View.createGetPropertiesResponse(): GetPropertiesResponse {
     // TODO(b/177573802): WebView is a special case and should happen on the UI thread
     ThreadUtils.assertOffMainThread()
 
@@ -152,7 +151,6 @@ fun View.createGetPropertiesResponse(generation: Int): GetPropertiesResponse {
     val view = this
     return GetPropertiesResponse.newBuilder().apply {
         this.viewId = view.uniqueDrawingId
-        this.generation = generation
 
         view.createResource(stringTable, sourceLayoutResId)?.let { layoutResource ->
             layout = layoutResource

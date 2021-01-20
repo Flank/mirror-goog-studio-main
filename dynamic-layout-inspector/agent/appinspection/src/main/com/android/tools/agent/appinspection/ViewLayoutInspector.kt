@@ -64,15 +64,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * When true, indicates we should stop capturing after the next one
          */
         var isLastCapture: Boolean = false
-    ) {
-        /**
-         * How many times this capture was triggered.
-         *
-         * The most important detail is that this is exposed to the client as a monotonically
-         * increasing number.
-         */
-        var generation: Int = 1
-    }
+    )
 
     private val contextMapLock = Any()
 
@@ -217,11 +209,8 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                             type = Screenshot.Type.SKP
                             bytes = screenshot
                         }.build()
-                        generation = context.generation
                     }.build()
                 }
-
-                context.generation++
             }
         }
 
@@ -287,35 +276,16 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     ) {
 
         ThreadUtils.runOnMainThread {
-            var foundView: View? = null
-            var foundViewRoot: View? = null
-
-            for (rootView in getRootViews()) {
-                foundView = rootView
-                    .flatten()
-                    .filter { view -> view.uniqueDrawingId == propertiesCommand.viewId }
-                    .firstOrNull()
-
-                if (foundView != null) {
-                    foundViewRoot = rootView
-                    break
-                }
-            }
+            val foundView = getRootViews()
+                .asSequence()
+                .flatMap { rootView -> rootView.flatten() }
+                .filter { view -> view.uniqueDrawingId == propertiesCommand.viewId }
+                .firstOrNull()
 
             environment.executors().primary().execute {
-                val context: CaptureContext? = if (foundViewRoot != null) {
-                    // We found a root view but perhaps due to rare timing it might not be in the
-                    // context map anymore
-                    synchronized(contextMapLock) { contextMap[foundViewRoot.uniqueDrawingId] }
-                } else {
-                    null
-                }
-
-                val response = if (foundView != null && context != null) {
-                    foundView.createGetPropertiesResponse(context.generation)
-                } else {
-                    GetPropertiesResponse.getDefaultInstance()
-                }
+                val response =
+                    foundView?.createGetPropertiesResponse()
+                        ?: GetPropertiesResponse.getDefaultInstance()
                 callback.reply { getPropertiesResponse = response }
             }
         }
