@@ -29,7 +29,6 @@ dependencies {
 }
 
 sourceSets {
-    main.java.srcDir "${project.buildDir}/generated/source/proto/main/java"
     main.java.srcDir "${project.buildDir}/generated/source/proto/main/grpc"
     main.proto.srcDir "$projectDir"
     main.proto.include "**/*.proto"

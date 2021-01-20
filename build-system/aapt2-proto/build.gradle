@@ -44,17 +44,3 @@ archivesBaseName = 'aapt2-proto'
 version = rootProject.ext.buildVersion + '-' + aaptVersionProperties.getProperty("aapt2Version")
 project.ext.pomName = 'AAPT2 proto'
 project.ext.pomDesc = 'Android Asset Packaging Tool 2. Protocol Buffer Files'
-
-// Add extra settings on top of the ones in the task definitions.
-sourcesJar.from new File(project.buildDir, "generated/source/proto/main/java/")
-jar.dependsOn compileJava
-
-// Make sure before we jar anything we wait for the proto tasks to finish.
-protobuf {
-    generateProtoTasks {
-        all().each { task ->
-            sourcesJar.dependsOn task
-            jar.dependsOn task
-        }
-    }
-}
