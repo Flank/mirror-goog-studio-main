@@ -89,8 +89,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     @get:InputFiles
-    var microApkManifest: FileCollection? = null
-        private set
+    abstract val microApkManifest: RegularFileProperty
 
     @get:Optional
     @get:Input
@@ -193,11 +192,11 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
             )
         }
-        if (microApkManifest != null) {
+        if (microApkManifest.isPresent) {
             // this is now always present if embedding is enabled, but it doesn't mean
             // anything got embedded so the file may not run (the file path exists and is
             // returned by the FC but the file doesn't exist.
-            val microManifest = microApkManifest!!.singleFile
+            val microManifest = microApkManifest.get().asFile
             if (microManifest.isFile) {
                 providers.add(
                     ManifestProviderImpl(
@@ -355,7 +354,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             if (creationConfig.taskContainer.microApkTask != null
                 && creationConfig.embedsMicroApp
             ) {
-                task.microApkManifest = project.files(creationConfig.paths.microApkManifestFile)
+                creationConfig.artifacts.setTaskInputToFinalProduct(
+                        InternalArtifactType.MICRO_APK_MANIFEST_FILE,
+                        task.microApkManifest
+                )
             }
             task.applicationId.set(creationConfig.applicationId)
             task.applicationId.disallowChanges()
