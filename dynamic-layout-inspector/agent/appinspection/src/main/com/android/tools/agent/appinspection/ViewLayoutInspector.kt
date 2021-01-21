@@ -28,6 +28,7 @@ import com.android.tools.agent.appinspection.framework.flatten
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.createAppContext
 import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
+import com.android.tools.agent.appinspection.proto.createPropertyGroup
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.idea.protobuf.ByteString
@@ -178,49 +179,78 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     }
                 }
 
-                command.run() // Triggers image fetch into `os`
-                val screenshot = ByteString.copyFrom(os.toByteArray())
-                os.reset() // Clear stream, ready for next frame
-
-                if (context.isLastCapture) {
-                    context.handle.close()
-                }
-
-                val stringTable = StringTable()
-                val appContext = root.createAppContext(stringTable)
-                lateinit var rootView: ViewNode
-                lateinit var rootOffset: IntArray
-                run {
-                    // Get layout info on the view thread, to avoid races
-                    val future = CompletableFuture<Unit>()
-                    root.post {
-                        rootView = root.toNode(stringTable, skipSystemViews)
-                        rootOffset = IntArray(2)
-                        root.getLocationInSurface(rootOffset)
-
-                        future.complete(Unit)
-                    }
-                    future.get()
-                }
-
                 // Check roots before sending a layout event, as this may send out a roots event.
                 // We always want layout events to follow up-to-date root events.
                 checkRoots(continuous)
 
-                connection.sendEvent {
-                    layoutEvent = LayoutEvent.newBuilder().apply {
-                        addAllStrings(stringTable.toStringEntries())
-                        this.appContext = appContext
-                        this.rootView = rootView
-                        this.rootOffset = Point.newBuilder().apply {
-                            x = rootOffset[0]
-                            y = rootOffset[1]
+                run { // Prepare and send LayoutEvent
+                    command.run() // Triggers image fetch into `os`
+                    val screenshot = ByteString.copyFrom(os.toByteArray())
+                    os.reset() // Clear stream, ready for next frame
+
+                    if (context.isLastCapture) {
+                        context.handle.close()
+                    }
+
+                    val stringTable = StringTable()
+                    val appContext = root.createAppContext(stringTable)
+                    lateinit var rootView: ViewNode
+                    lateinit var rootOffset: IntArray
+                    run {
+                        // Get layout info on the view thread, to avoid races
+                        val future = CompletableFuture<Unit>()
+                        root.post {
+                            rootView = root.toNode(stringTable, skipSystemViews)
+                            rootOffset = IntArray(2)
+                            root.getLocationInSurface(rootOffset)
+
+                            future.complete(Unit)
+                        }
+                        future.get()
+                    }
+
+                    connection.sendEvent {
+                        layoutEvent = LayoutEvent.newBuilder().apply {
+                            addAllStrings(stringTable.toStringEntries())
+                            this.appContext = appContext
+                            this.rootView = rootView
+                            this.rootOffset = Point.newBuilder().apply {
+                                x = rootOffset[0]
+                                y = rootOffset[1]
+                            }.build()
+                            this.screenshot = Screenshot.newBuilder().apply {
+                                type = Screenshot.Type.SKP
+                                bytes = screenshot
+                            }.build()
                         }.build()
-                        this.screenshot = Screenshot.newBuilder().apply {
-                            type = Screenshot.Type.SKP
-                            bytes = screenshot
+                    }
+                }
+
+                if (!continuous) { // Prepare and send PropertiesEvent
+                    // If this is a one-time layout event request, then collect and send all
+                    // properties as well, so that the values will match exactly the layout at this
+                    // time.
+
+                    lateinit var allViews: List<View>
+                    run {
+                        // Get layout info on the view thread, to avoid races
+                        val future = CompletableFuture<Unit>()
+                        root.post {
+                            allViews = root.flatten().toList()
+                            future.complete(Unit)
+                        }
+                        future.get()
+                    }
+
+                    val stringTable = StringTable()
+                    val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
+                    connection.sendEvent {
+                        propertiesEvent = PropertiesEvent.newBuilder().apply {
+                            rootId = root.uniqueDrawingId
+                            addAllPropertyGroups(propertyGroups)
+                            addAllStrings(stringTable.toStringEntries())
                         }.build()
-                    }.build()
+                    }
                 }
             }
         }

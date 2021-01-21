@@ -193,6 +193,13 @@ message Property {
     }
 }
 
+// A collection of all properties associated with a single view
+message PropertyGroup {
+    int64 view_id = 1;
+    Resource layout = 2;
+    repeated Property property = 3;
+}
+
 // ======= COMMANDS, RESPONSES, AND EVENTS =======
 
 // Tells the inspector to start sending |LayoutEvent|s asynchronously
@@ -219,10 +226,8 @@ message GetPropertiesCommand {
 // If the query failed (e.g. the command's view ID could not be found), the response's |view_id|
 // value will be 0.
 message GetPropertiesResponse {
-    int64 view_id = 1;
-    repeated StringEntry strings = 2;
-    Resource layout = 3;
-    repeated Property property = 4;
+    repeated StringEntry strings = 1;
+    PropertyGroup property_group = 2;
 }
 
 // An event containing complete layout information about a single node tree
@@ -241,6 +246,15 @@ message LayoutEvent {
 // Host is guaranteed to receive this at least once before the first |LayoutEvent|
 message WindowRootsEvent {
     repeated int64 ids = 1;
+}
+
+// An event fired which contains ALL properties under a single layout tree.
+// Host will receive this right after a |LayoutEvent| when taking a layout snapshot (that is,
+// fetching once, with continuous = false).
+message PropertiesEvent {
+    int64 root_id = 1;
+    repeated StringEntry strings = 2;
+    repeated PropertyGroup property_groups = 3;
 }
 
 // An event for reporting an error message, particularly for crashes that happen off the inspector
@@ -271,5 +285,6 @@ message Event {
         ErrorEvent error_event = 1;
         WindowRootsEvent roots_event = 2;
         LayoutEvent layout_event = 3;
+        PropertiesEvent properties_event = 4;
     }
 }

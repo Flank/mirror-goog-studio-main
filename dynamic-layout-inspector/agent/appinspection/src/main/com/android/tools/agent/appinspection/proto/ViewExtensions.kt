@@ -32,6 +32,7 @@ import com.android.tools.agent.appinspection.util.ThreadUtils
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertyGroup
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Rect
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
@@ -163,10 +164,18 @@ fun View.createAppContext(stringTable: StringTable): AppContext {
 }
 
 fun View.createGetPropertiesResponse(): GetPropertiesResponse {
+    val stringTable = StringTable()
+    val view = this
+
+    return GetPropertiesResponse.newBuilder().apply {
+        propertyGroup = view.createPropertyGroup(stringTable)
+        addAllStrings(stringTable.toStringEntries())
+    }.build()
+}
+
+fun View.createPropertyGroup(stringTable: StringTable): PropertyGroup {
     // TODO(b/177573802): WebView is a special case and should happen on the UI thread
     ThreadUtils.assertOffMainThread()
-
-    val stringTable = StringTable()
 
     val viewCacheMap = PropertyCache.createViewCache()
     val layoutCacheMap = PropertyCache.createLayoutParamsCache()
@@ -195,7 +204,7 @@ fun View.createGetPropertiesResponse(): GetPropertiesResponse {
     layoutCache.readProperties(layoutParams, layoutReader)
 
     val view = this
-    return GetPropertiesResponse.newBuilder().apply {
+    return PropertyGroup.newBuilder().apply {
         this.viewId = view.uniqueDrawingId
 
         view.createResource(stringTable, sourceLayoutResId)?.let { layoutResource ->
@@ -205,8 +214,5 @@ fun View.createGetPropertiesResponse(): GetPropertiesResponse {
         (viewProperties + layoutProperties)
             .mapNotNull { property -> property.build(stringTable) }
             .forEach { property -> this.addProperty(property) }
-
-        addAllStrings(stringTable.toStringEntries())
     }.build()
 }
-
