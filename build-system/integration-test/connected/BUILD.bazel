@@ -642,6 +642,15 @@ gradle_connected_test(
     deps = TEST_DEPS,
 )
 
+gradle_connected_test(
+    name = "FailureRetentionConnectedTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
+    data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/failureRetention"],
+    flaky = True,  # b/148626301 flaky emulator connectivity
+    maven_repos = TEST_MAVEN_REPOS,
+    deps = TEST_DEPS,
+)
+
 # Maven repo with all the dependencies required by test projects.
 #
 # Quick way of updating this list:

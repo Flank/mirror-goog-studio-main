@@ -57,7 +57,12 @@ private fun computeRegistrationDirectoryContainer(): Path? {
             for (dirstr in arrayOf(
                 System.getenv("XDG_RUNTIME_DIR"),
                 "/run/user/${getUid()}",
-                (System.getenv("HOME") ?: "/") + ".android"
+                System.getenv("ANDROID_EMULATOR_HOME"),
+                System.getenv("ANDROID_PREFS_ROOT"),
+                System.getenv("ANDROID_SDK_HOME"),
+                (System.getenv("HOME") ?: "/") + ".android",
+                // For integration tests, we use java property.
+                System.getProperty("android.emulator.home")
             )) {
                 if (dirstr == null) {
                     continue
