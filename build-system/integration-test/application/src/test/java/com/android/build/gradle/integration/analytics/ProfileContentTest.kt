@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.integration.analytics
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
+import com.android.build.gradle.options.BooleanOption
 import com.google.common.collect.Iterables
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import com.google.wireless.android.sdk.stats.GradleBuildProject.GradlePlugin.ORG_JETBRAINS_KOTLIN_GRADLE_PLUGIN_KOTLINANDROIDPLUGINWRAPPER
@@ -41,10 +41,11 @@ import java.util.regex.Pattern
 class ProfileContentTest {
     @get:Rule
     var project = GradleTestProject.builder()
-        .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .enableProfileOutput()
-        .create()
+            .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
+            // http://b/149978740
+            .addGradleProperties(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.propertyName + "=false")
+            .enableProfileOutput()
+            .create()
 
     @Test
     fun testProfileProtoContentMakesSense() {

@@ -102,7 +102,6 @@ class IncrementalJavaCompileWithAPsTest(
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(setUpTestProject())
         .withKotlinGradlePlugin(withKapt)
-        .also { if (withKapt) it.withConfigurationCaching(ConfigurationCaching.OFF) }
         .create()
 
     private fun setUpTestProject(): TestProject {

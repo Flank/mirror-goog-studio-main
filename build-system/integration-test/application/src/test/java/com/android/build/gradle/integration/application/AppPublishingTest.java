@@ -21,6 +21,7 @@ import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -38,8 +39,10 @@ public class AppPublishingTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("densitySplit")
-                    // maven-publish is incompatible
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    // http://b/149978740
+                    .addGradleProperties(
+                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
+                                    + "=false")
                     .create();
 
     @Before
@@ -84,7 +87,10 @@ public class AppPublishingTest {
     @Test
     public void testBundlePublishing() throws Exception {
         // publish the app as a bundle and an apk.
-        project.execute("publishBundlePublicationToMavenRepository");
+        project.executor()
+                // http://b/149978740 - building bundle always runs the incompatible task
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("publishBundlePublicationToMavenRepository");
 
         // manually check that the app publishing worked.
         Path testRepo = project.getProjectDir().toPath().resolve("testrepo");

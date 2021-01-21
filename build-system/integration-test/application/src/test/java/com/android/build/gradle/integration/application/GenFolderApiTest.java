@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -143,8 +142,6 @@ public class GenFolderApiTest {
     @Test
     public void checkAddingAndRemovingGeneratingTasks() throws Exception {
         project.executor()
-                // http://b/155766476
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .withArgument("-P" + "inject_enable_generate_values_res=false")
                 .run("assembleDebug");
 
@@ -156,8 +153,6 @@ public class GenFolderApiTest {
         }
 
         project.executor()
-                // http://b/155766476
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .withArgument("-P" + "inject_enable_generate_values_res=true")
                 .run("assembleDebug");
         try (Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
@@ -242,6 +237,6 @@ public class GenFolderApiTest {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
-                .isEqualTo("073e20ecd397be009b7cd7fd6f6166012d9c39a0");
+                .isEqualTo("40bca4a6e886a2ada3a060146e291a4a983b9794");
     }
 }
