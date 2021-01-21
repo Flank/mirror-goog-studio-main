@@ -16,6 +16,7 @@
 
 package com.android.builder.multidex;
 
+import static com.android.SdkConstants.DOT_DEX;
 import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE_HELP_PAGE;
 
 import com.android.annotations.NonNull;
@@ -54,7 +55,7 @@ public final class D8MainDexList {
      *
      * @param mainDexRules Proguard rules written as strings
      * @param mainDexRulesFiles files containing the Proguard rules
-     * @param programFiles classes that will end up in the final binary
+     * @param programFiles classes or dex files that will end up in the final binary
      * @param libraryFiles classes that are used only to resolve types in the program classes, but
      *     are not packaged in the final binary e.g. android.jar, provided classes etc.
      * @return a list of classes to be kept in the main dex file
@@ -89,8 +90,13 @@ public final class D8MainDexList {
                                         .filter(
                                                 file -> {
                                                     Path relative = program.relativize(file);
-                                                    return ClassFileInput.CLASS_MATCHER.test(
-                                                            relative.toString());
+                                                    Boolean isClass =
+                                                            ClassFileInput.CLASS_MATCHER.test(
+                                                                    relative.toString());
+
+                                                    Boolean isDex =
+                                                            relative.toString().endsWith(DOT_DEX);
+                                                    return isClass || isDex;
                                                 })
                                         .collect(Collectors.toList());
                         command.addProgramFiles(allClasses);

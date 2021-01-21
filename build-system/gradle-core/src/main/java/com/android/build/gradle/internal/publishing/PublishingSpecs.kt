@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PRO
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DESUGAR_LIB_MERGED_KEEP_RULES
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_PUBLISHED_DEX
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
@@ -189,6 +190,7 @@ class PublishingSpecs {
                 reverseMetadata(NATIVE_DEBUG_METADATA, ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA)
                 reverseMetadata(NATIVE_SYMBOL_TABLES, ArtifactType.REVERSE_METADATA_NATIVE_SYMBOL_TABLES)
                 reverseMetadata(DESUGAR_LIB_MERGED_KEEP_RULES, ArtifactType.DESUGAR_LIB_MERGED_KEEP_RULES)
+                reverseMetadata(FEATURE_PUBLISHED_DEX, ArtifactType.FEATURE_PUBLISHED_DEX)
 
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
                 runtime(FEATURE_NAME, ArtifactType.FEATURE_NAME)

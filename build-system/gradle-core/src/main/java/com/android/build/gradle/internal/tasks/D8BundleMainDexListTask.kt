@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,18 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
-import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
 import com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY
-import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.model.CodeShrinker
 import com.android.builder.multidex.D8MainDexList
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -39,18 +39,18 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 /**
- * Calculate the main dex list using D8.
+ * A task calculating the main dex list for bundle using D8.
  */
 @CacheableTask
-abstract class D8MainDexListTask : NonIncrementalTask() {
+abstract class D8BundleMainDexListTask : NonIncrementalTask() {
 
     @get:Input
     abstract val errorFormat: Property<SyncOptions.ErrorFormatMode>
@@ -72,8 +72,13 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
     @get:Classpath
     abstract val bootClasspath: ConfigurableFileCollection
 
-    @get:Classpath
-    abstract val inputClasses: ConfigurableFileCollection
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val baseDexDirs: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val featureDexDirs: ConfigurableFileCollection
 
     @get:Classpath
     abstract val libraryClasses: ConfigurableFileCollection
@@ -90,37 +95,33 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
             userMultidexProguardRules.orNull?.let { userRules ->
                 params.proguardRules.from(userRules)
             }
-            params.programClasses.from(inputClasses)
+            params.programDexFiles.from(baseDexDirs, featureDexDirs)
             params.libraryClasses.from(libraryClasses)
             params.bootClasspath.from(bootClasspath)
-            params.userMultidexKeepFile.set(userMultidexKeepFile.orNull?.asFile)
-            params.output.set(output.asFile)
+            params.userMultidexKeepFile.set(userMultidexKeepFile)
+            params.output.set(output)
             params.errorFormat.set(errorFormat)
         }
     }
 
     abstract class MainDexListWorkerAction : ProfileAwareWorkAction<MainDexListWorkerAction.Params>() {
-
         abstract class Params: ProfileAwareWorkAction.Parameters() {
             abstract val proguardRules: ConfigurableFileCollection
-            abstract val programClasses: ConfigurableFileCollection
+            abstract val programDexFiles: ConfigurableFileCollection
             abstract val libraryClasses: ConfigurableFileCollection
             abstract val bootClasspath: ConfigurableFileCollection
-            abstract val userMultidexKeepFile: Property<File>
-            abstract val output: Property<File>
+            abstract val userMultidexKeepFile: RegularFileProperty
+            abstract val output: RegularFileProperty
             abstract val errorFormat: Property<SyncOptions.ErrorFormatMode>
         }
 
         override fun run() {
-            // Javac output may be missing if there are no .java sources, so filter missing b/152759930.
-            val programClasses = parameters.programClasses.files.filter { it.exists() }
-            val libraryFilesNotInInputs =
-                parameters.libraryClasses.files.filter { !programClasses.contains(it) } + parameters.bootClasspath.files
+            val libraryFiles = parameters.libraryClasses.files + parameters.bootClasspath.files
             val logger = Logging.getLogger(D8MainDexListTask::class.java)
 
             logger.debug("Generating the main dex list using D8.")
-            logger.debug("Program files: %s", programClasses.joinToString())
-            logger.debug("Library files: %s", libraryFilesNotInInputs.joinToString())
+            logger.debug("Program files: %s", parameters.programDexFiles.joinToString())
+            logger.debug("Library files: %s", libraryFiles.joinToString())
             logger.debug("Proguard rule files: %s", parameters.proguardRules.joinToString())
 
             val mainDexClasses = mutableSetOf<String>()
@@ -129,46 +130,34 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
                 D8MainDexList.generate(
                     getPlatformRules(),
                     parameters.proguardRules.map { it.toPath() },
-                    programClasses.map { it.toPath() },
-                    libraryFilesNotInInputs.map { it.toPath() },
+                    parameters.programDexFiles.map { it.toPath() },
+                    libraryFiles.map { it.toPath() },
                     MessageReceiverImpl(parameters.errorFormat.get(), logger)
                 )
             )
 
-            parameters.userMultidexKeepFile.orNull?.let {
+            parameters.userMultidexKeepFile.asFile.orNull?.let {
                 mainDexClasses.addAll(it.readLines())
             }
 
-            parameters.output.get().writeText(mainDexClasses.joinToString(separator = System.lineSeparator()))
+            parameters.output.asFile.get().writeText(
+                mainDexClasses.joinToString(separator = System.lineSeparator()))
         }
     }
 
     class CreationAction(
-        creationConfig: VariantCreationConfig,
-    ) : VariantTaskCreationAction<D8MainDexListTask, VariantCreationConfig>(
+        creationConfig: ApkCreationConfig
+    ) : VariantTaskCreationAction<D8BundleMainDexListTask, ApkCreationConfig> (
         creationConfig
     ) {
-
-        private val inputClasses: FileCollection
         private val libraryClasses: FileCollection
 
         init {
-            val inputScopes: Set<QualifiedContent.ScopeType> = setOf(
-                PROJECT,
-                SUB_PROJECTS,
-                EXTERNAL_LIBRARIES
+            val libraryScopes = setOf(
+                PROVIDED_ONLY,
+                TESTED_CODE
             )
 
-            val libraryScopes = setOf(PROVIDED_ONLY, TESTED_CODE)
-
-            // It is ok to get streams that have more types/scopes than we are asking for, so just
-            // check if intersection is not empty. This is what TransformManager does.
-            inputClasses = creationConfig.transformManager
-                .getPipelineOutputAsFileCollection { contentTypes, scopes ->
-                    contentTypes.contains(
-                        QualifiedContent.DefaultContentType.CLASSES
-                    ) && inputScopes.intersect(scopes).isNotEmpty()
-                }
             libraryClasses = creationConfig.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
@@ -177,23 +166,17 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
                 }
         }
 
-        override val name: String = creationConfig.computeTaskName("multiDexList")
-        override val type: Class<D8MainDexListTask> = D8MainDexListTask::class.java
+        override val name: String = creationConfig.computeTaskName("bundleMultiDexList")
+        override val type: Class<D8BundleMainDexListTask> = D8BundleMainDexListTask::class.java
 
-        override fun handleProvider(
-            taskProvider: TaskProvider<D8MainDexListTask>
-        ) {
+        override fun handleProvider(taskProvider: TaskProvider<D8BundleMainDexListTask>) {
             super.handleProvider(taskProvider)
-            creationConfig
-                .artifacts
-                .setInitialProvider(taskProvider, D8MainDexListTask::output)
-                .withName("mainDexList.txt")
-                .on(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider, D8BundleMainDexListTask::output
+            ).withName("mainDexList.txt").on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
         }
 
-        override fun configure(
-            task: D8MainDexListTask
-        ) {
+        override fun configure(task: D8BundleMainDexListTask) {
             super.configure(task)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
@@ -217,30 +200,25 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
                 )
             }
             task.userMultidexKeepFile.disallowChanges()
-
-            task.inputClasses.from(inputClasses).disallowChanges()
-            task.libraryClasses.from(libraryClasses).disallowChanges()
-
             task.bootClasspath.from(creationConfig.variantScope.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(
                     SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions))
+
+            task.libraryClasses.from(libraryClasses).disallowChanges()
+
+            task.baseDexDirs.from(
+                creationConfig.artifacts.getAll(InternalMultipleArtifactType.DEX))
+
+            if (creationConfig.codeShrinker != CodeShrinker.PROGUARD) {
+                task.featureDexDirs.from(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.FEATURE_PUBLISHED_DEX
+                    )
+                )
+            }
         }
     }
 }
-
-internal fun getPlatformRules(): List<String> = listOf(
-    "-keep public class * extends android.app.Instrumentation {\n"
-            + "  <init>(); \n"
-            + "  void onCreate(...);\n"
-            + "  android.app.Application newApplication(...);\n"
-            + "  void callApplicationOnCreate(android.app.Application);\n"
-            + "}",
-    "-keep public class * extends android.app.Application { "
-            + "  <init>();\n"
-            + "  void attachBaseContext(android.content.Context);\n"
-            + "}",
-    "-keep public class * extends android.app.backup.BackupAgent { <init>(); }",
-    "-keep public class * implements java.lang.annotation.Annotation { *;}",
-    "-keep public class * extends android.test.InstrumentationTestCase { <init>(); }"
-)

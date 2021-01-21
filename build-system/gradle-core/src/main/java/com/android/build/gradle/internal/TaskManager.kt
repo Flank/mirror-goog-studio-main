@@ -94,6 +94,7 @@ import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
 import com.android.build.gradle.internal.tasks.CheckProguardFiles
 import com.android.build.gradle.internal.tasks.CompressAssetsTask
+import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
 import com.android.build.gradle.internal.tasks.D8MainDexListTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
 import com.android.build.gradle.internal.tasks.DesugarLibKeepRulesMergeTask
@@ -104,6 +105,7 @@ import com.android.build.gradle.internal.tasks.DexMergingAction
 import com.android.build.gradle.internal.tasks.DexMergingTask
 import com.android.build.gradle.internal.tasks.DexSplitterTask
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles
+import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.JacocoTask
@@ -1734,10 +1736,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
         if (creationConfig.dexingType.needsMainDexList) {
-            taskFactory.register(D8MainDexListTask.CreationAction(creationConfig, false))
+            taskFactory.register(D8MainDexListTask.CreationAction(creationConfig))
         }
         if (creationConfig.needsMainDexListForBundle) {
-            taskFactory.register(D8MainDexListTask.CreationAction(creationConfig, true))
+            taskFactory.register(D8BundleMainDexListTask.CreationAction(creationConfig))
+        }
+        if (creationConfig.variantType.isDynamicFeature) {
+            taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
         createDexTasks(creationConfig, dexingType, registeredLegacyTransform)
         maybeCreateResourcesShrinkerTasks(creationConfig)

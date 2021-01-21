@@ -398,6 +398,9 @@ InternalArtifactType<T : FileSystemLocation>(
     // The feature dex files output by the DexSplitter from the base. The base produces and
     // publishes these files when there's multi-apk code shrinking.
     object FEATURE_DEX: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // The feature dex files to be published from feature modules to the base for computing main
+    // dex list for bundle.
+    object FEATURE_PUBLISHED_DEX: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // The class files for a module and all of its runtime dependencies.
     object MODULE_AND_RUNTIME_DEPS_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // The name of a dynamic or legacy instant feature`

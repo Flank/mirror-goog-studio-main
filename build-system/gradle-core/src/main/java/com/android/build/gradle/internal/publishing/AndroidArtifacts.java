@@ -149,6 +149,8 @@ public class AndroidArtifacts {
     private static final String TYPE_DESUGAR_LIB_MERGED_KEEP_RULES =
             "android-desugar-lib-merged-keep-rules";
 
+    private static final String TYPE_FEATURE_PUBLISHED_DEX = "android-feature-published-dex";
+
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
         RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
@@ -413,6 +415,10 @@ public class AndroidArtifacts {
         // This is published by {@link FeatureNameWriterTask} to be consumed by dependencies
         // of the feature that need to know the name of its feature split
         FEATURE_NAME(TYPE_FEATURE_NAME),
+
+        // The feature dex files published from feature modules to the base for computing main
+        // dex list for bundle.
+        FEATURE_PUBLISHED_DEX(TYPE_FEATURE_PUBLISHED_DEX),
 
         // Reverse Metadata artifacts
         REVERSE_METADATA_FEATURE_DECLARATION(TYPE_REVERSE_METADATA_FEATURE_DECLARATION),
