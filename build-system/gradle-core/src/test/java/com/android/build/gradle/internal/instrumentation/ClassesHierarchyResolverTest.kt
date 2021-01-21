@@ -64,15 +64,17 @@ class ClassesHierarchyResolverTest(private val testMode: TestMode) {
             ClassExtendsAClassThatExtendsAnotherClassAndImplementsTwoInterfaces::class.java
         )
 
-        val builder = ClassesHierarchyResolver.Builder(ClassesDataCache()).addSources(androidJar)
+        val builder =
+            ClassesHierarchyResolver.Builder(ClassesDataCache())
+            .addDependenciesSources(androidJar)
 
         if (testMode == TestMode.DIR) {
             TestInputsGenerator.pathWithClasses(inputDir.toPath(), srcClasses)
-            builder.addSources(inputDir)
+            builder.addProjectSources(inputDir)
         } else {
             val inputJar = File(inputDir, "classes.jar")
             TestInputsGenerator.pathWithClasses(inputJar.toPath(), srcClasses)
-            builder.addSources(inputJar)
+            builder.addProjectSources(inputJar)
         }
 
         classesHierarchyResolver = builder.build()
