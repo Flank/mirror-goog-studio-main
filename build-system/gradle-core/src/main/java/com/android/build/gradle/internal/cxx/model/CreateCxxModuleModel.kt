@@ -112,7 +112,8 @@ fun createCxxModuleModel(
                         ndk.ndkInfo.getStlSharedObjectFiles(stl, ndk.ndkInfo.supportedAbis)
                     )
                 }
-                .toMap()
+                .toMap(),
+        nativeBuildOutputLevel = configurationParameters.nativeBuildOutputLevel
     )
 }
 

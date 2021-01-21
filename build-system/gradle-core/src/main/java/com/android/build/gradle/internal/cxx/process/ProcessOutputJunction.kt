@@ -54,27 +54,36 @@ class ProcessOutputJunction(
     private val logPrefix: String,
     private val execute: (ProcessInfo, ProcessOutputHandler, (Action<in BaseExecSpec?>) -> ExecResult) -> ProcessResult
 ) {
-    private var logErrorToLifecycle: Boolean = false
-    private var logOutputToInfo: Boolean = false
-    private var isJavaProcess: Boolean = false
 
+    private var logStderr: Boolean = false
+    private var logStdout: Boolean = false
+    private var logFullStdout: Boolean = false
+    private var isJavaProcess: Boolean = false
 
     fun javaProcess(): ProcessOutputJunction {
         isJavaProcess = true
         return this
     }
 
-    fun logStdoutToInfo(): ProcessOutputJunction {
-        logOutputToInfo = true
+    fun logStdout(): ProcessOutputJunction {
+        logStdout = true
         return this
     }
 
-    fun logStderrToLifecycle(): ProcessOutputJunction {
-        logErrorToLifecycle = true
+    fun logFullStdout(value: Boolean = true): ProcessOutputJunction {
+        logFullStdout = value
         return this
     }
 
-    fun execute(processHandler: DefaultProcessOutputHandler, execOperations: (Action<in BaseExecSpec?>) -> ExecResult) {
+    fun logStderr(): ProcessOutputJunction {
+        logStderr = true
+        return this
+    }
+
+    fun execute(
+        processHandler: DefaultProcessOutputHandler,
+        execOperations: (Action<in BaseExecSpec?>) -> ExecResult
+    ) {
         commandFile.parentFile.mkdirs()
         commandFile.delete()
         infoln(process.toString())
@@ -107,8 +116,9 @@ class ProcessOutputJunction(
             stderrFile,
             stdoutFile,
             logPrefix,
-            logErrorToLifecycle,
-            logOutputToInfo
+            logStderr,
+            logStdout,
+            logFullStdout
         )
         execute(handler, execOperations)
     }
