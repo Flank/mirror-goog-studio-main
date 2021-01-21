@@ -280,4 +280,20 @@ public class ApkParserTest {
         }
         Assert.assertFalse("Short overflow thrown", exceptionCaught);
     }
+
+    @Test
+    public void testGracefulMissingManifest() throws IOException, DeployerException {
+        Path tempDirectory = Files.createTempDirectory("");
+        try {
+            Path zip = tempDirectory.resolve("testGracefulMissingManifest.zip");
+            int numFiles = 1;
+            int sizePerFile = 1;
+            createZip(numFiles, sizePerFile, zip.toFile());
+            ApkParser parser = new ApkParser();
+            parser.parse(zip.toString());
+            Assert.fail("No exception thrown in apk missing AndroidManifest.xml");
+        } catch (IOException e) {
+            Assert.assertTrue(e.getMessage().startsWith(ApkParser.NO_MANIFEST_MSG));
+        }
+    }
 }
