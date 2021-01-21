@@ -155,9 +155,9 @@ abstract class RecalculateStackFramesTransform :
         val inputFile = inputArtifact.get().asFile
         val classesHierarchyResolver = parameters.classesHierarchyBuildService.get()
             .getClassesHierarchyResolverBuilder()
-            .addSources(parameters.bootClasspath.get().map { it.asFile })
-            .addSources(inputArtifact.get().asFile)
-            .addSources(classpath.files)
+            .addDependenciesSources(parameters.bootClasspath.get().map { it.asFile })
+            .addDependenciesSources(inputArtifact.get().asFile)
+            .addDependenciesSources(classpath.files)
             .build()
 
         FixStackFramesDelegate.transformJar(
