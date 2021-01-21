@@ -34,6 +34,28 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
     fun `before-unit-tests filtering via new api using buildtype callback`() {
         given {
             """
+                |    beforeVariants(selector().withBuildType("debug")) {
+                |        unitTestEnabled = false
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                unitTest = false
+            }
+        }
+    }
+
+    @Test
+    fun `before-unit-tests filtering via deprecated api using buildtype callback`() {
+        given {
+            """
                 |    beforeUnitTests(selector().withBuildType("debug")) {
                 |        enabled = false
                 |    }
@@ -54,6 +76,28 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
 
     @Test
     fun `before-android-tests filtering via new api using buildtype callback`() {
+        given {
+            """
+                |    beforeVariants(selector().withBuildType("debug")) {
+                |        androidTestEnabled = false
+                |    }
+            """
+        }
+
+        expect {
+            variant {
+                name = "release"
+                androidTest = false
+            }
+            variant {
+                name = "debug"
+                androidTest = false
+            }
+        }
+    }
+
+    @Test
+    fun `before-android-tests filtering via deprecated api using buildtype callback`() {
         given {
             """
                 |    beforeAndroidTests(selector().withBuildType("debug")) {
@@ -92,11 +136,11 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
 
         given {
             """
-                |    beforeUnitTests(
+                |    beforeVariants(
                 |            selector()
                 |               .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |               .withBuildType("debug")) {
-                |        enabled = false
+                |        unitTestEnabled = false
                 |    }
             """
         }
@@ -138,11 +182,11 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
 
         given {
             """
-                |    beforeAndroidTests(
+                |    beforeVariants(
                 |            selector()
                 |               .withFlavor(new kotlin.Pair("one", "flavor1"))
                 |               .withBuildType("debug")) {
-                |        enabled = false
+                |        androidTestEnabled = false
                 |    }
             """
         }
@@ -224,48 +268,4 @@ class AndroidComponentsFilteringTest: AbstractReturnGivenBuildResultTest<String,
             var unitTest: Boolean = true,
             var androidTest: Boolean = true
     )
-
-    @Test
-    fun `before-unit-test filtering via new api using buildtype callback`() {
-        given {
-            """
-                |    beforeUnitTest(selector().withBuildType("debug")) {
-                |        enabled = false
-                |    }
-            """
-        }
-
-        expect {
-            variant {
-                name = "release"
-                androidTest = false
-            }
-            variant {
-                name = "debug"
-                unitTest = false
-            }
-        }
-    }
-
-    @Test
-    fun `before-android-test filtering via new api using buildtype callback`() {
-        given {
-            """
-                |    beforeAndroidTest(selector().withBuildType("debug")) {
-                |        enabled = false
-                |    }
-            """
-        }
-
-        expect {
-            variant {
-                name = "release"
-                androidTest = false
-            }
-            variant {
-                name = "debug"
-                androidTest = false
-            }
-        }
-    }
 }

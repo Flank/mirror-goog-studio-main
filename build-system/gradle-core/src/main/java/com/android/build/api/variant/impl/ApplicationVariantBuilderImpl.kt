@@ -23,6 +23,7 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantApiServices
+import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Action
 import javax.inject.Inject
@@ -40,6 +41,8 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
 
     override val debuggable: Boolean
         get() = variantDslInfo.isDebuggable
+
+    override var androidTestEnabled: Boolean = true
 
     // only instantiate this if this is needed. This allows non-built variant to not do too much work.
     override val dependenciesInfo: DependenciesInfo by lazy {

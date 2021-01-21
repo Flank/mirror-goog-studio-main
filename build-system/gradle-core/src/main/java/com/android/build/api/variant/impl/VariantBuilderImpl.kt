@@ -68,4 +68,6 @@ abstract class VariantBuilderImpl(
             val minSdk = minSdkVersion.getFeatureLevel()
             return if (targetApi > minSdk) targetApi else minSdk
         }
+
+    override var unitTestEnabled: Boolean = true
 }

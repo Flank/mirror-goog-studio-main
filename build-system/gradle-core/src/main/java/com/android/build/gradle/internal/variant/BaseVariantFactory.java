@@ -20,12 +20,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestBuilderImpl;
 import com.android.build.api.component.impl.AndroidTestImpl;
 import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.UnitTestBuilderImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
+import com.android.build.api.variant.HasAndroidTestBuilder;
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
@@ -79,6 +81,7 @@ public abstract class BaseVariantFactory<
     public UnitTestBuilderImpl createUnitTestBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull ComponentBuilder testedComponent,
             @NonNull VariantApiServices variantApiServices) {
         return projectServices
                 .getObjectFactory()
@@ -86,6 +89,7 @@ public abstract class BaseVariantFactory<
                         UnitTestBuilderImpl.class,
                         variantDslInfo,
                         componentIdentity,
+                        testedComponent,
                         variantApiServices);
     }
 
@@ -94,6 +98,7 @@ public abstract class BaseVariantFactory<
     public AndroidTestBuilderImpl createAndroidTestBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull HasAndroidTestBuilder testedComponent,
             @NonNull VariantApiServices variantApiServices) {
         return projectServices
                 .getObjectFactory()
@@ -101,6 +106,7 @@ public abstract class BaseVariantFactory<
                         AndroidTestBuilderImpl.class,
                         variantDslInfo,
                         componentIdentity,
+                        testedComponent,
                         variantApiServices);
     }
 

@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.component.ComponentBuilder;
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.AndroidTestBuilderImpl;
 import com.android.build.api.component.impl.AndroidTestImpl;
@@ -28,6 +29,7 @@ import com.android.build.api.component.impl.UnitTestBuilderImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.TestBuildFeatures;
+import com.android.build.api.variant.HasAndroidTestBuilder;
 import com.android.build.api.variant.impl.TestVariantBuilderImpl;
 import com.android.build.api.variant.impl.TestVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
@@ -88,6 +90,7 @@ public class TestVariantFactory
     public UnitTestBuilderImpl createUnitTestBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull ComponentBuilder testedComponent,
             @NonNull VariantApiServices variantApiServices) {
         throw new RuntimeException("cannot instantiate unit-test in test plugin");
     }
@@ -97,6 +100,7 @@ public class TestVariantFactory
     public AndroidTestBuilderImpl createAndroidTestBuilder(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull VariantDslInfo variantDslInfo,
+            @NonNull HasAndroidTestBuilder testedComponent,
             @NonNull VariantApiServices variantApiServices) {
         throw new RuntimeException("cannot instantiate android-test in test plugin");
     }

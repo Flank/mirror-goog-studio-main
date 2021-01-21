@@ -36,6 +36,8 @@ open class LibraryVariantBuilderImpl @Inject constructor(
     variantApiServices
 ), LibraryVariantBuilder {
 
+    override var androidTestEnabled: Boolean = true
+
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             stats: GradleBuildVariant.Builder?

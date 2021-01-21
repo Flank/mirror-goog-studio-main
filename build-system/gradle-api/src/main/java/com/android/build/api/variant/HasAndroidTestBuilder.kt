@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.api.component
+package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 
 /**
- * Variant of the unit test artifact.
+ * Interface that mark the potential existence of android tests associated with a variant.
  */
 @Incubating
-@Deprecated("Will be removed in 4.2-beta6")
-interface UnitTestBuilder: TestComponentBuilder {
+interface HasAndroidTestBuilder {
+
+    /**
+     * Set to `true` if the variant's has any android tests, false otherwise.
+     * Value is [Boolean#True] by default.
+     */
+    var androidTestEnabled: Boolean
 }

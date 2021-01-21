@@ -389,7 +389,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val testVariant = testComponentInfo.variant
         createAssembleTask(testVariant)
         val testedVariant = testVariant.testedVariant
-        val variantDslInfo = testVariant.variantDslInfo
         val variantDependencies = testVariant.variantDependencies
         if (testedVariant.variantDslInfo.renderscriptSupportModeEnabled) {
             project.dependencies

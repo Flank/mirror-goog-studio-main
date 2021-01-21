@@ -16,9 +16,11 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl;
+import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.ComponentIdentity;
 import com.android.build.api.component.impl.*
 import com.android.build.api.dsl.BuildFeatures;
+import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.impl.VariantBuilderImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -62,11 +64,13 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     fun createUnitTestBuilder(
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
+            testedComponent: ComponentBuilder,
             variantApiServices: VariantApiServices): UnitTestBuilderImpl
 
     fun createAndroidTestBuilder(
             componentIdentity: ComponentIdentity,
             variantDslInfo: VariantDslInfo,
+            testedComponent: HasAndroidTestBuilder,
             variantApiServices: VariantApiServices): AndroidTestBuilderImpl
 
     fun createVariant(

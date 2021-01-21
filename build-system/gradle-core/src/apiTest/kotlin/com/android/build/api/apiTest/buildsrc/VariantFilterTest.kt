@@ -42,20 +42,20 @@ class VariantFilterTest:  VariantApiBaseTest(
                             override fun apply(project: Project) {
                                 project.plugins.withType(AppPlugin::class.java) {
                                     val extension = project.extensions.getByName("androidComponents") as ApplicationAndroidComponentsExtension
-                                    extension.beforeUnitTests {
+                                    extension.beforeVariants {
                                         // disable all unit tests for apps (only using instrumentation tests)
-                                        it.enabled = false
+                                        it.unitTestEnabled = false
                                     }
                                 }
                                 project.plugins.withType(LibraryPlugin::class.java) {
                                     val extension = project.extensions.getByName("androidComponents") as LibraryAndroidComponentsExtension
-                                    extension.beforeAndroidTests(extension.selector().withBuildType("debug")) {
+                                    extension.beforeVariants(extension.selector().withBuildType("debug")) {
                                         // Disable instrumentation for debug
-                                        it.enabled = false
+                                        it.androidTestEnabled = false
                                     }
-                                    extension.beforeUnitTests(extension.selector().withBuildType("release")) {
+                                    extension.beforeVariants(extension.selector().withBuildType("release")) {
                                         // disable all unit tests for apps (only using instrumentation tests)
-                                        it.enabled = false
+                                        it.unitTestEnabled = false
                                     }
                                 }
                             }

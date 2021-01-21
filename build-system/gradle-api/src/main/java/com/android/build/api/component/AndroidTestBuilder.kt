@@ -22,5 +22,6 @@ import org.gradle.api.Incubating
  * Variant of the android test artifact.
  */
 @Incubating
+@Deprecated("Will be removed in 4.2-beta6")
 interface AndroidTestBuilder : TestComponentBuilder {
 }

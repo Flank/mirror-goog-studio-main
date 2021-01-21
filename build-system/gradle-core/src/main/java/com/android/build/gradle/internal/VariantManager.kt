@@ -36,6 +36,7 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.*
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
+import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
@@ -434,30 +435,38 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 project.layout.buildDirectory)
         val apiAccessStats = testedComponentInfo.stats
         // this is ANDROID_TEST
-        val component = if (variantType.isApk) {
+        val component = if (variantType.isApk
+            && testedComponentInfo.variantBuilder is HasAndroidTestBuilder) {
             val androidTestVariantBuilder = variantFactory.createAndroidTestBuilder(
                     variantDslInfo.componentIdentity,
                     variantDslInfo,
+                    testedComponentInfo.variantBuilder,
                     variantApiServices)
 
             // run actions registered at the extension level.
             testedComponentInfo.variantApiOperationsRegistrar.androidTestBuilderOperations
                     .executeOperations(androidTestVariantBuilder)
+            if (!testedComponentInfo.variantBuilder.androidTestEnabled) {
+                return null
+            }
             androidTestVariantBuilder
+
         } else {
             // this is UNIT_TEST
             val unitTestVariantBuilder = variantFactory.createUnitTestBuilder(
                     variantDslInfo.componentIdentity,
                     variantDslInfo,
+                    testedComponentInfo.variantBuilder,
                     variantApiServices)
 
             // run actions registered in the extension level.
             testedComponentInfo.variantApiOperationsRegistrar.unitTestBuilderOperations
                     .executeOperations(unitTestVariantBuilder)
+
+            if (!testedComponentInfo.variantBuilder.unitTestEnabled) {
+                return null
+            }
             unitTestVariantBuilder
-        }
-        if (!component.enabled) {
-            return null
         }
 
         // now that we have the result of the filter, we can continue configuring the variant
@@ -654,7 +663,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 addVariant(variantInfo)
                 val variant = variantInfo.variant
                 val variantDslInfo = variant.variantDslInfo
-                val variantScope = variant.variantScope
                 val minSdkVersion = variantInfo.variant.minSdkVersion.apiLevel
                 val targetSdkVersion = variantDslInfo.targetSdkVersion.apiLevel
                 if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {

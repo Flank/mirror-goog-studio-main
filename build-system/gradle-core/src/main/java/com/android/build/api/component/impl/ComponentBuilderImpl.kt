@@ -29,4 +29,4 @@ abstract class ComponentBuilderImpl(
     ComponentBuilder, ComponentIdentity by variantConfiguration {
 
     override var enabled: Boolean = true
-}
+    }

@@ -18,6 +18,7 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.component.AndroidTestBuilder
 import com.android.build.api.component.ComponentIdentity
+import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantApiServices
 import javax.inject.Inject
@@ -25,9 +26,17 @@ import javax.inject.Inject
 open class AndroidTestBuilderImpl @Inject constructor(
     variantDslInfo: VariantDslInfo,
     variantConfiguration: ComponentIdentity,
+    val testedComponent: HasAndroidTestBuilder,
     variantApiServices: VariantApiServices
 ) : TestComponentBuilderImpl(
     variantDslInfo,
     variantConfiguration,
     variantApiServices
-), AndroidTestBuilder
+), AndroidTestBuilder {
+
+    override var enabled: Boolean
+        get() = testedComponent.androidTestEnabled
+        set(value) {
+            testedComponent.androidTestEnabled = value
+        }
+}

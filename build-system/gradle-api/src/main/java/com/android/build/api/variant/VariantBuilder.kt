@@ -49,4 +49,10 @@ interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
      * @return the renderscript target api or -1 if not specified.
      */
     var renderscriptTargetApi: Int
+
+    /**
+     * Set to `true` if the variant's has any unit tests, false otherwise. Value is [Boolean#True]
+     * by default.
+     */
+    var unitTestEnabled: Boolean
 }
