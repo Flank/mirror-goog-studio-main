@@ -70,12 +70,12 @@ fun RecipeExecutor.generateBasicActivity(
   // guaranteed to be unique
   val navHostFragmentId = "nav_host_fragment_${contentLayoutName}"
   save(
-    fragmentSimpleXml(
-      navGraphName = navGraphName,
-      navHostFragmentId = navHostFragmentId,
-      useAndroidX = useAndroidX
-    ),
-    moduleData.resDir.resolve("layout/$contentLayoutName.xml")
+      fragmentSimpleXml(
+        navGraphName = navGraphName,
+        navHostFragmentId = navHostFragmentId,
+        useAndroidX = useAndroidX
+      ),
+      moduleData.resDir.resolve("layout/$contentLayoutName.xml")
   )
   if (moduleData.isNewModule) {
     generateSimpleMenu(packageName, activityClass, moduleData.resDir, menuName)
