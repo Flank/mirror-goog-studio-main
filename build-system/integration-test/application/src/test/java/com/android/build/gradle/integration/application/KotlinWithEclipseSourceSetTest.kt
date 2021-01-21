@@ -19,10 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 
 import com.android.build.gradle.integration.common.category.SmokeTests
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.testutils.apk.Apk
-import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
@@ -33,8 +30,6 @@ class KotlinWithEclipseSourceSetTest {
     @get:Rule
     var project: GradleTestProject =
         GradleTestProject.builder().fromTestProject("kotlinWithEclipseSourceSet")
-            // http://b/158092419
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .create()
 
     @Test

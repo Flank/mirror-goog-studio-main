@@ -22,7 +22,6 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static java.util.stream.Collectors.toList;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
@@ -51,10 +50,7 @@ public class UnitTestingModelTest {
     @Test
     public void unitTestingArtifactsAreIncludedInTheModel() throws Exception {
         // Build the project, so we can verify paths in the model exist.
-        // http://b/158092419
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("test");
+        project.executor().run("test");
 
         AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
 

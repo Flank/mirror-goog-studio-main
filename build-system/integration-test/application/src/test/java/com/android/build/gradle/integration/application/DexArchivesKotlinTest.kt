@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
 import com.android.utils.FileUtils
@@ -29,8 +28,6 @@ class DexArchivesKotlinTest {
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-        // http://b/158092419
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .create()
 
     /** Regression test for http://b/65363841.  */

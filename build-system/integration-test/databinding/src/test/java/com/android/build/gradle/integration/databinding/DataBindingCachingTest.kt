@@ -106,19 +106,11 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         .fromTestProject("databinding")
         .withKotlinGradlePlugin(withKotlin)
         .withName("project")
-        .also {
-            // http://b/158092419
-            if (withKotlin) it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        }
         .create()
 
     @get:Rule
     val projectCopy = GradleTestProject.builder()
         .fromTestProject("databinding")
-        .also {
-            // http://b/158092419
-            if (withKotlin) it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        }
         .withKotlinGradlePlugin(withKotlin)
         .withName("projectCopy")
         .create()

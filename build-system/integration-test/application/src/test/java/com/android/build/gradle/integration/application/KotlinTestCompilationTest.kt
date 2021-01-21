@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import org.junit.Rule
 import org.junit.Test
@@ -25,8 +24,6 @@ class KotlinTestCompilationTest {
     @JvmField
     var project =
         builder().fromTestProject("kotlinApp")
-            // http://b/158092419
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .create()
 
     /** Regression test for b/150500779. */

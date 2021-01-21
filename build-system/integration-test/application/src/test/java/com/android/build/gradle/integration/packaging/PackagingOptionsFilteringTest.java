@@ -22,10 +22,10 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -48,8 +48,6 @@ public class PackagingOptionsFilteringTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("kotlinApp")
-                    // http://b/158092419
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Before
@@ -469,7 +467,10 @@ public class PackagingOptionsFilteringTest {
         addJavaRes(lib, "androidTest", c0, "foo.testExclude");
         addJavaRes(lib, "androidTest", c0, "foo.testKeep");
 
-        app.execute("assemble", "assembleDebugAndroidTest");
+        // http://b/149978740 - disable dependency info in order to run with configuration caching
+        app.executor()
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+                .run("assemble", "assembleDebugAndroidTest");
 
         assertThat(app.getApk(DEBUG).getFile()).exists();
         ApkSubject debugApk = TruthHelper.assertThat(app.getApk(DEBUG));

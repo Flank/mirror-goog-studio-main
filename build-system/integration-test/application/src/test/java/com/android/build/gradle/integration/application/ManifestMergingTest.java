@@ -62,8 +62,6 @@ public class ManifestMergingTest {
     public GradleTestProject navigation =
             GradleTestProject.builder()
                     .withName("navigation")
-                    // http://b/158092419
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("navigation")
                     .create();
 

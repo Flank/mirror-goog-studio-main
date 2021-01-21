@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.ANDROID_ARCH_VERSION
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
@@ -56,10 +55,6 @@ class JetifierTest(private val withKotlin: Boolean) {
     val project = GradleTestProject.builder()
         .fromTestProject("jetifier")
         .withKotlinGradlePlugin(withKotlin)
-        .also {
-            // http://b/158092419
-            if (withKotlin) it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        }
         .create()
 
     @Before

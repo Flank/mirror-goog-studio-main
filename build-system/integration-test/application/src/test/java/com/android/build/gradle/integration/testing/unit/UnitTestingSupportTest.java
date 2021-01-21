@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.testing.unit;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.ImmutableList;
@@ -34,8 +33,6 @@ public class UnitTestingSupportTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("unitTesting")
-                    // http://b/158092419
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Test
