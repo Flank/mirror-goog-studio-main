@@ -23,20 +23,34 @@ class AndroidLocationsException @JvmOverloads constructor(
     companion object {
 
         /**
-         * Creates an instance with a list of (key, value) pairs where the locations of the
+         * Creates an instance with a list of [LocationValue] pairs where the locations of the
          * preferences was searched.
          */
-        internal fun createForPrefsRoot(
-            vars: List<Pair<String, String>>
+        internal fun createForHomeLocation(
+            vars: List<LocationValue>
         ): AndroidLocationsException {
             val list =
-                vars.joinToString(separator = "\n") { "- ${it.first} -> ${it.second}" }
+                vars.joinToString(separator = "\n") { "- ${it.propertyName}(${it.queryType} -> ${it.value}" }
 
             val start = """
-Unable to find the root location for the android preferences.
-The following locations have been checked, but they do not exist:""".trimIndent()
+                Unable to find the location of the home directory.
+                The following locations have been checked, but they do not exist:
+                """.trimIndent()
 
             return AndroidLocationsException("$start\n$list")
+        }
+    }
+}
+
+internal interface LocationValue: Comparable<LocationValue> {
+    val propertyName: String
+    val queryType: String
+    val value: String
+
+    override fun compareTo(other: LocationValue): Int {
+        return when (val i = propertyName.compareTo(other.propertyName)) {
+            0 -> return queryType.compareTo(other.queryType)
+            else -> i
         }
     }
 }

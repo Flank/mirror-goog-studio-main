@@ -37,7 +37,10 @@ class AndroidLocationTest {
         AndroidLocation.sPrefsLocation = null;
 
         val testLocation = folder.newFolder()
-        val provider = FakeProvider(mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath))
+        val provider = FakeProvider(
+            sysProp = mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath),
+            envVar = mapOf()
+        )
         val logger = RecordingLogger()
 
         val result = AndroidLocation.getFolder(
@@ -57,10 +60,11 @@ class AndroidLocationTest {
         val androidSdkHomeLocation = folder.newFolder().absolutePath
         val androidPrefsRootLocation = folder.newFolder().absolutePath
         val provider = FakeProvider(
-            mapOf(
+            sysProp = mapOf(
                 "ANDROID_SDK_HOME" to androidSdkHomeLocation,
                 "ANDROID_PREFS_ROOT" to androidPrefsRootLocation
-            )
+            ),
+            envVar = mapOf()
         )
         val logger = RecordingLogger()
 
@@ -87,10 +91,11 @@ class AndroidLocationTest {
 
         val testLocation = folder.newFolder()
         val provider = FakeProvider(
-            mapOf(
+            sysProp = mapOf(
                 "ANDROID_SDK_HOME" to testLocation.absolutePath,
                 "ANDROID_PREFS_ROOT" to testLocation.absolutePath
-            )
+            ),
+            envVar = mapOf()
         )
         val logger = RecordingLogger()
 
@@ -115,7 +120,10 @@ class AndroidLocationTest {
         FileUtils.mkdirs(File(testLocation, "platforms"))
         FileUtils.mkdirs(File(testLocation, "platform-tools"))
 
-        val provider = FakeProvider(mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath))
+        val provider = FakeProvider(
+            sysProp = mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath),
+            envVar = mapOf()
+        )
         val logger = RecordingLogger()
 
         val result = AndroidLocation.getFolder(

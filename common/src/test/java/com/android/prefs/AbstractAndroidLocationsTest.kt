@@ -35,9 +35,37 @@ class AbstractAndroidLocationsTest {
     val exceptionRule : ExpectedException = ExpectedException.none()
 
     @Test
-    fun `ANDROID_PREFS_ROOT via sys prop`() {
+    fun `ANDROID_USER_HOME usage`() {
         val testLocation = folder.newFolder()
-        val provider = FakeProvider(mapOf(AbstractAndroidLocations.ANDROID_PREFS_ROOT to testLocation.absolutePath))
+        val provider = FakeProvider(
+            sysProp = mapOf(AbstractAndroidLocations.ANDROID_USER_HOME to testLocation.absolutePath),
+            envVar = mapOf()
+        )
+        val logger = RecordingLogger()
+
+        val locationProvider: AndroidLocationsProvider = AndroidLocations(provider, logger)
+        val result = locationProvider.prefsLocation
+
+        Truth.assertWithMessage("Test Location")
+            .that(result)
+            .isEqualTo(testLocation.toPath())
+        PathSubject.assertThat(result).isDirectory()
+
+        Truth.assertWithMessage("Emitted Warnings").that(logger.warnings).isEmpty()
+
+        val result2 = locationProvider.prefsLocation
+        Truth.assertWithMessage("Test Memoization")
+            .that(result2)
+            .isSameAs(result)
+    }
+
+    @Test
+    fun `ANDROID_PREFS_ROOT usage`() {
+        val testLocation = folder.newFolder()
+        val provider = FakeProvider(
+            sysProp = mapOf(AbstractAndroidLocations.ANDROID_PREFS_ROOT to testLocation.absolutePath),
+            envVar = mapOf()
+        )
         val logger = RecordingLogger()
 
         val locationProvider: AndroidLocationsProvider = AndroidLocations(provider, logger)
@@ -49,18 +77,15 @@ class AbstractAndroidLocationsTest {
             .isEqualTo(expected)
 
         Truth.assertWithMessage("Emitted Warnings").that(logger.warnings).isEmpty()
-
-        val result2 = locationProvider.prefsLocation
-        Truth.assertWithMessage("Test Location2")
-            .that(result2)
-            .isEqualTo(expected)
-        PathSubject.assertThat(result2).isDirectory()
     }
 
     @Test
     fun `ANDROID_SDK_HOME usage`() {
         val testLocation = folder.newFolder()
-        val provider = FakeProvider(mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath))
+        val provider = FakeProvider(
+            sysProp = mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath),
+            envVar = mapOf()
+        )
         val expected = testLocation.toPath().resolve(".android")
 
         val logger = RecordingLogger()
@@ -68,6 +93,8 @@ class AbstractAndroidLocationsTest {
         Truth.assertWithMessage("Test Location")
             .that(AndroidLocations(provider, logger).prefsLocation)
             .isEqualTo(expected)
+
+        Truth.assertWithMessage("Emitted Warnings").that(logger.warnings).isEmpty()
     }
 
     @Test
@@ -75,35 +102,38 @@ class AbstractAndroidLocationsTest {
         val androidSdkHomeLocation = folder.newFolder().absolutePath
         val androidPrefsRootLocation = folder.newFolder().absolutePath
         val provider = FakeProvider(
-            mapOf(
+            sysProp = mapOf(
                 "ANDROID_SDK_HOME" to androidSdkHomeLocation,
                 "ANDROID_PREFS_ROOT" to androidPrefsRootLocation
-            )
+            ),
+            envVar = mapOf()
         )
         val logger = RecordingLogger()
 
-        exceptionRule.expect(AndroidLocationsException::class.java)
-        exceptionRule.expectMessage(
+        checkException(
             """
-                Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values
-                Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.
-                Current values:
-                ANDROID_SDK_ROOT: $androidPrefsRootLocation
-                ANDROID_SDK_HOME: $androidSdkHomeLocation
-                """.trimIndent()
-        )
+                Several environment variables and/or system properties contain different paths to the Android Preferences folder.
+                Please correct and use only one way to inject the preference location.
 
-        AndroidLocations(provider, logger).prefsLocation
+                - ANDROID_PREFS_ROOT(system property): $androidPrefsRootLocation
+                - ANDROID_SDK_HOME(system property): $androidSdkHomeLocation
+
+                It is recommended to use ANDROID_USER_HOME as other methods are deprecated
+            """.trimIndent()
+        ) {
+            AndroidLocations(provider, logger).prefsLocation
+        }
     }
 
     @Test
     fun `ANDROID_PREFS_ROOT and ANDROID_SDK_HOME with same values`() {
         val testLocation = folder.newFolder()
         val provider = FakeProvider(
-            mapOf(
+            sysProp = mapOf(
                 "ANDROID_SDK_HOME" to testLocation.absolutePath,
                 "ANDROID_PREFS_ROOT" to testLocation.absolutePath
-            )
+            ),
+            envVar = mapOf()
         )
         val expected = testLocation.toPath().resolve(".android")
 
@@ -123,126 +153,143 @@ class AbstractAndroidLocationsTest {
         FileUtils.mkdirs(File(testLocation, "platforms"))
         FileUtils.mkdirs(File(testLocation, "platform-tools"))
 
-        val provider = FakeProvider(mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath))
+        val provider = FakeProvider(
+            sysProp = mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath),
+            envVar = mapOf()
+        )
         val expected = testLocation.toPath().resolve(".android")
 
         val logger = RecordingLogger()
 
-        Truth.assertWithMessage("Test Location")
-            .that(AndroidLocations(provider, logger).prefsLocation)
-            .isEqualTo(expected)
-
-        Truth.assertWithMessage("Emitted Warnings").that(logger.warnings).containsExactly(
+        checkException(
             """
                 ANDROID_SDK_HOME is set to the root of your SDK: $testLocation
-                ANDROID_SDK_HOME is meant to be the path of the preference folder expected by the Android tools.
-                It should NOT be set to the same as the root of your SDK.
-                To set a custom SDK Location, use ANDROID_SDK_ROOT.
-                If this is not set we default to: null""".trimIndent()
-        )
+                ANDROID_SDK_HOME was meant to be the parent path of the preference folder expected by the Android tools.
+                It is now deprecated.
+
+                To set a custom preference folder location, use ANDROID_USER_HOME.
+
+                It should NOT be set to the same directory as the root of your SDK.
+                To set a custom SDK location, use ANDROID_HOME.
+            """.trimIndent()
+        ) {
+            AndroidLocations(provider, logger).prefsLocation
+        }
     }
 
     @Test
-    fun `No valid paths, no ANDROID_SDK_HOME`() {
+    fun `No valid paths, no injected paths`() {
+        val userHomePath = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}user.home"
+        val testTempDir = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}TEST_TMPDIR"
+        val home = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}HOME"
         val provider = FakeProvider(
             sysProp = mapOf(
-                AbstractAndroidLocations.ANDROID_PREFS_ROOT to "/path/to/android_prefs_root/sys-prop",
-                "user.home" to "/path/to/user.home"
+                "user.home" to userHomePath
             ),
             envVar = mapOf(
-                AbstractAndroidLocations.ANDROID_PREFS_ROOT to "/path/to/android_prefs_root/env-var",
-                "TEST_TMPDIR" to "/path/to/TEST_TMPDIR",
-                "HOME" to "/path/to/HOME"
+                "TEST_TMPDIR" to testTempDir,
+                "HOME" to home
             )
         )
         val logger = RecordingLogger()
 
-        exceptionRule.expect(AndroidLocationsException::class.java)
-        exceptionRule.expectMessage(
+        checkException(
             """
-                Unable to find the root location for the android preferences.
+                Unable to find the location for the android preferences.
                 The following locations have been checked, but they do not exist:
-                - ANDROID_PREFS_ROOT(system property) -> /path/to/android_prefs_root/sys-prop
-                - ANDROID_PREFS_ROOT(environment variable) -> /path/to/android_prefs_root/env-var
-                - TEST_TMPDIR(environment variable) -> /path/to/TEST_TMPDIR
-                - user.home(system property) -> /path/to/user.home
-                - HOME(environment variable) -> /path/to/HOME
-                """.trimIndent()
-        )
 
-        AndroidLocations(provider, logger).prefsLocation
+                - HOME(environment variable): $home
+                - TEST_TMPDIR(environment variable): $testTempDir
+                - user.home(system property): $userHomePath
+                """.trimIndent()
+        ) {
+            AndroidLocations(provider, logger).prefsLocation
+        }
     }
 
     @Test
-    fun `No valid paths, with ANDROID_SDK_HOME`() {
+    fun `No valid paths, with old injected paths`() {
+        val androidSdkHomeSysProp = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}android_sdk_home${File.separatorChar}sys-prop"
+        val androidSdkHomeEnvVar = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}android_sdk_home${File.separatorChar}env-var"
+        val userHomePath = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}user.home"
+        val testTempDir = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}TEST_TMPDIR"
+        val home = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}HOME"
         val provider = FakeProvider(
             sysProp = mapOf(
-                "ANDROID_SDK_HOME" to "/path/to/android_sdk_home/sys-prop",
-                "user.home" to "/path/to/user.home"
+                "ANDROID_SDK_HOME" to androidSdkHomeSysProp,
+                "user.home" to userHomePath
             ),
             envVar = mapOf(
-                "ANDROID_SDK_HOME" to "/path/to/android_sdk_home/env-var",
-                "TEST_TMPDIR" to "/path/to/TEST_TMPDIR",
-                "HOME" to "/path/to/HOME"
+                "ANDROID_SDK_HOME" to androidSdkHomeEnvVar,
+                "TEST_TMPDIR" to testTempDir,
+                "HOME" to home
             )
         )
         val logger = RecordingLogger()
 
-        exceptionRule.expect(AndroidLocationsException::class.java)
-        exceptionRule.expectMessage(
+        checkException(
             """
-                Unable to find the root location for the android preferences.
+                Unable to find the location for the android preferences.
                 The following locations have been checked, but they do not exist:
-                - ANDROID_SDK_HOME(system property) -> /path/to/android_sdk_home/sys-prop
-                - ANDROID_SDK_HOME(environment variable) -> /path/to/android_sdk_home/env-var
-                - TEST_TMPDIR(environment variable) -> /path/to/TEST_TMPDIR
-                - user.home(system property) -> /path/to/user.home
-                - HOME(environment variable) -> /path/to/HOME
-                """.trimIndent()
-        )
 
-        AndroidLocations(provider, logger).prefsLocation
+                - ANDROID_SDK_HOME(environment variable): $androidSdkHomeEnvVar
+                - ANDROID_SDK_HOME(system property): $androidSdkHomeSysProp
+                - HOME(environment variable): $home
+                - TEST_TMPDIR(environment variable): $testTempDir
+                - user.home(system property): $userHomePath
+                """.trimIndent()
+        ) {
+            AndroidLocations(provider, logger).prefsLocation
+        }
     }
 
     @Test
     fun `No valid paths, both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME`() {
+        val userHomePath = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}user.home"
+        val testTempDir = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}TEST_TMPDIR"
+        val home = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}HOME"
+        val androidFolderPathSysProp = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}.android${File.separatorChar}sys-prop"
+        val androidFolderPathEnvVar = "${File.separatorChar}path${File.separatorChar}to${File.separatorChar}.android${File.separatorChar}env-var"
         val provider = FakeProvider(
             sysProp = mapOf(
-                AbstractAndroidLocations.ANDROID_PREFS_ROOT to "/path/to/.android/sys-prop",
-                "ANDROID_SDK_HOME" to "/path/to/.android/sys-prop",
-                "user.home" to "/path/to/user.home"
+                AbstractAndroidLocations.ANDROID_PREFS_ROOT to androidFolderPathSysProp,
+                "ANDROID_SDK_HOME" to androidFolderPathSysProp,
+                "user.home" to userHomePath
             ),
             envVar = mapOf(
-                AbstractAndroidLocations.ANDROID_PREFS_ROOT to "/path/to/.android/env-var",
-                "ANDROID_SDK_HOME" to "/path/to/.android/env-var",
-                "TEST_TMPDIR" to "/path/to/TEST_TMPDIR",
-                "HOME" to "/path/to/HOME"
+                AbstractAndroidLocations.ANDROID_PREFS_ROOT to androidFolderPathEnvVar,
+                "ANDROID_SDK_HOME" to androidFolderPathEnvVar,
+                "TEST_TMPDIR" to testTempDir,
+                "HOME" to home
             )
         )
         val logger = RecordingLogger()
 
-        exceptionRule.expect(AndroidLocationsException::class.java)
-        exceptionRule.expectMessage(
+        checkException(
             """
-                Unable to find the root location for the android preferences.
+                Unable to find the location for the android preferences.
                 The following locations have been checked, but they do not exist:
-                - ANDROID_PREFS_ROOT(system property) -> /path/to/.android/sys-prop
-                - ANDROID_SDK_HOME(system property) -> /path/to/.android/sys-prop
-                - ANDROID_PREFS_ROOT(environment variable) -> /path/to/.android/env-var
-                - ANDROID_SDK_HOME(environment variable) -> /path/to/.android/env-var
-                - TEST_TMPDIR(environment variable) -> /path/to/TEST_TMPDIR
-                - user.home(system property) -> /path/to/user.home
-                - HOME(environment variable) -> /path/to/HOME
-                """.trimIndent()
-        )
 
-        AndroidLocations(provider, logger).prefsLocation
+                - ANDROID_PREFS_ROOT(environment variable): $androidFolderPathEnvVar
+                - ANDROID_PREFS_ROOT(system property): $androidFolderPathSysProp
+                - ANDROID_SDK_HOME(environment variable): $androidFolderPathEnvVar
+                - ANDROID_SDK_HOME(system property): $androidFolderPathSysProp
+                - HOME(environment variable): $home
+                - TEST_TMPDIR(environment variable): $testTempDir
+                - user.home(system property): $userHomePath
+                """.trimIndent()
+        ) {
+            AndroidLocations(provider, logger).prefsLocation
+        }
     }
 
     @Test
     fun `Check failure to create location`() {
         val testLocation = folder.newFolder()
-        val provider = FakeProvider(mapOf(AbstractAndroidLocations.ANDROID_PREFS_ROOT to testLocation.absolutePath))
+        val provider = FakeProvider(
+            sysProp = mapOf(AbstractAndroidLocations.ANDROID_PREFS_ROOT to testLocation.absolutePath),
+            envVar = mapOf()
+        )
         val logger = RecordingLogger()
 
         val locationProvider: AndroidLocationsProvider = AndroidLocations(provider, logger)
@@ -251,19 +298,22 @@ class AbstractAndroidLocationsTest {
         val expected = File(testLocation, ".android")
         expected.writeText("foo")
 
-        exceptionRule.expect(AndroidLocationsException::class.java)
-        exceptionRule.expectMessage(
-            """${expected.absolutePath} is not a directory!
-This is the path of preference folder expected by the Android tools."""
-        )
-
-        locationProvider.prefsLocation
+        checkException(
+            """
+                ${expected.absolutePath} is not a directory!
+                This is the path of preference folder expected by the Android tools.""".trimIndent()
+        ) {
+            locationProvider.prefsLocation
+        }
     }
 
     @Test
     fun `AVD Location inside prefsLocation`() {
         val testLocation = folder.newFolder()
-        val provider = FakeProvider(mapOf("ANDROID_PREFS_ROOT" to testLocation.absolutePath))
+        val provider = FakeProvider(
+            sysProp = mapOf("ANDROID_PREFS_ROOT" to testLocation.absolutePath),
+            envVar = mapOf()
+        )
         val logger = RecordingLogger()
 
         val locationProvider = AndroidLocations(provider, logger)
@@ -281,10 +331,11 @@ This is the path of preference folder expected by the Android tools."""
         val testLocation = folder.newFolder()
         val expectedAvdLocation = folder.newFolder()
         val provider = FakeProvider(
-            mapOf(
+            sysProp = mapOf(
                 "ANDROID_PREFS_ROOT" to testLocation.absolutePath,
                 "ANDROID_AVD_HOME" to expectedAvdLocation.absolutePath
-            )
+            ),
+            envVar = mapOf()
         )
         val logger = RecordingLogger()
 
@@ -347,11 +398,35 @@ This is the path of preference folder expected by the Android tools."""
             .that(AndroidLocations(provider, logger).userHomeLocation)
             .isEqualTo(testLocation.toPath())
     }
+
+    /**
+     * Quick helper method to get the output of an exception.
+     *
+     * Changing to message comparison via truth allows for easier string comparison
+     * than using the ExpectedException
+     */
+    private fun <T> checkException(message: String, action: () -> T): T? {
+        return if (true) {
+            exceptionRule.expect(AndroidLocationsException::class.java)
+            exceptionRule.expectMessage(message)
+
+            action()
+        } else {
+            try {
+                action()
+                throw RuntimeException("No exception thrown")
+            } catch (e: Throwable) {
+                Truth.assertThat(e.message).isEqualTo(message)
+                null
+            }
+        }
+    }
+
 }
 
 internal class FakeProvider(
     private val sysProp: Map<String, String>,
-    private val envVar: Map<String, String> = mapOf()
+    private val envVar: Map<String, String>
 ): EnvironmentProvider {
     override fun getSystemProperty(key: String): String? = sysProp[key]
     override fun getEnvVariable(key: String): String? = envVar[key]
