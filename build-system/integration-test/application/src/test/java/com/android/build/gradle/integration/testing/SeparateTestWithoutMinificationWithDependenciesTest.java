@@ -1,10 +1,10 @@
 package com.android.build.gradle.integration.testing;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.CodeShrinker;
 import com.android.ide.common.process.ProcessException;
@@ -35,7 +35,10 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
             GradleTestProject.builder()
                     .fromTestProject("separateTestModuleWithDependencies")
                     // http://b/149978740
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    .addGradleProperties(
+                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
+                                    + "="
+                                    + false)
                     .withDependencyChecker(false)
                     .create();
 

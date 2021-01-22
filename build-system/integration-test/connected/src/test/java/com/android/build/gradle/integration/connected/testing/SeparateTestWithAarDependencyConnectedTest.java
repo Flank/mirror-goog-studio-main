@@ -32,8 +32,6 @@ public class SeparateTestWithAarDependencyConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    // b/162074215
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("separateTestModule")
                     .create();
 

@@ -69,9 +69,7 @@ public class SeparateTestModuleTest {
 
     @Test
     public void checkDependencySubtraction() throws Exception {
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run(":app:assembleDebug", ":test:assembleDebug");
+        project.executor().run(":app:assembleDebug", ":test:assembleDebug");
         try (Apk main = project.getSubproject("app").getApk(ApkType.DEBUG);
                 Apk test = project.getSubproject("test").getApk(ApkType.DEBUG)) {
 

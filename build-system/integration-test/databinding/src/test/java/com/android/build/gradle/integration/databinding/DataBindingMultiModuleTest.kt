@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.databinding
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
@@ -48,12 +46,13 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
         .fromTestProject("databindingMultiModule")
         .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=" + useAndroidX)
         .addGradleProperties(BooleanOption.ENABLE_JETIFIER.propertyName + "=" + useAndroidX)
+        // http://b/149978740
+        .addGradleProperties(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.propertyName + "=" + false)
         .create()
 
     @Test
     fun checkBRClasses() {
-        // http://b/146208910
-        val executor = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
+        val executor = project.executor();
         // use release to get 1 classes.dex instead of many
         executor.run("clean", "assembleRelease")
         val apk = getApk()
@@ -97,8 +96,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
             "android:text=\"@{input}\"",
             "app:customSetText=\"@{input}\""
         )
-        // http://b/146208910
-        val result = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run("assembleRelease")
+        val result = project.executor().run("assembleRelease")
         assertNull(result.exception)
         // now try to use it in the app, should fail
         val appLayout = project.file("app/src/main/res/layout/app_layout.xml")
@@ -108,7 +106,7 @@ class DataBindingMultiModuleTest(useAndroidX: Boolean) {
             "android:text=\"@{appInput}\"",
             "app:customSetText=\"@{appInput}\""
         )
-        val result2 = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).expectFailure().run("assembleRelease")
+        val result2 = project.executor().expectFailure().run("assembleRelease")
         MatcherAssert.assertThat(
             result2.failureMessage ?: "",
             CoreMatchers.containsString("Cannot find a setter for <android.widget.TextView app:customSetText> that accepts parameter type 'java.lang.String'")

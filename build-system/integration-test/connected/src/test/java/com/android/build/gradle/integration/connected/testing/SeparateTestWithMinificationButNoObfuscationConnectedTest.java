@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.testing;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
@@ -44,8 +43,6 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    // b/162074215
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("separateTestWithMinificationButNoObfuscation")
                     .create();
 

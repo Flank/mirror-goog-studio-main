@@ -55,9 +55,7 @@ class LintStandaloneCustomRuleTest {
 
     @Test
     fun checkPublishing() {
-        project.executor()
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run(":library:publishAllPublicationsToMavenRepository")
+        project.executor().run(":library:publishAllPublicationsToMavenRepository")
 
         val publishDir = project.file("repo/org/example/sample/library/0.1")
         val publishedFiles = publishDir.list()?.filter { !isCheckSum(it) }

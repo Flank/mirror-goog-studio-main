@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.integration.connected.application;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -35,8 +35,11 @@ public class FlavoredConnectedTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("flavored")
-                    // b/162074215
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    // http://b/149978740
+                    .addGradleProperties(
+                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
+                                    + "="
+                                    + false)
                     .create();
 
     @Before

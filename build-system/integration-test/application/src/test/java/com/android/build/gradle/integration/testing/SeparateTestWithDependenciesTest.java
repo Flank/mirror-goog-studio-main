@@ -1,8 +1,8 @@
 package com.android.build.gradle.integration.testing;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
@@ -27,9 +27,9 @@ public class SeparateTestWithDependenciesTest {
     @Test
     public void checkAppContainsAllDependentClasses()
             throws Exception {
-        // http://b/146208910
         project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // http://b/149978740
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "assemble");
         try (Apk apk = project.getSubproject("app").getApk("debug")) {
             TruthHelper.assertThatApk(apk)
@@ -45,10 +45,7 @@ public class SeparateTestWithDependenciesTest {
     @Test
     public void checkTestAppDoesNotContainAnyMinifiedApplicationDependentClasses()
             throws Exception {
-        // https://github.com/gradle/gradle/issues/13317
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("clean", ":test:assemble");
+        project.executor().run("clean", ":test:assemble");
         try (Apk apk = project.getSubproject("test").getApk("debug")) {
             TruthHelper.assertThatApk(apk)
                     .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");

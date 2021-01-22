@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import org.junit.Before
@@ -35,8 +34,6 @@ class ComposeHelloWorldConnectedTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
-        // b/158092419
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .withKotlinVersion("1.4.21")
         .create()
 
