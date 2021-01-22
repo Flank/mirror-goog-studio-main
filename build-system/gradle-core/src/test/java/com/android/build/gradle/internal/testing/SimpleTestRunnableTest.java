@@ -280,6 +280,62 @@ public class SimpleTestRunnableTest {
                 .isEqualTo(String.format("/data/data/%s/%s", null, FILE_COVERAGE_EC));
     }
 
+    @Test
+    public void installOptionsForBuddyApkWithPre23() throws Exception {
+        when(deviceConnector.getApiLevel()).thenReturn(22);
+
+        File prodApks = temporaryFolder.newFolder();
+        testedApks = ImmutableList.of(new File(prodApks, "app.apk"));
+
+        File buddyApk = new File(temporaryFolder.newFolder(), "buddy.apk");
+
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        List<String> installOptions = ImmutableList.of();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        false,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        installOptions);
+        runnable.run();
+
+        verify(deviceConnector)
+                .installPackage(testedApks.get(0), ImmutableList.of(), TIMEOUT, logger);
+        verify(deviceConnector).installPackage(buddyApk, ImmutableList.of(), TIMEOUT, logger);
+    }
+
+    @Test
+    public void installOptionsForBuddyApkWith23() throws Exception {
+        when(deviceConnector.getApiLevel()).thenReturn(23);
+
+        File prodApks = temporaryFolder.newFolder();
+        testedApks = ImmutableList.of(new File(prodApks, "app.apk"));
+
+        File buddyApk = new File(temporaryFolder.newFolder(), "buddy.apk");
+
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        List<String> installOptions = ImmutableList.of();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        false,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        installOptions);
+        runnable.run();
+
+        verify(deviceConnector)
+                .installPackage(testedApks.get(0), ImmutableList.of(), TIMEOUT, logger);
+        verify(deviceConnector).installPackage(buddyApk, ImmutableList.of("-g"), TIMEOUT, logger);
+    }
+
     private SimpleTestRunnable getSimpleTestRunnable(
             File buddyApk,
             File resultsDir,
@@ -336,10 +392,11 @@ public class SimpleTestRunnableTest {
         verify(deviceConnector).installPackage(testApk, installOptions, TIMEOUT, logger);
 
         if (apkCount == 1) {
+            verify(deviceConnector).getApiLevel();
             verify(deviceConnector)
                     .installPackage(testedApks.get(0), installOptions, TIMEOUT, logger);
         } else {
-            verify(deviceConnector).getApiLevel();
+            verify(deviceConnector, times(2)).getApiLevel();
             verify(deviceConnector).installPackages(testedApks, installOptions, TIMEOUT, logger);
         }
 
