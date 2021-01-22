@@ -219,31 +219,35 @@ class DeviceClientMonitorTask implements Runnable {
                 SelectionKey key = iter.next();
                 iter.remove();
 
-                if (key.isValid() && key.isReadable()) {
-                    Object attachment = key.attachment();
+                if (!key.isValid() || !key.isReadable()) {
+                    continue;
+                }
 
-                    if (attachment instanceof DeviceImpl) {
-                        DeviceImpl device = (DeviceImpl) attachment;
+                Object attachment = key.attachment();
+                if (!(attachment instanceof DeviceImpl)) {
+                    continue;
+                }
 
-                        SocketChannel socket = device.getClientMonitoringSocket();
+                DeviceImpl device = (DeviceImpl) attachment;
 
-                        if (socket != null) {
-                            try {
-                                int length = AdbSocketUtils.readLength(socket, lengthBuffer);
-                                processIncomingJdwpData(device, socket, length);
-                            } catch (IOException ioe) {
-                                Log.d(
-                                        "DeviceClientMonitorTask",
-                                        "Error reading jdwp list: " + ioe.getMessage());
-                                try {
-                                    socket.close();
-                                } catch (IOException ignored) {
-                                }
-                                mChannelsToRegister.remove(socket);
-                                device.getClientTracker().trackDeviceToDropAndReopen(device);
-                            }
-                        }
+                SocketChannel socket = device.getClientMonitoringSocket();
+                if (socket == null) {
+                    continue;
+                }
+
+                try {
+                    int length = AdbSocketUtils.readLength(socket, lengthBuffer);
+                    processIncomingJdwpData(device, socket, length);
+                } catch (IOException ioe) {
+                    Log.d(
+                            "DeviceClientMonitorTask",
+                            "Error reading jdwp list: " + ioe.getMessage());
+                    try {
+                        socket.close();
+                    } catch (IOException ignored) {
                     }
+                    mChannelsToRegister.remove(socket);
+                    device.getClientTracker().trackDeviceToDropAndReopen(device);
                 }
             }
         } while (!mQuit);
