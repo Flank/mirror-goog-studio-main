@@ -44,6 +44,7 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -136,10 +137,19 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 }
             }
 
-            for (File helperApk : helperApks) {
-                logger.verbose(
-                        "DeviceConnector '%s': installing helper APK %s", deviceName, helperApk);
-                device.installPackage(helperApk, installOptions, timeoutInMs, logger);
+            if (!helperApks.isEmpty()) {
+                ArrayList<String> helperApkInstallOptions = new ArrayList<>(installOptions);
+                if (device.getApiLevel() >= 23) {
+                    // Grant all permissions listed in the app manifest (Introduced at Android 6.0)
+                    // for test helper APKs. b/154754919.
+                    helperApkInstallOptions.add("-g");
+                }
+                for (File helperApk : helperApks) {
+                    logger.verbose(
+                            "DeviceConnector '%s': installing helper APK %s",
+                            deviceName, helperApk);
+                    device.installPackage(helperApk, helperApkInstallOptions, timeoutInMs, logger);
+                }
             }
 
             logger.verbose(
