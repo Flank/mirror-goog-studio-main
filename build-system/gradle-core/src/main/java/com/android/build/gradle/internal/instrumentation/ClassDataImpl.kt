@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.instrumentation
 
 import com.android.build.api.instrumentation.ClassData
 
-class ClassDataImpl(
+data class ClassDataImpl(
     override val className: String,
     override val classAnnotations: List<String>,
     override val interfaces: List<String>,
