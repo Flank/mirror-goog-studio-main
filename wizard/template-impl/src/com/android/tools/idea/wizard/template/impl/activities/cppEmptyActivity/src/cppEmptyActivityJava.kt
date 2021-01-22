@@ -23,11 +23,12 @@ import com.android.tools.idea.wizard.template.impl.activities.common.layoutToVie
 import com.android.tools.idea.wizard.template.renderIf
 
 fun cppEmptyActivityJava(
-  packageName: String,
-  activityClass: String,
-  layoutName: String,
-  useAndroidX: Boolean,
-  isViewBindingSupported: Boolean
+    packageName: String,
+    activityClass: String,
+    layoutName: String,
+    useAndroidX: Boolean,
+    isViewBindingSupported: Boolean,
+    libraryName: String
 ): String {
 
   val contentViewBlock = if (isViewBindingSupported) """
@@ -63,14 +64,14 @@ ${renderIf(isViewBindingSupported) {"""
     }
 
     /**
-     * A native method that is implemented by the 'native-lib' native library,
+     * A native method that is implemented by the '$libraryName' native library,
      * which is packaged with this application.
      */
     public native String stringFromJNI();
 
-    // Used to load the 'native-lib' library on application startup.
+    // Used to load the '$libraryName' library on application startup.
     static {
-        System.loadLibrary("native-lib");
+        System.loadLibrary("$libraryName");
     }
 }
 """
