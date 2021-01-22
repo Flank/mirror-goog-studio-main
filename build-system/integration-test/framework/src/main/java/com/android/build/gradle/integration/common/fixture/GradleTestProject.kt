@@ -1439,4 +1439,29 @@ buildCache {
             """.trimIndent()
         )
     }
+
+    /**
+     * Adds an adb timeout to the root project build file and applies it to all subprojects, so that
+     * tests using adb will fail fast when there is no response.
+     */
+    @JvmOverloads
+    fun addAdbTimeoutToSubProjects(timeout: Duration = Duration.ofSeconds(30)) {
+        TestFileUtils.appendToFile(
+                buildFile,
+                """
+
+                allprojects { proj ->
+                    proj.plugins.withId('com.android.application') {
+                        android.adbOptions.timeOutInMs ${timeout.toMillis()}
+                    }
+                    proj.plugins.withId('com.android.library') {
+                        android.adbOptions.timeOutInMs ${timeout.toMillis()}
+                    }
+                    proj.plugins.withId('com.android.dynamic-feature') {
+                        android.adbOptions.timeOutInMs ${timeout.toMillis()}
+                    }
+                }
+                """.trimIndent()
+        )
+    }
 }

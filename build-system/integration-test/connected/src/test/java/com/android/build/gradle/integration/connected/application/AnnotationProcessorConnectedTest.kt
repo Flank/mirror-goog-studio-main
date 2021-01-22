@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_BUILD_TOOL_VERSION
@@ -89,7 +88,7 @@ class AnnotationProcessorConnectedTest {
             .file("build.gradle"), Charsets.UTF_8)
             .write(buildScript)
         // fail fast if no response
-        project.getSubproject(":app").addAdbTimeout()
+        project.addAdbTimeoutToSubProjects()
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.execute("uninstallAll")
