@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.component.TestCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.tasks.databinding.DATA_BINDING_TRIGGER_CLASS
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.TestData
 import com.android.ide.common.util.toPathString
@@ -112,41 +113,42 @@ abstract class AbstractTestDataImpl(
     }
 
     override val hasTests: Provider<Boolean> = providerFactory.provider {
-            val namespaceDir = componentImpl.namespace.get().replace('.', '/')
-            val ignoredPaths = setOf(
-                    "${namespaceDir}/${SdkConstants.FN_BUILD_CONFIG_BASE}${SdkConstants.DOT_CLASS}",
-                    "${namespaceDir}/${SdkConstants.FN_MANIFEST_BASE}${SdkConstants.DOT_CLASS}"
-            )
-            val testClasses = componentImpl.artifacts.getAllClasses()
-                    .minus(componentImpl.getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH))
-                    .minus(componentImpl.getCompiledBuildConfig())
-            val isNotIgnoredClass = { relativePath: String ->
-                Files.getFileExtension(relativePath) == SdkConstants.EXT_CLASS &&
-                        relativePath !in ignoredPaths
-            }
+        val namespaceDir = componentImpl.namespace.get().replace('.', '/')
+        val ignoredPaths = setOf(
+                "${namespaceDir}/${SdkConstants.FN_BUILD_CONFIG_BASE}${SdkConstants.DOT_CLASS}",
+                "${namespaceDir}/${SdkConstants.FN_MANIFEST_BASE}${SdkConstants.DOT_CLASS}",
+                "${namespaceDir}/${DATA_BINDING_TRIGGER_CLASS}${SdkConstants.DOT_CLASS}",
+        )
+        val testClasses = componentImpl.artifacts.getAllClasses()
+                .minus(componentImpl.getCompiledRClasses(AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH))
+                .minus(componentImpl.getCompiledBuildConfig())
+        val isNotIgnoredClass = { relativePath: String ->
+            Files.getFileExtension(relativePath) == SdkConstants.EXT_CLASS &&
+                    relativePath !in ignoredPaths
+        }
 
-            for (jarOrDirectory in testClasses) {
-                if (!jarOrDirectory.exists()) {
-                    continue
+        for (jarOrDirectory in testClasses) {
+            if (!jarOrDirectory.exists()) {
+                continue
+            }
+            if (jarOrDirectory.isDirectory) {
+                for (file in jarOrDirectory.walk()) {
+                    if(isNotIgnoredClass(jarOrDirectory.toPath()
+                                    .relativize(file.toPath())
+                                    .toPathString().portablePath)) {
+                        return@provider true
+                    }
                 }
-                if (jarOrDirectory.isDirectory) {
-                    for (file in jarOrDirectory.walk()) {
-                        if(isNotIgnoredClass(jarOrDirectory.toPath()
-                                .relativize(file.toPath())
-                                .toPathString().portablePath)) {
+            } else {
+                ZipFile(jarOrDirectory).use {
+                    for (entry in it.entries()) {
+                        if (isNotIgnoredClass(entry.name)) {
                             return@provider true
                         }
                     }
-                } else {
-                    ZipFile(jarOrDirectory).use {
-                        for (entry in it.entries()) {
-                            if (isNotIgnoredClass(entry.name)) {
-                                return@provider true
-                            }
-                        }
-                    }
                 }
             }
-            false
         }
+        false
+    }
 }
