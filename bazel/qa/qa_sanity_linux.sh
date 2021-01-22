@@ -34,6 +34,11 @@ if [[ $lsb_release == "crostini" ]]; then
   fi
   echo $current_time > $crostini_timestamp_file
 
+  # Temp debugging for b/159371003
+  # Check running processes, output `ps -ef` in build log, helps avoid trips to the office
+  ps -ef
+  readonly counter="$(ps -ef | grep -c 'at-spi-bus-launcher')"
+
   # Generate a UUID for use as the bazel invocation id
   readonly logs_collector_invocation_id="$(uuidgen)"
 
