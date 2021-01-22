@@ -73,7 +73,6 @@ data class ApiTemplateData(
 data class ProjectTemplateData(
   val androidXSupport: Boolean,
   val gradlePluginVersion: GradlePluginVersion,
-  val javaVersion: JavaVersion?,
   val sdkDir: File?,
   val language: Language,
   val kotlinVersion: String,
