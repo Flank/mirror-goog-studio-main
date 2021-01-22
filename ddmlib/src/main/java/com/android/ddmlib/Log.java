@@ -238,17 +238,57 @@ public final class Log {
     }
 
     /**
+     * Outputs a {@link LogLevel#VERBOSE} level {@link Throwable} information.
+     * @param tag The tag associated with the message.
+     * @param throwable The {@link Throwable} to output.
+     */
+    public static void v(String tag, Throwable throwable) {
+        logThrowable(LogLevel.VERBOSE, tag, throwable);
+    }
+
+    /**
+     * Outputs a {@link LogLevel#DEBUG} level {@link Throwable} information.
+     * @param tag The tag associated with the message.
+     * @param throwable The {@link Throwable} to output.
+     */
+    public static void d(String tag, Throwable throwable) {
+        logThrowable(LogLevel.DEBUG, tag, throwable);
+    }
+
+    /**
+     * Outputs a {@link LogLevel#INFO} level {@link Throwable} information.
+     * @param tag The tag associated with the message.
+     * @param throwable The {@link Throwable} to output.
+     */
+    public static void i(String tag, Throwable throwable) {
+        logThrowable(LogLevel.INFO, tag, throwable);
+    }
+
+    /**
+     * Outputs a {@link LogLevel#WARN} level {@link Throwable} information.
+     * @param tag The tag associated with the message.
+     * @param throwable The {@link Throwable} to output.
+     */
+    public static void w(String tag, Throwable throwable) {
+        logThrowable(LogLevel.WARN, tag, throwable);
+    }
+
+    /**
      * Outputs a {@link LogLevel#ERROR} level {@link Throwable} information.
      * @param tag The tag associated with the message.
      * @param throwable The {@link Throwable} to output.
      */
     public static void e(String tag, Throwable throwable) {
+        logThrowable(LogLevel.ERROR, tag, throwable);
+    }
+
+    private static void logThrowable(LogLevel level, String tag, Throwable throwable) {
         if (throwable != null) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
 
             throwable.printStackTrace(pw);
-            println(LogLevel.ERROR, tag, throwable.getMessage() + '\n' + sw.toString());
+            println(level, tag, throwable.getMessage() + '\n' + sw.toString());
         }
     }
 
