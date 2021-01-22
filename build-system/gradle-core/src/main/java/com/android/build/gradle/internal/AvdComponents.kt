@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
+import com.android.repository.Revision
 import com.android.sdklib.repository.AndroidSdkHandler
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -40,14 +41,17 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     interface Parameters : BuildServiceParameters {
         val sdkService: Property<SdkComponentsBuildService>
-        val versionedSdkLoader: Property<SdkComponentsBuildService.VersionedSdkLoader>
+        val compileSdkVersion: Property<String>
+        val buildToolsRevision: Property<Revision>
         val avdLocation: DirectoryProperty
     }
 
     private val avdManager: AvdManager by lazy {
         AvdManager(
             parameters.avdLocation.get().asFile,
-            parameters.versionedSdkLoader.get(),
+            parameters.sdkService.map {
+                it.sdkLoader(parameters.compileSdkVersion, parameters.buildToolsRevision)
+            },
             AndroidSdkHandler.getInstance(
                 parameters.sdkService.get().sdkDirectoryProvider.get().asFile.toPath()
             ))
@@ -62,7 +66,11 @@ abstract class AvdComponentsBuildService @Inject constructor(
      * Returns the location of the emulator.
      */
     val emulatorDirectory: Provider<Directory> =
-        parameters.versionedSdkLoader.get().emulatorDirectoryProvider
+        parameters.sdkService.flatMap {
+            it.sdkLoader(
+                parameters.compileSdkVersion,
+                parameters.buildToolsRevision).emulatorDirectoryProvider
+        }
 
     /**
      * Returns the names of all avds currently in the shared avd folder.
@@ -81,12 +89,13 @@ abstract class AvdComponentsBuildService @Inject constructor(
     }
 
     fun avdProvider(
+        imageProvider: Provider<Directory>,
         imageHash: String,
         deviceName: String,
         hardwareProfile: String
     ): Provider<Directory> =
         objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-            avdManager.createOrRetrieveAvd(imageHash, deviceName, hardwareProfile)
+            avdManager.createOrRetrieveAvd(imageProvider, imageHash, deviceName, hardwareProfile)
         })
 
     fun deviceSnapshotCreated(deviceName: String): Boolean =
@@ -96,7 +105,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
         project: Project,
         private val avdFolderLocation: Provider<Directory>,
         private val sdkService: Provider<SdkComponentsBuildService>,
-        private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>
+        private val compileSdkVersion: Provider<String>,
+        private val buildToolsRevision: Provider<Revision>,
     ) : ServiceRegistrationAction<AvdComponentsBuildService, Parameters>(
         project,
         AvdComponentsBuildService::class.java
@@ -105,7 +115,8 @@ abstract class AvdComponentsBuildService @Inject constructor(
         override fun configure(parameters: Parameters) {
             parameters.avdLocation.set(avdFolderLocation)
             parameters.sdkService.set(sdkService)
-            parameters.versionedSdkLoader.set(versionedSdkLoader)
+            parameters.compileSdkVersion.set(compileSdkVersion)
+            parameters.buildToolsRevision.set(buildToolsRevision)
         }
     }
 

@@ -112,6 +112,11 @@ abstract class SdkComponentsBuildService @Inject constructor(
      *
      * So creating as many instances of VersionedSdkLoader as necessary is fine but instances
      * of [SdkLoadingStrategy] should be allocated wisely and closed once finished.
+     *
+     * Do not create instances of [VersionedSdkLoader] to store in [org.gradle.api.Task]'s input
+     * parameters or [org.gradle.workers.WorkParameters] as it is not serializable. Instead
+     * inject the [SdkComponentsBuildService] along with compileSdkVersion and buildToolsRevision
+     * for the module and call [SdkComponentsBuildService.sdkLoader] at execution time.
      */
     class VersionedSdkLoader(
         private val providerFactory: ProviderFactory,

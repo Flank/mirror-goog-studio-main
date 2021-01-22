@@ -384,20 +384,10 @@ public abstract class BasePlugin<
                                 getManagedDeviceAvdFolder(
                                         project.getObjects(), project.getProviders()),
                                 sdkComponentsBuildService,
-                                sdkComponentsBuildService.map(
-                                        buildService -> {
-                                            return buildService.sdkLoader(
-                                                    project.getProviders()
-                                                            .provider(
-                                                                    () ->
-                                                                            extension
-                                                                                    .getCompileSdkVersion()),
-                                                    project.getProviders()
-                                                            .provider(
-                                                                    () ->
-                                                                            extension
-                                                                                    .getBuildToolsRevision()));
-                                        }))
+                                project.getProviders()
+                                        .provider(() -> extension.getCompileSdkVersion()),
+                                project.getProviders()
+                                        .provider(() -> extension.getBuildToolsRevision()))
                         .execute();
 
         new SymbolTableBuildService.RegistrationAction(project, projectOptions).execute();

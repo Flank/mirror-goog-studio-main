@@ -28,6 +28,8 @@ import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
 import com.android.utils.ILogger
 import com.android.utils.StdLogger
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import java.io.File
 
 /**
@@ -35,12 +37,12 @@ import java.io.File
  */
 class AvdManager(
     avdFolder: File,
-    private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
+    private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>,
     private val sdkHandler: AndroidSdkHandler
 ) {
 
     private val sdkDirectory: File
-    get() = versionedSdkLoader.sdkDirectoryProvider.get().asFile
+    get() = versionedSdkLoader.get().sdkDirectoryProvider.get().asFile
 
     private val logger: ILogger = LoggerWrapper.getLogger(AvdManager::class.java)
 
@@ -57,6 +59,7 @@ class AvdManager(
     }
 
     fun createOrRetrieveAvd(
+        imageProvider: Provider<Directory>,
         imageHash: String,
         deviceName: String,
         hardwareProfile: String
@@ -69,7 +72,6 @@ class AvdManager(
             return info.configFile
         }
 
-        val imageProvider = versionedSdkLoader.sdkImageDirectoryProvider(imageHash)
         if (!imageProvider.isPresent) {
             throw RuntimeException("Failed to find system image for hash: $imageHash")
         }
@@ -146,7 +148,7 @@ class AvdManager(
 
     private fun defaultHardwareConfig(): MutableMap<String, String> {
         // Get the defaults of all the user-modifiable properties.
-        val emulatorProvider = versionedSdkLoader.emulatorDirectoryProvider
+        val emulatorProvider = versionedSdkLoader.get().emulatorDirectoryProvider
 
         val emulatorLib = if (emulatorProvider.isPresent) {
             emulatorProvider.get().asFile

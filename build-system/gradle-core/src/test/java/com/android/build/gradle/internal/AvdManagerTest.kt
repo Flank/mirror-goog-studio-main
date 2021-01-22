@@ -63,7 +63,10 @@ class AvdManagerTest {
         val versionedSdkLoader = setupVersionedSdkLoader()
         val sdkHandler = setupSdkHandler()
 
-        manager = AvdManager(fileOp.toFile(avdFolder), versionedSdkLoader, sdkHandler)
+        manager = AvdManager(
+            fileOp.toFile(avdFolder),
+            FakeGradleProvider(versionedSdkLoader),
+            sdkHandler)
     }
 
     @Test
@@ -78,6 +81,7 @@ class AvdManagerTest {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
@@ -92,14 +96,17 @@ class AvdManagerTest {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device2",
             "Pixel 3")
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device3",
             "Pixel 2")
@@ -116,10 +123,12 @@ class AvdManagerTest {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
@@ -134,10 +143,12 @@ class AvdManagerTest {
         //TODO(b/169661721): add support for windows.
         assumeTrue(SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS)
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device1",
             "Pixel 2")
         manager.createOrRetrieveAvd(
+            FakeGradleProvider(FakeGradleDirectory(fileOp.toFile(systemImageFolder))),
             "system-images;android-29;default;x86",
             "device2",
             "Pixel 3")
