@@ -66,7 +66,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
             params.add(new Object[] {"ProguardedAppWithTest", useAndroidX});
             // params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
         }
-        // params.add(new Object[] {"KotlinTestApp", true});
+        params.add(new Object[] {"KotlinTestApp", true});
         params.add(new Object[] {"ViewBindingWithDataBindingTestApp", true});
         return params;
     }
