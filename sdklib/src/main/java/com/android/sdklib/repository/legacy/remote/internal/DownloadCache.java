@@ -175,7 +175,7 @@ public class DownloadCache {
             @NonNull SettingsController settings) {
         File androidFolder;
         try {
-            androidFolder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
+            androidFolder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation().toFile();
         } catch (Throwable e) {
             androidFolder = null;
         }

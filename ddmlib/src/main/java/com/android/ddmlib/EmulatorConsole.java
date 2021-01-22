@@ -30,6 +30,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.util.Formatter;
 import java.util.HashMap;
@@ -640,10 +641,12 @@ public final class EmulatorConsole {
     }
 
     public synchronized String sendAuthentication() throws IOException {
+        Path useHomeLocation = AndroidLocationsSingleton.INSTANCE.getUserHomeLocation();
+        if (useHomeLocation == null) {
+            throw new RuntimeException("Enable to query home location");
+        }
         File emulatorConsoleAuthTokenFile =
-                new File(
-                        AndroidLocationsSingleton.INSTANCE.getUserHomeLocation(),
-                        EMULATOR_CONSOLE_AUTH_TOKEN);
+                useHomeLocation.resolve(EMULATOR_CONSOLE_AUTH_TOKEN).toFile();
         String authToken =
                 Files.asCharSource(emulatorConsoleAuthTokenFile, Charsets.UTF_8).read().trim();
         String command = String.format(COMMAND_AUTH, authToken);

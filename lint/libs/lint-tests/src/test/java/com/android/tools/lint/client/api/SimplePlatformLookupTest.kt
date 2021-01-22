@@ -65,7 +65,7 @@ class SimplePlatformLookupTest {
         // Now process the same folder with the real SDK manager to see
         // how it does
         val handler = AndroidSdkHandler.getInstance(
-            FakeAndroidLocationsProvider(homeFolder.root),
+            FakeAndroidLocationsProvider(homeFolder.root.toPath()),
             sdkFolder.toPath()
         )
 

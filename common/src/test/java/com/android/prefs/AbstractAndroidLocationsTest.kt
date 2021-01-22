@@ -15,6 +15,7 @@
  */
 package com.android.prefs
 
+import com.android.testutils.truth.PathSubject
 import com.android.utils.EnvironmentProvider
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
@@ -42,7 +43,7 @@ class AbstractAndroidLocationsTest {
         val locationProvider: AndroidLocationsProvider = AndroidLocations(provider, logger)
         val result = locationProvider.prefsLocation
 
-        val expected = File(testLocation, ".android")
+        val expected = testLocation.toPath().resolve(".android")
         Truth.assertWithMessage("Test Location")
             .that(result)
             .isEqualTo(expected)
@@ -53,22 +54,20 @@ class AbstractAndroidLocationsTest {
         Truth.assertWithMessage("Test Location2")
             .that(result2)
             .isEqualTo(expected)
-        Truth.assertWithMessage("Test Location created")
-            .that(result2.isDirectory)
-            .isTrue()
+        PathSubject.assertThat(result2).isDirectory()
     }
 
     @Test
     fun `ANDROID_SDK_HOME usage`() {
         val testLocation = folder.newFolder()
         val provider = FakeProvider(mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath))
+        val expected = testLocation.toPath().resolve(".android")
+
         val logger = RecordingLogger()
 
-        val result = AndroidLocations(provider, logger).prefsLocation
-
         Truth.assertWithMessage("Test Location")
-            .that(result)
-            .isEqualTo(File(testLocation, ".android"))
+            .that(AndroidLocations(provider, logger).prefsLocation)
+            .isEqualTo(expected)
     }
 
     @Test
@@ -106,13 +105,13 @@ class AbstractAndroidLocationsTest {
                 "ANDROID_PREFS_ROOT" to testLocation.absolutePath
             )
         )
+        val expected = testLocation.toPath().resolve(".android")
+
         val logger = RecordingLogger()
 
-        val result = AndroidLocations(provider, logger).prefsLocation
-
         Truth.assertWithMessage("Test Location")
-            .that(result)
-            .isEqualTo(File(testLocation, ".android"))
+            .that(AndroidLocations(provider, logger).prefsLocation)
+            .isEqualTo(expected)
 
         Truth.assertWithMessage("Warnings").that(logger.warnings).isEmpty()
     }
@@ -125,13 +124,13 @@ class AbstractAndroidLocationsTest {
         FileUtils.mkdirs(File(testLocation, "platform-tools"))
 
         val provider = FakeProvider(mapOf("ANDROID_SDK_HOME" to testLocation.absolutePath))
+        val expected = testLocation.toPath().resolve(".android")
+
         val logger = RecordingLogger()
 
-        val result = AndroidLocations(provider, logger).prefsLocation
-
         Truth.assertWithMessage("Test Location")
-            .that(result)
-            .isEqualTo(File(testLocation, ".android"))
+            .that(AndroidLocations(provider, logger).prefsLocation)
+            .isEqualTo(expected)
 
         Truth.assertWithMessage("Emitted Warnings").that(logger.warnings).containsExactly(
             """
@@ -269,7 +268,7 @@ This is the path of preference folder expected by the Android tools."""
 
         val locationProvider = AndroidLocations(provider, logger)
         val prefsLocation = locationProvider.prefsLocation
-        val expected = File(prefsLocation, "avd")
+        val expected = prefsLocation.resolve("avd")
 
         val result = locationProvider.avdLocation
         Truth.assertWithMessage("Test Location")
@@ -289,11 +288,9 @@ This is the path of preference folder expected by the Android tools."""
         )
         val logger = RecordingLogger()
 
-        val result = AndroidLocations(provider, logger).avdLocation
-
         Truth.assertWithMessage("Test Location")
-            .that(result)
-            .isEqualTo(expectedAvdLocation)
+            .that(AndroidLocations(provider, logger).avdLocation)
+            .isEqualTo(expectedAvdLocation.toPath())
     }
 
     @Test
@@ -310,11 +307,9 @@ This is the path of preference folder expected by the Android tools."""
         )
         val logger = RecordingLogger()
 
-        val result = AndroidLocations(provider, logger).userHomeLocation
-
         Truth.assertWithMessage("Test Location")
-            .that(result)
-            .isEqualTo(testLocation)
+            .that(AndroidLocations(provider, logger).userHomeLocation)
+            .isEqualTo(testLocation.toPath())
     }
 
     @Test
@@ -334,7 +329,7 @@ This is the path of preference folder expected by the Android tools."""
 
         Truth.assertWithMessage("Test Location")
             .that(result)
-            .isEqualTo(testLocation)
+            .isEqualTo(testLocation.toPath())
     }
 
     @Test
@@ -348,11 +343,9 @@ This is the path of preference folder expected by the Android tools."""
         )
         val logger = RecordingLogger()
 
-        val result = AndroidLocations(provider, logger).userHomeLocation
-
         Truth.assertWithMessage("Test Location")
-            .that(result)
-            .isEqualTo(testLocation)
+            .that(AndroidLocations(provider, logger).userHomeLocation)
+            .isEqualTo(testLocation.toPath())
     }
 }
 

@@ -22,7 +22,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/remote/internal/DownloadCache.java"
-            line="385"/>
+            line="383"/>
     </issue>
 
     <issue
@@ -30,7 +30,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/remote/internal/DownloadCache.java"
-            line="413"/>
+            line="411"/>
     </issue>
 
     <issue
@@ -38,7 +38,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/sdklib/repository/legacy/remote/internal/DownloadCache.java"
-            line="508"/>
+            line="506"/>
     </issue>
 
     <issue
@@ -78,7 +78,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/sdklib/repository/installer/MavenInstallListener.java"
-            line="299"/>
+            line="297"/>
     </issue>
 
     <issue
@@ -86,7 +86,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toUpperCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="src/main/java/com/android/sdklib/tool/OfflineRepoCreator.java"
-            line="136"/>
+            line="137"/>
     </issue>
 
     <issue
@@ -206,7 +206,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/tool/AvdManagerCli.java"
-            line="938"/>
+            line="947"/>
     </issue>
 
     <issue
@@ -214,15 +214,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/sdklib/tool/AvdManagerCli.java"
-            line="963"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
-            file="src/main/java/com/android/sdklib/tool/AvdManagerCli.java"
-            line="985"/>
+            line="997"/>
     </issue>
 
     <issue

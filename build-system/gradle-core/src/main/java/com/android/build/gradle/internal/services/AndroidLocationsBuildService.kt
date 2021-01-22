@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.services
 
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService.AndroidLocations
 import com.android.build.gradle.internal.utils.EnvironmentProviderImpl
 import com.android.build.gradle.internal.utils.GradleEnvironmentProviderImpl
 import com.android.prefs.AbstractAndroidLocations
@@ -24,11 +25,10 @@ import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.ILogger
 import org.gradle.api.Project
 import org.gradle.api.logging.Logging
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import java.io.File
+import java.nio.file.Path
 import javax.inject.Inject
 
 /**
@@ -45,13 +45,13 @@ abstract class AndroidLocationsBuildService @Inject constructor(
 
      // ----- AndroidLocationsProvider -----
 
-    override val prefsLocation: File
+    override val prefsLocation: Path
         get() = androidLocations.prefsLocation
 
-    override val avdLocation: File
+    override val avdLocation: Path
         get() = androidLocations.avdLocation
 
-    override val userHomeLocation: File?
+    override val userHomeLocation: Path?
         get() = androidLocations.userHomeLocation
 
     // -----

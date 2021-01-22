@@ -78,9 +78,8 @@ public final class KeystoreHelper {
     public static File defaultDebugKeystoreLocation(
             @NonNull AndroidLocationsProvider androidLocationsProvider)
             throws AndroidLocationsException {
-        // this is guaranteed to either return a non null value (terminated with a platform
-        // specific separator), or throw.
-        return new File(androidLocationsProvider.getPrefsLocation(), "debug.keystore");
+        // this is guaranteed to either return a non null value, or throw.
+        return androidLocationsProvider.getPrefsLocation().resolve("debug.keystore").toFile();
     }
 
     /**

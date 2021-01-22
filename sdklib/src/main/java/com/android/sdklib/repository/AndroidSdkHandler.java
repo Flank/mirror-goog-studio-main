@@ -222,7 +222,7 @@ public final class AndroidSdkHandler {
                     k -> {
                         Path androidFolder;
                         try {
-                            androidFolder = locationProvider.getPrefsLocation().toPath();
+                            androidFolder = locationProvider.getPrefsLocation();
                         } catch (Throwable e) {
                             androidFolder = null;
                         }

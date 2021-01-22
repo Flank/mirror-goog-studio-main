@@ -16,7 +16,7 @@
 
 package com.android.prefs
 
-import java.io.File
+import java.nio.file.Path
 
 /**
  * A provider of locations for android tools
@@ -31,13 +31,13 @@ interface AndroidLocationsProvider {
      * To query the AVD Folder, use [avdLocation] as it could be be overridden
      */
     @get:Throws(AndroidLocationsException::class)
-    val prefsLocation: File
+    val prefsLocation: Path
 
     /**
      * The location of the AVD folder.
      */
     @get:Throws(AndroidLocationsException::class)
-    val avdLocation: File
+    val avdLocation: Path
 
     /**
      * The root folder where the android folder will be located
@@ -46,5 +46,5 @@ interface AndroidLocationsProvider {
      *
      * To query the AVD Folder, use [avdLocation] as it could be overridden
      */
-    val userHomeLocation: File?
+    val userHomeLocation: Path?
 }

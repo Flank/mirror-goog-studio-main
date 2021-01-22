@@ -28,7 +28,14 @@ import org.mockito.Mockito
 open class BasicNdkBuildMock : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
-    val module by lazy { createCxxModuleModel(sdkComponents, configurationParameters, cmakeFinder) }
+    val module by lazy {
+        createCxxModuleModel(
+            sdkComponents,
+            androidLocationProvider,
+            configurationParameters,
+            cmakeFinder
+        )
+    }
     val variant by lazy { createCxxVariantModel(configurationParameters, module) }
     val abi by lazy { createCxxAbiModel(sdkComponents, configurationParameters, variant, Abi.X86) }
 

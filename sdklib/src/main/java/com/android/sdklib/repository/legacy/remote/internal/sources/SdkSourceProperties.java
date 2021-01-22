@@ -186,7 +186,7 @@ class SdkSourceProperties {
     @VisibleForTesting
     protected boolean loadProperties() {
         try {
-            File folder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
+            File folder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation().toFile();
             File f = new File(folder, SRC_FILENAME);
             if (f.exists()) {
                 FileInputStream fis = null;
@@ -220,7 +220,7 @@ class SdkSourceProperties {
         // Persist it to the file
         FileOutputStream fos = null;
         try {
-            File folder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
+            File folder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation().toFile();
             File f = new File(folder, SRC_FILENAME);
 
             fos = new FileOutputStream(f);

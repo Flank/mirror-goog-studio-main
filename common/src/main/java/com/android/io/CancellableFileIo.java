@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -301,6 +302,14 @@ public class CancellableFileIo {
     public static List<String> readAllLines(@NonNull Path file) throws IOException {
         ProgressManagerAdapter.checkCanceled();
         return Files.readAllLines(file, StandardCharsets.UTF_8);
+    }
+
+    /** @see Files#readAllLines(Path, Charset) */
+    @Slow
+    @NonNull
+    public static List<String> readAllLines(@NonNull Path file, @NonNull Charset cs) throws IOException {
+        ProgressManagerAdapter.checkCanceled();
+        return Files.readAllLines(file, cs);
     }
 
     /** Reads a text file in UTF-8 encoding. */

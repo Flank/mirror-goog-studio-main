@@ -1122,7 +1122,7 @@ abstract class LintClient {
         // (2) via jar files in the .android/lint directory
         var files: MutableList<File>? = null
         try {
-            val lint = File(AndroidLocationsSingleton.prefsLocation, "lint")
+            val lint = AndroidLocationsSingleton.prefsLocation.resolve("lint").toFile()
             if (lint.exists()) {
                 val list = lint.listFiles()
                 if (list != null) {

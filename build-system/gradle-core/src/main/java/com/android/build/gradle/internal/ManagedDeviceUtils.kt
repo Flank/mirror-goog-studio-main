@@ -36,7 +36,7 @@ fun getManagedDeviceAvdFolder(
     androidLocationsProvider: AndroidLocationsProvider
 ): DirectoryProperty =
     objectFactory.directoryProperty().fileProvider(providerFactory.provider {
-        File(androidLocationsProvider.prefsLocation, GRADLE_AVD_DIRECTORY_PATH)
+        androidLocationsProvider.prefsLocation.resolve(GRADLE_AVD_DIRECTORY_PATH).toFile()
     })
 
 fun computeAvdName(device: ManagedVirtualDevice): String =

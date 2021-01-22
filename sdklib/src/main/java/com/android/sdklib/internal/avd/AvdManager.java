@@ -438,7 +438,8 @@ public class AvdManager {
     public static AvdManager getInstance(
             @NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger log)
             throws AndroidLocationsException {
-        return getInstance(sdkHandler, AndroidLocationsSingleton.INSTANCE.getAvdLocation(), log);
+        return getInstance(
+                sdkHandler, AndroidLocationsSingleton.INSTANCE.getAvdLocation().toFile(), log);
     }
 
     @Nullable

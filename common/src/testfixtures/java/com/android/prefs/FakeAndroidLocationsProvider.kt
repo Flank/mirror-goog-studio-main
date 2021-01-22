@@ -16,18 +16,19 @@
 
 package com.android.prefs
 
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * An implementation of AndroidLocationProvider to be used in tests.
  *
  * This is accessible through common's text fixtures artifact.
  */
-class FakeAndroidLocationsProvider(override val userHomeLocation: File): AndroidLocationsProvider {
+class FakeAndroidLocationsProvider(override val userHomeLocation: Path): AndroidLocationsProvider {
 
-    override val prefsLocation: File
-        get() = File(userHomeLocation, ".android").also { it.mkdirs() }
+    override val prefsLocation: Path
+        get() = userHomeLocation.resolve(".android").also { Files.createDirectories(it) }
 
-    override val avdLocation: File
-        get() = File(prefsLocation, AbstractAndroidLocations.FOLDER_AVD)
+    override val avdLocation: Path
+        get() = prefsLocation.resolve(AbstractAndroidLocations.FOLDER_AVD)
 }

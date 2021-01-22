@@ -261,7 +261,7 @@ class AvdManagerCli extends CommandLineParser {
     private void init() {
         if (mAvdFolder == null) {
             try {
-                mAvdFolder = AndroidLocationsSingleton.INSTANCE.getAvdLocation();
+                mAvdFolder = AndroidLocationsSingleton.INSTANCE.getAvdLocation().toFile();
             } catch (Throwable e) {
                 // We'll print an error out later since the folder isn't defined.
             }
@@ -625,7 +625,7 @@ class AvdManagerCli extends CommandLineParser {
     private DeviceManager createDeviceManager() {
         File androidFolder;
         try {
-            androidFolder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation();
+            androidFolder = AndroidLocationsSingleton.INSTANCE.getPrefsLocation().toFile();
         } catch (Throwable e) {
             mSdkLog.warning(e.getMessage());
             androidFolder = null;
@@ -966,20 +966,20 @@ class AvdManagerCli extends CommandLineParser {
             // to rename that folder too.
             if (newName != null && paramFolderPath == null) {
                 // Compute the original data path
-                File originalFolder =
-                        new File(
-                                AndroidLocationsSingleton.INSTANCE.getAvdLocation(),
-                                info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
-                if (originalFolder.equals(new File(info.getDataFolderPath()))) {
+                Path originalFolder =
+                        AndroidLocationsSingleton.INSTANCE
+                                .getAvdLocation()
+                                .resolve(info.getName() + AvdManager.AVD_FOLDER_EXTENSION);
+                if (originalFolder.equals(Paths.get(info.getDataFolderPath()))) {
                     try {
                         // The AVD is using the default data folder path based on the AVD name.
                         // That folder needs to be adjusted to use the new name.
-                        File f =
-                                new File(
-                                        AndroidLocationsSingleton.INSTANCE.getAvdLocation(),
-                                        newName + AvdManager.AVD_FOLDER_EXTENSION);
-                        paramFolderPath = f.getCanonicalPath();
-                    } catch (IOException e) {
+                        paramFolderPath =
+                                AndroidLocationsSingleton.INSTANCE
+                                        .getAvdLocation()
+                                        .resolve(newName + AvdManager.AVD_FOLDER_EXTENSION)
+                                        .toString();
+                    } catch (Throwable e) {
                         // Fail to resolve canonical path. Fail now rather than later.
                         errorAndExit(e.getMessage());
                     }
