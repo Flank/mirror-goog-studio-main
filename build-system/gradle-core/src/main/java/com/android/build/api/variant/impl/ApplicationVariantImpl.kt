@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
@@ -73,7 +74,7 @@ open class ApplicationVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), ApplicationVariant, ApplicationCreationConfig {
+), ApplicationVariant, ApplicationCreationConfig, HasAndroidTestImpl {
 
     val delegate by lazy { ApkCreationConfigImpl(this, globalScope, variantDslInfo) }
 
@@ -223,4 +224,6 @@ open class ApplicationVariantImpl @Inject constructor(
     // Apps include the jacoco agent if test coverage is enabled
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
+
+    override var androidTest: AndroidTest? = null
 }

@@ -836,7 +836,7 @@ com.android.build.api.variant.ApkPackaging.dex: void (kotlin.jvm.functions.Funct
 com.android.build.api.variant.ApkPackaging.getDex: com.android.build.api.variant.DexPackagingOptions ()
 com.android.build.api.variant.ApkPackaging.getJniLibs: com.android.build.api.variant.JniLibsApkPackaging ()
 com.android.build.api.variant.ApkPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsApkPackaging, kotlin.Unit>)
-com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.ApplicationVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
 com.android.build.api.variant.ApplicationVariant.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.Aapt, kotlin.Unit>)
 com.android.build.api.variant.ApplicationVariant.getAapt: com.android.build.api.variant.Aapt ()
 com.android.build.api.variant.ApplicationVariant.getApplicationId: org.gradle.api.provider.Property<java.lang.String> ()
@@ -884,7 +884,7 @@ com.android.build.api.variant.DependenciesInfo.getIncludeInApk: boolean ()
 com.android.build.api.variant.DependenciesInfo.getIncludeInBundle: boolean ()
 com.android.build.api.variant.DexPackagingOptions
 com.android.build.api.variant.DexPackagingOptions.getUseLegacyPackaging: org.gradle.api.provider.Property<java.lang.Boolean> ()
-com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.DynamicFeatureVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
 com.android.build.api.variant.DynamicFeatureVariant.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.Aapt, kotlin.Unit>)
 com.android.build.api.variant.DynamicFeatureVariant.getAapt: com.android.build.api.variant.Aapt ()
 com.android.build.api.variant.DynamicFeatureVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
@@ -924,7 +924,7 @@ com.android.build.api.variant.JniLibsPackaging.getKeepDebugSymbols: org.gradle.a
 com.android.build.api.variant.JniLibsPackaging.getPickFirsts: org.gradle.api.provider.SetProperty<java.lang.String> ()
 com.android.build.api.variant.LibraryPackaging implements com.android.build.api.variant.Packaging
 com.android.build.api.variant.LibraryPackaging.jniLibs: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.JniLibsPackaging, kotlin.Unit>)
-com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant
+com.android.build.api.variant.LibraryVariant implements com.android.build.api.variant.Variant, com.android.build.api.variant.HasAndroidTest
 com.android.build.api.variant.LibraryVariant.getApplicationId: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.LibraryVariant.getPackaging: com.android.build.api.variant.LibraryPackaging ()
 com.android.build.api.variant.LibraryVariant.packaging: void (kotlin.jvm.functions.Function1<? super com.android.build.api.variant.LibraryPackaging, kotlin.Unit>)
@@ -965,6 +965,7 @@ com.android.build.api.variant.Variant.getExternalNdkBuild: com.android.build.api
 com.android.build.api.variant.Variant.getManifestPlaceholders: org.gradle.api.provider.MapProperty<java.lang.String, java.lang.String> ()
 com.android.build.api.variant.Variant.getNamespace: org.gradle.api.provider.Provider<java.lang.String> ()
 com.android.build.api.variant.Variant.getPackaging: com.android.build.api.variant.Packaging ()
+com.android.build.api.variant.Variant.getUnitTest: com.android.build.api.component.UnitTest ()
 com.android.build.api.variant.VariantBuilder implements com.android.build.api.component.ComponentBuilder, com.android.build.api.component.ActionableComponentObject
 com.android.build.api.variant.VariantBuilder.getMaxSdkVersion: java.lang.Integer ()
 com.android.build.api.variant.VariantBuilder.getMinSdkVersion: com.android.build.api.variant.AndroidVersion ()

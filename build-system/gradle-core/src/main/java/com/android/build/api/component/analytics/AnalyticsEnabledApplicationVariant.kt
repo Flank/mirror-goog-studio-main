@@ -16,6 +16,8 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.Aapt
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
@@ -102,4 +104,7 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
         action.invoke(userVisiblePackagingOptions)
     }
+
+    override val androidTest: AndroidTest?
+        get() = delegate.androidTest
 }

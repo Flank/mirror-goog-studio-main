@@ -20,7 +20,7 @@ import org.gradle.api.provider.Provider
 
 /** [Variant] for Library projects */
 @Incubating
-interface LibraryVariant : Variant {
+interface LibraryVariant : Variant, HasAndroidTest {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

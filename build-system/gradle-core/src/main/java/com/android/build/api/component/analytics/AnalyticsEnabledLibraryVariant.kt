@@ -16,6 +16,8 @@
 
 package com.android.build.api.component.analytics
 
+import com.android.build.api.component.AndroidTest
+import com.android.build.api.component.UnitTest
 import com.android.build.api.variant.LibraryPackaging
 import com.android.build.api.variant.LibraryVariant
 import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
@@ -58,4 +60,7 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
             VariantPropertiesMethodType.PACKAGING_OPTIONS_ACTION_VALUE
         action.invoke(userVisiblePackagingOptions)
     }
+
+    override val androidTest: AndroidTest?
+        get() = delegate.androidTest
 }

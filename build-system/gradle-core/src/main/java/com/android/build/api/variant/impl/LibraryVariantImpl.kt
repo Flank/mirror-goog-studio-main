@@ -16,6 +16,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
@@ -23,7 +24,11 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
-import com.android.build.api.variant.*
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.LibraryPackaging
+import com.android.build.api.variant.LibraryVariant
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -71,7 +76,7 @@ open class  LibraryVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), LibraryVariant, LibraryCreationConfig {
+), LibraryVariant, LibraryCreationConfig, HasAndroidTestImpl {
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -147,4 +152,6 @@ open class  LibraryVariantImpl @Inject constructor(
 
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled
+
+    override var androidTest: AndroidTest? = null
 }

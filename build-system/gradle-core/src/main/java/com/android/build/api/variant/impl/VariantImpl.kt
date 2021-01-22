@@ -17,9 +17,17 @@ package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.Component
+import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.*
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.ExternalCmake
+import com.android.build.api.variant.ExternalNdkBuild
+import com.android.build.api.variant.ExternalNdkBuildImpl
+import com.android.build.api.variant.Packaging
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
@@ -189,4 +197,7 @@ abstract class VariantImpl(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
             stats: GradleBuildVariant.Builder?): T
+
+    override var unitTest: UnitTest? = null
+
 }

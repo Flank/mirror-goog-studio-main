@@ -40,6 +40,7 @@ import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.HasAndroidTestImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
@@ -353,12 +354,6 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                 variantPropertiesApiServices,
                 taskCreationServices)
 
-        // Run the VariantProperties actions
-        val userVisibleVariant = (variantApiObject as VariantImpl)
-                .createUserVisibleVariantObject<Variant>(projectServices,
-                        variantApiOperationsRegistrar,
-                        profileEnabledVariantBuilder)
-        variantApiOperationsRegistrar.variantOperations.executeOperations(userVisibleVariant)
         return VariantComponentInfo(
                 variantBuilder,
                 variantApiObject,
@@ -679,8 +674,42 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                                     targetSdkVersion,
                                     variant.name))
                 }
-                val variantBuilder = variantInfo.stats
-                variantBuilder?.let {
+
+                if (variantFactory.variantType.hasTestComponents) {
+                    if (buildTypeData == testBuildTypeData) {
+                        val androidTest = createTestComponents(
+                                dimensionCombination,
+                                buildTypeData,
+                                productFlavorDataList,
+                                variantInfo, VariantTypeImpl.ANDROID_TEST)
+                        androidTest?.let {
+                            addTestComponent(it)
+                            (variantInfo.variant as HasAndroidTestImpl).androidTest = it.variant as AndroidTest
+                        }
+                    }
+                    val unitTest = createTestComponents(
+                            dimensionCombination,
+                            buildTypeData,
+                            productFlavorDataList,
+                            variantInfo, VariantTypeImpl.UNIT_TEST)
+                    unitTest?.let {
+                        addTestComponent(it)
+                        variantInfo.variant.unitTest = it.variant as UnitTest
+                    }
+                }
+
+                // Now that unitTest and/or androidTest have been created and added to the main
+                // user visible variant object, we can run the onVariants() actions
+                val userVisibleVariant = (variantInfo.variant as VariantImpl)
+                    .createUserVisibleVariantObject<Variant>(projectServices,
+                        variantApiOperationsRegistrar,
+                        variantInfo.stats)
+                variantApiOperationsRegistrar.variantOperations.executeOperations(userVisibleVariant)
+
+                // all the variant public APIs have run, we can now safely fill the analytics with
+                // the final values that will be used throughout the task creation and execution.
+                val variantAnalytics = variantInfo.stats
+                variantAnalytics?.let {
                     it
                         .setIsDebug(buildType.isDebuggable)
                         .setMinSdkVersion(AnalyticsUtil.toProto(variantInfo.variant.minSdkVersion))
@@ -694,38 +723,21 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                         .testExecution = AnalyticsUtil.toProto(globalScope.extension.testOptions.getExecutionEnum())
 
                     variant.codeShrinker?.let {
-                        variantBuilder.codeShrinker = AnalyticsUtil.toProto(it)
+                        variantAnalytics.codeShrinker = AnalyticsUtil.toProto(it)
                     }
                     if (variantDslInfo.targetSdkVersion.apiLevel > 0) {
-                        variantBuilder.targetSdkVersion =
+                        variantAnalytics.targetSdkVersion =
                             AnalyticsUtil.toProto(variantDslInfo.targetSdkVersion)
                     }
                     variantDslInfo.maxSdkVersion?.let {
-                        variantBuilder.setMaxSdkVersion(
+                        variantAnalytics.setMaxSdkVersion(
                             ApiVersion.newBuilder().setApiLevel(it.toLong()))
                     }
                     val supportType = variant.getJava8LangSupportType()
                     if (supportType != VariantScope.Java8LangSupport.INVALID
                         && supportType != VariantScope.Java8LangSupport.UNUSED) {
-                        variantBuilder.java8LangSupport = AnalyticsUtil.toProto(supportType)
+                        variantAnalytics.java8LangSupport = AnalyticsUtil.toProto(supportType)
                     }
-                }
-
-                if (variantFactory.variantType.hasTestComponents) {
-                    if (buildTypeData == testBuildTypeData) {
-                        val androidTest = createTestComponents(
-                                dimensionCombination,
-                                buildTypeData,
-                                productFlavorDataList,
-                                variantInfo, VariantTypeImpl.ANDROID_TEST)
-                        androidTest?.let { addTestComponent(it) }
-                    }
-                    val unitTest = createTestComponents(
-                            dimensionCombination,
-                            buildTypeData,
-                            productFlavorDataList,
-                            variantInfo, VariantTypeImpl.UNIT_TEST)
-                    unitTest?.let { addTestComponent(it) }
                 }
             }
         }

@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.Component
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.ApkCreationConfigImpl
@@ -82,7 +83,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     internalServices,
     taskCreationServices,
     globalScope
-), DynamicFeatureVariant, DynamicFeatureCreationConfig {
+), DynamicFeatureVariant, DynamicFeatureCreationConfig, HasAndroidTestImpl {
 
     private val delegate by lazy { ApkCreationConfigImpl(this, globalScope, variantDslInfo) }
 
@@ -275,4 +276,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
+
+    override var androidTest: AndroidTest? = null
 }

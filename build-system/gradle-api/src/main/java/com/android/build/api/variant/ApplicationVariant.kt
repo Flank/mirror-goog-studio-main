@@ -23,7 +23,7 @@ import org.gradle.api.provider.Property
  * Properties for the main Variant of an application.
  */
 @Incubating
-interface ApplicationVariant : Variant {
+interface ApplicationVariant : Variant, HasAndroidTest {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.
