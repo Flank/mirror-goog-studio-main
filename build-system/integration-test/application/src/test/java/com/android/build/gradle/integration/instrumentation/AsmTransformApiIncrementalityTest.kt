@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.libC
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.libClassesDescriptorPrefix
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils.projectClasses
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.instrumentation.loadClassData
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -204,6 +205,97 @@ class AsmTransformApiIncrementalityTest {
                 ),
                 expectedInstrumentedClasses = listOf("InterfaceExtendsI", "NewInterfaceExtendsI")
         )
+    }
+
+    @Test
+    fun loadedClassChanged() {
+        configureExtensionForAnnotationAddingVisitor(project)
+        configureExtensionForInterfaceAddingVisitor(project)
+
+        // Make the AnnotationAddingClassVisitorFactory query for ClassImplementsI class data
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":buildSrc")
+                .file("src/main/java/com/example/buildsrc/instrumentation/AnnotationAddingClassVisitorFactory.kt"),
+            "return AnnotationAddingClassVisitor(",
+            "classContext.loadClassData(\"com.example.myapplication.ClassImplementsI\")" +
+                    System.lineSeparator() +
+                    "return AnnotationAddingClassVisitor("
+        )
+
+        project.executor().run(":app:transformDebugClassesWithAsm")
+
+        val incrementalDir = FileUtils.join(
+            project.getSubproject(":app").intermediatesDir,
+            "incremental",
+            "transformDebugClassesWithAsm"
+        )
+
+        assertThat(incrementalDir.listFiles()).hasLength(1)
+        var classData = loadClassData(incrementalDir.listFiles()!![0])!!
+        assertThat(classData.className).isEqualTo("com.example.myapplication.ClassImplementsI")
+        assertThat(classData.interfaces).containsExactly("com.example.lib.I")
+        assertThat(classData.superClasses).containsExactly("java.lang.Object")
+        assertThat(classData.classAnnotations).isEmpty()
+
+        val taskOutputDir = FileUtils.join(
+            project.getSubproject(":app").intermediatesDir,
+            "asm_instrumented_project_classes",
+            "debug"
+        )
+        var originalFiles = getClassFilesModifiedTimeMap(taskOutputDir)
+
+        // change ClassImplementsI in a way that doesn't affect the class data, and so we should
+        // be still running incrementally
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app")
+                .file("src/main/java/com/example/myapplication/ClassImplementsI.kt"),
+            "fun f2() {}",
+            "fun f2() {}" + System.lineSeparator() +
+                    "fun f() {}"
+        )
+
+        var result = project.executor().run(":app:transformDebugClassesWithAsm")
+
+        assertThat(result.didWorkTasks).contains(":app:transformDebugClassesWithAsm")
+
+        var modifiedFiles = getClassFilesModifiedTimeMap(taskOutputDir).filter {
+            originalFiles[it.key] != it.value
+        }
+
+        assertThat(modifiedFiles).hasSize(1)
+        assertThat(modifiedFiles.keys).containsExactly("ClassImplementsI.class")
+
+        originalFiles = getClassFilesModifiedTimeMap(taskOutputDir).filterNot {
+            it.key == "BuildConfig.class"
+        }
+
+        // change ClassImplementsI in a way that will change the class data, and so we should run
+        // non incrementally
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app")
+                .file("src/main/java/com/example/myapplication/ClassImplementsI.kt"),
+            "ClassImplementsI : I",
+            "ClassImplementsI : I, java.io.Serializable"
+        )
+
+        result = project.executor().run(":app:transformDebugClassesWithAsm")
+
+        assertThat(result.didWorkTasks).contains(":app:transformDebugClassesWithAsm")
+
+        modifiedFiles = getClassFilesModifiedTimeMap(taskOutputDir).filter {
+            it.key != "BuildConfig.class" && originalFiles[it.key] != it.value
+        }
+
+        // all classes should be modified
+        assertThat(modifiedFiles).hasSize(originalFiles.size)
+
+        // new class data should be outputted
+        assertThat(incrementalDir.listFiles()).hasLength(1)
+        classData = loadClassData(incrementalDir.listFiles()!![0])!!
+        assertThat(classData.className).isEqualTo("com.example.myapplication.ClassImplementsI")
+        assertThat(classData.interfaces).containsExactly("com.example.lib.I", "java.io.Serializable")
+        assertThat(classData.superClasses).containsExactly("java.lang.Object")
+        assertThat(classData.classAnnotations).isEmpty()
     }
 
     private fun getClassFilesModifiedTimeMap(outputDir: File): Map<String, Long> {
