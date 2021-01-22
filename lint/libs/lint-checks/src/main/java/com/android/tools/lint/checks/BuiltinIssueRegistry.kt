@@ -387,6 +387,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 TextViewDetector.ISSUE,
                 TextViewDetector.SELECTABLE,
                 ThreadDetector.THREAD,
+                TileProviderDetector.ISSUE,
                 TitleDetector.ISSUE,
                 ToastDetector.ISSUE,
                 TooManyViewsDetector.TOO_DEEP,
