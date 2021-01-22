@@ -20,16 +20,6 @@ import com.google.common.io.Resources
 import java.io.File
 import java.net.URL
 
-data class GradleVersion(val major: Int, val minor: Int, val micro: Int) {
-  operator fun compareTo(other: GradleVersion) = when {
-    this == other -> 0
-    this.major > other.major -> 1
-    this.minor > other.minor -> 1
-    this.micro > other.micro -> 1
-    else -> -1
-  }
-}
-
 /** Converts an Activity class name into a suitable layout name. */
 fun activityToLayout(activityName: String, layoutName: String? = null): String =
   if (activityName.isNotEmpty())
