@@ -230,10 +230,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     }
                 }
 
-                if (!continuous) { // Prepare and send PropertiesEvent
-                    // If this is a one-time layout event request, then collect and send all
-                    // properties as well, so that the values will match exactly the layout at this
-                    // time.
+                if (context.isLastCapture) { // Prepare and send PropertiesEvent
+                    // We get here either if the client requested a one-time snapshot of the layout
+                    // or if the client just stopped an in-progress fetch. Collect and send all
+                    // properties, so that the user can continue to explore all values in the UI and
+                    // they will match exactly the layout at this moment in time.
 
                     val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
                     val stringTable = StringTable()
