@@ -35,7 +35,6 @@ import com.android.tools.idea.protobuf.ByteString
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.*
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
@@ -123,7 +122,13 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
      *     to true, so that we automatically start capturing newly discovered views as well.
      */
     private fun checkRoots(captureNewRoots: Boolean): Boolean {
-        val currRoots = getRootViews().map { v -> v.uniqueDrawingId to v }.toMap()
+        val currRoots =
+            ThreadUtils.runOnMainThread {
+                getRootViews()
+                    .map { v -> v.uniqueDrawingId to v }
+                    .toMap()
+            }.get()
+
         val currRootIds = currRoots.keys
         if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
             val removed = lastRootIds.filter { !currRootIds.contains(it) }
@@ -140,8 +145,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     state.contextMap.remove(toRemove)?.handle?.close()
                 }
                 if (captureNewRoots) {
-                    for (toAdd in added) {
-                        startCapturing(currRoots.getValue(toAdd), continuous = true)
+                    ThreadUtils.runOnMainThread {
+                        for (toAdd in added) {
+                            startCapturing(currRoots.getValue(toAdd), continuous = true)
+                        }
                     }
                 }
             }
@@ -159,6 +166,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 
     private fun startCapturing(root: View, continuous: Boolean) {
+        // Starting rendering captures must be called on the View thread or else it throws
+        ThreadUtils.assertOnMainThread()
+
         val os = ByteArrayOutputStream()
         // We might get multiple callbacks for the same view while still processing an earlier
         // one. Let's avoid processing these in parallel to avoid confusion.
@@ -194,20 +204,14 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
                     val stringTable = StringTable()
                     val appContext = root.createAppContext(stringTable)
-                    lateinit var rootView: ViewNode
-                    lateinit var rootOffset: IntArray
-                    run {
-                        // Get layout info on the view thread, to avoid races
-                        val future = CompletableFuture<Unit>()
-                        root.post {
-                            rootView = root.toNode(stringTable, skipSystemViews)
-                            rootOffset = IntArray(2)
-                            root.getLocationInSurface(rootOffset)
 
-                            future.complete(Unit)
-                        }
-                        future.get()
-                    }
+                    val (rootView, rootOffset) = ThreadUtils.runOnMainThread {
+                        val rootView = root.toNode(stringTable, skipSystemViews)
+                        val rootOffset = IntArray(2)
+                        root.getLocationInSurface(rootOffset)
+
+                        (rootView to rootOffset)
+                    }.get()
 
                     connection.sendEvent {
                         layoutEvent = LayoutEvent.newBuilder().apply {
@@ -231,17 +235,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // properties as well, so that the values will match exactly the layout at this
                     // time.
 
-                    lateinit var allViews: List<View>
-                    run {
-                        // Get layout info on the view thread, to avoid races
-                        val future = CompletableFuture<Unit>()
-                        root.post {
-                            allViews = root.flatten().toList()
-                            future.complete(Unit)
-                        }
-                        future.get()
-                    }
-
+                    val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
                     val stringTable = StringTable()
                     val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
                     connection.sendEvent {
@@ -255,32 +249,22 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             }
         }
 
-        // Starting rendering captures must be called on the View thread or else it throws
-        root.post {
-            // Sometimes the window has become detached before we get in here,
-            // so check one more time before trying to start capture.
-            if (!root.isAttachedToWindow) return@post
-
-            try {
-                synchronized(stateLock) {
-                    val handle =
-                        SkiaQWorkaround.startRenderingCommandsCapture(
-                            root,
-                            captureExecutor
-                        ) { os }
-                    if (handle != null) {
-                        state.contextMap[root.uniqueDrawingId] =
-                            CaptureContext(handle, isLastCapture = (!continuous))
-                    }
+        try {
+            synchronized(stateLock) {
+                val handle =
+                    SkiaQWorkaround.startRenderingCommandsCapture(root, captureExecutor) { os }
+                if (handle != null) {
+                    state.contextMap[root.uniqueDrawingId] =
+                        CaptureContext(handle, isLastCapture = (!continuous))
                 }
-                root.invalidate() // Force a re-render so we send the current screen
             }
-            catch (t: Throwable) {
-                connection.sendEvent {
-                    errorEvent = ErrorEvent.newBuilder().apply {
-                        message = t.stackTraceToString()
-                    }.build()
-                }
+            root.invalidate() // Force a re-render so we send the current screen
+        }
+        catch (t: Throwable) {
+            connection.sendEvent {
+                errorEvent = ErrorEvent.newBuilder().apply {
+                    message = t.stackTraceToString()
+                }.build()
             }
         }
     }
@@ -298,8 +282,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         synchronized(stateLock) {
             state.skipSystemViews = startFetchCommand.skipSystemViews
         }
-        for (root in getRootViews()) {
-            startCapturing(root, startFetchCommand.continuous)
+
+        ThreadUtils.runOnMainThread {
+            for (root in getRootViews()) {
+                startCapturing(root, startFetchCommand.continuous)
+            }
         }
     }
 
@@ -339,6 +326,8 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 }
 
 private fun getRootViews(): List<View> {
+    ThreadUtils.assertOnMainThread()
+
     val views = WindowInspector.getGlobalWindowViews()
     return views
         .filter { view -> view.visibility == View.VISIBLE && view.isAttachedToWindow }
