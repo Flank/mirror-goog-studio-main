@@ -69,7 +69,9 @@ class IceboxPlugin @VisibleForTesting constructor(
     @VisibleForTesting
     lateinit var outputDir: File
     private var maxSnapshotNumber = 0
+    private var remainSnapshotNumber = 0
     private var failureSnapshotId = 0
+    private var printedWarning = false
 
     override fun configure(config: Config) {
         iceboxPluginConfig = IceboxPluginConfig.parseFrom((config as ProtoConfig).configProto!!.value)
@@ -86,12 +88,14 @@ class IceboxPlugin @VisibleForTesting constructor(
         } else {
             maxSnapshotNumber = iceboxPluginConfig.maxSnapshotNumber
         }
+        remainSnapshotNumber = maxSnapshotNumber
         outputDir = File(config.environment.outputDirectory)
     }
 
     /** Creates the IceboxCaller, takes no actions on the device. */
     override fun beforeAll(deviceController: DeviceController) {
         this.deviceController = deviceController
+        printedWarning = false
         iceboxCaller = iceboxCallerFactory(
                 ManagedChannelBuilder.forAddress(
                         iceboxPluginConfig.emulatorGrpcAddress,
@@ -112,7 +116,7 @@ class IceboxPlugin @VisibleForTesting constructor(
                 deviceController,
                 iceboxPluginConfig.appPackage,
                 snapshotNamePrefix,
-                maxSnapshotNumber,
+                remainSnapshotNumber,
                 androidStudioDdmlibPort
         )
     }
@@ -122,7 +126,14 @@ class IceboxPlugin @VisibleForTesting constructor(
             testResult: TestResult,
             deviceController: DeviceController
     ): TestResult {
-        if (testResult.testStatus != TestStatus.FAILED || maxSnapshotNumber <= 0) {
+        if (testResult.testStatus != TestStatus.FAILED
+                || remainSnapshotNumber <= 0) {
+            if (testResult.testStatus == TestStatus.FAILED && !printedWarning) {
+                logger.warning("Number of failures exceeds maximum snapshot "
+                    + "count. Only the first $maxSnapshotNumber failure(s) will "
+                    + "have retention snapshots.")
+                printedWarning = true
+            }
             return testResult
         }
         val testClass = testResult.testCase.testClass
@@ -147,7 +158,7 @@ class IceboxPlugin @VisibleForTesting constructor(
 
         // Add the artifact to testResult
         if (snapshotFile.exists()) {
-            maxSnapshotNumber = maxSnapshotNumber - 1
+            remainSnapshotNumber = remainSnapshotNumber - 1
             return testResult.toBuilder().apply {
                 addOutputArtifact(
                         TestArtifactProto.Artifact.newBuilder().apply {

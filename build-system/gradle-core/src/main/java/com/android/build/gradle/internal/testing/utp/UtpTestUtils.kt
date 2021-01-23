@@ -55,9 +55,9 @@ internal fun runUtpTestSuite(
     }
     val loggingPropertiesFile = File.createTempFile("logging", "properties").also { file ->
         Files.asCharSink(file, Charsets.UTF_8).write("""
-                    .level=SEVERE
+                    .level=WARNING
                     .handlers=java.util.logging.ConsoleHandler
-                    java.util.logging.ConsoleHandler.level=SEVERE
+                    java.util.logging.ConsoleHandler.level=WARNING
                 """.trimIndent())
     }
     val javaProcessInfo = ProcessInfoBuilder().apply {
