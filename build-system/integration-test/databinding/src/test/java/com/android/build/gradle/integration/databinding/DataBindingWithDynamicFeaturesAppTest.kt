@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.databinding
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.options.BooleanOption
@@ -55,8 +54,8 @@ class DataBindingWithDynamicFeaturesAppTest(useAndroidX: Boolean) {
     @Test
     fun app() {
         project.executor()
-             // disable explicitly - http://b/146208910, http://b/149978740
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
+            // http://b/149978740
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
             .run(":app:assemble")
     }
 

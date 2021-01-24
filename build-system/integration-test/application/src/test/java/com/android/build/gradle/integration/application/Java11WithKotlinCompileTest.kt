@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.TestUtils
@@ -35,9 +34,6 @@ class Java11WithKotlinCompileTest {
     val project =
         GradleTestProject.builder()
             .fromTestProject("kotlinApp")
-            // b/158092419, b/146208910
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN)
-            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=45")
             .create()
 
     @Before

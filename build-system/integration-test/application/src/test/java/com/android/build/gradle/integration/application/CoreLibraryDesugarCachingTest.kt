@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.DESUGAR_DEPENDENCY_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.EmptyActivityProjectBuilder
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Before
@@ -60,8 +60,8 @@ class CoreLibraryDesugarCachingTest {
         val buildCacheDir = File(project.projectDir.parent, GRADLE_BUILD_CACHE)
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)
 
-        // http://b/149978740 and http://b/146208910
-        val executor = project.executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+        // http://b/149978740
+        val executor = project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
         executor
             .withArgument("--build-cache")
             .run("clean", ASSEMBLE_RELEASE)

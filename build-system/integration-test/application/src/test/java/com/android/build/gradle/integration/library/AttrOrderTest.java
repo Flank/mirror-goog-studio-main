@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -42,9 +41,6 @@ public class AttrOrderTest {
 
     @Test
     public void lint() throws IOException, InterruptedException {
-        // http://b/146208910
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("lint");
+        project.executor().run("lint");
     }
 }

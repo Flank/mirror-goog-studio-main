@@ -17,17 +17,14 @@
 package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.application.SigningTest
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.getOutputDir
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.SyncIssue
-import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.io.Resources
 import org.junit.Rule
 import org.junit.Test
@@ -86,8 +83,8 @@ class DynamicAppSigningConfigTest {
 
         val result =
             project.executor()
-                // http://b/146208910
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
+                // http://b/149978740
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .with(StringOption.IDE_SIGNING_STORE_FILE, keystoreFile.path)
                 .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
@@ -138,8 +135,6 @@ class DynamicAppSigningConfigTest {
         )
 
         project.executor()
-            // http://b/146208910
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.NONE)
             .with(StringOption.IDE_SIGNING_STORE_FILE, keystoreFile.path)
             .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
             .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)

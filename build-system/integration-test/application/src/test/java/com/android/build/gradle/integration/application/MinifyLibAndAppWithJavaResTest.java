@@ -19,9 +19,9 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.CodeShrinker;
 import com.android.testutils.apk.Apk;
@@ -73,8 +73,8 @@ public class MinifyLibAndAppWithJavaResTest {
                 .with(
                         OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8,
                         codeShrinker == CodeShrinker.R8)
-                // http://b/149978740 and http://b/146208910
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // http://b/149978740
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run(":app:assembleRelease");
         Apk releaseApk =
                 project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
