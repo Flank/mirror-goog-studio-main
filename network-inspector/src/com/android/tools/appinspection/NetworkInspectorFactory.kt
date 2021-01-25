@@ -20,7 +20,7 @@ import androidx.inspection.Connection
 import androidx.inspection.InspectorEnvironment
 import androidx.inspection.InspectorFactory
 
-private const val INSPECTOR_ID = "app-inspection.inspectors.network"
+private const val INSPECTOR_ID = "studio.network.inspection"
 
 class NetworkInspectorFactory : InspectorFactory<NetworkInspector>(INSPECTOR_ID) {
     override fun createInspector(con: Connection, env: InspectorEnvironment): NetworkInspector {
