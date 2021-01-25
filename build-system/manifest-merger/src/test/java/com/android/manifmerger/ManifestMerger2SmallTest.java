@@ -2268,6 +2268,182 @@ public class ManifestMerger2SmallTest {
         testIntentMerging(appInput, libInput, 2);
     }
 
+    @Test
+    public void testInjectAndroidExportedAttributeWithIntentFilter() throws Exception {
+        MockLog mockLog = new MockLog();
+        String appInput =
+                ""
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.myapplication\">\n"
+                        + "    <uses-sdk\n"
+                        + "        android:minSdkVersion=\"31\"\n"
+                        + "        android:targetSdkVersion=\"31\" />"
+                        + "    <application\n"
+                        + "        android:label=\"@string/app_name\">\n"
+                        + "        <activity\n"
+                        + "            android:name=\".MainActivity\"\n"
+                        + "            android:label=\"@string/app_name\"\n"
+                        + "            android:theme=\"@style/Theme.MyApplication.NoActionBar\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>";
+        File appFile = TestUtils.inputAsFile("appFile", appInput);
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.ERROR);
+            assertNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            assertThat(mergingReport.getLoggingRecords().toString())
+                    .contains(
+                            "Apps targeting Android 12 and higher are required to specify an explicit value");
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+        }
+    }
+
+    @Test
+    public void testAndroidExportedAttributeWithIntentFilter2() throws Exception {
+        MockLog mockLog = new MockLog();
+        String appInput =
+                ""
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.myapplication\">\n"
+                        + "    <uses-sdk\n"
+                        + "        android:minSdkVersion=\"31\"\n"
+                        + "        android:targetSdkVersion=\"31\" />"
+                        + "    <application\n"
+                        + "        android:label=\"@string/app_name\">\n"
+                        + "        <activity\n"
+                        + "            android:name=\".MainActivity\"\n"
+                        + "            android:label=\"@string/app_name\"\n"
+                        + "            android:theme=\"@style/Theme.MyApplication.NoActionBar\"\n"
+                        + "            android:exported=\"true\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>";
+        File appFile = TestUtils.inputAsFile("appFile", appInput);
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+        }
+    }
+
+    @Test
+    public void testAndroidExportedAttributeNoIntentFilter() throws Exception {
+        MockLog mockLog = new MockLog();
+        String appInput =
+                ""
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.myapplication\">\n"
+                        + "    <uses-sdk\n"
+                        + "        android:minSdkVersion=\"31\"\n"
+                        + "        android:targetSdkVersion=\"31\" />"
+                        + "    <application\n"
+                        + "        android:label=\"@string/app_name\">\n"
+                        + "        <activity\n"
+                        + "            android:name=\".MainActivity\"\n"
+                        + "            android:label=\"@string/app_name\"\n"
+                        + "            android:theme=\"@style/Theme.MyApplication.NoActionBar\">\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>";
+        File appFile = TestUtils.inputAsFile("appFile", appInput);
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document xmlDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            NodeList activityNode = xmlDocument.getElementsByTagName(SdkConstants.TAG_ACTIVITY);
+            NodeList intentFilter =
+                    ((Element) activityNode.item(0))
+                            .getElementsByTagName(SdkConstants.TAG_INTENT_FILTER);
+            assertThat(intentFilter.getLength()).isEqualTo(0);
+            assertTrue(
+                    activityNode
+                                    .item(0)
+                                    .getAttributes()
+                                    .getNamedItemNS(
+                                            SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)
+                            == null);
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+        }
+    }
+
+    @Test
+    public void testAndroidExportedAttributeWithAPILessThan30() throws Exception {
+        MockLog mockLog = new MockLog();
+        String appInput =
+                ""
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.myapplication\">\n"
+                        + "    <uses-sdk\n"
+                        + "        android:minSdkVersion=\"29\"\n"
+                        + "        android:targetSdkVersion=\"29\" />"
+                        + "    <application\n"
+                        + "        android:label=\"@string/app_name\">\n"
+                        + "        <activity\n"
+                        + "            android:name=\".MainActivity\"\n"
+                        + "            android:label=\"@string/app_name\"\n"
+                        + "            android:theme=\"@style/Theme.MyApplication.NoActionBar\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>";
+        File appFile = TestUtils.inputAsFile("appFile", appInput);
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    appFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document xmlDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            NodeList activityNode = xmlDocument.getElementsByTagName(SdkConstants.TAG_ACTIVITY);
+            NodeList intentFilter =
+                    ((Element) activityNode.item(0))
+                            .getElementsByTagName(SdkConstants.TAG_INTENT_FILTER);
+            assertThat(intentFilter.getLength()).isEqualTo(1);
+            assertTrue(
+                    activityNode
+                                    .item(0)
+                                    .getAttributes()
+                                    .getNamedItemNS(
+                                            SdkConstants.ANDROID_URI, SdkConstants.ATTR_EXPORTED)
+                            == null);
+        } finally {
+            assertThat(appFile.delete()).named("appFile was deleted").isTrue();
+        }
+    }
+
     private void testIntentMerging(String appInput, String libInput, int expectedIntentCount)
             throws Exception {
         MockLog mockLog = new MockLog();
