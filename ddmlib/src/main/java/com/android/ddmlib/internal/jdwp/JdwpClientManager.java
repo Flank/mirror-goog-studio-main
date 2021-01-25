@@ -23,6 +23,7 @@ import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.JdwpHandshake;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import com.android.ddmlib.internal.jdwp.interceptor.ClientInitializationInterceptor;
@@ -59,6 +60,7 @@ public class JdwpClientManager implements JdwpSocketHandler {
     private final List<Interceptor> mInterceptors = new ArrayList<>();
     private final List<ShutdownListener> mShutdownListeners = new ArrayList<>();
     private JdwpConnectionReader mReader;
+    private boolean isHandshakeComplete = false;
 
     public JdwpClientManager(@NonNull JdwpClientManagerId id, @NonNull Selector selector)
             throws TimeoutException, AdbCommandRejectedException, IOException {
@@ -146,9 +148,20 @@ public class JdwpClientManager implements JdwpSocketHandler {
             shutdown();
             throw new EOFException("Client disconnected");
         }
-        if (mReader.isHandshake()) {
-            mReader.consumeData(JdwpHandshake.HANDSHAKE_LEN);
-            return;
+
+        // Need to test for the handshake in a loop due to bug (b/178655046),
+        // fixed in S+ by (aosp/1569323)
+        while (!isHandshakeComplete) {
+            if (mReader.isHandshake()) {
+                mReader.consumeData(JdwpHandshake.HANDSHAKE_LEN);
+                isHandshakeComplete = true;
+                break;
+            }
+            if (!mReader.isAPNMPacket()) {
+                Log.e("DDMLIB", "An unexpected packet was received before the handshake.");
+                return;
+            }
+            mReader.consumePacket();
         }
         // Loop the readers buffer processing any packets returned.
         JdwpPacket packet;

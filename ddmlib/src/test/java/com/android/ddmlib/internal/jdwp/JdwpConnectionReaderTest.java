@@ -17,15 +17,14 @@ package com.android.ddmlib.internal.jdwp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-
 import org.junit.Test;
 
 public class JdwpConnectionReaderTest {
@@ -44,6 +43,33 @@ public class JdwpConnectionReaderTest {
             finalSentData.put(byteBuffer.array());
         }
         SlowSimpleServer server = new SlowSimpleServer(finalSentData.array());
+        channel.connect(
+                new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
+        JdwpConnectionReader reader =
+                new JdwpConnectionReader(channel, JdwpPacket.JDWP_HEADER_LEN + 1);
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+        validatePackets(reader, packets);
+    }
+
+    @Test
+    public void handshakePacketDoesNotOverflowBuffer() throws Exception {
+        SocketChannel channel = SocketChannel.open();
+        ByteBuffer[] packets = new ByteBuffer[5];
+        int length = 0;
+        for (int i = 0; i < packets.length - 1; i++) {
+            packets[i] = JdwpTest.createPacketBuffer(JdwpTest.CHUNK_TEST, packets.length - i);
+            length += packets[i].position();
+        }
+        packets[packets.length - 1] = ByteBuffer.allocate(JdwpHandshake.HANDSHAKE_LEN);
+        JdwpHandshake.putHandshake(packets[packets.length - 1]);
+        length += JdwpHandshake.HANDSHAKE_LEN;
+
+        ByteBuffer finalSentData = ByteBuffer.allocate(length);
+        for (ByteBuffer byteBuffer : packets) {
+            finalSentData.put(byteBuffer.array());
+        }
+        SimpleServer server = new SimpleServer(finalSentData.array());
         channel.connect(
                 new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
         JdwpConnectionReader reader =
@@ -110,15 +136,22 @@ public class JdwpConnectionReaderTest {
         for (ByteBuffer packet : packets) {
             JdwpPacket readPacket = null;
             while (reader.read() != -1) {
+                if (reader.isHandshake()) {
+                    break;
+                }
                 readPacket = reader.readPacket();
                 if (readPacket != null) {
                     break;
                 }
             }
-            ByteBuffer packetData = ByteBuffer.allocate(readPacket.getLength());
-            readPacket.copy(packetData);
-            assertThat(packet.array()).isEqualTo(packetData.array());
-            readPacket.consume();
+            if (readPacket == null) {
+                assertThat(reader.isHandshake()).isTrue();
+            } else {
+                ByteBuffer packetData = ByteBuffer.allocate(readPacket.getLength());
+                readPacket.copy(packetData);
+                assertThat(packet.array()).isEqualTo(packetData.array());
+                readPacket.consume();
+            }
         }
     }
 

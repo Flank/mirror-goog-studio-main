@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.JdwpHandshake;
+import com.android.ddmlib.Log;
 import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import java.io.EOFException;
@@ -133,6 +134,12 @@ public class JdwpProxyClient implements JdwpSocketHandler {
             write(handshake.array(), handshake.position());
             setHandshakeComplete();
             mReader.consumeData(JdwpHandshake.HANDSHAKE_LEN);
+        } else if (!isHandshakeComplete()) {
+            // If we get here it means we read data from the buffer, however that data was not
+            // the handshake. We consume whatever packet read and throw it away until we establish
+            // the handshake.
+            Log.e("DDMLIB", "An unexpected packet was received before the handshake.");
+            mReader.consumePacket();
         } else if (mConnection != null) {
             JdwpPacket packet;
             while ((packet = mReader.readPacket()) != null) {

@@ -268,7 +268,7 @@ public final class JdwpPacket {
      * <p>Returns a new JdwpPacket if a full one is found in the buffer. If not, returns null.
      * Throws an exception if the data doesn't look like a valid JDWP packet.
      */
-    public static JdwpPacket findPacket(ByteBuffer buf) {
+    private static JdwpPacket findPacket(ByteBuffer buf, boolean setPayload) {
         int count = buf.position();
         int length, id, flags, cmdSet, cmd;
 
@@ -287,12 +287,16 @@ public final class JdwpPacket {
 
         buf.order(oldOrder);
 
-        if (length < JDWP_HEADER_LEN)
-            throw new BadPacketException();
-        if (count < length)
-            return null;
+        JdwpPacket pkt;
 
-        JdwpPacket pkt = new JdwpPacket(buf);
+        if (setPayload) {
+            if (length < JDWP_HEADER_LEN) throw new BadPacketException();
+            if (count < length) return null;
+
+            pkt = new JdwpPacket(buf);
+        } else {
+            pkt = new JdwpPacket(ByteBuffer.allocate(0));
+        }
         //pkt.mBuffer = buf;
         pkt.mLength = length;
         pkt.mId = id;
@@ -309,6 +313,14 @@ public final class JdwpPacket {
         }
 
         return pkt;
+    }
+
+    public static JdwpPacket findPacket(ByteBuffer buf) {
+        return findPacket(buf, true);
+    }
+
+    public static JdwpPacket findPacketHeader(ByteBuffer buf) {
+        return findPacket(buf, false);
     }
 
     @Override
