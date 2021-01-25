@@ -426,10 +426,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
                 creationConfig.globalScope.extension.lintOptions.checkOnly
             })
             task.projectInputs.initialize(variant)
+            // ignore dynamic features for lintVital and lintFix
+            val includeDynamicFeatureSourceProviders =
+                !fatalOnly && !autoFix && creationConfig.globalScope.hasDynamicFeatures()
             task.variantInputs.initialize(
                 variant,
                 checkDependencies,
-                warnIfProjectTreatedAsExternalDependency = true
+                warnIfProjectTreatedAsExternalDependency = true,
+                includeDynamicFeatureSourceProviders = includeDynamicFeatureSourceProviders
             )
             if (checkDependencies) {
                 task.mainDependencyLintModels.from(
@@ -471,6 +475,12 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             if (autoFix) {
                 task.outputs.upToDateWhen {
                     it.logger.debug("Lint fix task potentially modifies sources so cannot be up-to-date")
+                    false
+                }
+            }
+            if (includeDynamicFeatureSourceProviders) {
+                task.outputs.upToDateWhen {
+                    it.logger.debug("Lint with dynamic features does not model all of its inputs yet.")
                     false
                 }
             }

@@ -54,7 +54,9 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         val needsCopyReportTask = needsCopyReportTask(globalScope.extension.lintOptions)
 
         for (variantWithTests in variantsWithTests.values) {
-            if (variantType.isAar) { // Export lint models to support checkDependencies.
+            if (variantType.isAar || variantType.isDynamicFeature) {
+                // We need the library lint models if checkDependencies is true, and we need the
+                // dynamic-feature lint models for the base app's lint task.
                 taskFactory.register(LintModelWriterTask.CreationAction(variantWithTests.main))
             }
             val variantLintTask =
