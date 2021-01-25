@@ -110,7 +110,7 @@ class CxxConfigurationFoldingTest {
             val namer = CxxConfigurationFolding(allAbis)
             assertThat(namer.buildConfigureEdges).containsExactly(
                     "buildCMakeDebug" to "configureCMakeDebug",
-                    "buildCMakeRelease" to "configureCMakeRelease"
+                    "buildCMakeRelWithDebInfo" to "configureCMakeRelWithDebInfo"
             )
         }
     }
