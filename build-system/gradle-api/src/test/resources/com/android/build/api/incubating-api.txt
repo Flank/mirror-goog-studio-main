@@ -477,6 +477,10 @@ com.android.build.api.dsl.JniLibsPackagingOptions.getPickFirsts: java.util.Set<j
 com.android.build.api.dsl.JniLibsPackagingOptions.getUseLegacyPackaging: java.lang.Boolean ()
 com.android.build.api.dsl.JniLibsPackagingOptions.setUseLegacyPackaging: void (java.lang.Boolean)
 com.android.build.api.dsl.LibraryBaseFlavor implements com.android.build.api.dsl.BaseFlavor, com.android.build.api.dsl.LibraryVariantDimension
+com.android.build.api.dsl.LibraryBaseFlavor.getTargetSdk: java.lang.Integer ()
+com.android.build.api.dsl.LibraryBaseFlavor.getTargetSdkPreview: java.lang.String ()
+com.android.build.api.dsl.LibraryBaseFlavor.setTargetSdk: void (java.lang.Integer)
+com.android.build.api.dsl.LibraryBaseFlavor.setTargetSdkPreview: void (java.lang.String)
 com.android.build.api.dsl.LibraryBuildFeatures implements com.android.build.api.dsl.BuildFeatures
 com.android.build.api.dsl.LibraryBuildFeatures.getAndroidResources: java.lang.Boolean ()
 com.android.build.api.dsl.LibraryBuildFeatures.getDataBinding: java.lang.Boolean ()

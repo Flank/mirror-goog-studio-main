@@ -21,4 +21,31 @@ import org.gradle.api.Incubating
 @Incubating
 interface LibraryBaseFlavor<SigningConfigT : SigningConfig> :
     BaseFlavor,
-    LibraryVariantDimension<SigningConfigT>
+    LibraryVariantDimension<SigningConfigT> {
+
+    /**
+     * The target SDK version used for building the test APK.
+     *
+     * This is propagated in the library manifest, but that is only advisory for libraries that
+     * depend on this library.
+     *
+     * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
+     * Only one of [targetSdk] and [targetSdkPreview] should be set.
+     *
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+     */
+    var targetSdk: Int?
+
+    /**
+     * The target SDK version used for building the test APK.
+     *
+     * This is propagated in the library manifest, but that is only advisory for libraries that
+     * depend on this library.
+     *
+     * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
+     * Only one of [targetSdk] and [targetSdkPreview] should be set.
+     *
+     * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
+     */
+    var targetSdkPreview: String?
+}
