@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.settings
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.createInitialCxxModel
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
+import com.android.build.gradle.internal.cxx.model.BasicNdkBuildMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
@@ -125,14 +126,8 @@ class LookupSettingFromModelKtTest {
 
     @Test
     fun `ensure all ndkBuild macros example values are accurate`() {
-        BasicCmakeMock().let {
-            val configurationParameters = it.configurationParameters.copy(
-                    buildSystem = NativeBuildSystem.NDK_BUILD,
-                    nativeVariantConfig = it.configurationParameters.nativeVariantConfig.copy(
-                            arguments = listOf("APP_STL=c++_shared")
-                    )
-            )
-            val allAbis = createInitialCxxModel(it.sdkComponents, listOf(configurationParameters))
+        BasicNdkBuildMock().let {
+            val allAbis = createInitialCxxModel(it.sdkComponents, listOf(it.configurationParameters))
             val abi = allAbis.single { abi -> abi.abi == Abi.X86_64 }
 
             Macro.values().forEach { macro ->
@@ -164,7 +159,7 @@ class LookupSettingFromModelKtTest {
                     val actual = convertWindowsAspectsToLinux(resolved)
                     val expected = example.toString()
                     assertThat(actual)
-                            .named(macro.ref)
+                            .named(macro.name)
                             .isEqualTo(convertWindowsAspectsToLinux(expected))
                 }
             }

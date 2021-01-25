@@ -48,11 +48,14 @@ import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerat
 import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
+import com.android.utils.FileUtils.join
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
@@ -135,24 +138,27 @@ data class CxxConfigurationParameters(
  * undefined behavior.
  */
  private fun findCxxFolder(
+        buildSystem : NativeBuildSystem,
         moduleRootFolder : File,
         buildStagingDirectory: File?,
         buildFolder: File): File {
     val defaultCxxFolder =
-            FileUtils.join(
-                    moduleRootFolder,
-                    CXX_DEFAULT_CONFIGURATION_SUBFOLDER
-            )
+        when(buildSystem) {
+            NDK_BUILD -> join(buildFolder, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
+            else -> join(moduleRootFolder, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
+        }
     return when {
         buildStagingDirectory == null -> defaultCxxFolder
         FileUtils.isFileInDirectory(buildStagingDirectory, buildFolder) -> {
-            warnln("""
-            The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
-            is a subdirectory of your project's temporary build directory (
-            '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
-            builds. It is recommended to either use the default build staging directory
-            ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
+            if (buildSystem != NDK_BUILD) {
+                warnln("""
+                    The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
+                    is a subdirectory of your project's temporary build directory (
+                    '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
+                    builds. It is recommended to either use the default build staging directory
+                    ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
             """.trimIndent())
+            }
             buildStagingDirectory
         }
         else -> buildStagingDirectory
@@ -172,6 +178,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
             ?: return null
 
     val cxxFolder = findCxxFolder(
+        buildSystem,
         global.project.projectDir,
         buildStagingFolder,
         global.project.buildDir
@@ -285,7 +292,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
 private fun getProjectPath(config: ExternalNativeBuild)
         : Triple<NativeBuildSystem, File, File?>? {
     val externalProjectPaths = listOfNotNull(
-        config.cmake.path?.let { Triple(NativeBuildSystem.CMAKE, it, config.cmake.buildStagingDirectory)},
+        config.cmake.path?.let { Triple(CMAKE, it, config.cmake.buildStagingDirectory)},
         config.ndkBuild.path?.let { Triple(NativeBuildSystem.NDK_BUILD, it, config.ndkBuild.buildStagingDirectory) })
 
     return when {
@@ -330,7 +337,7 @@ fun createCxxMetadataGenerator(
             abis,
             variantBuilder
         )
-        NativeBuildSystem.CMAKE -> {
+        CMAKE -> {
             val cmake =
                 Objects.requireNonNull(variant.module.cmake)!!
             if (!cmake.isValidCmakeAvailable) {
