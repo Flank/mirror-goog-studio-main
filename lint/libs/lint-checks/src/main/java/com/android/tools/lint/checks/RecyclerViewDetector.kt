@@ -58,7 +58,13 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
     // ---- implements SourceCodeScanner ----
 
     override fun applicableSuperClasses(): List<String>? {
-        return listOf(VIEW_ADAPTER)
+        return listOf(
+            SUPERCLASS_SUPPORTLIB,
+            SUPERCLASS_ANDROIDX
+        )
+    }
+    override fun getApplicableMethodNames(): List<String>? {
+        return listOf(NOTIFY_DATA_SET_CHANGED)
     }
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
@@ -89,6 +95,25 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
 
         // Look for pending data binder calls that aren't executed before the method finishes
         checkDataBinders(context, method, visitor.dataBinders)
+    }
+
+    override fun visitMethodCall(
+        context: JavaContext,
+        node: UCallExpression,
+        method: PsiMethod
+    ) {
+        if (method.name == NOTIFY_DATA_SET_CHANGED &&
+            (
+                context.evaluator.isMemberInSubClassOf(method, SUPERCLASS_SUPPORTLIB) ||
+                    context.evaluator.isMemberInSubClassOf(method, SUPERCLASS_ANDROIDX)
+                )
+        ) {
+            context.report(
+                CLEAR_ALL_DATA, context.getLocation(node),
+                "It will always be more efficient to use more specific change events if " +
+                    "you can. Rely on `notifyDataSetChanged` as a last resort."
+            )
+        }
     }
 
     private fun reportError(
@@ -335,8 +360,28 @@ class RecyclerViewDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION
         )
 
-        private const val VIEW_ADAPTER = "android.support.v7.widget.RecyclerView.Adapter"
+        @JvmField
+        val CLEAR_ALL_DATA = Issue.create(
+            id = "NotifyDataSetChanged",
+            briefDescription = "Invalidating All RecyclerView Data",
+            explanation =
+                """
+                The `RecyclerView` adapter's `onNotifyDataSetChanged` method does not specify what \
+                about the data set has changed, forcing any observers to assume that all existing \
+                items and structure may no longer be valid. `LayoutManager`s will be forced to \
+                fully rebind and relayout all visible views.
+                """,
+            category = Category.PERFORMANCE,
+            priority = 8,
+            androidSpecific = true,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION
+        )
+
         private const val ON_BIND_VIEW_HOLDER = "onBindViewHolder"
+        private const val NOTIFY_DATA_SET_CHANGED = "notifyDataSetChanged"
+        private const val SUPERCLASS_SUPPORTLIB = "android.support.v7.widget.RecyclerView.Adapter"
+        private const val SUPERCLASS_ANDROIDX = "androidx.recyclerview.widget.RecyclerView.Adapter"
 
         private fun getDataBinderReference(element: UElement?): PsiField? {
             if (element is UReferenceExpression) {
