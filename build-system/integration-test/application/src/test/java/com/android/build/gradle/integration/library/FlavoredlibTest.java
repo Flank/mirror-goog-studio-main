@@ -24,7 +24,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -63,10 +62,7 @@ public class FlavoredlibTest {
 
     @Test
     public void lint() throws Exception {
-        // http://b/146208910
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("lint");
+        project.executor().run("lint");
     }
 
     @Test
