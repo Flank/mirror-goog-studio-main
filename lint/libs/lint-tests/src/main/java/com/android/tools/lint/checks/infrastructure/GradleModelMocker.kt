@@ -113,7 +113,7 @@ import java.util.zip.ZipEntry
 
 class GradleModelMocker @JvmOverloads constructor(
     @field:Language("Groovy") @param:Language("Groovy") private val gradle: String,
-    val projectDir: File = File("")
+    @VisibleForTesting val projectDir: File = File("")
 ) {
 
     private class DepConf {
@@ -122,9 +122,8 @@ class GradleModelMocker @JvmOverloads constructor(
         val moduleLibraries: MutableSet<IdeModuleLibrary> = mutableSetOf()
     }
 
-    @get:VisibleForTesting
-    var project: IdeAndroidProjectImpl = createAndroidProject()
-    var defaultVariantName: String = ""
+    private var project: IdeAndroidProjectImpl = createAndroidProject()
+    private var defaultVariantName: String = ""
 
     private val variants: MutableList<IdeVariantImpl> = ArrayList()
     private val libraryLintJars: MutableMap<String, String> = HashMap()
@@ -289,18 +288,11 @@ class GradleModelMocker @JvmOverloads constructor(
             return variant.mainArtifact.generatedSourceFolders
         }
 
-    val generatedResourceFolders: Collection<File>
-        get() {
-            ensureInitialized()
-            return variant.mainArtifact.generatedResourceFolders
-        }
-
     private val buildTypes get() = project.buildTypes.map { it.buildType as IdeBuildTypeImpl }
     private val productFlavors get() = project.productFlavors.map { it.productFlavor as IdeProductFlavorImpl }
     private val flavorDimensions get() = project.flavorDimensions
 
-    @VisibleForTesting
-    val variant
+    private val variant
         get() = variants.single { it.name == defaultVariantName }
 
     fun syncFlagsTo(to: LintCliFlags) {
@@ -1848,13 +1840,11 @@ class GradleModelMocker @JvmOverloads constructor(
      * @param graph the graph
      * @return the corresponding dependencies
      */
-    @VisibleForTesting
-    fun createDependencies(graph: String): IdeDependencies {
+    private fun createDependencies(graph: String): IdeDependencies {
         val deps = parseDependencyGraph(graph)
         return createDependencies(deps)
     }
 
-    @JvmOverloads
     private fun parseDependencyGraph(graph: String, map: MutableMap<String, Dep> = Maps.newHashMap()): List<Dep> {
         val lines = graph.split("\n").filter { it.isNotBlank() }.toTypedArray()
         // TODO: Check that it's using the expected graph format - e.g. indented to levels
@@ -2028,6 +2018,7 @@ class GradleModelMocker @JvmOverloads constructor(
          */
         const val PROJECT_TYPE_JAVA_LIBRARY = 999
         const val PROJECT_TYPE_JAVA = 998
+
         private val configurationPattern = Pattern.compile(
             "^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*"
         )
