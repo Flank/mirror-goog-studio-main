@@ -104,18 +104,22 @@ public final class DexArchiveTestUtil {
 
     public static void mergeMonoDex(@NonNull List<Path> dexArchives, @NonNull Path outputDir)
             throws IOException, InterruptedException, DexArchiveMergerException {
-        implMergeDexes(dexArchives, outputDir, DexingType.MONO_DEX, null);
+        implMergeDexes(dexArchives, outputDir, DexingType.MONO_DEX, null, null);
     }
 
     public static void mergeLegacyDex(
-            @NonNull List<Path> dexArchives, @NonNull Path outputDir, @NonNull Path mainDexList)
+            @NonNull List<Path> dexArchives,
+            @NonNull Path outputDir,
+            @NonNull List<String> mainDexRules,
+            @NonNull Collection<Path> libraryFiles)
             throws IOException, DexArchiveMergerException {
-        implMergeDexes(dexArchives, outputDir, DexingType.LEGACY_MULTIDEX, mainDexList);
+        implMergeDexes(
+                dexArchives, outputDir, DexingType.LEGACY_MULTIDEX, mainDexRules, libraryFiles);
     }
 
     public static void mergeNativeDex(@NonNull List<Path> dexArchives, @NonNull Path outputDir)
             throws IOException, DexArchiveMergerException {
-        implMergeDexes(dexArchives, outputDir, DexingType.NATIVE_MULTIDEX, null);
+        implMergeDexes(dexArchives, outputDir, DexingType.NATIVE_MULTIDEX, null, null);
     }
 
     /** Gets a DEX-style class names from the specified class names without the package. */
@@ -177,18 +181,24 @@ public final class DexArchiveTestUtil {
     /**
      * Runs the dex merger.
      *
-     * @param mainDexList the list of classes to keep in the main dex. Must be set if the dexing
-     *     mode is legacy mulidex, must be null otherwise.
+     * @param mainDexListRules Proguard rules for choosing classes to be kept in the main dex file.
+     * @param libraryFiles classes that are used only to resolve types in the program classes, but
+     *     are not packaged in the final binary e.g. android.jar, provided classes etc.
      */
     private static void implMergeDexes(
             @NonNull List<Path> inputs,
             @NonNull Path outputDir,
             @NonNull DexingType dexingType,
-            @Nullable Path mainDexList)
+            @Nullable List<String> mainDexListRules,
+            @Nullable Collection<Path> libraryFiles)
             throws IOException, DexArchiveMergerException {
         Preconditions.checkState(
-                (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexList != null),
-                "Main Dex list must be set if and only if legacy multidex is enabled.");
+                (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexListRules != null),
+                "Main Dex rules must be set if and only if legacy multidex is enabled.");
+
+        Preconditions.checkState(
+                (dexingType == DexingType.LEGACY_MULTIDEX) == (libraryFiles != null),
+                "Library files must be set if and only if legacy multidex is enabled.");
 
         DexArchiveMerger merger =
                 DexArchiveMerger.createD8DexMerger(
@@ -198,6 +208,12 @@ public final class DexArchiveTestUtil {
                         ForkJoinPool.commonPool());
         Files.createDirectory(outputDir);
         merger.mergeDexArchives(
-                DexArchives.getAllEntriesFromArchives(inputs), outputDir, mainDexList);
+                DexArchives.getAllEntriesFromArchives(inputs),
+                outputDir,
+                null,
+                mainDexListRules,
+                null,
+                libraryFiles,
+                null);
     }
 }

@@ -27,6 +27,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
+import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -38,11 +39,11 @@ import com.google.common.collect.Sets;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
-import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -161,7 +162,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(fstArchive, sndArchive),
                 output,
-                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")));
+                generateMainDexListRules(ImmutableSet.of(PACKAGE + ".A")),
+                getLibraryFiles());
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
         assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
@@ -183,8 +185,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(fstArchive, sndArchive),
                 output,
-                generateMainDexListFile(
-                        ImmutableSet.of(PACKAGE + "/A.class", PACKAGE + "/B.class")));
+                generateMainDexListRules(ImmutableSet.of(PACKAGE + ".A", PACKAGE + ".B")),
+                getLibraryFiles());
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
         assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B"));
@@ -205,7 +207,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(dexArchive, bigDexArchive),
                 outputDex,
-                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")));
+                generateMainDexListRules(ImmutableSet.of(PACKAGE + ".A")),
+                getLibraryFiles());
 
         Dex primaryDex = new Dex(outputDex.resolve("classes.dex"));
         assertThat(primaryDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
@@ -431,7 +434,18 @@ public class DexArchiveMergerTest {
     }
 
     @NonNull
-    private Path generateMainDexListFile(@NonNull Set<String> mainDexClasses) throws IOException {
-        return Files.write(temporaryFolder.newFile().toPath(), mainDexClasses);
+    private List<String> generateMainDexListRules(@NonNull Set<String> mainDexClasses) {
+        List<String> rules = Lists.newArrayList();
+        for (String eachClass : mainDexClasses) {
+            rules.add("-keep class " + eachClass + " { *; }");
+        }
+        return rules;
+    }
+
+    @NonNull
+    private Collection<Path> getLibraryFiles() {
+        List<Path> files = Lists.newArrayList();
+        files.add(TestUtils.resolvePlatformPath("android.jar"));
+        return files;
     }
 }
