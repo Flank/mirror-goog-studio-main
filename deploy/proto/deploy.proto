@@ -145,6 +145,10 @@ message LiveLiteralUpdateRequest {
   Arch arch = 4;
 
   repeated LiveLiteral updates = 5;
+
+  string overlay_id = 6;
+
+  string expected_overlay_id = 7;
 }
 
 message LiveLiteral {
