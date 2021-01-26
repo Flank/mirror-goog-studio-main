@@ -194,14 +194,13 @@ class LintModelSerializationTest {
                     </severities>
                   </lintOptions>
                   <variant name="freeBetaDebug"/>
-                  <variant name="betaDebug"/>
-                  <variant name="normalDebug"/>
-                  <variant name="freeDebug"/>
-                  <variant name="paidDebug"/>
-                  <variant name="betaRelease"/>
-                  <variant name="normalRelease"/>
-                  <variant name="freeRelease"/>
-                  <variant name="paidRelease"/>
+                  <variant name="freeNormalDebug"/>
+                  <variant name="paidBetaDebug"/>
+                  <variant name="paidNormalDebug"/>
+                  <variant name="freeBetaRelease"/>
+                  <variant name="freeNormalRelease"/>
+                  <variant name="paidBetaRelease"/>
+                  <variant name="paidNormalRelease"/>
                 </lint-module>
                 """,
                 "variant-freeBetaDebug" to """
@@ -210,7 +209,7 @@ class LintModelSerializationTest {
                     minSdkVersion="5"
                     targetSdkVersion="16"
                     debuggable="true"
-                    resourceConfigurations="mdpi,hdpi,en,nodpi">
+                    resourceConfigurations="en,nodpi,hdpi,mdpi">
                   <buildFeatures
                       viewBinding="true"/>
                   <sourceProviders>
@@ -240,6 +239,12 @@ class LintModelSerializationTest {
                         resDirectories="src/debug/res"
                         assetsDirectories="src/debug/assets"
                         debugOnly="true"/>
+                    <sourceProvider
+                        manifest="src/freeBetaDebug/AndroidManifest.xml"
+                        javaDirectories="src/freeBetaDebug/java:src/freeBetaDebug/kotlin"
+                        resDirectories="src/freeBetaDebug/res"
+                        assetsDirectories="src/freeBetaDebug/assets"
+                        debugOnly="true"/>
                   </sourceProviders>
                   <testSourceProviders>
                     <sourceProvider
@@ -253,6 +258,30 @@ class LintModelSerializationTest {
                         javaDirectories="src/test/java:src/test/kotlin"
                         resDirectories="src/test/res"
                         assetsDirectories="src/test/assets"
+                        unitTest="true"/>
+                    <sourceProvider
+                        manifest="src/androidTestBeta/AndroidManifest.xml"
+                        javaDirectories="src/androidTestBeta/java:src/androidTestBeta/kotlin"
+                        resDirectories="src/androidTestBeta/res"
+                        assetsDirectories="src/androidTestBeta/assets"
+                        androidTest="true"/>
+                    <sourceProvider
+                        manifest="src/testBeta/AndroidManifest.xml"
+                        javaDirectories="src/testBeta/java:src/testBeta/kotlin"
+                        resDirectories="src/testBeta/res"
+                        assetsDirectories="src/testBeta/assets"
+                        unitTest="true"/>
+                    <sourceProvider
+                        manifest="src/androidTestFree/AndroidManifest.xml"
+                        javaDirectories="src/androidTestFree/java:src/androidTestFree/kotlin"
+                        resDirectories="src/androidTestFree/res"
+                        assetsDirectories="src/androidTestFree/assets"
+                        androidTest="true"/>
+                    <sourceProvider
+                        manifest="src/testFree/AndroidManifest.xml"
+                        javaDirectories="src/testFree/java:src/testFree/kotlin"
+                        resDirectories="src/testFree/res"
+                        assetsDirectories="src/testFree/assets"
                         unitTest="true"/>
                   </testSourceProviders>
                   <resValues>
@@ -381,10 +410,7 @@ class LintModelSerializationTest {
                 <dependencies>
                 </dependencies>
                 """,
-                "dependencies-betaDebug-mainArtifact" to """
-                <dependencies>
-                </dependencies>
-                """,
+
                 "library_table-freeBetaDebug-mainArtifact" to """
                 <libraries>
                   <library
@@ -552,450 +578,366 @@ class LintModelSerializationTest {
                 </libraries>
                 """,
 
-                "variant-betaDebug" to """
-                <variant
-                    name="betaDebug"
-                    minSdkVersion="5"
-                    targetSdkVersion="16"
-                    debuggable="true">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/beta/AndroidManifest.xml"
-                        javaDirectories="src/beta/java:src/beta/kotlin"
-                        resDirectories="src/beta/res"
-                        assetsDirectories="src/beta/assets"/>
-                    <sourceProvider
-                        manifest="src/debug/AndroidManifest.xml"
-                        javaDirectories="src/debug/java:src/debug/kotlin"
-                        resDirectories="src/debug/res"
-                        assetsDirectories="src/debug/assets"
-                        debugOnly="true"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="debugName"
-                        value="Some Debug Data" />
-                  </resValues>
-                  <manifestPlaceholders>
-                    <placeholder
-                        name="holder"
-                        value="debug" />
-                  </manifestPlaceholders>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/betaDebug/classes:build/tmp/kotlin-classes/betaDebug"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """,
-                "variant-normalDebug" to """
-                <variant
-                    name="normalDebug"
-                    minSdkVersion="5"
-                    targetSdkVersion="16"
-                    debuggable="true">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/normal/AndroidManifest.xml"
-                        javaDirectories="src/normal/java:src/normal/kotlin"
-                        resDirectories="src/normal/res"
-                        assetsDirectories="src/normal/assets"/>
-                    <sourceProvider
-                        manifest="src/debug/AndroidManifest.xml"
-                        javaDirectories="src/debug/java:src/debug/kotlin"
-                        resDirectories="src/debug/res"
-                        assetsDirectories="src/debug/assets"
-                        debugOnly="true"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="debugName"
-                        value="Some Debug Data" />
-                  </resValues>
-                  <manifestPlaceholders>
-                    <placeholder
-                        name="holder"
-                        value="debug" />
-                  </manifestPlaceholders>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/normalDebug/classes:build/tmp/kotlin-classes/normalDebug"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """,
-                "variant-freeDebug" to """
-                <variant
-                    name="freeDebug"
-                    minSdkVersion="5"
-                    targetSdkVersion="16"
-                    debuggable="true">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/free/AndroidManifest.xml"
-                        javaDirectories="src/free/java:src/free/kotlin"
-                        resDirectories="src/free/res"
-                        assetsDirectories="src/free/assets"/>
-                    <sourceProvider
-                        manifest="src/debug/AndroidManifest.xml"
-                        javaDirectories="src/debug/java:src/debug/kotlin"
-                        resDirectories="src/debug/res"
-                        assetsDirectories="src/debug/assets"
-                        debugOnly="true"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="debugName"
-                        value="Some Debug Data" />
-                  </resValues>
-                  <manifestPlaceholders>
-                    <placeholder
-                        name="holder"
-                        value="debug" />
-                  </manifestPlaceholders>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/freeDebug/classes:build/tmp/kotlin-classes/freeDebug"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """,
-                "variant-paidDebug" to """
-                <variant
-                    name="paidDebug"
-                    minSdkVersion="5"
-                    targetSdkVersion="16"
-                    debuggable="true">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/paid/AndroidManifest.xml"
-                        javaDirectories="src/paid/java:src/paid/kotlin"
-                        resDirectories="src/paid/res"
-                        assetsDirectories="src/paid/assets"/>
-                    <sourceProvider
-                        manifest="src/debug/AndroidManifest.xml"
-                        javaDirectories="src/debug/java:src/debug/kotlin"
-                        resDirectories="src/debug/res"
-                        assetsDirectories="src/debug/assets"
-                        debugOnly="true"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="debugName"
-                        value="Some Debug Data" />
-                  </resValues>
-                  <manifestPlaceholders>
-                    <placeholder
-                        name="holder"
-                        value="debug" />
-                  </manifestPlaceholders>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/paidDebug/classes:build/tmp/kotlin-classes/paidDebug"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """,
-                "variant-betaRelease" to """
-                <variant
-                    name="betaRelease"
-                    minSdkVersion="5"
-                    targetSdkVersion="16">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/beta/AndroidManifest.xml"
-                        javaDirectories="src/beta/java:src/beta/kotlin"
-                        resDirectories="src/beta/res"
-                        assetsDirectories="src/beta/assets"/>
-                    <sourceProvider
-                        manifest="src/release/AndroidManifest.xml"
-                        javaDirectories="src/release/java:src/release/kotlin"
-                        resDirectories="src/release/res"
-                        assetsDirectories="src/release/assets"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="releaseName1"
-                        value="Some Release Data 1" />
-                    <resValue
-                        type="string"
-                        name="releaseName2"
-                        value="Some Release Data 2" />
-                  </resValues>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/betaRelease/classes:build/tmp/kotlin-classes/betaRelease"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """,
-                "variant-normalRelease" to """
-                <variant
-                    name="normalRelease"
-                    minSdkVersion="5"
-                    targetSdkVersion="16">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/normal/AndroidManifest.xml"
-                        javaDirectories="src/normal/java:src/normal/kotlin"
-                        resDirectories="src/normal/res"
-                        assetsDirectories="src/normal/assets"/>
-                    <sourceProvider
-                        manifest="src/release/AndroidManifest.xml"
-                        javaDirectories="src/release/java:src/release/kotlin"
-                        resDirectories="src/release/res"
-                        assetsDirectories="src/release/assets"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="releaseName1"
-                        value="Some Release Data 1" />
-                    <resValue
-                        type="string"
-                        name="releaseName2"
-                        value="Some Release Data 2" />
-                  </resValues>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/normalRelease/classes:build/tmp/kotlin-classes/normalRelease"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """,
-                "variant-freeRelease" to """
-                <variant
-                    name="freeRelease"
-                    minSdkVersion="5"
-                    targetSdkVersion="16">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/free/AndroidManifest.xml"
-                        javaDirectories="src/free/java:src/free/kotlin"
-                        resDirectories="src/free/res"
-                        assetsDirectories="src/free/assets"/>
-                    <sourceProvider
-                        manifest="src/release/AndroidManifest.xml"
-                        javaDirectories="src/release/java:src/release/kotlin"
-                        resDirectories="src/release/res"
-                        assetsDirectories="src/release/assets"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="releaseName1"
-                        value="Some Release Data 1" />
-                    <resValue
-                        type="string"
-                        name="releaseName2"
-                        value="Some Release Data 2" />
-                  </resValues>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/freeRelease/classes:build/tmp/kotlin-classes/freeRelease"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """,
-                "variant-paidRelease" to """
-                <variant
-                    name="paidRelease"
-                    minSdkVersion="5"
-                    targetSdkVersion="16">
-                  <buildFeatures
-                      viewBinding="true"/>
-                  <sourceProviders>
-                    <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
-                        javaDirectories="src/main/java:src/main/kotlin"
-                        resDirectories="src/main/res"
-                        assetsDirectories="src/main/assets"/>
-                    <sourceProvider
-                        manifest="src/paid/AndroidManifest.xml"
-                        javaDirectories="src/paid/java:src/paid/kotlin"
-                        resDirectories="src/paid/res"
-                        assetsDirectories="src/paid/assets"/>
-                    <sourceProvider
-                        manifest="src/release/AndroidManifest.xml"
-                        javaDirectories="src/release/java:src/release/kotlin"
-                        resDirectories="src/release/res"
-                        assetsDirectories="src/release/assets"/>
-                  </sourceProviders>
-                  <testSourceProviders>
-                    <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
-                        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-                        resDirectories="src/androidTest/res"
-                        assetsDirectories="src/androidTest/assets"
-                        androidTest="true"/>
-                    <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
-                        javaDirectories="src/test/java:src/test/kotlin"
-                        resDirectories="src/test/res"
-                        assetsDirectories="src/test/assets"
-                        unitTest="true"/>
-                  </testSourceProviders>
-                  <resValues>
-                    <resValue
-                        type="string"
-                        name="releaseName1"
-                        value="Some Release Data 1" />
-                    <resValue
-                        type="string"
-                        name="releaseName2"
-                        value="Some Release Data 2" />
-                  </resValues>
-                  <mainArtifact
-                      classOutputs="build/intermediates/javac/paidRelease/classes:build/tmp/kotlin-classes/paidRelease"
-                      applicationId="com.android.tools.test">
-                  </mainArtifact>
-                </variant>
-              """
+                "variant-paidNormalRelease" to """
+                    <variant
+                        name="paidNormalRelease"
+                        minSdkVersion="5"
+                        targetSdkVersion="16"
+                        resourceConfigurations="mdpi">
+                      <buildFeatures
+                          viewBinding="true"/>
+                      <sourceProviders>
+                        <sourceProvider
+                            manifest="src/main/AndroidManifest.xml"
+                            javaDirectories="src/main/java:src/main/kotlin"
+                            resDirectories="src/main/res"
+                            assetsDirectories="src/main/assets"/>
+                        <sourceProvider
+                            manifest="src/normal/AndroidManifest.xml"
+                            javaDirectories="src/normal/java:src/normal/kotlin"
+                            resDirectories="src/normal/res"
+                            assetsDirectories="src/normal/assets"/>
+                        <sourceProvider
+                            manifest="src/paid/AndroidManifest.xml"
+                            javaDirectories="src/paid/java:src/paid/kotlin"
+                            resDirectories="src/paid/res"
+                            assetsDirectories="src/paid/assets"/>
+                        <sourceProvider
+                            manifest="src/paidNormal/AndroidManifest.xml"
+                            javaDirectories="src/paidNormal/java:src/paidNormal/kotlin"
+                            resDirectories="src/paidNormal/res"
+                            assetsDirectories="src/paidNormal/assets"/>
+                        <sourceProvider
+                            manifest="src/release/AndroidManifest.xml"
+                            javaDirectories="src/release/java:src/release/kotlin"
+                            resDirectories="src/release/res"
+                            assetsDirectories="src/release/assets"/>
+                        <sourceProvider
+                            manifest="src/freeBetaDebug/AndroidManifest.xml"
+                            javaDirectories="src/freeBetaDebug/java:src/freeBetaDebug/kotlin"
+                            resDirectories="src/freeBetaDebug/res"
+                            assetsDirectories="src/freeBetaDebug/assets"/>
+                      </sourceProviders>
+                      <testSourceProviders>
+                        <sourceProvider
+                            manifest="src/androidTest/AndroidManifest.xml"
+                            javaDirectories="src/androidTest/java:src/androidTest/kotlin"
+                            resDirectories="src/androidTest/res"
+                            assetsDirectories="src/androidTest/assets"
+                            androidTest="true"/>
+                        <sourceProvider
+                            manifest="src/test/AndroidManifest.xml"
+                            javaDirectories="src/test/java:src/test/kotlin"
+                            resDirectories="src/test/res"
+                            assetsDirectories="src/test/assets"
+                            unitTest="true"/>
+                        <sourceProvider
+                            manifest="src/androidTestNormal/AndroidManifest.xml"
+                            javaDirectories="src/androidTestNormal/java:src/androidTestNormal/kotlin"
+                            resDirectories="src/androidTestNormal/res"
+                            assetsDirectories="src/androidTestNormal/assets"
+                            androidTest="true"/>
+                        <sourceProvider
+                            manifest="src/testNormal/AndroidManifest.xml"
+                            javaDirectories="src/testNormal/java:src/testNormal/kotlin"
+                            resDirectories="src/testNormal/res"
+                            assetsDirectories="src/testNormal/assets"
+                            unitTest="true"/>
+                        <sourceProvider
+                            manifest="src/androidTestPaid/AndroidManifest.xml"
+                            javaDirectories="src/androidTestPaid/java:src/androidTestPaid/kotlin"
+                            resDirectories="src/androidTestPaid/res"
+                            assetsDirectories="src/androidTestPaid/assets"
+                            androidTest="true"/>
+                        <sourceProvider
+                            manifest="src/testPaid/AndroidManifest.xml"
+                            javaDirectories="src/testPaid/java:src/testPaid/kotlin"
+                            resDirectories="src/testPaid/res"
+                            assetsDirectories="src/testPaid/assets"
+                            unitTest="true"/>
+                      </testSourceProviders>
+                      <resValues>
+                        <resValue
+                            type="string"
+                            name="defaultConfigName"
+                            value="Some DefaultConfig Data" />
+                        <resValue
+                            type="string"
+                            name="releaseName1"
+                            value="Some Release Data 1" />
+                        <resValue
+                            type="string"
+                            name="releaseName2"
+                            value="Some Release Data 2" />
+                      </resValues>
+                      <manifestPlaceholders>
+                        <placeholder
+                            name="localApplicationId"
+                            value="com.example.manifest_merger_example" />
+                      </manifestPlaceholders>
+                      <mainArtifact
+                          classOutputs="build/intermediates/javac/paidNormalRelease/classes:build/tmp/kotlin-classes/paidNormalRelease"
+                          applicationId="com.android.tools.test">
+                      </mainArtifact>
+                      <androidTestArtifact
+                          classOutputs="instrumentation-classes"
+                          applicationId="com.android.tools.test">
+                      </androidTestArtifact>
+                      <testArtifact
+                          classOutputs="test-classes">
+                      </testArtifact>
+                    </variant>
+                """,
+
+                "dependencies-paidNormalRelease-mainArtifact" to """
+                    <dependencies>
+                      <compile
+                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support:support-v4:25.0.1,com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,com.android.support:support-annotations:25.0.1,com.android.support.constraint:constraint-layout-solver:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0,org.jetbrains:annotations:13.0">
+                        <dependency
+                            name="com.android.support:appcompat-v7:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-v4:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-media-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-utils:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-ui:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-fragment:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support:animated-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout:1.0.0-beta3"/>
+                        <dependency
+                            name="com.android.support:support-annotations:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains:annotations:13.0"/>
+                      </compile>
+                      <package
+                          roots="com.android.support:appcompat-v7:25.0.1,com.android.support:support-v4:25.0.1,com.android.support:support-compat:25.0.1,com.android.support:support-media-compat:25.0.1,com.android.support:support-core-utils:25.0.1,com.android.support:support-core-ui:25.0.1,com.android.support:support-fragment:25.0.1,com.android.support:support-vector-drawable:25.0.1,com.android.support:animated-vector-drawable:25.0.1,com.android.support.constraint:constraint-layout:1.0.0-beta3,com.android.support:support-annotations:25.0.1,com.android.support.constraint:constraint-layout-solver:1.0.0-beta3,org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0,org.jetbrains.kotlin:kotlin-stdlib:1.3.0,org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0,org.jetbrains:annotations:13.0">
+                        <dependency
+                            name="com.android.support:appcompat-v7:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-v4:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-media-compat:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-utils:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-core-ui:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-fragment:25.0.1"/>
+                        <dependency
+                            name="com.android.support:support-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support:animated-vector-drawable:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout:1.0.0-beta3"/>
+                        <dependency
+                            name="com.android.support:support-annotations:25.0.1"/>
+                        <dependency
+                            name="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                        <dependency
+                            name="org.jetbrains:annotations:13.0"/>
+                      </package>
+                    </dependencies>
+                """,
+                "dependencies-paidNormalRelease-testArtifact" to """
+                <dependencies>
+                </dependencies>
+                """,
+                "dependencies-paidNormalRelease-androidTestArtifact" to """
+                <dependencies>
+                </dependencies>
+                """,
+
+                "library_table-paidNormalRelease-mainArtifact" to """
+                <libraries>
+                  <library
+                      name="com.android.support:appcompat-v7:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:appcompat-v7:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-v4:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-v4/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-v4:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-v4/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-compat:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-compat:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-compat/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-media-compat:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-media-compat:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-media-compat/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-core-utils:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-core-utils:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-utils/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-core-ui:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-core-ui:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-core-ui/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-fragment:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-fragment/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-fragment:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-fragment/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-vector-drawable:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:support-vector-drawable:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:animated-vector-drawable:25.0.1"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/25.0.1/jars/classes.jar"
+                      resolved="com.android.support:animated-vector-drawable:25.0.1"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/25.0.1"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support.constraint:constraint-layout:1.0.0-beta3"
+                      jars="＄ROOT/build/intermediates/exploded-aar/com.android.support.constraint/constraint-layout/1.0.0-beta3/jars/classes.jar"
+                      resolved="com.android.support.constraint:constraint-layout:1.0.0-beta3"
+                      folder="＄ROOT/build/intermediates/exploded-aar/com.android.support.constraint/constraint-layout/1.0.0-beta3"
+                      manifest="AndroidManifest.xml"
+                      resFolder="res"
+                      assetsFolder="assets"
+                      lintJar="lint.jar"
+                      publicResources="public.txt"
+                      symbolFile="R.txt"
+                      externalAnnotations="annotations.zip"
+                      proguardRules="proguard.pro"/>
+                  <library
+                      name="com.android.support:support-annotations:25.0.1"
+                      jars="$ROOT/caches/modules-2/files-2.1/com.android.support/support-annotations/25.0.19c6ef172e8de35fd8d4d8783e4821e57cdef7445/support-annotations-25.0.1.jar"
+                      resolved="com.android.support:support-annotations:25.0.1"/>
+                  <library
+                      name="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"
+                      jars="$ROOT/caches/modules-2/files-2.1/com.android.support.constraint/constraint-layout-solver/1.0.0-beta39c6ef172e8de35fd8d4d8783e4821e57cdef7445/constraint-layout-solver-1.0.0-beta3.jar"
+                      resolved="com.android.support.constraint:constraint-layout-solver:1.0.0-beta3"/>
+                  <library
+                      name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"
+                      jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-jdk7-1.3.0.jar"
+                      resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.0"/>
+                  <library
+                      name="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"
+                      jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-1.3.0.jar"
+                      resolved="org.jetbrains.kotlin:kotlin-stdlib:1.3.0"/>
+                  <library
+                      name="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"
+                      jars="＄ROOT/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.3.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/kotlin-stdlib-common-1.3.0.jar"
+                      resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.3.0"/>
+                  <library
+                      name="org.jetbrains:annotations:13.0"
+                      jars="$ROOT/caches/modules-2/files-2.1/org.jetbrains/annotations/13.09c6ef172e8de35fd8d4d8783e4821e57cdef7445/annotations-13.0.jar"
+                      resolved="org.jetbrains:annotations:13.0"/>
+                </libraries>
+                """,
+                "library_table-paidNormalRelease-testArtifact" to """
+                <libraries>
+                </libraries>
+                """,
+                "library_table-paidNormalRelease-androidTestArtifact" to """
+                <libraries>
+                </libraries>
+                """,
             )
         )
     }
@@ -1325,7 +1267,13 @@ class LintModelSerializationTest {
                     val writtenXml: String = xml[mapKey] ?: continue
                     assertValidXml(writtenXml)
                     val expected = remainingExpectedXml.remove(mapKey) ?: continue
-                    assertThat(writtenXml.cleanup()).isEqualTo(expected.trimIndent().trim())
+                    try {
+                        assertEquals(expected.trimIndent().trim(), writtenXml.cleanup())
+                        assertThat(writtenXml.cleanup()).isEqualTo(expected.trimIndent().trim())
+                    } catch (e: Exception) {
+                        println("FAIL: ${e.message}")
+                        throw e
+                    }
                 }
             }
         }

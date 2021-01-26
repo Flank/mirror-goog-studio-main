@@ -688,7 +688,7 @@ public class TestFile {
             if (mocker == null) {
                 assert contents != null;
                 //noinspection LanguageMismatch
-                mocker = new GradleModelMocker(contents).withProjectDir(projectDir);
+                mocker = new GradleModelMocker(contents, projectDir);
                 for (Consumer<GradleModelMocker> configurator : mockerConfigurators) {
                     configurator.accept(mocker);
                 }

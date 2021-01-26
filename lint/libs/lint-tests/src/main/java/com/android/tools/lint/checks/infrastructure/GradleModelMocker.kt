@@ -16,48 +16,52 @@
 package com.android.tools.lint.checks.infrastructure
 
 import com.android.AndroidProjectTypes
+import com.android.AndroidProjectTypes.PROJECT_TYPE_APP
+import com.android.AndroidProjectTypes.PROJECT_TYPE_FEATURE
+import com.android.AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP
+import com.android.AndroidProjectTypes.PROJECT_TYPE_LIBRARY
 import com.android.SdkConstants
 import com.android.build.FilterData
-import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.AndroidProject
-import com.android.builder.model.JavaLibrary
 import com.android.builder.model.LintOptions
-import com.android.builder.model.level2.GraphItem
-import com.android.builder.model.level2.Library
 import com.android.ide.common.gradle.model.IdeAaptOptions
-import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeAndroidArtifactOutput
 import com.android.ide.common.gradle.model.IdeAndroidLibrary
-import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.gradle.model.IdeApiVersion
 import com.android.ide.common.gradle.model.IdeBuildType
-import com.android.ide.common.gradle.model.IdeBuildTypeContainer
 import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeDependencies
-import com.android.ide.common.gradle.model.IdeJavaArtifact
-import com.android.ide.common.gradle.model.IdeJavaCompileOptions
 import com.android.ide.common.gradle.model.IdeJavaLibrary
 import com.android.ide.common.gradle.model.IdeLibrary
-import com.android.ide.common.gradle.model.IdeLintOptions
 import com.android.ide.common.gradle.model.IdeModuleLibrary
 import com.android.ide.common.gradle.model.IdeProductFlavor
-import com.android.ide.common.gradle.model.IdeProductFlavorContainer
 import com.android.ide.common.gradle.model.IdeSourceProvider
-import com.android.ide.common.gradle.model.IdeSourceProviderContainer
-import com.android.ide.common.gradle.model.IdeVariant
 import com.android.ide.common.gradle.model.IdeVectorDrawablesOptions
-import com.android.ide.common.gradle.model.IdeViewBindingOptions
+import com.android.ide.common.gradle.model.impl.IdeAaptOptionsImpl
+import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactImpl
 import com.android.ide.common.gradle.model.impl.IdeAndroidArtifactOutputImpl
+import com.android.ide.common.gradle.model.impl.IdeAndroidGradlePluginProjectFlagsImpl
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryCore
 import com.android.ide.common.gradle.model.impl.IdeAndroidLibraryImpl
+import com.android.ide.common.gradle.model.impl.IdeAndroidProjectImpl
 import com.android.ide.common.gradle.model.impl.IdeApiVersionImpl
+import com.android.ide.common.gradle.model.impl.IdeBuildTypeContainerImpl
+import com.android.ide.common.gradle.model.impl.IdeBuildTypeImpl
 import com.android.ide.common.gradle.model.impl.IdeDependenciesImpl
+import com.android.ide.common.gradle.model.impl.IdeJavaArtifactImpl
+import com.android.ide.common.gradle.model.impl.IdeJavaCompileOptionsImpl
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryCore
 import com.android.ide.common.gradle.model.impl.IdeJavaLibraryImpl
 import com.android.ide.common.gradle.model.impl.IdeLintOptionsImpl
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryCore
 import com.android.ide.common.gradle.model.impl.IdeModuleLibraryImpl
+import com.android.ide.common.gradle.model.impl.IdeProductFlavorContainerImpl
+import com.android.ide.common.gradle.model.impl.IdeProductFlavorImpl
+import com.android.ide.common.gradle.model.impl.IdeSourceProviderContainerImpl
 import com.android.ide.common.gradle.model.impl.IdeSourceProviderImpl
+import com.android.ide.common.gradle.model.impl.IdeVariantImpl
+import com.android.ide.common.gradle.model.impl.IdeVectorDrawablesOptionsImpl
+import com.android.ide.common.gradle.model.impl.IdeViewBindingOptionsImpl
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.projectmodel.ARTIFACT_NAME_ANDROID_TEST
@@ -71,21 +75,18 @@ import com.android.tools.lint.model.LintModelFactory
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.ILogger
+import com.android.utils.appendCamelCase
+import com.android.utils.appendCapitalized
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
-import com.google.common.collect.Sets
 import com.google.common.io.ByteStreams
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
-import org.jetbrains.annotations.Contract
-import org.mockito.Mockito
-import org.mockito.invocation.InvocationOnMock
 import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -109,7 +110,11 @@ import java.util.zip.ZipEntry
  * TODO: Clean way to configure whether build dep cache is enabled TODO: Handle scopes (test
  * dependencies etc)
  */
-class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") private val gradle: String) {
+
+class GradleModelMocker @JvmOverloads constructor(
+    @field:Language("Groovy") @param:Language("Groovy") private val gradle: String,
+    val projectDir: File = File("")
+) {
 
     private class DepConf {
         val androidLibraries: MutableSet<IdeAndroidLibrary> = mutableSetOf()
@@ -117,64 +122,56 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         val moduleLibraries: MutableSet<IdeModuleLibrary> = mutableSetOf()
     }
 
-    private lateinit var _project: IdeAndroidProject
-    private lateinit var _variant: IdeVariant
-    private val _variants: MutableList<IdeVariant> = ArrayList()
-    private val lintRuleJars: MutableList<File> = ArrayList()
+    @get:VisibleForTesting
+    var project: IdeAndroidProjectImpl = createAndroidProject()
+    var defaultVariantName: String = ""
+
+    private val variants: MutableList<IdeVariantImpl> = ArrayList()
     private val libraryLintJars: MutableMap<String, String> = HashMap()
     private val libraryPublicResourcesFiles: MutableMap<String, String> = HashMap()
     private val librarySymbolFiles: MutableMap<String, String> = HashMap()
+
     private val androidLibraryInstances: MutableMap<IdeAndroidLibrary, IdeAndroidLibrary> = HashMap()
     private val javaLibraryInstances: MutableMap<IdeJavaLibrary, IdeJavaLibrary> = HashMap()
     private val moduleLibraryInstances: MutableMap<IdeModuleLibrary, IdeModuleLibrary> = HashMap()
-    private val buildTypes: MutableList<IdeBuildType> = mutableListOf()
+
     private val main = DepConf()
     private val test = DepConf()
     private val androidTest = DepConf()
-    private var mergedFlavor: IdeProductFlavor? = null
-    private var defaultFlavor: IdeProductFlavor? = null
-    private var lintOptions: IdeLintOptions? = null
+
     private val severityOverrides = HashMap<String, Int>()
     private val flags = LintCliFlags()
     var primary = true
-    var projectDir = File("")
-        private set
-    private val productFlavors: MutableList<IdeProductFlavor?> = mutableListOf()
+
     private val splits: Multimap<String, String> = ArrayListMultimap.create()
     private var logger: ILogger? = null
     private var initialized = false
     private val ext: MutableMap<String, String> = HashMap()
-    private var modelVersion = GradleVersion.parse("2.2.2")
     private val graphs: MutableMap<String, Dep> = Maps.newHashMap()
-    private var vectorDrawablesOptions: IdeVectorDrawablesOptions? = null
-    private var aaptOptions: IdeAaptOptions? = null
     private var allowUnrecognizedConstructs = false
     private var fullDependencies = false
-    private lateinit var compileOptions: IdeJavaCompileOptions
-    private var javaPlugin = false
-    private var javaLibraryPlugin = false
+
     fun withLogger(logger: ILogger?): GradleModelMocker {
+        ensureNotInitialized()
         this.logger = logger
         return this
     }
 
     fun withModelVersion(modelVersion: String): GradleModelMocker {
-        this.modelVersion = GradleVersion.parse(modelVersion)
-        return this
-    }
-
-    fun withProjectDir(projectDir: File): GradleModelMocker {
-        this.projectDir = projectDir
+        updateModelVersion(modelVersion)
         return this
     }
 
     fun withDependencyGraph(graph: String): GradleModelMocker {
+        ensureNotInitialized()
         parseDependencyGraph(graph, graphs)
         return this
     }
 
     fun withLintRuleJar(lintRuleJarPath: String): GradleModelMocker {
-        lintRuleJars.add(File(lintRuleJarPath))
+        updateProject {
+            it.copy(lintRuleJars = it.lintRuleJars.orEmpty() + File(lintRuleJarPath))
+        }
         return this
     }
 
@@ -182,6 +179,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         library: String,
         lintJarPath: String
     ): GradleModelMocker {
+        ensureNotInitialized()
         libraryLintJars[library] = lintJarPath
         return this
     }
@@ -190,6 +188,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         library: String,
         publicResourcesPath: String
     ): GradleModelMocker {
+        ensureNotInitialized()
         libraryPublicResourcesFiles[library] = publicResourcesPath
         return this
     }
@@ -198,6 +197,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         library: String,
         symbolFilePath: String
     ): GradleModelMocker {
+        ensureNotInitialized()
         librarySymbolFiles[library] = symbolFilePath
         return this
     }
@@ -212,6 +212,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
      * controlled by sync/model builder flag [ ][AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES].)
      */
     fun withFullDependencies(fullDependencies: Boolean): GradleModelMocker {
+        ensureNotInitialized()
         this.fullDependencies = fullDependencies
         return this
     }
@@ -243,33 +244,32 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         }
     }
 
+    private fun ensureNotInitialized() {
+        if (initialized) error("GradleModelMocker has been already initialized.")
+    }
+
     /** Whether the Gradle file applied the java plugin  */
     fun hasJavaPlugin(): Boolean {
-        return javaPlugin
+        ensureInitialized()
+        return project.projectType == PROJECT_TYPE_JAVA
     }
 
     /** Whether the Gradle file applied the java-library plugin  */
     fun hasJavaLibraryPlugin(): Boolean {
-        return javaLibraryPlugin
+        ensureInitialized()
+        return project.projectType == PROJECT_TYPE_JAVA_LIBRARY
     }
 
     val isLibrary: Boolean
-        get() = project.projectType == AndroidProjectTypes.PROJECT_TYPE_LIBRARY ||
-            project.projectType == PROJECT_TYPE_JAVA_LIBRARY
-
-    /** Whether the Gradle file applied the java-library plugin  */
-    fun hasAndroidLibraryPlugin(): Boolean {
-        return javaLibraryPlugin
-    }
-
-    @get:VisibleForTesting
-    val project: IdeAndroidProject get() {
-        ensureInitialized()
-        return _project
-    }
+        get() {
+            ensureInitialized()
+            return project.projectType == PROJECT_TYPE_LIBRARY ||
+                project.projectType == PROJECT_TYPE_JAVA_LIBRARY
+        }
 
     val buildTargetHash: String?
         get() {
+            ensureInitialized()
             return project
                 .compileTarget
                 .takeUnless { it.isEmpty() }
@@ -277,31 +277,31 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
 
     val buildSdk: Int?
         get() {
+            ensureInitialized()
             return buildTargetHash
                 ?.let { AndroidTargetHash.getPlatformVersion(it) }
                 ?.apiLevel
         }
 
-    @get:VisibleForTesting
-    val variant: IdeVariant get() {
-        ensureInitialized()
-        return _variant
-    }
-
-    private val variants: Collection<IdeVariant> get() {
-        ensureInitialized()
-        return _variants
-    }
-
     val generatedSourceFolders: Collection<File>
         get() {
+            ensureInitialized()
             return variant.mainArtifact.generatedSourceFolders
         }
 
     val generatedResourceFolders: Collection<File>
         get() {
+            ensureInitialized()
             return variant.mainArtifact.generatedResourceFolders
         }
+
+    private val buildTypes get() = project.buildTypes.map { it.buildType as IdeBuildTypeImpl }
+    private val productFlavors get() = project.productFlavors.map { it.productFlavor as IdeProductFlavorImpl }
+    private val flavorDimensions get() = project.flavorDimensions
+
+    @VisibleForTesting
+    val variant
+        get() = variants.single { it.name == defaultVariantName }
 
     fun syncFlagsTo(to: LintCliFlags) {
         ensureInitialized()
@@ -327,135 +327,29 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     }
 
     fun getLintVariant(): LintModelVariant? {
-        return getLintModule().findVariant(variant.name)
+        ensureInitialized()
+        return getLintModule().findVariant(defaultVariantName)
     }
 
     fun getLintModule(): LintModelModule {
+        ensureInitialized()
         return LintModelFactory().create(project, variants, projectDir, true)
     }
 
     private fun initialize() {
-        _project = Mockito.mock(IdeAndroidProject::class.java)
-        Mockito.`when`(project.modelVersion).thenReturn(modelVersion.toString())
-        val apiVersion = if (modelVersion.major >= 2) 3 else 2
-        Mockito.`when`(project.apiVersion).thenReturn(apiVersion)
-        Mockito.`when`(project.flavorDimensions).thenReturn(mutableListOf())
-        Mockito.`when`(project.name).thenReturn("test_project")
-        Mockito.`when`(project.compileTarget).thenReturn("android-" + SdkVersionInfo.HIGHEST_KNOWN_API)
-        _variant = Mockito.mock(IdeVariant::class.java)
-        lintOptions = IdeLintOptionsImpl()
-        Mockito.`when`(project.lintOptions).thenAnswer { invocation: InvocationOnMock? -> lintOptions }
-        Mockito.`when`(project.lintRuleJars).thenAnswer { invocation: InvocationOnMock? -> lintRuleJars }
-        compileOptions = Mockito.mock(IdeJavaCompileOptions::class.java)
-        Mockito.`when`(compileOptions.sourceCompatibility).thenReturn("1.7")
-        Mockito.`when`(compileOptions.targetCompatibility).thenReturn("1.7")
-        Mockito.`when`(compileOptions.encoding).thenReturn("UTF-8")
-        Mockito.`when`(project.javaCompileOptions).thenReturn(compileOptions)
-
         // built-in build-types
-        getBuildType("debug", true)
-        getBuildType("release", true)
-        defaultFlavor = getProductFlavor("defaultConfig", true)
-        Mockito.`when`(defaultFlavor!!.versionCode)
-            .thenReturn(null) // don't default to Integer.valueOf(0) !
-        var dependencies = Mockito.mock(IdeDependencies::class.java)
-        val testDependencies = Mockito.mock(IdeDependencies::class.java)
-        val androidTestDependencies = Mockito.mock(IdeDependencies::class.java)
-        Mockito.`when`(dependencies.androidLibraries).thenReturn(main.androidLibraries)
+        updateBuildType("debug", true) { it }
+        updateBuildType("release", true) { it }
+
         addLocalLibs(File(projectDir, "libs"))
-        Mockito.`when`(testDependencies.androidLibraries).thenReturn(test.androidLibraries)
-        Mockito.`when`(androidTestDependencies.androidLibraries).thenReturn(androidTest.androidLibraries)
-        Mockito.`when`(dependencies.javaLibraries).thenReturn(main.javaLibraries)
-        Mockito.`when`(testDependencies.javaLibraries).thenReturn(test.javaLibraries)
-        Mockito.`when`(androidTestDependencies.javaLibraries).thenReturn(androidTest.javaLibraries)
-        Mockito.`when`(dependencies.moduleDependencies).thenReturn(main.moduleLibraries)
-        Mockito.`when`(testDependencies.moduleDependencies).thenReturn(test.moduleLibraries)
-        Mockito.`when`(androidTestDependencies.moduleDependencies)
-            .thenReturn(androidTest.moduleLibraries)
-        mergedFlavor = getProductFlavor("mergedFlavor", true)
-        productFlavors.remove(mergedFlavor) // create mock but don't store as a separate flavor
-        Mockito.`when`(variant.mergedFlavor).thenReturn(mergedFlavor)
-        vectorDrawableOptions // ensure initialized
-        getAaptOptions() // ensure initialized
+
         scan(gradle, "")
-        val containers: MutableList<IdeBuildTypeContainer> = mutableListOf()
-        for (buildType in buildTypes) {
-            val container = Mockito.mock(
-                IdeBuildTypeContainer::class.java
-            )
-            Mockito.`when`(container.buildType).thenReturn(buildType)
-            containers.add(container)
-            val provider = createSourceProvider(projectDir, buildType.name)
-            Mockito.`when`(container.sourceProvider).thenReturn(provider)
-        }
-        Mockito.`when`(project.buildTypes).thenReturn(containers)
-        val defaultContainer = Mockito.mock(
-            IdeProductFlavorContainer::class.java
-        )
-        Mockito.`when`(defaultContainer.productFlavor).thenReturn(defaultFlavor)
-        Mockito.`when`(defaultContainer.toString()).thenReturn("defaultConfig")
-        Mockito.`when`(project.defaultConfig).thenReturn(defaultContainer)
-        val mainProvider = createSourceProvider(projectDir, "main")
-        Mockito.`when`(defaultContainer.sourceProvider).thenReturn(mainProvider)
-        val androidTestProvider = Mockito.mock(
-            IdeSourceProviderContainer::class.java
-        )
-        Mockito.`when`(androidTestProvider.artifactName)
-            .thenReturn(AndroidProject.ARTIFACT_ANDROID_TEST)
-        val androidSourceProvider = createSourceProvider(projectDir, "androidTest")
-        Mockito.`when`(androidTestProvider.sourceProvider).thenReturn(androidSourceProvider)
-        val unitTestProvider = Mockito.mock(
-            IdeSourceProviderContainer::class.java
-        )
-        Mockito.`when`(unitTestProvider.artifactName).thenReturn(AndroidProject.ARTIFACT_UNIT_TEST)
-        val unitSourceProvider = createSourceProvider(projectDir, "test")
-        Mockito.`when`(unitTestProvider.sourceProvider).thenReturn(unitSourceProvider)
-        val extraProviders: List<IdeSourceProviderContainer> = Lists.newArrayList(androidTestProvider, unitTestProvider)
-        Mockito.`when`(defaultContainer.extraSourceProviders).thenReturn(extraProviders)
-        val flavorContainers: MutableList<IdeProductFlavorContainer> = mutableListOf()
-        flavorContainers.add(defaultContainer)
-        for (flavor in productFlavors) {
-            if (flavor === defaultFlavor) {
-                continue
-            }
-            val container = Mockito.mock(
-                IdeProductFlavorContainer::class.java
-            )
-            val flavorName = flavor!!.name
-            val flavorSourceProvider = createSourceProvider(projectDir, flavorName)
-            Mockito.`when`(container.sourceProvider).thenReturn(flavorSourceProvider)
-            Mockito.`when`(container.productFlavor).thenReturn(flavor)
-            Mockito.`when`(container.toString()).thenReturn(flavorName)
-            flavorContainers.add(container)
-        }
-        Mockito.`when`(project.productFlavors).thenReturn(flavorContainers)
 
         // Artifacts
-        var artifact = Mockito.mock(IdeAndroidArtifact::class.java)
-        val testArtifact = Mockito.mock(IdeJavaArtifact::class.java)
-        val androidTestArtifact = Mockito.mock(IdeAndroidArtifact::class.java)
-        var applicationId = project.defaultConfig.productFlavor.applicationId
-        if (applicationId == null) {
-            applicationId = "test.pkg"
-        }
-        Mockito.`when`(artifact.applicationId).thenReturn(applicationId)
-        Mockito.`when`(androidTestArtifact.applicationId).thenReturn(applicationId)
-        Mockito.`when`(artifact.level2Dependencies).thenReturn(dependencies)
-        Mockito.`when`(testArtifact.level2Dependencies).thenReturn(testDependencies)
-        Mockito.`when`(androidTestArtifact.level2Dependencies).thenReturn(androidTestDependencies)
-        Mockito.`when`(variant.mainArtifact).thenReturn(artifact)
-        Mockito.`when`(variant.unitTestArtifact).thenReturn(testArtifact)
-        Mockito.`when`(variant.androidTestArtifact).thenReturn(androidTestArtifact)
+        updateDefaultConfig { it.copy(applicationId = it.applicationId ?: "test.pkg") }
 
-        /*
-        if (modelVersion.isAtLeast(2, 5, 0, "alpha", 1, false)) {
-            DependencyGraphs graphs = createDependencyGraphs();
-            when(artifact.getDependencyGraphs()).thenReturn(graphs);
-        } else {
-            // Should really throw org.gradle.tooling.model.UnsupportedMethodException here!
-            when(artifact.getDependencyGraphs()).thenThrow(new RuntimeException());
-        }
-        */Mockito.`when`(project.buildFolder).thenReturn(File(projectDir, "build"))
+        updateProject { it.copy(buildFolder = File(projectDir, "build")) }
+
         val outputs: MutableList<IdeAndroidArtifactOutput> = mutableListOf()
         outputs.add(createAndroidArtifactOutput("", ""))
         for ((key, value) in splits.entries()) {
@@ -463,192 +357,247 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         }
         // outputs.add(createAndroidArtifactOutput("DENSITY", "mdpi"));
         // outputs.add(createAndroidArtifactOutput("DENSITY", "hdpi"));
-        Mockito.`when`(artifact.outputs).thenReturn(outputs)
-        val seenDimensions: MutableSet<String> = Sets.newHashSet()
-        val defaultBuildType = buildTypes[0]
-        val defaultBuildTypeName = defaultBuildType.name
-        val variantNameSb = StringBuilder()
-        val flavorDimensions = project.flavorDimensions
-        for (dimension in flavorDimensions) {
-            for (flavor in productFlavors) {
-                if (flavor !== defaultFlavor && dimension == flavor!!.dimension) {
-                    if (seenDimensions.contains(dimension)) {
-                        continue
-                    }
-                    seenDimensions.add(dimension)
-                    val name = flavor.name
-                    if (variantNameSb.length == 0) {
-                        variantNameSb.append(name)
-                    } else {
-                        variantNameSb.append(name.capitalize())
-                    }
-                }
-            }
-        }
-        for (flavor in productFlavors) {
-            if (flavor !== defaultFlavor && flavor!!.dimension == null) {
-                val name = flavor.name
-                if (variantNameSb.length == 0) {
-                    variantNameSb.append(name)
-                } else {
-                    variantNameSb.append(name.capitalize())
-                }
-                break
-            }
-        }
-        if (flavorContainers.size >= 2) {
-            val multiVariantSourceSet = createSourceProvider(projectDir, variantNameSb.toString())
-            Mockito.`when`(artifact.multiFlavorSourceProvider).thenReturn(multiVariantSourceSet)
-        }
-        if (variantNameSb.length == 0) {
-            variantNameSb.append(defaultBuildTypeName)
-        } else {
-            variantNameSb.append(defaultBuildTypeName.capitalize())
-        }
-        val defaultVariantName = variantNameSb.toString()
-        if (productFlavors.isEmpty()) {
-            val variantSourceSet = createSourceProvider(projectDir, defaultVariantName)
-            Mockito.`when`(artifact.variantSourceProvider).thenReturn(variantSourceSet)
-        }
-        setVariantName(defaultVariantName)
-        Mockito.`when`(artifact.name).thenReturn(ARTIFACT_NAME_MAIN)
-        Mockito.`when`(testArtifact.name).thenReturn(ARTIFACT_NAME_UNIT_TEST)
-        Mockito.`when`(androidTestArtifact.name).thenReturn(ARTIFACT_NAME_ANDROID_TEST)
-        Mockito.`when`(artifact.classesFolder)
-            .thenReturn(
-                File(
-                    projectDir,
-                    "build/intermediates/javac/$defaultVariantName/classes"
+
+        val dependencies = createDependencies(main)
+        val androidTestDependencies = createDependencies(androidTest)
+        val testDependencies = createDependencies(test)
+
+        val variantCoordinates = generateVariants()
+        defaultVariantName = variantCoordinates.first().let { buildVariantName(it.second, it.first) }
+        variantCoordinates.forEach { (buildType, productFlavors) ->
+            val variantName = buildVariantName(productFlavors, buildType)
+
+            val generated = File(projectDir, "generated")
+            val mergedFlavor = merge(defaultConfig, productFlavors, buildType)
+            variants.add(
+                IdeVariantImpl(
+                    name = variantName,
+                    displayName = "",
+                    mainArtifact = createAndroidArtifact(ARTIFACT_NAME_MAIN)
+                        .copy(
+                            name = variantName,
+                            applicationId = mergedFlavor.applicationId!!,
+                            outputs = outputs,
+                            level2Dependencies = dependencies,
+                            classesFolder = File(projectDir, "build/intermediates/javac/$variantName/classes"),
+                            additionalClassesFolders = setOf(File(projectDir, "build/tmp/kotlin-classes/$variantName")),
+                            mutableGeneratedSourceFolders =
+                                listOfNotNull(File(generated, "java").takeIf { it.exists() }).toMutableList(),
+                            generatedResourceFolders =
+                                listOfNotNull(File(generated, "res").takeIf { it.exists() }),
+                            multiFlavorSourceProvider = let {
+                                if (productFlavors.size >= 2)
+                                    createSourceProvider(projectDir, buildVariantName(productFlavors))
+                                else null
+                            },
+                            variantSourceProvider = let {
+                                if (productFlavors.isNotEmpty())
+                                    createSourceProvider(projectDir, defaultVariantName)
+                                else null
+                            },
+                        ),
+                    unitTestArtifact = createJavaArtifact(ARTIFACT_NAME_UNIT_TEST)
+                        .copy(
+                            level2Dependencies = testDependencies,
+                            classesFolder = File(projectDir, "test-classes"),
+                        ),
+                    androidTestArtifact = createAndroidArtifact(ARTIFACT_NAME_ANDROID_TEST)
+                        .copy(
+                            applicationId = mergedFlavor.applicationId!!,
+                            level2Dependencies = androidTestDependencies,
+                            classesFolder = File(projectDir, "instrumentation-classes"),
+                        ),
+                    buildType = buildType.name,
+                    productFlavors = productFlavors.map { it.name },
+                    mergedFlavor = mergedFlavor,
+                    testedTargetVariants = emptyList(),
+                    instantAppCompatible = false,
                 )
             )
-        Mockito.`when`(artifact.additionalClassesFolders)
-            .thenReturn(
-                setOf(
-                    File(
-                        projectDir,
-                        "build/tmp/kotlin-classes/$defaultVariantName"
-                    )
-                )
-            )
-        Mockito.`when`(testArtifact.classesFolder).thenReturn(File(projectDir, "test-classes"))
-        Mockito.`when`(androidTestArtifact.classesFolder)
-            .thenReturn(File(projectDir, "instrumentation-classes"))
-
-        // Generated sources: Special test support under folder "generated" instead of "src"
-        val generated = File(projectDir, "generated")
-        if (generated.exists()) {
-            val generatedRes = File(generated, "res")
-            if (generatedRes.exists()) {
-                val generatedResources = listOf(generatedRes)
-                Mockito.`when`(artifact.generatedResourceFolders).thenReturn(generatedResources)
-            }
-            val generatedJava = File(generated, "java")
-            if (generatedJava.exists()) {
-                val generatedSources = listOf(generatedJava)
-                Mockito.`when`(artifact.generatedSourceFolders).thenReturn(generatedSources)
-            }
         }
+    }
 
-        // Merge values into mergedFlavor
-        var minSdkVersion = defaultFlavor!!.minSdkVersion
-        var targetSdkVersion = defaultFlavor!!.targetSdkVersion
-        val versionCode = defaultFlavor!!.versionCode
-        val versionName = defaultFlavor!!.versionName
-        val manifestPlaceholders: MutableMap<String, String> = HashMap(
-            defaultFlavor!!.manifestPlaceholders
-        )
-        val resValues: MutableMap<String, IdeClassField> = HashMap(
-            defaultFlavor!!.resValues
-        )
-        val resourceConfigurations: MutableCollection<String> = HashSet(
-            defaultFlavor!!.resourceConfigurations
-        )
-        for (container in flavorContainers) {
-            val flavor = container.productFlavor
-            manifestPlaceholders.putAll(flavor.manifestPlaceholders)
-            resValues.putAll(flavor.resValues)
-            resourceConfigurations.addAll(flavor.resourceConfigurations)
+    private fun generateVariants(): List<Pair<IdeBuildTypeImpl, List<IdeProductFlavorImpl>>> {
+        val dimensions = flavorDimensions.takeUnless { it.isEmpty() }?.toList()
+            ?: if (productFlavors.isNotEmpty()) listOf(null) else emptyList()
+        val dimensionFlavors = dimensions.map { dimensionNameOrNull ->
+            productFlavors.filter { it.dimension == dimensionNameOrNull }
         }
-        manifestPlaceholders.putAll(defaultBuildType.manifestPlaceholders)
-        resValues.putAll(defaultBuildType.resValues)
-        Mockito.`when`(mergedFlavor!!.minSdkVersion).thenReturn(minSdkVersion)
-        Mockito.`when`(mergedFlavor!!.targetSdkVersion).thenReturn(targetSdkVersion)
-        Mockito.`when`(mergedFlavor!!.applicationId).thenReturn(applicationId)
-        Mockito.`when`(mergedFlavor!!.versionCode).thenReturn(versionCode)
-        Mockito.`when`(mergedFlavor!!.versionName).thenReturn(versionName)
-        Mockito.`when`(mergedFlavor!!.manifestPlaceholders).thenReturn(manifestPlaceholders)
-        Mockito.`when`(mergedFlavor!!.resValues).thenReturn(resValues)
-        Mockito.`when`(mergedFlavor!!.resourceConfigurations).thenReturn(resourceConfigurations)
+        return dimensionFlavors
+            .fold<List<IdeProductFlavorImpl>, Sequence<Pair<IdeBuildTypeImpl, List<IdeProductFlavorImpl>>>>(
+                buildTypes.asSequence().map { it to emptyList() }
+            ) { acc, dimension ->
+                acc.flatMap { prefix -> dimension.asSequence().map { prefix.first to prefix.second + it } }
+            }
+            .toList()
+    }
 
-        // Attempt to make additional variants?
-        _variants.add(variant)
-        for (buildType in buildTypes) {
-            val buildTypeName = buildType.name
-            for (flavor in productFlavors) {
-                if (flavor === defaultFlavor) {
-                    continue
-                }
-                val variantName = flavor!!.name + buildType.name.capitalize()
-                println()
-                if (variantName != variant.name) {
-                    val newVariant = Mockito.mock(IdeVariant::class.java, Mockito.RETURNS_SMART_NULLS)
-                    Mockito.`when`(newVariant.name).thenReturn(variantName)
-                    Mockito.`when`(newVariant.buildType).thenReturn(buildTypeName)
-                    val productFlavorNames = listOf(flavor.name)
-                    Mockito.`when`(newVariant.productFlavors).thenReturn(productFlavorNames)
-                    Mockito.`when`(mergedFlavor!!.applicationId).thenReturn(applicationId)
-                    minSdkVersion = mergedFlavor!!.minSdkVersion
-                    targetSdkVersion = mergedFlavor!!.targetSdkVersion
-                    val flavorName = mergedFlavor!!.name
-                    val vectorDrawables = mergedFlavor!!.vectorDrawables
-                    val variantFlavor = Mockito.mock(IdeProductFlavor::class.java)
-                    Mockito.`when`(variantFlavor.minSdkVersion).thenReturn(minSdkVersion)
-                    Mockito.`when`(variantFlavor.targetSdkVersion).thenReturn(targetSdkVersion)
-                    Mockito.`when`(variantFlavor.name).thenReturn(flavorName)
-                    Mockito.`when`(variantFlavor.vectorDrawables).thenReturn(vectorDrawables)
-                    Mockito.`when`(variantFlavor.resourceConfigurations)
-                        .thenReturn(emptyList())
-                    Mockito.`when`(variantFlavor.resValues).thenReturn(emptyMap())
-                    Mockito.`when`(variantFlavor.manifestPlaceholders)
-                        .thenReturn(emptyMap())
-                    Mockito.`when`(newVariant.mergedFlavor).thenReturn(variantFlavor)
-                    val mainArtifact = variant.mainArtifact
-                    Mockito.`when`(newVariant.mainArtifact).thenReturn(mainArtifact)
-
-                    // Customize artifacts instead of just pointing to the main one
-                    // to avoid really redundant long dependency lists
-                    artifact = Mockito.mock(IdeAndroidArtifact::class.java)
-                    Mockito.`when`(artifact.name).thenReturn(ARTIFACT_NAME_MAIN)
-                    Mockito.`when`(artifact.classesFolder)
-                        .thenReturn(
-                            File(
-                                projectDir,
-                                "build/intermediates/javac/" +
-                                    variantName +
-                                    "/classes"
-                            )
-                        )
-                    Mockito.`when`(artifact.additionalClassesFolders)
-                        .thenReturn(
-                            setOf(
-                                File(
-                                    projectDir,
-                                    "build/tmp/kotlin-classes/$variantName"
-                                )
-                            )
-                        )
-                    Mockito.`when`(artifact.applicationId).thenReturn(applicationId)
-                    dependencies = Mockito.mock(IdeDependencies::class.java)
-                    Mockito.`when`(dependencies.androidLibraries).thenReturn(emptyList())
-                    Mockito.`when`(artifact.level2Dependencies).thenReturn(dependencies)
-                    Mockito.`when`(newVariant.mainArtifact).thenReturn(artifact)
-                    Mockito.`when`(newVariant.unitTestArtifact).thenReturn(null)
-                    Mockito.`when`(newVariant.androidTestArtifact).thenReturn(null)
-                    _variants.add(newVariant)
-                }
+    private fun buildVariantName(
+        productFlavors: List<IdeProductFlavorImpl>,
+        buildType: IdeBuildTypeImpl? = null
+    ): String {
+        return buildString {
+            productFlavors.forEach { appendCamelCase(it.name) }
+            if (buildType != null) {
+                appendCamelCase(buildType.name)
             }
         }
     }
+
+    private fun merge(
+        defaultConfig: IdeProductFlavorImpl,
+        productFlavors: List<IdeProductFlavorImpl>,
+        buildType: IdeBuildTypeImpl
+    ): IdeProductFlavorImpl {
+
+        fun <T> combineValues(
+            combine: (T?, T) -> T,
+            f: IdeProductFlavorImpl.() -> T,
+            b: (IdeBuildTypeImpl.() -> T)? = null
+        ): T {
+            return combine(
+                productFlavors.map { it.f() } // second
+                    .fold(
+                        if (b != null) buildType.b() else null, // first
+                        combine
+                    ),
+                defaultConfig.f() // third
+            )
+        }
+
+        fun <T> combineNullable(u: T?, v: T) = u ?: v
+        fun <T> combineSets(u: Collection<T>?, v: Collection<T>) = u.orEmpty().toSet() + v
+        fun <T> combineMaps(u: Map<String, T>?, v: Map<String, T>) = v + (u ?: emptyMap())
+
+        return defaultConfig.copy(
+            name = buildVariantName(productFlavors, buildType),
+            applicationIdSuffix = combineValues(::combineNullable, { applicationIdSuffix }, { applicationIdSuffix }),
+            versionNameSuffix = combineValues(::combineNullable, { versionNameSuffix }, { versionNameSuffix }),
+            resValues = combineValues(::combineMaps, { resValues }, { resValues }),
+            proguardFiles = combineValues(::combineSets, { proguardFiles }, { proguardFiles }),
+            consumerProguardFiles = combineValues(::combineSets, { consumerProguardFiles }, { consumerProguardFiles }),
+            manifestPlaceholders = combineValues(::combineMaps, { manifestPlaceholders }, { manifestPlaceholders }),
+            multiDexEnabled = combineValues(::combineNullable, { multiDexEnabled }, { multiDexEnabled }),
+            applicationId = combineValues(::combineNullable, { applicationId }, { null }),
+            versionCode = combineValues(::combineNullable, { versionCode }),
+            versionName = combineValues(::combineNullable, { versionName }),
+            minSdkVersion = combineValues(::combineNullable, { minSdkVersion }),
+            targetSdkVersion = combineValues(::combineNullable, { targetSdkVersion }),
+            maxSdkVersion = combineValues(::combineNullable, { maxSdkVersion }),
+            testApplicationId = combineValues(::combineNullable, { testApplicationId }),
+            testInstrumentationRunner = combineValues(::combineNullable, { testInstrumentationRunner }),
+            testInstrumentationRunnerArguments = combineValues(::combineMaps, { testInstrumentationRunnerArguments }),
+            testHandleProfiling = combineValues(::combineNullable, { testHandleProfiling }),
+            testFunctionalTest = combineValues(::combineNullable, { testFunctionalTest }),
+            resourceConfigurations = combineValues(::combineSets, { resourceConfigurations }),
+            vectorDrawables = combineValues(::combineNullable, { vectorDrawables }),
+        )
+    }
+
+    private fun createAndroidProject() = IdeAndroidProjectImpl(
+        modelVersion = "2.2.2",
+        apiVersion = 3,
+        name = "test_project",
+        projectType = 0,
+        defaultConfig =
+            IdeProductFlavorContainerImpl(
+                productFlavor = createProductFlavor("defaultConfig"),
+                sourceProvider = createSourceProvider(projectDir, "main"),
+                extraSourceProviders = listOf(
+                    IdeSourceProviderContainerImpl(
+                        AndroidProject.ARTIFACT_ANDROID_TEST,
+                        createSourceProvider(projectDir, "androidTest")
+                    ),
+                    IdeSourceProviderContainerImpl(
+                        AndroidProject.ARTIFACT_UNIT_TEST,
+                        createSourceProvider(projectDir, "test")
+                    )
+                )
+            ),
+        buildTypes = emptyList(),
+        productFlavors = emptyList(),
+        variantNames = emptyList(),
+        flavorDimensions = emptyList(),
+        compileTarget = "android-" + SdkVersionInfo.HIGHEST_KNOWN_API,
+        bootClasspath = emptyList(),
+        signingConfigs = emptyList(),
+        aaptOptions = IdeAaptOptionsImpl(namespacing = IdeAaptOptions.Namespacing.DISABLED),
+        lintOptions = IdeLintOptionsImpl(),
+        javaCompileOptions = IdeJavaCompileOptionsImpl(
+            encoding = "UTF-8",
+            sourceCompatibility = "1.7",
+            targetCompatibility = "1.7",
+            isCoreLibraryDesugaringEnabled = false
+        ),
+        buildFolder = File(""),
+        resourcePrefix = null,
+        buildToolsVersion = null,
+        ndkVersion = null,
+        isBaseSplit = false,
+        dynamicFeatures = emptyList(),
+        viewBindingOptions = null,
+        dependenciesInfo = null,
+        groupId = null,
+        agpFlags = IdeAndroidGradlePluginProjectFlagsImpl(),
+        variantsBuildInformation = emptyList(),
+        lintRuleJars = emptyList(),
+    )
+
+    private fun createAndroidArtifact(artifact: String) = IdeAndroidArtifactImpl(
+        name = artifact,
+        compileTaskName = "",
+        assembleTaskName = "",
+        assembleTaskOutputListingFile = "",
+        classesFolder = File(""),
+        additionalClassesFolders = emptyList(),
+        javaResourcesFolder = null,
+        variantSourceProvider = null,
+        multiFlavorSourceProvider = null,
+        ideSetupTaskNames = emptyList(),
+        mutableGeneratedSourceFolders = mutableListOf(),
+        isTestArtifact = false,
+        level2Dependencies = createDependencies(),
+        applicationId = "",
+        signingConfigName = null,
+        outputs = emptyList(),
+        isSigned = false,
+        generatedResourceFolders = emptyList(),
+        additionalRuntimeApks = emptyList(),
+        testOptions = null,
+        abiFilters = emptySet(),
+        bundleTaskName = null,
+        bundleTaskOutputListingFile = null,
+        apkFromBundleTaskName = null,
+        apkFromBundleTaskOutputListingFile = null,
+        codeShrinker = null
+    )
+
+    private fun createJavaArtifact(artifact: String) = IdeJavaArtifactImpl(
+        name = artifact,
+        compileTaskName = "",
+        assembleTaskName = "",
+        assembleTaskOutputListingFile = "",
+        classesFolder = File(""),
+        additionalClassesFolders = emptyList(),
+        javaResourcesFolder = null,
+        variantSourceProvider = null,
+        multiFlavorSourceProvider = null,
+        ideSetupTaskNames = emptyList(),
+        mutableGeneratedSourceFolders = mutableListOf(),
+        isTestArtifact = false,
+        level2Dependencies = createDependencies(),
+        mockablePlatformJar = null,
+    )
+
+    private fun createDependencies(dep: DepConf? = null) =
+        if (dep != null)
+            IdeDependenciesImpl(
+                androidLibraries = dep.androidLibraries,
+                javaLibraries = dep.javaLibraries,
+                moduleDependencies = dep.moduleLibraries,
+                emptyList()
+            )
+        else IdeDependenciesImpl(emptyList(), emptyList(), emptyList(), emptyList())
 
     private fun addLocalLibs(libsDir: File) {
         val libs = libsDir.listFiles()
@@ -722,6 +671,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         return graphs;
     }
     */
+/*
     private fun addGraphItems(
         result: MutableList<GraphItem>,
         globalMap: MutableMap<String, Library>,
@@ -767,47 +717,50 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             globalMap[name] = createLevel2Library(library)
         }
     }
+*/
 
-    private fun createLevel2Library(library: com.android.builder.model.Library): Library {
-        val lib = Mockito.mock(
-            Library::class.java
-        )
-        val coordinates = library.resolvedCoordinates
-        val name = (
-            coordinates.groupId +
-                ':' +
-                coordinates.artifactId +
-                ':' +
-                coordinates.version +
-                '@' +
-                coordinates.packaging
+    /*
+        private fun createLevel2Library(library: com.android.builder.model.Library): Library {
+            val lib = Mockito.mock(
+                Library::class.java
             )
-        Mockito.`when`(lib.artifactAddress).thenReturn(name)
-        if (library is AndroidLibrary) {
-            val folder = library.folder
-            Mockito.`when`(lib.type)
-                .thenReturn(Library.LIBRARY_ANDROID)
-            Mockito.`when`(lib.folder).thenReturn(folder)
-            Mockito.`when`(lib.lintJar).thenReturn("lint.jar")
-            Mockito.`when`(lib.localJars).thenReturn(emptyList())
-            Mockito.`when`(lib.externalAnnotations).thenReturn(SdkConstants.FN_ANNOTATIONS_ZIP)
-            Mockito.`when`(lib.jarFile).thenReturn("jars/" + SdkConstants.FN_CLASSES_JAR)
-            val jar = File(folder, "jars/" + SdkConstants.FN_CLASSES_JAR)
-            if (!jar.exists()) {
-                createEmptyJar(jar)
+            val coordinates = library.resolvedCoordinates
+            val name = (
+                coordinates.groupId +
+                    ':' +
+                    coordinates.artifactId +
+                    ':' +
+                    coordinates.version +
+                    '@' +
+                    coordinates.packaging
+                )
+            Mockito.`when`(lib.artifactAddress).thenReturn(name)
+            if (library is AndroidLibrary) {
+                val folder = library.folder
+                Mockito.`when`(lib.type)
+                    .thenReturn(Library.LIBRARY_ANDROID)
+                Mockito.`when`(lib.folder).thenReturn(folder)
+                Mockito.`when`(lib.lintJar).thenReturn("lint.jar")
+                Mockito.`when`(lib.localJars).thenReturn(emptyList())
+                Mockito.`when`(lib.externalAnnotations).thenReturn(SdkConstants.FN_ANNOTATIONS_ZIP)
+                Mockito.`when`(lib.jarFile).thenReturn("jars/" + SdkConstants.FN_CLASSES_JAR)
+                val jar = File(folder, "jars/" + SdkConstants.FN_CLASSES_JAR)
+                if (!jar.exists()) {
+                    createEmptyJar(jar)
+                }
+                // when(l2.isProvided).thenReturn(androidLibrary.isProvided());
+            } else if (library is JavaLibrary) {
+                Mockito.`when`(lib.type).thenReturn(Library.LIBRARY_JAVA)
+                val jars: List<String> = mutableListOf()
+                Mockito.`when`(lib.localJars).thenReturn(jars)
+                val jarFile = library.jarFile
+                Mockito.`when`(lib.artifact).thenReturn(jarFile)
+                Mockito.`when`(lib.folder).thenThrow(UnsupportedOperationException())
             }
-            // when(l2.isProvided).thenReturn(androidLibrary.isProvided());
-        } else if (library is JavaLibrary) {
-            Mockito.`when`(lib.type).thenReturn(Library.LIBRARY_JAVA)
-            val jars: List<String> = mutableListOf()
-            Mockito.`when`(lib.localJars).thenReturn(jars)
-            val jarFile = library.jarFile
-            Mockito.`when`(lib.artifact).thenReturn(jarFile)
-            Mockito.`when`(lib.folder).thenThrow(UnsupportedOperationException())
+            return lib
         }
-        return lib
-    }
 
+    */
     private fun createEmptyJar(jar: File) {
         if (!jar.exists()) {
             val parentFile = jar.parentFile
@@ -938,417 +891,384 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         if (line.isEmpty()) {
             return
         }
-        if (line == "apply plugin: 'com.android.library'" || line == "apply plugin: 'android-library'") {
-            Mockito.`when`(project.projectType).thenReturn(AndroidProjectTypes.PROJECT_TYPE_LIBRARY)
-            return
-        } else if (line == "apply plugin: 'com.android.application'" || line == "apply plugin: 'android'") {
-            Mockito.`when`(project.projectType).thenReturn(AndroidProjectTypes.PROJECT_TYPE_APP)
-            return
-        } else if (line == "apply plugin: 'com.android.feature'") {
-            Mockito.`when`(project.projectType).thenReturn(AndroidProjectTypes.PROJECT_TYPE_FEATURE)
-            return
-        } else if (line == "apply plugin: 'com.android.instantapp'") {
-            Mockito.`when`(project.projectType).thenReturn(AndroidProjectTypes.PROJECT_TYPE_INSTANTAPP)
-            return
-        } else if (line == "apply plugin: 'java'") {
-            Mockito.`when`(project.projectType).thenReturn(PROJECT_TYPE_JAVA_LIBRARY)
-            javaPlugin = true
-            return
-        } else if (line == "apply plugin: 'java-library'") {
-            Mockito.`when`(project.projectType).thenReturn(PROJECT_TYPE_JAVA_LIBRARY)
-            javaLibraryPlugin = true
-            return
-        } else if (context == "buildscript.repositories" || context == "allprojects.repositories") {
-            // Plugins not modeled in the builder model
-            return
-        } else if (line.startsWith("apply plugin: ")) {
-            // Some other plugin not relevant to the builder-model
-            return
+
+        fun updateProjectType(type: Int): Boolean {
+            updateProject { it.copy(projectType = type) }
+            return true
         }
+
+        if (when (line) {
+            "apply plugin: 'com.android.library'", "apply plugin: 'android-library'" -> updateProjectType(
+                PROJECT_TYPE_LIBRARY
+            )
+            "apply plugin: 'com.android.application'", "apply plugin: 'android'" -> updateProjectType(
+                PROJECT_TYPE_APP
+            )
+            "apply plugin: 'com.android.feature'" -> updateProjectType(PROJECT_TYPE_FEATURE)
+            "apply plugin: 'com.android.instantapp'" -> updateProjectType(PROJECT_TYPE_INSTANTAPP)
+            "apply plugin: 'java'" -> updateProjectType(PROJECT_TYPE_JAVA)
+            "apply plugin: 'java-library'" -> updateProjectType(PROJECT_TYPE_JAVA_LIBRARY)
+            else -> when {
+                context == "buildscript.repositories" || context == "allprojects.repositories" -> {
+                    // Plugins not modeled in the builder model
+                    true
+                }
+                line.startsWith("apply plugin: ") -> {
+                    // Some other plugin not relevant to the builder-model
+                    true
+                }
+                else -> false
+            }
+        }
+        ) return
+
         var key = if (context.isEmpty()) line else "$context.$line"
         val m = configurationPattern.matcher(key)
-        if (key.startsWith("ext.")) {
-            val name = key.substring(4, key.indexOf(' '))
-            ext[name] = getUnquotedValue(key)
-        } else if (m.matches()) {
-            val artifactName = m.group(1)
-            var declaration = getUnquotedValue(key)
-            if (GradleCoordinate.parseCoordinateString(declaration) != null) {
-                addDependency(declaration, artifactName, false)
-                return
-            } else {
-                // Group/artifact/version syntax?
-                if (line.contains("group:") &&
-                    line.contains("name:") &&
-                    line.contains("version:")
-                ) {
-                    var group: String? = null
-                    var artifact: String? = null
-                    var version: String? = null
-                    for (
-                        part in Splitter.on(',')
-                            .trimResults()
-                            .omitEmptyStrings()
-                            .split(line.substring(line.indexOf(' ') + 1))
+        when {
+            key.startsWith("ext.") -> {
+                val name = key.substring(4, key.indexOf(' '))
+                ext[name] = getUnquotedValue(key)
+            }
+            m.matches() -> {
+                val artifactName = m.group(1)
+                var declaration = getUnquotedValue(key)
+                if (GradleCoordinate.parseCoordinateString(declaration) != null) {
+                    addDependency(declaration, artifactName, false)
+                    return
+                } else {
+                    // Group/artifact/version syntax?
+                    if (line.contains("group:") &&
+                        line.contains("name:") &&
+                        line.contains("version:")
                     ) {
-                        if (part.startsWith("group:")) {
-                            group = getUnquotedValue(part)
-                        } else if (part.startsWith("name:")) {
-                            artifact = getUnquotedValue(part)
-                        } else if (part.startsWith("version:")) {
-                            version = getUnquotedValue(part)
+                        var group: String? = null
+                        var artifact: String? = null
+                        var version: String? = null
+                        for (
+                            part in Splitter.on(',')
+                                .trimResults()
+                                .omitEmptyStrings()
+                                .split(line.substring(line.indexOf(' ') + 1))
+                        ) {
+                            if (part.startsWith("group:")) {
+                                group = getUnquotedValue(part)
+                            } else if (part.startsWith("name:")) {
+                                artifact = getUnquotedValue(part)
+                            } else if (part.startsWith("version:")) {
+                                version = getUnquotedValue(part)
+                            }
+                        }
+                        if (group != null && artifact != null && version != null) {
+                            declaration = "$group:$artifact:$version"
+                            addDependency(declaration, artifactName, false)
+                            return
                         }
                     }
-                    if (group != null && artifact != null && version != null) {
-                        declaration = "$group:$artifact:$version"
-                        addDependency(declaration, artifactName, false)
-                        return
+                }
+                warn("Ignored unrecognized dependency $line")
+            }
+            key.startsWith("dependencies.provided '") && key.endsWith("'") -> {
+                addDependency(getUnquotedValue(key), null, true)
+            }
+            line.startsWith("applicationId ") || line.startsWith("packageName ") -> {
+                updateFlavorFromContext(context) { it.copy(applicationId = getUnquotedValue(key)) }
+            }
+            line.startsWith("minSdkVersion ") -> {
+                updateFlavorFromContext(context) { it.copy(minSdkVersion = createApiVersion(key)) }
+            }
+            line.startsWith("targetSdkVersion ") -> {
+                updateFlavorFromContext(context) { it.copy(targetSdkVersion = createApiVersion(key)) }
+            }
+            line.startsWith("versionCode ") -> {
+                val value = key.substring(key.indexOf(' ') + 1).trim { it <= ' ' }
+                if (Character.isDigit(value[0])) {
+                    val number = Integer.decode(value)
+                    updateFlavorFromContext(context) { it.copy(versionCode = number) }
+                } else {
+                    warn("Ignoring unrecognized versionCode token: $value")
+                }
+            }
+            line.startsWith("versionName ") -> {
+                updateFlavorFromContext(context) { it.copy(versionName = getUnquotedValue(key)) }
+            }
+            line.startsWith("versionNameSuffix ") -> {
+                updateFlavorFromContext(context) { it.copy(versionNameSuffix = getUnquotedValue(key)) }
+            }
+            line.startsWith("applicationIdSuffix ") -> {
+                updateFlavorFromContext(context) { it.copy(applicationIdSuffix = getUnquotedValue(key)) }
+            }
+            key.startsWith("android.resourcePrefix ") -> {
+                updateProject { it.copy(resourcePrefix = getUnquotedValue(key)) }
+            }
+            key.startsWith("group=") -> {
+                updateProject { it.copy(groupId = getUnquotedValue(key)) }
+            }
+            key.startsWith("android.buildToolsVersion ") -> {
+                updateProject { it.copy(buildToolsVersion = getUnquotedValue(key)) }
+            }
+            line.startsWith("minifyEnabled ") && key.startsWith("android.buildTypes.") -> {
+                updateBuildTypeFromContext(context) {
+                    it.copy(isMinifyEnabled = SdkConstants.VALUE_TRUE == getUnquotedValue(line))
+                }
+            }
+            key.startsWith("android.compileSdkVersion ") -> {
+                val value = getUnquotedValue(key)
+                updateProject { it.copy(compileTarget = if (Character.isDigit(value[0])) "android-$value" else value) }
+            }
+            line.startsWith("resConfig") -> { // and resConfigs
+                updateFlavorFromContext(context) {
+                    val configs = it.resourceConfigurations.toMutableSet()
+                    for (s in Splitter.on(",").trimResults().split(line.substring(line.indexOf(' ') + 1))) {
+                        if (!configs.contains(s)) {
+                            configs.add(getUnquotedValue(s))
+                        }
+                    }
+                    it.copy(resourceConfigurations = configs)
+                }
+            }
+            key.startsWith("android.defaultConfig.vectorDrawables.useSupportLibrary ") -> {
+                val value = getUnquotedValue(key)
+                if (SdkConstants.VALUE_TRUE == value) {
+                    updateVectorDrawableOptions {
+                        it.copy(useSupportLibrary = true)
                     }
                 }
             }
-            warn("Ignored unrecognized dependency $line")
-        } else if (key.startsWith("dependencies.provided '") && key.endsWith("'")) {
-            val declaration = getUnquotedValue(key)
-            addDependency(declaration, null, true)
-        } else if (line.startsWith("applicationId ") || line.startsWith("packageName ")) {
-            val id = getUnquotedValue(key)
-            val flavor = getFlavorFromContext(context)
-            if (flavor != null) {
-                Mockito.`when`(flavor.applicationId).thenReturn(id)
-            } else {
-                error("Unexpected flavor context $context")
-            }
-        } else if (line.startsWith("minSdkVersion ")) {
-            val apiVersion = createApiVersion(key)
-            val flavor = getFlavorFromContext(context)
-            if (flavor != null) {
-                Mockito.`when`(flavor.minSdkVersion).thenReturn(apiVersion)
-            } else {
-                error("Unexpected flavor context $context")
-            }
-        } else if (line.startsWith("targetSdkVersion ")) {
-            val version = createApiVersion(key)
-            val flavor = getFlavorFromContext(context)
-            if (flavor != null) {
-                Mockito.`when`(flavor.targetSdkVersion).thenReturn(version)
-            } else {
-                error("Unexpected flavor context $context")
-            }
-        } else if (line.startsWith("versionCode ")) {
-            val value = key.substring(key.indexOf(' ') + 1).trim { it <= ' ' }
-            if (Character.isDigit(value[0])) {
-                val number = Integer.decode(value)
-                val flavor = getFlavorFromContext(context)
-                if (flavor != null) {
-                    Mockito.`when`(flavor.versionCode).thenReturn(number)
-                } else {
-                    error("Unexpected flavor context $context")
-                }
-            } else {
-                warn("Ignoring unrecognized versionCode token: $value")
-            }
-        } else if (line.startsWith("versionName ")) {
-            val name = getUnquotedValue(key)
-            val flavor = getFlavorFromContext(context)
-            if (flavor != null) {
-                Mockito.`when`(flavor.versionName).thenReturn(name)
-            } else {
-                error("Unexpected flavor context $context")
-            }
-        } else if (line.startsWith("versionNameSuffix ")) {
-            val name = getUnquotedValue(key)
-            val flavor = getFlavorFromContext(context)
-            if (flavor != null) {
-                Mockito.`when`(flavor.versionNameSuffix).thenReturn(name)
-            } else {
-                error("Unexpected flavor context $context")
-            }
-        } else if (line.startsWith("applicationIdSuffix ")) {
-            val name = getUnquotedValue(key)
-            val flavor = getFlavorFromContext(context)
-            if (flavor != null) {
-                Mockito.`when`(flavor.applicationIdSuffix).thenReturn(name)
-            } else {
-                error("Unexpected flavor context $context")
-            }
-        } else if (key.startsWith("android.resourcePrefix ")) {
-            val value = getUnquotedValue(key)
-            Mockito.`when`(project.resourcePrefix).thenReturn(value)
-        } else if (key.startsWith("group=")) {
-            val value = getUnquotedValue(key)
-            Mockito.`when`(project.groupId).thenReturn(value)
-        } else if (key.startsWith("android.buildToolsVersion ")) {
-            val value = getUnquotedValue(key)
-            Mockito.`when`(project.buildToolsVersion).thenReturn(value)
-        } else if (line.startsWith("minifyEnabled ") && key.startsWith("android.buildTypes.")) {
-            val name = key.substring("android.buildTypes.".length, key.indexOf(".minifyEnabled"))
-            val buildType = getBuildType(name, true)
-            val value = getUnquotedValue(line)
-            Mockito.`when`(buildType!!.isMinifyEnabled).thenReturn(SdkConstants.VALUE_TRUE == value)
-        } else if (key.startsWith("android.compileSdkVersion ")) {
-            val value = getUnquotedValue(key)
-            Mockito.`when`(project.compileTarget)
-                .thenReturn(if (Character.isDigit(value[0])) "android-$value" else value)
-        } else if (line.startsWith("resConfig")) { // and resConfigs
-            val flavor: IdeProductFlavor?
-            flavor = if (context.startsWith("android.productFlavors.")) {
-                val flavorName = context.substring("android.productFlavors.".length)
-                getProductFlavor(flavorName, true)
-            } else if (context == "android.defaultConfig") {
-                defaultFlavor
-            } else {
-                error("Unexpected flavor $context")
-                return
-            }
-            val configs = flavor!!.resourceConfigurations as MutableCollection<String>
-            for (s in Splitter.on(",").trimResults().split(line.substring(line.indexOf(' ') + 1))) {
-                if (!configs.contains(s)) {
-                    configs.add(getUnquotedValue(s))
-                }
-            }
-        } else if (key.startsWith("android.defaultConfig.vectorDrawables.useSupportLibrary ")) {
-            val value = getUnquotedValue(key)
-            if (SdkConstants.VALUE_TRUE == value) {
-                val options = vectorDrawableOptions
-                Mockito.`when`(options!!.useSupportLibrary).thenReturn(true)
-            }
-        } else if (key.startsWith(
-            "android.compileOptions.sourceCompatibility JavaVersion.VERSION_"
-        )
-        ) {
-            val s = key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
-            Mockito.`when`(compileOptions.sourceCompatibility).thenReturn(s)
-        } else if (key.startsWith(
-            "android.compileOptions.targetCompatibility JavaVersion.VERSION_"
-        )
-        ) {
-            val s = key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
-            Mockito.`when`(compileOptions.targetCompatibility).thenReturn(s)
-        } else if (key.startsWith("buildscript.dependencies.classpath ")) {
-            if (key.contains("'com.android.tools.build:gradle:")) {
-                val value = getUnquotedValue(key)
-                val gc = GradleCoordinate.parseCoordinateString(value)
-                if (gc != null) {
-                    modelVersion = GradleVersion.parse(gc.revision)
-                    Mockito.`when`(project.modelVersion).thenReturn(gc.revision)
-                }
-            } // else ignore other class paths
-        } else if (key.startsWith("android.defaultConfig.testInstrumentationRunner ") ||
-            key.contains(".proguardFiles ") ||
-            key == "dependencies.compile fileTree(dir: 'libs', include: ['*.jar'])" || key.startsWith("dependencies.androidTestCompile('")
-        ) {
-            // Ignored for now
-        } else if (line.startsWith("manifestPlaceholders [") &&
-            key.startsWith("android.") &&
-            line.endsWith("]")
-        ) {
-            // Example:
-            // android.defaultConfig.manifestPlaceholders [
-            // localApplicationId:'com.example.manifest_merger_example']
-            val manifestPlaceholders: MutableMap<String, String>
-            manifestPlaceholders = if (context.startsWith("android.buildTypes.")) {
-                val name = context.substring("android.buildTypes.".length)
-                val buildType = getBuildType(name, false)
-                if (buildType != null) {
-                    buildType.manifestPlaceholders as MutableMap<String, String>
-                } else {
-                    error("Couldn't find flavor $name; ignoring $key")
-                    return
-                }
-            } else if (context.startsWith("android.productFlavors.")) {
-                val name = context.substring("android.productFlavors.".length)
-                val flavor = getProductFlavor(name, false)
-                if (flavor != null) {
-                    flavor.manifestPlaceholders as MutableMap<String, String>
-                } else {
-                    error("Couldn't find flavor $name; ignoring $key")
-                    return
-                }
-            } else {
-                defaultFlavor!!.manifestPlaceholders as MutableMap<String, String>
-            }
-            val mapString = key.substring(key.indexOf('[') + 1, key.indexOf(']')).trim { it <= ' ' }
-
-            // TODO: Support one than one more entry in the map? Comma separated list
-            val index = mapString.indexOf(':')
-            assert(index != -1) { mapString }
-            var mapKey = mapString.substring(0, index).trim { it <= ' ' }
-            mapKey = getUnquotedValue(mapKey)
-            var mapValue = mapString.substring(index + 1).trim { it <= ' ' }
-            mapValue = getUnquotedValue(mapValue)
-            manifestPlaceholders.put(mapKey, mapValue)
-        } else if (key.startsWith("android.flavorDimensions ")) {
-            val value = key.substring("android.flavorDimensions ".length)
-            val flavorDimensions = project.flavorDimensions as MutableCollection<String>
-            for (s in Splitter.on(',').omitEmptyStrings().trimResults().split(value)) {
-                val dimension = getUnquotedValue(s)
-                if (!flavorDimensions.contains(dimension)) {
-                    flavorDimensions.add(dimension)
-                }
-            }
-        } else if (line.startsWith("dimension ") && key.startsWith("android.productFlavors.")) {
-            val name = key.substring("android.productFlavors.".length, key.indexOf(".dimension"))
-            val productFlavor = getProductFlavor(name, true)
-            val dimension = getUnquotedValue(line)
-            Mockito.`when`(productFlavor!!.dimension).thenReturn(dimension)
-        } else if (key.startsWith("android.") && line.startsWith("resValue ")) {
-            // Example:
-            // android.defaultConfig.resValue 'string', 'defaultConfigName', 'Some DefaultConfig
-            // Data'
-            val index = key.indexOf(".resValue ")
-            var name = key.substring("android.".length, index)
-            val resValues: MutableMap<String, IdeClassField>
-            if (name.startsWith("buildTypes.")) {
-                name = name.substring("buildTypes.".length)
-                val buildType = getBuildType(name, false)
-                if (buildType != null) {
-                    resValues = buildType.resValues as MutableMap<String, IdeClassField>
-                } else {
-                    error("Couldn't find flavor $name; ignoring $key")
-                    return
-                }
-            } else if (name.startsWith("productFlavors.")) {
-                name = name.substring("productFlavors.".length)
-                val flavor = getProductFlavor(name, false)
-                if (flavor != null) {
-                    resValues = flavor.resValues as MutableMap<String, IdeClassField>
-                } else {
-                    error("Couldn't find flavor $name; ignoring $key")
-                    return
-                }
-            } else {
-                assert(name.indexOf('.') == -1) { name }
-                resValues = defaultFlavor!!.resValues as MutableMap<String, IdeClassField>
-            }
-            var fieldName: String? = null
-            var value: String? = null
-            var type: String? = null
-            val declaration = key.substring(index + ".resValue ".length)
-            val splitter = Splitter.on(',').trimResults().omitEmptyStrings()
-            var resIndex = 0
-            for (component in splitter.split(declaration)) {
-                val component = getUnquotedValue(component)
-                when (resIndex) {
-                    0 -> type = component
-                    1 -> fieldName = component
-                    2 -> value = component
-                }
-                resIndex++
-            }
-            val field = Mockito.mock(IdeClassField::class.java)
-            Mockito.`when`(field.name).thenReturn(fieldName)
-            Mockito.`when`(field.type).thenReturn(type)
-            Mockito.`when`(field.value).thenReturn(value)
-            resValues.put(fieldName!!, field)
-        } else if (context.startsWith("android.splits.") &&
-            context.indexOf('.', "android.splits.".length) == -1
-        ) {
-            val type = context.substring("android.splits.".length).toUpperCase(Locale.ROOT)
-            if (line == "reset") {
-                splits.removeAll(type)
-            } else if (line.startsWith("include ")) {
-                val value = line.substring("include ".length)
-                for (s in Splitter.on(',').trimResults().omitEmptyStrings().split(value)) {
-                    splits.put(type, getUnquotedValue(s))
-                }
-            } else if (line.startsWith("exclude ")) {
-                warn("Warning: Split exclude not supported for mocked builder model yet")
-            }
-        } else if (key.startsWith("android.aaptOptions.namespaced ")) {
-            val value = getUnquotedValue(key)
-            if (SdkConstants.VALUE_TRUE == value) {
-                val options = getAaptOptions()
-                Mockito.`when`(options!!.namespacing).thenReturn(IdeAaptOptions.Namespacing.REQUIRED)
-            }
-        } else if (key.startsWith("groupId ")) {
-            val groupId = getUnquotedValue(key)
-            Mockito.`when`(project.groupId).thenReturn(groupId)
-        } else if (key.startsWith("android.lintOptions.")) {
-            key = key.substring("android.lintOptions.".length)
-            val argIndex = key.indexOf(' ')
-            if (argIndex == -1) {
-                error("No value supplied for lint option $key")
-                return
-            }
-            val arg = key.substring(argIndex).trim { it <= ' ' }
-            key = key.substring(0, argIndex)
-            when (key) {
-                "quiet" -> flags.isQuiet = toBoolean(arg)
-                "abortOnError" -> flags.isSetExitCode = toBoolean(arg)
-                "checkReleaseBuilds" -> error("Test framework doesn't support lint DSL flag checkReleaseBuilds")
-                "ignoreWarnings" -> flags.isIgnoreWarnings = toBoolean(arg)
-                "absolutePaths" -> flags.isFullPath = toBoolean(arg)
-                "checkAllWarnings" -> flags.isCheckAllWarnings = toBoolean(arg)
-                "warningsAsErrors" -> flags.isWarningsAsErrors = toBoolean(arg)
-                "noLines" -> flags.isShowSourceLines = !toBoolean(arg)
-                "showAll" -> flags.isShowEverything = toBoolean(arg)
-                "explainIssues" -> flags.isExplainIssues = toBoolean("explainIssues")
-                "textReport" -> error("Test framework doesn't support lint DSL flag textReport")
-                "xmlReport" -> error("Test framework doesn't support lint DSL flag xmlReport")
-                "htmlReport" -> error("Test framework doesn't support lint DSL flag htmlReport")
-                "sarifReport" -> error("Test framework doesn't support lint DSL flag sarifReport")
-                "checkTestSources" -> {
-                    val checkTests = toBoolean(arg)
-                    flags.isCheckTestSources = checkTests
-                    updateLintOptions(null, null, null, checkTests, null)
-                }
-                "checkDependencies" -> {
-                    val checkDependencies = toBoolean(arg)
-                    flags.isCheckDependencies = checkDependencies
-                    updateLintOptions(null, null, null, null, checkDependencies)
-                }
-                "checkGeneratedSources" -> flags.isCheckGeneratedSources = toBoolean(arg)
-                "enable" -> {
-                    val ids = parseListDsl(arg)
-                    flags.enabledIds.addAll(ids)
-                    setLintSeverity(ids, Severity.WARNING)
-                }
-                "disable" -> {
-                    val ids = parseListDsl(arg)
-                    flags.suppressedIds.addAll(ids)
-                    setLintSeverity(ids, Severity.IGNORE)
-                }
-                "check" -> flags.exactCheckedIds = parseListDsl(arg)
-                "fatal" -> parseSeverityOverrideDsl(Severity.FATAL, arg)
-                "error" -> parseSeverityOverrideDsl(Severity.ERROR, arg)
-                "warning" -> parseSeverityOverrideDsl(Severity.WARNING, arg)
-                "informational" -> parseSeverityOverrideDsl(Severity.INFORMATIONAL, arg)
-                "ignore" -> parseSeverityOverrideDsl(Severity.IGNORE, arg)
-                "lintConfig" -> {
-                    val file = file(arg, true)
-                    flags.lintConfig = file
-                    updateLintOptions(null, file, null, null, null)
-                }
-                "textOutput" -> error("Test framework doesn't support lint DSL flag textOutput")
-                "xmlOutput" -> error("Test framework doesn't support lint DSL flag xmlOutput")
-                "htmlOutput" -> error("Test framework doesn't support lint DSL flag htmlOutput")
-                "saraifOutput" -> error("Test framework doesn't support lint DSL flag sarifOutput")
-                "baseline" -> {
-                    val file = file(arg, true)
-                    flags.baselineFile = file
-                    updateLintOptions(file, null, null, null, null)
-                }
-            }
-        } else if (key.startsWith("android.buildFeatures.")) {
-            key = key.substring("android.buildFeatures.".length)
-            val argIndex = key.indexOf(' ')
-            if (argIndex == -1) {
-                error("No value supplied for build feature: $key")
-                return
-            }
-            val arg = key.substring(argIndex).trim { it <= ' ' }
-            key = key.substring(0, argIndex)
-            when (key) {
-                "viewBinding" -> {
-                    val viewBindingOptions = Mockito.mock(
-                        IdeViewBindingOptions::class.java
+            key.startsWith(
+                "android.compileOptions.sourceCompatibility JavaVersion.VERSION_"
+            ) -> {
+                updateCompileOptions {
+                    it.copy(
+                        sourceCompatibility =
+                            key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
                     )
-                    Mockito.`when`(viewBindingOptions.enabled).thenReturn(toBoolean(arg))
-                    Mockito.`when`(project.viewBindingOptions).thenReturn(viewBindingOptions)
                 }
             }
-        } else {
-            warn("ignored line: $line, context=$context")
+            key.startsWith(
+                "android.compileOptions.targetCompatibility JavaVersion.VERSION_"
+            ) -> {
+                updateCompileOptions {
+                    it.copy(
+                        targetCompatibility =
+                            key.substring(key.indexOf("VERSION_") + "VERSION_".length).replace('_', '.')
+                    )
+                }
+            }
+            key.startsWith("buildscript.dependencies.classpath ") -> {
+                if (key.contains("'com.android.tools.build:gradle:")) {
+                    val value = getUnquotedValue(key)
+                    val gc = GradleCoordinate.parseCoordinateString(value)
+                    if (gc != null) {
+                        updateModelVersion(gc.revision)
+                    }
+                } // else ignore other class paths
+            }
+            key.startsWith("android.defaultConfig.testInstrumentationRunner ") || key.contains(".proguardFiles ") || key == "dependencies.compile fileTree(dir: 'libs', include: ['*.jar'])" || key.startsWith("dependencies.androidTestCompile('") -> {
+                // Ignored for now
+            }
+            line.startsWith("manifestPlaceholders [") &&
+                key.startsWith("android.") &&
+                line.endsWith("]") -> {
+                fun updateManifestPlaceholders(manifestPlaceholders: MutableMap<String, String>) {
+                    val mapString = key.substring(key.indexOf('[') + 1, key.indexOf(']')).trim { it <= ' ' }
+
+                    // TODO: Support one than one more entry in the map? Comma separated list
+                    val index = mapString.indexOf(':')
+                    assert(index != -1) { mapString }
+                    var mapKey = mapString.substring(0, index).trim { it <= ' ' }
+                    mapKey = getUnquotedValue(mapKey)
+                    var mapValue = mapString.substring(index + 1).trim { it <= ' ' }
+                    mapValue = getUnquotedValue(mapValue)
+                    manifestPlaceholders.put(mapKey, mapValue)
+                }
+
+                // Example:
+                // android.defaultConfig.manifestPlaceholders [
+                // localApplicationId:'com.example.manifest_merger_example']
+
+                if (context.startsWith("android.buildTypes.")) {
+                    updateBuildTypeFromContext(context) {
+                        val manifestPlaceholders = it.manifestPlaceholders.toMutableMap()
+                        updateManifestPlaceholders(manifestPlaceholders)
+                        it.copy(manifestPlaceholders = manifestPlaceholders)
+                    }
+                } else updateFlavorFromContext(context) {
+                    val manifestPlaceholders = it.manifestPlaceholders.toMutableMap()
+                    updateManifestPlaceholders(manifestPlaceholders)
+                    it.copy(manifestPlaceholders = manifestPlaceholders)
+                }
+            }
+            key.startsWith("android.flavorDimensions ") -> {
+                val value = key.substring("android.flavorDimensions ".length)
+                updateProject {
+                    it.copy(
+                        flavorDimensions = it.flavorDimensions.toSet() +
+                            Splitter.on(',').omitEmptyStrings()
+                                .trimResults().split(value)
+                                .map { getUnquotedValue(it) }
+                    )
+                }
+            }
+            line.startsWith("dimension ") && key.startsWith("android.productFlavors.") -> {
+                val name = key.substring("android.productFlavors.".length, key.indexOf(".dimension"))
+                updateProductFlavor(name, true) {
+                    val dimension = getUnquotedValue(line)
+                    it.copy(dimension = dimension)
+                }
+            }
+            key.startsWith("android.") && line.startsWith("resValue ") -> {
+                // Example:
+                // android.defaultConfig.resValue 'string', 'defaultConfigName', 'Some DefaultConfig
+                // Data'
+                val index = key.indexOf(".resValue ")
+                val name = key.substring("android.".length, index)
+
+                fun updateResValues(resValues: MutableMap<String, IdeClassField>) {
+                    var fieldName: String? = null
+                    var value: String? = null
+                    var type: String? = null
+                    val declaration = key.substring(index + ".resValue ".length)
+                    val splitter = Splitter.on(',').trimResults().omitEmptyStrings()
+                    var resIndex = 0
+                    for (component in splitter.split(declaration)) {
+                        val component = getUnquotedValue(component)
+                        when (resIndex) {
+                            0 -> type = component
+                            1 -> fieldName = component
+                            2 -> value = component
+                        }
+                        resIndex++
+                    }
+                    val field = object : IdeClassField {
+                        override val type: String = type!!
+                        override val name: String = fieldName!!
+                        override val value: String = value!!
+                    }
+                    resValues[fieldName!!] = field
+                }
+
+                if (name.startsWith("buildTypes.")) {
+                    updateBuildTypeFromContext(context) {
+                        val resValues = it.resValues.toMutableMap()
+                        updateResValues(resValues)
+                        it.copy(resValues = resValues)
+                    }
+                } else updateFlavorFromContext(context, defaultToDefault = true) {
+                    val resValues = it.resValues.toMutableMap()
+                    updateResValues(resValues)
+                    it.copy(resValues = resValues)
+                }
+            }
+            context.startsWith("android.splits.") &&
+                context.indexOf('.', "android.splits.".length) == -1 -> {
+                val type = context.substring("android.splits.".length).toUpperCase(Locale.ROOT)
+                if (line == "reset") {
+                    splits.removeAll(type)
+                } else if (line.startsWith("include ")) {
+                    val value = line.substring("include ".length)
+                    for (s in Splitter.on(',').trimResults().omitEmptyStrings().split(value)) {
+                        splits.put(type, getUnquotedValue(s))
+                    }
+                } else if (line.startsWith("exclude ")) {
+                    warn("Warning: Split exclude not supported for mocked builder model yet")
+                }
+            }
+            key.startsWith("android.aaptOptions.namespaced ") -> {
+                val value = getUnquotedValue(key)
+                if (SdkConstants.VALUE_TRUE == value) {
+                    updateAaptOptions {
+                        it.copy(namespacing = IdeAaptOptions.Namespacing.REQUIRED)
+                    }
+                }
+            }
+            key.startsWith("groupId ") -> {
+                updateProject { it.copy(groupId = getUnquotedValue(key)) }
+            }
+            key.startsWith("android.lintOptions.") -> {
+                key = key.substring("android.lintOptions.".length)
+                val argIndex = key.indexOf(' ')
+                if (argIndex == -1) {
+                    error("No value supplied for lint option $key")
+                    return
+                }
+                val arg = key.substring(argIndex).trim { it <= ' ' }
+                key = key.substring(0, argIndex)
+                when (key) {
+                    "quiet" -> flags.isQuiet = toBoolean(arg)
+                    "abortOnError" -> flags.isSetExitCode = toBoolean(arg)
+                    "checkReleaseBuilds" -> error("Test framework doesn't support lint DSL flag checkReleaseBuilds")
+                    "ignoreWarnings" -> flags.isIgnoreWarnings = toBoolean(arg)
+                    "absolutePaths" -> flags.isFullPath = toBoolean(arg)
+                    "checkAllWarnings" -> flags.isCheckAllWarnings = toBoolean(arg)
+                    "warningsAsErrors" -> flags.isWarningsAsErrors = toBoolean(arg)
+                    "noLines" -> flags.isShowSourceLines = !toBoolean(arg)
+                    "showAll" -> flags.isShowEverything = toBoolean(arg)
+                    "explainIssues" -> flags.isExplainIssues = toBoolean("explainIssues")
+                    "textReport" -> error("Test framework doesn't support lint DSL flag textReport")
+                    "xmlReport" -> error("Test framework doesn't support lint DSL flag xmlReport")
+                    "htmlReport" -> error("Test framework doesn't support lint DSL flag htmlReport")
+                    "sarifReport" -> error("Test framework doesn't support lint DSL flag sarifReport")
+                    "checkTestSources" -> {
+                        val checkTests = toBoolean(arg)
+                        flags.isCheckTestSources = checkTests
+                        updateLintOptions(null, null, null, checkTests, null)
+                    }
+                    "checkDependencies" -> {
+                        val checkDependencies = toBoolean(arg)
+                        flags.isCheckDependencies = checkDependencies
+                        updateLintOptions(null, null, null, null, checkDependencies)
+                    }
+                    "checkGeneratedSources" -> flags.isCheckGeneratedSources = toBoolean(arg)
+                    "enable" -> {
+                        val ids = parseListDsl(arg)
+                        flags.enabledIds.addAll(ids)
+                        setLintSeverity(ids, Severity.WARNING)
+                    }
+                    "disable" -> {
+                        val ids = parseListDsl(arg)
+                        flags.suppressedIds.addAll(ids)
+                        setLintSeverity(ids, Severity.IGNORE)
+                    }
+                    "check" -> flags.exactCheckedIds = parseListDsl(arg)
+                    "fatal" -> parseSeverityOverrideDsl(Severity.FATAL, arg)
+                    "error" -> parseSeverityOverrideDsl(Severity.ERROR, arg)
+                    "warning" -> parseSeverityOverrideDsl(Severity.WARNING, arg)
+                    "informational" -> parseSeverityOverrideDsl(Severity.INFORMATIONAL, arg)
+                    "ignore" -> parseSeverityOverrideDsl(Severity.IGNORE, arg)
+                    "lintConfig" -> {
+                        val file = file(arg, true)
+                        flags.lintConfig = file
+                        updateLintOptions(null, file, null, null, null)
+                    }
+                    "textOutput" -> error("Test framework doesn't support lint DSL flag textOutput")
+                    "xmlOutput" -> error("Test framework doesn't support lint DSL flag xmlOutput")
+                    "htmlOutput" -> error("Test framework doesn't support lint DSL flag htmlOutput")
+                    "saraifOutput" -> error("Test framework doesn't support lint DSL flag sarifOutput")
+                    "baseline" -> {
+                        val file = file(arg, true)
+                        flags.baselineFile = file
+                        updateLintOptions(file, null, null, null, null)
+                    }
+                }
+            }
+            key.startsWith("android.buildFeatures.") -> {
+                key = key.substring("android.buildFeatures.".length)
+                val argIndex = key.indexOf(' ')
+                if (argIndex == -1) {
+                    error("No value supplied for build feature: $key")
+                    return
+                }
+                val arg = key.substring(argIndex).trim { it <= ' ' }
+                key = key.substring(0, argIndex)
+                when (key) {
+                    "viewBinding" -> updateProject {
+                        it.copy(viewBindingOptions = IdeViewBindingOptionsImpl(enabled = toBoolean(arg)))
+                    }
+                }
+            }
+            else -> {
+                warn("ignored line: $line, context=$context")
+            }
         }
     }
 
@@ -1378,7 +1298,6 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         }
         severityOverrides[id] = severityValue
         updateLintOptions(null, null, severityOverrides, null, null)
-        Mockito.`when`(project.lintOptions).thenReturn(lintOptions)
     }
 
     private fun updateLintOptions(
@@ -1388,38 +1307,20 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         tests: Boolean?,
         dependencies: Boolean?
     ) {
-        // No mocking IdeLintOptions; it's final
-        lintOptions = IdeLintOptionsImpl(
-            baseline ?: lintOptions!!.baselineFile,
-            lintConfig ?: lintOptions!!.lintConfig,
-            severities ?: severityOverrides,
-            tests ?: lintOptions!!.isCheckTestSources,
-            dependencies ?: lintOptions!!.isCheckDependencies, // TODO: Allow these to be customized by model mocker
-            lintOptions!!.enable,
-            lintOptions!!.disable,
-            lintOptions!!.check,
-            lintOptions!!.isAbortOnError,
-            lintOptions!!.isAbsolutePaths,
-            lintOptions!!.isNoLines,
-            lintOptions!!.isQuiet,
-            lintOptions!!.isCheckAllWarnings,
-            lintOptions!!.isIgnoreWarnings,
-            lintOptions!!.isWarningsAsErrors,
-            lintOptions!!.isIgnoreTestSources,
-            lintOptions!!.isCheckGeneratedSources,
-            lintOptions!!.isCheckReleaseBuilds,
-            lintOptions!!.isExplainIssues,
-            lintOptions!!.isShowAll,
-            lintOptions!!.textReport,
-            lintOptions!!.textOutput,
-            lintOptions!!.htmlReport,
-            lintOptions!!.htmlOutput,
-            lintOptions!!.xmlReport,
-            lintOptions!!.xmlOutput,
-            lintOptions!!.sarifReport,
-            lintOptions!!.sarifOutput
-        )
-        Mockito.`when`(project.lintOptions).thenReturn(lintOptions)
+        updateProject {
+            val lintOptions = it.lintOptions as IdeLintOptionsImpl
+            it.copy(
+                // No mocking IdeLintOptions; it's final
+                lintOptions = lintOptions.copy(
+                    baselineFile = baseline ?: lintOptions.baselineFile,
+                    lintConfig = lintConfig ?: lintOptions.lintConfig,
+                    severityOverrides = severities ?: severityOverrides,
+                    isCheckTestSources = tests ?: lintOptions.isCheckTestSources,
+                    isCheckDependencies = dependencies
+                        ?: lintOptions.isCheckDependencies, // TODO: Allow these to be customized by model mocker
+                )
+            )
+        }
     }
 
     private fun parseListDsl(dsl: String): Set<String> {
@@ -1461,57 +1362,134 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         return string
     }
 
-    private fun getFlavorFromContext(context: String): IdeProductFlavor? {
-        return if (context == "android.defaultConfig") {
-            defaultFlavor
-        } else if (context.startsWith("android.productFlavors.")) {
-            val name = context.substring("android.productFlavors.".length)
-            getProductFlavor(name, true)
-        } else {
-            null
-        }
+    private fun updateProject(f: (IdeAndroidProjectImpl) -> IdeAndroidProjectImpl) {
+        project = f(project)
     }
 
-    private val vectorDrawableOptions: IdeVectorDrawablesOptions?
-        get() {
-            if (vectorDrawablesOptions == null) {
-                vectorDrawablesOptions = Mockito.mock(IdeVectorDrawablesOptions::class.java)
-                Mockito.`when`(mergedFlavor!!.vectorDrawables).thenReturn(vectorDrawablesOptions)
+    private fun updateFlavorFromContext(
+        context: String,
+        defaultToDefault: Boolean = false,
+        f: (IdeProductFlavorImpl) -> IdeProductFlavorImpl
+    ) {
+        when {
+            context == "android.defaultConfig" -> {
+                updateDefaultConfig(f)
             }
-            return vectorDrawablesOptions
-        }
-
-    private fun getAaptOptions(): IdeAaptOptions? {
-        if (aaptOptions == null) {
-            aaptOptions = Mockito.mock(IdeAaptOptions::class.java)
-            Mockito.`when`(project.aaptOptions).thenReturn(aaptOptions)
-            Mockito.`when`(aaptOptions!!.namespacing).thenReturn(IdeAaptOptions.Namespacing.DISABLED)
-        }
-        return aaptOptions
-    }
-
-    @Contract("_,true -> !null")
-    private fun getBuildType(name: String, create: Boolean): IdeBuildType? {
-        for (type in buildTypes) {
-            if (type.name == name) {
-                return type
+            context.startsWith("android.productFlavors.") -> {
+                val name = context.substring("android.productFlavors.".length)
+                updateProductFlavor(name, true, f)
+            }
+            else -> {
+                if (defaultToDefault) {
+                    updateDefaultConfig(f)
+                } else {
+                    error("Unexpected flavor context $context")
+                }
             }
         }
-        return if (create) {
-            createBuildType(name)
-        } else null
     }
 
-    private fun createBuildType(name: String): IdeBuildType {
-        val buildType = Mockito.mock(IdeBuildType::class.java)
-        Mockito.`when`(buildType.name).thenReturn(name)
-        Mockito.`when`(buildType.toString()).thenReturn(name)
-        Mockito.`when`(buildType.isDebuggable).thenReturn(name.startsWith("debug"))
-        buildTypes.add(buildType)
-        // Creating mutable map here which we can add to later
-        Mockito.`when`(buildType.resValues).thenReturn(Maps.newHashMap())
-        Mockito.`when`(buildType.manifestPlaceholders).thenReturn(Maps.newHashMap())
-        return buildType
+    private fun updateVectorDrawableOptions(f: (IdeVectorDrawablesOptionsImpl) -> IdeVectorDrawablesOptions) {
+        updateDefaultConfig {
+            it.copy(
+                vectorDrawables =
+                    f(
+                        (it.vectorDrawables as? IdeVectorDrawablesOptionsImpl)
+                            ?: IdeVectorDrawablesOptionsImpl(useSupportLibrary = null)
+                    )
+            )
+        }
+    }
+
+    private fun updateBuildType(name: String, create: Boolean, f: (IdeBuildTypeImpl) -> IdeBuildTypeImpl) {
+        val index = buildTypes.indexOfFirst { it.name == name }
+        if (index >= 0) {
+            updateProject {
+                it.copy(
+                    buildTypes = run {
+                        val list = it.buildTypes.toMutableList()
+                        list[index] = (list[index] as IdeBuildTypeContainerImpl).let { buildType ->
+                            buildType.copy(buildType = f(buildType.buildType as IdeBuildTypeImpl))
+                        }
+                        list
+                    }
+                )
+            }
+        }
+        if (index < 0) {
+            if (create) {
+                updateProject {
+                    it.copy(
+                        buildTypes = it.buildTypes + IdeBuildTypeContainerImpl(
+                            buildType = f(createBuildType(name)),
+                            sourceProvider = createSourceProvider(projectDir, name),
+                            extraSourceProviders = emptyList()
+                        )
+                    )
+                }
+            } else {
+                error("Couldn't find flavor $name")
+            }
+        }
+    }
+
+    private fun updateBuildTypeFromContext(
+        context: String,
+        f: (IdeBuildTypeImpl) -> IdeBuildTypeImpl
+    ) {
+        when {
+            context.startsWith("android.buildTypes.") -> {
+                val name = context.substring("android.buildTypes.".length)
+                updateBuildType(name, true, f)
+            }
+            else -> {
+                error("Unexpected build type context $context")
+            }
+        }
+    }
+
+    private fun createBuildType(name: String): IdeBuildTypeImpl {
+        return IdeBuildTypeImpl(
+            name = name,
+            applicationIdSuffix = null,
+            versionNameSuffix = null,
+            resValues = emptyMap(),
+            proguardFiles = emptyList(),
+            consumerProguardFiles = emptyList(),
+            manifestPlaceholders = emptyMap(),
+            multiDexEnabled = null,
+            isDebuggable = name.startsWith("debug"),
+            isJniDebuggable = false,
+            isRenderscriptDebuggable = false,
+            renderscriptOptimLevel = 0,
+            isMinifyEnabled = false,
+            isZipAlignEnabled = false
+        )
+    }
+
+    private fun updateCompileOptions(f: (IdeJavaCompileOptionsImpl) -> IdeJavaCompileOptionsImpl) {
+        updateProject {
+            it.copy(
+                javaCompileOptions = f(it.javaCompileOptions as IdeJavaCompileOptionsImpl)
+            )
+        }
+    }
+
+    private fun updateAaptOptions(f: (IdeAaptOptionsImpl) -> IdeAaptOptionsImpl) {
+        updateProject {
+            it.copy(
+                aaptOptions = f(it.aaptOptions as IdeAaptOptionsImpl)
+            )
+        }
+    }
+
+    private fun updateModelVersion(modelVersion: String) {
+        updateProject {
+            it.copy(
+                modelVersion = modelVersion,
+                apiVersion = if (GradleVersion.parse(modelVersion).major >= 2) 3 else 2
+            )
+        }
     }
 
     private fun block(
@@ -1519,44 +1497,96 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         @Language("Groovy") blockBody: String,
         context: String
     ) {
-        if ("android.productFlavors" == context && buildTypes.stream()
-            .noneMatch { flavor: IdeBuildType -> flavor.name == name }
+        if ("android.productFlavors" == context && productFlavors
+            .none { flavor: IdeProductFlavor -> flavor.name == name }
         ) {
             // Defining new product flavors
-            createProductFlavor(name)
+            updateProductFlavor(name, true) { it }
         }
-        if ("android.buildTypes" == context && buildTypes.stream()
-            .noneMatch { buildType: IdeBuildType -> buildType.name == name }
+        if ("android.buildTypes" == context && buildTypes
+            .none { buildType: IdeBuildType -> buildType.name == name }
         ) {
             // Defining new build types
-            createBuildType(name)
+            updateBuildType(name, true) { it }
         }
         scan(blockBody, if (context.isEmpty()) name else "$context.$name")
     }
 
-    @Contract("_,true -> !null")
-    private fun getProductFlavor(name: String, create: Boolean): IdeProductFlavor? {
-        for (flavor in productFlavors) {
-            if (flavor!!.name == name) {
-                return flavor
+    private fun updateProductFlavor(name: String, create: Boolean, f: (IdeProductFlavorImpl) -> IdeProductFlavorImpl) {
+        val index = productFlavors.indexOfFirst { it.name == name }
+        if (index >= 0) {
+            updateProject {
+                it.copy(
+                    productFlavors = run {
+                        val list = it.productFlavors.toMutableList()
+                        list[index] = (list[index] as IdeProductFlavorContainerImpl).let { productFlavor ->
+                            productFlavor.copy(productFlavor = f(productFlavor.productFlavor as IdeProductFlavorImpl))
+                        }
+                        list
+                    }
+                )
             }
         }
-        return if (create) {
-            createProductFlavor(name)
-        } else null
+        if (index < 0 && create) {
+            updateProject {
+                it.copy(
+                    productFlavors = it.productFlavors + IdeProductFlavorContainerImpl(
+                        productFlavor = f(createProductFlavor(name)),
+                        sourceProvider = createSourceProvider(projectDir, name),
+                        extraSourceProviders = listOf(
+                            IdeSourceProviderContainerImpl(
+                                ARTIFACT_NAME_ANDROID_TEST,
+                                createSourceProvider(projectDir, "androidTest".appendCapitalized(name))
+                            ),
+                            IdeSourceProviderContainerImpl(
+                                ARTIFACT_NAME_UNIT_TEST,
+                                createSourceProvider(projectDir, "test".appendCapitalized(name))
+                            ),
+                        )
+                    )
+                )
+            }
+        }
     }
 
-    private fun createProductFlavor(name: String): IdeProductFlavor {
-        val flavor = Mockito.mock(IdeProductFlavor::class.java)
-        Mockito.`when`(flavor.name).thenReturn(name)
-        Mockito.`when`(flavor.toString()).thenReturn(name)
-        // Creating mutable map here which we can add to later
-        Mockito.`when`(flavor.resValues).thenReturn(Maps.newHashMap())
-        Mockito.`when`(flavor.manifestPlaceholders).thenReturn(Maps.newHashMap())
-        // Creating mutable list here which we can add to later
-        Mockito.`when`(flavor.resourceConfigurations).thenReturn(mutableListOf())
-        productFlavors.add(flavor)
-        return flavor
+    private fun updateDefaultConfig(f: (IdeProductFlavorImpl) -> IdeProductFlavorImpl) {
+        updateProject {
+            val flavorContainerImpl = it.defaultConfig as IdeProductFlavorContainerImpl
+            it.copy(
+                defaultConfig = flavorContainerImpl.copy(
+                    productFlavor = f(flavorContainerImpl.productFlavor as IdeProductFlavorImpl)
+                )
+            )
+        }
+    }
+
+    private val defaultConfig get() = project.defaultConfig.productFlavor as IdeProductFlavorImpl
+
+    private fun createProductFlavor(name: String): IdeProductFlavorImpl {
+        return IdeProductFlavorImpl(
+            name = name,
+            applicationIdSuffix = null,
+            versionNameSuffix = null,
+            resValues = emptyMap(),
+            proguardFiles = emptyList(),
+            consumerProguardFiles = emptyList(),
+            manifestPlaceholders = emptyMap(),
+            multiDexEnabled = null,
+            dimension = null,
+            applicationId = null,
+            versionCode = null,
+            versionName = null,
+            minSdkVersion = null,
+            targetSdkVersion = null,
+            maxSdkVersion = null,
+            testApplicationId = null,
+            testInstrumentationRunner = null,
+            testInstrumentationRunnerArguments = emptyMap(),
+            testHandleProfiling = null,
+            testFunctionalTest = null,
+            resourceConfigurations = emptySet(),
+            vectorDrawables = null
+        )
     }
 
     private fun createApiVersion(value: String): IdeApiVersion {
@@ -1717,18 +1747,18 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             jar = File(
                 projectDir,
                 "caches/modules-2/files-2.1/" +
-                        coordinate.groupId +
-                        "/" +
-                        coordinate.artifactId +
-                        "/" +
-                        coordinate.revision +
-                        // Usually some hex string here, but keep same to keep test
-                        // behavior stable
-                        "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/" +
-                        coordinate.artifactId +
-                        "-" +
-                        coordinate.revision +
-                        SdkConstants.DOT_JAR
+                    coordinate.groupId +
+                    "/" +
+                    coordinate.artifactId +
+                    "/" +
+                    coordinate.revision +
+                    // Usually some hex string here, but keep same to keep test
+                    // behavior stable
+                    "9c6ef172e8de35fd8d4d8783e4821e57cdef7445/" +
+                    coordinate.artifactId +
+                    "-" +
+                    coordinate.revision +
+                    SdkConstants.DOT_JAR
             )
             if (!jar.exists()) {
                 createEmptyJar(jar)
@@ -1782,25 +1812,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     }
 
     fun setVariantName(variantName: String) {
-        ensureInitialized()
-
-        // For something like debugFreeSubscription, set the variant's build type
-        // to "debug", and the flavor set to ["free", "subscription"]
-        Mockito.`when`(variant!!.name).thenReturn(variantName)
-        val splitter = Splitter.on('_')
-        val flavors: MutableList<String> = mutableListOf()
-        for (s in splitter.split(SdkVersionInfo.camelCaseToUnderlines(variantName))) {
-            val buildType = getBuildType(s, false)
-            if (buildType != null) {
-                Mockito.`when`(variant!!.buildType).thenReturn(s)
-            } else {
-                val flavor = getProductFlavor(s, false)
-                if (flavor != null) {
-                    flavors.add(s)
-                }
-            }
-        }
-        Mockito.`when`(variant!!.productFlavors).thenReturn(flavors)
+        defaultVariantName = variantName
     }
 
     /**
@@ -1809,7 +1821,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
      *
      * <pre>
      * $ ./gradlew :app:dependencies
-    </pre> *
+     </pre> *
      *
      *
      * Sample graph:
@@ -1831,7 +1843,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
      * |    \--- org.hamcrest:hamcrest-library:1.3 (*)
      * +--- com.google.code.findbugs:jsr305:2.0.1
      * \--- javax.annotation:javax.annotation-api:1.2
-    </pre> *
+     </pre> *
      *
      * @param graph the graph
      * @return the corresponding dependencies
@@ -1843,7 +1855,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
     }
 
     @JvmOverloads
-    fun parseDependencyGraph(graph: String, map: MutableMap<String, Dep> = Maps.newHashMap()): List<Dep> {
+    private fun parseDependencyGraph(graph: String, map: MutableMap<String, Dep> = Maps.newHashMap()): List<Dep> {
         val lines = graph.split("\n").filter { it.isNotBlank() }.toTypedArray()
         // TODO: Check that it's using the expected graph format - e.g. indented to levels
         // that are multiples of 5
@@ -2015,6 +2027,7 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
          * Extension to [AndroidProjectTypes] for non-Android project types, consumed in [ ]
          */
         const val PROJECT_TYPE_JAVA_LIBRARY = 999
+        const val PROJECT_TYPE_JAVA = 998
         private val configurationPattern = Pattern.compile(
             "^dependencies\\.(|test|androidTest)([Cc]ompile|[Ii]mplementation)[ (].*"
         )
@@ -2069,13 +2082,13 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
         ): IdeAndroidArtifactOutput {
             return IdeAndroidArtifactOutputImpl(
                 filters =
-                if (filterType.isEmpty()) emptyList()
-                else listOf(
-                    object : FilterData {
-                        override fun getIdentifier() = identifier
-                        override fun getFilterType() = filterType
-                    }
-                ),
+                    if (filterType.isEmpty()) emptyList()
+                    else listOf(
+                        object : FilterData {
+                            override fun getIdentifier() = identifier
+                            override fun getFilterType() = filterType
+                        }
+                    ),
                 versionCode = 0,
                 outputFile = File("")
             )
@@ -2121,17 +2134,17 @@ class GradleModelMocker(@field:Language("Groovy") @param:Language("Groovy") priv
             ) {
                 // Jar prior to to v20
                 return (
-                        declaration.contains(":13") ||
-                                declaration.contains(":18") ||
-                                declaration.contains(":19")
-                        )
+                    declaration.contains(":13") ||
+                        declaration.contains(":18") ||
+                        declaration.contains(":19")
+                    )
             } else if (declaration.startsWith("com.google.guava:guava:")) {
                 return true
             } else if (declaration.startsWith("com.google.android.wearable:wearable:")) {
                 return true
             } else if (declaration.startsWith(
-                    "com.android.support.constraint:constraint-layout-solver:"
-                )
+                "com.android.support.constraint:constraint-layout-solver:"
+            )
             ) {
                 return true
             } else if (declaration.startsWith("junit:junit:")) {
@@ -2284,4 +2297,3 @@ private val wellKnownLibraries = listOf(
 |         \--- org.jetbrains.kotlin:kotlin-stdlib:VERSION (*)"""
     ),
 )
-

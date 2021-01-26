@@ -880,6 +880,7 @@ class LintModelFactory : LintModelModuleLoader {
                 AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE -> LintModelModuleType.DYNAMIC_FEATURE
                 // 999: Special value defined in GradleModelMocker#PROJECT_TYPE_JAVA_LIBRARY
                 999 -> LintModelModuleType.JAVA_LIBRARY
+                998 -> LintModelModuleType.JAVA_LIBRARY
                 else -> throw IllegalArgumentException("The value $typeId is not a valid project type ID")
             }
         }

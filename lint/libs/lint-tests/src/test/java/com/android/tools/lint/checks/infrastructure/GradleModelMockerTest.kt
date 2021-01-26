@@ -204,38 +204,26 @@ android {
         val module = mocker.getLintModule()
         Truth.assertThat(module.type).isEqualTo(LintModelModuleType.APP)
 
-
         Truth.assertThat(module.variants.map { it.name })
             .containsExactly(
-// TODO:
-//                "freeBetaDebug", "paidBetaDebug", "freeNormalDebug", "paidNormalDebug",
-//                "freeBetaRelease", "paidBetaRelease", "freeNormalRelease", "paidNormalRelease"
-                "freeBetaDebug",
-                "betaDebug",
-                "normalDebug",
-                "freeDebug",
-                "paidDebug",
-                "betaRelease",
-                "normalRelease",
-                "freeRelease",
-                "paidRelease"
+                "freeBetaDebug", "paidBetaDebug", "freeNormalDebug", "paidNormalDebug",
+                "freeBetaRelease", "paidBetaRelease", "freeNormalRelease", "paidNormalRelease"
             )
 
         Truth.assertThat(module.findVariant("freeBetaDebug")!!.debuggable).isTrue()
-        // TODO: Truth.assertThat(module.findVariant("freeBetaRelease")!!.debuggable).isFalse()
-        Truth.assertThat(module.findVariant("freeRelease")!!.debuggable).isFalse()
+        Truth.assertThat(module.findVariant("freeBetaRelease")!!.debuggable).isFalse()
 
         // ResConfigs
+        Truth.assertThat(module.findVariant("freeNormalDebug")!!.resourceConfigurations).containsExactly("mdpi")
+        Truth.assertThat(module.findVariant("paidNormalRelease")!!.resourceConfigurations).containsExactly("mdpi")
         Truth.assertThat(module.findVariant("freeBetaDebug")!!.resourceConfigurations)
             .containsExactly("mdpi", "en", "nodpi", "hdpi")
-        // TODO: Truth.assertThat(module.findVariant("freeNormalDebug")!!.resourceConfigurations).containsExactly("mdpi", "en")
-        // TODO: Truth.assertThat(module.findVariant("paidNormalRelease")!!.resourceConfigurations).containsExactly("mdpi")
-        Truth.assertThat(module.findVariant("freeDebug")!!.resourceConfigurations).containsExactly()
-        Truth.assertThat(module.findVariant("paidRelease")!!.resourceConfigurations).containsExactly()
+        Truth.assertThat(module.findVariant("paidBetaRelease")!!.resourceConfigurations)
+            .containsExactly("mdpi", "en", "nodpi", "hdpi")
 
         // Suffix handling
         Truth.assertThat(module.findVariant("freeBetaDebug")!!.mainArtifact.applicationId).isEqualTo("test.pkg")
-        Truth.assertThat(module.findVariant("freeBetaDebug")!!.`package`).isNull()
+        Truth.assertThat(module.findVariant("paidBetaRelease")!!.`package`).isNull()
     }
 
     @Test
@@ -282,8 +270,8 @@ dependencies {
 
         Truth.assertThat(module.type).isEqualTo(LintModelModuleType.LIBRARY)
 
-        val libraries = variant.mainArtifact.dependencies.compileDependencies.roots.map {it.artifactAddress}.toSet() -
-                        variant.mainArtifact.dependencies.packageDependencies.roots.map {it.artifactAddress}.toSet()
+        val libraries = variant.mainArtifact.dependencies.compileDependencies.roots.map { it.artifactAddress }.toSet() -
+            variant.mainArtifact.dependencies.packageDependencies.roots.map { it.artifactAddress }.toSet()
 
         Truth.assertThat(libraries)
             .containsExactly("com.google.android.wearable:wearable:2.0.0-alpha4")
@@ -383,19 +371,29 @@ dependencies {
 
         val module = mocker.getLintModule()
 
-        fun LintModelVariant.testValue() = this.resValues.values.joinToString("\n") {"${it.name}/${it.type}/${it.value}"}
+        fun LintModelVariant.testValue() = this.resValues.values.joinToString("\n") { "${it.name}/${it.type}/${it.value}" }
 
         Truth.assertThat(module.findVariant("flavor1Debug")!!.testValue())
-            .isEqualTo("""
-VALUE_DEBUG/string/20
-debugName/string/Some Debug Data
-VALUE_FLAVOR/string/20
-defaultConfigName/string/Some DefaultConfig Data
-VALUE_VARIANT/string/20""".trim())
+            .isEqualTo(
+                """
+    defaultConfigName/string/Some DefaultConfig Data
+    VALUE_DEBUG/string/10
+    VALUE_FLAVOR/string/10
+    VALUE_VARIANT/string/10
+    debugName/string/Some Debug Data
+                """.trimIndent()
+            )
         Truth.assertThat(module.findVariant("flavor2Release")!!.testValue())
-            .isEqualTo("""
-releaseName2/string/Some Release Data 2
-releaseName1/string/Some Release Data 1""".trim())
+            .isEqualTo(
+                """
+    defaultConfigName/string/Some DefaultConfig Data
+    VALUE_DEBUG/string/20
+    VALUE_FLAVOR/string/20
+    VALUE_VARIANT/string/20
+    releaseName1/string/Some Release Data 1
+    releaseName2/string/Some Release Data 2
+                """.trimIndent()
+            )
     }
 
     @Test
@@ -457,16 +455,30 @@ releaseName1/string/Some Release Data 1""".trim())
         )
         val module = mocker.getLintModule()
 
-        fun LintModelVariant.testValue() = this.manifestPlaceholders.entries.joinToString("\n") {"${it.key}/${it.value}"}
+        fun LintModelVariant.testValue() = this.manifestPlaceholders.entries.joinToString("\n") { "${it.key}/${it.value}" }
 
         Truth.assertThat(module.findVariant("flavorDebug")!!.testValue())
-            .isEqualTo("""
-localApplicationId/com.example.manifest_merger_example.flavor
-holder/beta""".trim())
-        Truth.assertThat(module.findVariant("freeRelease")!!.testValue())
-            .isEqualTo("""
-""".trim())
+            .isEqualTo(
+                """
+    localApplicationId/com.example.manifest_merger_example.flavor
+                """.trimIndent()
+            )
 
+        Truth.assertThat(module.findVariant("freeRelease")!!.testValue())
+            .isEqualTo(
+                """
+    localApplicationId/com.example.manifest_merger_example
+    holder/free
+                """.trimIndent()
+            )
+
+        Truth.assertThat(module.findVariant("betaDebug")!!.testValue())
+            .isEqualTo(
+                """
+    localApplicationId/com.example.manifest_merger_example
+    holder/beta
+                """.trimIndent()
+            )
     }
 
     @Test
@@ -480,10 +492,9 @@ holder/beta""".trim())
     }
 }"""
         )
-        mocker.setVariantName("Release")
         val module = mocker.getLintModule()
-        Truth.assertThat(module.findVariant("Release")!!.shrinkable).isTrue()
-// TODO:        Truth.assertThat(module.findVariant("Debug")!!.shrinkable).isFalse()
+        Truth.assertThat(module.findVariant("release")!!.shrinkable).isTrue()
+        Truth.assertThat(module.findVariant("debug")!!.shrinkable).isFalse()
     }
 
     @Test(expected = AssertionError::class)
@@ -513,7 +524,8 @@ holder/beta""".trim())
 
                     override fun info(msgFormat: String, vararg args: Any) {}
                     override fun verbose(
-                        msgFormat: String, vararg args: Any
+                        msgFormat: String,
+                        vararg args: Any
                     ) {
                     }
                 })
@@ -547,18 +559,12 @@ holder/beta""".trim())
 }"""
         )
         mocker.setVariantName("flavorDebug")
-        val module = mocker.getLintModule()
         val variant = mocker.getLintVariant()!!
 
         Truth.assertThat(variant.mainArtifact.applicationId)
-            .isEqualTo("com.example.manifest_merger_example")
-// TODO:
-//        Truth.assertThat(variant.mainArtifact.applicationId)
-//            .isEqualTo("com.example.manifest_merger_example.flavor")
-        Truth.assertThat(variant.minSdkVersion!!.apiLevel).isEqualTo(15)
-//TODO:        Truth.assertThat(variant.minSdkVersion!!.apiLevel).isEqualTo(16)
-        Truth.assertThat(variant.targetSdkVersion!!.apiLevel).isEqualTo(21)
-//TODO:        Truth.assertThat(variant.targetSdkVersion!!.apiLevel).isEqualTo(22)
+            .isEqualTo("com.example.manifest_merger_example.flavor")
+        Truth.assertThat(variant.minSdkVersion!!.apiLevel).isEqualTo(16)
+        Truth.assertThat(variant.targetSdkVersion!!.apiLevel).isEqualTo(22)
 //        Truth.assertThat(flavor.versionCode).isEqualTo(2)
 //        Truth.assertThat(flavor.versionName).isEqualTo("2.0")
     }
@@ -766,7 +772,7 @@ dependencies {
 //    compile 'org.powermock:powermock-module-junit4-rule:1.6.4'
 //    compile 'org.powermock:powermock-module-junit4:1.6.4'
 //    compile 'org.json:json:20090211'}
-//"""
+// """
 //        )
 //            .withDependencyGraph(
 //                """
@@ -824,8 +830,8 @@ dependencies {
 //    dependencies {
 //        classpath 'com.android.tools.build:gradle:2.5.0-alpha1'
 //    }
-//}
-//dependencies {
+// }
+// dependencies {
 //    compile 'junit:junit:4.12'
 //    compile 'org.hamcrest:hamcrest-core:1.3'
 //    compile 'org.mockito:mockito-core:1.10.8'
@@ -834,7 +840,7 @@ dependencies {
 //    compile 'org.powermock:powermock-module-junit4-rule:1.6.4'
 //    compile 'org.powermock:powermock-module-junit4:1.6.4'
 //    compile 'org.json:json:20090211'}
-//"""
+// """
 //        )
 //            .withDependencyGraph(
 //                """
@@ -953,8 +959,6 @@ dependencies {
         )
 
         val module = mocker.getLintModule()
-        var variant = mocker.getLintVariant()!!
-
 
         Truth.assertThat(module.javaSourceLevel).isEqualTo("1.8")
         // TODO: Truth.assertThat(module.compileTarget).isEqualTo("1.8")
@@ -971,8 +975,6 @@ dependencies {
 }"""
         )
         val module = mocker.getLintModule()
-        var variant = mocker.getLintVariant()!!
-
 
         Truth.assertThat(module.javaSourceLevel).isEqualTo("1.7")
         // TODO: Truth.assertThat(module.compileTarget).isEqualTo("1.8")
@@ -980,10 +982,11 @@ dependencies {
 
     companion object {
         fun createMocker(
-            @Language("Groovy") gradle: String?, tempFolder: TemporaryFolder
+            @Language("Groovy") gradle: String?,
+            tempFolder: TemporaryFolder
         ): GradleModelMocker {
             return try {
-                GradleModelMocker(gradle!!)
+                GradleModelMocker(gradle!!, tempFolder.newFolder("build"))
                     .withLogger(
                         object : ILogger {
                             override fun error(
@@ -1001,7 +1004,6 @@ dependencies {
                             override fun info(msgFormat: String, vararg args: Any) {}
                             override fun verbose(msgFormat: String, vararg args: Any) {}
                         })
-                    .withProjectDir(tempFolder.newFolder("build"))
             } catch (e: IOException) {
                 Assert.fail(e.message)
                 error("")

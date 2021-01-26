@@ -84,7 +84,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.model.LintModelExternalLibrary;
-import com.android.tools.lint.model.LintModelFactory;
 import com.android.tools.lint.model.LintModelLibrary;
 import com.android.tools.lint.model.LintModelLintOptions;
 import com.android.tools.lint.model.LintModelMavenName;

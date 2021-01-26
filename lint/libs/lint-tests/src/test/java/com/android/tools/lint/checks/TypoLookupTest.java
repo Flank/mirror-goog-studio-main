@@ -23,7 +23,6 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-import com.google.common.io.Files;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -323,14 +322,21 @@ public class TypoLookupTest extends AbstractCheckTest {
                 continue;
             }
 
-            assertTrue(msg(filename, i, "Line should contain '->': %1$s", line), line.contains(SEPARATOR));
+            assertTrue(
+                    msg(filename, i, "Line should contain '->': %1$s", line),
+                    line.contains(SEPARATOR));
             int index = line.indexOf(SEPARATOR);
             String typo = line.substring(0, index).trim();
             String replacements = line.substring(index + SEPARATOR.length()).trim();
 
             if (typo.contains("*") && !typo.endsWith("*")) {
                 fixDictionary(filename);
-                fail(msg(filename, i, "Globbing (*) not supported anywhere but at the tail: %1$s", line));
+                fail(
+                        msg(
+                                filename,
+                                i,
+                                "Globbing (*) not supported anywhere but at the tail: %1$s",
+                                line));
             } else if (typo.contains("*") && !replacements.contains("*")) {
                 fail(msg(filename, i, "No glob found in the replacements for %1$s", line));
             }
@@ -357,7 +363,8 @@ public class TypoLookupTest extends AbstractCheckTest {
 
             assertTrue(msg(filename, i, "Typo entry was empty: %1$s", line), !typo.isEmpty());
             assertTrue(
-                    msg(filename, i, "Typo replacements was empty: %1$s", line), !replacements.isEmpty());
+                    msg(filename, i, "Typo replacements was empty: %1$s", line),
+                    !replacements.isEmpty());
 
             for (String remove : sRemove) {
                 if (replacements.contains(remove)) {
@@ -399,7 +406,11 @@ public class TypoLookupTest extends AbstractCheckTest {
                 for (Pattern pattern : patterns) {
                     if (pattern.matcher(typo).matches()) {
                         fixDictionary(filename);
-                        fail(msg(filename, i, "The typo " + typo + " matches an earlier glob: ignoring"));
+                        fail(
+                                msg(
+                                        filename,
+                                        i,
+                                        "The typo " + typo + " matches an earlier glob: ignoring"));
                         continue;
                     }
                 }
@@ -424,9 +435,10 @@ public class TypoLookupTest extends AbstractCheckTest {
     @NonNull
     private static List<String> readFile(String filename) {
         InputStream typoStream = TypoLookup.class.getResourceAsStream(filename);
-        List<String> lines = new BufferedReader(new InputStreamReader(typoStream))
-                .lines()
-                .collect(Collectors.toList());
+        List<String> lines =
+                new BufferedReader(new InputStreamReader(typoStream))
+                        .lines()
+                        .collect(Collectors.toList());
         return lines;
     }
 
@@ -564,12 +576,7 @@ public class TypoLookupTest extends AbstractCheckTest {
     }
 
     private static String msg(String file, int line, String message, Object... args) {
-        return file
-                + ':'
-                + Integer.toString(line + 1)
-                + ':'
-                + ' '
-                + String.format(message, args);
+        return file + ':' + Integer.toString(line + 1) + ':' + ' ' + String.format(message, args);
     }
 
     @Override
