@@ -774,13 +774,24 @@ public interface IDevice extends IShellEnabledDevice {
     void removeRemotePackage(String remoteFilePath) throws InstallException;
 
     /**
-     * Uninstalls an package from the device.
+     * Uninstalls a package from the device.
      *
-     * @param packageName the Android application package name to uninstall
+     * @param packageName the Android application ID to uninstall
      * @return a {@link String} with an error code, or <code>null</code> if success.
      * @throws InstallException if the uninstallation fails.
      */
     String uninstallPackage(String packageName) throws InstallException;
+
+    /**
+     * Uninstalls an app from the device.
+     *
+     * @param applicationID the Android application ID to uninstall
+     * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
+     * @return a {@link String} with an error code, or <code>null</code> if success.
+     * @throws InstallException if the uninstallation fails.
+     */
+    String uninstallApp(String applicationID, String... extraArgs) throws InstallException;
 
     /**
      * Reboot the device.

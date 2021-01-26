@@ -1287,13 +1287,24 @@ public final class DeviceImpl implements IDevice {
 
     @Override
     public String uninstallPackage(String packageName) throws InstallException {
+        return uninstallApp(packageName, new String[] {});
+    }
+
+    @Override
+    public String uninstallApp(String applicationID, String... extraArgs) throws InstallException {
         try {
+            StringBuilder command = new StringBuilder("pm uninstall");
+
+            if (extraArgs != null) {
+                command.append(" ");
+                Joiner.on(' ').appendTo(command, extraArgs);
+            }
+
+            command.append(" ").append(applicationID);
+
             InstallReceiver receiver = new InstallReceiver();
             executeShellCommand(
-                    "pm uninstall " + packageName,
-                    receiver,
-                    INSTALL_TIMEOUT_MINUTES,
-                    TimeUnit.MINUTES);
+                    command.toString(), receiver, INSTALL_TIMEOUT_MINUTES, TimeUnit.MINUTES);
             return receiver.getErrorMessage();
         } catch (TimeoutException
                 | AdbCommandRejectedException
