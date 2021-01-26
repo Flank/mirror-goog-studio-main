@@ -90,7 +90,7 @@ public class UnmarshalTest extends TestCase {
         List<Archive> archives = ((RemotePackageImpl) platform22).getAllArchives();
         assertEquals(2, archives.size());
         Archive archive = archives.get(1);
-        assertEquals(64, archive.getHostBits().intValue());
+        assertEquals("x64", archive.getHostArch());
         assertEquals("windows", archive.getHostOs());
         Archive.PatchType patch = archive.getAllPatches().get(0);
         assertEquals(new Revision(1), patch.getBasedOn().toRevision());

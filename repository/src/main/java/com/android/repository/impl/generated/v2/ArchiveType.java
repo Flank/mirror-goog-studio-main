@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;all&gt;
  *         &lt;element name="host-os" type="{http://schemas.android.com/repository/android/common/02}osType" minOccurs="0"/&gt;
- *         &lt;element name="host-bits" type="{http://schemas.android.com/repository/android/common/02}bitSizeType" minOccurs="0"/&gt;
+ *         &lt;element name="host-arch" type="{http://schemas.android.com/repository/android/common/02}hostArchType" minOccurs="0"/&gt;
  *         &lt;element name="jvm-bits" type="{http://schemas.android.com/repository/android/common/02}bitSizeType" minOccurs="0"/&gt;
  *         &lt;element name="min-jvm-version" type="{http://schemas.android.com/repository/android/common/02}revisionType" minOccurs="0"/&gt;
  *         &lt;element name="complete" type="{http://schemas.android.com/repository/android/common/02}completeType"/&gt;
@@ -48,8 +48,9 @@ public class ArchiveType extends Archive {
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String hostOs;
 
-    @XmlElement(name = "host-bits")
-    protected Integer hostBits;
+    @XmlElement(name = "host-arch")
+    @XmlJavaTypeAdapter(TrimStringAdapter.class)
+    protected String hostArch;
 
     @XmlElement(name = "jvm-bits")
     protected Integer jvmBits;
@@ -81,21 +82,21 @@ public class ArchiveType extends Archive {
     }
 
     /**
-     * Gets the value of the hostBits property.
+     * Gets the value of the hostArch property.
      *
-     * @return possible object is {@link Integer }
+     * @return possible object is {@link String }
      */
-    public Integer getHostBits() {
-        return hostBits;
+    public String getHostArch() {
+        return hostArch;
     }
 
     /**
-     * Sets the value of the hostBits property.
+     * Sets the value of the hostArch property.
      *
-     * @param value allowed object is {@link Integer }
+     * @param value allowed object is {@link String }
      */
-    public void setHostBits(Integer value) {
-        this.hostBits = value;
+    public void setHostArch(String value) {
+        this.hostArch = value;
     }
 
     /**
@@ -175,8 +176,8 @@ public class ArchiveType extends Archive {
         return ((value == null) || (value.matches("^linux|macosx|windows$")));
     }
 
-    public boolean isValidHostBits(String value) {
-        return ((value == null) || (value.matches("^32|64$")));
+    public boolean isValidHostArch(String value) {
+        return ((value == null) || (value.matches("^x86|x64|aarch64$")));
     }
 
     public boolean isValidJvmBits(String value) {

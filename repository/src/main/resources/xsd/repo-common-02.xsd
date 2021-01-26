@@ -234,7 +234,7 @@
         </xsd:annotation>
         <xsd:all>
             <xsd:element name="host-os" type="repo:osType" minOccurs="0"/>
-            <xsd:element name="host-bits" type="repo:bitSizeType" minOccurs="0"/>
+            <xsd:element name="host-arch" type="repo:hostArchType" minOccurs="0"/>
             <xsd:element name="jvm-bits" type="repo:bitSizeType" minOccurs="0"/>
             <xsd:element name="min-jvm-version" type="repo:revisionType" minOccurs="0"/>
             <xsd:element name="complete" type="repo:completeType" minOccurs="1" maxOccurs="1"/>
@@ -344,6 +344,14 @@
         </xsd:all>
     </xsd:complexType>
 
+    <xsd:simpleType name="hostArchType">
+        <xsd:annotation>
+            <xsd:documentation>A host CPU architecture filter.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="x86|x64|aarch64"/>
+        </xsd:restriction>
+    </xsd:simpleType>
 
     <xsd:simpleType name="bitSizeType">
         <xsd:annotation>

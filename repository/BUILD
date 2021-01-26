@@ -32,6 +32,8 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:mockito[test]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/analytics-library/shared:analytics-shared[module]",
+        "//tools/adt/idea/.idea/libraries:studio-analytics-proto",
     ],
 )
 
