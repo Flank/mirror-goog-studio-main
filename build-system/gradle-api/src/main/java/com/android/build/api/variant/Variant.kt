@@ -109,4 +109,12 @@ interface Variant : Component {
      * Variant's [UnitTest], or null if the unit tests for this variant are disabled.
      */
     val unitTest: UnitTest?
+
+    /**
+     * Returns an extension object registered via the [VariantBuilder.registerExtension] API or
+     * null if none were registered under the passed [type].
+     *
+     * @return the registered object or null.
+     */
+    fun <T> getExtension(type: Class<T>): T?
 }

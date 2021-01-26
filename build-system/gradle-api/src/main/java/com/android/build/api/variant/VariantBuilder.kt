@@ -55,4 +55,19 @@ interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
      * by default.
      */
     var unitTestEnabled: Boolean
+
+    /**
+     * Registers an extension object to the variant object. Extension objects can be looked up
+     * during the [com.android.build.api.extension.AndroidComponentsExtension.onVariants] callbacks
+     * by using the [Variant.getExtension] API.
+     *
+     * This is very useful for third party plugins that want to attach some variant specific
+     * configuration object to the Android Gradle Plugin variant object and make it available to
+     * other plugins.
+     *
+     * @param type the registered object type (can be a supertype), this is the type that must be
+     * passed to the [Variant.getExtension] API.
+     * @param instance the object to associate to the AGP Variant object.
+     */
+    fun <T: Any> registerExtension(type: Class<T>, instance: T)
 }
