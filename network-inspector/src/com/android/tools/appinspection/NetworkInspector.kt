@@ -19,6 +19,7 @@ package com.android.tools.appinspection
 import androidx.inspection.Connection
 import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
+import studio.network.inspection.NetworkInspectorProtocol
 
 class NetworkInspector(
     connection: Connection,
@@ -26,6 +27,17 @@ class NetworkInspector(
 ) : Inspector(connection) {
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
-        callback.reply(data)
+        val command = NetworkInspectorProtocol.Command.parseFrom(data)
+        callback.reply(
+            NetworkInspectorProtocol.Response.newBuilder()
+                .setTestResponse(
+                    NetworkInspectorProtocol.TestResponse.newBuilder()
+                        .setCmdId(command.testCommand.cmdId)
+                        .setResponse("Received: ${command.testCommand.message}")
+                        .build()
+                )
+                .build()
+                .toByteArray()
+        )
     }
 }

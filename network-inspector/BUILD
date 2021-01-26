@@ -1,19 +1,38 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
+load("//tools/base/bazel:proto.bzl", "android_java_proto_library")
+
+android_java_proto_library(
+    name = "network_inspector_java_proto",
+    srcs = ["resources/proto/network-inspector.proto"],
+    grpc_support = 1,
+    java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
+    protoc_grpc_version = "1.21.1",
+    visibility = ["//visibility:public"],
+)
 
 kotlin_library(
     name = "network-inspector-sources_undexed",
     srcs = glob(["src/**/*.kt"]),
     deps = [
+        ":network_inspector_java_proto",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
+        "//tools/base/bazel:studio-proto",
     ],
 )
 
 dex_library(
     name = "network-inspector-sources_dexed",
     dexer = "D8",
-    jars = [":network-inspector-sources_undexed"],
+    flags = [
+        "--min-api 26",  # Network inspector is only supported on O+ devices.
+    ],
+    jars = [
+        ":network_inspector_java_proto",
+        ":network-inspector-sources_undexed",
+        "//tools/base/bazel:studio-proto",
+    ],
 )
 
 java_library(

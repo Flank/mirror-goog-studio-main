@@ -1,0 +1,26 @@
+syntax = "proto3";
+package studio.network.inspection;
+option java_package = "studio.network.inspection";
+option java_outer_classname = "NetworkInspectorProtocol";
+
+message Command {
+    oneof one_of_command {
+        TestCommand test_command = 1;
+    }
+}
+
+message Response {
+    oneof one_of_response {
+        TestResponse test_response = 1;
+    }
+}
+
+message TestCommand {
+    int64 cmd_id = 1;
+    string message = 2;
+}
+
+message TestResponse {
+    int64 cmd_id = 1;
+    string response = 2;
+}
