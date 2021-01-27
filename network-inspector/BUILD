@@ -15,8 +15,12 @@ android_java_proto_library(
 kotlin_library(
     name = "network-inspector-sources_undexed",
     srcs = glob(["src/**/*.kt"]),
+    # do not sort: fake_android must come before latest_jar in the classpath to override small pieces of it
     deps = [
         ":network_inspector_java_proto",
+        "//tools/base/network-inspector/fake-android:fake_android",
+        "//prebuilts/studio/sdk:platforms/latest_jar",
+        "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
         "//tools/base/bazel:studio-proto",
     ],

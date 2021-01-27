@@ -91,6 +91,7 @@
       <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/agent/transport/dynamic-layout-inspector.agent.transport.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/agent/transport/dynamic-layout-inspector.agent.transport.iml" />
       <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/common/dynamic-layout-inspector.common.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/common/dynamic-layout-inspector.common.iml" />
       <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/skia/dynamic-layout-inspector.skia.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/skia/dynamic-layout-inspector.skia.iml" />
+      <module fileurl="file://$PROJECT_DIR$/network-inspector/fake-android/network-inspector.fake-android.iml" filepath="$PROJECT_DIR$/network-inspector/fake-android/network-inspector.fake-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/fakeandroid/fakeandroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/perf-logger/perf-logger.iml" filepath="$PROJECT_DIR$/perf-logger/perf-logger.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils-tests.iml" filepath="$PROJECT_DIR$/testutils/testutils-tests.iml" />

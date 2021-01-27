@@ -192,6 +192,7 @@ java_import(
         "//tools/base/dynamic-layout-inspector/agent/fake-android:__pkg__",
         "//tools/base/dynamic-layout-inspector/agent/transport:__pkg__",
         "//tools/base/experimental/live-sql-inspector:__pkg__",
+        "//tools/base/network-inspector:__pkg__",
     ],
 )
 
