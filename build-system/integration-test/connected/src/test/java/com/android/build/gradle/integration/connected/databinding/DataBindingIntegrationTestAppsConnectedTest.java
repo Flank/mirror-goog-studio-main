@@ -64,9 +64,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
             // b/177370256
             // params.add(new Object[] {"ViewBindingTestApp", useAndroidX});
 
-            // b/178137946
-            // params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
-
+            params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
             params.add(new Object[] {"ProguardedAppWithTest", useAndroidX});
             params.add(new Object[] {"IndependentLibrary", useAndroidX});
         }
