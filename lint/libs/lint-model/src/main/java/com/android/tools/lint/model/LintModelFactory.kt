@@ -348,7 +348,7 @@ class LintModelFactory : LintModelModuleLoader {
             }
         }
         */
-        return variant.mergedFlavor.resourceConfigurations
+        return variant.resourceConfigurations
     }
 
     private fun getAndroidTestArtifact(variant: IdeVariant): LintModelAndroidArtifact? {
@@ -794,7 +794,7 @@ class LintModelFactory : LintModelModuleLoader {
         override val targetSdkVersion: AndroidVersion?
             get() = variant.targetSdkVersion?.toAndroidVersion()
         override val resourceConfigurations: Collection<String>
-            get() = variant.mergedFlavor.resourceConfigurations
+            get() = variant.resourceConfigurations
         override val debuggable: Boolean
             get() = buildType.isDebuggable
         override val shrinkable: Boolean

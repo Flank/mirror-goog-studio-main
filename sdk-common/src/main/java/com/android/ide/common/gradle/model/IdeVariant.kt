@@ -15,6 +15,10 @@
  */
 package com.android.ide.common.gradle.model
 
+import com.android.builder.model.AndroidArtifact
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.Variant
+
 interface IdeVariantHeader {
   val name: String
   val buildType: String
@@ -42,6 +46,31 @@ interface IdeVariant: IdeVariantHeader {
   /** The maxSdkVersion, or null if not specified. This is only the value set on this produce flavor. */
   val maxSdkVersion: Int?
 
-  val testedTargetVariants: List<IdeTestedTargetVariant>
   val instantAppCompatible: Boolean
+
+  /**
+   * The resource configuration for this variant.
+   *
+   * This is the list of -c parameters for aapt.
+   */
+  val resourceConfigurations: Collection<String>
+
+  /**
+   * The test application id. This is only the value set on this product flavor.
+   * To get the final value, use [Variant.getExtraAndroidArtifacts] with
+   * [AndroidProject.ARTIFACT_ANDROID_TEST] and then
+   * [AndroidArtifact.getApplicationId]
+   */
+  val testApplicationId: String?
+
+  /**
+   * The test instrumentation runner. This is only the value set on this product flavor.
+   * TODO: make test instrumentation runner available through the model.
+   */
+  val testInstrumentationRunner: String?
+
+  /** The arguments for the test instrumentation runner.*/
+  val testInstrumentationRunnerArguments: Map<String, String>
+
+  val testedTargetVariants: List<IdeTestedTargetVariant>
 }

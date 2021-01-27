@@ -98,7 +98,6 @@ import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ImmutableSortedSet
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 import java.util.HashMap
 
 interface ModelCache {
@@ -771,10 +770,14 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
           minSdkVersion = mergedFlavor.minSdkVersion,
           targetSdkVersion = mergedFlavor.targetSdkVersion,
           maxSdkVersion = mergedFlavor.maxSdkVersion,
-          testedTargetVariants = getTestedTargetVariants(variant),
           instantAppCompatible = (modelVersion != null &&
                   modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
-                  variant.isInstantAppCompatible)
+                  variant.isInstantAppCompatible),
+          resourceConfigurations = mergedFlavor.resourceConfigurations,
+          testApplicationId = mergedFlavor.testApplicationId,
+          testInstrumentationRunner = mergedFlavor.testInstrumentationRunner,
+          testInstrumentationRunnerArguments = mergedFlavor.testInstrumentationRunnerArguments,
+          testedTargetVariants = getTestedTargetVariants(variant),
       )
   }
 

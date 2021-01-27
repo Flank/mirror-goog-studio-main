@@ -35,6 +35,10 @@ data class IdeVariantImpl(
   override val minSdkVersion: IdeApiVersion?,
   override val targetSdkVersion: IdeApiVersion?,
   override val maxSdkVersion: Int?,
+  override val instantAppCompatible: Boolean,
+  override val resourceConfigurations: Collection<String>,
+  override val testApplicationId: String?,
+  override val testInstrumentationRunner: String?,
+  override val testInstrumentationRunnerArguments: Map<String, String>,
   override val testedTargetVariants: List<IdeTestedTargetVariant>,
-  override val instantAppCompatible: Boolean
 ) : IdeVariant, Serializable

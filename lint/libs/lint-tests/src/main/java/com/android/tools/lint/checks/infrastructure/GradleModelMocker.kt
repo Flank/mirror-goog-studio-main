@@ -405,8 +405,12 @@ class GradleModelMocker @JvmOverloads constructor(
                     minSdkVersion = mergedFlavor.minSdkVersion,
                     targetSdkVersion = mergedFlavor.targetSdkVersion,
                     maxSdkVersion = mergedFlavor.maxSdkVersion,
-                    testedTargetVariants = emptyList(),
                     instantAppCompatible = false,
+                    resourceConfigurations = mergedFlavor.resourceConfigurations,
+                    testApplicationId = mergedFlavor.testApplicationId,
+                    testInstrumentationRunner = mergedFlavor.testInstrumentationRunner,
+                    testInstrumentationRunnerArguments = mergedFlavor.testInstrumentationRunnerArguments,
+                    testedTargetVariants = emptyList(),
                 )
             )
         }
