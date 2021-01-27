@@ -84,7 +84,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
             // Support version has no subprojects
             project.addAdbTimeout();
         } else {
-            project.addAdbTimeoutToSubProjects();
+            project.addAdbTimeout();
         }
 
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning

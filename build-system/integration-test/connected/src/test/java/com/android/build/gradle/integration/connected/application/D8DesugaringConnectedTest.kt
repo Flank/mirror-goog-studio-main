@@ -102,7 +102,7 @@ class D8DesugaringConnectedTest {
                 """.trimIndent()
         )
         // fail fast if no response
-        project.addAdbTimeoutToSubProjects()
+        project.addAdbTimeout()
 
         TestFileUtils.appendToFile(
             project.getSubproject(":lib").buildFile, "apply plugin: 'java'\n"
