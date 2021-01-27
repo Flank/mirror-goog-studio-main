@@ -44,30 +44,30 @@ class LeanbackWifiUsageDetector : Detector(), XmlScanner {
         if (hasLeanBack == null) {
             hasLeanBack = context.mainProject.mergedManifest
                 ?.documentElement?.iterator()?.asSequence()?.any { node ->
-                    node.localName == TAG_USES_FEATURE && node.attributes.getNamedItemNS(
-                        ANDROID_URI,
-                        ATTR_NAME
-                    )?.nodeValue == LEANBACK_ATTR_NAME
-                }
+                node.localName == TAG_USES_FEATURE && node.attributes.getNamedItemNS(
+                    ANDROID_URI,
+                    ATTR_NAME
+                )?.nodeValue == LEANBACK_ATTR_NAME
+            }
         }
         if (hasLeanBack != true) return
         if (!wifiFeatureNodeSearched) {
             wifiFeatureNode = context.mainProject.mergedManifest
                 ?.documentElement?.iterator()?.asSequence()?.firstOrNull { node ->
-                    when (node.localName) {
-                        TAG_USES_FEATURE -> {
-                            with(node.attributes) {
-                                getNamedItemNS(
-                                    ANDROID_URI,
-                                    ATTR_NAME
-                                )?.nodeValue == WIFI_FEATURE_NAME
-                            }
-                        }
-                        else -> {
-                            false
+                when (node.localName) {
+                    TAG_USES_FEATURE -> {
+                        with(node.attributes) {
+                            getNamedItemNS(
+                                ANDROID_URI,
+                                ATTR_NAME
+                            )?.nodeValue == WIFI_FEATURE_NAME
                         }
                     }
+                    else -> {
+                        false
+                    }
                 }
+            }
             wifiFeatureNodeRequired = wifiFeatureNode?.let { wifiNode ->
                 wifiNode.attributes.getNamedItemNS(ANDROID_URI, ATTR_REQUIRED)?.nodeValue != "false"
             } ?: false
@@ -118,7 +118,7 @@ class LeanbackWifiUsageDetector : Detector(), XmlScanner {
             id = "LeanbackUsesWifi",
             briefDescription = "Using android.hardware.wifi on TV",
             explanation =
-            """
+                """
                 WiFi is not required for Android TV and many devices connect to the internet via \
                 alternative methods e.g. Ethernet.
 
