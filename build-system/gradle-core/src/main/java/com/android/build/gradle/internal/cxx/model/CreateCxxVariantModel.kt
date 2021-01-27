@@ -30,7 +30,7 @@ import java.util.Locale
 fun createCxxVariantModel(
     configurationParameters: CxxConfigurationParameters,
     module: CxxModuleModel) : CxxVariantModel {
-    val validAbiList = CachingEnvironment(module.cxxFolder).use {
+    val validAbiList = CachingEnvironment(configurationParameters.cxxCacheFolder).use {
         AbiConfigurator(
                 AbiConfigurationKey(
                         module.ndkSupportedAbiList,

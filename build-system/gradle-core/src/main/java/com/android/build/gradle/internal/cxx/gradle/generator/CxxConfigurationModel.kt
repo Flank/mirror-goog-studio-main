@@ -96,6 +96,7 @@ enum class NativeBuildOutputLevel {
  */
 data class CxxConfigurationParameters(
     val cxxFolder: File,
+    val cxxCacheFolder: File,
     val buildSystem: NativeBuildSystem,
     val makeFile: File,
     val buildStagingFolder: File?,
@@ -183,7 +184,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         buildStagingFolder,
         global.project.buildDir
     )
-
+    val cxxCacheFolder = join(global.intermediatesDir, "cxx")
     fun option(option: BooleanOption) = global.projectOptions.get(option)
     fun option(option: StringOption) = global.projectOptions.get(option)
 
@@ -198,7 +199,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         ndkVersion = global.extension.ndkVersion,
         ndkPath = global.extension.ndkPath
     )
-    val ndkInstall = CachingEnvironment(cxxFolder).use {
+    val ndkInstall = CachingEnvironment(cxxCacheFolder).use {
         ndkHandler.getNdkPlatform(downloadOkay = true)
     }
     if (!ndkInstall.isConfigured) {
@@ -245,6 +246,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
 
     return CxxConfigurationParameters(
         cxxFolder = cxxFolder,
+        cxxCacheFolder = cxxCacheFolder,
         buildSystem = buildSystem,
         makeFile = makeFile,
         buildStagingFolder = buildStagingFolder,
