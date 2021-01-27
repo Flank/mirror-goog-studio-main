@@ -11,7 +11,8 @@ fi
 readonly script_dir="$(dirname "$0")"
 
 # Clean up existing results so obsolete data cannot cause issues
-"${script_dir}/bazel" clean --async || exit $?
+# --max_idle_secs is only effective at bazel server startup time so it needs to be in the first call
+"${script_dir}/bazel" --max_idle_secs=60 clean --async || exit $?
 
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id="$(uuidgen)"
@@ -32,7 +33,6 @@ fi
 
 # Run Bazel with coverage instrumentation
 "${script_dir}/bazel" \
-  --max_idle_secs=60 \
   test \
   --keep_going \
   --config=dynamic \
