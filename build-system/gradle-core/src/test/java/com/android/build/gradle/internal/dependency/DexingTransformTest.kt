@@ -180,7 +180,7 @@ class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
         val dexClasses = dexFiles.flatMap { Dex(it).classes.keys }
         assertThat(dexClasses).hasSize(classes.size + 1)
         assertThat(dexClasses).containsAtLeastElementsIn(classes.map { Type.getDescriptor(it) })
-        val synthesizedLambdas = dexClasses.filter { it.contains("\$\$Lambda\$") }
+        val synthesizedLambdas = dexClasses.filter { it.contains("-\$\$ExternalSyntheticLambda") }
         assertThat(synthesizedLambdas).hasSize(1)
     }
 
@@ -210,7 +210,8 @@ class DexingTransformTest(private val incrementalDexingTransform: Boolean) {
         assertThat(dex).containsClassesIn(classes.map { Type.getDescriptor(it) })
         assertThat(dex.classes).hasSize(classes.size + 1)
 
-        val synthesizedLambdas = dex.classes.keys.filter { it.contains("\$\$Lambda\$") }
+        val synthesizedLambdas =
+            dex.classes.keys.filter { it.contains("-\$\$ExternalSyntheticLambda") }
         assertThat(synthesizedLambdas).hasSize(1)
 
     }

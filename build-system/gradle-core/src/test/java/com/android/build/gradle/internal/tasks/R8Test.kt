@@ -359,6 +359,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             ),
             featureClasses = listOf(
                 Type.getDescriptor(Cat::class.java),
+                "L" + Type.getInternalName(Cat::class.java) + "-\$\$ExternalSyntheticLambda0;",
                 Type.getDescriptor(Toy::class.java)
             ),
             featureName = "feature"
@@ -397,6 +398,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             ),
             featureClasses = listOf(
                 Type.getDescriptor(Cat::class.java),
+                "L" + Type.getInternalName(Cat::class.java) + "-\$\$ExternalSyntheticLambda0;",
                 Type.getDescriptor(Toy::class.java)
             ),
             featureName = "feature"
