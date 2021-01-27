@@ -314,8 +314,8 @@ class LintModelFactory : LintModelModuleLoader {
             mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
             manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
             `package` = null, // not in the old builder model
-            minSdkVersion = variant.mergedFlavor.minSdkVersion?.toAndroidVersion(),
-            targetSdkVersion = variant.mergedFlavor.targetSdkVersion?.toAndroidVersion(),
+            minSdkVersion = variant.minSdkVersion?.toAndroidVersion(),
+            targetSdkVersion = variant.targetSdkVersion?.toAndroidVersion(),
             resValues = getResValues(variant.mergedFlavor, buildType),
             manifestPlaceholders = getPlaceholders(variant.mergedFlavor, buildType),
             resourceConfigurations = getMergedResourceConfigurations(variant),
@@ -790,9 +790,9 @@ class LintModelFactory : LintModelModuleLoader {
         override val `package`: String?
             get() = null // no in the old builder model
         override val minSdkVersion: AndroidVersion?
-            get() = variant.mergedFlavor.minSdkVersion?.toAndroidVersion()
+            get() = variant.minSdkVersion?.toAndroidVersion()
         override val targetSdkVersion: AndroidVersion?
-            get() = variant.mergedFlavor.targetSdkVersion?.toAndroidVersion()
+            get() = variant.targetSdkVersion?.toAndroidVersion()
         override val resourceConfigurations: Collection<String>
             get() = variant.mergedFlavor.resourceConfigurations
         override val debuggable: Boolean

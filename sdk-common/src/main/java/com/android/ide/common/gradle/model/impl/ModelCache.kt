@@ -756,22 +756,27 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
   fun variantFrom(
     variant: Variant,
     modelVersion: GradleVersion?
-  ): IdeVariantImpl =
-    IdeVariantImpl(
-      name = variant.name,
-      displayName = variant.displayName,
-      mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, modelVersion) },
-      androidTestArtifact =
-      copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, modelVersion) }.firstOrNull { it.isTestArtifact },
-      unitTestArtifact = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) }.firstOrNull { it.isTestArtifact },
-      buildType = variant.buildType,
-      productFlavors = ImmutableList.copyOf(variant.productFlavors),
-      mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom),
-      testedTargetVariants = getTestedTargetVariants(variant),
-      instantAppCompatible = (modelVersion != null &&
-                              modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
-                              variant.isInstantAppCompatible)
-    )
+  ): IdeVariantImpl {
+      val mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom)
+      return IdeVariantImpl(
+          name = variant.name,
+          displayName = variant.displayName,
+          mainArtifact = copyModel(variant.mainArtifact) { androidArtifactFrom(it, modelVersion) },
+          androidTestArtifact =
+          copy(variant::getExtraAndroidArtifacts) { androidArtifactFrom(it, modelVersion) }.firstOrNull { it.isTestArtifact },
+          unitTestArtifact = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) }.firstOrNull { it.isTestArtifact },
+          buildType = variant.buildType,
+          productFlavors = ImmutableList.copyOf(variant.productFlavors),
+          mergedFlavor = mergedFlavor,
+          minSdkVersion = mergedFlavor.minSdkVersion,
+          targetSdkVersion = mergedFlavor.targetSdkVersion,
+          maxSdkVersion = mergedFlavor.maxSdkVersion,
+          testedTargetVariants = getTestedTargetVariants(variant),
+          instantAppCompatible = (modelVersion != null &&
+                  modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
+                  variant.isInstantAppCompatible)
+      )
+  }
 
   fun nativeAbiFrom(nativeAbi: NativeAbi): IdeNativeAbiImpl {
     return IdeNativeAbiImpl(

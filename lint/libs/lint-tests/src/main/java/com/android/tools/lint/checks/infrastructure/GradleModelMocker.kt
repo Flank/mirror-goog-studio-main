@@ -402,6 +402,9 @@ class GradleModelMocker @JvmOverloads constructor(
                     buildType = buildType.name,
                     productFlavors = productFlavors.map { it.name },
                     mergedFlavor = mergedFlavor,
+                    minSdkVersion = mergedFlavor.minSdkVersion,
+                    targetSdkVersion = mergedFlavor.targetSdkVersion,
+                    maxSdkVersion = mergedFlavor.maxSdkVersion,
                     testedTargetVariants = emptyList(),
                     instantAppCompatible = false,
                 )
