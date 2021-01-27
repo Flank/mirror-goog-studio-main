@@ -135,7 +135,7 @@ fun addComposeArgsToKotlinCompile(
                 "-Xplugin=${compilerExtension.files.first().absolutePath}",
                 "-XXLanguage:+NonParenthesizedAnnotationsOnFunctionalTypes",
                 "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
-                "-Xallow-jvm-ir-dependencies"
+                "-Xallow-unstable-dependencies"
         )
         if (debuggable) {
             extraFreeCompilerArgs += listOf(
