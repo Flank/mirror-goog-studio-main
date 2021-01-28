@@ -47,7 +47,6 @@ import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.AnnotationLookup;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Lint;
-import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Splitter;
@@ -173,6 +172,9 @@ public class Extractor {
      * class retention and will appear in the compiled .jar version of the library
      */
     private final boolean includeClassRetentionAnnotations;
+
+    /** Whether the tool should fail on class-retention typedef annotations */
+    private final boolean strictTypedefRetention;
 
     /**
      * Whether we should skip nullable annotations in merged in annotations zip files (these are
@@ -305,12 +307,14 @@ public class Extractor {
             @Nullable Collection<File> classDir,
             boolean displayInfo,
             boolean includeClassRetentionAnnotations,
+            boolean strictTypedefRetention,
             boolean sortAnnotations) {
         this.apiFilter = apiFilter;
         this.listIgnored = apiFilter != null;
         this.classDir = classDir;
         this.displayInfo = displayInfo;
         this.includeClassRetentionAnnotations = includeClassRetentionAnnotations;
+        this.strictTypedefRetention = strictTypedefRetention;
         this.sortAnnotations = sortAnnotations;
     }
 
@@ -2857,9 +2861,8 @@ public class Extractor {
                                     aClass.getQualifiedName()
                                             + ": The typedef annotation should have "
                                             + "@Retention(RetentionPolicy.SOURCE)";
-                            if (VALUE_TRUE.equals(
-                                    System.getProperty("android.typedef.enforce-retention"))) {
-                                throw new ReflectiveLintRunner.ExtractErrorException(message);
+                            if (strictTypedefRetention) {
+                                throw new ExtractErrorException(message);
                             } else {
                                 Extractor.warning(message);
                             }
@@ -2891,6 +2894,12 @@ public class Extractor {
             }
 
             return false;
+        }
+    }
+
+    public static class ExtractErrorException extends RuntimeException {
+        public ExtractErrorException(String message) {
+            super(message);
         }
     }
 }

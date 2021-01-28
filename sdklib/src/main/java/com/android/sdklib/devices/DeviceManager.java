@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
 import com.android.io.CancellableFileIo;
+import com.android.prefs.AndroidLocationsProvider;
 import com.android.repository.api.RepoManager;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
@@ -121,8 +122,12 @@ public class DeviceManager {
      *
      * @see #createInstance(AndroidSdkHandler, ILogger)
      */
-    public static DeviceManager createInstance(@Nullable Path sdkLocation, @NonNull ILogger log) {
-        return createInstance(AndroidSdkHandler.getInstance(sdkLocation), log);
+    public static DeviceManager createInstance(
+            @NonNull AndroidLocationsProvider androidLocationsProvider,
+            @Nullable Path sdkLocation,
+            @NonNull ILogger log) {
+        return createInstance(
+                AndroidSdkHandler.getInstance(androidLocationsProvider, sdkLocation), log);
     }
 
     public static DeviceManager createInstance(

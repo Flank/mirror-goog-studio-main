@@ -17,35 +17,21 @@
 package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
-import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test ensuring that when we have multiple service-loaded lint jars, they're all included.
  * Regression test for https://issuetracker.google.com/143455360.
  */
-@RunWith(FilterableParameterized.class)
 public class LintMultipleLintJarsTest {
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
 
     @Rule
-    public final GradleTestProject project;
-
-    public LintMultipleLintJarsTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintMultipleLintJars")
-                .create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("lintMultipleLintJars").create();
 
     @Test
     public void checkBothErrorsFound() throws Exception {

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.build
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.cxx.gradle.generator.NativeBuildOutputLevel
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
@@ -336,11 +337,11 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                         .stream()
                         .map { library -> library.artifactName + "_" + library.abi }
                         .toList()
-                lifecycleln("Build multiple targets ${targetNames.joinToString(" ")}")
+                infoln("Build multiple targets ${targetNames.joinToString(" ")}")
             } else {
                 Preconditions.checkElementIndex(0, buildStep.libraries.size)
                 logFileSuffix = buildStep.libraries[0].artifactName + "_" + abiName
-                lifecycleln("Build $logFileSuffix")
+                infoln("Build $logFileSuffix")
             }
 
             abis
@@ -378,8 +379,9 @@ class CxxRegularBuilder(val configurationModel: CxxConfigurationModel) : CxxBuil
                     buildStep.outputFolder.resolve("android_gradle_build_stderr_$logFileSuffix.txt"),
                     processBuilder,
                     "")
-                    .logStderrToLifecycle()
-                    .logStdoutToInfo()
+                    .logStderr()
+                    .logStdout()
+                    .logFullStdout(abis.firstOrNull()?.variant?.module?.nativeBuildOutputLevel == NativeBuildOutputLevel.VERBOSE)
                     .execute(ops::exec)
 
             generateChromeTraces?.invoke()

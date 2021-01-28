@@ -89,7 +89,8 @@ open class VariantDslInfoImpl internal constructor(
     private val dslServices: DslServices,
     private val services: VariantPropertiesApiServices,
     private val buildDirectory: DirectoryProperty,
-    private val dslNamespace: String?
+    private val dslNamespace: String?,
+    private val dslTestNamespace: String?
 ): VariantDslInfo, DimensionCombination {
 
     override val buildType: String?
@@ -276,9 +277,11 @@ open class VariantDslInfoImpl internal constructor(
         when {
             // -------------
             // Special case for test components
-            // The namespace is the tested component namespace + .test
+            // The namespace is the tested component's testNamespace or else the tested component's
+            // namespace + ".test"
             testedVariantImpl != null -> {
-                testedVariantImpl.namespace.map { "$it.test" }
+                testedVariantImpl.testNamespace?.let { services.provider { it } }
+                    ?: testedVariantImpl.namespace.map { "$it.test" }
             }
 
             // -------------
@@ -286,8 +289,8 @@ open class VariantDslInfoImpl internal constructor(
             // If there is no namespace from the DSL or package attribute in the manifest, we use
             // testApplicationId, if present. This allows the test project to not have a manifest if
             // all is declared in the DSL.
-            // TODO(Issue 172361895) Remove this special case - users should use namespace DSL
-            // instead of testApplicationId DSL for this.
+            // TODO(b/170945282, b/172361895) Remove this special case - users should use namespace
+            //  DSL instead of testApplicationId DSL for this.
             variantType.isSeparateTestProject -> {
                 if (dslNamespace != null) {
                     services.provider { dslNamespace }
@@ -327,6 +330,8 @@ open class VariantDslInfoImpl internal constructor(
             }
         }
     }
+
+    override val testNamespace: String? = dslTestNamespace ?: dslNamespace?.let { "$it.test" }
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could

@@ -18,9 +18,13 @@ package com.android.tools.deployer.tasks;
 
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.AdbClient;
+import com.android.tools.deployer.DeploymentCacheDatabase;
 import com.android.tools.deployer.Installer;
+import com.android.tools.deployer.OverlayId;
+
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The purpose of this class is to provide a facet to updating Live Literals on the device.
@@ -33,9 +37,6 @@ import java.util.Collection;
  * effort on respond time instead.
  */
 public class LiveLiteralDeployer {
-
-    private static final Object LOCK = new Object();
-
     public static class UpdateLiveLiteralParam {
         final String key;
         final String type;
@@ -53,12 +54,21 @@ public class LiveLiteralDeployer {
         }
     }
 
+    private final DeploymentCacheDatabase deployCache;
+
+    public LiveLiteralDeployer(DeploymentCacheDatabase db) {
+        this.deployCache = db;
+    }
+
     /** Temp solution. Going to refactor / move this elsewhere later. */
     public void updateLiveLiteral(
             Installer installer,
             AdbClient adb,
             String packageName,
             Collection<UpdateLiveLiteralParam> params) {
+
+        List<Integer> pids = adb.getPids(packageName);
+        Deploy.Arch arch = adb.getArch(pids);
 
         Deploy.LiveLiteralUpdateRequest.Builder requestBuilder =
                 Deploy.LiveLiteralUpdateRequest.newBuilder();
@@ -70,26 +80,27 @@ public class LiveLiteralDeployer {
                                     .setOffset(param.offset)
                                     .setHelperClass(param.helper)
                                     .setType(param.type)
-                                    .setValue(param.value))
-                    .setArch(Deploy.Arch.ARCH_64_BIT);
+                                    .setValue(param.value));
         }
 
         requestBuilder.setPackageName(packageName);
-        requestBuilder.addAllProcessIds(adb.getPids(packageName));
+        requestBuilder.addAllProcessIds(pids);
+        requestBuilder.setArch(arch);
+
+        // We update the OID on the device as thought we did an install of an unchanged APK.
+        OverlayId overlayId = deployCache.get(adb.getSerial(), packageName).getOverlayId();
+        if (overlayId.isBaseInstall()) {
+            requestBuilder.setExpectedOverlayId("");
+            deployCache.store(adb.getSerial(), packageName, overlayId.getInstalledApks(), overlayId);
+        } else {
+            requestBuilder.setExpectedOverlayId(overlayId.getSha());
+        }
+        requestBuilder.setOverlayId(overlayId.getSha());
+
         Deploy.LiveLiteralUpdateRequest request = requestBuilder.build();
 
         try {
-            synchronized (LOCK) {
-                // All of the installer pipeline should be thread (multi-process) safe except how we
-                // interact with DDMLib. For that communication, all request shares the same socket
-                // so we could potentially end up reading part of a reply for a different request.
-                //
-                // This is very unlikely to happen. While recoverable, we still want to avoid this
-                // as much as possible. Therefore we are going to have a global lock on the quest.
-                //
-                // TODO: This can possible race with a real deployment (one of them would fail)
-                installer.updateLiveLiterals(request);
-            }
+            installer.updateLiveLiterals(request);
         } catch (IOException e) {
             e.printStackTrace();
         }

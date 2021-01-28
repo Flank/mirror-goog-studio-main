@@ -21,10 +21,10 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.utils.FileUtils;
@@ -62,8 +62,6 @@ public class ManifestMergingTest {
     public GradleTestProject navigation =
             GradleTestProject.builder()
                     .withName("navigation")
-                    // http://b/158092419
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("navigation")
                     .create();
 
@@ -74,9 +72,9 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergingForLibraries() throws Exception {
-        // http://b/146208910
         libsTest.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // http://b/162074215
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "build");
         File fileOutput =
                 libsTest.file(
@@ -101,9 +99,9 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergerReport() throws Exception {
-        // http://b/146208910
         flavors.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // http://b/162074215
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "assemble");
         File logs = new File(flavors.getOutputFile("apk").getParentFile(), "logs");
         File[] reports = logs.listFiles(file -> file.getName().startsWith("manifest-merger"));
@@ -112,9 +110,9 @@ public class ManifestMergingTest {
 
     @Test
     public void checkManifestMergeBlameReport() throws Exception {
-        // http://b/146208910
         flavors.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // http://b/162074215
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", "assemble");
 
         File dirs =
@@ -168,9 +166,9 @@ public class ManifestMergingTest {
                         + "        targetSdkVersion 'N'\n"
                         + "    }\n"
                         + "}");
-        // http://b/146208910
         libsTest.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                // http://b/162074215
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("clean", ":app:build");
         assertThat(
                         appProject.file(

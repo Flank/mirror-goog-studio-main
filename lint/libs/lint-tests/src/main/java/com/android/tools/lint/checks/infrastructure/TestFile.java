@@ -50,11 +50,13 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -192,11 +194,11 @@ public class TestFile {
         return this;
     }
 
-    public static class JavaTestFile extends LintDetectorTest.TestFile {
+    public static class JavaTestFile extends TestFile {
         public JavaTestFile() {}
 
         @NonNull
-        public static LintDetectorTest.TestFile create(@NonNull @Language("JAVA") String source) {
+        public static TestFile create(@NonNull @Language("JAVA") String source) {
             // Figure out the "to" path: the package plus class name + java in the src/ folder
             ClassName name = new ClassName(source);
             String pkg = name.packageNameWithDefault();
@@ -214,7 +216,7 @@ public class TestFile {
         }
 
         @NonNull
-        public static LintDetectorTest.TestFile create(
+        public static TestFile create(
                 @NonNull String to, @NonNull @Language("JAVA") String source) {
             if (!to.endsWith(DOT_JAVA)) {
                 throw new IllegalArgumentException("Expected .java suffix for Java test file");
@@ -223,11 +225,11 @@ public class TestFile {
         }
     }
 
-    public static class KotlinTestFile extends LintDetectorTest.TestFile {
+    public static class KotlinTestFile extends TestFile {
         public KotlinTestFile() {}
 
         @NonNull
-        public static LintDetectorTest.TestFile create(@NonNull @Language("kotlin") String source) {
+        public static TestFile create(@NonNull @Language("kotlin") String source) {
             // Figure out the "to" path: the package plus class name + kt in the src/ folder
             ClassName name = new ClassName(source);
             String pkg = name.packageNameWithDefault();
@@ -244,7 +246,7 @@ public class TestFile {
         }
 
         @NonNull
-        public static LintDetectorTest.TestFile create(
+        public static TestFile create(
                 @NonNull String to, @NonNull @Language("kotlin") String source) {
             if (!to.endsWith(DOT_KT) && !to.endsWith(DOT_KTS)) {
                 throw new IllegalArgumentException(
@@ -254,13 +256,12 @@ public class TestFile {
         }
     }
 
-    public static class XmlTestFile extends LintDetectorTest.TestFile {
+    public static class XmlTestFile extends TestFile {
 
         public XmlTestFile() {}
 
         @NonNull
-        public static LintDetectorTest.TestFile create(
-                @NonNull String to, @NonNull @Language("XML") String source) {
+        public static TestFile create(@NonNull String to, @NonNull @Language("XML") String source) {
             if (!to.endsWith(DOT_XML)) {
                 throw new IllegalArgumentException("Expected .xml suffix for XML test file");
             }
@@ -328,33 +329,33 @@ public class TestFile {
         }
     }
 
-    public static class JarTestFile extends LintDetectorTest.TestFile {
-        private final List<LintDetectorTest.TestFile> files = Lists.newArrayList();
-        private final Map<LintDetectorTest.TestFile, String> path = Maps.newHashMap();
+    public static class JarTestFile extends TestFile {
+        private final List<TestFile> files = Lists.newArrayList();
+        private final Map<TestFile, String> path = Maps.newHashMap();
 
         public JarTestFile(@NonNull String to) {
             to(to);
         }
 
-        public JarTestFile files(@NonNull LintDetectorTest.TestFile... files) {
+        public JarTestFile files(@NonNull TestFile... files) {
             this.files.addAll(Arrays.asList(files));
             return this;
         }
 
-        public JarTestFile add(@NonNull LintDetectorTest.TestFile file, @NonNull String path) {
+        public JarTestFile add(@NonNull TestFile file, @NonNull String path) {
             add(file);
             this.path.put(file, path);
             return this;
         }
 
-        public JarTestFile add(@NonNull LintDetectorTest.TestFile file) {
+        public JarTestFile add(@NonNull TestFile file) {
             files.add(file);
             path.put(file, null);
             return this;
         }
 
         @Override
-        public LintDetectorTest.TestFile withSource(@NonNull String source) {
+        public TestFile withSource(@NonNull String source) {
             TestCase.fail("Don't call withSource on " + this.getClass());
             return this;
         }
@@ -401,7 +402,7 @@ public class TestFile {
             try (JarOutputStream jarOutputStream =
                     new JarOutputStream(
                             new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
-                for (LintDetectorTest.TestFile file : files) {
+                for (TestFile file : files) {
                     String path = this.path.get(file);
                     if (path == null) {
                         path = file.targetRelativePath;
@@ -494,7 +495,7 @@ public class TestFile {
         }
     }
 
-    public static class ManifestTestFile extends LintDetectorTest.TestFile {
+    public static class ManifestTestFile extends TestFile {
         public String pkg = "test.pkg";
         public String minSdk = "";
         public String targetSdk = "";
@@ -597,24 +598,23 @@ public class TestFile {
     }
 
     /** Produces byte arrays, for use with {@link BinaryTestFile} */
-    public static class ByteProducer {
-        @SuppressWarnings("MethodMayBeStatic") // intended for override
+    public interface ByteProducer {
         @NonNull
-        public byte[] produce() {
+        default byte[] produce() {
             return new byte[0];
         }
     }
 
-    public static class BinaryTestFile extends LintDetectorTest.TestFile {
-        private final BytecodeProducer producer;
+    public static class BinaryTestFile extends TestFile {
+        private final ByteProducer producer;
 
-        public BinaryTestFile(@NonNull String to, @NonNull BytecodeProducer producer) {
+        public BinaryTestFile(@NonNull String to, @NonNull ByteProducer producer) {
             to(to);
             this.producer = producer;
         }
 
         @Override
-        public LintDetectorTest.TestFile withSource(@NonNull String source) {
+        public TestFile withSource(@NonNull String source) {
             TestCase.fail("Don't call withSource on " + this.getClass());
             return this;
         }
@@ -648,7 +648,7 @@ public class TestFile {
         }
     }
 
-    public static class BytecodeProducer extends ByteProducer implements Opcodes {
+    public static class BytecodeProducer implements ByteProducer, Opcodes {
         /**
          * Typically generated by first getting asm output like this:
          *
@@ -666,8 +666,9 @@ public class TestFile {
         }
     }
 
-    public static class GradleTestFile extends LintDetectorTest.TestFile {
-        private Map<File, GradleModelMocker> mockers = new HashMap<>();
+    public static class GradleTestFile extends TestFile {
+        private final Map<File, GradleModelMocker> mockers = new HashMap<>();
+        private final List<Consumer<GradleModelMocker>> mockerConfigurators = new ArrayList<>();
 
         public GradleTestFile(@NonNull String to, @NonNull @Language("Groovy") String source) {
             to(to).withSource(source);
@@ -676,13 +677,21 @@ public class TestFile {
             }
         }
 
+        public GradleTestFile withMockerConfigurator(Consumer<GradleModelMocker> configurator) {
+            mockerConfigurators.add(configurator);
+            return this;
+        }
+
         @NonNull
         public GradleModelMocker getMocker(@NonNull File projectDir) {
             GradleModelMocker mocker = mockers.get(projectDir);
             if (mocker == null) {
                 assert contents != null;
                 //noinspection LanguageMismatch
-                mocker = new GradleModelMocker(contents).withProjectDir(projectDir);
+                mocker = new GradleModelMocker(contents, projectDir);
+                for (Consumer<GradleModelMocker> configurator : mockerConfigurators) {
+                    configurator.accept(mocker);
+                }
                 mockers.put(projectDir, mocker);
             }
 
@@ -690,7 +699,7 @@ public class TestFile {
         }
     }
 
-    public static class PropertyTestFile extends LintDetectorTest.TestFile {
+    public static class PropertyTestFile extends TestFile {
         @SuppressWarnings("StringBufferField")
         private final StringBuilder stringBuilder = new StringBuilder();
 
@@ -739,7 +748,7 @@ public class TestFile {
         }
 
         @Override
-        public LintDetectorTest.TestFile withSource(@NonNull String source) {
+        public TestFile withSource(@NonNull String source) {
             TestCase.fail("Don't call withSource on " + this.getClass());
             return this;
         }

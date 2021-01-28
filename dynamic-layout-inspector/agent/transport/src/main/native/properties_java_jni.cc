@@ -220,16 +220,17 @@ Java_com_android_tools_agent_layoutinspector_Properties_addFlagPropertyValue(
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addLambdaProperty(
     JNIEnv *env, jclass clazz, jlong jevent, jlong jproperty, jint name,
-    jint package_name, jint file_name, jint lambda_name, jint start_line,
-    jint end_line) {
+    jint type, jint package_name, jint file_name, jint lambda_name,
+    jint function_name, jint start_line, jint end_line) {
   auto *property = addProperty(jevent, jproperty);
   property->set_name(name);
   property->set_is_layout(false);
-  property->set_type(Property::LAMBDA);
+  property->set_type(static_cast<Property_Type>(type));
   auto *lambda = property->mutable_lambda_value();
   lambda->set_package_name(package_name);
   lambda->set_file_name(file_name);
   lambda->set_lambda_name(lambda_name);
+  lambda->set_function_name(function_name);
   lambda->set_start_line_number(start_line);
   lambda->set_end_line_number(end_line);
   return (long)property;

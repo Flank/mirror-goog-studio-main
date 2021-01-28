@@ -1,29 +1,11 @@
-/*
- * Copyright (C) 2012 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
-import static org.mockito.Mockito.when;
 
-import com.android.ide.common.gradle.model.IdeAndroidLibrary;
-import com.android.ide.common.gradle.model.IdeDependencies;
+import com.android.annotations.NonNull;
 import com.android.testutils.TestUtils;
-import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -37,40 +19,6 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     protected Detector getDetector() {
         return new PrivateResourceDetector();
     }
-
-    public static TestLintTask.GradleMockModifier mockModifier =
-            (project, variant) -> {
-                IdeDependencies dependencies = variant.getMainArtifact().getLevel2Dependencies();
-                IdeAndroidLibrary library = dependencies.getAndroidLibraries().iterator().next();
-
-                try {
-                    File tempDir = TestUtils.createTempDirDeletedOnExit().toFile();
-
-                    String allResources =
-                            ""
-                                    + "int string my_private_string 0x7f040000\n"
-                                    + "int string my_public_string 0x7f040001\n"
-                                    + "int layout my_private_layout 0x7f040002\n"
-                                    + "int id title 0x7f040003\n"
-                                    + "int style Theme_AppCompat_DayNight 0x7f070004";
-
-                    File rFile = new File(tempDir, FN_RESOURCE_TEXT);
-                    Files.asCharSink(rFile, Charsets.UTF_8).write(allResources);
-
-                    String publicResources =
-                            ""
-                                    + ""
-                                    + "string my_public_string\n"
-                                    + "style Theme.AppCompat.DayNight\n";
-
-                    File publicTxtFile = new File(tempDir, FN_PUBLIC_TXT);
-                    Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
-                    when(library.getPublicResources()).thenReturn(publicTxtFile.getPath());
-                    when(library.getSymbolFile()).thenReturn(rFile.getPath());
-                } catch (IOException ioe) {
-                    fail(ioe.getMessage());
-                }
-            };
 
     @SuppressWarnings("ClassNameDiffersFromFileName") // Sample code
     private static final TestFile cls =
@@ -97,17 +45,65 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                             + "\n"
                             + "</resources>\n");
 
+    private final File rFile = createRFile();
+    private final File publicTxtFile = createPublicResourcesFile();
     private final TestFile gradle =
             gradle(
+                            ""
+                                    + "apply plugin: 'com.android.application'\n"
+                                    + "\n"
+                                    + "dependencies {\n"
+                                    + "    compile 'com.android.tools:test-library:1.0.0'\n"
+                                    + "}\n")
+                    .withMockerConfigurator(
+                            mocker -> {
+                                mocker.withLibraryPublicResourcesFile(
+                                        "com.android.tools:test-library:1.0.0",
+                                        publicTxtFile.getPath());
+                                mocker.withLibrarySymbolFile(
+                                        "com.android.tools:test-library:1.0.0", rFile.getPath());
+                            });
+
+    @NonNull
+    private static File createPublicResourcesFile() {
+        try {
+            File tempDir = TestUtils.createTempDirDeletedOnExit().toFile();
+            String publicResources =
+                    "" + "" + "string my_public_string\n" + "style Theme.AppCompat.DayNight\n";
+
+            File publicTxtFile = new File(tempDir, FN_PUBLIC_TXT);
+            Files.asCharSink(publicTxtFile, Charsets.UTF_8).write(publicResources);
+            return publicTxtFile;
+        } catch (IOException ioe) {
+            fail(ioe.getMessage());
+            return new File("");
+        }
+    }
+
+    @NonNull
+    private static File createRFile() {
+        try {
+            File tempDir = TestUtils.createTempDirDeletedOnExit().toFile();
+
+            String allResources =
                     ""
-                            + "apply plugin: 'com.android.application'\n"
-                            + "\n"
-                            + "dependencies {\n"
-                            + "    compile 'com.android.tools:test-library:1.0.0'\n"
-                            + "}\n");
+                            + "int string my_private_string 0x7f040000\n"
+                            + "int string my_public_string 0x7f040001\n"
+                            + "int layout my_private_layout 0x7f040002\n"
+                            + "int id title 0x7f040003\n"
+                            + "int style Theme_AppCompat_DayNight 0x7f070004";
+
+            File rFile = new File(tempDir, FN_RESOURCE_TEXT);
+            Files.asCharSink(rFile, Charsets.UTF_8).write(allResources);
+            return rFile;
+        } catch (IOException ioe) {
+            fail(ioe.getMessage());
+            return new File("");
+        }
+    }
 
     @SuppressWarnings("ClassNameDiffersFromFileName") // Sample code
-    private static TestFile rClass =
+    private static final TestFile rClass =
             java(
                     "src/main/java/test/pkg/R.java",
                     ""
@@ -148,7 +144,6 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                         + "            android:text=\"@string/my_public_string\" />\n"
                                         + "</LinearLayout>\n"),
                         gradle)
-                .modifyGradleMocks(mockModifier)
                 .run()
                 .expect(expected);
     }
@@ -176,7 +171,6 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                         + "}\n"),
                         rClass,
                         gradle)
-                .modifyGradleMocks(mockModifier)
                 .allowCompilationErrors()
                 .run()
                 .expect(expected);
@@ -203,7 +197,6 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "</merge>\n"),
                         gradle)
-                .modifyGradleMocks(mockModifier)
                 .run()
                 .expectClean();
     }
@@ -245,13 +238,21 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                         xml("src/main/res/layout/my_private_layout.xml", "<LinearLayout/>"),
                         xml("src/main/res/layout/my_public_layout.xml", "<LinearLayout/>"),
                         gradle(
-                                ""
-                                        + "apply plugin: 'com.android.application'\n"
-                                        + "\n"
-                                        + "dependencies {\n"
-                                        + "    compile 'com.android.tools:test-library:1.0.0'\n"
-                                        + "}\n"))
-                .modifyGradleMocks(mockModifier)
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.tools:test-library:1.0.0'\n"
+                                                + "}\n")
+                                .withMockerConfigurator(
+                                        mocker -> {
+                                            mocker.withLibraryPublicResourcesFile(
+                                                    "com.android.tools:test-library:1.0.0",
+                                                    publicTxtFile.getPath());
+                                            mocker.withLibrarySymbolFile(
+                                                    "com.android.tools:test-library:1.0.0",
+                                                    rFile.getPath());
+                                        }))
                 .run()
                 .expect(expected);
     }
@@ -285,13 +286,21 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"),
                         gradle(
-                                ""
-                                        + "apply plugin: 'com.android.application'\n"
-                                        + "\n"
-                                        + "dependencies {\n"
-                                        + "    compile 'com.android.tools:test-library:1.0.0'\n"
-                                        + "}\n"))
-                .modifyGradleMocks(mockModifier)
+                                        ""
+                                                + "apply plugin: 'com.android.application'\n"
+                                                + "\n"
+                                                + "dependencies {\n"
+                                                + "    compile 'com.android.tools:test-library:1.0.0'\n"
+                                                + "}\n")
+                                .withMockerConfigurator(
+                                        mocker -> {
+                                            mocker.withLibraryPublicResourcesFile(
+                                                    "com.android.tools:test-library:1.0.0",
+                                                    publicTxtFile.getPath());
+                                            mocker.withLibrarySymbolFile(
+                                                    "com.android.tools:test-library:1.0.0",
+                                                    rFile.getPath());
+                                        }))
                 .run()
                 .expectClean();
     }
@@ -305,17 +314,13 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
         //       you also need to mark that local resource as a deliberate override,
         //       but if not you'll get a warning in the XML file where the override is
         //       defined.)
-        lint().files(manifest().pkg("test.pkg"), rClass, cls, strings, gradle)
-                .modifyGradleMocks(mockModifier)
-                .run()
-                .expectClean();
+        lint().files(manifest().pkg("test.pkg"), rClass, cls, strings, gradle).run().expectClean();
     }
 
     public void testAllowLocalOverridesWithResourceRepository() {
         // Regression test for
         //   https://code.google.com/p/android/issues/detail?id=207152
         lint().files(manifest().pkg("test.pkg"), rClass, cls, strings, gradle)
-                .modifyGradleMocks(mockModifier)
                 .supportResourceRepository(true)
                 .run()
                 .expectClean();

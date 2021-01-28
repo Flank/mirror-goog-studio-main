@@ -70,20 +70,28 @@ public class NativeSoPackagingFromRemoteAarTest {
                         + "    api 'com.example.android.nativepackaging:library:1.0-SNAPSHOT@aar'\n"
                         + "}\n");
 
-        TestFileUtils.appendToFile(libProject.getBuildFile(),
-                "apply plugin: 'maven'\n"
-                + "\n"
-                + "group = 'com.example.android.nativepackaging'\n"
-                + "archivesBaseName = 'library'\n"
-                + "version = '1.0-SNAPSHOT'\n"
-                + "\n"
-                + "uploadArchives {\n"
-                + "    repositories {\n"
-                + "        mavenDeployer {\n"
-                + "            repository(url: uri(\"../testrepo\"))\n"
-                + "        }\n"
-                + "    }\n"
-                + "}\n");
+        TestFileUtils.appendToFile(
+                libProject.getBuildFile(),
+                "apply plugin: 'maven-publish'\n"
+                        + "\n"
+                        + "group = 'com.example.android.nativepackaging'\n"
+                        + "version = '1.0-SNAPSHOT'\n"
+                        + "\n"
+                        + "afterEvaluate {\n"
+                        + "    publishing {\n"
+                        + "        repositories {\n"
+                        + "            maven {\n"
+                        + "                url = uri(\"../testrepo\")\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "        publications {\n"
+                        + "            release(MavenPublication) {\n"
+                        + "                from components.release\n"
+                        + "                artifactId = 'library'\n"
+                        + "            }\n"
+                        + "       }\n"
+                        + "    }\n"
+                        + "}\n");
 
         // put some default files in the library project, to check non incremental packaging
         // as well, and to provide files to change to test incremental support.
@@ -95,7 +103,7 @@ public class NativeSoPackagingFromRemoteAarTest {
         project.executor()
                 .withFailOnWarning(false)
                 .withArgument("--configure-on-demand")
-                .run("library:clean", "library:uploadArchives");
+                .run("library:clean", "library:publish");
 
         execute("app:clean", "app:assembleDebug");
 
@@ -105,7 +113,7 @@ public class NativeSoPackagingFromRemoteAarTest {
         project.executor()
                 .withFailOnWarning(false)
                 .withArgument("--configure-on-demand")
-                .run("library:clean", "library:uploadArchives");
+                .run("library:clean", "library:publish");
         // remove the added .so file and revert the version to 1.0-SNAPSHOT
         FileUtils.delete(FileUtils.join(libDir, "src", "main", "jniLibs", "x86", "liblibrary3.so"));
         TestFileUtils.searchAndReplace(libProject.getBuildFile(), "2.0-SNAPSHOT", "1.0-SNAPSHOT");
@@ -130,44 +138,53 @@ public class NativeSoPackagingFromRemoteAarTest {
 
     @Test
     public void testAppProjectWithNewSoInAar() throws Exception {
-        doTest(libProject, project -> {
-            project.addFile("src/main/jniLibs/x86/libnewapp.so", "newfile content");
-            // must be two calls as it's a single project that includes both modules and
-            // dependency is resolved at evaluation time, before the library published its new
-            // versions.
-            execute("library:uploadArchives");
-            execute("app:assembleDebug");
+        doTest(
+                libProject,
+                project -> {
+                    project.addFile("src/main/jniLibs/x86/libnewapp.so", "newfile content");
+                    // must be two calls as it's a single project that includes both modules and
+                    // dependency is resolved at evaluation time, before the library published its
+                    // new
+                    // versions.
+                    execute("library:publish");
+                    execute("app:assembleDebug");
 
-            checkApk(appProject, "libnewapp.so", "newfile content");
-        });
+                    checkApk(appProject, "libnewapp.so", "newfile content");
+                });
     }
 
     @Test
     public void testAppProjectWithRemovedSoInAar() throws Exception {
-        doTest(libProject, project -> {
-            project.removeFile("src/main/jniLibs/x86/liblibrary2.so");
-            // must be two calls as it's a single project that includes both modules and
-            // dependency is resolved at evaluation time, before the library published its new
-            // versions.
-            execute("library:uploadArchives");
-            execute("app:assembleDebug");
+        doTest(
+                libProject,
+                project -> {
+                    project.removeFile("src/main/jniLibs/x86/liblibrary2.so");
+                    // must be two calls as it's a single project that includes both modules and
+                    // dependency is resolved at evaluation time, before the library published its
+                    // new
+                    // versions.
+                    execute("library:publish");
+                    execute("app:assembleDebug");
 
-            checkApk(appProject, "liblibrary2.so", null);
-        });
+                    checkApk(appProject, "liblibrary2.so", null);
+                });
     }
 
     @Test
     public void testAppProjectWithEditedSoInAar() throws Exception {
-        doTest(libProject, project -> {
-            project.replaceFile("src/main/jniLibs/x86/liblibrary2.so", "new content");
-            // must be two calls as it's a single project that includes both modules and
-            // dependency is resolved at evaluation time, before the library published its new
-            // versions.
-            execute("library:uploadArchives");
-            execute("app:assembleDebug");
+        doTest(
+                libProject,
+                project -> {
+                    project.replaceFile("src/main/jniLibs/x86/liblibrary2.so", "new content");
+                    // must be two calls as it's a single project that includes both modules and
+                    // dependency is resolved at evaluation time, before the library published its
+                    // new
+                    // versions.
+                    execute("library:publish");
+                    execute("app:assembleDebug");
 
-            checkApk(appProject, "liblibrary2.so", "new content");
-        });
+                    checkApk(appProject, "liblibrary2.so", "new content");
+                });
     }
 
     /**

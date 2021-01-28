@@ -132,7 +132,6 @@ public class JacocoTest {
                         + "}\n");
         project.executor()
                 .withArgument("--dry-run")
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 // https://issuetracker.google.com/146163513
                 .run("createDebugAndroidTestCoverageReport");
 
@@ -140,7 +139,6 @@ public class JacocoTest {
                 project.getBuildFile(), "com.android.application", "com.android.library");
         project.executor()
                 .withArgument("--dry-run")
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 // https://issuetracker.google.com/146163513
                 .run("createDebugAndroidTestCoverageReport");
     }

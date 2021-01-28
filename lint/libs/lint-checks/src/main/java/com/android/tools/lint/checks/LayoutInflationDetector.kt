@@ -20,6 +20,7 @@ import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceType
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceReference.Companion.get
+import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
@@ -143,16 +144,13 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
 
     private fun hasLayoutParams(context: JavaContext, name: String): Boolean {
         val client = context.client
-        if (!client.supportsProjectResources()) {
-            return true // not certain
-        }
         val project = context.project
-        val resources = client.getResourceRepository(
-            project,
-            includeModuleDependencies = true,
-            includeLibraries = false
-        ) ?: return true // not certain
+        val resources = client.getResources(project, LOCAL_DEPENDENCIES)
         val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT, name)
+        if (items.isEmpty()) {
+            // Couldn't find layout: uncertain
+            return true
+        }
         for (item in items) {
             val source = item.source
                 ?: return true // Not certain.

@@ -16,10 +16,11 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +28,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(FilterableParameterized::class)
-class ProjectNoJavaSourcesTest(testProject: MinimalSubProject) {
+class ProjectNoJavaSourcesTest(val testProject: MinimalSubProject) {
 
     companion object {
         @Parameterized.Parameters
@@ -43,16 +44,11 @@ class ProjectNoJavaSourcesTest(testProject: MinimalSubProject) {
             android.buildFeatures.buildConfig = false
         """.trimIndent()
         )
-    ).also {
-        if (testProject.plugin == "com.android.application") {
-            // http://b/149978740 and http://b/146208910
-            it.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        }
-    }.create()
+    ).create()
 
     @Test
     fun testBuild() {
-        project.executor().run("assemble", "assembleDebugAndroidTest")
+        executor().run("assemble", "assembleDebugAndroidTest")
         Truth.assertThat(project.projectDir.walk().filter { it.extension == "java" }
             .toList()).named("list of Java sources").isEmpty()
     }
@@ -70,7 +66,7 @@ class ProjectNoJavaSourcesTest(testProject: MinimalSubProject) {
             }
         """.trimIndent()
         )
-        project.executor().run("assemble", "assembleDebugAndroidTest")
+        executor().run("assemble", "assembleDebugAndroidTest")
         Truth.assertThat(project.projectDir.walk().filter { it.extension == "java" }
             .toList()).named("list of Java sources").isEmpty()
     }
@@ -87,8 +83,17 @@ class ProjectNoJavaSourcesTest(testProject: MinimalSubProject) {
             }
         """.trimIndent()
         )
-        project.executor().run("assemble", "assembleDebugAndroidTest")
+        executor().run("assemble", "assembleDebugAndroidTest")
         Truth.assertThat(project.projectDir.walk().filter { it.extension == "java" }
             .toList()).named("list of Java sources").isEmpty()
+    }
+
+    private fun executor() : GradleTaskExecutor {
+        return if (testProject.plugin == "com.android.application") {
+            // http://b/149978740
+             project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+        } else {
+             project.executor()
+        }
     }
 }

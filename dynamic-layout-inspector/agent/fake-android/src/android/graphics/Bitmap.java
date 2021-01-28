@@ -16,7 +16,7 @@
 
 package android.graphics;
 
-import java.io.OutputStream;
+import java.nio.Buffer;
 
 /**
  * During testing this is used instead of the version in android.jar, since all the methods there
@@ -25,17 +25,18 @@ import java.io.OutputStream;
 public class Bitmap {
     public static Bitmap INSTANCE = null;
 
-    public static Bitmap createBitmap(Picture picture) {
+    public int getByteCount() {
+        return 0;
+    }
+
+    public void copyPixelsToBuffer(Buffer dst) {}
+
+    public static Bitmap createBitmap(int width, int height, Bitmap.Config config) {
         return INSTANCE;
     }
 
-    public boolean compress(CompressFormat png, int i, OutputStream out) {
-        return true;
-    }
-
-    public void recycle() {}
-
-    public enum CompressFormat {
-        PNG
+    public enum Config {
+        ARGB_8888,
+        RGB_565,
     }
 }

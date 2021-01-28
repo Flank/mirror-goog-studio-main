@@ -78,6 +78,7 @@ import com.android.tools.lint.checks.VersionChecks.Companion.isVersionCheckCondi
 import com.android.tools.lint.checks.VersionChecks.Companion.isWithinVersionCheckConditional
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.ResourceReference
+import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext.Companion.getFqcn
@@ -1582,13 +1583,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return
             }
 
-            val resources =
-                context.client.getResourceRepository(
-                    context.mainProject,
-                    includeModuleDependencies = true,
-                    includeLibraries = false
-                ) ?: return
-
             val api = 21
             if (getMinSdk(context) >= api) {
                 return
@@ -1601,6 +1595,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             // See if the associated resource references propertyValuesHolder, and if so
             // suggest switching to AnimatorInflaterCompat.loadAnimator.
+            val client = context.client
+            val resources = client.getResources(context.mainProject, LOCAL_DEPENDENCIES)
             val items =
                 resources.getResources(ResourceNamespace.TODO(), resource.type, resource.name)
             val paths = items.asSequence().mapNotNull { it.source }.toSet()

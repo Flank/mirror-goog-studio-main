@@ -77,8 +77,12 @@ public final class DeviceMonitor implements ClientTracker {
     /** Starts the monitoring. */
     public void start() {
         try {
-            mJdwpProxy = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, this::jdwpProxyChangedState);
-            mJdwpProxy.start();
+            if (DdmPreferences.isJdwpProxyEnabled()) {
+                mJdwpProxy =
+                        new JdwpProxyServer(
+                                DdmPreferences.getJdwpProxyPort(), this::jdwpProxyChangedState);
+                mJdwpProxy.start();
+            }
 
             // To terminate thread call stop on each respective task.
             mDeviceListMonitorTask = new DeviceListMonitorTask(mServer, new DeviceListUpdateListener());

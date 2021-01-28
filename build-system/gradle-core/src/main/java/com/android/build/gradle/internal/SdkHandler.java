@@ -31,6 +31,7 @@ import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.SdkLoader;
 import com.android.builder.sdk.TargetInfo;
+import com.android.prefs.AndroidLocationsProvider;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
@@ -54,13 +55,16 @@ public class SdkHandler {
 
     @NonNull private final IssueReporter issueReporter;
 
+    @NonNull private final AndroidLocationsProvider androidLocationsProvider;
     @NonNull private SdkLocationSourceSet sdkLocationSourceSet;
     @NonNull private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private SdkLoader sdkLoader;
 
     public SdkHandler(
+            @NonNull AndroidLocationsProvider androidLocationsProvider,
             @NonNull SdkLocationSourceSet sdkLocationSourceSet,
             @NonNull IssueReporter issueReporter) {
+        this.androidLocationsProvider = androidLocationsProvider;
         this.sdkLocationSourceSet = sdkLocationSourceSet;
         this.issueReporter = issueReporter;
     }
@@ -152,7 +156,8 @@ public class SdkHandler {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         File sdkDir = SdkLocator.getSdkLocation(sdkLocationSourceSet, issueReporter).getDirectory();
         AndroidSdkHandler sdk =
-                AndroidSdkHandler.getInstance(sdkDir == null ? null : sdkDir.toPath());
+                AndroidSdkHandler.getInstance(
+                        androidLocationsProvider, sdkDir == null ? null : sdkDir.toPath());
         LocalPackage platformToolsPackage =
                 sdk.getLatestLocalPackageForPrefix(
                         SdkConstants.FD_PLATFORM_TOOLS, null, true, progress);
@@ -193,7 +198,9 @@ public class SdkHandler {
             switch (sdkLocation.getType()) {
                 case TEST: // Fallthrough
                 case REGULAR:
-                    sdkLoader = DefaultSdkLoader.getLoader(sdkLocation.getDirectory());
+                    sdkLoader =
+                            DefaultSdkLoader.getLoader(
+                                    androidLocationsProvider, sdkLocation.getDirectory());
                     break;
                 case PLATFORM:
                     sdkLoader = PlatformLoader.getLoader(sdkLocation.getDirectory());

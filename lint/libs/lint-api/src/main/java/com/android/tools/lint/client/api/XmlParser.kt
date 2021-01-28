@@ -16,9 +16,16 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.ATTR_TYPE
+import com.android.SdkConstants.NEW_ID_PREFIX
+import com.android.ide.common.resources.ResourceItem
+import com.android.ide.common.resources.ResourceMergerItem
+import com.android.resources.ResourceType
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.utils.iterator
 import com.google.common.annotations.Beta
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
@@ -228,4 +235,136 @@ abstract class XmlParser {
      * @return the leaf node, if any
      */
     abstract fun findNodeAt(context: XmlContext, offset: Int): Node?
+
+    /**
+     * Returns a [Location] for the given DOM node
+     *
+     * @return a location for the given node
+     */
+    abstract fun getLocation(client: LintClient, file: File, node: Node): Location
+
+    /**
+     * Returns the start offset of the given node, or -1 if not known
+     *
+     * @return the start offset, or -1 if not known
+     */
+    abstract fun getNodeStartOffset(client: LintClient, file: File, node: Node): Int
+
+    /**
+     * Returns the end offset of the given node, or -1 if not known
+     *
+     * @return the end offset, or -1 if not known
+     */
+    abstract fun getNodeEndOffset(client: LintClient, file: File, node: Node): Int
+
+    /**
+     * Returns a [Location] for the given DOM node
+     *
+     * @return a location for the given node
+     */
+    abstract fun getNameLocation(client: LintClient, file: File, node: Node): Location
+
+    /**
+     * Returns a [Location] for the given DOM node
+     *
+     * @return a location for the given node
+     */
+    abstract fun getValueLocation(client: LintClient, file: File, node: Attr): Location
+
+    /**
+     * Attempt to find the location of the given resource [item] for
+     * the given [client]. This will return the location for the entire
+     * element; see [getNameLocation] and [getValueLocation] to pick out
+     * more specific ranges. (For file-based resources, the location
+     * points to the first line of the file.)
+     */
+    fun getLocation(
+        client: LintClient,
+        item: ResourceItem
+    ): Location? {
+        return getLocation(client, item, false, false)
+    }
+
+    private fun getLocation(
+        client: LintClient,
+        item: ResourceItem,
+        nameOnly: Boolean = false,
+        valueOnly: Boolean = false
+    ): Location? {
+        val file = item.getFile() ?: return null
+        if (item.isFileBased) {
+            // Just point to the file -- that's easy
+            return Location.create(file)
+        }
+
+        // For elements and attributes we have to work harder
+        val text = client.readFile(file)
+        val name = item.name
+        val type = item.type
+
+        // Id's in non-values files are different
+        if (type == ResourceType.ID && text.contains(NEW_ID_PREFIX)) {
+            return Location.create(file, text, -1, "$NEW_ID_PREFIX/$name", null, null)
+        }
+
+        // Parse XML document and search for the right target element
+        val document = client.getXmlDocument(file, text)?.documentElement ?: return null
+        for (element in document) {
+            if (element.getAttribute(ATTR_NAME) != name) {
+                continue
+            }
+
+            val tag = element.tagName
+            if (tag == type.getName() || element.getAttribute(ATTR_TYPE) == type.getName()) {
+                if (nameOnly) {
+                    element.getAttributeNode(ATTR_NAME)?.let {
+                        return getNameLocation(client, file, it)
+                    }
+                } else if (valueOnly) {
+                    val firstChild = element.firstChild
+                    val lastChild = element.lastChild
+                    if (firstChild != null) {
+                        val startLocation = getLocation(file, firstChild)
+                        if (lastChild === firstChild) {
+                            // Single child (the common case): we have the whole range
+                            // already
+                            return startLocation
+                        }
+                        val endLocation = getLocation(file, lastChild)
+                        if (startLocation.start != null && endLocation.end != null) {
+                            return Location.create(file, startLocation.start, endLocation.end)
+                        }
+                    }
+                }
+                return getLocation(client, file, element)
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * Attempt to find the location of the given resource [item] for the
+     * given [client], and in particular, just the name part.
+     */
+    fun getNameLocation(client: LintClient, item: ResourceItem): Location? {
+        return getLocation(client, item, nameOnly = true)
+    }
+
+    /**
+     * Attempt to find the location of the given resource [item] for the
+     * given [client], and in particular, just the value part.
+     */
+    fun getValueLocation(client: LintClient, item: ResourceItem): Location? {
+        return getLocation(client, item, valueOnly = true)
+    }
+
+    fun ResourceItem.getFile(): File? {
+        // TODO: Check how to do this most efficiently in the IDE
+        return if (this is ResourceMergerItem) {
+            file
+        } else {
+            source?.toFile()
+        }
+    }
 }

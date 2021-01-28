@@ -20,7 +20,6 @@ import com.android.testutils.TestUtils
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
 import org.junit.Test
 import java.awt.image.BufferedImage
-import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -40,7 +39,7 @@ class SkiaParserTest {
     @Test
     fun testBoxes() {
         val response = SkiaParser.InspectorView.parseFrom(generateBoxes())
-        val tree = LayoutInspectorUtils.buildTree(response, { false }, mapOf())!!
+        val tree = LayoutInspectorUtils.buildTree(response, mapOf(), { false }, mapOf())!!
         assertTreeIdsEqual(
             Node(
                 1, listOf(
@@ -62,7 +61,7 @@ class SkiaParserTest {
     @Test
     fun testTransformation() {
         val response = SkiaParser.InspectorView.parseFrom(generateTransformedViews())
-        val tree = LayoutInspectorUtils.buildTree(response, { false }, mapOf())!!
+        val tree = LayoutInspectorUtils.buildTree(response, mapOf(), { false }, mapOf())!!
         assertTreeIdsEqual(
             Node(
                 1, listOf(

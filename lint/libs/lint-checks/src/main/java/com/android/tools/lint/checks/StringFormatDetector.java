@@ -34,6 +34,7 @@ import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG_WRAPPE
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_OBJECT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT_WRAPPER;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 import static com.android.utils.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
@@ -42,6 +43,7 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -55,7 +57,9 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
+import com.android.tools.lint.detector.api.Location.ResourceItemHandle;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -83,6 +87,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -101,7 +106,19 @@ import org.w3c.dom.NodeList;
  * Check which looks for problems with formatting strings such as inconsistencies between
  * translations or between string declaration and string usage in Java.
  *
- * <p>TODO: Handle Resources.getQuantityString as well
+ * <p>TODO
+ *
+ * <ul>
+ *   <li>Port to Kotlin before the following changes:
+ *   <li>Handle Resources.getQuantityString as well
+ *   <li>Remove all the batch mode handling here; instead of accumulating all strings we can now
+ *       limit the analysis directly to resolving strings from String#format calls, so there's no
+ *       longer any ambiguity about what is a formatting string and what is not. One small challenge
+ *       is what to do about formatted= attributes which we can't look up later; maybe only flag
+ *       these in batch mode. (It's also unlikely to happen; these strings tend not to be used from
+ *       String#format).
+ *   <li>Add support for Kotlin strings
+ * </ul>
  */
 public class StringFormatDetector extends ResourceXmlDetector implements SourceCodeScanner {
     private static final Implementation IMPLEMENTATION_XML =
@@ -634,19 +651,21 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                         matcher.start(),
                                         matcher.end());
                         Location otherLocation = typeDefinition.get(number).resolve();
-                        otherLocation.setMessage("Conflicting argument type here");
+                        otherLocation.setMessage(
+                                "Conflicting argument type (`" + currentFormat + "') here");
                         location.setSecondary(otherLocation);
                         File f = otherLocation.getFile();
                         String message =
                                 String.format(
+                                        Locale.US,
                                         "Inconsistent formatting types for argument #%1$d in "
-                                                + "format string `%2$s` ('%3$s'): Found both '`%4$s`' and '`%5$s`' "
-                                                + "(in %6$s)",
+                                                + "format string `%2$s` ('%3$s'): Found both '`%4$s`' here and '`%5$s`' "
+                                                + "in %6$s",
                                         number,
                                         name,
                                         str,
-                                        currentFormat,
                                         format,
+                                        currentFormat,
                                         Lint.getFileNameWithParent(context.getClient(), f));
                         // warned = true;
                         context.report(ARG_TYPES, location, message);
@@ -799,13 +818,18 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                 }
                 Location location = handle.resolve();
                 Location secondary = list.get(0).getFirst().resolve();
-                secondary.setMessage("Conflicting number of arguments here");
+                secondary.setMessage("Conflicting number of arguments (" + prevCount + ") here");
                 location.setSecondary(secondary);
+                String path = Lint.getFileNameWithParent(context.getClient(), secondary.getFile());
                 String message =
                         String.format(
+                                Locale.US,
                                 "Inconsistent number of arguments in formatting string `%1$s`; "
-                                        + "found both %2$d and %3$d",
-                                name, prevCount, count);
+                                        + "found both %2$d here and %3$d in %4$s",
+                                name,
+                                count,
+                                prevCount,
+                                path);
                 context.report(ARG_COUNT, location, message);
                 break;
             }
@@ -1057,10 +1081,6 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
-        if (mFormatStrings == null && !context.getClient().supportsProjectResources()) {
-            return;
-        }
-
         JavaEvaluator evaluator = context.getEvaluator();
         String methodName = method.getName();
         if (methodName.equals(FORMAT_METHOD)) {
@@ -1242,106 +1262,107 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         List<Pair<Handle, String>> list = mFormatStrings != null ? mFormatStrings.get(name) : null;
         if (list == null) {
             LintClient client = context.getClient();
-            if (client.supportsProjectResources()
-                    && !context.getScope().contains(Scope.RESOURCE_FILE)) {
-                ResourceRepository resources =
-                        client.getResourceRepository(context.getMainProject(), true, false);
-                List<ResourceItem> items;
-                if (resources != null) {
-                    items =
-                            resources.getResources(
-                                    ResourceNamespace.TODO(), ResourceType.STRING, name);
-                } else {
-                    // Must be a non-Android module
-                    items = null;
+            Project mainProject = context.getMainProject();
+            ResourceRepository resources = client.getResources(mainProject, LOCAL_DEPENDENCIES);
+            List<ResourceItem> items;
+            items = resources.getResources(ResourceNamespace.TODO(), ResourceType.STRING, name);
+            for (ResourceItem item : items) {
+                ResourceValue v = item.getResourceValue();
+                if (v == null) {
+                    continue;
                 }
-                if (items != null) {
-                    for (final ResourceItem item : items) {
-                        ResourceValue v = item.getResourceValue();
-                        if (v != null) {
-                            String value = v.getRawXmlValue();
-                            // Attempt to resolve indirection
-                            if (value == null) {
-                                continue;
-                            }
-                            if (isReference(value)) {
-                                // Only resolve a few indirections
-                                for (int i = 0; i < 3; i++) {
-                                    ResourceUrl url = ResourceUrl.parse(value);
-                                    if (url == null || url.isFramework()) {
-                                        break;
-                                    }
-                                    List<ResourceItem> l =
-                                            resources.getResources(
-                                                    ResourceNamespace.TODO(), url.type, url.name);
-                                    if (l != null && !l.isEmpty()) {
-                                        v = l.get(0).getResourceValue();
-                                        if (v != null) {
-                                            value = v.getValue();
-                                            if (value == null || !isReference(value)) {
-                                                break;
-                                            }
-                                        } else {
-                                            break;
-                                        }
-                                    } else {
-                                        break;
-                                    }
+                String value = v.getRawXmlValue();
+                // Attempt to resolve indirection
+                if (value == null) {
+                    continue;
+                }
+                if (isReference(value)) {
+                    // Only resolve a few indirections
+                    for (int i = 0; i < 3; i++) {
+                        ResourceUrl url = ResourceUrl.parse(value);
+                        if (url == null || url.isFramework()) {
+                            break;
+                        }
+                        List<ResourceItem> l =
+                                resources.getResources(
+                                        ResourceNamespace.TODO(), url.type, url.name);
+                        if (!l.isEmpty()) {
+                            v = l.get(0).getResourceValue();
+                            if (v != null) {
+                                value = v.getValue();
+                                if (value == null || !isReference(value)) {
+                                    break;
                                 }
+                            } else {
+                                break;
                             }
-
-                            if (value != null && !isReference(value)) {
-                                // Make sure it's really a formatting string,
-                                // not for example "Battery remaining: 90%"
-                                boolean isFormattingString = value.indexOf('%') != -1;
-                                for (int j = 0, m = value.length();
-                                        j < m && isFormattingString;
-                                        j++) {
-                                    char c = value.charAt(j);
-                                    if (c == '\\') {
-                                        j++;
-                                    } else if (c == '%') {
-                                        Matcher matcher = FORMAT.matcher(value);
-                                        if (!matcher.find(j)) {
-                                            isFormattingString = false;
-                                        } else {
-                                            String conversion = matcher.group(6);
-                                            int conversionClass =
-                                                    getConversionClass(conversion.charAt(0));
-                                            if (conversionClass == CONVERSION_CLASS_UNKNOWN
-                                                    || matcher.group(5) != null) {
-                                                // Some date format etc - don't process
-                                                return;
-                                            }
-                                        }
-                                        j++; // Don't process second % in a %%
-                                    }
-                                    // If the user marked the string with
-                                }
-
-                                Handle handle = client.createResourceItemHandle(item);
-                                if (isFormattingString) {
-                                    if (list == null) {
-                                        list = Lists.newArrayList();
-                                        if (mFormatStrings == null) {
-                                            mFormatStrings = Maps.newHashMap();
-                                        }
-                                        mFormatStrings.put(name, list);
-                                    }
-                                    list.add(Pair.of(handle, value));
-                                } else if (callCount > 0) {
-                                    checkNotFormattedHandle(context, call, name, handle);
-                                }
-                            }
+                        } else {
+                            break;
                         }
                     }
                 }
-            } else {
-                return;
+
+                if (value != null && !isReference(value)) {
+                    // Make sure it's really a formatting string,
+                    // not for example "Battery remaining: 90%"
+                    boolean isFormattingString = value.indexOf('%') != -1;
+                    for (int j = 0, m = value.length(); j < m && isFormattingString; j++) {
+                        char c = value.charAt(j);
+                        if (c == '\\') {
+                            j++;
+                        } else if (c == '%') {
+                            Matcher matcher = FORMAT.matcher(value);
+                            if (!matcher.find(j)) {
+                                isFormattingString = false;
+                            } else {
+                                String conversion = matcher.group(6);
+                                int conversionClass = getConversionClass(conversion.charAt(0));
+                                if (conversionClass == CONVERSION_CLASS_UNKNOWN
+                                        || matcher.group(5) != null) {
+                                    // Some date format etc - don't process
+                                    return;
+                                }
+                            }
+                            j++; // Don't process second % in a %%
+                        }
+                        // If the user marked the string with
+                    }
+
+                    Handle handle = client.createResourceItemHandle(item, false, true);
+                    if (isFormattingString) {
+                        if (list == null) {
+                            list = Lists.newArrayList();
+                            if (mFormatStrings == null) {
+                                mFormatStrings = Maps.newHashMap();
+                            }
+                            mFormatStrings.put(name, list);
+                        }
+                        list.add(Pair.of(handle, value));
+                    } else if (callCount > 0) {
+                        checkNotFormattedHandle(context, call, name, handle);
+                    }
+                }
             }
         }
 
-        if (list != null) {
+        if (list != null && !list.isEmpty()) {
+            list.sort(
+                    (o1, o2) -> {
+                        Handle h1 = o1.getFirst();
+                        Handle h2 = o2.getFirst();
+                        if (h1 instanceof ResourceItemHandle && h2 instanceof ResourceItemHandle) {
+                            ResourceItem item1 = ((ResourceItemHandle) h1).getItem();
+                            ResourceItem item2 = ((ResourceItemHandle) h2).getItem();
+                            FolderConfiguration f1 = item1.getConfiguration();
+                            FolderConfiguration f2 = item2.getConfiguration();
+                            int delta = f1.compareTo(f2);
+                            if (delta != 0) {
+                                return delta;
+                            }
+                            return item1.toString().compareTo(item2.toString());
+                        }
+                        return o1.toString().compareTo(o2.toString());
+                    });
             Set<String> reported = null;
             for (Pair<Handle, String> pair : list) {
                 String s = pair.getSecond();
@@ -1354,13 +1375,20 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                     Location location = context.getLocation(call);
                     Location secondary = handle.resolve();
                     secondary.setMessage(
-                            String.format("This definition requires %1$d arguments", count));
+                            String.format(
+                                    Locale.US,
+                                    "This definition requires %1$d argument%2$s",
+                                    count,
+                                    count != 1 ? "s" : ""));
                     location.setSecondary(secondary);
                     String message =
                             String.format(
+                                    Locale.US,
                                     "Wrong argument count, format string `%1$s` requires `%2$d` but format "
                                             + "call supplies `%3$d`",
-                                    name, count, callCount);
+                                    name,
+                                    count,
+                                    callCount);
                     context.report(ARG_TYPES, call, location, message);
                     if (reported == null) {
                         reported = Sets.newHashSet();
@@ -1486,6 +1514,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
 
                                 String message =
                                         String.format(
+                                                Locale.US,
                                                 "Wrong argument type for formatting argument '#%1$d' "
                                                         + "in `%2$s`: conversion is '`%3$s`', received `%4$s` "
                                                         + "(argument #%5$d in method call)%6$s",
@@ -1499,6 +1528,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 if ((last == 's' || last == 'S') && isNumericType(type, false)) {
                                     message =
                                             String.format(
+                                                    Locale.US,
                                                     "Suspicious argument type for formatting argument #%1$d "
                                                             + "in `%2$s`: conversion is `%3$s`, received `%4$s` "
                                                             + "(argument #%5$d in method call)%6$s",

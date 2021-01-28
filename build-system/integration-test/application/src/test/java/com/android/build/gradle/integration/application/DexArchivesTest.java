@@ -19,11 +19,9 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
 import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -31,6 +29,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
@@ -157,8 +156,8 @@ public class DexArchivesTest {
     public void testForReleaseVariants() throws IOException, InterruptedException {
         GradleBuildResult result =
                 project.executor()
-                        // http://b/149978740
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        // http://b/162074215
+                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("assembleRelease");
 
         assertThat(result.getTask(":dexBuilderRelease")).didWork();

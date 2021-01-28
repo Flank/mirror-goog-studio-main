@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.SdkConstants.DOT_ANDROID_PACKAGE
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_RES_RAW
@@ -23,6 +24,7 @@ import com.android.SdkConstants.FD_RES_XML
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -222,9 +224,30 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         override val type: Class<GenerateApkDataTask> = GenerateApkDataTask::class.java
 
         override fun handleProvider(
-            taskProvider: TaskProvider<GenerateApkDataTask>
+                taskProvider: TaskProvider<GenerateApkDataTask>
         ) {
             super.handleProvider(taskProvider)
+            val manifestLocation = FileUtils.join(creationConfig.paths.generatedDir,
+                    "manifests",
+                    "microapk",
+                    creationConfig.variantDslInfo.dirName,
+                    SdkConstants.FN_ANDROID_MANIFEST_XML)
+
+            creationConfig.artifacts
+                    .setInitialProvider(taskProvider, GenerateApkDataTask::manifestFile)
+                    .atLocation(manifestLocation.absolutePath)
+                    .on(InternalArtifactType.MICRO_APK_MANIFEST_FILE)
+
+            val microApkResDirectory =
+                    FileUtils.join(creationConfig.paths.generatedDir,
+                            "res",
+                            "microapk",
+                            creationConfig.variantDslInfo.dirName)
+            creationConfig.artifacts
+                    .setInitialProvider(taskProvider, GenerateApkDataTask::resOutputDir)
+                    .atLocation(microApkResDirectory.absolutePath)
+                    .on(InternalArtifactType.MICRO_APK_RES)
+
             creationConfig.taskContainer.microApkTask = taskProvider
             creationConfig.taskContainer.generateApkDataTask = taskProvider
         }
@@ -234,20 +257,12 @@ abstract class GenerateApkDataTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val paths = creationConfig.paths
-
-            task.resOutputDir.set(paths.microApkResDirectory)
-            task.resOutputDir.disallowChanges()
-
             apkFileCollection?.let {
                 task.apkFileCollection.from(it)
             }
             task.apkFileCollection.disallowChanges()
 
             task.hasDependency.setDisallowChanges(apkFileCollection != null)
-
-            task.manifestFile.set(paths.microApkManifestFile)
-            task.manifestFile.disallowChanges()
 
             task.mainPkgName.setDisallowChanges(creationConfig.applicationId)
 

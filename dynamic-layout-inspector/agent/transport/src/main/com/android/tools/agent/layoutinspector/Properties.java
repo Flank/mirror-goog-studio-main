@@ -290,6 +290,8 @@ class Properties {
                 return ValueType.DIMENSION_EM;
             case "Lambda":
                 return ValueType.LAMBDA;
+            case "FunctionReference":
+                return ValueType.FUNCTION_REFERENCE;
             default:
                 Log.w("Compose", "Could not map this type: " + type);
                 return ValueType.OBJECT;
@@ -410,18 +412,24 @@ class Properties {
                 return addIntProperty(
                         event, property, name, isLayout, type, toInt(value.getClass().getName()));
             case LAMBDA:
-                return addLambdaProperty(event, property, name, value);
+            case FUNCTION_REFERENCE:
+                if (!(value instanceof Object[] && ((Object[]) value).length >= 1)) {
+                    return 0;
+                }
+                return addLambdaProperty(event, property, name, type, (Object[]) value);
             default:
                 return 0;
         }
     }
 
-    private long addLambdaProperty(long event, long property, int name, Object value) {
-        Class<?> lambdaClass = value.getClass();
+    private long addLambdaProperty(long event, long property, int name, int type, Object[] value) {
+        Object lambdaInstance = value[0];
+        String functionName = value.length >= 2 ? String.valueOf(value[1]) : null;
+        Class<?> lambdaClass = lambdaInstance.getClass();
         String lambdaClassName = lambdaClass.getName();
         String packageName = substringBeforeLast(lambdaClassName, '.', "");
         String lambdaName = substringAfter(lambdaClassName, '$');
-        LambdaLocation location = getLambdaLocation(value.getClass());
+        LambdaLocation location = getLambdaLocation(lambdaClass);
         if (location == null) {
             return 0;
         }
@@ -429,9 +437,11 @@ class Properties {
                 event,
                 property,
                 name,
+                type,
                 toInt(packageName),
                 toInt(location.getFileName()),
                 toInt(lambdaName),
+                toInt(functionName),
                 location.getStartLine(),
                 location.getEndLine());
     }
@@ -577,9 +587,11 @@ class Properties {
             long event,
             long property,
             int name,
+            int type,
             int enclosedPackageName,
             int fileName,
             int lambdaName,
+            int functionName,
             int startLine,
             int endLine);
 

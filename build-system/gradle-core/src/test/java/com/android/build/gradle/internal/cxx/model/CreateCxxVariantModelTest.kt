@@ -25,6 +25,7 @@ class CreateCxxVariantModelTest {
         BasicCmakeMock().let {
             val module = createCxxModuleModel(
                 it.sdkComponents,
+                it.androidLocationProvider,
                 it.configurationParameters
             )
             createCxxVariantModel(

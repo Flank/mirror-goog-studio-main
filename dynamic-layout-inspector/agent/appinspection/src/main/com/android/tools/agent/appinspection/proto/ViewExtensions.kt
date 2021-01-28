@@ -18,13 +18,21 @@ package com.android.tools.agent.appinspection.proto
 
 import android.content.res.Resources
 import android.graphics.Point
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
-import com.android.tools.agent.appinspection.util.ThreadUtils
 import android.view.WindowManager
 import com.android.tools.agent.appinspection.framework.getChildren
 import com.android.tools.agent.appinspection.framework.getTextValue
+import com.android.tools.agent.appinspection.framework.isSystemView
+import com.android.tools.agent.appinspection.proto.property.PropertyCache
+import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
+import com.android.tools.agent.appinspection.proto.resource.convert
+import com.android.tools.agent.appinspection.util.ThreadUtils
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertyGroup
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Rect
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
@@ -34,15 +42,65 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
  *
  * This method must be called on the main thread to avoid race conditions when querying the tree.
  */
-fun View.toNode(stringTable: StringTable): ViewNode {
+fun View.toNode(stringTable: StringTable, skipSystemViews: Boolean): ViewNode {
     ThreadUtils.assertOnMainThread()
-    return toNodeImpl(stringTable, Point()).build()
+    val absPos = Point(left, top)
+    val rootNode = this.toNodeImpl(stringTable, absPos)
+    populateNodesRecursively(stringTable, skipSystemViews, rootNode, absPos)
+
+    return rootNode.build()
 }
 
-private fun View.toNodeImpl(stringTable: StringTable, absOffset: Point): ViewNode.Builder {
+/**
+ * Run through all views and, if not filtered out, created nodes for them.
+ *
+ * It is because of the fact we can filter out some intermediate nodes that we need to have a
+ * separate method for populating nodes and creating them (see: [toNodeImpl]
+ *
+ * Any valid children of intermediate views that got filtered out will be added to their first
+ * valid ancestor.
+ */
+private fun View.populateNodesRecursively(
+    stringTable: StringTable,
+    skipSystemViews: Boolean,
+    lastParent: ViewNode.Builder,
+    parentPos: Point,
+) {
+    if (this is ViewGroup) {
+        for (child in getChildren()) {
+            val childPos = Point(parentPos.x + child.left, parentPos.y + child.top)
+            val childNode =
+                if (!(skipSystemViews && child.isSystemView())) {
+                    child.toNodeImpl(stringTable, childPos)
+                } else null
+
+            // Filling out protos requires populating children before parents, since "addChildren"
+            // takes a snapshot of the current node when you call it.
+            child.populateNodesRecursively(
+                stringTable,
+                skipSystemViews,
+                childNode ?: lastParent,
+                childPos
+            )
+            if (childNode != null) {
+                lastParent.addChildren(childNode)
+            }
+        }
+    }
+}
+
+/**
+ * Directly convert a view to a node, without adding children.
+ *
+ * Adding children will be handled by [populateNodesRecursively], which may skip over intermediate
+ * nodes.
+ */
+private fun View.toNodeImpl(
+    stringTable: StringTable,
+    absPos: Point
+): ViewNode.Builder {
     val view = this
     val viewClass = view::class.java
-    val absPos = Point(absOffset.x + view.left, absOffset.y + view.top)
 
     return ViewNode.newBuilder().apply {
         id = uniqueDrawingId
@@ -69,11 +127,6 @@ private fun View.toNodeImpl(stringTable: StringTable, absOffset: Point): ViewNod
         view.getTextValue()?.let { text ->
             textValue = stringTable.put(text)
         }
-        if (view is ViewGroup) {
-            view.getChildren().forEach { child ->
-                addChildren(child.toNodeImpl(stringTable, absPos))
-            }
-        }
     }
 }
 
@@ -96,3 +149,70 @@ fun View.createResource(stringTable: StringTable, resourceId: Int): Resource? {
     }
 }
 
+fun View.createAppContext(stringTable: StringTable): AppContext {
+    return AppContext.newBuilder().apply {
+        apiLevel = Build.VERSION.SDK_INT
+        apiCodeName = stringTable.put(Build.VERSION.CODENAME)
+        appPackageName = stringTable.put(context.packageName)
+
+        // getThemeResId is @hide; stubbed in fake-android but IDE doesn't find it due to setup
+        createResource(stringTable, context.getThemeResId())?.let { themeResource ->
+            theme = themeResource
+        }
+        configuration = context.resources.configuration.convert(stringTable)
+    }.build()
+}
+
+fun View.createGetPropertiesResponse(): GetPropertiesResponse {
+    val stringTable = StringTable()
+    val view = this
+
+    return GetPropertiesResponse.newBuilder().apply {
+        propertyGroup = view.createPropertyGroup(stringTable)
+        addAllStrings(stringTable.toStringEntries())
+    }.build()
+}
+
+fun View.createPropertyGroup(stringTable: StringTable): PropertyGroup {
+    // TODO(b/177573802): WebView is a special case and should happen on the UI thread
+    ThreadUtils.assertOffMainThread()
+
+    val viewCacheMap = PropertyCache.createViewCache()
+    val layoutCacheMap = PropertyCache.createLayoutParamsCache()
+
+    val viewCache = viewCacheMap.typeOf(this)
+    val layoutCache = layoutCacheMap.typeOf(layoutParams)
+
+    val viewProperties = viewCache.properties
+    val layoutProperties = layoutCache.properties
+
+    val viewReader =
+        SimplePropertyReader(
+            stringTable,
+            this,
+            viewProperties,
+            SimplePropertyReader.PropertyCategory.VIEW
+        )
+    viewCache.readProperties(this, viewReader)
+    val layoutReader =
+        SimplePropertyReader(
+            stringTable,
+            this,
+            layoutProperties,
+            SimplePropertyReader.PropertyCategory.LAYOUT_PARAMS
+        )
+    layoutCache.readProperties(layoutParams, layoutReader)
+
+    val view = this
+    return PropertyGroup.newBuilder().apply {
+        this.viewId = view.uniqueDrawingId
+
+        view.createResource(stringTable, sourceLayoutResId)?.let { layoutResource ->
+            layout = layoutResource
+        }
+
+        (viewProperties + layoutProperties)
+            .mapNotNull { property -> property.build(stringTable) }
+            .forEach { property -> this.addProperty(property) }
+    }.build()
+}

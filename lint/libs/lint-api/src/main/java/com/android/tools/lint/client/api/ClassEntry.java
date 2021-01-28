@@ -19,7 +19,7 @@ package com.android.tools.lint.client.api;
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_SRCJAR;
-import static org.objectweb.asm.Opcodes.ASM5;
+import static org.objectweb.asm.Opcodes.ASM7;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -302,7 +302,7 @@ class ClassEntry implements Comparable<ClassEntry> {
         private final Map<String, String> mMap;
 
         SuperclassVisitor(Map<String, String> map) {
-            super(ASM5);
+            super(ASM7);
             mMap = map;
         }
 

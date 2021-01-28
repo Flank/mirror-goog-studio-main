@@ -17,26 +17,15 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(FilterableParameterized::class)
-class LintDynamicFeatureTest(lintInvocationType: LintInvocationType) {
-
-    companion object {
-        @get:JvmStatic
-        @get:Parameterized.Parameters(name = "{0}")
-        val params get() = LintInvocationType.values()
-    }
+class LintDynamicFeatureTest {
 
     @get:Rule
     val project: GradleTestProject =
-        lintInvocationType.testProjectBuilder()
-            .fromTestProject("dynamicApp").create()
+        GradleTestProject.builder().fromTestProject("dynamicApp").create()
 
     @Test
     fun runLint() {

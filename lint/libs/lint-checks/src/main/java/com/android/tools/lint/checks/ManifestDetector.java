@@ -46,6 +46,7 @@ import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.GradleDetector.GMS_GROUP_ID;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
@@ -61,6 +62,7 @@ import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.resources.ResourceUrl;
 import com.android.sdklib.AndroidVersion;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -510,14 +512,12 @@ public class ManifestDetector extends Detector implements XmlScanner {
             Attr fullBackupNode =
                     application.getAttributeNodeNS(ANDROID_URI, ATTR_FULL_BACKUP_CONTENT);
             if (fullBackupNode != null
-                    && fullBackupNode.getValue().startsWith(PREFIX_RESOURCE_REF)
-                    && context.getClient().supportsProjectResources()) {
-                ResourceRepository resources =
-                        context.getClient().getResourceRepository(mainProject, true, false);
+                    && fullBackupNode.getValue().startsWith(PREFIX_RESOURCE_REF)) {
+                LintClient client = context.getClient();
+                ResourceRepository resources = client.getResources(mainProject, LOCAL_DEPENDENCIES);
                 ResourceUrl url = ResourceUrl.parse(fullBackupNode.getValue());
                 if (url != null
                         && !url.isFramework()
-                        && resources != null
                         && !resources.hasResources(ResourceNamespace.TODO(), url.type, url.name)) {
                     Attr sourceFullBackupNode =
                             sourceApplicationElement.getAttributeNodeNS(

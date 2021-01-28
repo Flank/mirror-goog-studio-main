@@ -63,10 +63,7 @@ public class FlavorlibTest {
 
     @Test
     public void lint() throws Exception {
-        // http://b/146208910
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("lint");
+        project.executor().run("lint");
     }
 
     @Test

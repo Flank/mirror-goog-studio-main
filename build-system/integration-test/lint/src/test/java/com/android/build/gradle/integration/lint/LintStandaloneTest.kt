@@ -16,36 +16,27 @@
 
 package com.android.build.gradle.integration.lint
 
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Test for the standalone lint plugin.
  *
- * To run just this test:
- * ./gradlew :base:build-system:integration-test:application:test --tests LintStandaloneTest
+ * <p>Tip: To execute just this test run:
+ *
+ * <pre>
+ *     $ cd tools
+ *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintStandaloneTest
+ * </pre>
  */
-@RunWith(FilterableParameterized::class)
-class LintStandaloneTest(private val lintInvocationType: LintInvocationType) {
+class LintStandaloneTest {
 
-    companion object {
-        @get:JvmStatic
-        @get:Parameterized.Parameters(name = "{0}")
-        val params get() = LintInvocationType.values()
-    }
-
-    @Rule
-    @JvmField
-    var project = lintInvocationType
-        .testProjectBuilder()
-        .fromTestProject("lintStandalone")
-        .create()
+    @get:Rule
+    val project = GradleTestProject.builder().fromTestProject("lintStandalone").create()
 
     @Test
     fun checkStandaloneLint() {
@@ -66,17 +57,9 @@ class LintStandaloneTest(private val lintInvocationType: LintInvocationType) {
         )
         // Run twice to catch issues with configuration caching
         val secondRun = project.executor().run(":lint")
-        if (lintInvocationType == LintInvocationType.NEW_LINT_MODEL) {
-            assertThat(secondRun.getTask(":lint")).wasUpToDate()
-        } else {
-            assertThat(secondRun.getTask(":lint")).didWork()
-        }
+        assertThat(secondRun.getTask(":lint")).wasUpToDate()
         val thirdRun = project.executor().run(":lint")
-        if (lintInvocationType == LintInvocationType.NEW_LINT_MODEL) {
-            assertThat(thirdRun.getTask(":lint")).wasUpToDate()
-        } else {
-            assertThat(thirdRun.getTask(":lint")).didWork()
-        }
+        assertThat(thirdRun.getTask(":lint")).wasUpToDate()
         val secondFile = project.file("lint-results2.txt")
         assertThat(secondFile).exists()
         assertThat(secondFile).contains("MyClass.java:5: Warning: Use Boolean.valueOf(true) instead")

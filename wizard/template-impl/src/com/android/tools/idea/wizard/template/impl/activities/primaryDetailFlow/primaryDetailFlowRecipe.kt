@@ -110,17 +110,27 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   // guaranteed to be unique
   val navHostFragmentId = "nav_host_${detailNameFragmentLayout}"
 
-  save(fragmentItemDetailXml(detailName, detailNameLayout, packageName, useAndroidX),
-       resOut.resolve("layout/${detailNameFragmentLayout}.xml"))
-  save(fragmentItemDetailTwoPaneXml(detailName, detailNameLayout, packageName, useAndroidX),
-       resOut.resolve("layout-sw600dp/${detailNameFragmentLayout}.xml"))
-  save(fragmentItemListXml(collectionName, detailName, itemListLayout, itemListContentLayout, packageName, useAndroidX),
-       resOut.resolve("layout/fragment_${itemListLayout}.xml"))
-  save(fragmentItemListTwoPaneXml(collectionName, itemListLayout, detailName, detailNameLayout, itemListContentLayout, childNavGraphFile, packageName,
-                                  useAndroidX), resOut.resolve("layout-sw600dp/fragment_${itemListLayout}.xml"))
+  save(
+    fragmentItemDetailXml(detailName, detailNameLayout, packageName, useAndroidX),
+    resOut.resolve("layout/${detailNameFragmentLayout}.xml")
+  )
+  save(
+    fragmentItemDetailTwoPaneXml(detailName, detailNameLayout, packageName, useAndroidX),
+    resOut.resolve("layout-sw600dp/${detailNameFragmentLayout}.xml")
+  )
+  save(
+    fragmentItemListXml(collectionName, detailName, itemListLayout, itemListContentLayout, packageName, useAndroidX),
+    resOut.resolve("layout/fragment_${itemListLayout}.xml")
+  )
+  save(
+    fragmentItemListTwoPaneXml(collectionName, itemListLayout, detailName, detailNameLayout, itemListContentLayout, childNavGraphFile, packageName,
+                                 useAndroidX), resOut.resolve("layout-sw600dp/fragment_${itemListLayout}.xml")
+  )
   save(itemListContentXml(), resOut.resolve("layout/${itemListContentLayout}.xml"))
-  save(activityMainXml(navHostFragmentId, detailNameFragmentLayout, mainNavGraphFile, useAndroidX),
-       resOut.resolve("layout/activity_${detailNameLayout}.xml"))
+  save(
+    activityMainXml(navHostFragmentId, detailNameFragmentLayout, mainNavGraphFile, useAndroidX),
+    resOut.resolve("layout/activity_${detailNameLayout}.xml")
+  )
 
   val mainActivity = when (projectData.language) {
     Language.Java -> contentListDetailHostActivityJava(
@@ -199,16 +209,20 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   }
   save(placeholderContent, srcOut.resolve("placeholder/PlaceholderContent.${ktOrJavaExt}"))
 
-  save(mobileNavigationXml(packageName,
-                           itemListLayout,
-                           collectionName,
-                           detailName,
-                           detailNameLayout),
-       resOut.resolve("navigation/${mainNavGraphFile}.xml"))
-  save(tabletDetailsNavigationXml(packageName,
-                                  detailName,
-                                  detailNameLayout),
-       resOut.resolve("navigation/${childNavGraphFile}.xml"))
+  save(
+    mobileNavigationXml(packageName,
+                          itemListLayout,
+                          collectionName,
+                          detailName,
+                          detailNameLayout),
+    resOut.resolve("navigation/${mainNavGraphFile}.xml")
+  )
+  save(
+    tabletDetailsNavigationXml(packageName,
+                                 detailName,
+                                 detailNameLayout),
+    resOut.resolve("navigation/${childNavGraphFile}.xml")
+  )
 
   open(srcOut.resolve("${detailName}Fragment.${ktOrJavaExt}"))
   open(resOut.resolve("layout/fragment_${detailNameLayout}.xml"))

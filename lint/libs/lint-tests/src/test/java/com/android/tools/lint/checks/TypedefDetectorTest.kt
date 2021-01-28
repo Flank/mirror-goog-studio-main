@@ -1284,54 +1284,14 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 """
             ).indented(),
 
-            // Binary version of class files; sources are below. To reproduce
+            // Binary version of class file. To reproduce
             // this bug we need to use bytecode, not source resolution
             // (since we want to verify what happens with field declarations
             // where the initializer is not present.)
-            base64gzip(
+            bytecode(
                 "libs/recyclerview.jar",
-                "" +
-                    "H4sIAAAAAAAAAAvwZmYRYeDg4GBgiaryZUACnAwsDL6uIY66nn5u+v9OMTAw" +
-                    "MwR4s3OApJigSgJwahYBYrhmX0c/TzfX4BA9X7fPvmdO+3jr6l3k9dbVOnfm" +
-                    "/OYggyvGD54W6Xn56nj6XixdxcIZ8ULyiHSUhFbGD3FVtedLtCyei4s+EVed" +
-                    "xnA1+1PRxyJGsCskPtrYugDtcIW6gouBAeiyX5GorpAF4sS8lKL8zJQK/aLU" +
-                    "5MrknNSisszUcv3yzJT01BJ9hAfQteoT0hoEFQsDiukl5yQWF/cG+nofdhCo" +
-                    "vXzNLfvqtV9/GeVc1jTtfOEp6LVWgoP3yoxm8ZvLuvM6pW8sy6qfpn6w2f6A" +
-                    "vKpfUmvVZ6PN78+emX383PPrv9kbknOiIzZviHNilBYz080RTLNdvMTPZVGS" +
-                    "r4Z1lPflniMJCuwtl6ZeL8zbu+1+AecTgWezNsqpOKk3drQZnV+l4MO+tu+9" +
-                    "iXReV2fA7oxYs7yY/33t0TavreNmB9gER6k+b/lTZ6sgMqvQX0gsZmlq9Y8b" +
-                    "U4+J3+2Y6WrO5yrCsTjIRo37ZHOSffu6C7bCq+9156ZYcClnzptSs21+6Ps4" +
-                    "tbL0M6xn5m76/boiw6lyZVDrq5SPK/TnsSQWr/lmPb9K8Jjo4ooZAq/+3ws9" +
-                    "xqTV4rUqy93p/u247frO1yx+bj/27ojshmaZ+xwnkmUvz3hor2d4KnFaYSXT" +
-                    "+UTez/UGhWnGc1b/2WS5/MyVg9Kf1keeVjqe5DYt4HHEv8wDQtM2//ISC09M" +
-                    "lT0yVaar2vg+KPpzE78vT2dkYHBhQk6E6HFoRigOfTLzUhOLfBIr80tLfBPz" +
-                    "EtNTiyBROTUo1lvaUcTWfHZKaWxy1lv3NVG1xpUvvD6eVfII4FnDlnSjfZ+v" +
-                    "mbPVpnOHLD4+tv+69ILSjwf8H9xF3+csitjQuu/OzOJv5yzLn735+/62NcPt" +
-                    "iO8bZRY08W/WSD56fFW/qVPBjbel+8r6f1cbNlq1/Cxbd37tBTPBmxFVNSIt" +
-                    "M1P2X3+/5XtSe6fAvNLeSbe4Vhf5rqgLjLoZe+hUms6XC0+yJJbu3HZHcOvd" +
-                    "qtTyWZwL75xrn7RBQFu3/3g6c+avpAmGmyWerzwhlDjlcPCmnP0riw89dz+5" +
-                    "+sSJL1Znl+wM+GS0K+TwxC0TLwupiV3/eUOOU9ft0huBPyVJ3hl/SpWceln/" +
-                    "7ejYfvOJOoffp42eTxuLgvfUH3xweeUOgZZn9uyvfXe27BT4/ENCqcX/xq/7" +
-                    "rwVendM/1SLnevfgSp9cw8wmXr9NhzorMhZw3Wc9uqIl8thBY5vjU/d226r3" +
-                    "SF1ndWPv8d7DtlZ6StTT+A91Iral60x3rGEuW7H5nkycYZX1y2NKcbv/N5V7" +
-                    "VxyOOhJ/z9d0MRPz1Gv+FffnP1nFujPmRMvktpU89oUXr1aAc3/+6tas2cDo" +
-                    "X4U3+q1JycIq/kWZqXkliSWZ+XnQ7Nx/0IvZUKDtf2bu9bzo3L2Vl5p1KgzF" +
-                    "bSsnLVLg0I5+Y3tX1svrjJPZ7Vvhnx8w/wh4tKYjVMDEYObJM/b28XH358Uz" +
-                    "zHmscEjhUF2LoOK8aVvP/zwWodZjfM58Z6q98R676FdT1WTStnI/m5i+zKj4" +
-                    "dPi5qY7swbu6CmquZ0y5mrfwy3WHVJkbpldVF26+tE3s9RP+l7WZvvsmtr4z" +
-                    "qT2hdl3wWAv3W674WY88f/pvmNqwcqummMyV8huTr0gb/jJQ/VK/h237uY3z" +
-                    "I2JDdS4s1vWwii+S43Dfvyl3v5fFX3NPJ4UtKrcy/KSti7ZfcAz/FPBr4hG9" +
-                    "xe0S1Ze6Lup8MfSpeg8KYTtueb6fwPBbyAgKYUYmEQbUch5WA4AqCVSAUmWg" +
-                    "a0UutkVQtNniqDBAJnAx4C7eEeAw4cIe4RiQUciFiD6KUf9IL/zRDUdOomYo" +
-                    "hh9iIrdUQrcDOZKsUew4yEJR0g/wZmUDGcMGhJ+AhiuDeQDkSQ9gKwgAAA=="
-            ),
-
-            /*
-               These are the source files for the two classes that are packaged into
-               the above libs/recyclerview.jar file:
-
-            java(
-                """
+                java(
+                    """
                 package androidx.recyclerview.widget;
 
                 import android.content.Context;
@@ -1354,9 +1314,22 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     }
                 }
                 """
-            ).indented(),
-            java(
-                """
+                ).indented(),
+                "androidx/recyclerview/widget/LinearLayoutManager.class:" +
+                    "H4sIAAAAAAAAAH1Qy0rDQBQ907SNTdOH1kfrY+Gu7cK4c6EIpSgWYgu1ZOFu" +
+                    "mg5lSjqBOH39kxtBEVz4AX6UeBOKKIibe+Yc5txzOR+fb+8AznBgYsdCBrs5" +
+                    "pLFnomqixmDd9Pqd+1530HIZWIeh0A7Vg+ZKezyYCYOsYNjwrvqDTrvlxpwx" +
+                    "2NNeJIXSXMtQMWQvpJL6kuGw7nI1ikI5cvxQafrhtGNc6vOGx5BuhyPBUHKl" +
+                    "Et3ZdCiiAR8GpBTHQv/aaNQbdIt1F84iX1zL+E81dvHI5atwpm+54mMRnUz4" +
+                    "nDM01qFLJxL+yg9ENJdi4SzkiPY6/bXmkWajgH0bNkyG039df6QxlOM8J+Bq" +
+                    "7PSGE+Hr5FIPx1RphqoxUEMWZtwYsRRyxK0fPE+TspM3VY0izRKxJvEUodV8" +
+                    "RaqZfoHxlPRepllEXHqeEoq0zyZ1E1tr3xEhI8w0n2E8fluyiVihWUmitr8A" +
+                    "fb+LPAUCAAA="
+            ),
+            bytecode(
+                "libs/recyclerview.jar",
+                java(
+                    """
                 package androidx.recyclerview.widget;
 
                 import android.widget.LinearLayout;
@@ -1382,9 +1355,28 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     static final int DEFAULT_ORIENTATION = VERTICAL;
                 }
                 """
-            ).indented(),
-            */
-
+                ).indented(),
+                "androidx/recyclerview/widget/RecyclerView.class:" +
+                    "H4sIAAAAAAAAAI2QzU7CQBSFz/BXKCAg/oDGhYkx4sKujBtjQhBik9omWFm4" +
+                    "MUOZkCF1mrQF5LFcmbjwAXwo422DCe7c3Lnnzpxvbs7X98cngCscatjTsK8j" +
+                    "h5aGtoYDhrITSqFiHstAMVRMpUTY83kUiYhBv3OG5pNju12LgZkM1V6gopir" +
+                    "eMT9ucgSFQzFUX/omr2ulWjG0LztD7qPlvtM5j55XdOxGQrXUsn4hiF71hkx" +
+                    "5HrBRDDULKmEPX8Zi9DlY58m+kMwDz0xkIloDIW38nwRjqRYXsz4gtPGtoji" +
+                    "e5FYaMVDriZhICfGUk6mIjYSHg8tvgrmMUNnfftqhGvQgkC/bzfhFdRQZ6gn" +
+                    "fxg+V1PDGc+ER4zLfzNONrLEMTKUM5BFG0WUKCedVAZl0pUNXUULW380RZ0s" +
+                    "Q7VBk6NUA/nzd2Tf0sC3qRbSYZXwzdS2g106czTNQ6NOT7sMCqelH1wLg3sA" +
+                    "AgAA",
+                "androidx/recyclerview/widget/RecyclerView\$Orientation.class:" +
+                    "H4sIAAAAAAAAAJVQW0sCQRT+xrL1Wl66mUE9mBFR+xQ9+JJJF0FS1hSih1jX" +
+                    "QUa2GdkdNf9aD/2AflR0FMkEIRs4cy7zne+c+T6/3j8AXGLfwKaBbQM7DJG6" +
+                    "6nsOvxUuZ0ha3Bk5Lveagg/Pu/bAZshYfanFK28KX7RcXpRSaVsLJX2Gw8oY" +
+                    "Y7q27Jj2z4Npcc3lOCowBAe22yfq/B/QmnKFM6KGtXq1YZVuGLLTwWU5WDD6" +
+                    "uGLLtqdE2/T7vZ7y9Dyrrz3h6EdVMJChJeqO6tESsbKU3Cu5tu9z4jhbjiM3" +
+                    "6abV4pXytVW0nl7urGqjxhB6IMy98rWBPYaLKdmb6U1VHJCK5lC0O1ybv5XN" +
+                    "VT1Bv57MYYjOZYmZTNVWlzua4WChcjM1DGQZTv/xFYaTpXdlOFqKOc/AECBb" +
+                    "wfgEsUp3gPwa+TjVDbIQRxgRRKmUoDQ2Lj2DccqSSE0a0tggn6Iojl2sX2UI" +
+                    "k8ZWPvwNltmVBL4CAAA="
+            ),
             jar(
                 "annotations.zip",
                 xml(

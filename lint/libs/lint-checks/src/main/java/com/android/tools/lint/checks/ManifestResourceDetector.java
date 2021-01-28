@@ -16,14 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ICON;
 import static com.android.SdkConstants.ATTR_LABEL;
-import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_THEME;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.utils.SdkUtils.endsWithIgnoreCase;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.PROJECT_ONLY;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
 
 import com.android.annotations.NonNull;
@@ -34,15 +32,11 @@ import com.android.ide.common.resources.ResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.VersionQualifier;
-import com.android.resources.FolderTypeRelationship;
-import com.android.resources.ResourceFolderType;
-import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -50,26 +44,15 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /** Detects references to resources in the manifest that vary by configuration */
 public class ManifestResourceDetector extends ResourceXmlDetector {
     /** Using resources in the manifest that vary by configuration */
-    @SuppressWarnings("unchecked")
     public static final Issue ISSUE =
             Issue.create(
                     "ManifestResource",
@@ -80,76 +63,25 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
                     Category.CORRECTNESS,
                     6,
                     Severity.FATAL,
-                    new Implementation(
-                            ManifestResourceDetector.class,
-                            Scope.MANIFEST_AND_RESOURCE_SCOPE,
-                            Scope.MANIFEST_SCOPE));
-
-    /**
-     * Map from resource name to resource type to manifest location; used in batch mode to report
-     * errors when resource overrides are found
-     */
-    private Map<String, Multimap<ResourceType, Location>> mManifestLocations;
+                    new Implementation(ManifestResourceDetector.class, Scope.MANIFEST_SCOPE));
 
     /** Constructs a new {@link ManifestResourceDetector} */
     public ManifestResourceDetector() {}
 
+    @Nullable
     @Override
-    public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
-        if (endsWithIgnoreCase(context.file.getPath(), ANDROID_MANIFEST_XML)) {
-            checkManifest(context, document);
-        } else {
-            //noinspection VariableNotUsedInsideIf
-            if (mManifestLocations != null) {
-                checkResourceFile(context, document);
-            }
-        }
+    public Collection<String> getApplicableAttributes() {
+        return ALL;
     }
 
-    private void checkManifest(@NonNull XmlContext context, @NonNull Document document) {
-        LintClient client = context.getClient();
-        Project project = context.getProject();
-        ResourceRepository repository = null;
-        if (client.supportsProjectResources()) {
-            repository = client.getResourceRepository(project, true, false);
-        }
-        if (repository == null && !context.getScope().contains(Scope.RESOURCE_FILE)) {
-            // Can't perform incremental analysis without a resource repository
+    @Override
+    public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
+        if (NODE_METADATA.equals(attribute.getOwnerElement().getTagName())) {
             return;
         }
-
-        Element root = document.getDocumentElement();
-        if (root != null) {
-            visit(context, root, repository);
-        }
-    }
-
-    private void visit(
-            @NonNull XmlContext context,
-            @NonNull Element element,
-            @Nullable ResourceRepository repository) {
-        if (NODE_METADATA.equals(element.getTagName())) {
-            return;
-        }
-
-        NamedNodeMap attributes = element.getAttributes();
-        for (int i = 0, n = attributes.getLength(); i < n; i++) {
-            Node node = attributes.item(i);
-            String value = node.getNodeValue();
-            if (value.startsWith(PREFIX_RESOURCE_REF)) {
-                Attr attribute = (Attr) node;
-                if (!isAllowedToVary(attribute)) {
-                    checkReference(context, attribute, value, repository);
-                }
-            }
-        }
-
-        NodeList children = element.getChildNodes();
-        for (int i = 0, n = children.getLength(); i < n; i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                visit(context, ((Element) child), repository);
-            }
+        String value = attribute.getNodeValue();
+        if (value.startsWith(PREFIX_RESOURCE_REF) && !isAllowedToVary(attribute)) {
+            checkReference(context, attribute, value);
         }
     }
 
@@ -191,145 +123,71 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
         return false;
     }
 
-    private void checkReference(
-            @NonNull XmlContext context,
-            @NonNull Attr attribute,
-            @NonNull String value,
-            @Nullable ResourceRepository repository) {
+    private static void checkReference(
+            @NonNull XmlContext context, @NonNull Attr attribute, @NonNull String value) {
         ResourceUrl url = ResourceUrl.parse(value);
         if (url != null && !url.isFramework()) {
-            if (repository != null) {
-                List<ResourceItem> items =
-                        repository.getResources(ResourceNamespace.TODO(), url.type, url.name);
-                if (items.size() > 1) {
-                    List<String> list = Lists.newArrayListWithExpectedSize(5);
-                    for (ResourceItem item : items) {
-                        String qualifiers = item.getConfiguration().getQualifierString();
-                        // Default folder is okay
-                        if (qualifiers.isEmpty()) {
-                            continue;
-                        }
+            LintClient client = context.getClient();
+            Project project = context.getProject();
+            ResourceRepository repository = client.getResources(project, PROJECT_ONLY);
+            List<ResourceItem> items =
+                    repository.getResources(ResourceNamespace.TODO(), url.type, url.name);
+            if (items.size() > 1) {
+                List<String> list = Lists.newArrayListWithExpectedSize(5);
+                for (ResourceItem item : items) {
+                    String qualifiers = item.getConfiguration().getQualifierString();
+                    // Default folder is okay
+                    if (qualifiers.isEmpty()) {
+                        continue;
+                    }
 
-                        // Version qualifier is okay, as is density qualifiers (or both)
-                        int qualifierCount = 1;
-                        for (int i = 0, n = qualifiers.length(); i < n; i++) {
-                            if (qualifiers.charAt(i) == '-') {
-                                qualifierCount++;
+                    // Version qualifier is okay, as is density qualifiers (or both)
+                    int qualifierCount = 1;
+                    for (int i = 0, n = qualifiers.length(); i < n; i++) {
+                        if (qualifiers.charAt(i) == '-') {
+                            qualifierCount++;
+                        }
+                    }
+                    FolderConfiguration configuration = item.getConfiguration();
+                    DensityQualifier densityQualifier = configuration.getDensityQualifier();
+                    VersionQualifier versionQualifier = configuration.getVersionQualifier();
+                    if (qualifierCount == 1
+                            && (versionQualifier != null && versionQualifier.isValid()
+                                    || densityQualifier != null && densityQualifier.isValid())) {
+                        continue;
+                    } else if (qualifierCount == 2
+                            && densityQualifier != null
+                            && densityQualifier.isValid()
+                            && versionQualifier != null
+                            && versionQualifier.isValid()) {
+                        continue;
+                    }
+
+                    list.add(qualifiers);
+                }
+                if (!list.isEmpty()) {
+                    Collections.sort(list);
+                    String message = getErrorMessage(Joiner.on(", ").join(list));
+                    Location location = context.getValueLocation(attribute);
+                    context.report(ISSUE, attribute, location, message);
+                    // Secondary locations?
+                    // Not relevant when running in the IDE and analyzing a single
+                    // file; no point highlighting matches in other files (which
+                    // will be cleared when you visit them.
+                    if (!Scope.checkSingleFile(context.getDriver().getScope())) {
+                        for (ResourceItem item : items) {
+                            if (!list.contains(item.getConfiguration().getQualifierString())) {
+                                continue;
                             }
-                        }
-                        FolderConfiguration configuration = item.getConfiguration();
-                        if (configuration == null) {
-                            // shouldn't happen, but don't throw NPE on invalid projects
-                            continue;
-                        }
-                        DensityQualifier densityQualifier = configuration.getDensityQualifier();
-                        VersionQualifier versionQualifier = configuration.getVersionQualifier();
-                        if (qualifierCount == 1
-                                && (versionQualifier != null && versionQualifier.isValid()
-                                        || densityQualifier != null
-                                                && densityQualifier.isValid())) {
-                            continue;
-                        } else if (qualifierCount == 2
-                                && densityQualifier != null
-                                && densityQualifier.isValid()
-                                && versionQualifier != null
-                                && versionQualifier.isValid()) {
-                            continue;
-                        }
-
-                        list.add(qualifiers);
-                    }
-                    if (!list.isEmpty()) {
-                        Collections.sort(list);
-                        String message = getErrorMessage(Joiner.on(", ").join(list));
-                        context.report(
-                                ISSUE, attribute, context.getValueLocation(attribute), message);
-                    }
-                }
-            } else if (!context.getDriver().isSuppressed(context, ISSUE, attribute)) {
-                // Don't have a resource repository; need to check resource files during batch
-                // run
-                if (mManifestLocations == null) {
-                    mManifestLocations = Maps.newHashMap();
-                }
-                Multimap<ResourceType, Location> typeMap = mManifestLocations.get(url.name);
-                if (typeMap == null) {
-                    typeMap = ArrayListMultimap.create();
-                    mManifestLocations.put(url.name, typeMap);
-                }
-                typeMap.put(url.type, context.getValueLocation(attribute));
-            }
-        }
-    }
-
-    private void checkResourceFile(@NonNull XmlContext context, @NonNull Document document) {
-        File parentFile = context.file.getParentFile();
-        if (parentFile == null) {
-            return;
-        }
-        String parentName = parentFile.getName();
-        // Base folders are okay
-        int index = parentName.indexOf('-');
-        if (index == -1) {
-            return;
-        }
-
-        // Version qualifier is okay
-        String qualifiers = parentName.substring(index + 1);
-        if (VersionQualifier.getQualifier(qualifiers) != null) {
-            return;
-        }
-
-        ResourceFolderType folderType = context.getResourceFolderType();
-        if (folderType == ResourceFolderType.VALUES) {
-            Element root = document.getDocumentElement();
-            if (root != null) {
-                NodeList children = root.getChildNodes();
-                for (int i = 0, n = children.getLength(); i < n; i++) {
-                    Node child = children.item(i);
-                    if (child.getNodeType() == Node.ELEMENT_NODE) {
-                        Element item = (Element) child;
-                        String name = item.getAttribute(ATTR_NAME);
-                        if (name != null && mManifestLocations.containsKey(name)) {
-                            ResourceType type = ResourceType.fromXmlTag(item);
-                            if (type != null) {
-                                reportIfFound(context, qualifiers, name, type, item);
+                            Location secondary =
+                                    client.getXmlParser().getValueLocation(client, item);
+                            if (secondary != null) {
+                                secondary.setMessage("This value will not be used");
+                                location.setSecondary(secondary);
+                                location = secondary;
                             }
                         }
                     }
-                }
-            }
-        } else if (folderType != null) {
-            String name = Lint.getBaseName(context.file.getName());
-            if (mManifestLocations.containsKey(name)) {
-                List<ResourceType> types =
-                        FolderTypeRelationship.getRelatedResourceTypes(folderType);
-                for (ResourceType type : types) {
-                    reportIfFound(context, qualifiers, name, type, document.getDocumentElement());
-                }
-            }
-        }
-    }
-
-    private void reportIfFound(
-            @NonNull XmlContext context,
-            @NonNull String qualifiers,
-            @NonNull String name,
-            @NonNull ResourceType type,
-            @Nullable Node secondary) {
-        Multimap<ResourceType, Location> typeMap = mManifestLocations.get(name);
-        if (typeMap != null) {
-            Collection<Location> locations = typeMap.get(type);
-            if (locations != null) {
-                for (Location location : locations) {
-                    String message = getErrorMessage(qualifiers);
-                    if (secondary != null) {
-                        Location secondaryLocation = context.getLocation(secondary);
-                        secondaryLocation.setSecondary(location.getSecondary());
-                        secondaryLocation.setMessage("This value will not be used");
-                        location.setSecondary(secondaryLocation);
-                    }
-                    context.report(ISSUE, location, message);
                 }
             }
         }

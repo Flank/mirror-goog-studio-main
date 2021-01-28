@@ -27,15 +27,13 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StringEntry
  */
 class StringTable {
     private val innerMap = mutableMapOf<String, Int>()
-    val entries: Set<Map.Entry<String, Int>>
-        get() = innerMap.entries
 
     fun put(str: String): Int {
         return innerMap.computeIfAbsent(str) { innerMap.size + 1 }
     }
 
     fun toStringEntries(): List<StringEntry> {
-        return entries.map { entry ->
+        return innerMap.entries.map { entry ->
             StringEntry.newBuilder().apply {
                 str = entry.key
                 id = entry.value

@@ -149,12 +149,19 @@ interface VariantDslInfo {
      * The namespace of the generated R and BuildConfig classes. Also, the namespace used to resolve
      * any relative class names that are declared in the AndroidManifest.xml.
      *
-     * This value comes from the namespace DSL element, if present, or from the `package` attribute
-     * in the source AndroidManifest.xml if not specified in the DSL.
+     * For test components, this is set to the tested variant's [testNamespace] value or to the
+     * tested variant's [namespace] + ".test"
      *
-     * For test components, this is the namespace of the tested variant + '.test'
+     * Otherwise, this value comes from the namespace DSL element, if present, or from the `package`
+     * attribute in the source AndroidManifest.xml if not specified in the DSL.
      */
     val namespace: Provider<String>
+
+    /**
+     * The testNamespace DSL value or the namespace DSL value + ".test" if either of those DSL
+     * elements are specified; otherwise, this value is null.
+     */
+    val testNamespace: String?
 
     /**
      * Returns the application ID for this variant. This could be coming from the manifest or could

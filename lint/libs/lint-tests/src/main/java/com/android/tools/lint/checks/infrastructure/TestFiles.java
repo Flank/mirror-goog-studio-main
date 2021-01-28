@@ -47,51 +47,47 @@ public class TestFiles {
     private TestFiles() {}
 
     @NonNull
-    public static LintDetectorTest.TestFile file() {
-        return new LintDetectorTest.TestFile();
+    public static TestFile file() {
+        return new TestFile();
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile source(@NonNull String to, @NonNull String source) {
+    public static TestFile source(@NonNull String to, @NonNull String source) {
         return file().to(to).withSource(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile java(
-            @NonNull String to, @NonNull @Language("JAVA") String source) {
+    public static TestFile java(@NonNull String to, @NonNull @Language("JAVA") String source) {
         return TestFile.JavaTestFile.create(to, source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile java(@NonNull @Language("JAVA") String source) {
+    public static TestFile java(@NonNull @Language("JAVA") String source) {
         return TestFile.JavaTestFile.create(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kt(@NonNull @Language("kotlin") String source) {
+    public static TestFile kt(@NonNull @Language("kotlin") String source) {
         return kotlin(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kt(
-            @NonNull String to, @NonNull @Language("kotlin") String source) {
+    public static TestFile kt(@NonNull String to, @NonNull @Language("kotlin") String source) {
         return kotlin(to, source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kotlin(@NonNull @Language("kotlin") String source) {
+    public static TestFile kotlin(@NonNull @Language("kotlin") String source) {
         return TestFile.KotlinTestFile.create(source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kotlin(
-            @NonNull String to, @NonNull @Language("kotlin") String source) {
+    public static TestFile kotlin(@NonNull String to, @NonNull @Language("kotlin") String source) {
         return TestFile.KotlinTestFile.create(to, source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile xml(
-            @NonNull String to, @NonNull @Language("XML") String source) {
+    public static TestFile xml(@NonNull String to, @NonNull @Language("XML") String source) {
         if (!to.endsWith(DOT_XML)) {
             throw new IllegalArgumentException("Expected .xml suffix for XML test file");
         }
@@ -100,13 +96,13 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile copy(
+    public static TestFile copy(
             @NonNull String from, @NonNull TestResourceProvider resourceProvider) {
         return file().from(from, resourceProvider).to(from);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile copy(
+    public static TestFile copy(
             @NonNull String from,
             @NonNull String to,
             @NonNull TestResourceProvider resourceProvider) {
@@ -130,7 +126,7 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile manifest(@NonNull @Language("XML") String source) {
+    public static TestFile manifest(@NonNull @Language("XML") String source) {
         return TestFiles.source(ANDROID_MANIFEST_XML, source);
     }
 
@@ -165,21 +161,71 @@ public class TestFiles {
                 + "\"";
     }
 
+    // Backwards compat: default to Java formatting
     public static String toBase64gzip(@NonNull byte[] bytes) {
+        return toBase64gzipJava(bytes, 0, false, true);
+    }
+
+    public static String toBase64gzipJava(
+            @NonNull byte[] bytes, int indent, boolean indentStart, boolean includeEmptyPrefix) {
+        String base64 = toBase64gzipString(bytes);
+        StringBuilder indentString = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            indentString.append(' ');
+        }
+
+        Iterable<String> lines = Splitter.fixedLength(60).split(base64);
+        StringBuilder result = new StringBuilder();
+        if (indentStart) {
+            result.append(indentString);
+        }
+        if (includeEmptyPrefix) {
+            result.append("\"\" +\n");
+            result.append(indentString);
+        }
+        result.append("\"");
+        String separator = "\" +\n" + indentString.toString() + "\"";
+        result.append(Joiner.on(separator).join(lines));
+        result.append("\"");
+        return result.toString();
+    }
+
+    public static String toBase64gzipKotlin(
+            @NonNull byte[] bytes, int indent, boolean indentStart, boolean includeQuotes) {
+        String base64 = toBase64gzipString(bytes).replace('$', '＄');
+        StringBuilder indentString = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            indentString.append(' ');
+        }
+        Iterable<String> lines = Splitter.fixedLength(60).split(base64);
+        StringBuilder result = new StringBuilder();
+        if (indentStart) {
+            result.append(indentString);
+        }
+        if (includeQuotes) {
+            result.append("\"\"\"\n");
+            result.append(indentString);
+        }
+        result.append(Joiner.on("\n" + indentString.toString()).join(lines));
+        if (includeQuotes) {
+            result.append("\"\"\"");
+        }
+        result.append("\n");
+        return result.toString();
+    }
+
+    private static String toBase64gzipString(@NonNull byte[] bytes) {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             try (GZIPOutputStream stream = new GZIPOutputStream(out)) {
                 stream.write(bytes);
             }
             bytes = out.toByteArray();
+            return Base64.getEncoder().encodeToString(bytes).replace('$', '＄');
         } catch (IOException ignore) {
             // Can't happen on a ByteArrayInputStream
+            return "";
         }
-
-        String base64 = Base64.getEncoder().encodeToString(bytes);
-        return "\"\" +\n\""
-                + Joiner.on("\" +\n\"").join(Splitter.fixedLength(60).split(base64))
-                + "\"";
     }
 
     public static String toBase64(@NonNull File file) throws IOException {
@@ -199,9 +245,11 @@ public class TestFiles {
      * @param to the file to write as
      * @param encoded the encoded data
      * @return the new test file
+     * @deprecated Use {@link #base64gzip(String, String)} instead
      */
+    @Deprecated
     public static TestFile.BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
-        encoded = encoded.replaceAll("\n", "");
+        encoded = encoded.replace('＄', '$');
         final byte[] bytes = Base64.getDecoder().decode(encoded);
         return new TestFile.BinaryTestFile(
                 to,
@@ -222,7 +270,24 @@ public class TestFiles {
      */
     @NonNull
     public static TestFile.BinaryTestFile base64gzip(@NonNull String to, @NonNull String encoded) {
-        encoded = encoded.replaceAll("\n", "");
+        return new TestFile.BinaryTestFile(to, getByteProducerForBase64gzip(encoded));
+    }
+
+    /**
+     * Creates a bytecode producer which takes an encoded base64gzip string and returns the
+     * uncompressed de-base64'ed byte array
+     */
+    @NonNull
+    public static TestFile.ByteProducer getByteProducerForBase64gzip(@NonNull String encoded) {
+        encoded =
+                encoded
+                        // Recover any $'s we've converted to ＄ to better handle Kotlin raw strings
+                        .replace('＄', '$')
+                        // Whitespace is not significant in base64 but isn't handled properly by
+                        // the base64 decoder
+                        .replace(" ", "")
+                        .replace("\n", "")
+                        .replace("\t", "");
         byte[] bytes = Base64.getDecoder().decode(encoded);
 
         try {
@@ -234,18 +299,16 @@ public class TestFiles {
         }
 
         byte[] finalBytes = bytes;
-        return new TestFile.BinaryTestFile(
-                to,
-                new TestFile.BytecodeProducer() {
-                    @NonNull
-                    @Override
-                    public byte[] produce() {
-                        return finalBytes;
-                    }
-                });
+        return new TestFile.BytecodeProducer() {
+            @NonNull
+            @Override
+            public byte[] produce() {
+                return finalBytes;
+            }
+        };
     }
 
-    public static LintDetectorTest.TestFile classpath(String... extraLibraries) {
+    public static TestFile classpath(String... extraLibraries) {
         StringBuilder sb = new StringBuilder();
         sb.append(
                 ""
@@ -270,8 +333,7 @@ public class TestFiles {
     }
 
     @NonNull
-    public static TestFile.JarTestFile jar(
-            @NonNull String to, @NonNull LintDetectorTest.TestFile... files) {
+    public static TestFile.JarTestFile jar(@NonNull String to, @NonNull TestFile... files) {
         if (!to.endsWith("jar") // don't insist on .jar since we're also supporting .srcjar etc
                 && !to.endsWith("zip")) {
             throw new IllegalArgumentException("Expected .jar suffix for jar test file");

@@ -46,7 +46,7 @@ class UtpTestRunner @JvmOverloads constructor(
         private val javaProcessExecutor: JavaProcessExecutor,
         executor: ExecutorServiceAdapter,
         private val utpDependencies: UtpDependencies,
-        private val sdkComponents: SdkComponentsBuildService,
+        private val versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         private val retentionConfig: RetentionConfig,
         private val useOrchestrator: Boolean,
         private val configFactory: UtpConfigFactory = UtpConfigFactory())
@@ -77,7 +77,7 @@ class UtpTestRunner @JvmOverloads constructor(
                             testData,
                             apks.union(helperApks) + testData.testApk,
                             utpDependencies,
-                            sdkComponents,
+                            versionedSdkLoader,
                             utpOutputDir,
                             utpTmpDir,
                             utpTestLogDir,

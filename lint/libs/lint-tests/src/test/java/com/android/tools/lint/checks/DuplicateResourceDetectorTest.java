@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -236,16 +237,16 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/values/refs.xml:3: Error: Unexpected resource reference type; expected value of type @string/ [ReferenceType]\n"
                         + "    <item name=\"invalid1\" type=\"string\">@layout/other</item>\n"
-                        + "                                        ^\n"
+                        + "                                        ~~~~~~~~~~~~~\n"
                         + "res/values/refs.xml:5: Error: Unexpected resource reference type; expected value of type @drawable/ [ReferenceType]\n"
                         + "          @layout/other\n"
-                        + "          ^\n"
+                        + "          ~~~~~~~~~~~~~\n"
                         + "res/values/refs.xml:10: Error: Unexpected resource reference type; expected value of type @string/ [ReferenceType]\n"
                         + "    <string name=\"invalid4\">@layout/indirect</string>\n"
-                        + "                            ^\n"
+                        + "                            ~~~~~~~~~~~~~~~~\n"
                         + "res/values/refs.xml:15: Error: Unexpected resource reference type; expected value of type @color/ [ReferenceType]\n"
                         + "    <item name=\"drawableAsColor\" type=\"color\">@drawable/my_drawable</item>\n"
-                        + "                                              ^\n"
+                        + "                                              ~~~~~~~~~~~~~~~~~~~~~\n"
                         + "4 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(

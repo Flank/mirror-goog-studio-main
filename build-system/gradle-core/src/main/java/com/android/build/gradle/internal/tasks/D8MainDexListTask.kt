@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
 import com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
-import com.android.build.gradle.internal.InternalScope.FEATURES
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -146,7 +145,6 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
 
     class CreationAction(
         creationConfig: VariantCreationConfig,
-        private val includeDynamicFeatures: Boolean
     ) : VariantTaskCreationAction<D8MainDexListTask, VariantCreationConfig>(
         creationConfig
     ) {
@@ -159,7 +157,7 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
                 PROJECT,
                 SUB_PROJECTS,
                 EXTERNAL_LIBRARIES
-            ) + (if (includeDynamicFeatures) setOf(FEATURES) else emptySet())
+            )
 
             val libraryScopes = setOf(PROVIDED_ONLY, TESTED_CODE)
 
@@ -179,22 +177,18 @@ abstract class D8MainDexListTask : NonIncrementalTask() {
                 }
         }
 
-        override val name: String =
-            creationConfig.computeTaskName(if (includeDynamicFeatures) "bundleMultiDexList" else "multiDexList")
+        override val name: String = creationConfig.computeTaskName("multiDexList")
         override val type: Class<D8MainDexListTask> = D8MainDexListTask::class.java
 
         override fun handleProvider(
             taskProvider: TaskProvider<D8MainDexListTask>
         ) {
             super.handleProvider(taskProvider)
-            val request = creationConfig.artifacts.setInitialProvider(
-                taskProvider, D8MainDexListTask::output
-            ).withName("mainDexList.txt")
-            if (includeDynamicFeatures) {
-                request.on(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
-            } else {
-                request.on(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
-            }
+            creationConfig
+                .artifacts
+                .setInitialProvider(taskProvider, D8MainDexListTask::output)
+                .withName("mainDexList.txt")
+                .on(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
         }
 
         override fun configure(

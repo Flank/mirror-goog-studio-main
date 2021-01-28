@@ -175,28 +175,24 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                     }
                 """
             ).indented(),
-            java(
-                "" +
-                    "@CheckReturnValue\n" +
-                    "package test.pkg;\n" +
-                    "import javax.annotation.CheckReturnValue;\n"
-            ),
-            // Also register the compiled version of the above package-info jar file;
-            // without this we don't resolve package annotations
-            base64gzip(
+
+            // Include the compiled version of the package-info file;
+            // without this we can't resolve package annotations.
+            compiled(
                 "libs/packageinfoclass.jar",
-                "" +
-                    "H4sIAAAAAAAAAAvwZmYRYeDg4GDInpfvzYAEOBlYGHxdQxx1Pf3c9P+dYmBg" +
-                    "ZgjwZucASTFBlQTg1CwCxHDNvo5+nm6uwSF6vm6ffc+c9vHW1bvI662rde7M" +
-                    "+c1BBleMHzwt0vPy1fH0vVi6ioUz4oXkEelZUi/Flj5boia2XCujYuk0C1HV" +
-                    "tGei2iKvRV8+zf5U9LGIEeyWtpXBql5Am7xQ3GKK5hZpIC5JLS7RL8hO1y9I" +
-                    "TM5OTE/VzcxLy9dLzkksLvb12ct1yEBiT0juVU921vT0sw9eqDRNVgh5Ma/t" +
-                    "/CwztaW+R9KLPzDWaGwMFcjf0fy7et87fgZtHiUXwV88hxd/nbpk7qUjBnqt" +
-                    "Oi5u3Kl+ZTO7VyfMOHrPonShy1Wtq1sMj1k9nGJqerjmfllezB+ffbaTdZKK" +
-                    "9hl1Xph3jUfYfevj1Ikf/1e3BVo/i5rRI39pzpLZTDyM+zgu/CwQ3+t2WI2z" +
-                    "0Rzky33aDlPmAv1wAOxLRiYRBtQwh8UGKMJQAUr0oWtFDjwRFG22OCIP2QRQ" +
-                    "ICM7TBrFhJP4gzzAm5UNpIwZCI8B6fWMIB4A/Y4BiosCAAA="
+                java(
+                    "" +
+                        "@CheckReturnValue\n" +
+                        "package test.pkg;\n" +
+                        "import javax.annotation.CheckReturnValue;\n"
+                ),
+                "test/pkg/package-info.class:" +
+                    "H4sIAAAAAAAAAE1NvQrCMBi81J+qkw66ODprRgcnEQRBECq4p+Gzpo1JaZPi" +
+                    "szn4AD6U2CqIN9zB/XDP1/0BYIl+iDBEj2FwtL6QtFWaGEa5kJlIaK7M2S5S" +
+                    "UQmGaeSNU1famUqVKta0NsY64ZQ1JcNs37RuXPxMvrmQzCJyvjAnoT2tGMaO" +
+                    "SsfzLOH/BwzDZsy1MAk/xClJNwEYAnwRoPXhNjq1duukC7wBEsYF4sIAAAA="
             ),
+            javaxCheckReturnValueSource,
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
         )

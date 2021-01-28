@@ -145,6 +145,10 @@ message LiveLiteralUpdateRequest {
   Arch arch = 4;
 
   repeated LiveLiteral updates = 5;
+
+  string overlay_id = 6;
+
+  string expected_overlay_id = 7;
 }
 
 message LiveLiteral {
@@ -507,6 +511,7 @@ message OverlayUpdateRequest {
   repeated OverlayFile files_to_write = 4;
   repeated string files_to_delete = 5;
   bool wipe_all_files = 6;
+  string package_name = 7;
 }
 
 message OverlayFile {
@@ -577,29 +582,20 @@ message OverlayIdPushResponse {
 }
 
 message InstallServerRequest {
-  enum Type {
-    UNKNOWN = 0;
-    SERVER_EXIT = 1;
-    HANDLE_REQUEST = 2;
-  }
-
-  Type type = 1;
   oneof message {
-    CheckSetupRequest check_request = 2;
-    OverlayUpdateRequest overlay_request = 3;
-    GetAgentExceptionLogRequest log_request = 4;
-    OpenAgentSocketRequest socket_request = 5;
-    SendAgentMessageRequest send_request = 6;
+    CheckSetupRequest check_request = 1;
+    OverlayUpdateRequest overlay_request = 2;
+    GetAgentExceptionLogRequest log_request = 3;
+    OpenAgentSocketRequest socket_request = 4;
+    SendAgentMessageRequest send_request = 5;
   }
 }
 
 message InstallServerResponse {
   enum Status {
     UNKNOWN = 0;
-    SERVER_STARTED = 1;
-    SERVER_EXITED = 2;
-    REQUEST_COMPLETED = 3;
-    ERROR = 4;
+    REQUEST_COMPLETED = 1;
+    ERROR = 2;
   }
 
   Status status = 1;

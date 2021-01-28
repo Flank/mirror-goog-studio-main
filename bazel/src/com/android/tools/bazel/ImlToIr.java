@@ -110,6 +110,9 @@ public class ImlToIr {
         Map<JpsLibrary, IrLibrary> libraryToIr = new HashMap<>();
         for (JpsModule jpsModule : graph.getModulesInTopologicalOrder()) {
             IrModule module = createIrModule(jpsModule, compilerOptions);
+            if (config.ignoreModule(workspace, module)) {
+                continue;
+            }
             irProject.modules.add(module);
             imlToIr.put(jpsModule, module);
 

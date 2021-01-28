@@ -42,16 +42,12 @@ public class CompositeBuildTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .withName("app")
-                    // composite builds are not supported
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Rule
     public GradleTestProject lib =
             GradleTestProject.builder()
                     .fromTestApp(new EmptyAndroidTestApp())
-                    // composite builds are not supported
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withName("lib")
                     .create();
 
@@ -66,8 +62,6 @@ public class CompositeBuildTest {
                                             "androidLib2",
                                             new EmptyAndroidTestApp("com.example.androidLib2"))))
                     .withName("androidLib")
-                    // composite builds are not supported
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .withDependencyChecker(false)
                     .create();
 

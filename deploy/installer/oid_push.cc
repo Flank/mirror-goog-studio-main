@@ -23,8 +23,7 @@
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
-#include "tools/base/deploy/installer/server/install_client.h"
-#include "tools/base/deploy/installer/server/install_server.h"
+#include "tools/base/deploy/installer/server/app_servers.h"
 #include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
@@ -59,17 +58,13 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   update_request.set_expected_overlay_id(request_.prev_oid());
   update_request.set_overlay_id(request_.next_oid());
   const std::string pkg = request_.package_name();
+  update_request.set_package_name(pkg);
   update_request.set_overlay_path(Sites::AppOverlays(pkg));
   update_request.set_wipe_all_files(request_.wipe_overlays());
 
-  std::unique_ptr<InstallClient> client_ = StartInstallServer(
-      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
-      request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
-
-  if (!client_) {
-    ErrEvent("OverlayIdPushCommand error: No client");
-    return;
-  }
+  InstallClient* client_ =
+      AppServers::Get(request_.package_name(), workspace_.GetTmpFolder(),
+                      workspace_.GetVersion());
 
   auto resp = client_->UpdateOverlay(update_request);
   if (!resp) {
@@ -81,12 +76,6 @@ void OverlayIdPushCommand::Run(proto::InstallerResponse* response) {
   if (status != proto::OverlayUpdateResponse::OK) {
     ErrEvent("OverlayIdPushCommand error: Bad status (" + to_string(status) +
              ")");
-  }
-
-  proto::InstallServerResponse install_response;
-  if (!client_->KillServerAndWait(&install_response)) {
-    ErrEvent("OverlayIdPushCommand error: Unable to kill AppServer");
-    return;
   }
 
   dump_response->set_status(proto::OverlayIdPushResponse::OK);

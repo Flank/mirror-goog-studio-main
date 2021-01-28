@@ -137,9 +137,17 @@ class CoreLibraryDesugarConversionTest(val minSdkVersion: Int) {
         // Consumer and IntUnaryOperator are desugared up to 23 so conversion doesn't exist for 24 and above
         Assume.assumeTrue(minSdkVersion < 24)
         DexClassSubject.assertThat(dex.classes[programClass])
-            .hasMethodThatInvokes("getNumbers", "Lj\$/\$r8\$wrapper\$java\$util\$function\$IntUnaryOperator$-WRP;->convert(Lj$/util/function/IntUnaryOperator;)Ljava/util/function/IntUnaryOperator;")
+            .hasMethodThatInvokesMethod(
+                "getNumbers",
+                "convert",
+                listOf("Lj$/util/function/IntUnaryOperator;"),
+                "Ljava/util/function/IntUnaryOperator;")
         DexClassSubject.assertThat(dex.classes[programClass])
-            .hasMethodThatInvokes("onGetDirectActions", "Lj\$/\$r8\$wrapper\$java\$util\$function\$Consumer$-V-WRP;->convert(Ljava/util/function/Consumer;)Lj$/util/function/Consumer;")
+            .hasMethodThatInvokesMethod(
+                "onGetDirectActions",
+                "convert",
+                listOf("Ljava/util/function/Consumer;"),
+                "Lj$/util/function/Consumer;")
     }
 
     private fun getDexWithSpecificClass(className: String, dexes: Collection<Dex>) : Dex? =

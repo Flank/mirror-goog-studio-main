@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.process
 
-
 /**
  * Detect common diagnostic message formats so that they can be passed to lifecycle instead of info.
  * Only lifecycle lines will be seen by the user at the command-line (and by Android Studio build
@@ -24,24 +23,30 @@ package com.android.build.gradle.internal.cxx.process
  */
 private val diagnosticTypes = listOf("ignored", "note", "remark", "warning", "error", "fatal error")
 private val diagnosticTypeOrPattern = diagnosticTypes.joinToString("|")
-private val ninjaEnterDirectoryPattern = Regex("ninja: Entering directory `([^']+)'")
-private val clangLinkerErrorPattern = Regex("clang(\\+\\+)?(\\.exe)?: error: linker command failed with exit code 1.*")
+private val clangLinkerErrorPattern =
+    Regex("clang(\\+\\+)?(\\.exe)?: error: linker command failed with exit code 1.*")
 private val clangFileInclusionPattern = Regex("In file included from (.+):(\\d+):")
-private val clangDiagnosticMessagePattern = Regex("((?:[A-Z]:)?[^\\s][^:]+):(\\d+):(\\d+): ($diagnosticTypeOrPattern): (.*)")
-private val clangLinkerErrorDiagnosticPattern = Regex("((?:[A-Z]:)?[^\\s][^:]+)(?::(\\d+))?: ($diagnosticTypeOrPattern)?: (.+)")
-private val msvcDiagnosticMessagePattern = Regex("((?:[A-Z]:)?[^\\s][^:]+)\\((\\d+),(\\d+)\\): ($diagnosticTypeOrPattern): (.*)")
+private val clangDiagnosticMessagePattern =
+    Regex("((?:[A-Z]:)?[^\\s][^:]+):(\\d+):(\\d+): ($diagnosticTypeOrPattern): (.*)")
+private val clangLinkerErrorDiagnosticPattern =
+    Regex("((?:[A-Z]:)?[^\\s][^:]+)(?::(\\d+))?: ($diagnosticTypeOrPattern)?: (.+)")
+private val msvcDiagnosticMessagePattern =
+    Regex("((?:[A-Z]:)?[^\\s][^:]+)\\((\\d+),(\\d+)\\): ($diagnosticTypeOrPattern): (.*)")
 private val allPatterns = listOf(
-        ninjaEnterDirectoryPattern,
-        clangLinkerErrorPattern,
-        clangFileInclusionPattern,
-        clangDiagnosticMessagePattern,
-        clangLinkerErrorDiagnosticPattern,
-        msvcDiagnosticMessagePattern
+    clangLinkerErrorPattern,
+    clangFileInclusionPattern,
+    clangDiagnosticMessagePattern,
+    clangLinkerErrorDiagnosticPattern,
+    msvcDiagnosticMessagePattern
 )
 
-fun shouldElevateToLifeCycle(message : String) : Boolean {
+fun isNinjaWorkingDirectoryLine(message: String): Boolean {
+    return message.startsWith("ninja: Entering directory")
+}
+
+fun shouldElevateToLifeCycle(message: String): Boolean {
     // Quick short-circuit to avoid checking all regex against all lines
-    if (!message.contains(":")) return false
+    if (!message.contains(':')) return false
     for (pattern in allPatterns) {
         if (pattern.matches(message)) return true
     }

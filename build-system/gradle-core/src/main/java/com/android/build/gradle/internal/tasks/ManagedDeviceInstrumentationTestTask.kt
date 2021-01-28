@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.testing.utp.UtpManagedDevice
 import com.android.build.gradle.internal.testing.utp.createRetentionConfig
 import com.android.build.gradle.internal.testing.utp.maybeCreateUtpConfigurations
 import com.android.build.gradle.internal.testing.utp.resolveDependencies
+import com.android.build.gradle.internal.testing.utp.shouldEnableUtp
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
@@ -50,6 +51,7 @@ import com.android.builder.core.BuilderConstants.FD_REPORTS
 import com.android.builder.core.BuilderConstants.MANAGED_DEVICE
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.TestOptions
+import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import org.gradle.api.Action
@@ -91,6 +93,12 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
         @get: Input
         abstract val retentionConfig: Property<RetentionConfig>
 
+        @get: Input
+        abstract val compileSdkVersion: Property<String>
+
+        @get: Input
+        abstract val buildToolsRevision: Property<Revision>
+
         @get: Internal
         abstract val sdkBuildService: Property<SdkComponentsBuildService>
 
@@ -123,7 +131,7 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             return ManagedDeviceTestRunner(
                     javaProcessExecutor,
                     utpDependencies,
-                    sdkBuildService.get(),
+                    sdkBuildService.get().sdkLoader(compileSdkVersion, buildToolsRevision),
                     retentionConfig.get(),
                     useOrchestrator)
 
@@ -303,6 +311,12 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
             task.group = JavaBasePlugin.VERIFICATION_GROUP
 
             task.testData.setDisallowChanges(testData)
+            task.testRunnerFactory.compileSdkVersion.setDisallowChanges(
+                extension.compileSdkVersion
+            )
+            task.testRunnerFactory.buildToolsRevision.setDisallowChanges(
+                extension.buildToolsRevision
+            )
             task.testRunnerFactory.sdkBuildService.setDisallowChanges(
                     getBuildService(
                             creationConfig.services.buildServiceRegistry,
@@ -310,10 +324,18 @@ abstract class ManagedDeviceInstrumentationTestTask(): NonIncrementalTask(), And
 
             val executionEnum = extension.testOptions.getExecutionEnum()
             task.testRunnerFactory.executionEnum.setDisallowChanges(executionEnum)
-            val useUtp = projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)
+            val useUtp = shouldEnableUtp(projectOptions,extension.testOptions)
             task.testRunnerFactory.unifiedTestPlatform.setDisallowChanges(useUtp)
 
             if (useUtp) {
+                if (!projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
+                    LoggerWrapper.getLogger(CreationAction::class.java).warning(
+                        "Implicitly enabling Unified Test Platform because related features " +
+                                "are specified in gradle test options. Please add " +
+                                "-Pandroid.experimental.androidTest.useUnifiedTestPlatform=true " +
+                                "to your gradle command to suppress this warning."
+                    )
+                }
                 maybeCreateUtpConfigurations(task.project)
                 task.testRunnerFactory.utpDependencies
                         .resolveDependencies(task.project.configurations)

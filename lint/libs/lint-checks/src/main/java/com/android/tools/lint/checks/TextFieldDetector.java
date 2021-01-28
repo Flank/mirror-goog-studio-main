@@ -16,16 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.ATTR_INPUT_METHOD;
-import static com.android.SdkConstants.ATTR_INPUT_TYPE;
-import static com.android.SdkConstants.ATTR_PASSWORD;
-import static com.android.SdkConstants.ATTR_PHONE_NUMBER;
-import static com.android.SdkConstants.ATTR_STYLE;
-import static com.android.SdkConstants.EDIT_TEXT;
-import static com.android.SdkConstants.ID_PREFIX;
-import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.*;
 import static com.android.tools.lint.detector.api.LintFix.TODO;
 
 import com.android.annotations.NonNull;
@@ -93,23 +84,17 @@ public class TextFieldDetector extends LayoutDetector {
             String style = element.getAttribute(ATTR_STYLE);
             if (style != null && !style.isEmpty()) {
                 LintClient client = context.getClient();
-                if (client.supportsProjectResources()) {
-                    Project project = context.getMainProject();
-                    List<ResourceValue> styles =
-                            Lint.getStyleAttributes(
-                                    project, client, style, ANDROID_URI, ATTR_INPUT_TYPE);
-                    if (styles != null && !styles.isEmpty()) {
-                        ResourceValue value = styles.get(0);
-                        inputType = value.getValue();
-                        inputTypeNode = element;
-                    }
-                } else {
-                    // The input type might be specified via a style. This will require
-                    // us to track these (similar to what is done for the
-                    // RequiredAttributeDetector to track layout_width and layout_height
-                    // in style declarations). For now, simply ignore these elements
-                    // to avoid producing false positives.
+                Project project = context.getMainProject();
+                List<ResourceValue> styles =
+                        Lint.getStyleAttributes(
+                                project, client, style, ANDROID_URI, ATTR_INPUT_TYPE, false);
+                if (styles == null) {
                     return;
+                }
+                if (!styles.isEmpty()) {
+                    ResourceValue value = styles.get(0);
+                    inputType = value.getValue();
+                    inputTypeNode = element;
                 }
             }
         }

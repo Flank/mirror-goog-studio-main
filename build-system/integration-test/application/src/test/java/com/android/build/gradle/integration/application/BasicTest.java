@@ -35,6 +35,7 @@ import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
@@ -65,8 +66,10 @@ public class BasicTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("basic")
-                    // http://b/149978740 and http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    // http://b/149978740
+                    .addGradleProperties(
+                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
+                                    + "=false")
                     .create();
 
     public static AndroidProject model;
@@ -96,7 +99,10 @@ public class BasicTest {
 
     @Test
     public void report() throws Exception {
-        project.execute("androidDependencies");
+        project.executor()
+                // https://github.com/gradle/gradle/issues/12871
+                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .run("androidDependencies");
     }
 
     @Test

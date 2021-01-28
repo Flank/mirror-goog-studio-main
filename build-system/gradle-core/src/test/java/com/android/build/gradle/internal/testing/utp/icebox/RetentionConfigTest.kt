@@ -61,14 +61,14 @@ class RetentionConfigTest {
         failureRetention.enable = true
         val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
         assertThat(retentionConfig.enabled).isTrue()
-        assertThat(retentionConfig.maxSnapshots).isEqualTo(5)
+        assertThat(retentionConfig.maxSnapshots).isEqualTo(2)
         assertThat(retentionConfig.compressSnapshots).isFalse()
         assertThat(retentionConfig.retainAll).isFalse()
     }
 
     @Test
     fun setMaxSnapshotsByDsl() {
-        val maxSnapshots = 2
+        val maxSnapshots = 3
         failureRetention.enable = true
         failureRetention.maxSnapshots = maxSnapshots
         val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
@@ -79,9 +79,7 @@ class RetentionConfigTest {
 
     @Test
     fun setRetainAllByDsl() {
-        val maxSnapshots = 2
         failureRetention.enable = true
-        failureRetention.maxSnapshots = maxSnapshots
         failureRetention.retainAll()
         val retentionConfig = createRetentionConfig(emptyProjectOptions, failureRetention)
         assertThat(retentionConfig.enabled).isTrue()

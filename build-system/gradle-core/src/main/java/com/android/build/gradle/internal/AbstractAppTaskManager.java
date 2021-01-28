@@ -164,11 +164,6 @@ public abstract class AbstractAppTaskManager<
 
         createPackagingTask(apkCreationConfig);
 
-        maybeCreateLintVitalTask(appVariantProperties, allComponentsWithLint);
-
-        // Create the lint tasks, if enabled
-        createLintTasks(appVariantProperties, allComponentsWithLint);
-
         taskFactory.register(
                 new PackagedDependenciesWriterTask.CreationAction(appVariantProperties));
 

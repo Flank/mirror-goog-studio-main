@@ -19,35 +19,26 @@ package com.android.build.gradle.integration.lint;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
- * Assemble tests for lintLibraryModel.
+ * Assemble tests for lintLibrarySkipDeps.
  *
- * <p>To run just this test: ./gradlew :base:build-system:integration-test:lint:test --tests
- * LintSkipDependenciesTest
+ * <p>Tip: To execute just this test run:
+ *
+ * <pre>
+ *     $ cd tools
+ *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintSkipDependenciesTest
+ * </pre>
  */
-@RunWith(FilterableParameterized.class)
 public class LintSkipDependenciesTest {
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
 
     @Rule
-    public final GradleTestProject project;
-
-    public LintSkipDependenciesTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintLibrarySkipDeps")
-                .create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("lintLibrarySkipDeps").create();
 
     @Test
     public void checkLintDependenciesSkipped() throws IOException, InterruptedException {

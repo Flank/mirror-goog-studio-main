@@ -65,8 +65,10 @@ fun RecipeExecutor.appWidgetRecipe(
 
   val minWidthDp = -30 + 70 * minWidth.name.toInt()
   val minHeightDp = -30 + 70 * minHeight.name.toInt()
-  save(appwidgetInfoXml(minHeightDp, minWidthDp, className, configurable, layoutName, packageName, placement, resizable),
-       resOut.resolve("xml/${layoutName}_info.xml"))
+  save(
+    appwidgetInfoXml(minHeightDp, minWidthDp, className, configurable, layoutName, packageName, placement, resizable),
+    resOut.resolve("xml/${layoutName}_info.xml")
+  )
   mergeXml(stringsXml(configurable), resOut.resolve("values/strings.xml"))
   mergeXml(attrsXml(), resOut.resolve("values/attrs.xml"))
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))

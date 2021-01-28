@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.SigningConfig;
-import com.android.prefs.AndroidLocation;
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -43,8 +42,7 @@ public final class SigningConfigHelper {
     private boolean isSigningReady = false;
 
     public SigningConfigHelper(
-            @NonNull SigningConfig signingConfig, @NonNull String name, @NonNull File storeFile)
-            throws AndroidLocation.AndroidLocationException {
+            @NonNull SigningConfig signingConfig, @NonNull String name, @NonNull File storeFile) {
         assertNotNull(String.format("SigningConfig '%s' null-check", name), signingConfig);
         this.signingConfig = signingConfig;
         this.name = name;

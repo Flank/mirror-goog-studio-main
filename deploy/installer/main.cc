@@ -21,6 +21,7 @@
 #include <string>
 
 #include <getopt.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -38,6 +39,7 @@
 #include "tools/base/deploy/installer/executor/executor_impl.h"
 #include "tools/base/deploy/installer/executor/redirect_executor.h"
 #include "tools/base/deploy/installer/highlander.h"
+#include "tools/base/deploy/installer/server/app_servers.h"
 #include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
@@ -209,6 +211,11 @@ int main(int argc, char** argv) {
   // all time on a device. Kill(2) other instances if necessary.
   Highlander highlander(workspace);
 
+  // Since we keep pipes open towards appserverd process, we don't want
+  // to get a SIGPIPE signal writing to a closed pipe (dead appserverd).
+  // We request to get EPIPE instead of a signal.
+  signal(SIGPIPE, SIG_IGN);
+
   while (running) {
     // Retrieve request from stdin.
     auto request = GetRequestFromFD(STDIN_FILENO);
@@ -218,5 +225,6 @@ int main(int argc, char** argv) {
     ProcessRequest(std::move(request), workspace);
   }
 
+  AppServers::Clear();
   return EXIT_SUCCESS;
 }

@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
@@ -73,7 +74,7 @@ class ModelBuilderTest {
     @get:Rule
     val thrown: ExpectedException = ExpectedException.none()
 
-    private lateinit var project: Project
+    private val project: Project = ProjectFactory.project
     private val projectServices: ProjectServices = createProjectServices(
         issueReporter = SyncIssueReporterImpl(SyncOptions.EvaluationMode.IDE, FakeLogger())
     )
@@ -188,18 +189,16 @@ class ModelBuilderTest {
 
         // for now create an app extension
         val sdkComponents = Mockito.mock(SdkComponentsBuildService::class.java)
-        Mockito.`when`(sdkComponents.adbExecutableProvider).thenReturn(FakeGradleProvider(null))
-        Mockito.`when`(sdkComponents.ndkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-        Mockito.`when`(sdkComponents.sdkDirectoryProvider).thenReturn(FakeGradleProvider(null))
-
         val sdkComponentProvider = FakeGradleProvider(sdkComponents)
         val dslServices = createDslServices(
             projectServices = projectServices,
             sdkComponents = sdkComponentProvider
         )
 
-        val avdComponents = Mockito.mock(AvdComponentsBuildService::class.java)
+        AndroidLocationsBuildService.RegistrationAction(project).execute()
 
+
+        val avdComponents = Mockito.mock(AvdComponentsBuildService::class.java)
         val avdComponentsProvider = FakeGradleProvider(avdComponents)
 
         val variantInputModel = LegacyVariantInputManager(
@@ -217,8 +216,6 @@ class ModelBuilderTest {
             dslServices = dslServices,
             dslContainers = variantInputModel
         )
-
-        project = ProjectBuilder.builder().withProjectDir(Files.createTempDir()).build()
 
         // make sure the global issue reporter is registered
         SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(

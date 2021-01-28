@@ -924,30 +924,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
     }
 
     fun testRangeAnnotationsInCompiledJars() {
-        val libJarPath = "jar/jar/annotation_test.jar"
-        val base64JarData = "" +
-            "H4sIAAAAAAAAAAvwZmbhYmDgYAACRRsGJMDJwMLg6xriqOvp56b/7xQDQwCK" +
-            "0h/FzxlqgSwQFgFiuFJfRz9PN9fgED1fN9/EvMy01OIS3bDUouLM/DwrBUM9" +
-            "A14u56LUxJLUFF2nSiuFpMSq1BxerpDEovTUEl2fxKTUHCsFff3UioLUoszc" +
-            "1LySxBz90mKgdv3EosTs1OIM/azEskQgUQTCVol5efkliSVAs+NzMvNK4nm5" +
-            "FEqAFvJy8XIF4PQZCxCDDMCtggOqAqZKhIGDg4OBEU2VHJIqR7hDip1zEouL" +
-            "9ZJBZGtgrH+Uo4Atd4XjFtZMA5HbJtsCMn33XDkxuXdilofBF+UbE74UPtTb" +
-            "9WRT9je9b+VfTy7h/8v4b8W1m9oBqzJ3n3zz5sy5OcbV3349/y7P8O2DUbdK" +
-            "3JJAz8WnHuyd6nWLuS3lbWi/YukS5oMTXnuo2vkcq020+1znMdPJnb/ixmO3" +
-            "XRWzfG4WSxpOsVbOq0n3XbrlaViWqGyrTdc3Sa/DAcW/O6Xt6tTfhCuG7F3Z" +
-            "ZP7Vauv1qL7JvCejeH5+PzTvtYKeaJiE07oS9VOnNmas9pb0fDQnXs/AMKd0" +
-            "B1fPtEZ5Xz29LRvt5sf/1j1+/+krnwsmKxdeTOa/fHTChlvWf4y6ry3dZf4y" +
-            "b/FDtdzjk702mTl/ja/JNU2NnnXxDN9+iU3Lq5LYFqnOrTm6u+htzw/VeFcu" +
-            "7yW375uoLoyZKS/U+X+jvRBzt6/Ki+C7XpeMV8wv++4136ZYeM8+pt9u7SyX" +
-            "tlQXXnJu+3b1NpOOsnedpPYUz2Nnb29U23F/RlxGSkVD+5NiviOsDvNyzn5c" +
-            "Fxj+UKI/wOaYleP0Dz/qL8y0X3D6xg/e2LiWukcL/D+IHBW2WVxhfKyyjjnA" +
-            "m53DTqBGahkjA8NTJlBCZ2TiYsCdK1ABWh5B1YqeSxBAG0eewWc5qtW34MkY" +
-            "tw4OFB1/UJI1I5MIAyJhIweAHIouJUZCyTzAm5UNpJIVCA2BqkWYQTwAgU6w" +
-            "1VsEAAA="
-
-        val customLib = base64gzip(libJarPath, base64JarData)
-        val classPath = classpath(SUPPORT_JAR_PATH, libJarPath)
-
         lint().files(
             java(
                 "package test.pkg;\n" +
@@ -975,9 +951,36 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                     "  private static void inClassFloatParamFrom0To100(@FloatRange(from = 0, to = 100) float f) {}\n" +
                     "}\n"
             ),
-            classPath,
-            SUPPORT_ANNOTATIONS_JAR,
-            customLib
+            bytecode(
+                "bin/classes",
+                java(
+                    "package jar.jar;\n" +
+                        "\n" +
+                        "import android.support.annotation.FloatRange;\n" +
+                        "import android.support.annotation.IntRange;\n" +
+                        "\n" +
+                        "public class AnnotationsClass {\n" +
+                        "   public static void floatParamBetween0And100(@FloatRange(from = 0.0D,to = 100.0D) float f) {\n" +
+                        "   }\n" +
+                        "\n" +
+                        "   public static void intParamBetween0And255(@IntRange(from = 0L,to = 255L) int i) {\n" +
+                        "   }\n" +
+                        "}"
+                ),
+                "jar/jar/AnnotationsClass.class:" +
+                    "H4sIAAAAAAAAAIWQ20pCQRSG//GwNTW0g50LgiLrom2BdFFElgiKVFgEXY46" +
+                    "xojOyN6jPVdXQRc9QA9VrdloRUINzJrT/631r3l7f3kFcISNBMJYjWEthnUG" +
+                    "50QqaU4ZwrndO4bIhW4JhnRNKnE56DWEd8sbXbpZanc1N9fc471zYR6FUPmi" +
+                    "ah3k88Tkyhbdqg+UkT1RUUPpS4ICsTDCKyqlDTdSK59hp8ZVy9Oy5fqDfl97" +
+                    "xuVfz27ZFqlz9SCOKW/b0z0Ho8EQMto5ux+fFqSasHNYKFg7FWtn+686FTWq" +
+                    "Eh2nH28+GBI3euA1RVnavrM/zF90ue/vd/iQpxBBlD6lwz3Xzt8ihoyVuV0q" +
+                    "4l41OqJpsIkQfbwdYbJPPEXb3TqtzDrYewZ7CnqLUXSCSwdTiNMMBdLl4BWT" +
+                    "sjgSFGdsoiRpUyVMI11ChshZzP1HJ7/peUtXkUW6ikU6WyaElU81KfZVPQIA" +
+                    "AA=="
+
+            ),
+            classpath(SUPPORT_JAR_PATH),
+            SUPPORT_ANNOTATIONS_JAR
         )
             .run()
             .expect(

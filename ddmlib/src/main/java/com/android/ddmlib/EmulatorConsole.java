@@ -19,7 +19,7 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.prefs.AndroidLocation;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -30,6 +30,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.util.Formatter;
 import java.util.HashMap;
@@ -340,7 +341,7 @@ public final class EmulatorConsole {
             } catch (IOException e) {
                 Log.w(LOG_TAG, "Failed to start Emulator console for " + mPort);
                 return false;
-            } catch (AndroidLocation.AndroidLocationException e) {
+            } catch (Throwable e) {
                 Log.w(LOG_TAG, "Failed to get emulator console auth token");
                 return false;
             }
@@ -639,8 +640,13 @@ public final class EmulatorConsole {
         }
     }
 
-    public synchronized String sendAuthentication() throws IOException, AndroidLocation.AndroidLocationException {
-        File emulatorConsoleAuthTokenFile = new File(AndroidLocation.getUserHomeFolder(), EMULATOR_CONSOLE_AUTH_TOKEN);
+    public synchronized String sendAuthentication() throws IOException {
+        Path useHomeLocation = AndroidLocationsSingleton.INSTANCE.getUserHomeLocation();
+        if (useHomeLocation == null) {
+            throw new RuntimeException("Enable to query home location");
+        }
+        File emulatorConsoleAuthTokenFile =
+                useHomeLocation.resolve(EMULATOR_CONSOLE_AUTH_TOKEN).toFile();
         String authToken =
                 Files.asCharSource(emulatorConsoleAuthTokenFile, Charsets.UTF_8).read().trim();
         String command = String.format(COMMAND_AUTH, authToken);

@@ -21,6 +21,7 @@ import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Ty
 
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 import java.io.File;
 

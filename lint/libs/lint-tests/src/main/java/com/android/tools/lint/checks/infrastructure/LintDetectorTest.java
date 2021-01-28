@@ -20,22 +20,10 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
-import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.MergingException;
-import com.android.ide.common.resources.ResourceFile;
-import com.android.ide.common.resources.ResourceItem;
-import com.android.ide.common.resources.ResourceMerger;
-import com.android.ide.common.resources.ResourceMergerItem;
-import com.android.ide.common.resources.ResourceRepositories;
-import com.android.ide.common.resources.ResourceRepository;
-import com.android.ide.common.resources.ResourceSet;
-import com.android.ide.common.resources.TestResourceRepository;
-import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceFolderType;
-import com.android.resources.ResourceType;
 import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
@@ -52,6 +40,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.ConfigurationHierarchy;
@@ -74,15 +63,8 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
-import com.android.utils.ILogger;
-import com.android.utils.StdLogger;
-import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiErrorElement;
@@ -94,19 +76,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -208,8 +187,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     /**
-     * See {@link #lintProject(TestFile...)} for instructions on how to migrate.
-     *
      * @deprecated Use the new lint testing infrastructure instead; the entry point is {@link
      *     #lint()}
      */
@@ -472,11 +449,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
-    public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile
-            projectProperties() {
+    public static PropertyTestFile projectProperties() {
         return TestFiles.projectProperties();
     }
 
+    /** Use {@link #bytecode(String, TestFile, String...)} instead */
+    @Deprecated
     @NonNull
     public static BinaryTestFile bytecode(@NonNull String to, @NonNull BytecodeProducer producer) {
         return TestFiles.bytecode(to, producer);
@@ -487,6 +465,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return TestFiles.bytes(to, bytes);
     }
 
+    /** Use {@link #toBase64gzip(File)} instead. */
+    @Deprecated
     public static String toBase64(@NonNull byte[] bytes) {
         return TestFiles.toBase64(bytes);
     }
@@ -495,6 +475,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return TestFiles.toBase64gzip(bytes);
     }
 
+    /** Use {@link #toBase64gzip(File)} instead. */
+    @Deprecated
     public static String toBase64(@NonNull File file) throws IOException {
         return TestFiles.toBase64(file);
     }
@@ -512,7 +494,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * @param to the file to write as
      * @param encoded the encoded data
      * @return the new test file
+     * @deprecated Use {@link #toBase64gzip(File)} instead.
      */
+    @Deprecated
     public static BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
         return TestFiles.base64(to, encoded);
     }
@@ -522,14 +506,79 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * data, use {@link #toBase64gzip(File)} or {@link #toBase64gzip(byte[])}, for example via
      *
      * <pre>{@code assertEquals("", toBase64gzip(new File("path/to/your.class")));}</pre>
+     *
+     * <b>For bytes from compiled bytecode, use {@link #bytecode(String, TestFile, String...)}
+     * instead!</b>
      */
     @NonNull
     public static BinaryTestFile base64gzip(@NonNull String to, @NonNull String encoded) {
         return TestFiles.base64gzip(to, encoded);
     }
 
+    /**
+     * Create a project classpath file including the given extra libraries.
+     *
+     * <p>Note that bin/classes/ is included by default, as are all jars found under libs/.
+     */
     public static TestFile classpath(String... extraLibraries) {
         return TestFiles.classpath(extraLibraries);
+    }
+
+    /**
+     * Special test file which uses the bytecode from the given source. Note that only the bytecode
+     * will be injected into the project; the source is here in the test file declaration for two
+     * reasons: (1) Ability to regenerate the bytecode in the future if we want to for example
+     * change to a higher class format version. (2) Ability to easily generate the bytecode in the
+     * first place: write the test and create this object where you only specify the source and an
+     * empty string for the bytecode: lint will then try to compile it and spit out the expected
+     * bytecode string you can then add to the test. (3) Ability for lint to test checks both with
+     * and without source access. In the provisional reporting situation (where each module is
+     * analyzed independently) you don't get to look at upstream dependency source code. Lint can
+     * simulate this by taking these files and checking in both scenarios (e.g. in {@link
+     * TestMode#PROVISIONAL} it can check for projects that contain compiled files and move these
+     * into their own module.)
+     *
+     * <p>The reason you need to provide the compiled contents is that we don't want to have to
+     * recompile the sources every time the test runs, and besides, the compilation environment
+     * (javac, kotlinc) may not be available in the test execution environment, and finally we want
+     * to make sure that the output is stable across test invocations, not subject to changes as for
+     * example the Kotlin compiler gets updated.
+     *
+     * <p>The [into] parameter is normally a path like libs/foo.jar but can also be something like
+     * bin/classes/ to have the classes be part of the class file analysis, not just for symbol
+     * resolution or simulating a library dependency. Note also that you can specify the same jar
+     * multiple times: all the bytecode from these files are accumulated into a single jar.
+     *
+     * <p>Note: To include <b>both</b> the source <b>and</b> the bytecode, use {@link
+     * #compiled(String, TestFile, String...)} instead.
+     */
+    public static CompiledSourceFile bytecode(
+            @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
+
+        return new CompiledSourceFile(into, CompiledSourceFile.Type.BYTECODE_ONLY, source, encoded);
+    }
+
+    /**
+     * Special test file which includes the bytecode for the given source (as well as the source
+     * itself) in the test project. This type of test file makes it easy to include binary bytecode
+     * because lint can generate this bytecode on its own by compiling the test sources (though this
+     * is not done automatically since we want stable test output as well as much faster test
+     * execution than compiling each of lint's 2000+ unit tests every time.)
+     *
+     * <p>The [into] parameter specifies where the bytecode should be written; it is normally a path
+     * like libs/foo.jar but can also be something like bin/classes/ to have the classes be part of
+     * the class file analysis, not just for symbol resolution or simulating a library dependency.
+     * Note also that you can specify the same jar multiple times: all the bytecode from these files
+     * are accumulated into a single jar. (The source file is written to the relative path of the
+     * nested test source file.)
+     *
+     * <p>Note: To only include the bytecode, not the source, use {@link #bytecode(String, TestFile,
+     * String...)} instead.
+     */
+    public static CompiledSourceFile compiled(
+            @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
+        return new CompiledSourceFile(
+                into, CompiledSourceFile.Type.SOURCE_AND_BYTECODE, source, encoded);
     }
 
     @NonNull
@@ -927,8 +976,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @NonNull
         @Override
         public Configuration getConfiguration(
-                @NonNull com.android.tools.lint.detector.api.Project project,
-                @Nullable final LintDriver driver) {
+                @NonNull Project project, @Nullable final LintDriver driver) {
             return getConfigurations()
                     .getConfigurationForProject(
                             project,
@@ -937,8 +985,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
 
         private Configuration createConfiguration(
-                @NonNull com.android.tools.lint.detector.api.Project project,
-                @NonNull Configuration defaultConfiguration) {
+                @NonNull Project project, @NonNull Configuration defaultConfiguration) {
             // Ensure that we have a fallback configuration which disables everything
             // except the relevant issues
             ConfigurationHierarchy configurations = getConfigurations();
@@ -969,122 +1016,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         public void setIncremental(File currentFile) {
             incrementalCheck = currentFile;
-        }
-
-        @Override
-        public boolean supportsProjectResources() {
-            return incrementalCheck != null;
-        }
-
-        @Nullable
-        protected String getProjectResourceLibraryName() {
-            return null;
-        }
-
-        @Nullable
-        @Override
-        public ResourceRepository getResourceRepository(
-                Project project, boolean includeDependencies, boolean includeLibraries) {
-            if (incrementalCheck == null) {
-                return null;
-            }
-
-            TestResourceRepository repository = new TestResourceRepository(RES_AUTO);
-            ILogger logger = new StdLogger(StdLogger.Level.INFO);
-            ResourceMerger merger = new ResourceMerger(0);
-
-            ResourceSet resourceSet =
-                    new ResourceSet(
-                            project.getName(),
-                            RES_AUTO,
-                            getProjectResourceLibraryName(),
-                            true,
-                            null) {
-                        @Override
-                        protected void checkItems() {
-                            // No checking in ProjectResources; duplicates can happen, but
-                            // the project resources shouldn't abort initialization
-                        }
-                    };
-            // Only support 1 resource folder in test setup right now
-            int size = project.getResourceFolders().size();
-            assertTrue("Found " + size + " test resources folders", size <= 1);
-            if (size == 1) {
-                resourceSet.addSource(project.getResourceFolders().get(0));
-            }
-            try {
-                resourceSet.loadFromFiles(logger);
-                merger.addDataSet(resourceSet);
-                repository.update(merger);
-
-                // Make tests stable: sort the item lists!
-                for (ListMultimap<String, ResourceItem> multimap :
-                        repository.getResourceTable().values()) {
-                    ResourceRepositories.sortItemLists(multimap);
-                }
-
-                // Workaround: The repository does not insert ids from layouts! We need
-                // to do that here.
-                // TODO: namespaces
-                Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                        repository.getResourceTable().row(RES_AUTO);
-                ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
-                if (layouts != null) {
-                    for (ResourceItem item : layouts.values()) {
-                        PathString source = item.getSource();
-                        if (source == null) {
-                            continue;
-                        }
-                        File file = source.toFile();
-                        if (file == null) {
-                            continue;
-                        }
-                        try {
-                            String xml = Files.toString(file, StandardCharsets.UTF_8);
-                            Document document = XmlUtils.parseDocumentSilently(xml, true);
-                            assertNotNull(document);
-                            Set<String> ids = Sets.newHashSet();
-                            addIds(ids, document); // TODO: pull parser
-                            if (!ids.isEmpty()) {
-                                ListMultimap<String, ResourceItem> idMap =
-                                        items.get(ResourceType.ID);
-                                if (idMap == null) {
-                                    idMap = ArrayListMultimap.create();
-                                    items.put(ResourceType.ID, idMap);
-                                }
-                                for (String id : ids) {
-                                    ResourceMergerItem idItem =
-                                            new ResourceMergerItem(
-                                                    id,
-                                                    RES_AUTO,
-                                                    ResourceType.ID,
-                                                    null,
-                                                    null,
-                                                    null);
-                                    String qualifiers = source.getParentFileName();
-                                    if (qualifiers.startsWith("layout-")) {
-                                        qualifiers = qualifiers.substring("layout-".length());
-                                    } else if (qualifiers.equals("layout")) {
-                                        qualifiers = "";
-                                    }
-
-                                    // Creating the resource file will set the source of idItem.
-                                    //noinspection ResultOfObjectAllocationIgnored
-                                    ResourceFile.createSingle(file, idItem, qualifiers);
-
-                                    idMap.put(id, idItem);
-                                }
-                            }
-                        } catch (IOException e) {
-                            fail(e.toString());
-                        }
-                    }
-                }
-            } catch (MergingException e) {
-                fail(e.getMessage());
-            }
-
-            return repository;
         }
 
         @Nullable
@@ -1287,60 +1218,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @Override
         public void ignore(@NonNull String issueId, @NonNull File file) {
             fail("Not supported in tests.");
-        }
-    }
-
-    /**
-     * Test file description, which can copy from resource directory or from a specified hardcoded
-     * string literal, and copy into a target directory
-     *
-     * <p>This class is just a temporary shim to keep the API compatible; new code should reference
-     * com.android.tools.lint.checks.infrastructure.TestFile.
-     */
-    public static class TestFile extends com.android.tools.lint.checks.infrastructure.TestFile {
-        public TestFile() {}
-
-        // This source file is indented: dedent the contents before creating the file
-        @Override
-        public TestFile indented() {
-            contents = kotlin.text.StringsKt.trimIndent(contents);
-            return this;
-        }
-
-        @Override
-        public TestFile withSource(@NonNull String source) {
-            super.withSource(source);
-            return this;
-        }
-
-        @Override
-        public TestFile from(@NonNull String from, @NonNull TestResourceProvider provider) {
-            super.from(from, provider);
-            return this;
-        }
-
-        @Override
-        public TestFile to(@NonNull String to) {
-            super.to(to);
-            return this;
-        }
-
-        @Override
-        public TestFile copy(@NonNull String relativePath, @NonNull TestResourceProvider provider) {
-            super.copy(relativePath, provider);
-            return this;
-        }
-
-        @Override
-        public TestFile withBytes(@NonNull byte[] bytes) {
-            super.withBytes(bytes);
-            return this;
-        }
-
-        @Override
-        public TestFile within(@Nullable String root) {
-            super.within(root);
-            return this;
         }
     }
 }

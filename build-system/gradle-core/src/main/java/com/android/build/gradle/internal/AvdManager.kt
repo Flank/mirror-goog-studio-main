@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
+import com.android.prefs.AndroidLocationsProvider
 import com.android.sdklib.PathFileWrapper
 import com.android.sdklib.devices.DeviceManager
 import com.android.sdklib.internal.avd.AvdCamera
@@ -28,6 +29,8 @@ import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
 import com.android.utils.ILogger
 import com.android.utils.StdLogger
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import java.io.File
 
 /**
@@ -35,12 +38,13 @@ import java.io.File
  */
 class AvdManager(
     avdFolder: File,
-    private val sdkComponents: SdkComponentsBuildService,
-    private val sdkHandler: AndroidSdkHandler
+    private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>,
+    private val sdkHandler: AndroidSdkHandler,
+    private val androidLocationsProvider: AndroidLocationsProvider
 ) {
 
     private val sdkDirectory: File
-    get() = sdkComponents.sdkDirectoryProvider.get().asFile
+    get() = versionedSdkLoader.get().sdkDirectoryProvider.get().asFile
 
     private val logger: ILogger = LoggerWrapper.getLogger(AvdManager::class.java)
 
@@ -53,10 +57,11 @@ class AvdManager(
     }
 
     private val deviceManager: DeviceManager by lazy {
-        DeviceManager.createInstance(sdkDirectory.toPath(), logger)
+        DeviceManager.createInstance(androidLocationsProvider, sdkDirectory.toPath(), logger)
     }
 
     fun createOrRetrieveAvd(
+        imageProvider: Provider<Directory>,
         imageHash: String,
         deviceName: String,
         hardwareProfile: String
@@ -69,7 +74,6 @@ class AvdManager(
             return info.configFile
         }
 
-        val imageProvider = sdkComponents.sdkImageDirectoryProvider(imageHash)
         if (!imageProvider.isPresent) {
             throw RuntimeException("Failed to find system image for hash: $imageHash")
         }
@@ -146,7 +150,7 @@ class AvdManager(
 
     private fun defaultHardwareConfig(): MutableMap<String, String> {
         // Get the defaults of all the user-modifiable properties.
-        val emulatorProvider = sdkComponents.emulatorDirectoryProvider
+        val emulatorProvider = versionedSdkLoader.get().emulatorDirectoryProvider
 
         val emulatorLib = if (emulatorProvider.isPresent) {
             emulatorProvider.get().asFile

@@ -1035,10 +1035,9 @@ class LintDriver(
         // Look up manifest information (but not for library projects)
         if (project.isAndroidProject) {
             for (manifestFile in project.manifestFiles) {
-                val parser = client.xmlParser
                 client.runReadAction(
                     Runnable {
-                        val context = createXmlContext(project, main, manifestFile, null, parser)
+                        val context = createXmlContext(project, main, manifestFile, null)
                             ?: return@Runnable
                         project.readManifest(context.document)
                         if ((
@@ -1055,7 +1054,7 @@ class LintDriver(
                                     }
                                 }
 
-                                val v = ResourceVisitor(parser, xmlDetectors, null)
+                                val v = ResourceVisitor(client, xmlDetectors, null)
                                 fireEvent(EventType.SCANNING_FILE, context)
                                 v.visitFile(context)
                                 fileCount++
@@ -1884,9 +1883,8 @@ class LintDriver(
                 return null
             }
 
-            val parser = client.xmlParser
             currentVisitor = ResourceVisitor(
-                parser, applicableXmlChecks,
+                client, applicableXmlChecks,
                 applicableBinaryChecks
             )
         }
@@ -1955,8 +1953,6 @@ class LintDriver(
 
         val visitor = getVisitor(type, xmlChecks, binaryChecks)
         if (visitor != null) { // if not, there are no applicable rules in this folder
-            val parser = visitor.parser
-
             // Process files in alphabetical order, to ensure stable output
             // (for example for the duplicate resource detector)
             Arrays.sort(files)
@@ -1964,7 +1960,7 @@ class LintDriver(
                 if (isXmlFile(file)) {
                     client.runReadAction(
                         Runnable {
-                            val context = createXmlContext(project, main, file, type, parser)
+                            val context = createXmlContext(project, main, file, type)
                                 ?: return@Runnable
                             fireEvent(EventType.SCANNING_FILE, context)
                             visitor.visitFile(context)
@@ -1994,21 +1990,19 @@ class LintDriver(
         project: Project,
         main: Project?,
         file: File,
-        type: ResourceFolderType?,
-        parser: XmlParser
+        type: ResourceFolderType?
     ): XmlContext? {
         assert(isXmlFile(file))
         val contents = client.readFile(file)
         if (contents.isEmpty()) {
             return null
         }
-        val xml = contents.toString()
-        val document = parser.parseXml(xml, file) ?: return null
+        val document = project.client.getXmlDocument(file, contents) ?: return null
 
         // Ignore empty documents
         document.documentElement ?: return null
 
-        return XmlContext(this, project, main, file, type, parser, xml, document)
+        return XmlContext(this, project, main, file, type, contents, document)
     }
 
     /** Checks individual resources  */
@@ -2041,10 +2035,9 @@ class LintDriver(
                 if (type != null) {
                     val visitor = getVisitor(type, xmlDetectors, binaryChecks)
                     if (visitor != null) {
-                        val parser = visitor.parser
                         client.runReadAction(
                             Runnable {
-                                val context = createXmlContext(project, main, file, type, parser)
+                                val context = createXmlContext(project, main, file, type)
                                     ?: return@Runnable
                                 fireEvent(EventType.SCANNING_FILE, context)
                                 visitor.visitFile(context)
@@ -2136,6 +2129,10 @@ class LintDriver(
 
         override fun findManifestSourceLocation(mergedNode: org.w3c.dom.Node): Location? =
             delegate.findManifestSourceLocation(mergedNode)
+
+        override fun getXmlDocument(file: File, contents: CharSequence?): Document? {
+            return delegate.getXmlDocument(file, contents)
+        }
 
         override fun report(
             context: Context,
@@ -2333,23 +2330,25 @@ class LintDriver(
 
         override fun checkForSuppressComments(): Boolean = delegate.checkForSuppressComments()
 
-        override fun supportsProjectResources(): Boolean = delegate.supportsProjectResources()
-
-        override fun getResourceRepository(
+        override fun getResources(
             project: Project,
-            includeModuleDependencies: Boolean,
-            includeLibraries: Boolean
-        ): ResourceRepository? =
-            delegate.getResourceRepository(
-                project, includeModuleDependencies,
-                includeLibraries
-            )
+            scope: ResourceRepositoryScope
+        ): ResourceRepository = delegate.getResources(project, scope)
 
         override fun getResourceVisibilityProvider(): ResourceVisibilityLookup.Provider =
             delegate.getResourceVisibilityProvider()
 
-        override fun createResourceItemHandle(item: ResourceItem): Location.Handle =
-            delegate.createResourceItemHandle(item)
+        override fun createResourceItemHandle(item: ResourceItem, nameOnly: Boolean, valueOnly: Boolean): Location.ResourceItemHandle {
+            return delegate.createResourceItemHandle(item, nameOnly, valueOnly)
+        }
+
+        override fun getLatestSdkTarget(minApi: Int, includePreviews: Boolean): IAndroidTarget? {
+            return delegate.getLatestSdkTarget(minApi, includePreviews)
+        }
+
+        override fun getPlatformLookup(): PlatformLookup? {
+            return delegate.getPlatformLookup()
+        }
 
         @Throws(IOException::class)
         override fun openConnection(url: URL): URLConnection? = delegate.openConnection(url)
@@ -3062,9 +3061,14 @@ class LintDriver(
             sb.append(':')
             appendStackTraceSummary(throwable, sb)
             sb.append("`")
+            sb.append("\n\nYou can ")
+            if (!LintClient.isStudio) {
+                sb.append(
+                    "run with --stacktrace or "
+                )
+            }
             sb.append(
-                "\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
-                    "dump a full stacktrace to stdout."
+                "set environment variable `LINT_PRINT_STACKTRACE=true` to dump a full stacktrace to stdout."
             )
 
             val throwableMessage = throwable.message
@@ -3118,9 +3122,7 @@ class LintDriver(
                 else -> driver.client.log(throwable, message)
             }
 
-            if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE") ||
-                VALUE_TRUE == System.getProperty("lint.print-stacktrace")
-            ) {
+            if (driver.client.printInternalErrorStackTrace) {
                 throwable.printStackTrace()
             }
 

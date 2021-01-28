@@ -30,8 +30,10 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class LiveLiteralSupport {
@@ -49,25 +51,33 @@ public class LiveLiteralSupport {
     // the first start-up agent will set the value on application restart.
     private static String applicationId = null;
 
-    // TODO: Find a way to not have a user visible thread hang around after
-    //       updates are done.
-    // A single helper background thread responsible for writing the initMap to disk.
-    // This thread make sure that:
-    //  1) The application does not have any strict mode violation. (IE it is not writing
-    //     to disk on the main thread.
-    //  2) The write is thread safe. (By the single threaded nature of this pool)
-    private static final ExecutorService POOL =
-            Executors.newFixedThreadPool(
-                    1,
-                    new ThreadFactory() {
-                        @Override
-                        public Thread newThread(Runnable runnable) {
-                            return new Thread(
-                                    new ThreadGroup("Live Literal Support"),
-                                    runnable,
-                                    "I/O Thread");
-                        }
-                    });
+    private static final ExecutorService POOL;
+
+    static {
+        ThreadFactory factory =
+                new ThreadFactory() {
+                    @Override
+                    public Thread newThread(Runnable runnable) {
+                        Thread t =
+                                new Thread(
+                                        new ThreadGroup("Live Literal Support"),
+                                        runnable,
+                                        "LiveLiteral I/O Thread");
+                        return t;
+                    }
+                };
+
+        ThreadPoolExecutor p =
+                new ThreadPoolExecutor(
+                        0, /* Core Pool Size */
+                        1, /* Max Pool Size */
+                        10, /* Keep Alive Time */
+                        TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<Runnable>(),
+                        factory);
+        p.allowCoreThreadTimeOut(true);
+        POOL = p;
+    }
 
     // Time step when a last live literal update occurred.
     // Should the writing thread just written to disk recently, it would sleep for a short time.
@@ -90,12 +100,22 @@ public class LiveLiteralSupport {
      *     in from a JVMTI class search because this class will be loaded in the boot classloader
      *     and will not be able to find the application classes.
      * @param targetApplicationId The package name of the application.
+     * @return True if this invocation enabled Live Literal from inactive to active state. False
+     *     otherwise.
      */
-    public static void enable(Class<?> liveLiteralKtClass, String targetApplicationId) {
+    public static boolean enable(Class<?> liveLiteralKtClass, String targetApplicationId) {
         applicationId = targetApplicationId;
         try {
-            Method enableMethod = liveLiteralKtClass.getMethod("enableLiveLiterals");
-            enableMethod.invoke(liveLiteralKtClass);
+            Field enabled = liveLiteralKtClass.getDeclaredField("isLiveLiteralsEnabled");
+            enabled.setAccessible(true);
+            boolean started = enabled.getBoolean(liveLiteralKtClass);
+            if (!started) {
+                Method enableMethod = liveLiteralKtClass.getMethod("enableLiveLiterals");
+                enableMethod.invoke(liveLiteralKtClass);
+                return true;
+            }
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
@@ -103,6 +123,7 @@ public class LiveLiteralSupport {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     /**
@@ -173,7 +194,9 @@ public class LiveLiteralSupport {
             initMap.put(helper, fields);
         }
         fields.put(key, value);
-        POOL.submit(() -> saveToDisk());
+        try (Phase p = new Phase("LL saveToDisk")) {
+            POOL.submit(() -> saveToDisk());
+        }
     }
 
     // Accessing the initMap will require a lock.

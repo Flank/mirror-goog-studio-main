@@ -28,7 +28,7 @@
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
-#include "tools/base/deploy/installer/server/install_server.h"
+#include "tools/base/deploy/installer/server/app_servers.h"
 #include "tools/base/deploy/sites/sites.h"
 
 namespace {
@@ -39,9 +39,6 @@ namespace {
 // changed since 2012.
 const int kFirstAppUid = 10000;
 const int kLastAppUid = 19999;
-bool isUserDebug() {
-  return deploy::Env::build_type().find("userdebug") != std::string::npos;
-}
 
 }  // namespace
 
@@ -73,21 +70,8 @@ void LiveLiteralUpdateCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  client_ = StartInstallServer(
-      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
-      package_name_, kInstallServer + "-" + workspace_.GetVersion());
-
-  if (!client_) {
-    if (isUserDebug()) {
-      update_response->set_status(
-          proto::LiveLiteralUpdateResponse::START_SERVER_FAILED_USERDEBUG);
-    } else {
-      update_response->set_status(
-          proto::LiveLiteralUpdateResponse::START_SERVER_FAILED);
-    }
-    update_response->set_extra(kInstallServer);
-    return;
-  }
+  client_ = AppServers::Get(request_.package_name(), workspace_.GetTmpFolder(),
+                            workspace_.GetVersion());
 
   PrepareAndBuildRequest(update_response);
   Update(request_, update_response);
@@ -193,15 +177,6 @@ void LiveLiteralUpdateCommand::ProcessResponse(
   // Do this even if the deployment failed; it's retrieving data unrelated to
   // the current deployment. We might want to find a better time to do this.
   GetAgentLogs(response);
-
-  proto::InstallServerResponse install_response;
-  if (!client_->KillServerAndWait(&install_response)) {
-    response->set_status(
-        proto::LiveLiteralUpdateResponse::INSTALL_SERVER_COM_ERR);
-    return;
-  }
-
-  ConvertProtoEventsToEvents(install_response.events());
 }
 
 // TODO: Refactor this which is mostly identical to
@@ -231,10 +206,10 @@ void LiveLiteralUpdateCommand::FilterProcessIds(std::vector<int>* process_ids) {
 // TODO: Refactor this which is mostly identical to
 // BaseSwapCommand::ListenForAgents()
 proto::LiveLiteralUpdateResponse::Status
-LiveLiteralUpdateCommand::ListenForAgents() const {
+LiveLiteralUpdateCommand::ListenForAgents() {
   Phase("ListenForAgents");
   proto::OpenAgentSocketRequest req;
-  req.set_socket_name(Socket::kDefaultAddress);
+  req.set_socket_name(GetSocketName());
 
   auto resp = client_->OpenAgentSocket(req);
   if (!resp) {
@@ -254,6 +229,24 @@ void LiveLiteralUpdateCommand::Update(
     proto::LiveLiteralUpdateResponse* response) {
   Phase p("LiveLiteralUpdate");
   if (response->status() != proto::LiveLiteralUpdateResponse::UNKNOWN) {
+    return;
+  }
+
+  proto::OverlayUpdateRequest oid_update_request;
+  oid_update_request.set_expected_overlay_id(request_.expected_overlay_id());
+  oid_update_request.set_overlay_id(request_.overlay_id());
+  const std::string pkg = request_.package_name();
+  oid_update_request.set_overlay_path(Sites::AppOverlays(pkg));
+  oid_update_request.set_wipe_all_files(false);
+  auto oid_resp = client_->UpdateOverlay(oid_update_request);
+  if (!oid_resp) {
+    ErrEvent("OverlayIdPushCommand comm error");
+    return;
+  }
+  proto::OverlayUpdateResponse_Status oid_status = oid_resp->status();
+  if (oid_status != proto::OverlayUpdateResponse::OK) {
+    ErrEvent("OverlayIdPushCommand error: Bad status (" +
+             to_string(oid_status) + ")");
     return;
   }
 

@@ -42,22 +42,28 @@ import com.android.build.gradle.options.BooleanOption.ENABLE_PROFILE_JSON
 import com.android.build.gradle.options.BooleanOption.PREFER_CMAKE_FILE_API
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
+import com.android.build.gradle.options.StringOption.NATIVE_BUILD_OUTPUT_LEVEL
 import com.android.build.gradle.options.StringOption.PROFILE_OUTPUT_DIR
 import com.android.build.gradle.tasks.CmakeAndroidNinjaExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.CmakeQueryMetadataGenerator
 import com.android.build.gradle.tasks.CmakeServerExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.tasks.NdkBuildExternalNativeJsonGenerator
 import com.android.build.gradle.tasks.getPrefabFromMaven
 import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
+import com.android.utils.FileUtils.join
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import org.gradle.api.file.FileCollection
 import java.io.File
-import java.util.*
+import java.lang.IllegalStateException
+import java.util.Locale
+import java.util.Objects
 
 /**
  * The createCxxMetadataGenerator(...) function is meant to be use at
@@ -81,11 +87,16 @@ data class CxxConfigurationModel(
     val unusedAbis: List<CxxAbiModel>
 )
 
+enum class NativeBuildOutputLevel {
+    QUIET, VERBOSE
+}
+
 /**
  * Parameters common to configuring the creation of [CxxConfigurationModel].
  */
 data class CxxConfigurationParameters(
     val cxxFolder: File,
+    val cxxCacheFolder: File,
     val buildSystem: NativeBuildSystem,
     val makeFile: File,
     val buildStagingFolder: File?,
@@ -95,6 +106,9 @@ data class CxxConfigurationParameters(
     val buildFile: File,
     val isDebuggable: Boolean,
     val minSdkVersion: AndroidVersion,
+    val compileSdkVersion: String,
+    val ndkVersion: String?,
+    val ndkPath: String?,
     val cmakeVersion: String?,
     val splitsAbiFilterSet: Set<String>,
     val intermediatesFolder: File,
@@ -110,7 +124,8 @@ data class CxxConfigurationParameters(
     val implicitBuildTargetSet: Set<String>,
     val variantName: String,
     val nativeVariantConfig: NativeBuildSystemVariantConfig,
-    val isPreferCmakeFileApiEnabled: Boolean
+    val isPreferCmakeFileApiEnabled: Boolean,
+    val nativeBuildOutputLevel: NativeBuildOutputLevel,
 )
 
 /**
@@ -124,24 +139,27 @@ data class CxxConfigurationParameters(
  * undefined behavior.
  */
  private fun findCxxFolder(
+        buildSystem : NativeBuildSystem,
         moduleRootFolder : File,
         buildStagingDirectory: File?,
         buildFolder: File): File {
     val defaultCxxFolder =
-            FileUtils.join(
-                    moduleRootFolder,
-                    CXX_DEFAULT_CONFIGURATION_SUBFOLDER
-            )
+        when(buildSystem) {
+            NDK_BUILD -> join(buildFolder, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
+            else -> join(moduleRootFolder, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
+        }
     return when {
         buildStagingDirectory == null -> defaultCxxFolder
         FileUtils.isFileInDirectory(buildStagingDirectory, buildFolder) -> {
-            warnln("""
-            The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
-            is a subdirectory of your project's temporary build directory (
-            '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
-            builds. It is recommended to either use the default build staging directory
-            ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
+            if (buildSystem != NDK_BUILD) {
+                warnln("""
+                    The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
+                    is a subdirectory of your project's temporary build directory (
+                    '${buildFolder.absolutePath}'). Files in this directory do not persist through clean
+                    builds. It is recommended to either use the default build staging directory
+                    ('$defaultCxxFolder'), or specify a path outside the temporary build directory.
             """.trimIndent())
+            }
             buildStagingDirectory
         }
         else -> buildStagingDirectory
@@ -161,11 +179,12 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
             ?: return null
 
     val cxxFolder = findCxxFolder(
+        buildSystem,
         global.project.projectDir,
         buildStagingFolder,
         global.project.buildDir
     )
-
+    val cxxCacheFolder = join(global.intermediatesDir, "cxx")
     fun option(option: BooleanOption) = global.projectOptions.get(option)
     fun option(option: StringOption) = global.projectOptions.get(option)
 
@@ -174,8 +193,13 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
      * allow valid [errorln]s to pass or throw exception that will trigger download hyperlinks
      * in Android Studio
      */
-    val ndkHandler = global.sdkComponents.get().ndkHandler
-    val ndkInstall = CachingEnvironment(cxxFolder).use {
+    val ndkHandler = global.sdkComponents.get().versionedNdkHandler(
+        compileSdkVersion = global.extension.compileSdkVersion ?:
+            throw IllegalStateException("compileSdkVersion not set in android configuration"),
+        ndkVersion = global.extension.ndkVersion,
+        ndkPath = global.extension.ndkPath
+    )
+    val ndkInstall = CachingEnvironment(cxxCacheFolder).use {
         ndkHandler.getNdkPlatform(downloadOkay = true)
     }
     if (!ndkInstall.isConfigured) {
@@ -222,6 +246,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
 
     return CxxConfigurationParameters(
         cxxFolder = cxxFolder,
+        cxxCacheFolder = cxxCacheFolder,
         buildSystem = buildSystem,
         makeFile = makeFile,
         buildStagingFolder = buildStagingFolder,
@@ -231,6 +256,10 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         buildFile = global.project.buildFile,
         isDebuggable = variant.debuggable,
         minSdkVersion = variant.variantBuilder.minSdkVersion.toSharedAndroidVersion(),
+        compileSdkVersion = global.extension.compileSdkVersion ?:
+            throw IllegalStateException("compileSdkVersion not set in android configuration"),
+        ndkVersion = global.extension.ndkVersion,
+        ndkPath = global.extension.ndkPath,
         cmakeVersion = global.extension.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = global.extension.splits.abiFilters,
         intermediatesFolder = global.intermediatesDir,
@@ -248,7 +277,10 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
             buildSystem, variant, variant.variantDslInfo
         ),
-        isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API)
+        isPreferCmakeFileApiEnabled = option(PREFER_CMAKE_FILE_API),
+        nativeBuildOutputLevel = NativeBuildOutputLevel.values()
+            .firstOrNull { it.toString() == option(NATIVE_BUILD_OUTPUT_LEVEL)?.toUpperCase(Locale.US) }
+            ?: NativeBuildOutputLevel.QUIET
     )
 }
 
@@ -262,7 +294,7 @@ fun tryCreateConfigurationParameters(variant: VariantImpl) : CxxConfigurationPar
 private fun getProjectPath(config: ExternalNativeBuild)
         : Triple<NativeBuildSystem, File, File?>? {
     val externalProjectPaths = listOfNotNull(
-        config.cmake.path?.let { Triple(NativeBuildSystem.CMAKE, it, config.cmake.buildStagingDirectory)},
+        config.cmake.path?.let { Triple(CMAKE, it, config.cmake.buildStagingDirectory)},
         config.ndkBuild.path?.let { Triple(NativeBuildSystem.NDK_BUILD, it, config.ndkBuild.buildStagingDirectory) })
 
     return when {
@@ -307,7 +339,7 @@ fun createCxxMetadataGenerator(
             abis,
             variantBuilder
         )
-        NativeBuildSystem.CMAKE -> {
+        CMAKE -> {
             val cmake =
                 Objects.requireNonNull(variant.module.cmake)!!
             if (!cmake.isValidCmakeAvailable) {

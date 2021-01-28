@@ -38,10 +38,10 @@
 
 namespace deploy {
 
-jvmtiExtensionFunction const* GetExtensionFunctionVoid(
-    JNIEnv* env, jvmtiEnv* jvmti, const std::string& name) {
+jvmtiExtensionFunction GetExtensionFunctionVoid(JNIEnv* env, jvmtiEnv* jvmti,
+                                                const std::string& name) {
   jint n_ext = 0;
-  jvmtiExtensionFunction const* res = nullptr;
+  jvmtiExtensionFunction res = nullptr;
   jvmtiExtensionFunctionInfo* infos = nullptr;
   if (jvmti->GetExtensionFunctions(&n_ext, &infos) != JVMTI_ERROR_NONE) {
     return res;
@@ -50,7 +50,7 @@ jvmtiExtensionFunction const* GetExtensionFunctionVoid(
   for (jint i = 0; i < n_ext; i++) {
     const jvmtiExtensionFunctionInfo& info = infos[i];
     if (name == info.id) {
-      res = &info.func;
+      res = info.func;
     }
     for (auto j = 0; j < info.param_count; j++) {
       jvmti->Deallocate(reinterpret_cast<unsigned char*>(info.params[j].name));
@@ -91,7 +91,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   const std::string& r_class_prefix = "/R$";
   std::vector<ClassInfo> detailed_error_classes;
 
-  jvmtiExtensionFunction const* extension = nullptr;
+  jvmtiExtensionFunction extension = nullptr;
   if (swap_request.structural_redefinition()) {
     extension =
         GetExtensionFunctionVoid(jni_, jvmti_, STRUCTRUAL_REDEFINE_EXTENSION);

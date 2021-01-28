@@ -2,10 +2,10 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 
 # managed by go/iml_to_build
 iml_module(
-    name = "studio.layout-inspector-common",
+    name = "studio.dynamic-layout-inspector.common",
     srcs = ["src/main"],
-    iml_files = ["layout-inspector-common.iml"],
-    project = "unb",
+    iml_files = ["dynamic-layout-inspector.common.iml"],
+    test_srcs = ["src/test"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -13,5 +13,9 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:studio-proto",
         "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/adt/idea/.idea/libraries:layoutinspector-skia-proto",
+        "//prebuilts/tools/common/m2/repository/junit/junit/4.12:junit-4.12[test]",
+        "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
+        "//tools/base/common:studio.android.sdktools.common[module, test]",
+        "//tools/adt/idea/.idea/libraries:truth",
     ],
 )

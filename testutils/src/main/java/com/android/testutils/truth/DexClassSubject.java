@@ -35,6 +35,7 @@ import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.jf.dexlib2.DebugItemType;
@@ -113,6 +114,35 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
     }
 
     public void hasMethodThatInvokes(@NonNull String name, String descriptor) {
+        hasMethodThatInvokes(name, reference -> reference.toString().equals(descriptor));
+    }
+
+    public void hasMethodThatInvokesMethod(
+            @NonNull String name,
+            String invokedMethodName,
+            List<String> argumentsType,
+            String returnType) {
+        Predicate<MethodReference> predicate =
+                reference -> {
+                    if (!(reference.getName().equals(invokedMethodName)
+                            && reference.getReturnType().toString().equals(returnType))) {
+                        return false;
+                    }
+                    for (int i = 0; i < argumentsType.size(); i++) {
+                        if (!reference
+                                .getParameterTypes()
+                                .get(i)
+                                .toString()
+                                .equals(argumentsType.get(i))) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+        hasMethodThatInvokes(name, predicate);
+    }
+
+    private void hasMethodThatInvokes(@NonNull String name, Predicate<MethodReference> predicate) {
         assertSubjectIsNonNull();
         hasMethod(name);
         List<DexBackedMethod> methods = findMethodWithImplementation(name);
@@ -120,8 +150,8 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
             fail("contains an implementation for a method named `" + name + "`");
             return;
         }
-        if (!checkHasMethodInvokes(methods, descriptor)) {
-            fail("invokes a method with the descriptor `" + descriptor + "` from `" + name + "`");
+        if (!checkHasMethodInvokes(methods, predicate)) {
+            fail("invokes a method with the name `" + name + "` from `" + name + "`");
         }
     }
 
@@ -133,7 +163,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
             fail("contains an implementation for a method named `" + name + "`");
             return;
         }
-        if (checkHasMethodInvokes(methods, descriptor)) {
+        if (checkHasMethodInvokes(methods, reference -> reference.toString().equals(descriptor))) {
             fail(
                     "does not invoke a method with the descriptor `"
                             + descriptor
@@ -157,9 +187,9 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
     }
 
     private static boolean checkHasMethodInvokes(
-            @NonNull List<DexBackedMethod> methods, @NonNull String descriptor) {
+            @NonNull List<DexBackedMethod> methods, Predicate<MethodReference> predicate) {
         for (DexBackedMethod method : methods) {
-            if (checkMethodInvokes(method, descriptor)) {
+            if (checkMethodInvokes(method, predicate)) {
                 return true;
             }
         }
@@ -167,7 +197,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
     }
 
     private static boolean checkMethodInvokes(
-            @NonNull DexBackedMethod method, @NonNull String descriptor) {
+            @NonNull DexBackedMethod method, Predicate<MethodReference> predicate) {
         for (Instruction instruction : method.getImplementation().getInstructions()) {
             Opcode opcode = instruction.getOpcode();
             boolean isInvoke =
@@ -187,7 +217,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
                         isInvoke
                                 ? ((MethodReference) ((Instruction35c) instruction).getReference())
                                 : ((MethodReference) ((Instruction3rc) instruction).getReference());
-                if (reference.toString().equals(descriptor)) {
+                if (predicate.test(reference)) {
                     return true;
                 }
             }

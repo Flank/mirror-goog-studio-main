@@ -17,12 +17,9 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.testutils.truth.PathSubject.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
 /**
@@ -32,19 +29,13 @@ import java.io.File
  * makes sure that we handle the classpath correctly such that type resolution to
  * Kotlin libraries works correctly.
  */
-@RunWith(FilterableParameterized::class)
-class LintNoJavaClassesTest(lintInvocationType: LintInvocationType) {
-
-    companion object {
-        @get:JvmStatic
-        @get:Parameterized.Parameters(name = "{0}")
-        val params get() = LintInvocationType.values()
-    }
+class LintNoJavaClassesTest {
 
     @get:Rule
     val project: GradleTestProject =
-        lintInvocationType.testProjectBuilder(87)
+        GradleTestProject.builder()
             .fromTestProject("lintNoJavaClasses")
+            .withConfigurationCacheMaxProblems(87)
             .create()
 
     @Test

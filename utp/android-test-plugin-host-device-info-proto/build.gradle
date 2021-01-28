@@ -27,7 +27,6 @@ dependencies {
 }
 
 sourceSets {
-    main.java.srcDir "${project.buildDir}/generated/source/proto/main/java"
     main.proto.srcDir 'src/main/proto'
     main.resources.srcDir 'src/main/java'
 }

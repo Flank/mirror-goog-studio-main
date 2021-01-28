@@ -118,9 +118,9 @@ abstract class AsmClassesTransform : TransformAction<AsmClassesTransform.Paramet
 
         val classesHierarchyResolver = parameters.classesHierarchyBuildService.get()
             .getClassesHierarchyResolverBuilder()
-            .addSources(inputArtifact.get().asFile)
-            .addSources(classpath.files)
-            .addSources(parameters.bootClasspath.get().map { it.asFile })
+            .addDependenciesSources(inputArtifact.get().asFile)
+            .addDependenciesSources(classpath.files)
+            .addDependenciesSources(parameters.bootClasspath.get().map { it.asFile })
             .build()
 
         AsmInstrumentationManager(

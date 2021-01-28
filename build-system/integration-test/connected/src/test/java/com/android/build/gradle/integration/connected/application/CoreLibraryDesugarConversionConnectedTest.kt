@@ -27,6 +27,7 @@ import com.android.utils.FileUtils
 import com.google.common.io.Resources
 import org.junit.Before
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -167,7 +168,13 @@ class CoreLibraryDesugarConversionConnectedTest(minSdkVersion: Int) {
             "getNumbers(); getTime();"
         )
         project.executor().run("connectedDebugAndroidTest")
+    }
 
+    // TODO(bingran) This test is temporarily disabled because of b/126429384. For more details,
+    // see b/177973669.
+    @Ignore
+    @Test
+    fun testFunctionWithDesugaredLibraryParamInNonMinifiedReleaseBuild() {
         // check non-minified release build (d8 with keep rules)
         setupKeyStore()
         project.buildFile.appendText("\n\nandroid.testBuildType \"release\"\n\n")

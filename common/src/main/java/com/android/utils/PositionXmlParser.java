@@ -719,8 +719,31 @@ public class PositionXmlParser {
                         if (end != -1) {
                             attributePosition.setEnd(new Position(line, column, offset + end));
                         } else {
+                            // Search backwards for the last non-space character
+                            for (int i = textLength - 1; i >= 0; i--) {
+                                if (!Character.isWhitespace(text.charAt(i))) {
+                                    textLength = i + 1;
+                                    break;
+                                }
+                            }
+
+                            // Search for the end
+                            endOffset = offset + textIndex;
+                            int endLine = line;
+                            int endColumn = column;
+                            for (; textIndex < textLength; textIndex++) {
+                                char t = text.charAt(textIndex);
+                                if (t == '\n') {
+                                    endLine++;
+                                    endColumn = 0;
+                                } else {
+                                    endColumn++;
+                                }
+                                endOffset++;
+                            }
+
                             attributePosition.setEnd(
-                                    new Position(line, column, offset + textLength));
+                                    new Position(endLine, endColumn, endOffset));
                         }
                         return attributePosition;
                     } else if (c == '"') {

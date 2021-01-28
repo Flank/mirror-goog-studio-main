@@ -27,152 +27,115 @@ class OverrideDetectorTest : AbstractCheckTest() {
         lint().files(
             classpath(),
             manifest().minSdk(10),
-            java(
-                """
-                package pkg1;
+            compiled(
+                "bin/classes",
+                java(
+                    """
+                    package pkg1;
 
-                public class Class1 {
-                    void method() {
-                    }
+                    public class Class1 {
+                        void method() {
+                        }
 
-                    void method2(int foo) {
-                    }
+                        void method2(int foo) {
+                        }
 
-                    void method3() {
-                    }
+                        void method3() {
+                        }
 
-                    void method4() {
-                    }
+                        void method4() {
+                        }
 
-                    void method5() {
-                    }
+                        void method5() {
+                        }
 
-                    void method6() {
-                    }
+                        void method6() {
+                        }
 
-                    void method7() {
-                    }
+                        void method7() {
+                        }
 
-                    public static class Class4 extends Class1 {
-                        void method() { // Not an error: same package
+                        public static class Class4 extends Class1 {
+                            void method() { // Not an error: same package
+                            }
                         }
                     }
-                }
-                """
-            ).indented(),
-            java(
-                """
-                package pkg2;
+                    """
+                ).indented(),
+                "pkg1/Class1.class:" +
+                    "H4sIAAAAAAAAAIWQwU7CQBCG/4HSFloBEUVMPJh4QA82KMrFeCExIVE8aLy3" +
+                    "sMFiaU1bfC9PJh58AB/KOLs1DYkmbTI7//z77XR3vr4/PgEMsVdDGTsGOgZ2" +
+                    "DXQJ+ihwk2RAsMdhKGJViYT9Sz/00ytCuXf0SNBG0UwQGjd+KCarpSfiB9cL" +
+                    "2NGXIn2KZgQjE6fM9sbyyK9xlqtBrs5zdZGrIaF2H63iqbj2ZWNLXaV/snBf" +
+                    "Xa4mIklvhfxxYsOAydbL87zvZBShKTkncMO5c+ctxDQltNaAw+yZOECJByA/" +
+                    "EyT78Frlap8zca4cv4PeWPBteNWVKQ9YOdpVu/iLVThsbKxhpf8wk6Ne3M3i" +
+                    "aBRjdY5mMbapohBrc7SKsQ6PZEu9r41tzhq7Gu+BGalKPIvqD4aL/jJ0AgAA",
+                "pkg1/Class1\$Class4.class:" +
+                    "H4sIAAAAAAAAAGVOzQoBYRQ91zDDGL87yUJZYEFK2chGiZIN2Q++GD8zmm94" +
+                    "Lytl4QE8lNz5RMqte8+5555O9/G83QF0kDOhwTKQMpAl6F3HdYIeQavW5oRo" +
+                    "31sJQmbsuGJyOiyEP7MXe1b0gwg23opgTr2TvxQDJ1ST/b0tZauxtc82IT4R" +
+                    "Mhh6MrAQRYyQP+7WrebbUlHQ5qAPsUauK3y1CclRP2aUEeEnw4qAwjCeOm8l" +
+                    "RmKM1a+gCxOCwVNXYoE7/rUW1BX/tiInJ1SyiaRCDRlGk68hTyPxArsJjdos" +
+                    "AQAA"
+            ),
+            compiled(
+                "bin/classes",
+                java(
+                    """
+                    package pkg2;
 
-                import android.annotation.SuppressLint;
-                import pkg1.Class1;
+                    import android.annotation.SuppressLint;
+                    import pkg1.Class1;
 
-                public class Class2 extends Class1 {
-                    void method() { // Flag this as an accidental override
-                    }
+                    public class Class2 extends Class1 {
+                        void method() { // Flag this as an accidental override
+                        }
 
-                    void method2(String foo) { // not an override: different signature
-                    }
+                        void method2(String foo) { // not an override: different signature
+                        }
 
-                    static void method4() { // not an override: static
-                    }
+                        static void method4() { // not an override: static
+                        }
 
-                    private void method3() { // not an override: private
-                    }
+                        private void method3() { // not an override: private
+                        }
 
-                    protected void method5() { // not an override: protected
-                    }
+                        protected void method5() { // not an override: protected
+                        }
 
-                    public void method6() { // not an override: public
-                    }
+                        public void method6() { // not an override: public
+                        }
 
-                    @SuppressLint("DalvikOverride")
-                    public void method7() { // suppressed: no warning
-                    }
+                        @SuppressLint("DalvikOverride")
+                        public void method7() { // suppressed: no warning
+                        }
 
-                    public class Class3 extends Object {
-                        void method() { // Not an override: not a subclass
+                        public class Class3 extends Object {
+                            void method() { // Not an override: not a subclass
+                            }
                         }
                     }
-                }
-                """
-            ).indented(),
-            base64gzip(
-                "bin/classes/pkg1/Class1.class",
-                "" +
-                    "yv66vgAAADIAHgcAAgEAC3BrZzEvQ2xhc3MxBwAEAQAQamF2YS9sYW5nL09i" +
-                    "amVjdAEABjxpbml0PgEAAygpVgEABENvZGUKAAMACQwABQAGAQAPTGluZU51" +
-                    "bWJlclRhYmxlAQASTG9jYWxWYXJpYWJsZVRhYmxlAQAEdGhpcwEADUxwa2cx" +
-                    "L0NsYXNzMTsBAAZtZXRob2QBAAdtZXRob2QyAQAEKEkpVgEAA2ZvbwEAAUkB" +
-                    "AAdtZXRob2QzAQAHbWV0aG9kNAEAB21ldGhvZDUBAAdtZXRob2Q2AQAHbWV0" +
-                    "aG9kNwEAClNvdXJjZUZpbGUBAAtDbGFzczEuamF2YQEADElubmVyQ2xhc3Nl" +
-                    "cwcAHAEAEnBrZzEvQ2xhc3MxJENsYXNzNAEABkNsYXNzNAAhAAEAAwAAAAAA" +
-                    "CAABAAUABgABAAcAAAAvAAEAAQAAAAUqtwAIsQAAAAIACgAAAAYAAQAAAAMA" +
-                    "CwAAAAwAAQAAAAUADAANAAAAAAAOAAYAAQAHAAAAKwAAAAEAAAABsQAAAAIA" +
-                    "CgAAAAYAAQAAAAUACwAAAAwAAQAAAAEADAANAAAAAAAPABAAAQAHAAAANQAA" +
-                    "AAIAAAABsQAAAAIACgAAAAYAAQAAAAgACwAAABYAAgAAAAEADAANAAAAAAAB" +
-                    "ABEAEgABAAAAEwAGAAEABwAAACsAAAABAAAAAbEAAAACAAoAAAAGAAEAAAAL" +
-                    "AAsAAAAMAAEAAAABAAwADQAAAAAAFAAGAAEABwAAACsAAAABAAAAAbEAAAAC" +
-                    "AAoAAAAGAAEAAAAOAAsAAAAMAAEAAAABAAwADQAAAAAAFQAGAAEABwAAACsA" +
-                    "AAABAAAAAbEAAAACAAoAAAAGAAEAAAARAAsAAAAMAAEAAAABAAwADQAAAAAA" +
-                    "FgAGAAEABwAAACsAAAABAAAAAbEAAAACAAoAAAAGAAEAAAAUAAsAAAAMAAEA" +
-                    "AAABAAwADQAAAAAAFwAGAAEABwAAACsAAAABAAAAAbEAAAACAAoAAAAGAAEA" +
-                    "AAAXAAsAAAAMAAEAAAABAAwADQAAAAIAGAAAAAIAGQAaAAAACgABABsAAQAd" +
-                    "AAk="
+                    """
+                ).indented(),
+                "pkg2/Class2\$Class3.class:" +
+                    "H4sIAAAAAAAAAF1PTUvDQBScl8SkTbc21u+DiNJDrWCkHjwoXgqiUOpB8Z60" +
+                    "S5uaJpLd+r88iODBH+CPEt9GherhvXlvZ3Zm9+Pz7R3AKbaqsLHiw0HTw6qH" +
+                    "DYKrJ4lqHRPq/ceHcTfspZFS3TMmzpMs0ReEoP2HObgnOL18JAmNfpLJwXwW" +
+                    "y+IuilM+cWdST/IRwW4bnX+bz4uhvEwMV/s2OJpGTxGhMpBKX+VKe9gUWIIr" +
+                    "4EEQmgtZrRJO2PZ3ENdZJotyk4qfZrzCNMrG4U08lUPNKQv3scffdfjnFAQm" +
+                    "gicLxDkV7lXe9nm3GP3O4Quo8wrr2ajhc3cZgR2uGsSPfrtkuf7LdjmoXtov" +
+                    "o1FigHVjzKzN8xroCzPOvxKFAQAA",
+                "pkg2/Class2.class:" +
+                    "H4sIAAAAAAAAAIVQTUvDQBB9W9umtrVatVatCoIH9WCwfvSgCKIIhVrBihdP" +
+                    "q1nq2nRTskn+lyfBgz/AHyVONhIUxS7szJuZt7Nv5v3j9Q1AC2tFTGDZQsPC" +
+                    "ioVVhvyZy7XeYyi3lRK+iYSm/LFUMjhhmNjcumXInnmOYJjuSCW64fBe+Df8" +
+                    "3qVMfiiCR89hsBLQZKhtdp54xG2Xq77dC3yp+kdxjy/Gfor2UnSQosMUtRga" +
+                    "16EK5FC0VSS1pP9OlfICHkhPkcT1DleO70nH5mna7oWjkS+0JqHBEUMu4m5I" +
+                    "Mivn3I3k4CoSvi/jSYo9L/QfxIWMhyiZsZs7sWyKukIHlyIeUpdhoUCp0aDf" +
+                    "tBNWEu0m0S7D7LfaRrJNrCNDe45PASxuQXaSolXyjHxu+wXsmQAJIZs3yTzd" +
+                    "UkpdMlX8phXoljH1jZb5ixZ3qvzohr9oFXo9Pf7TKrKYGU+bJ1sdT6uTnSVa" +
+                    "5n9aA3NGITN9a3dgGgu017qZedE8zFIla1ZXNCiDHNgnGw9xae8CAAA="
             ),
-            base64gzip(
-                "bin/classes/pkg1/Class1\$Class4.class",
-                "" +
-                    "yv66vgAAADIAEwcAAgEAEnBrZzEvQ2xhc3MxJENsYXNzNAcABAEAC3BrZzEv" +
-                    "Q2xhc3MxAQAGPGluaXQ+AQADKClWAQAEQ29kZQoAAwAJDAAFAAYBAA9MaW5l" +
-                    "TnVtYmVyVGFibGUBABJMb2NhbFZhcmlhYmxlVGFibGUBAAR0aGlzAQAUTHBr" +
-                    "ZzEvQ2xhc3MxJENsYXNzNDsBAAZtZXRob2QBAApTb3VyY2VGaWxlAQALQ2xh" +
-                    "c3MxLmphdmEBAAxJbm5lckNsYXNzZXMBAAZDbGFzczQAIQABAAMAAAAAAAIA" +
-                    "AQAFAAYAAQAHAAAALwABAAEAAAAFKrcACLEAAAACAAoAAAAGAAEAAAAZAAsA" +
-                    "AAAMAAEAAAAFAAwADQAAAAAADgAGAAEABwAAACsAAAABAAAAAbEAAAACAAoA" +
-                    "AAAGAAEAAAAbAAsAAAAMAAEAAAABAAwADQAAAAIADwAAAAIAEAARAAAACgAB" +
-                    "AAEAAwASAAk="
-            ),
-            base64gzip(
-                "bin/classes/pkg2/Class2.class",
-                "" +
-                    "yv66vgAAADIAIgcAAgEAC3BrZzIvQ2xhc3MyBwAEAQALcGtnMS9DbGFzczEB" +
-                    "AAY8aW5pdD4BAAMoKVYBAARDb2RlCgADAAkMAAUABgEAD0xpbmVOdW1iZXJU" +
-                    "YWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBAA1McGtnMi9DbGFz" +
-                    "czI7AQAGbWV0aG9kAQAHbWV0aG9kMgEAFShMamF2YS9sYW5nL1N0cmluZzsp" +
-                    "VgEAA2ZvbwEAEkxqYXZhL2xhbmcvU3RyaW5nOwEAB21ldGhvZDQBAAdtZXRo" +
-                    "b2QzAQAHbWV0aG9kNQEAB21ldGhvZDYBAAdtZXRob2Q3AQAbUnVudGltZUlu" +
-                    "dmlzaWJsZUFubm90YXRpb25zAQAhTGFuZHJvaWQvYW5ub3RhdGlvbi9TdXBw" +
-                    "cmVzc0xpbnQ7AQAFdmFsdWUBAA5EYWx2aWtPdmVycmlkZQEAClNvdXJjZUZp" +
-                    "bGUBAAtDbGFzczIuamF2YQEADElubmVyQ2xhc3NlcwcAIAEAEnBrZzIvQ2xh" +
-                    "c3MyJENsYXNzMwEABkNsYXNzMwAhAAEAAwAAAAAACAABAAUABgABAAcAAAAv" +
-                    "AAEAAQAAAAUqtwAIsQAAAAIACgAAAAYAAQAAAAYACwAAAAwAAQAAAAUADAAN" +
-                    "AAAAAAAOAAYAAQAHAAAAKwAAAAEAAAABsQAAAAIACgAAAAYAAQAAAAgACwAA" +
-                    "AAwAAQAAAAEADAANAAAAAAAPABAAAQAHAAAANQAAAAIAAAABsQAAAAIACgAA" +
-                    "AAYAAQAAAAsACwAAABYAAgAAAAEADAANAAAAAAABABEAEgABAAgAEwAGAAEA" +
-                    "BwAAACEAAAAAAAAAAbEAAAACAAoAAAAGAAEAAAAOAAsAAAACAAAAAgAUAAYA" +
-                    "AQAHAAAAKwAAAAEAAAABsQAAAAIACgAAAAYAAQAAABEACwAAAAwAAQAAAAEA" +
-                    "DAANAAAABAAVAAYAAQAHAAAAKwAAAAEAAAABsQAAAAIACgAAAAYAAQAAABQA" +
-                    "CwAAAAwAAQAAAAEADAANAAAAAQAWAAYAAQAHAAAAKwAAAAEAAAABsQAAAAIA" +
-                    "CgAAAAYAAQAAABcACwAAAAwAAQAAAAEADAANAAAAAQAXAAYAAgAYAAAADgAB" +
-                    "ABkAAQAaWwABcwAbAAcAAAArAAAAAQAAAAGxAAAAAgAKAAAABgABAAAAGwAL" +
-                    "AAAADAABAAAAAQAMAA0AAAACABwAAAACAB0AHgAAAAoAAQAfAAEAIQAB"
-            ),
-            base64gzip(
-                "bin/classes/pkg2/Class2\$Class3.class",
-                "" +
-                    "yv66vgAAADIAGgcAAgEAEnBrZzIvQ2xhc3MyJENsYXNzMwcABAEAEGphdmEv" +
-                    "bGFuZy9PYmplY3QBAAZ0aGlzJDABAA1McGtnMi9DbGFzczI7AQAGPGluaXQ+" +
-                    "AQAQKExwa2cyL0NsYXNzMjspVgEABENvZGUJAAEACwwABQAGCgADAA0MAAcA" +
-                    "DgEAAygpVgEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJs" +
-                    "ZQEABHRoaXMBABRMcGtnMi9DbGFzczIkQ2xhc3MzOwEABm1ldGhvZAEAClNv" +
-                    "dXJjZUZpbGUBAAtDbGFzczIuamF2YQEADElubmVyQ2xhc3NlcwcAGAEAC3Br" +
-                    "ZzIvQ2xhc3MyAQAGQ2xhc3MzACEAAQADAAAAARAQAAUABgAAAAIAAQAHAAgA" +
-                    "AQAJAAAANAACAAIAAAAKKiu1AAoqtwAMsQAAAAIADwAAAAYAAQAAAB0AEAAA" +
-                    "AAwAAQAAAAoAEQASAAAAAAATAA4AAQAJAAAAKwAAAAEAAAABsQAAAAIADwAA" +
-                    "AAYAAQAAAB8AEAAAAAwAAQAAAAEAEQASAAAAAgAUAAAAAgAVABYAAAAKAAEA" +
-                    "AQAXABkAAQ=="
-            )
         ).run().expect(
             """
             src/pkg2/Class2.java:7: Error: This package private method may be unintentionally overriding method in pkg1.Class1 [DalvikOverride]

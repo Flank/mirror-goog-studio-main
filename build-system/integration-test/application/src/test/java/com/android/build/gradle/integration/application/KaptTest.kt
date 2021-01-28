@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.AnnotationProcessorLib
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
@@ -45,8 +44,6 @@ class KaptTest() {
                                 ":lib-compiler", AnnotationProcessorLib.createCompiler()
                         )))
                 .withDependencyChecker(false)  // kotlin plugin is resolving kapt on configuration
-                // http://b/158092419
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                 .create()
     }
 

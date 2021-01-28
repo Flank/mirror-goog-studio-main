@@ -33,7 +33,7 @@ open class FailureRetention @Inject constructor(dslServices: DslServices) :
         return retainAll
     }
 
-    override var maxSnapshots: Int = 5
+    override var maxSnapshots: Int = 2
 
     override var compressSnapshots: Boolean = false
 }

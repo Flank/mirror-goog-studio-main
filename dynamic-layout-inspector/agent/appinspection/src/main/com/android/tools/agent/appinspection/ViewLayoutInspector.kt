@@ -24,14 +24,17 @@ import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
 import androidx.inspection.InspectorFactory
 import com.android.tools.agent.appinspection.framework.SkiaQWorkaround
+import com.android.tools.agent.appinspection.framework.flatten
 import com.android.tools.agent.appinspection.proto.StringTable
+import com.android.tools.agent.appinspection.proto.createAppContext
+import com.android.tools.agent.appinspection.proto.createGetPropertiesResponse
+import com.android.tools.agent.appinspection.proto.createPropertyGroup
 import com.android.tools.agent.appinspection.proto.toNode
 import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.idea.protobuf.ByteString
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.*
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
@@ -42,10 +45,11 @@ class LayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_INSP
     override fun createInspector(
         connection: Connection,
         environment: InspectorEnvironment
-    ) = ViewLayoutInspector(connection)
+    ) = ViewLayoutInspector(connection, environment)
 }
 
-class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
+class ViewLayoutInspector(connection: Connection, private val environment: InspectorEnvironment) :
+    Inspector(connection) {
 
     /**
      * Context data associated with a capture of a single layout tree.
@@ -60,23 +64,24 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
          * When true, indicates we should stop capturing after the next one
          */
         var isLastCapture: Boolean = false
-    ) {
+    )
+
+    private class InspectorState {
         /**
-         * How many times this capture was triggered.
-         *
-         * The most important detail is that this is exposed to the client as a monotonically
-         * increasing number.
+         * A mapping of root view IDs to data that should be accessed across multiple threads.
          */
-        var generation: Int = 1
+        val contextMap = mutableMapOf<Long, CaptureContext>()
+
+        /**
+         * When true, future layout events should exclude System views, only returning trees of
+         * views created by the user's app.
+         */
+        var skipSystemViews: Boolean = false
     }
 
-    private val contextMapLock = Any()
-
-    /**
-     * A mapping of root view IDs to data that should be accessed across multiple threads.
-     */
-    @GuardedBy("contextMapLock")
-    private val contextMap = mutableMapOf<Long, CaptureContext>()
+    private val stateLock = Any()
+    @GuardedBy("stateLock")
+    private val state = InspectorState()
 
     /**
      * A snapshot of the current list of view root IDs.
@@ -94,6 +99,10 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
                 callback
             )
             Command.SpecializedCase.STOP_FETCH_COMMAND -> handleStopFetchCommand(callback)
+            Command.SpecializedCase.GET_PROPERTIES_COMMAND -> handleGetProperties(
+                command.getPropertiesCommand,
+                callback
+            )
             else -> error("Unexpected view inspector command case: ${command.specializedCase}")
         }
     }
@@ -113,7 +122,13 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
      *     to true, so that we automatically start capturing newly discovered views as well.
      */
     private fun checkRoots(captureNewRoots: Boolean): Boolean {
-        val currRoots = getRootViews().map { v -> v.uniqueDrawingId to v }.toMap()
+        val currRoots =
+            ThreadUtils.runOnMainThread {
+                getRootViews()
+                    .map { v -> v.uniqueDrawingId to v }
+                    .toMap()
+            }.get()
+
         val currRootIds = currRoots.keys
         if (lastRootIds.size != currRootIds.size || !lastRootIds.containsAll(currRootIds)) {
             val removed = lastRootIds.filter { !currRootIds.contains(it) }
@@ -125,13 +140,15 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
                 }.build()
             }
 
-            synchronized(contextMapLock) {
+            synchronized(stateLock) {
                 for (toRemove in removed) {
-                    contextMap.remove(toRemove)?.handle?.close()
+                    state.contextMap.remove(toRemove)?.handle?.close()
                 }
                 if (captureNewRoots) {
-                    for (toAdd in added) {
-                        startCapturing(currRoots.getValue(toAdd), continuous = true)
+                    ThreadUtils.runOnMainThread {
+                        for (toAdd in added) {
+                            startCapturing(currRoots.getValue(toAdd), continuous = true)
+                        }
                     }
                 }
             }
@@ -140,15 +157,18 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
     }
 
     private fun forceStopAllCaptures() {
-        synchronized(contextMapLock) {
-            for (context in contextMap.values) {
+        synchronized(stateLock) {
+            for (context in state.contextMap.values) {
                 context.handle.close()
             }
-            contextMap.clear()
+            state.contextMap.clear()
         }
     }
 
     private fun startCapturing(root: View, continuous: Boolean) {
+        // Starting rendering captures must be called on the View thread or else it throws
+        ThreadUtils.assertOnMainThread()
+
         val os = ByteArrayOutputStream()
         // We might get multiple callbacks for the same view while still processing an earlier
         // one. Let's avoid processing these in parallel to avoid confusion.
@@ -157,90 +177,95 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
         val captureExecutor = Executor { command ->
             sequentialExecutor.execute {
                 var context: CaptureContext
-                synchronized(contextMapLock) {
+                var skipSystemViews: Boolean
+                synchronized(stateLock) {
+                    skipSystemViews = state.skipSystemViews
                     // We might get some lingering captures even though we already finished
                     // listening earlier (this would be indicated by no context). Just abort
                     // early in that case.
-                    context = contextMap[root.uniqueDrawingId] ?: return@execute
+                    context = state.contextMap[root.uniqueDrawingId] ?: return@execute
                     if (context.isLastCapture) {
-                        contextMap.remove(root.uniqueDrawingId)
+                        state.contextMap.remove(root.uniqueDrawingId)
                     }
-                }
-
-                command.run() // Triggers image fetch into `os`
-                val screenshot = ByteString.copyFrom(os.toByteArray())
-                os.reset() // Clear stream, ready for next frame
-
-                if (context.isLastCapture) {
-                    context.handle.close()
-                }
-
-                val stringTable = StringTable()
-                lateinit var rootView: ViewNode
-                lateinit var rootOffset: IntArray
-                run {
-                    // Get layout info on the view thread, to avoid races
-                    val future = CompletableFuture<Unit>()
-                    root.post {
-                        rootView = root.toNode(stringTable)
-                        rootOffset = IntArray(2)
-                        root.getLocationInSurface(rootOffset)
-
-                        future.complete(Unit)
-                    }
-                    future.get()
                 }
 
                 // Check roots before sending a layout event, as this may send out a roots event.
                 // We always want layout events to follow up-to-date root events.
                 checkRoots(continuous)
 
-                connection.sendEvent {
-                    layoutEvent = LayoutEvent.newBuilder().apply {
-                        addAllStrings(stringTable.toStringEntries())
-                        this.rootView = rootView
-                        this.rootOffset = Point.newBuilder().apply {
-                            x = rootOffset[0]
-                            y = rootOffset[1]
+                run { // Prepare and send LayoutEvent
+                    command.run() // Triggers image fetch into `os`
+                    val screenshot = ByteString.copyFrom(os.toByteArray())
+                    os.reset() // Clear stream, ready for next frame
+
+                    if (context.isLastCapture) {
+                        context.handle.close()
+                    }
+
+                    val stringTable = StringTable()
+                    val appContext = root.createAppContext(stringTable)
+
+                    val (rootView, rootOffset) = ThreadUtils.runOnMainThread {
+                        val rootView = root.toNode(stringTable, skipSystemViews)
+                        val rootOffset = IntArray(2)
+                        root.getLocationInSurface(rootOffset)
+
+                        (rootView to rootOffset)
+                    }.get()
+
+                    connection.sendEvent {
+                        layoutEvent = LayoutEvent.newBuilder().apply {
+                            addAllStrings(stringTable.toStringEntries())
+                            this.appContext = appContext
+                            this.rootView = rootView
+                            this.rootOffset = Point.newBuilder().apply {
+                                x = rootOffset[0]
+                                y = rootOffset[1]
+                            }.build()
+                            this.screenshot = Screenshot.newBuilder().apply {
+                                type = Screenshot.Type.SKP
+                                bytes = screenshot
+                            }.build()
                         }.build()
-                        this.screenshot = Screenshot.newBuilder().apply {
-                            type = Screenshot.Type.SKP
-                            bytes = screenshot
-                        }.build()
-                        generation = context.generation
-                    }.build()
+                    }
                 }
 
-                context.generation++
+                if (context.isLastCapture) { // Prepare and send PropertiesEvent
+                    // We get here either if the client requested a one-time snapshot of the layout
+                    // or if the client just stopped an in-progress fetch. Collect and send all
+                    // properties, so that the user can continue to explore all values in the UI and
+                    // they will match exactly the layout at this moment in time.
+
+                    val allViews = ThreadUtils.runOnMainThread { root.flatten().toList() }.get()
+                    val stringTable = StringTable()
+                    val propertyGroups = allViews.map { it.createPropertyGroup(stringTable) }
+                    connection.sendEvent {
+                        propertiesEvent = PropertiesEvent.newBuilder().apply {
+                            rootId = root.uniqueDrawingId
+                            addAllPropertyGroups(propertyGroups)
+                            addAllStrings(stringTable.toStringEntries())
+                        }.build()
+                    }
+                }
             }
         }
 
-        // Starting rendering captures must be called on the View thread or else it throws
-        root.post {
-            // Sometimes the window has become detached before we get in here,
-            // so check one more time before trying to start capture.
-            if (!root.isAttachedToWindow) return@post
-
-            try {
-                synchronized(contextMapLock) {
-                    val handle =
-                        SkiaQWorkaround.startRenderingCommandsCapture(
-                            root,
-                            captureExecutor
-                        ) { os }
-                    if (handle != null) {
-                        contextMap[root.uniqueDrawingId] =
-                            CaptureContext(handle, isLastCapture = (!continuous))
-                    }
+        try {
+            synchronized(stateLock) {
+                val handle =
+                    SkiaQWorkaround.startRenderingCommandsCapture(root, captureExecutor) { os }
+                if (handle != null) {
+                    state.contextMap[root.uniqueDrawingId] =
+                        CaptureContext(handle, isLastCapture = (!continuous))
                 }
-                root.invalidate() // Force a re-render so we send the current screen
             }
-            catch (t: Throwable) {
-                connection.sendEvent {
-                    errorEvent = ErrorEvent.newBuilder().apply {
-                        message = t.stackTraceToString()
-                    }.build()
-                }
+            root.invalidate() // Force a re-render so we send the current screen
+        }
+        catch (t: Throwable) {
+            connection.sendEvent {
+                errorEvent = ErrorEvent.newBuilder().apply {
+                    message = t.stackTraceToString()
+                }.build()
             }
         }
     }
@@ -254,8 +279,15 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
         }
 
         forceStopAllCaptures()
-        for (root in getRootViews()) {
-            startCapturing(root, startFetchCommand.continuous)
+
+        synchronized(stateLock) {
+            state.skipSystemViews = startFetchCommand.skipSystemViews
+        }
+
+        ThreadUtils.runOnMainThread {
+            for (root in getRootViews()) {
+                startCapturing(root, startFetchCommand.continuous)
+            }
         }
     }
 
@@ -264,15 +296,39 @@ class ViewLayoutInspector(connection: Connection) : Inspector(connection) {
             stopFetchResponse = StopFetchResponse.getDefaultInstance()
         }
 
-        synchronized(contextMapLock) {
-            for (context in contextMap.values) {
+        synchronized(stateLock) {
+            for (context in state.contextMap.values) {
                 context.isLastCapture = true
+            }
+        }
+    }
+
+    private fun handleGetProperties(
+        propertiesCommand: GetPropertiesCommand,
+        callback: CommandCallback
+    ) {
+
+        ThreadUtils.runOnMainThread {
+            val foundView = getRootViews()
+                .asSequence()
+                .filter { it.uniqueDrawingId == propertiesCommand.rootViewId }
+                .flatMap { rootView -> rootView.flatten() }
+                .filter { view -> view.uniqueDrawingId == propertiesCommand.viewId }
+                .firstOrNull()
+
+            environment.executors().primary().execute {
+                val response =
+                    foundView?.createGetPropertiesResponse()
+                        ?: GetPropertiesResponse.getDefaultInstance()
+                callback.reply { getPropertiesResponse = response }
             }
         }
     }
 }
 
 private fun getRootViews(): List<View> {
+    ThreadUtils.assertOnMainThread()
+
     val views = WindowInspector.getGlobalWindowViews()
     return views
         .filter { view -> view.visibility == View.VISIBLE && view.isAttachedToWindow }

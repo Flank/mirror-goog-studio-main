@@ -28,7 +28,6 @@ import android.view.inspector.WindowInspector
 import com.android.tools.agent.layoutinspector.testing.ResourceEntry
 import com.android.tools.agent.layoutinspector.testing.StandardView
 import com.android.tools.agent.layoutinspector.testing.StringTable
-import com.android.tools.agent.layoutinspector.testing.TestCanvasFactory
 import com.android.tools.layoutinspector.proto.LayoutInspectorProto
 import com.android.tools.profiler.proto.Common
 import com.android.tools.transport.AgentRule
@@ -36,13 +35,13 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.mock
-import java.io.OutputStream
+import java.io.ByteArrayOutputStream
 import java.lang.management.ManagementFactory
+import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
+import java.util.zip.Inflater
 
 class LayoutInspectorServiceTest {
     @get:Rule
@@ -141,39 +140,14 @@ class LayoutInspectorServiceTest {
     }
 
     @Test
-    fun testPictureTooLarge() {
-        val bitmap = mock(Bitmap::class.java)
-        Bitmap.INSTANCE = bitmap
-        val bitmapBytes = byteArrayOf(1, 2, 3, 4)
-        `when`(bitmap.compress(eq(Bitmap.CompressFormat.PNG), anyInt(), any()))
-            .then { invocation ->
-                invocation.getArgument<OutputStream>(2).write(bitmapBytes)
-                true
-            }
-        val picture = Picture()
-        val pictureContents = ByteArray(LayoutInspectorService.MAX_IMAGE_SIZE + 1)
-        picture.setImage(pictureContents)
-
-        val (_, callback) = setUpInspectorService()
-
-        val event = onPictureCaptured(callback, picture)
-        assertThat(event.groupId).isEqualTo(1101)
-        assertThat(event.kind).isEqualTo(Common.Event.Kind.LAYOUT_INSPECTOR)
-        val tree = event.layoutInspectorEvent.tree
-        assertThat(tree.payloadType)
-            .isEqualTo(LayoutInspectorProto.ComponentTreeEvent.PayloadType.PNG_SKP_TOO_LARGE)
-        assertThat(agentRule.payloads[event.layoutInspectorEvent.tree.payloadId])
-            .isEqualTo(bitmapBytes)
-    }
-
-    @Test
     fun testUseScreenshotMode() {
         val bitmap = mock(Bitmap::class.java)
         Bitmap.INSTANCE = bitmap
-        val bitmapBytes = byteArrayOf(1, 2, 3, 4, 5)
-        `when`(bitmap.compress(eq(Bitmap.CompressFormat.PNG), anyInt(), any()))
+        val bitmapBytes = (1 .. 1_000_000).map { (it % 256).toByte() }.toByteArray()
+        `when`(bitmap.byteCount).thenReturn(1_000_000)
+        `when`(bitmap.copyPixelsToBuffer(any()))
             .then { invocation ->
-                invocation.getArgument<OutputStream>(2).write(bitmapBytes)
+                invocation.getArgument<ByteBuffer>(0).put(bitmapBytes)
                 true
             }
         val (service, callback) = setUpInspectorService()
@@ -185,9 +159,23 @@ class LayoutInspectorServiceTest {
         assertThat(event.kind).isEqualTo(Common.Event.Kind.LAYOUT_INSPECTOR)
         val tree = event.layoutInspectorEvent.tree
         assertThat(tree.payloadType)
-            .isEqualTo(LayoutInspectorProto.ComponentTreeEvent.PayloadType.PNG_AS_REQUESTED)
-        assertThat(agentRule.payloads[event.layoutInspectorEvent.tree.payloadId])
-            .isEqualTo(bitmapBytes)
+            .isEqualTo(LayoutInspectorProto.ComponentTreeEvent.PayloadType.BITMAP_AS_REQUESTED)
+        val payload = agentRule.payloads[event.layoutInspectorEvent.tree.payloadId]
+        val inf = Inflater().also { it.setInput(payload) }
+        val baos = ByteArrayOutputStream()
+        val buffer = ByteArray(4096)
+        var total = 0
+        while (!inf.finished()) {
+            val count = inf.inflate(buffer)
+            if (count <= 0) {
+                break
+            }
+            baos.write(buffer, 0, count)
+            total += count
+        }
+
+        assertThat(total).isEqualTo(1_000_000)
+        assertThat(baos.toByteArray()).isEqualTo(bitmapBytes)
     }
 
     private fun setUpInspectorService()
@@ -199,7 +187,6 @@ class LayoutInspectorServiceTest {
         val view: View = StandardView.createLinearLayoutWithTextView()
         setField(view, "mAttachInfo", info)
         WindowInspector.setGlobalWindowViews(listOf(view))
-        Picture.setCanvasFactory(TestCanvasFactory())
         val service = LayoutInspectorService.instance()
         service.startLayoutInspector(view)
         val callback = renderer.pictureCaptureCallback!!

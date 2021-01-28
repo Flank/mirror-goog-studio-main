@@ -81,6 +81,7 @@ public class LintCliFlags {
     private boolean abortOnAutoFix;
     private boolean includeXmlFixes;
     private boolean allowSuppress;
+    private boolean printInternalErrorStackTrace;
 
     public static final int ERRNO_SUCCESS = 0;
     public static final int ERRNO_ERRORS = 1;
@@ -716,5 +717,15 @@ public class LintCliFlags {
      */
     public boolean getAllowSuppress() {
         return allowSuppress;
+    }
+
+    /** Returns true if internal error stacktraces should be printed to stdout */
+    public boolean getPrintInternalErrorStackTrace() {
+        return printInternalErrorStackTrace;
+    }
+
+    /** Sets if internal error stacktraces should be printed to stdout */
+    public void setPrintInternalErrorStackTrace(boolean printInternalErrorStackTrace) {
+        this.printInternalErrorStackTrace = printInternalErrorStackTrace;
     }
 }

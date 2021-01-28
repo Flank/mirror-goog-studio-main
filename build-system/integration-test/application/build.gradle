@@ -84,7 +84,7 @@ configure([test, testPrebuilts]) {
 
     outputs.upToDateWhen { false }
 
-    maxParallelForks = Runtime.runtime.availableProcessors() / 1.5
+    maxParallelForks = Runtime.runtime.availableProcessors() / 3
 
     useJUnit {
         if (System.properties['test.includeCategories'] != null) {
@@ -186,7 +186,7 @@ DevicePool devicePool = new DevicePool();
 
 task('startDevicePool').doLast {
     // This port number needs to be kept in sync with DevicePoolClient.
-    devicePool.start(3431)
+    devicePool.start(5554)
 }
 
 task('stopDevicePool').doLast {

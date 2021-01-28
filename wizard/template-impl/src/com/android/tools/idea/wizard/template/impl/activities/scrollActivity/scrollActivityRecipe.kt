@@ -61,9 +61,11 @@ fun RecipeExecutor.scrollActivityRecipe(
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   generateNoActionBarStyles(moduleData.baseFeature?.resDir, resOut, moduleData.themesData)
   generateSimpleMenu(packageName, activityClass, resOut, menuName)
-  save(appBarXml(activityClass, packageName, contentLayoutName,
-                 moduleData.themesData.appBarOverlay.name, moduleData.themesData.popupOverlay.name, useAndroidX),
-       resOut.resolve("layout/${layoutName}.xml"))
+  save(
+    appBarXml(activityClass, packageName, contentLayoutName,
+                moduleData.themesData.appBarOverlay.name, moduleData.themesData.popupOverlay.name, useAndroidX),
+    resOut.resolve("layout/${layoutName}.xml")
+  )
   save(simpleXml(activityClass, layoutName, packageName, useAndroidX), resOut.resolve("layout/${contentLayoutName}.xml"))
 
   open(resOut.resolve("layout/${contentLayoutName}.xml"))

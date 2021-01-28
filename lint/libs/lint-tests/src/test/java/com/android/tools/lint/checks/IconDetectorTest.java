@@ -34,6 +34,7 @@ import static com.android.tools.lint.checks.IconDetector.NOTIFICATION_ICON_COMPA
 import static com.android.tools.lint.checks.IconDetector.WEBP_ELIGIBLE;
 import static com.android.tools.lint.checks.IconDetector.WEBP_UNSUPPORTED;
 
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 

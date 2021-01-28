@@ -25,7 +25,6 @@ class RemoteViewDetectorTest : AbstractCheckTest() {
 
     fun testBasic() {
         lint()
-            .supportResourceRepository(true)
             .files(
                 kotlin(
                     """

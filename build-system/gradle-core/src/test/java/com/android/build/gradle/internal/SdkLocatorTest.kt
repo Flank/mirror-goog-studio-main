@@ -24,6 +24,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.ExpectedException
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.FileOutputStream
@@ -34,6 +35,9 @@ class SdkLocatorTest {
 
     @get:Rule
     val testFolder = TemporaryFolder()
+
+    @get:Rule
+    val exceptionRule: ExpectedException = ExpectedException.none()
 
     private lateinit var projectRootDir: File
     private lateinit var validSdkDirectory: File
@@ -248,17 +252,6 @@ class SdkLocatorTest {
     }
 
     @Test
-    fun selectionPreference_androidHomeOverSdkRoot() {
-        val sourceSet = getLocationSourceSet(
-            envAndroidHome = validSdkDirectory.absolutePath,
-            envSdkRoot = anotherValidSdkDirectory.absolutePath)
-        val sdkLocation = SdkLocator.getSdkLocation(sourceSet, issueReporter)
-        assertThat(issueReporter.messages).isEmpty()
-        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
-        assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
-    }
-
-    @Test
     fun selectionPreference_sdkRootOverBadAndroidHome() {
         val sourceSet = getLocationSourceSet(
             envAndroidHome = missingSdkDirectory.absolutePath,
@@ -267,6 +260,52 @@ class SdkLocatorTest {
         assertThat(issueReporter.messages).isEmpty()
         assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
+    }
+
+    @Test
+    fun conflict_androidHomeAndSdkRoot() {
+        val sourceSet = getLocationSourceSet(
+            envAndroidHome = validSdkDirectory.absolutePath,
+            envSdkRoot = anotherValidSdkDirectory.absolutePath
+        )
+
+        exceptionRule.expect(RuntimeException::class.java)
+        exceptionRule.expectMessage("""
+            Several environment variables and/or system properties contain different paths to the SDK.
+            Please correct and use only one way to inject the SDK location.
+
+            ANDROID_HOME: ${validSdkDirectory.absolutePath}
+            ANDROID_SDK_ROOT: ${anotherValidSdkDirectory.absolutePath}
+
+            It is recommended to use ANDROID_HOME as other methods are deprecated
+        """.trimIndent())
+
+        SdkLocator.getSdkLocation(sourceSet, issueReporter)
+    }
+
+    @Test
+    fun conflict_androidHomeAndSdkRootAndAndroidDotHome() {
+        val yetAnotherValidSdkDirectory = testFolder.newFolder("YetAnotherSDKDir")
+
+        val sourceSet = getLocationSourceSet(
+            envAndroidHome = validSdkDirectory.absolutePath,
+            envSdkRoot = anotherValidSdkDirectory.absolutePath,
+            systemAndroidHome = yetAnotherValidSdkDirectory.absolutePath
+        )
+
+        exceptionRule.expect(RuntimeException::class.java)
+        exceptionRule.expectMessage("""
+            Several environment variables and/or system properties contain different paths to the SDK.
+            Please correct and use only one way to inject the SDK location.
+
+            ANDROID_HOME: ${validSdkDirectory.absolutePath}
+            ANDROID_SDK_ROOT: ${anotherValidSdkDirectory.absolutePath}
+            android.home: ${yetAnotherValidSdkDirectory.absolutePath}
+
+            It is recommended to use ANDROID_HOME as other methods are deprecated
+        """.trimIndent())
+
+        SdkLocator.getSdkLocation(sourceSet, issueReporter)
     }
 
     @Test

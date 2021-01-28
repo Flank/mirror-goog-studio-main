@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -270,8 +269,8 @@ class CompileLibraryResourcesTest {
     @Test
     fun testIntegrationWithResourceShrinker() {
         project.executor().with(BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES, true)
-            // http://b/149978740 and http://b/146208910
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            // http://b/149978740
+            .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
             .with(OptionalBooleanOption.INTERNAL_ONLY_ENABLE_R8, true)
             .run(":app:assembleRelease")
 

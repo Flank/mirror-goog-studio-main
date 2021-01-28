@@ -73,10 +73,12 @@ class NativeModelBuilder(
 
     fun createGenerator(model: CxxConfigurationModel) : CxxMetadataGenerator {
         return generators.computeIfAbsent(model) { model ->
-            IssueReporterLoggingEnvironment(issueReporter).use {
+            val analyticsService =
+                getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
+            IssueReporterLoggingEnvironment(issueReporter, analyticsService, model).use {
                 createCxxMetadataGenerator(
                     model,
-                    getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
+                    analyticsService
                 )
             }
         }
@@ -94,35 +96,44 @@ class NativeModelBuilder(
         unusedModelName: String,
         params: NativeModelBuilderParameter?,
         project: Project
-    ): NativeModule? = IssueReporterLoggingEnvironment(issueReporter).use {
-        if (configurationModels.isEmpty()) return@use null
-        val cxxModuleModel = configurationModels.first().second.variant.module
+    ): NativeModule? {
+        if (configurationModels.isEmpty()) return null
+        val analyticsService =
+            getBuildService<AnalyticsService>(globalScope.project.gradle.sharedServices).get()
+        val configurationModel = configurationModels.first().second
+        return IssueReporterLoggingEnvironment(
+            issueReporter,
+            analyticsService,
+            configurationModel
+        ).use {
+            val cxxModuleModel = configurationModel.variant.module
 
-        val buildSystem = cxxModuleModel.ifCMake { CMAKE } ?: NDK_BUILD
+            val buildSystem = cxxModuleModel.ifCMake { CMAKE } ?: NDK_BUILD
 
-        val variants: List<NativeVariant> = configurationModels
+            val variants: List<NativeVariant> = configurationModels
                 .flatMap { (variantName, model) -> model.activeAbis.map { variantName to it } }
                 .groupBy { (variantName, abi) -> variantName }
                 .map { (variantName, abis) ->
-                    NativeVariantImpl(variantName, abis.map { (_,abi) ->
+                    NativeVariantImpl(variantName, abis.map { (_, abi) ->
                         NativeAbiImpl(
-                                abi.abi.tag,
-                                abi.compileCommandsJsonBinFile.canonicalFile,
-                                abi.symbolFolderIndexFile.canonicalFile,
-                                abi.buildFileIndexFile.canonicalFile,
-                                abi.additionalProjectFilesIndexFile
+                            abi.abi.tag,
+                            abi.compileCommandsJsonBinFile.canonicalFile,
+                            abi.symbolFolderIndexFile.canonicalFile,
+                            abi.buildFileIndexFile.canonicalFile,
+                            abi.additionalProjectFilesIndexFile
                         )
                     })
                 }
-        NativeModuleImpl(
-            project.name,
-            variants,
-            buildSystem,
-            cxxModuleModel.ndkVersion.toString(),
-            cxxModuleModel.makeFile.canonicalFile
-        ).also {
-            // Generate build files and compile_commands.json on request.
-            generateBuildFilesAndCompileCommandsJson(params.asPredicate())
+            NativeModuleImpl(
+                project.name,
+                variants,
+                buildSystem,
+                cxxModuleModel.ndkVersion.toString(),
+                cxxModuleModel.makeFile.canonicalFile
+            ).also {
+                // Generate build files and compile_commands.json on request.
+                generateBuildFilesAndCompileCommandsJson(params.asPredicate())
+            }
         }
     }
 

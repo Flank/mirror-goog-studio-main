@@ -28,6 +28,7 @@ import java.net.URLClassLoader
 abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWorkActionParameters> {
 
     abstract class LintWorkActionParameters : WorkParameters {
+        abstract val mainClass: Property<String>
         abstract val arguments: ListProperty<String>
         abstract val classpath: ConfigurableFileCollection
         abstract val android: Property<Boolean>
@@ -123,7 +124,7 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
 
     private fun invokeLintMainRunMethod(classLoader: ClassLoader, arguments: List<String>): Int {
         // val returnValue: Int = Main().run(arguments.toTypedArray())
-        val cls = classLoader.loadClass("com.android.tools.lint.Main")
+        val cls = classLoader.loadClass(parameters.mainClass.get())
         val method = cls.getMethod("run", Array<String>::class.java)
         val lintMain = cls.getDeclaredConstructor().newInstance()
         val returnValue = method.invoke(lintMain, arguments.toTypedArray()) as Int

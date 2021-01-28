@@ -19,6 +19,7 @@
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
 #include "tools/base/deploy/agent/native/jni/jni_util.h"
+#include "tools/base/deploy/agent/native/recompose.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
@@ -210,8 +211,18 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
   // Call Support the support class enable() first.
   jobject package_name = jni_->NewStringUTF(package_name_.c_str());
   JniClass support(jni_, LiveLiteral::kSupportClass);
-  support.CallStaticVoidMethod(
-      "enable", "(Ljava/lang/Class;Ljava/lang/String;)V", klass, package_name);
+  jboolean needs_recompose = support.CallStaticBooleanMethod(
+      "enable", "(Ljava/lang/Class;Ljava/lang/String;)Z", klass, package_name);
+
+  if (needs_recompose) {
+    Recompose recompose(jvmti_, jni_);
+    jobject reloader = recompose.GetComposeHotReload();
+    if (reloader == nullptr) {
+      ErrEvent("GetComposeHotReload was not found.");
+    }
+    recompose.SaveStateAndDispose(reloader);
+    recompose.LoadStateAndCompose(reloader);
+  }
 
   JniClass live_literal_kt(jni_, klass);
 
@@ -342,15 +353,6 @@ proto::AgentLiveLiteralUpdateResponse LiveLiteral::Update(
 }
 
 void LiveLiteral::InstrumentHelper(const std::string& helper) {
-  if (helper.empty()) {
-    // TODO: WORK AROUND FOR UNIT TESTS
-    // This should NOT happen. The request should always give
-    // us a helper. This is only here because the unit test isn't
-    // completely set up with the helpers yet.
-    Log::V("Skipping InstrumentHelper because helper class name not given.");
-    return;
-  }
-
   // First chech if we already instrumented this at least once.
   if (instrumented_helpers.find(helper) != instrumented_helpers.end()) {
     Log::V("Already Instrumented %s", helper.c_str());

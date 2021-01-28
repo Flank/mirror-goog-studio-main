@@ -134,6 +134,20 @@ bool Overlay::DeleteFile(const std::string& path) const {
   return true;
 }
 
+bool Overlay::DeleteDirectory(const std::string& path) const {
+  if (!is_open_) {
+    ErrEvent("Overlay must be opened before it can be modified");
+    return false;
+  }
+
+  if (IO::rmdir(path) != 0) {
+    ErrEvent("Could not remove file '" + path + "': " + strerror(errno));
+    return false;
+  }
+
+  return true;
+}
+
 bool Overlay::Commit() {
   if (!is_open_) {
     ErrEvent("Cannot commit an overlay that is not open for modification");

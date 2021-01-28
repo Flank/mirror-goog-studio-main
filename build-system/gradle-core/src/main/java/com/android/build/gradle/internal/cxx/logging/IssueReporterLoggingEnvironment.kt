@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
+import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
+import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.builder.errors.IssueReporter
 import com.android.builder.errors.IssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION
 import org.gradle.api.logging.Logging
@@ -24,8 +26,32 @@ import org.gradle.api.logging.Logging
  * A logging environment that will report errors and warnings to an [IssueReporter].
  * Messages are also logger to a standard [org.gradle.api.logging.Logger].
  */
-class IssueReporterLoggingEnvironment(
-    private val issueReporter : IssueReporter) : PassThroughDeduplicatingLoggingEnvironment() {
+class IssueReporterLoggingEnvironment private constructor(
+    private val issueReporter: IssueReporter,
+    private val internals: CxxDiagnosticCodesTrackingInternals? = null
+) : PassThroughDeduplicatingLoggingEnvironment() {
+
+    private class CxxDiagnosticCodesTrackingInternals(
+        val analyticsService: AnalyticsService,
+        val cxxConfigurationModel: CxxConfigurationModel,
+        val cxxDiagnosticCodes: MutableList<Int>
+    )
+
+    constructor(issueReporter: IssueReporter) : this(issueReporter, null)
+
+    constructor(
+        issueReporter: IssueReporter,
+        analyticsService: AnalyticsService,
+        cxxConfigurationModel: CxxConfigurationModel,
+    ) : this(
+        issueReporter,
+        CxxDiagnosticCodesTrackingInternals(
+            analyticsService,
+            cxxConfigurationModel,
+            mutableListOf()
+        )
+    )
+
     private val logger = Logging.getLogger(IssueReporterLoggingEnvironment::class.java)
 
     override fun log(message: LoggingMessage) {
@@ -33,17 +59,36 @@ class IssueReporterLoggingEnvironment(
             LoggingLevel.INFO -> logger.info(message.toString())
             LoggingLevel.LIFECYCLE -> logger.lifecycle(message.toString())
             LoggingLevel.WARN -> {
+                message.diagnosticCode?.let { internals?.cxxDiagnosticCodes?.add(it.warningCode) }
                 issueReporter.reportWarning(
                     EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    message.toString())
+                    message.toString()
+                )
                 logger.warn(message.toString())
             }
             LoggingLevel.ERROR -> {
+                message.diagnosticCode?.let { internals?.cxxDiagnosticCodes?.add(it.errorCode) }
                 issueReporter.reportError(
                     EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    message.toString())
+                    message.toString()
+                )
                 logger.error(message.toString())
             }
+        }
+    }
+
+    override fun close() {
+        try {
+            if (internals != null) {
+                val variant = internals.cxxConfigurationModel.variant
+                val builder = internals.analyticsService.getVariantBuilder(
+                    variant.module.gradleModulePathName,
+                    variant.variantName
+                ) ?: return
+                builder.addAllCxxDiagnosticCodes(internals.cxxDiagnosticCodes)
+            }
+        }finally {
+            super.close()
         }
     }
 }

@@ -146,18 +146,10 @@ public class AndroidArtifacts {
 
     private static final String TYPE_PREFAB_PACKAGE = "android-prefab";
 
-    private static final String TYPE_DESUGAR_LIB_PROJECT_KEEP_RULES =
-            "android-desugar-lib-project-keep-rules";
-    private static final String TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES =
-            "android-desugar-lib-subproject-keep-rules";
-    private static final String TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES =
-            "android-desugar-lib-external-libs-keep-rules";
-    private static final String TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES =
-            "android-desugar-lib-mixed-scope-keep-rules";
-    private static final String TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES =
-            "android-desugar-lib-external-file-keep-rules";
-    private static final String TYPE_DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES =
-            "android-desugar-lib-external-artifact-transform-file-keep-rules";
+    private static final String TYPE_DESUGAR_LIB_MERGED_KEEP_RULES =
+            "android-desugar-lib-merged-keep-rules";
+
+    private static final String TYPE_FEATURE_PUBLISHED_DEX = "android-feature-published-dex";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
@@ -424,6 +416,10 @@ public class AndroidArtifacts {
         // of the feature that need to know the name of its feature split
         FEATURE_NAME(TYPE_FEATURE_NAME),
 
+        // The feature dex files published from feature modules to the base for computing main
+        // dex list for bundle.
+        FEATURE_PUBLISHED_DEX(TYPE_FEATURE_PUBLISHED_DEX),
+
         // Reverse Metadata artifacts
         REVERSE_METADATA_FEATURE_DECLARATION(TYPE_REVERSE_METADATA_FEATURE_DECLARATION),
         REVERSE_METADATA_FEATURE_MANIFEST(TYPE_REVERSE_METADATA_FEATURE_MANIFEST),
@@ -448,13 +444,8 @@ public class AndroidArtifacts {
 
         NAVIGATION_JSON(TYPE_NAVIGATION_JSON),
 
-        DESUGAR_LIB_PROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_PROJECT_KEEP_RULES),
-        DESUGAR_LIB_SUBPROJECT_KEEP_RULES(TYPE_DESUGAR_LIB_SUBPROJECT_KEEP_RULES),
-        DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_LIBS_KEEP_RULES),
-        DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES(TYPE_DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES),
-        DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES(TYPE_DESUGAR_LIB_EXTERNAL_FILE_KEEP_RULES),
-        DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES(
-                TYPE_DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES);
+        // merged desugar lib keep rules from dynamic feature modules
+        DESUGAR_LIB_MERGED_KEEP_RULES(TYPE_DESUGAR_LIB_MERGED_KEEP_RULES);
 
         @NonNull private final String type;
 

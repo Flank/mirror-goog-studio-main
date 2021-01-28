@@ -28,7 +28,8 @@ class LintUpToDateTest {
 
     @get:Rule
     val project: GradleTestProject =
-        LintInvocationType.NEW_LINT_MODEL.testProjectBuilder(4)
+        GradleTestProject.builder()
+            .withConfigurationCacheMaxProblems(4)
             .fromTestProject("lintKotlin")
             .create()
 

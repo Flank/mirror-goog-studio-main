@@ -33,11 +33,13 @@ import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheB
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
+import com.android.build.gradle.internal.lint.AndroidLintTask.Companion.LINT_CLASS_PATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
@@ -66,6 +68,7 @@ import com.android.tools.lint.model.LintModelLintOptions
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.LintModelNamespacingMode
+import com.android.tools.lint.model.LintModelSerialization
 import com.android.tools.lint.model.LintModelSeverity
 import com.android.tools.lint.model.LintModelSourceProvider
 import com.android.tools.lint.model.LintModelVariant
@@ -82,7 +85,6 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -94,7 +96,64 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.workers.WorkerExecutor
 import java.io.File
+
+abstract class LintTool {
+
+    /** Lint itself */
+    @get:Classpath
+    abstract val classpath: ConfigurableFileCollection
+
+    @get:Input
+    abstract val runInProcess: Property<Boolean>
+
+    fun initialize(project: Project, projectOptions: ProjectOptions) {
+        // TODO(b/160392650) Clean this up to use a detached configuration
+        classpath.fromDisallowChanges(project.configurations.getByName(LINT_CLASS_PATH))
+        runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
+    }
+
+    fun submit(workerExecutor: WorkerExecutor, mainClass: String, arguments: List<String>) {
+        submit(
+            workerExecutor,
+            mainClass,
+            arguments,
+            android = true,
+            fatalOnly = false,
+            await = false
+        )
+    }
+
+    fun submit(
+        workerExecutor: WorkerExecutor,
+        mainClass: String,
+        arguments: List<String>,
+        android: Boolean,
+        fatalOnly: Boolean,
+        await: Boolean) {
+        // Respect the android.experimental.runLintInProcess flag (useful for debugging)
+        val workQueue = if (runInProcess.get()) {
+            workerExecutor.noIsolation()
+        } else {
+            workerExecutor.processIsolation {
+                it.classpath.from(classpath)
+            }
+        }
+        workQueue.submit(AndroidLintWorkAction::class.java) { isolatedParameters ->
+            isolatedParameters.mainClass.set(mainClass)
+            isolatedParameters.arguments.set(arguments)
+            isolatedParameters.classpath.from(classpath)
+            isolatedParameters.android.set(android)
+            isolatedParameters.fatalOnly.set(fatalOnly)
+            isolatedParameters.cacheClassLoader.set(!runInProcess.get())
+        }
+        if (await) {
+            workQueue.await()
+        }
+    }
+
+}
 
 abstract class ProjectInputs {
 
@@ -421,11 +480,15 @@ abstract class VariantInputs {
     @get:Internal
     abstract val mavenCoordinatesCache: Property<MavenCoordinatesCacheBuildService>
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    abstract val dynamicFeatureLintModels: ConfigurableFileCollection
 
     fun initialize(
         variantWithTests: VariantWithTests,
         checkDependencies: Boolean,
-        warnIfProjectTreatedAsExternalDependency: Boolean
+        warnIfProjectTreatedAsExternalDependency: Boolean,
+        includeDynamicFeatureSourceProviders: Boolean = false
     ) {
         val creationConfig = variantWithTests.main
         name.setDisallowChanges(creationConfig.name)
@@ -481,6 +544,17 @@ abstract class VariantInputs {
         buildFeatures.initialize(creationConfig)
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
+
+        if (includeDynamicFeatureSourceProviders) {
+            dynamicFeatureLintModels.from(
+                creationConfig.variantDependencies.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.LINT_MODEL
+                )
+            )
+        }
+        dynamicFeatureLintModels.disallowChanges()
     }
 
     internal fun initializeForStandalone(project: Project, javaConvention: JavaPluginConvention, projectOptions: ProjectOptions, checkDependencies: Boolean) {
@@ -524,6 +598,11 @@ abstract class VariantInputs {
             libraryDependencyCacheBuildService.get().localJarCache,
             mavenCoordinatesCache.get().cache)
 
+        val dynamicFeatureSourceProviders: List<LintModelSourceProvider> =
+            dynamicFeatureLintModels.files.map {
+                LintModelSerialization.readModule(it, readDependencies = false)
+            }.flatMap { it.variants.flatMap { variant -> variant.sourceProviders } }
+
         return DefaultLintModelVariant(
             module,
             name.get(),
@@ -541,13 +620,12 @@ abstract class VariantInputs {
             resourceConfigurations = resourceConfigurations.get(),
             proguardFiles = proguardFiles.get().map { it.asFile },
             consumerProguardFiles = consumerProguardFiles.get(),
-            sourceProviders = sourceProviders.get().map { it.toLintModel() },
+            sourceProviders = sourceProviders.get().map { it.toLintModel() } + dynamicFeatureSourceProviders,
             testSourceProviders = listOf(), //FIXME
             debuggable = debuggable.get(),
             shrinkable = false, //FIXME
             buildFeatures = buildFeatures.toLintModel(),
-            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap),
-            oldVariant = null
+            libraryResolver = DefaultLintModelLibraryResolver(dependencyCaches.libraryMap)
         )
     }
 

@@ -117,3 +117,18 @@ iml_module(
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )
+
+kotlin_library(
+    name = "tools.fixtures",
+    srcs = glob([
+        "src/testfixtures/java/**/*.kt",
+        "src/testfixtures/java/**/*.java",
+    ]),
+    resources = glob(["src/testFixtures/resources/**"]),
+    visibility = ["//visibility:public"],  # contains com.android.repository.testframework
+    deps = [
+        ":tools.common",
+        "//tools/base/annotations",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)

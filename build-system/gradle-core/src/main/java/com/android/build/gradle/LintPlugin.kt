@@ -40,12 +40,11 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServicesImpl
-import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
-import com.android.build.gradle.internal.tasks.LintStandaloneTask
-import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.ProjectOptionService
 import com.android.build.gradle.options.SyncOptions
@@ -54,7 +53,6 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Category
 import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.component.ConfigurationVariantDetails
@@ -63,9 +61,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.build.event.BuildEventsListenerRegistry
-import java.util.function.BiConsumer
 import javax.inject.Inject
 
 /**
@@ -96,26 +92,14 @@ abstract class LintPlugin : Plugin<Project> {
     }
     private fun registerTasks(project: Project) {
         val javaConvention: JavaPluginConvention = getJavaPluginConvention(project) ?: return
-        val useNewLintModel = LintTaskManager.computeUseNewLintModel(
-            project,
-            projectServices.projectOptions
-        )
         val customLintChecksConfig = TaskManager.createCustomLintChecksConfig(project)
         val customLintChecks = getLocalCustomLintChecks(customLintChecksConfig)
         BasePlugin.createLintClasspathConfiguration(project)
-        if (useNewLintModel) {
-            registerTasks(
-                project,
-                javaConvention,
-                customLintChecks
-            )
-        } else {
-            registerLegacyTasks(
-                project,
-                javaConvention,
-                customLintChecksConfig
-            )
-        }
+        registerTasks(
+            project,
+            javaConvention,
+            customLintChecks
+        )
     }
 
     private fun registerTasks(
@@ -200,67 +184,12 @@ abstract class LintPlugin : Plugin<Project> {
         }
     }
 
-    private fun registerLegacyTasks(
-        project: Project,
-        javaConvention: JavaPluginConvention,
-        customLintChecksConfig: Configuration
-    ) {
-        val projectName = project.name
-        val task = registerLegacyTask(
-            "lint",
-            "Run Android Lint analysis on project `$projectName`",
-            project,
-            javaConvention,
-            customLintChecksConfig
-        )
-        // Make the check task depend on the lint
-        project.tasks.named(JavaBasePlugin.CHECK_TASK_NAME)
-            .configure { t: Task -> t.dependsOn(task) }
-        val lintVital = registerLegacyTask(
-            "lintVital",
-            "Runs lint on just the fatal issues in the project `$projectName`",
-            project,
-            javaConvention,
-            customLintChecksConfig
-        )
-        lintVital.configure { it.fatalOnly = true }
-        registerLegacyTask(
-            "lintFix",
-            "Runs lint on `$projectName` and applies any safe suggestions to " +
-                    "the source code.",
-            project,
-            javaConvention,
-            customLintChecksConfig
-        ).configure {
-            it.autoFix = true
-            it.group = "cleanup"
-        }
-    }
-
     private fun createExtension(project: Project) {
         lintOptions = project.extensions.create("lintOptions", LintOptions::class.java, dslServices)
     }
 
     private fun withJavaPlugin(project: Project, action: Action<Plugin<*>>) {
         project.plugins.withType(JavaBasePlugin::class.java, action)
-    }
-
-    private fun registerLegacyTask(
-        taskName: String,
-        description: String,
-        project: Project,
-        javaConvention: JavaPluginConvention,
-        customLintChecksConfig: Configuration
-    ): TaskProvider<LintStandaloneTask> {
-        return project.tasks.register(taskName, LintStandaloneTask::class.java) { task ->
-            task.group = JavaBasePlugin.VERIFICATION_GROUP
-            task.description = description
-            task.reportDir = javaConvention.testResultsDir
-            task.lintOptions = lintOptions
-            task.lintChecks = customLintChecksConfig
-            task.outputs.upToDateWhen { false }
-            task.lintClassLoader.set(LintClassLoaderBuildService.RegistrationAction(project).execute())
-        }
     }
 
     private fun getJavaPluginConvention(project: Project): JavaPluginConvention? {
@@ -325,13 +254,12 @@ abstract class LintPlugin : Plugin<Project> {
             project,
             SyncOptions.getModelQueryMode(projectServices.projectOptions)
         ).execute()
+
+        AndroidLocationsBuildService.RegistrationAction(project).execute()
+
         SdkComponentsBuildService.RegistrationAction(
             project,
-            projectServices.projectOptions,
-            project.provider { null },
-            project.provider { null },
-            project.provider { null },
-            project.provider { null },
+            projectServices.projectOptions
         ).execute()
         LintFixBuildService.RegistrationAction(project).execute()
     }

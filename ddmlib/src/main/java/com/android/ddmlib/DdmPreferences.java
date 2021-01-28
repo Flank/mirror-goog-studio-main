@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.Log.LogLevel;
+import java.util.function.Function;
 
 /**
  * Preferences for the ddm library.
@@ -42,7 +43,6 @@ public final class DdmPreferences {
    * Default value for the logcat {@link LogLevel}
    */
   public static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.ERROR;
-  public static final int DEFAULT_PROXY_SERVER_PORT = 8599;
   /**
    * Default timeout values for adb connection (milliseconds)
    */
@@ -66,6 +66,13 @@ public final class DdmPreferences {
 
   private static boolean sUseAdbHost = DEFAULT_USE_ADBHOST;
   private static String sAdbHostValue = DEFAULT_ADBHOST_VALUE;
+
+    /** Enable / Disable the JdwpProxy feature. */
+    private static boolean sJdwpProxyEnabled =
+            getPropertyOrDefault("DDMLIB_JDWP_PROXY_ENABLED", true, Boolean::parseBoolean);
+    /** Port used by JdwpProxy feature */
+    private static int sJdwpProxyPort =
+            getPropertyOrDefault("DDMLIB_JDWP_PROXY_PORT", 8599, Integer::parseInt);
 
   /**
    * Returns the initial {@link Client} flag for thread updates.
@@ -178,6 +185,40 @@ public final class DdmPreferences {
      */
     public static void setAdbHostValue(String adbHostValue) {
         sAdbHostValue = adbHostValue;
+    }
+
+    /**
+     * Enable jdwp proxy service allowing for multiple client support DDMLIB clients to be used at
+     * the same time.
+     */
+    public static void enableJdwpProxyService(boolean enabled) {
+        sJdwpProxyEnabled = enabled;
+    }
+
+    public static boolean isJdwpProxyEnabled() {
+        return sJdwpProxyEnabled;
+    }
+
+    /**
+     * Set the port used by the jdwp proxy service. This port should be consistent across all
+     * instances of the jdwp proxy service run on a single machine.
+     *
+     * @param port
+     */
+    public static void setJdwpProxyPort(int port) {
+        sJdwpProxyPort = port;
+    }
+
+    public static int getJdwpProxyPort() {
+        return sJdwpProxyPort;
+    }
+
+    private static <T> T getPropertyOrDefault(String property, T def, Function<String, T> parser) {
+        try {
+            return parser.apply(System.getProperty(property, def + ""));
+        } catch (Exception ignored) {
+            return def;
+        }
     }
 
     /**

@@ -49,6 +49,7 @@ import com.android.build.gradle.tasks.createRepublishCxxBuildTask
 import com.android.build.gradle.tasks.createVariantCxxCleanTask
 import com.android.build.gradle.tasks.createWorkingCxxBuildTask
 import com.android.builder.errors.IssueReporter
+import com.android.prefs.AndroidLocationsProvider
 import com.android.utils.appendCapitalized
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
@@ -57,6 +58,7 @@ import org.gradle.api.tasks.TaskProvider
  * Construct gradle tasks for C/C++ configuration and build.
  */
 fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTasks(
+        androidLocationsProvider: AndroidLocationsProvider,
         sdkComponents: SdkComponentsBuildService,
         issueReporter: IssueReporter,
         taskFactory: TaskFactory,
@@ -67,7 +69,7 @@ fun <VariantBuilderT : ComponentBuilderImpl, VariantT : VariantImpl> createCxxTa
             val configurationParameters = variants
                     .mapNotNull { tryCreateConfigurationParameters(it.variant) }
             if (configurationParameters.isEmpty()) return
-            val abis = createInitialCxxModel(sdkComponents, configurationParameters)
+            val abis = createInitialCxxModel(sdkComponents, androidLocationsProvider, configurationParameters)
             val enableFolding = configurationParameters.first().isConfigurationFoldingEnabled
             val taskModel =
                     if (enableFolding) createFoldedCxxTaskDependencyModel(abis)
@@ -230,10 +232,12 @@ fun createFoldedCxxTaskDependencyModel(globalAbis: List<CxxAbiModel>) : CxxTaskD
  * Create the [CxxAbiModel]s for a given build.
  */
 fun createInitialCxxModel(
-        sdkComponents: SdkComponentsBuildService,
-        configurationParameters: List<CxxConfigurationParameters>) : List<CxxAbiModel> {
+    sdkComponents: SdkComponentsBuildService,
+    androidLocationsProvider: AndroidLocationsProvider,
+    configurationParameters: List<CxxConfigurationParameters>
+) : List<CxxAbiModel> {
     return configurationParameters.flatMap { parameters ->
-        val module = createCxxModuleModel(sdkComponents, parameters)
+        val module = createCxxModuleModel(sdkComponents, androidLocationsProvider, parameters)
         val variant = createCxxVariantModel(parameters, module)
         Abi.getDefaultValues().map { abi ->
             createCxxAbiModel(sdkComponents, parameters, variant, abi)

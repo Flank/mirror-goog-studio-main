@@ -1,50 +1,28 @@
 package com.android.build.gradle.internal.lint
 
-import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.TestComponentImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.dsl.LintOptions
-import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.variant.VariantModel
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.tasks.LintFixTask
-import com.android.build.gradle.tasks.LintGlobalTask
 import com.android.builder.core.VariantType
 import com.android.utils.appendCapitalized
-import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaBasePlugin
-import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /** Factory for the LintModel based lint tasks */
 class LintTaskManager constructor(private val globalScope: GlobalScope, private val taskFactory: TaskFactory) {
 
-    val useNewLintModel: Boolean = computeUseNewLintModel(globalScope.project, globalScope.projectOptions)
-
     fun createBeforeEvaluateLintTasks() {
         // LintFix task
-        if (useNewLintModel) {
-            taskFactory.register(AndroidLintGlobalTask.LintFixCreationAction(globalScope))
-        } else {
-            taskFactory.register(AndroidLintGlobalTask.LintFixCreationAction.name, LintFixTask::class.java) { }
-        }
+        taskFactory.register(AndroidLintGlobalTask.LintFixCreationAction(globalScope))
 
         // LintGlobalTask
-        val globalTask = if (useNewLintModel) {
-            taskFactory.register(AndroidLintGlobalTask.GlobalCreationAction(globalScope))
-        } else {
-            taskFactory.register(AndroidLintGlobalTask.GlobalCreationAction.name, LintGlobalTask::class.java) { }
-        }
+        val globalTask = taskFactory.register(AndroidLintGlobalTask.GlobalCreationAction(globalScope))
         taskFactory.configure(JavaBasePlugin.CHECK_TASK_NAME) { it.dependsOn(globalTask) }
 
     }
@@ -55,9 +33,6 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
             variantPropertiesList: List<VariantImpl>,
             testComponentPropertiesList: List<TestComponentImpl>
             ) {
-        if (!useNewLintModel) {
-            return // This is only for the new lint tasks.
-        }
         if (variantType.isForTesting) {
             return // Don't  create lint tasks in test-only projects
         }
@@ -79,7 +54,9 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
         val needsCopyReportTask = needsCopyReportTask(globalScope.extension.lintOptions)
 
         for (variantWithTests in variantsWithTests.values) {
-            if (variantType.isAar) { // Export lint models to support checkDependencies.
+            if (variantType.isAar || variantType.isDynamicFeature) {
+                // We need the library lint models if checkDependencies is true, and we need the
+                // dynamic-feature lint models for the base app's lint task.
                 taskFactory.register(LintModelWriterTask.CreationAction(variantWithTests.main))
             }
             val variantLintTask =
@@ -173,12 +150,6 @@ class LintTaskManager constructor(private val globalScope: GlobalScope, private 
     }
 
     companion object {
-
-        @JvmStatic
-        fun computeUseNewLintModel(project: Project, projectOptions: ProjectOptions): Boolean {
-            return projectOptions[BooleanOption.USE_NEW_LINT_MODEL] ||
-                    (project.gradle.startParameter.isConfigurationCache ?: false)
-        }
 
         internal fun File?.isLintStdout() = this?.path == "stdout"
         internal fun File?.isLintStderr() = this?.path == "stdout"

@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantPropertiesApiServices
@@ -270,10 +271,13 @@ abstract class BaseVariantData(
             services.fileCollection(
                 paths.renderscriptResOutputDir,
                 paths.generatedResOutputDir,
-                paths.microApkResDirectory,
                 extraGeneratedResFolders
             )
         )
+
+        taskContainer.generateApkDataTask?.let {
+            allRes.from(artifacts.get(InternalArtifactType.MICRO_APK_RES))
+        }
 
         for (sourceSet in androidResources.values) {
             allRes.from(sourceSet)

@@ -10,9 +10,3 @@ repositories {
         url file("../../local-repo")
     }
 }
-
-uploadArchives {
-    repositories {
-        add project.repositories.localrepo
-    }
-}

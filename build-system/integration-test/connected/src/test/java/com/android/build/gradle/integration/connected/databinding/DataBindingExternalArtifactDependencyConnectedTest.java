@@ -47,10 +47,10 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
     @Before
     public void setUp() throws Exception {
         // fail fast if no response
-        appProject.getSubproject("app").addAdbTimeout();
+        appProject.addAdbTimeoutToSubProjects();
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
-        appProject.getSubproject("app").execute("uninstallAll");
+        appProject.execute("uninstallAll");
     }
 
     public DataBindingExternalArtifactDependencyConnectedTest(boolean useAndroidX) {

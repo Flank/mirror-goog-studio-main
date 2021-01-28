@@ -33,6 +33,8 @@ import static com.android.SdkConstants.VALUE_ID;
 import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.VIEW_MERGE;
 import static com.android.tools.lint.checks.RequiredAttributeDetector.PERCENT_RELATIVE_LAYOUT;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 import static com.android.tools.lint.detector.api.Lint.editDistance;
 import static com.android.tools.lint.detector.api.Lint.isSameResourceFile;
 import static com.android.tools.lint.detector.api.Lint.stripIdPrefix;
@@ -286,16 +288,8 @@ public class WrongIdDetector extends LayoutDetector {
         }
 
         LintClient client = context.getClient();
-        if (!client.supportsProjectResources()) {
-            return false;
-        }
-
         Project project = context.getMainProject();
-        ResourceRepository resources = client.getResourceRepository(project, true, false);
-        if (resources == null) {
-            return false;
-        }
-
+        ResourceRepository resources = client.getResources(project, LOCAL_DEPENDENCIES);
         List<ResourceItem> layouts =
                 resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT, included);
         if (layouts.isEmpty()) {
@@ -448,26 +442,23 @@ public class WrongIdDetector extends LayoutDetector {
                                 ? idDefined(mGlobalIds, id)
                                 : idDefined(context, id, context.file);
                 LintClient client = context.getClient();
-                if (!isBound
-                        && checkExists
-                        && (projectScope || client.supportsProjectResources())) {
+                if (!isBound && checkExists) {
                     boolean isDeclared = idDefined(mDeclaredIds, id);
                     id = stripIdPrefix(id);
                     String suggestionMessage;
                     Set<String> spellingDictionary = createSpellingDictionary();
-                    if (!projectScope && client.supportsProjectResources()) {
+                    // TODO: Do this in general, even from batch mode!
+                    if (!projectScope) {
+                        Project project = context.getProject();
                         ResourceRepository resources =
-                                client.getResourceRepository(context.getProject(), true, false);
-                        if (resources != null) {
-                            spellingDictionary =
-                                    Sets.newHashSet(
-                                            resources
-                                                    .getResources(
-                                                            ResourceNamespace.TODO(),
-                                                            ResourceType.ID)
-                                                    .keySet());
-                            spellingDictionary.remove(id);
-                        }
+                                client.getResources(project, LOCAL_DEPENDENCIES);
+                        spellingDictionary =
+                                Sets.newHashSet(
+                                        resources
+                                                .getResources(
+                                                        ResourceNamespace.TODO(), ResourceType.ID)
+                                                .keySet());
+                        spellingDictionary.remove(id);
                     }
                     List<String> suggestions = getSpellingSuggestions(id, spellingDictionary);
                     if (suggestions.size() > 1) {
@@ -607,30 +598,29 @@ public class WrongIdDetector extends LayoutDetector {
     }
 
     private boolean idDefined(@NonNull Context context, @NonNull String id, @Nullable File notIn) {
-        ResourceRepository resources =
-                context.getClient().getResourceRepository(context.getProject(), true, true);
-        if (resources != null) {
-            List<ResourceItem> items =
-                    resources.getResources(
-                            ResourceNamespace.TODO(), ResourceType.ID, stripIdPrefix(id));
-            for (ResourceItem item : items) {
-                PathString source = item.getSource();
-                if (source != null) {
-                    String parentName = source.getParentFileName();
-                    if (parentName != null && parentName.startsWith(FD_RES_VALUES)) {
-                        if (mDeclaredIds == null) {
-                            mDeclaredIds = Sets.newHashSet();
-                        }
-                        mDeclaredIds.add(id);
-                        continue;
+        LintClient client = context.getClient();
+        Project project = context.getProject();
+        ResourceRepository resources = client.getResources(project, ALL_DEPENDENCIES);
+        List<ResourceItem> items =
+                resources.getResources(
+                        ResourceNamespace.TODO(), ResourceType.ID, stripIdPrefix(id));
+        for (ResourceItem item : items) {
+            PathString source = item.getSource();
+            if (source != null) {
+                String parentName = source.getParentFileName();
+                if (parentName != null && parentName.startsWith(FD_RES_VALUES)) {
+                    if (mDeclaredIds == null) {
+                        mDeclaredIds = Sets.newHashSet();
                     }
+                    mDeclaredIds.add(id);
+                    continue;
+                }
 
-                    // Ignore definitions in the given file. This is used to ignore
-                    // matches in the same file as the reference, since the reference
-                    // is often expressed as a definition.
-                    if (!isSameResourceFile(source.toFile(), notIn)) {
-                        return true;
-                    }
+                // Ignore definitions in the given file. This is used to ignore
+                // matches in the same file as the reference, since the reference
+                // is often expressed as a definition.
+                if (!isSameResourceFile(source.toFile(), notIn)) {
+                    return true;
                 }
             }
         }

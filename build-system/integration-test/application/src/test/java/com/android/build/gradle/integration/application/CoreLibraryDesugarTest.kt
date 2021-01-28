@@ -47,6 +47,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -539,6 +540,28 @@ class CoreLibraryDesugarTest {
         // http://b/149978740, unable to disable even with a flag
         val build = executor().withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF).run(":app:bundleRelease")
         Truth.assertThat(build.didWorkTasks).contains(":app:l8DexDesugarLibRelease")
+    }
+
+    @Test
+    fun testKeepRuleConsumptionForExternalLibOnRuntimeClasspath() {
+        // External lib dependencies of subproject end up in the app runtime classpath, this test
+        // makes sure their keep rules are consumed.
+        addExternalDependency(library)
+        executor().run("app:assembleRelease")
+        val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        assertNotNull(getDexWithSpecificClass(usedDesugarClass3, apk.allDexes))
+    }
+
+    @Test
+    fun testKeepRuleConsumptionForSubprojectOnRuntimeClasspath() {
+        TestFileUtils.searchAndReplace(
+            app.buildFile,
+            """implementation project("$LIBRARY_MODULE")""",
+            """runtimeOnly project("$LIBRARY_MODULE")"""
+        )
+        executor().run("app:assembleRelease")
+        val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
+        assertNotNull(getDexWithSpecificClass(usedDesugarClass2, apk.allDexes))
     }
 
     private fun addFileDependency(project: GradleTestProject) {

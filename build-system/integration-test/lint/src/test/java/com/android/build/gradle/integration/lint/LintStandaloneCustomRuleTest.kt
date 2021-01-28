@@ -17,35 +17,28 @@
 package com.android.build.gradle.integration.lint
 
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
 /**
  * Test for the standalone lint plugin.
  *
  *
- * To run just this test:
- * ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintStandaloneCustomRuleTest
+ * <p>Tip: To execute just this test run:
+ *
+ * <pre>
+ *     $ cd tools
+ *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintStandaloneCustomRuleTest
+ * </pre>
  */
-@RunWith(FilterableParameterized::class)
-class LintStandaloneCustomRuleTest(lintInvocationType: LintInvocationType) {
+class LintStandaloneCustomRuleTest {
 
-    companion object {
-        @get:JvmStatic
-        @get:Parameterized.Parameters(name = "{0}")
-        val params get() = LintInvocationType.values()
-    }
-
-    @Rule
-    @JvmField
-    var project = lintInvocationType.testProjectBuilder()
-        .fromTestProject("lintStandaloneCustomRules")
-        .create()
+    @get:Rule
+    val project =
+        GradleTestProject.builder().fromTestProject("lintStandaloneCustomRules").create()
 
     @Test
     @Throws(Exception::class)
@@ -62,9 +55,7 @@ class LintStandaloneCustomRuleTest(lintInvocationType: LintInvocationType) {
 
     @Test
     fun checkPublishing() {
-        project.executor()
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run(":library:publishAllPublicationsToMavenRepository")
+        project.executor().run(":library:publishAllPublicationsToMavenRepository")
 
         val publishDir = project.file("repo/org/example/sample/library/0.1")
         val publishedFiles = publishDir.list()?.filter { !isCheckSum(it) }

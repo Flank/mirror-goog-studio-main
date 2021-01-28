@@ -100,7 +100,6 @@ public class FailureTest extends AgentBasedClassRedefinerTestBase {
 
         // The install server exits if it receives an unparseable request.
         Deploy.InstallServerResponse response = redefiner.getServerResponse();
-        Assert.assertEquals(
-                Deploy.InstallServerResponse.Status.SERVER_EXITED, response.getStatus());
+        Assert.assertEquals(response, null);
     }
 }

@@ -32,12 +32,13 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
-import com.android.build.gradle.internal.fixtures.DirectGradleEnvironmentProvider;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.variant.ComponentInfo;
 import com.android.build.gradle.internal.variant.VariantInputModel;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SigningConfig;
+import com.android.prefs.AbstractAndroidLocations;
+import com.android.utils.EnvironmentProvider;
 import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -369,12 +370,13 @@ public class AppPluginInternalTest {
         TestCase.assertNotNull(signingConfig);
         final File file = signingConfig.getStoreFile();
         assertNotNull(file);
-        assertThat(file.getAbsolutePath())
+        assertThat(file)
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
-                                        new DirectGradleEnvironmentProvider(),
-                                        new StdLogger(StdLogger.Level.VERBOSE))
-                                .getAbsolutePath());
+                                new AbstractAndroidLocations(
+                                        EnvironmentProvider.DIRECT,
+                                        new StdLogger(StdLogger.Level.VERBOSE),
+                                        true) {}));
 
         variant = VariantCheckers.findComponent(components, "flavor1Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();
@@ -391,12 +393,13 @@ public class AppPluginInternalTest {
         TestCase.assertNotNull(signingConfig);
         final File file1 = signingConfig.getStoreFile();
         assertNotNull(file1);
-        assertThat(file1.getAbsolutePath())
+        assertThat(file1)
                 .isEqualTo(
                         GradleKeystoreHelper.getDefaultDebugKeystoreLocation(
-                                        new DirectGradleEnvironmentProvider(),
-                                        new StdLogger(StdLogger.Level.VERBOSE))
-                                .getAbsolutePath());
+                                new AbstractAndroidLocations(
+                                        EnvironmentProvider.DIRECT,
+                                        new StdLogger(StdLogger.Level.VERBOSE),
+                                        true) {}));
 
         variant = VariantCheckers.findComponent(components, "flavor2Staging");
         signingConfig = variant.getVariantDslInfo().getSigningConfig();

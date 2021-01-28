@@ -19,6 +19,7 @@ dependencies {
     testImplementation libs.junit
     testImplementation libs.truth
     testImplementation libs.mockito_core
+    testImplementation project(':base:testutils')
 
     testFixturesImplementation project(':base:annotations')
     testFixturesImplementation project(':base:testutils')

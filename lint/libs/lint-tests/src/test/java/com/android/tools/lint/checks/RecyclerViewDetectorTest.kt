@@ -45,6 +45,7 @@ class RecyclerViewDetectorTest : AbstractCheckTest() {
                     public abstract void onBindViewHolder(VH holder, int position);
                     public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
                     }
+                    public void notifyDataSetChanged() { }
                 }
             }
             """
@@ -385,6 +386,53 @@ class RecyclerViewDetectorTest : AbstractCheckTest() {
                         public View getRoot() {
                             return root;
                         }
+                    }
+                }
+                """
+            ).indented(),
+            recyclerViewStub
+        ).run().expect(expected)
+    }
+
+    fun testClearAllData() {
+        val expected =
+            """
+            src/test/pkg/RecyclerViewTest.java:24: Warning: It will always be more efficient to use more specific change events if you can. Rely on notifyDataSetChanged as a last resort. [NotifyDataSetChanged]
+                        notifyDataSetChanged();
+                        ~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.support.v7.widget.RecyclerView;
+                import android.view.View;
+                import android.widget.TextView;
+
+                import java.util.List;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "unused"})
+                public class RecyclerViewTest {
+                    // From https://developer.android.com/training/material/lists-cards.html
+                    public abstract static class Test1 extends RecyclerView.Adapter<Test1.ViewHolder> {
+                        private String[] mDataset;
+                        public static class ViewHolder extends RecyclerView.ViewHolder {
+                            public TextView mTextView;
+                            public ViewHolder(TextView v) {
+                                super(v);
+                                mTextView = v;
+                            }
+                        }
+
+                        public Test1(String[] myDataset) {
+                            mDataset = myDataset;
+                            notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void onBindViewHolder(ViewHolder holder, int position) { }
                     }
                 }
                 """

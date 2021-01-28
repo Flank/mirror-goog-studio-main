@@ -1468,13 +1468,13 @@ public class DeployerRunnerTest {
                             + Sites.appStudio("com.example.simpleapp"),
                     "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
                             + Sites.appStudio("com.example.simpleapp"),
-                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/system/bin/run-as com.example.simpleapp cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
                     runner.getMetrics(),
@@ -1732,13 +1732,13 @@ public class DeployerRunnerTest {
                             + Sites.appStudio("com.example.simpleapp"),
                     "cp -rF /data/local/tmp/.studio/tmp/$VERSION/ "
                             + Sites.appStudio("com.example.simpleapp"),
-                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/system/bin/run-as com.example.simpleapp cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "cp /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
-                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "cp -n /data/local/tmp/.studio/tmp/$VERSION/install_server /data/data/com.example.simpleapp/code_cache/install_server-$VERSION",
+                    "/system/bin/run-as com.example.simpleapp /data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/data/data/com.example.simpleapp/code_cache/install_server-$VERSION com.example.simpleapp",
+                    "/system/bin/cmd activity attach-agent 10001 /data/data/com.example.simpleapp/code_cache/.studio/agent.so=irsocket-0",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
                     runner.getMetrics(),

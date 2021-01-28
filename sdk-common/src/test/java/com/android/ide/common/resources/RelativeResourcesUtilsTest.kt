@@ -23,7 +23,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.IOException
-import java.lang.IllegalStateException
 
 /**
  * Tests for [com.android.ide.common.resources.RelativeResourceUtils].
@@ -123,7 +122,7 @@ class RelativeResourcesUtilsTest {
     @Test
     fun `test should convert relative path format to absolute path format`() {
         val sourceSetPathMap =
-                mapOf("com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main/")
+                mapOf("com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main")
         val testRelativePath = "com.foobar.myproject.app-0:/res/layout/activity_map_tv.xml"
         val expectedAbsolutePath = "/usr/a/b/c/d/myproject/src/main/res/layout/activity_map_tv.xml"
 
@@ -158,13 +157,13 @@ class RelativeResourcesUtilsTest {
     fun `test should load source set map file to map`() {
         val sourceSetPathsMapDir = File(temporaryFolder.newFolder(), "test").also { it.mkdir() }
         val sourceSetPathsMapFile = File(sourceSetPathsMapDir, "file-path.txt").also {
-            it.writeText("com.foobar.myproject.app-0 /usr/a/b/c/d/myproject/src/main/\n")
+            it.writeText("com.foobar.myproject.app-0 /usr/a/b/c/d/myproject/src/main\n")
         }
         val sourceSetPathsMap = readFromSourceSetPathsFile(sourceSetPathsMapFile)
         assertThat(sourceSetPathsMap)
                 .isEqualTo(
                         mapOf(
-                                "com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main/"
+                                "com.foobar.myproject.app-0" to "/usr/a/b/c/d/myproject/src/main"
                         )
                 )
     }

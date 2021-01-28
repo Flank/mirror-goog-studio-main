@@ -30,6 +30,7 @@ import static com.android.SdkConstants.UNIT_IN;
 import static com.android.SdkConstants.UNIT_MM;
 import static com.android.SdkConstants.UNIT_PX;
 import static com.android.SdkConstants.UNIT_SP;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -54,7 +55,6 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -137,8 +137,6 @@ public class PxUsageDetector extends LayoutDetector {
                     Severity.WARNING,
                     IMPLEMENTATION);
 
-    private HashMap<String, Location.Handle> mTextSizeUsage;
-
     /** Constructs a new {@link PxUsageDetector} */
     public PxUsageDetector() {}
 
@@ -161,47 +159,6 @@ public class PxUsageDetector extends LayoutDetector {
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
-        if (context.getResourceFolderType() != ResourceFolderType.LAYOUT) {
-            assert context.getResourceFolderType() == ResourceFolderType.VALUES;
-            if (mTextSizeUsage != null
-                    && attribute.getOwnerElement().getTagName().equals(TAG_DIMEN)) {
-                Element element = attribute.getOwnerElement();
-                String name = element.getAttribute(ATTR_NAME);
-                if (name != null
-                        && mTextSizeUsage.containsKey(name)
-                        && context.isEnabled(DP_ISSUE)) {
-                    NodeList children = element.getChildNodes();
-                    for (int i = 0, n = children.getLength(); i < n; i++) {
-                        Node child = children.item(i);
-                        if (child.getNodeType() == Node.TEXT_NODE
-                                && isDpUnit(child.getNodeValue())) {
-                            String message =
-                                    "This dimension is used as a text size: "
-                                            + "Should use \"`sp`\" instead of \"`dp`\"";
-                            Location location = context.getLocation(child);
-                            Location secondary = mTextSizeUsage.get(name).resolve();
-                            secondary.setMessage("Dimension used as a text size here");
-                            location.setSecondary(secondary);
-
-                            if (secondary.getSource() instanceof Node) {
-                                if (context.getDriver()
-                                        .isSuppressed(
-                                                context, DP_ISSUE, (Node) secondary.getSource())) {
-                                    // Suppressed at the usage site
-                                    break;
-                                }
-                            }
-
-                            context.report(
-                                    DP_ISSUE, attribute, location, message, createDpToSpFix());
-                            break;
-                        }
-                    }
-                }
-            }
-            return;
-        }
-
         String value = attribute.getValue();
         if (value.endsWith(UNIT_PX) && value.matches("\\d+(\\.\\d+)?px")) {
             if (isZero(value) || value.equals("1px")) {
@@ -256,49 +213,46 @@ public class PxUsageDetector extends LayoutDetector {
                             createDpToSpFix());
                 }
             } else if (value.startsWith(DIMEN_PREFIX)) {
-                if (context.getClient().supportsProjectResources()) {
-                    LintClient client = context.getClient();
-                    Project project = context.getProject();
-                    ResourceRepository resources =
-                            client.getResourceRepository(project, true, false);
-                    ResourceUrl url = ResourceUrl.parse(value);
-                    if (resources != null && url != null) {
-                        List<ResourceItem> items =
-                                resources.getResources(
-                                        ResourceNamespace.TODO(), url.type, url.name);
-                        for (ResourceItem item : items) {
-                            ResourceValue resourceValue = item.getResourceValue();
-                            if (resourceValue != null) {
-                                String dimenValue = resourceValue.getValue();
-                                if (dimenValue != null
-                                        && isDpUnit(dimenValue)
-                                        && context.isEnabled(DP_ISSUE)) {
-                                    PathString sourceFile = item.getSource();
-                                    assert sourceFile != null;
-                                    String message =
-                                            String.format(
-                                                    "Should use \"`sp`\" instead of \"`dp`\" for text sizes (`%1$s` is defined as `%2$s` in `%3$s`",
-                                                    value,
-                                                    dimenValue,
-                                                    Lint.getFileNameWithParent(client, sourceFile));
-                                    context.report(
-                                            DP_ISSUE,
-                                            attribute,
-                                            context.getLocation(attribute),
-                                            message);
-                                    break;
+                LintClient client = context.getClient();
+                Project project = context.getProject();
+                ResourceRepository resources = client.getResources(project, LOCAL_DEPENDENCIES);
+                ResourceUrl url = ResourceUrl.parse(value);
+                if (url != null) {
+                    List<ResourceItem> items =
+                            resources.getResources(ResourceNamespace.TODO(), url.type, url.name);
+                    for (ResourceItem item : items) {
+                        ResourceValue resourceValue = item.getResourceValue();
+                        if (resourceValue != null) {
+                            String dimenValue = resourceValue.getValue();
+                            if (dimenValue != null
+                                    && isDpUnit(dimenValue)
+                                    && context.isEnabled(DP_ISSUE)) {
+                                PathString sourceFile = item.getSource();
+                                assert sourceFile != null;
+                                String message =
+                                        String.format(
+                                                "Should use \"`sp`\" instead of \"`dp`\" for text sizes (`%1$s` is defined as `%2$s` in `%3$s`",
+                                                value,
+                                                dimenValue,
+                                                Lint.getFileNameWithParent(client, sourceFile));
+                                Location location = context.getLocation(attribute);
+
+                                if (!Scope.checkSingleFile(context.getDriver().getScope())) {
+                                    // Secondary location: this is a waste of time in the IDE when
+                                    // analyzing
+                                    // just a single file
+                                    Location secondary =
+                                            client.getXmlParser().getValueLocation(client, item);
+                                    if (secondary != null) {
+                                        secondary.setMessage(
+                                                "This dp dimension is used as a text size");
+                                        location.setSecondary(secondary);
+                                    }
                                 }
+                                context.report(DP_ISSUE, attribute, location, message);
+                                break;
                             }
                         }
-                    }
-                } else {
-                    ResourceUrl url = ResourceUrl.parse(value);
-                    if (url != null) {
-                        if (mTextSizeUsage == null) {
-                            mTextSizeUsage = new HashMap<>();
-                        }
-                        Location.Handle handle = context.createLocationHandle(attribute);
-                        mTextSizeUsage.put(url.name, handle);
                     }
                 }
             }

@@ -72,7 +72,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** A Device. It can be a physical device or an emulator. */
-@VisibleForTesting
 public final class DeviceImpl implements IDevice {
     /** Serial number of the device */
     private final String mSerialNumber;
@@ -737,6 +736,24 @@ public final class DeviceImpl implements IDevice {
             throws AdbCommandRejectedException, TimeoutException, IOException {
         return AdbHelper.rawExec(
                 AndroidDebugBridge.getSocketAddress(), this, executable, parameters);
+    }
+
+    @Override
+    public SocketChannel rawBinder(String service, String[] parameters)
+            throws AdbCommandRejectedException, TimeoutException, IOException {
+        final String[] command = new String[parameters.length + 1];
+        command[0] = service;
+        System.arraycopy(parameters, 0, command, 1, parameters.length);
+
+        if (supportsFeature(Feature.ABB_EXEC)) {
+            return AdbHelper.rawAdbService(
+                    AndroidDebugBridge.getSocketAddress(),
+                    this,
+                    String.join("\u0000", command),
+                    AdbHelper.AdbService.ABB_EXEC);
+        } else {
+            return AdbHelper.rawExec(AndroidDebugBridge.getSocketAddress(), this, "cmd", command);
+        }
     }
 
     @Override

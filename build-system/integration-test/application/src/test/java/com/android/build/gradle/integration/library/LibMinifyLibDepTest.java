@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.library;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -48,10 +47,7 @@ public class LibMinifyLibDepTest {
 
     @Test
     public void lint() throws IOException, InterruptedException {
-        // http://b/146208910
-        executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("lint");
+        executor().run("lint");
     }
 
     @Test

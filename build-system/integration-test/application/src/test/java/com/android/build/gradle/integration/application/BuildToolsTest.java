@@ -3,13 +3,13 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil.assumeBuildToolsGreaterThan;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -78,13 +78,12 @@ public class BuildToolsTest {
 
     @Test
     public void nullBuild() throws IOException, InterruptedException {
-        // http://b/149978740 and http://b/146208910
         project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                 .run("assemble");
         GradleBuildResult result =
                 project.executor()
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("assemble");
 
         assertThat(result.getUpToDateTasks()).containsAllIn(JAVAC_TASKS);

@@ -47,13 +47,12 @@ import com.android.ide.common.resources.ResourceSet;
 import com.android.ide.common.resources.TestResourceRepository;
 import com.android.ide.common.util.PathString;
 import com.android.resources.ResourceType;
-import com.android.sdklib.AndroidTargetHash;
-import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintCliXmlParser;
+import com.android.tools.lint.LintResourceRepository;
 import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
@@ -67,6 +66,7 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.LintXmlConfiguration;
+import com.android.tools.lint.client.api.ResourceRepositoryScope;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
@@ -84,7 +84,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.model.LintModelExternalLibrary;
-import com.android.tools.lint.model.LintModelFactory;
 import com.android.tools.lint.model.LintModelLibrary;
 import com.android.tools.lint.model.LintModelLintOptions;
 import com.android.tools.lint.model.LintModelMavenName;
@@ -93,6 +92,7 @@ import com.android.tools.lint.model.LintModelModuleType;
 import com.android.tools.lint.model.LintModelSourceProvider;
 import com.android.tools.lint.model.LintModelVariant;
 import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
@@ -101,7 +101,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.intellij.openapi.util.Computable;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiElement;
@@ -124,6 +123,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import kotlin.Pair;
+import kotlin.io.FilesKt;
 import org.jetbrains.kotlin.config.LanguageVersionSettings;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
@@ -179,7 +180,7 @@ public class TestLintClient extends LintCliClient {
         return "Lint Unit Tests";
     }
 
-    protected void setLintTask(@Nullable TestLintTask task) {
+    public void setLintTask(@Nullable TestLintTask task) {
         if (task != null && task.optionSetter != null) {
             task.optionSetter.set(getFlags());
         }
@@ -401,8 +402,8 @@ public class TestLintClient extends LintCliClient {
             mocker = task.projectMocks.get(dir);
         }
         LintCliFlags flags = getFlags();
-        if (mocker != null && mocker.getProject() != null) {
-            if (mocker.primary) {
+        if (mocker != null) {
+            if (mocker.getPrimary()) {
                 mocker.syncFlagsTo(flags);
                 flags.setFatalOnly(task.vital);
 
@@ -417,9 +418,6 @@ public class TestLintClient extends LintCliClient {
                 }
             } else if (description != null && description.getVariantName() != null) {
                 mocker.setVariantName(description.getVariantName());
-            }
-            if (task.mockModifier != null) {
-                task.mockModifier.modify(mocker.getProject(), mocker.getVariant());
             }
         }
         if (task.baselineFile != null) {
@@ -512,9 +510,17 @@ public class TestLintClient extends LintCliClient {
     @Nullable
     @Override
     public File getCacheDir(@Nullable String name, boolean create) {
-        File cacheDir = super.getCacheDir(name, create);
-        // Separate test caches from user's normal caches
-        cacheDir = new File(cacheDir, "unit-tests");
+        File cacheDir;
+
+        //noinspection ConstantConditions
+        if (task != null && task.tempDir != null) {
+            cacheDir = new File(task.tempDir, "lint-cache/" + name);
+        } else {
+            cacheDir = super.getCacheDir(name, create);
+            // Separate test caches from user's normal caches
+            cacheDir = new File(cacheDir, "unit-tests/" + name);
+        }
+
         if (create) {
             //noinspection ResultOfMethodCallIgnored
             cacheDir.mkdirs();
@@ -543,7 +549,7 @@ public class TestLintClient extends LintCliClient {
         // to do it early before the driver is initialized
         if (!files.isEmpty()) {
             GradleModelMocker mocker = task.projectMocks.get(files.get(0));
-            if (mocker != null && mocker.primary) {
+            if (mocker != null && mocker.getPrimary()) {
                 mocker.syncFlagsTo(getFlags());
             }
         }
@@ -1238,63 +1244,85 @@ public class TestLintClient extends LintCliClient {
         incrementalCheck = currentFile;
     }
 
+    @NonNull
     @Override
-    public boolean supportsProjectResources() {
-        if (task.supportResourceRepository != null) {
-            return task.supportResourceRepository;
+    public ResourceRepository getResources(
+            @NonNull Project project, @NonNull ResourceRepositoryScope scope) {
+        task.requestedResourceRepository = true;
+
+        // In special test mode requesting to check resource repositories
+        // (default vs ~AGP one) ?
+        if (!task.forceAgpResourceRepository) {
+            // Default lint resource repository, used in production.
+            // Instead of just returning the resource repository computed by super,
+            // we'll compute it, then clear the in-memory caches, then call it again;
+            // this will test the persistence mechanism as well which helps verify
+            // correct serialization
+            super.getResources(project, scope);
+            LintResourceRepository.Companion.clearCaches(this, project);
+            return super.getResources(project, scope);
         }
-        return incrementalCheck != null;
-    }
-
-    @SuppressWarnings("MethodMayBeStatic")
-    @Nullable
-    protected String getProjectResourceLibraryName() {
-        return null;
-    }
-
-    @Nullable
-    @Override
-    public ResourceRepository getResourceRepository(
-            Project project, boolean includeDependencies, boolean includeLibraries) {
-        if (!supportsProjectResources()) {
-            return null;
-        }
-
-        TestResourceRepository repository = new TestResourceRepository(RES_AUTO);
-        ILogger logger = new StdLogger(StdLogger.Level.INFO);
-        ResourceMerger merger = new ResourceMerger(0);
 
         ResourceNamespace namespace = project.getResourceNamespace();
-        ResourceSet resourceSet =
-                new ResourceSet(
-                        project.getName(), namespace, getProjectResourceLibraryName(), true, null) {
-                    @Override
-                    protected void checkItems() {
-                        // No checking in ProjectResources; duplicates can happen, but
-                        // the project resources shouldn't abort initialization
-                    }
-                };
-        // Only support 1 resource folder in test setup right now
-        int size = project.getResourceFolders().size();
-        assertTrue("Found " + size + " test resources folders", size <= 1);
-        if (size == 1) {
-            resourceSet.addSource(project.getResourceFolders().get(0));
+        List<Project> projects = new ArrayList<>();
+        projects.add(project);
+        if (scope.includesDependencies()) {
+            for (Project dep : project.getAllLibraries()) {
+                if (!dep.isExternalLibrary()) {
+                    projects.add(dep);
+                }
+            }
+        }
+        List<Pair<String, List<File>>> resourceSets = new ArrayList<>();
+        for (Project p : projects) {
+            List<File> resFolders = p.getResourceFolders();
+            resourceSets.add(new Pair<>(project.getName(), resFolders));
         }
 
+        // TODO: Allow TestLintTask pass libraryName (such as getProjectResourceLibraryName())
+        return getResources(namespace, null, resourceSets, true);
+    }
+
+    /**
+     * Create a test resource repository given a list of resource sets, where each resource set is a
+     * resource set name and a list of resource folders
+     */
+    public static ResourceRepository getResources(
+            @NonNull ResourceNamespace namespace,
+            @Nullable String libraryName,
+            @NonNull List<Pair<String, List<File>>> resourceSets,
+            boolean reportErrors) {
+        TestResourceRepository repository = new TestResourceRepository(RES_AUTO);
+        ILogger logger = reportErrors ? new StdLogger(StdLogger.Level.INFO) : new NullLogger();
+        ResourceMerger merger = new ResourceMerger(0);
+
         try {
-            resourceSet.loadFromFiles(logger);
-            merger.addDataSet(resourceSet);
+            for (Pair<String, List<File>> pair : resourceSets) {
+                String projectName = pair.getFirst();
+                List<File> resFolders = pair.getSecond();
+                ResourceSet resourceSet =
+                        new ResourceSet(projectName, namespace, libraryName, true, null) {
+                            @Override
+                            protected void checkItems() {
+                                // No checking in ProjectResources; duplicates can happen, but
+                                // the project resources shouldn't abort initialization
+                            }
+                        };
+                for (File res : resFolders) {
+                    resourceSet.addSource(res);
+                }
+                resourceSet.loadFromFiles(logger);
+                merger.addDataSet(resourceSet);
+            }
             repository.update(merger);
 
             // Make tests stable: sort the item lists!
-            for (ListMultimap<String, ResourceItem> multimap :
-                    repository.getResourceTable().values()) {
-                ResourceRepositories.sortItemLists(multimap);
+            for (ListMultimap<String, ResourceItem> map : repository.getResourceTable().values()) {
+                ResourceRepositories.sortItemLists(map);
             }
 
             // Workaround: The repository does not insert ids from layouts! We need
             // to do that here.
-            // TODO: namespaces
             Map<ResourceType, ListMultimap<String, ResourceItem>> items =
                     repository.getResourceTable().row(ResourceNamespace.TODO());
             ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
@@ -1308,46 +1336,46 @@ public class TestLintClient extends LintCliClient {
                     if (file == null) {
                         continue;
                     }
-                    try {
-                        String xml = Files.toString(file, Charsets.UTF_8);
-                        Document document = XmlUtils.parseDocumentSilently(xml, true);
-                        assertNotNull(document);
-                        Set<String> ids = Sets.newHashSet();
-                        addIds(ids, document); // TODO: pull parser
-                        if (!ids.isEmpty()) {
-                            ListMultimap<String, ResourceItem> idMap =
-                                    items.computeIfAbsent(
-                                            ResourceType.ID, k -> ArrayListMultimap.create());
-                            for (String id : ids) {
-                                ResourceMergerItem idItem =
-                                        new ResourceMergerItem(
-                                                id,
-                                                ResourceNamespace.TODO(),
-                                                ResourceType.ID,
-                                                null,
-                                                null,
-                                                null);
-                                String qualifiers = source.getParentFileName();
-                                if (qualifiers.startsWith("layout-")) {
-                                    qualifiers = qualifiers.substring("layout-".length());
-                                } else if (qualifiers.equals("layout")) {
-                                    qualifiers = "";
-                                }
-
-                                // Creating the resource file will set the source of
-                                // idItem.
-                                //noinspection ResultOfObjectAllocationIgnored
-                                ResourceFile.createSingle(file, idItem, qualifiers);
-                                idMap.put(id, idItem);
+                    String xml = FilesKt.readText(file, Charsets.UTF_8);
+                    Document document = XmlUtils.parseDocumentSilently(xml, true);
+                    assertNotNull(document);
+                    Set<String> ids = Sets.newHashSet();
+                    addIds(ids, document);
+                    if (!ids.isEmpty()) {
+                        ListMultimap<String, ResourceItem> idMap =
+                                items.computeIfAbsent(
+                                        ResourceType.ID, k -> ArrayListMultimap.create());
+                        for (String id : ids) {
+                            ResourceMergerItem idItem =
+                                    new ResourceMergerItem(
+                                            id,
+                                            ResourceNamespace.TODO(),
+                                            ResourceType.ID,
+                                            null,
+                                            null,
+                                            null);
+                            String qualifiers = source.getParentFileName();
+                            if (qualifiers == null) {
+                                qualifiers = "";
+                            } else if (qualifiers.startsWith("layout-")) {
+                                qualifiers = qualifiers.substring("layout-".length());
+                            } else if (qualifiers.equals("layout")) {
+                                qualifiers = "";
                             }
+
+                            // Creating the resource file will set the source of
+                            // idItem.
+                            //noinspection ResultOfObjectAllocationIgnored
+                            ResourceFile.createSingle(file, idItem, qualifiers);
+                            idMap.put(id, idItem);
                         }
-                    } catch (IOException e) {
-                        fail(e.toString());
                     }
                 }
             }
         } catch (MergingException e) {
-            fail(e.getMessage());
+            if (reportErrors) {
+                throw new RuntimeException(e);
+            }
         }
 
         return repository;
@@ -1557,13 +1585,9 @@ public class TestLintClient extends LintCliClient {
         @Override
         public int getBuildSdk() {
             if (mocker != null) {
-                String compileTarget = mocker.getProject().getCompileTarget();
-                //noinspection ConstantConditions
-                if (compileTarget != null && !compileTarget.isEmpty()) {
-                    AndroidVersion version = AndroidTargetHash.getPlatformVersion(compileTarget);
-                    if (version != null) {
-                        return version.getApiLevel();
-                    }
+                Integer buildSdk = mocker.getBuildSdk();
+                if (buildSdk != null) {
+                    return buildSdk;
                 }
             }
 
@@ -1574,10 +1598,9 @@ public class TestLintClient extends LintCliClient {
         @Override
         public String getBuildTargetHash() {
             if (mocker != null) {
-                String compileTarget = mocker.getProject().getCompileTarget();
-                //noinspection ConstantConditions
-                if (compileTarget != null && !compileTarget.isEmpty()) {
-                    return compileTarget;
+                String buildTargetHash = mocker.getBuildTargetHash();
+                if (buildTargetHash != null) {
+                    return buildTargetHash;
                 }
             }
 
@@ -1599,23 +1622,7 @@ public class TestLintClient extends LintCliClient {
                 return cachedLintVariant;
             }
             if (mocker != null) {
-                LintModelModule module =
-                        new LintModelFactory()
-                                .create(
-                                        mocker.getProject(),
-                                        mocker.getVariants(),
-                                        mocker.getProjectDir(),
-                                        true);
-                cachedLintVariant = null;
-                for (LintModelVariant variant : module.getVariants()) {
-                    if (variant.getOldVariant() == mocker.getVariant()) {
-                        cachedLintVariant = variant;
-                        break;
-                    }
-                }
-                if (cachedLintVariant == null) {
-                    cachedLintVariant = module.findVariant(mocker.getVariant().getName());
-                }
+                cachedLintVariant = mocker.getLintVariant();
             }
 
             return cachedLintVariant;
@@ -1723,8 +1730,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedSourceFolders =
-                            mocker.getVariant().getMainArtifact().getGeneratedSourceFolders()
-                                    .stream()
+                            mocker.getGeneratedSourceFolders().stream()
                                     .filter(File::exists)
                                     .collect(Collectors.toList());
                 }
@@ -1757,8 +1763,7 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     generatedResourceFolders =
-                            mocker.getVariant().getMainArtifact().getGeneratedResourceFolders()
-                                    .stream()
+                            mocker.getGeneratedSourceFolders().stream()
                                     .filter(File::exists)
                                     .collect(Collectors.toList());
                 }

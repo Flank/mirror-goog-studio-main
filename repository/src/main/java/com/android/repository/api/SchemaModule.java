@@ -35,31 +35,28 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlTransient
 public class SchemaModule<T> {
 
-    /**
-     * Map of XML namespaces to the SchemaModuleVersions making up this module.
-     */
-    private final Map<String, SchemaModuleVersion> mVersions = Maps.newHashMap();
+    /** Map of XML namespaces to the SchemaModuleVersions making up this module. */
+    private final Map<String, SchemaModuleVersion<T>> mVersions = Maps.newHashMap();
 
     /**
      * Reference to the highest version found. Used by default when creating new objects.
      */
     private final SchemaModuleVersion<T> mLatestVersion;
 
-    /**
-     * Class used with {@link Class#getResourceAsStream(String)} to look up xsd resources.
-     */
-    private final Class mResourceRoot;
+    /** Class used with {@link Class#getResourceAsStream(String)} to look up xsd resources. */
+    private final Class<?> mResourceRoot;
 
     /**
-     * @param ofPattern Fully-qualified class name of the JAXB {@code ObjectFactory} classes
-     *                  making up this module. Should have a single %d parameter, corresponding to
-     *                  the 1-indexed version of the schema.
-     * @param xsdPattern Filename pattern of the XSDs making up this module. Should have a single
-     *                   %d parameter, corresponding to the 1-indexed version of the schema.
-     * @param resourceRoot A class instance used via {@link Class#getResource(String)} to read
-     *                     the XSD file.
+     * @param ofPattern Fully-qualified class name of the JAXB {@code ObjectFactory} classes making
+     *     up this module. Should have a single %d parameter, corresponding to the 1-indexed version
+     *     of the schema.
+     * @param xsdPattern Filename pattern of the XSDs making up this module. Should have a single %d
+     *     parameter, corresponding to the 1-indexed version of the schema.
+     * @param resourceRoot A class instance used via {@link Class#getResource(String)} to read the
+     *     XSD file.
      */
-    public SchemaModule(@NonNull String ofPattern, @NonNull String xsdPattern, @NonNull Class resourceRoot) {
+    public SchemaModule(
+            @NonNull String ofPattern, @NonNull String xsdPattern, @NonNull Class<?> resourceRoot) {
         if (!ofPattern.matches(".*%[0-9.$]*d.*") || !xsdPattern.matches(".*%[0-9.$]*d.*")) {
             assert false : "ofPattern and xsdPattern must contain a single %d parameter";
         }
@@ -96,11 +93,11 @@ public class SchemaModule<T> {
     }
 
     /**
-     * Gets the map of namespaces to {@link SchemaModuleVersion}s. Should only be needed by
-     * the repository framework.
+     * Gets the map of namespaces to {@link SchemaModuleVersion}s. Should only be needed by the
+     * repository framework.
      */
     @NonNull
-    public Map<String, SchemaModuleVersion> getNamespaceVersionMap() {
+    public Map<String, SchemaModuleVersion<T>> getNamespaceVersionMap() {
         return mVersions;
     }
 

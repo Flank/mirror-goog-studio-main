@@ -24,8 +24,7 @@
 #include "tools/base/deploy/installer/binary_extract.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
-#include "tools/base/deploy/installer/server/install_client.h"
-#include "tools/base/deploy/installer/server/install_server.h"
+#include "tools/base/deploy/installer/server/app_servers.h"
 #include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
@@ -58,17 +57,8 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
     return;
   }
 
-  const std::string server_name =
-      kInstallServer + "-" + workspace_.GetVersion();
-  client_ = StartInstallServer(Executor::Get(),
-                               workspace_.GetTmpFolder() + kInstallServer,
-                               request_.package_name(), server_name);
-
-  if (!client_) {
-    overlay_response->set_status(
-        proto::OverlayInstallResponse::START_SERVER_FAILED);
-    return;
-  }
+  client_ = AppServers::Get(request_.package_name(), workspace_.GetTmpFolder(),
+                            workspace_.GetVersion());
 
   if (!SetUpAgent(agent, overlay_response)) {
     overlay_response->set_status(proto::OverlayInstallResponse::SETUP_FAILED);
@@ -78,15 +68,6 @@ void OverlayInstallCommand::Run(proto::InstallerResponse* response) {
 
   UpdateOverlay(overlay_response);
   GetAgentLogs(overlay_response);
-
-  proto::InstallServerResponse install_response;
-  if (!client_->KillServerAndWait(&install_response)) {
-    overlay_response->set_status(
-        proto::OverlayInstallResponse::INSTALL_SERVER_COM_ERR);
-    return;
-  }
-
-  ConvertProtoEventsToEvents(install_response.events());
 }
 
 bool OverlayInstallCommand::SetUpAgent(
@@ -171,13 +152,6 @@ void OverlayInstallCommand::UpdateOverlay(
   for (auto deleted_file : request_.deleted_files()) {
     overlay_request.add_files_to_delete(deleted_file);
   }
-
-  // Live Literal instrumentation, while persistent across restarts, are not
-  // considered part of the APK's install. We want all installs to nuke
-  // all live literals information and the source of truth of all literal
-  // updates will be based on this last install.
-  std::string live_literal_dir = Sites::AppOverlays(request_.package_name());
-  overlay_request.add_files_to_delete(live_literal_dir);
 
   auto resp = client_->UpdateOverlay(overlay_request);
   if (!resp) {

@@ -15,7 +15,6 @@
  */
 package com.android.sdklib.repository;
 
-import com.android.prefs.AndroidLocation;
 import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.testframework.FakeDownloader;
@@ -87,7 +86,6 @@ public class AddonListSourceProviderTest extends TestCase {
     }
 
     public void testLocalSource() throws Exception {
-        AndroidLocation.resetFolder();
         MockFileOp fop = new MockFileOp();
         Path androidFolder = fop.toPath(ANDROID_FOLDER);
         Files.createDirectories(androidFolder);

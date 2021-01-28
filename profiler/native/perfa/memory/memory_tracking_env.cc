@@ -136,7 +136,15 @@ const char* MemTagToString(MemTag tag) {
 void ClassGlobalRefs::Preserve(JNIEnv* jni, jclass klass) {
   tail_pos_ = (tail_pos_ + 1) % ClassGlobalRefs::kBucketSize;
   if (tail_pos_ == 0) {
-    jni->PushLocalFrame(1);
+    jni->PushLocalFrame(2);
+    if (jni->ExceptionOccurred()) {
+      // Some sort of failure occurred. Fallback to using global-refs directly
+      Log::W(Log::Tag::PROFILER, "Failed to allocate global-ref list segment");
+      tail_pos_ = ClassGlobalRefs::kBucketSize - 1;
+      jni->ExceptionClear();
+      jni->NewGlobalRef(klass);
+      return;
+    }
     // Allocate a new bucket.
     jobjectArray next_local =
         jni->NewObjectArray(ClassGlobalRefs::kBucketSize,

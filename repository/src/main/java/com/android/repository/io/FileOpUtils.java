@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,6 +53,34 @@ public final class FileOpUtils {
      */
     @NonNull
     public static FileOp create() {
+        return new FileOpImpl();
+    }
+
+    /**
+     * Create a {@link FileOp} that supports the provided {@code path}. This should be used where
+     * code using only {@link Path}s directly has to interact with code that still uses {@link
+     * FileOp}.
+     *
+     * @deprecated Use {@link Path}s, {@link CancellableFileIo} and (for testing) {@code
+     *     InMemoryFileSystems} directly.
+     */
+    @NonNull
+    public static FileOp create(@Nullable Path path) {
+        if (path != null) {
+            try {
+                FileSystem desiredFs = path.getFileSystem();
+                if (desiredFs != FileSystems.getDefault()) {
+                    Class<?> mockFileOp =
+                            FileOp.class
+                                    .getClassLoader()
+                                    .loadClass("com.android.repository.testframework.MockFileOp");
+                    return (FileOp)
+                            mockFileOp.getConstructor(FileSystem.class).newInstance(desiredFs);
+                }
+            } catch (Exception ignore) {
+                // We'll just return the default
+            }
+        }
         return new FileOpImpl();
     }
 

@@ -21,6 +21,7 @@ package com.android.tools.lint.detector.api
 import com.android.SdkConstants
 import com.android.SdkConstants.AAPT_URI
 import com.android.SdkConstants.ANDROID_MANIFEST_XML
+import com.android.SdkConstants.ANDROID_NS_NAME_PREFIX
 import com.android.SdkConstants.ANDROID_PREFIX
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_LOCALE
@@ -59,6 +60,7 @@ import com.android.resources.ResourceUrl
 import com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines
 import com.android.sdklib.SdkVersionInfo.underlinesToCamelCase
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES
 import com.android.tools.lint.client.api.TYPE_BOOLEAN
 import com.android.tools.lint.client.api.TYPE_BOOLEAN_WRAPPER
 import com.android.tools.lint.client.api.TYPE_BYTE
@@ -1038,28 +1040,29 @@ fun getLocaleAndRegion(folderName: String): String? {
 }
 
 /**
- * Looks up the resource values for the given attribute given a style. Note that this only looks
- * project-level style values, it does not resume into the framework styles.
+ * Looks up the resource values for the given attribute given a style.
+ * Note that this only looks project-level style values, it does not
+ * resume into the framework styles.
+ *
+ * It will return a list of resource values if the styles were found,
+ * and false if it failed to resolve some styles, unless [acceptMissing]
+ * is true.
  */
 fun getStyleAttributes(
     project: Project,
     client: LintClient,
     styleUrl: String,
     namespaceUri: String,
-    attribute: String
+    attribute: String,
+    acceptMissing: Boolean = false
 ): List<ResourceValue>? {
-    if (!client.supportsProjectResources()) {
-        return null
-    }
-
-    val resources = client.getResourceRepository(project, true, true) ?: return null
-
+    val resources = client.getResources(project, ALL_DEPENDENCIES)
     val style = ResourceUrl.parse(styleUrl)
     if (style == null || style.isFramework) {
         return null
     }
 
-    var result: MutableList<ResourceValue>? = null
+    val result: MutableList<ResourceValue> = ArrayList()
 
     val queue = ArrayDeque<ResourceValue>()
     queue.add(ResourceValueImpl(ResourceNamespace.RES_AUTO, style.type, style.name, null))
@@ -1070,6 +1073,11 @@ fun getStyleAttributes(
         val name = front.name
         seen.add(name)
         val items = resources.getResources(ResourceNamespace.TODO(), front.resourceType, name)
+        if (!acceptMissing && items.isEmpty()) {
+            // Failed to resolve the given resource: return null since it's possible that
+            // we'll have false positives
+            return null
+        }
         for (item in items) {
             val rv = item.resourceValue
             if (rv is StyleResourceValue) {
@@ -1078,13 +1086,20 @@ fun getStyleAttributes(
                     ResourceNamespace.fromNamespaceUri(namespaceUri),
                     ResourceNamespace.TODO()
                 )
-                val value = srv!!.getItem(namespace, attribute)
-                if (value != null) {
-                    if (result == null) {
-                        result = ArrayList()
-                    }
-                    if (!result.contains(value)) {
-                        result.add(value)
+                val frameworkResource: String? = if (!attribute.startsWith(ANDROID_NS_NAME_PREFIX) &&
+                    namespace == ResourceNamespace.ANDROID
+                ) {
+                    ANDROID_NS_NAME_PREFIX + attribute
+                } else {
+                    null
+                }
+                for (styleItem in srv!!.definedItems) {
+                    if (styleItem.attrName == attribute && styleItem.namespace == namespace ||
+                        styleItem.attrName == frameworkResource
+                    ) {
+                        if (!result.contains(styleItem)) {
+                            result.add(styleItem)
+                        }
                     }
                 }
 
@@ -1092,15 +1107,20 @@ fun getStyleAttributes(
                 val parent = srv.parentStyleName
                 if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
                     val p = ResourceUrl.parse(parent)
-                    if (p != null && !p.isFramework && !seen.contains(p.name)) {
-                        seen.add(p.name)
-                        queue.add(
-                            ResourceValueImpl(
-                                ResourceNamespace.RES_AUTO,
-                                ResourceType.STYLE,
-                                p.name, null
+                    if (p != null) {
+                        if (!acceptMissing && p.isFramework) {
+                            return null
+                        }
+                        if (!p.isFramework && !seen.contains(p.name)) {
+                            seen.add(p.name)
+                            queue.add(
+                                ResourceValueImpl(
+                                    ResourceNamespace.RES_AUTO,
+                                    ResourceType.STYLE,
+                                    p.name, null
+                                )
                             )
-                        )
+                        }
                     }
                 }
 
@@ -1132,12 +1152,7 @@ fun getInheritedStyles(
     client: LintClient,
     styleUrl: String
 ): List<StyleResourceValue>? {
-    if (!client.supportsProjectResources()) {
-        return null
-    }
-
-    val resources = client.getResourceRepository(project, true, true) ?: return null
-
+    val resources = client.getResources(project, ALL_DEPENDENCIES)
     val style = ResourceUrl.parse(styleUrl)
     if (style == null || style.isFramework) {
         return null

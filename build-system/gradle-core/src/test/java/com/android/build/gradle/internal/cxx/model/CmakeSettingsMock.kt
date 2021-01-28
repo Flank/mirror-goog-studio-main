@@ -33,7 +33,15 @@ const val NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "no-varia
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
  */
 class CmakeSettingsMock : BasicModuleModelMock() {
-    val module by lazy { createCxxModuleModel(sdkComponents, configurationParameters, cmakeFinder) }
+
+    val module by lazy {
+        createCxxModuleModel(
+            sdkComponents,
+            androidLocationProvider,
+            configurationParameters,
+            cmakeFinder
+        )
+    }
     val variant by lazy { createCxxVariantModel(configurationParameters, module) }
     val abi by lazy { createCxxAbiModel(sdkComponents, configurationParameters, variant, Abi.X86) }
 

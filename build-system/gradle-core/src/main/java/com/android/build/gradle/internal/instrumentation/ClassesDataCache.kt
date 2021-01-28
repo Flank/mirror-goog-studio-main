@@ -35,15 +35,18 @@ class ClassesDataCache: Closeable {
         Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).fileKey()
             ?: file.canonicalPath
 
-    fun getSourceCaches(sources: Set<File>): List<ClassesDataSourceCache> {
-        val requested = sources.filter(File::exists).associateBy { getSourceFileKey(it) }
+    fun getSourceCaches(
+        sources: Map<File, ClassesDataSourceCache.SourceType>
+    ): List<ClassesDataSourceCache> {
+        val requested = sources.filter { it.key.exists() }
         synchronized(this) {
-            return requested.map { (key, sourceFile) ->
+            return requested.map { (sourceFile, sourceType) ->
+                val key = getSourceFileKey(sourceFile)
                 sourcesCacheMap.computeIfAbsent(key) {
                     if (sourceFile.name.endsWith(SdkConstants.DOT_JAR)) {
-                        JarCache(sourceFile)
+                        JarCache(sourceFile, sourceType)
                     } else {
-                        DirCache(sourceFile)
+                        DirCache(sourceFile, sourceType)
                     }
                 }
             }
@@ -55,7 +58,10 @@ class ClassesDataCache: Closeable {
         sourcesCacheMap.clear()
     }
 
-    private class JarCache(file: File) : ClassesDataSourceCache() {
+    private class JarCache(
+        file: File,
+        sourceType: SourceType
+    ) : ClassesDataSourceCache(sourceType) {
         private val jarFile = JarFile(file)
 
         override fun close() {
@@ -75,7 +81,10 @@ class ClassesDataCache: Closeable {
         }
     }
 
-    private class DirCache(private val dir: File) : ClassesDataSourceCache() {
+    private class DirCache(
+        private val dir: File,
+        sourceType: SourceType
+    ) : ClassesDataSourceCache(sourceType) {
 
         @Synchronized
         override fun maybeLoadClassData(className: String): ClassData? {

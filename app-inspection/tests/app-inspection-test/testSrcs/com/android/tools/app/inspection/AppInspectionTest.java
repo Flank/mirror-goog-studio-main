@@ -360,7 +360,7 @@ public final class AppInspectionTest {
         AppInspectionResponse response =
                 appInspectionRule.sendCommandAndGetResponse(
                         createLibraryInspector(
-                                "test.inspector",
+                                "test.proguard.inspector",
                                 onDevicePath,
                                 artifactCoordinate("test.library", "test", "0.0.1")));
         assertThat(response.getStatus()).isEqualTo(ERROR);

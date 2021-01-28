@@ -192,6 +192,9 @@ class ProjectDescription : Comparable<ProjectDescription> {
     fun ensureUnique() {
         val targets = mutableSetOf<String>()
         for (file in files) {
+            if (file is CompiledSourceFile) {
+                continue // Not a single file; will potentially expand into a number of class files
+            }
             val added = targets.add(file.targetRelativePath)
             if (!added) {
                 fail("${file.targetRelativePath} is specified multiple times; files must be unique (in older versions, lint tests would just clobber the earlier files of the same name)")
@@ -267,6 +270,8 @@ class ProjectDescription : Comparable<ProjectDescription> {
                 }
             }
             val jars: MutableList<String> = ArrayList()
+            val compiled: MutableList<CompiledSourceFile> = ArrayList()
+            var missingClasses = false
             for (fp in testFiles) {
                 if (haveGradle) {
                     if (SdkConstants.ANDROID_MANIFEST_XML == fp.targetRelativePath) {
@@ -282,12 +287,33 @@ class ProjectDescription : Comparable<ProjectDescription> {
                         fp.targetRootFolder != null && fp.targetRootFolder == "src"
                     ) {
                         fp.within("src/main/kotlin")
+                    } else if (fp is CompiledSourceFile && fp.source is JavaTestFile &&
+                        fp.source.targetRootFolder == "src"
+                    ) {
+                        fp.within("src/main/java")
+                    } else if (fp is CompiledSourceFile && fp.source is KotlinTestFile &&
+                        fp.source.targetRootFolder == "src"
+                    ) {
+                        fp.within("src/main/kotlin")
                     }
                 }
                 if (fp is LibraryReferenceTestFile) {
                     jars.add(fp.file.path)
                     continue
                 }
+
+                if (fp is CompiledSourceFile) {
+                    // Create these after we've populated the rest of the project,
+                    // since if they don't all have classfile contents specified,
+                    // we want to run the compiler to produce the sources which
+                    // can build the test files, and fail the build.
+                    compiled.add(fp)
+                    if (fp.isMissingClasses()) {
+                        missingClasses = true
+                    }
+                    continue
+                }
+
                 fp.createFile(projectDir)
 
                 // Note -- lint-override.xml is only a convention in the test suite; it's
@@ -324,6 +350,23 @@ class ProjectDescription : Comparable<ProjectDescription> {
             }
             if (project.type !== Type.JAVA) {
                 addManifestFileIfNecessary(manifest)
+            }
+
+            if (missingClasses) {
+                // Create all sources before attempting to compile them
+                for (fp in compiled) {
+                    fp.source.createFile(projectDir)
+                }
+                for (fp in compiled) {
+                    if (fp.isMissingClasses()) {
+                        if (fp.compile(projectDir)) {
+                            break
+                        }
+                    }
+                }
+                fail("One or more compiled source files were missing class file encodings")
+            } else {
+                CompiledSourceFile.createFiles(projectDir, compiled)
             }
         }
 

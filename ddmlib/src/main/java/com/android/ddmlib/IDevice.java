@@ -928,4 +928,20 @@ public interface IDevice extends IShellEnabledDevice {
             throws AdbCommandRejectedException, TimeoutException, IOException {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * Invoke the Android Binder Bridge service on a remote device. Return a socket channel that is
+     * connected to the device binder command.
+     *
+     * <p>Ownership of the SocketChannel is relinquished to the caller, it must be explicitly closed
+     * after usage.
+     *
+     * @param service the name of the Android service to connect to
+     * @param parameters the parameters of the binder command
+     * @return A SocketChannel connected to the executing process on the device. after use.
+     */
+    default SocketChannel rawBinder(String service, String[] parameters)
+            throws AdbCommandRejectedException, TimeoutException, IOException {
+        throw new UnsupportedOperationException();
+    }
 }

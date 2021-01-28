@@ -122,15 +122,6 @@ class PrefabTest(private val buildSystem: NativeBuildSystem, val cmakeVersion: S
     }
 
     @Test
-    fun `build integrations are not cleaned up`() {
-        project.execute("assembleDebug")
-        project.execute("clean")
-        val abis = project.recoverExistingCxxAbiModels().sortedBy { it.abi.ordinal }
-        assertThat(abis.map { it.abi }).containsExactlyElementsIn(expectedAbis)
-        abis.forEach { assertThat(it.prefabFolder).exists() }
-    }
-
-    @Test
     fun `cleaning a cleaned project works`() {
         project.execute("clean")
         project.execute("clean")

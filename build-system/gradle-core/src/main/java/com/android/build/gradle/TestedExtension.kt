@@ -85,4 +85,6 @@ abstract class TestedExtension(
     fun getMockableAndroidJar(): FileCollection {
         return globalScope.mockableJarArtifact
     }
+
+    abstract override var testNamespace: String?
 }

@@ -295,6 +295,13 @@ public enum ResourceType {
         return mKind == Kind.REAL && this != ATTR;
     }
 
+    /**
+     * Returns true if this type is a synthetic type, such as {@link #PUBLIC}
+     */
+    public boolean isSynthetic() {
+        return mKind == Kind.SYNTHETIC;
+    }
+
     @Override
     @NonNull
     public String toString() {

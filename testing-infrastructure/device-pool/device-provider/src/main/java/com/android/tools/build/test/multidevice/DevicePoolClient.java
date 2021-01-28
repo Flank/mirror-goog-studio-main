@@ -35,7 +35,7 @@ import java.util.List;
 public class DevicePoolClient {
 
     /** This needs to be kept in sync with the port in integration-test/build.gradle */
-    private static final int PORT = 3431;
+    private static final int PORT = 5554;
 
     public static String reserveDevice(
             @NonNull List<String> serials, @NonNull String displayName) throws IOException {

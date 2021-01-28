@@ -39,7 +39,7 @@ class FixFramesClassWriterTest {
     @Before
     fun setUp() {
         fixFramesClassWriter = FixFramesClassWriterWrapper(
-                ClassesHierarchyResolver.Builder(ClassesDataCache()).addSources(androidJar.toFile()).build())
+                ClassesHierarchyResolver.Builder(ClassesDataCache()).addDependenciesSources(androidJar.toFile()).build())
         classWriter = ClassWriterWrapper(URLClassLoader(arrayOf(androidJar.toUri().toURL()), null))
     }
 

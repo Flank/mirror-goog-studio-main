@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="testkit-api">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/6.8/generated-gradle-jars/gradle-test-kit-6.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/6.8.1/generated-gradle-jars/gradle-test-kit-6.8.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

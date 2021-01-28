@@ -26,15 +26,14 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Utilities related to the respository XSDs.
+ * Utilities related to the repository XSDs.
  *
- * @deprecated This is part of the old SDK manager framework. Use
- * {@link AndroidSdkHandler}/{@link RepoManager} and associated classes instead.
+ * @deprecated This is part of the old SDK manager framework. Use {@link AndroidSdkHandler}/{@link
+ *     RepoManager} and associated classes instead.
  */
 @Deprecated
 public class RepoXsdUtil {
@@ -54,24 +53,20 @@ public class RepoXsdUtil {
      */
     public static StreamSource[] getXsdStream(final String rootElement, int version) {
         String filename =
-                String.format(Locale.US, "%1$s-%2$02d.xsd", rootElement, version); //$NON-NLS-1$
+                String.format(Locale.US, "/xsd/legacy/%1$s-%2$02d.xsd", rootElement, version);
         final List<StreamSource> streams = Lists.newArrayList();
-        InputStream stream = null;
+        InputStream stream;
         try {
             stream = RepoXsdUtil.class.getResourceAsStream(filename);
             if (stream == null) {
-                filename =
-                        String.format(
-                                Locale.US, "%1$s-%2$d.xsd", rootElement, version); //$NON-NLS-1$
+                filename = String.format(Locale.US, "%1$s-%2$d.xsd", rootElement, version);
                 stream = RepoXsdUtil.class.getResourceAsStream(filename);
             }
             if (stream == null) {
                 // Try the alternate schemas that are not published yet.
                 // This allows us to internally test with new schemas before the
                 // public repository uses it.
-                filename =
-                        String.format(
-                                Locale.US, "-%1$s-%2$02d.xsd", rootElement, version); //$NON-NLS-1$
+                filename = String.format(Locale.US, "-%1$s-%2$02d.xsd", rootElement, version);
                 stream = RepoXsdUtil.class.getResourceAsStream(filename);
             }
 
@@ -81,16 +76,21 @@ public class RepoXsdUtil {
             SAXParser parser = factory.newSAXParser();
             XMLReader reader = parser.getXMLReader();
             reader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            parser.parse(stream, new DefaultHandler() {
-                @Override
-                public void startElement(String uri, String localName, String name, Attributes attributes) throws SAXException {
-                    name = name.substring(name.indexOf(':') + 1);
-                    if (name.equals(NODE_IMPORT) || name.equals(NODE_INCLUDE)) {
-                        String importFile = attributes.getValue(ATTR_SCHEMA_LOCATION);
-                        streams.add(new StreamSource(RepoXsdUtil.class.getResourceAsStream(importFile)));
-                    }
-                }
-            });
+            parser.parse(
+                    stream,
+                    new DefaultHandler() {
+                        @Override
+                        public void startElement(
+                                String uri, String localName, String name, Attributes attributes) {
+                            name = name.substring(name.indexOf(':') + 1);
+                            if (name.equals(NODE_IMPORT) || name.equals(NODE_INCLUDE)) {
+                                String importFile = attributes.getValue(ATTR_SCHEMA_LOCATION);
+                                streams.add(
+                                        new StreamSource(
+                                                RepoXsdUtil.class.getResourceAsStream(importFile)));
+                            }
+                        }
+                    });
             // create and add the first stream again, since SaxParser closes the original one
             streams.add(new StreamSource(RepoXsdUtil.class.getResourceAsStream(filename)));
         } catch (Exception e) {

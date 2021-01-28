@@ -19,34 +19,22 @@ package com.android.build.gradle.integration.lint;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test making sure that the SupportAnnotationUsage does not report errors referencing R.type.name
  * resource fields. (Regression test for bug 133326990.)
  */
-@RunWith(FilterableParameterized.class)
 public class LintResourceResolveTest {
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
 
     @Rule
-    public final GradleTestProject project;
-
-    public LintResourceResolveTest(LintInvocationType lintInvocationType) {
-        this.project =
-                lintInvocationType
-                        .testProjectBuilder(44)
-                        .fromTestProject("lintResourceResolve")
-                        .create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("lintResourceResolve")
+                    .withConfigurationCacheMaxProblems(44)
+                    .create();
 
     @Test
     public void checkClean() throws Exception {

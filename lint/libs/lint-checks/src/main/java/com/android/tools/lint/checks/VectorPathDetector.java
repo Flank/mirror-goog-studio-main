@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.TAG_VECTOR;
+import static com.android.tools.lint.client.api.ResourceRepositoryScope.ALL_DEPENDENCIES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -26,6 +27,7 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceRepository;
 import com.android.resources.ResourceUrl;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -101,11 +103,9 @@ public class VectorPathDetector extends ResourceXmlDetector {
             if (url == null || url.isFramework()) {
                 return;
             }
-            ResourceRepository repository =
-                    context.getClient().getResourceRepository(context.getProject(), true, true);
-            if (repository == null) {
-                return;
-            }
+            LintClient client = context.getClient();
+            Project project = context.getProject();
+            ResourceRepository repository = client.getResources(project, ALL_DEPENDENCIES);
             List<ResourceItem> item =
                     repository.getResources(ResourceNamespace.TODO(), url.type, url.name);
             if (item.isEmpty()) {

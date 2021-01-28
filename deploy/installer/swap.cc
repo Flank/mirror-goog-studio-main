@@ -39,6 +39,7 @@
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor/executor.h"
 #include "tools/base/deploy/installer/executor/runas_executor.h"
+#include "tools/base/deploy/installer/server/app_servers.h"
 #include "tools/base/deploy/sites/sites.h"
 
 namespace deploy {
@@ -89,10 +90,6 @@ void SwapCommand::Run(proto::InstallerResponse* response) {
 
   proto::SwapResponse::Status swap_status = Swap();
 
-  proto::InstallServerResponse server_response;
-  client_->KillServerAndWait(&server_response);
-  ConvertProtoEventsToEvents(server_response.events());
-
   // If the swap fails, abort the installation.
   if (swap_status != proto::SwapResponse::OK) {
     cmd.AbortInstall(install_session, &output);
@@ -121,15 +118,8 @@ bool SwapCommand::Setup() noexcept {
     return false;
   }
 
-  client_ = StartInstallServer(
-      Executor::Get(), workspace_.GetTmpFolder() + kInstallServer,
-      request_.package_name(), kInstallServer + "-" + workspace_.GetVersion());
-
-  if (client_ == nullptr) {
-    ErrEvent("SwapCommand: Unable to get InstallServer client");
-    return false;
-  }
-
+  client_ = AppServers::Get(request_.package_name(), workspace_.GetTmpFolder(),
+                            workspace_.GetVersion());
   return true;
 }
 
@@ -165,7 +155,7 @@ bool SwapCommand::CopyBinaries() const noexcept {
   return true;
 }
 
-proto::SwapResponse::Status SwapCommand::Swap() const {
+proto::SwapResponse::Status SwapCommand::Swap() {
   // Don't bother with the server if we have no work to do.
   if (request_.process_ids().empty() && request_.extra_agents() <= 0) {
     LogEvent("No PIDs needs to be swapped");
@@ -186,8 +176,6 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
 #endif
   if (!Attach(request_.process_ids(), agent_path)) {
     ErrEvent("Could not attach agents");
-    proto::InstallServerResponse server_response;
-    client_->KillServerAndWait(&server_response);
     return proto::SwapResponse::AGENT_ATTACH_FAILED;
   }
 
@@ -200,8 +188,6 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   auto resp = client_->SendAgentMessage(send_request);
   if (!resp) {
     ErrEvent("Could not send to install server");
-    proto::InstallServerResponse server_response;
-    client_->KillServerAndWait(&server_response);
     return proto::SwapResponse::INSTALL_SERVER_COM_ERR;
   }
 
@@ -247,11 +233,11 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
   return proto::SwapResponse::MISSING_AGENT_RESPONSES;
 }
 
-bool SwapCommand::WaitForServer() const {
+bool SwapCommand::WaitForServer() {
   Phase p("WaitForServer");
 
   proto::OpenAgentSocketRequest socket_request;
-  socket_request.set_socket_name(Socket::kDefaultAddress);
+  socket_request.set_socket_name(GetSocketName());
 
   auto resp = client_->OpenAgentSocket(socket_request);
   if (!resp) {

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
@@ -27,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.connected.utils.getEmulator
-import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableMap
 import org.junit.Before
@@ -104,7 +102,7 @@ class D8DesugaringConnectedTest {
                 """.trimIndent()
         )
         // fail fast if no response
-        project.getSubproject(":app").addAdbTimeout()
+        project.addAdbTimeoutToSubProjects()
 
         TestFileUtils.appendToFile(
             project.getSubproject(":lib").buildFile, "apply plugin: 'java'\n"

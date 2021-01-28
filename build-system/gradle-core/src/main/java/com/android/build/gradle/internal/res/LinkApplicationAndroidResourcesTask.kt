@@ -31,6 +31,8 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.initialize
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -298,9 +300,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             parameters.manifestFiles.set(if (aaptFriendlyManifestFiles.isPresent) aaptFriendlyManifestFiles else manifestFiles)
             parameters.manifestMergeBlameFile.set(manifestMergeBlameFile)
             parameters.mergeBlameDirectory.set(mergeBlameLogFolder)
+            parameters.namespace.set(namespace)
             parameters.namespaced.set(isNamespaced)
             parameters.packageId.set(resOffset)
-            parameters.namespace.set(namespace)
             parameters.resourceConfigs.set(resourceConfigs)
             parameters.sharedLibraryDependencies.from(sharedLibraryDependencies)
             parameters.sourceSetMaps.from(sourceSetMaps)
@@ -344,9 +346,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         abstract val manifestFiles: DirectoryProperty
         abstract val manifestMergeBlameFile: RegularFileProperty
         abstract val mergeBlameDirectory: DirectoryProperty
+        abstract val namespace: Property<String>
         abstract val namespaced: Property<Boolean>
         abstract val packageId: Property<Int>
-        abstract val namespace: Property<String>
         abstract val resourceConfigs: SetProperty<String>
         abstract val sharedLibraryDependencies: ConfigurableFileCollection
         abstract val sourceSetMaps: ConfigurableFileCollection
@@ -503,7 +505,15 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
 
             task.mainSplit = creationConfig.outputs.getMainSplitOrNull()
-            task.namespace.setDisallowChanges(creationConfig.namespace)
+            task.namespace.setDisallowChanges(
+                if (creationConfig is TestComponentCreationConfig) {
+                    // TODO(b/176931684) Use creationConfig.namespace instead after we stop
+                    //  supporting using applicationId to namespace the test component R class.
+                    creationConfig.namespaceForR
+                } else {
+                    creationConfig.namespace
+                }
+            )
 
             task.taskInputType = creationConfig.manifestArtifactType
             creationConfig.artifacts.setTaskInputToFinalProduct(
@@ -575,9 +585,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
             creationConfig.services.initializeAapt2Input(task.aapt2)
             task.symbolTableBuildService.set(getBuildService(creationConfig.services.buildServiceRegistry))
-            task.androidJarInput.sdkBuildService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.androidJarInput.initialize(creationConfig)
 
             task.useStableIds = projectOptions[BooleanOption.ENABLE_STABLE_IDS]
 
@@ -812,14 +820,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             var proguardOutputFile: File? = null
             var mainDexListProguardOutputFile: File? = null
             if (generateRClass) {
-                packageForR = if (parameters.variantType.get().isForTesting) {
-                    // Workaround for b/162244493: Use application ID in the test variant to match
-                    // previous behaviour.
-                    // TODO(170945282): migrate everything to use the actual namespace in AGP 7.0.
-                    parameters.applicationId.get()
-                } else {
-                    parameters.namespace.get()
-                }
+                packageForR = parameters.namespace.get()
 
                 // we have to clean the source folder output in case the package name changed.
                 srcOut = parameters.sourceOutputDirectory.orNull?.asFile

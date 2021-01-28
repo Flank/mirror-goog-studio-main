@@ -87,6 +87,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CL
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
@@ -94,8 +95,10 @@ import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
 import com.android.build.gradle.internal.tasks.CheckProguardFiles
 import com.android.build.gradle.internal.tasks.CompressAssetsTask
+import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
 import com.android.build.gradle.internal.tasks.D8MainDexListTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
+import com.android.build.gradle.internal.tasks.DesugarLibKeepRulesMergeTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
@@ -103,6 +106,7 @@ import com.android.build.gradle.internal.tasks.DexMergingAction
 import com.android.build.gradle.internal.tasks.DexMergingTask
 import com.android.build.gradle.internal.tasks.DexSplitterTask
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles
+import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.JacocoTask
@@ -147,6 +151,7 @@ import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass
 import com.android.build.gradle.internal.test.AbstractTestDataImpl
 import com.android.build.gradle.internal.test.BundleTestDataImpl
 import com.android.build.gradle.internal.test.TestDataImpl
+import com.android.build.gradle.internal.testing.utp.shouldEnableUtp
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
@@ -170,10 +175,6 @@ import com.android.build.gradle.tasks.GenerateTestConfig
 import com.android.build.gradle.tasks.GenerateTestConfig.TestConfigInputs
 import com.android.build.gradle.tasks.JavaCompileCreationAction
 import com.android.build.gradle.tasks.JavaPreCompileTask
-import com.android.build.gradle.tasks.LintFixTask
-import com.android.build.gradle.tasks.LintGlobalTask
-import com.android.build.gradle.tasks.LintPerVariantTask
-import com.android.build.gradle.tasks.LintPerVariantTask.VitalCreationAction
 import com.android.build.gradle.tasks.ManifestProcessorTask
 import com.android.build.gradle.tasks.MapSourceSetPathsTask
 import com.android.build.gradle.tasks.MergeResources
@@ -213,7 +214,6 @@ import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.ResolutionStrategy
 import org.gradle.api.execution.TaskExecutionGraph
 import org.gradle.api.file.Directory
@@ -223,6 +223,7 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
@@ -273,11 +274,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
      */
     fun createTasks(
             variantType: VariantType, variantModel: VariantModel) {
-        // this is call before all the variants are created since they are all going to depend
+        // this is called before all the variants are created since they are all going to depend
         // on the global LINT_PUBLISH_JAR task output
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
-        taskFactory.register(PrepareLintJarForPublish.CreationAction(globalScope))
+        createPrepareLintJarForPublishTask()
 
         // create a lifecycle task to build the lintChecks dependencies
         taskFactory.register(COMPILE_LINT_CHECKS_TASK) { task: Task ->
@@ -307,11 +308,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
 
 
         // Create C/C++ configuration, build, and clean tasks
+        val androidLocationBuildService: Provider<AndroidLocationsBuildService> =
+                getBuildService(project.gradle.sharedServices)
         createCxxTasks(
-                globalScope.sdkComponents.get(),
-                globalScope.dslServices.issueReporter,
-                taskFactory,
-                variants);
+            androidLocationBuildService.get(),
+            globalScope.sdkComponents.get(),
+            globalScope.dslServices.issueReporter,
+            taskFactory,
+            variants
+        )
     }
 
     fun createPostApiTasks() {
@@ -323,8 +328,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // configure Kotlin compilation if needed.
         configureKotlinPluginTasksIfNecessary()
 
-        // create the global lint task that depends on all the variants
-        configureGlobalLintTask()
         createAnchorAssembleTasks(extension.productFlavors.size, extension.flavorDimensionList.size)
     }
 
@@ -355,9 +358,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
         if (variantProperties.variantDslInfo.renderscriptSupportModeEnabled) {
             val fileCollection = project.files(
-                    globalScope
-                            .sdkComponents
-                            .flatMap(SdkComponentsBuildService::renderScriptSupportJarProvider))
+                    globalScope.versionedSdkLoader.flatMap {
+                        it.renderScriptSupportJarProvider
+                    }
+            )
             project.dependencies.add(variantDependencies.compileClasspath.name, fileCollection)
             if (variantType.isApk && !variantType.isForTesting) {
                 project.dependencies.add(variantDependencies.runtimeClasspath.name, fileCollection)
@@ -393,10 +397,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     .add(
                             variantDependencies.compileClasspath.name,
                             project.files(
-                                    globalScope
-                                            .sdkComponents
-                                            .flatMap(
-                                                    SdkComponentsBuildService::renderScriptSupportJarProvider)))
+                                    globalScope.versionedSdkLoader.flatMap {
+                                        it.renderScriptSupportJarProvider
+                                    }
+                            ))
+
         }
         if (testVariant.variantType.isApk) { // ANDROID_TEST
             if ((testVariant as ApkCreationConfig).dexingType.isLegacyMultiDexMode()) {
@@ -421,26 +426,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    // this is run after all the variants are created.
-    protected open fun configureGlobalLintTask() {
-        if (lintTaskManager.useNewLintModel) {
-            return;
-        }
-        // configure the global lint tasks.
-        taskFactory.configure(
-                LINT,
-                LintGlobalTask::class.java
-        ) { task: LintGlobalTask ->
-            LintGlobalTask.GlobalCreationAction(globalScope, variantPropertiesList)
-                    .configure(task)
-        }
-        taskFactory.configure(
-                LINT_FIX,
-                LintFixTask::class.java
-        ) { task: LintFixTask ->
-            LintFixTask.GlobalCreationAction(globalScope, variantPropertiesList)
-                    .configure(task)
-        }
+    protected open fun createPrepareLintJarForPublishTask() {
+        taskFactory.register(PrepareLintJarForPublish.CreationAction(globalScope))
     }
 
     private fun configureKotlinPluginTasksIfNecessary() {
@@ -535,11 +522,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                         VariantDependencies.CONFIG_NAME_ANDROID_APIS,
                         project.files(
                                 Callable {
-                                    globalScope
-                                            .sdkComponents
-                                            .flatMap(
-                                                    SdkComponentsBuildService::androidJarProvider)
-                                            .orNull
+                                    globalScope.versionedSdkLoader.flatMap {
+                                        it.androidJarProvider
+                                    }.orNull
                                 } as Callable<*>))
 
         // Adding this task to help the IDE find the mockable JAR.
@@ -1375,63 +1360,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         createConnectedTestForVariant(androidTestProperties)
     }
 
-    /**
-     * Add tasks for running lint on individual variants. We've already added a lint task earlier
-     * which runs on all variants.
-     */
-    open fun createLintTasks(
-            variantProperties: VariantT,
-            allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
-        if (lintTaskManager.useNewLintModel) {
-            return
-        }
-        taskFactory.register(
-                LintPerVariantTask.CreationAction(
-                        variantProperties,
-                        allVariants.stream()
-                                .map(ComponentInfo<VariantBuilderT, VariantT>::variant)
-                                .collect(Collectors.toList())))
-    }
-
     /** Returns the full path of a task given its name.  */
     private fun getTaskPath(taskName: String): String {
         return if (project.rootProject === project) ":$taskName" else project.path + ':' + taskName
-    }
-
-    open fun maybeCreateLintVitalTask(
-            variant: VariantT,
-            allVariants: List<ComponentInfo<VariantBuilderT, VariantT>>) {
-        if (lintTaskManager.useNewLintModel) {
-            return;
-        }
-        if (variant.debuggable
-                || !extension.lintOptions.isCheckReleaseBuilds()) {
-            return
-        }
-        val lintReleaseCheck = taskFactory.register(
-                VitalCreationAction(
-                        variant,
-                        allVariants.stream()
-                                .map(ComponentInfo<VariantBuilderT, VariantT>::variant)
-                                .collect(Collectors.toList())),
-                null,
-                object : TaskConfigAction<Task> {
-                    override fun configure(task: Task) {
-                        task.dependsOn(variant.taskContainer.javacTask)
-                    }
-                },
-                null)
-        variant.taskContainer.assembleTask.dependsOn(lintReleaseCheck)
-
-        // If lint is being run, we do not need to run lint vital.
-        project.gradle
-                .taskGraph
-                .whenReady { taskGraph: TaskExecutionGraph ->
-                    if (taskGraph.hasTask(getTaskPath(LINT))) {
-                        project.tasks
-                                .getByName(lintReleaseCheck.name).enabled = false
-                    }
-                }
     }
 
     private fun createRunUnitTestTask(unitTestCreationConfig: UnitTestCreationConfig) {
@@ -1526,8 +1457,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
     }
 
     protected fun createTestDevicesTasks() {
-        if (!globalScope
-                        .projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]) {
+        if (!shouldEnableUtp(globalScope.projectOptions, extension.testOptions)) {
             return
         }
 
@@ -1653,7 +1583,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
 
-        if (globalScope.projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]) {
+        if (shouldEnableUtp(globalScope.projectOptions, extension.testOptions)) {
             // Now for each managed device defined in the dsl
             val managedDevices = mutableListOf<ManagedVirtualDevice>()
             extension
@@ -1796,7 +1726,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         maybeCreateJavaCodeShrinkerTask(creationConfig)
         if (creationConfig.codeShrinker == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(creationConfig)
-            maybeCreateDexDesugarLibTask(creationConfig, false)
+            maybeCreateDesugarLibTask(creationConfig, false)
             return
         }
 
@@ -1812,10 +1742,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             }
         }
         if (creationConfig.dexingType.needsMainDexList) {
-            taskFactory.register(D8MainDexListTask.CreationAction(creationConfig, false))
+            taskFactory.register(D8MainDexListTask.CreationAction(creationConfig))
         }
         if (creationConfig.needsMainDexListForBundle) {
-            taskFactory.register(D8MainDexListTask.CreationAction(creationConfig, true))
+            taskFactory.register(D8BundleMainDexListTask.CreationAction(creationConfig))
+        }
+        if (creationConfig.variantType.isDynamicFeature) {
+            taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
         createDexTasks(creationConfig, dexingType, registeredLegacyTransform)
         maybeCreateResourcesShrinkerTasks(creationConfig)
@@ -1845,7 +1778,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 && supportsDesugaring)
         taskFactory.register(
                 DexArchiveBuilderTask.CreationAction(enableDexingArtifactTransform, creationConfig))
-        maybeCreateDexDesugarLibTask(creationConfig, enableDexingArtifactTransform)
+        maybeCreateDesugarLibTask(creationConfig, enableDexingArtifactTransform)
         createDexMergingTasks(creationConfig, dexingType, enableDexingArtifactTransform)
     }
 
@@ -2110,13 +2043,18 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             return
         }
 
+        val service: Provider<AndroidLocationsBuildService> =
+                getBuildService(
+                    creationConfig.services.buildServiceRegistry,
+                    AndroidLocationsBuildService::class.java
+                )
+
         // FIXME create one per signing config instead of one per variant.
         taskFactory.register(
                 ValidateSigningTask.CreationAction(
                         creationConfig,
-                        getDefaultDebugKeystoreLocation(
-                                creationConfig.services.gradleEnvironmentProvider,
-                                LoggerWrapper(logger))))
+                        service.get().getDefaultDebugKeystoreLocation()
+                        ))
     }
 
     /**
@@ -2813,7 +2751,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         }
     }
 
-    private fun maybeCreateDexDesugarLibTask(
+    private fun maybeCreateDesugarLibTask(
             apkCreationConfig: ApkCreationConfig,
             enableDexingArtifactTransform: Boolean) {
         val separateFileDependenciesDexingTask =
@@ -2825,6 +2763,18 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                             apkCreationConfig,
                             enableDexingArtifactTransform,
                             separateFileDependenciesDexingTask))
+        }
+
+        if(apkCreationConfig.variantType.isDynamicFeature
+            && apkCreationConfig.needsShrinkDesugarLibrary
+        ) {
+            taskFactory.register(
+                DesugarLibKeepRulesMergeTask.CreationAction(
+                    apkCreationConfig,
+                    enableDexingArtifactTransform,
+                    separateFileDependenciesDexingTask
+                )
+            )
         }
     }
 

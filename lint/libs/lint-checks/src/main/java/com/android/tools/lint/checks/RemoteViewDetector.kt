@@ -23,6 +23,7 @@ import com.android.SdkConstants.VIEW_MERGE
 import com.android.ide.common.rendering.api.ResourceNamespace.TODO
 import com.android.resources.ResourceType.LAYOUT
 import com.android.tools.lint.client.api.ResourceReference
+import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -65,7 +66,7 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableConstructorTypes(): List<String>? {
+    override fun getApplicableConstructorTypes(): List<String> {
         return listOf("android.widget.RemoteViews")
     }
 
@@ -82,12 +83,8 @@ class RemoteViewDetector : Detector(), SourceCodeScanner {
             return
         }
 
-        val resources =
-            context.client.getResourceRepository(
-                context.mainProject,
-                includeModuleDependencies = true,
-                includeLibraries = false
-            ) ?: return
+        val project = context.mainProject
+        val resources = context.client.getResources(project, LOCAL_DEPENDENCIES)
 
         // See if the associated resource references propertyValuesHolder, and if so
         // suggest switching to AnimatorInflaterCompat.loadAnimator.

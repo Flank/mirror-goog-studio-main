@@ -293,7 +293,7 @@ private fun addAndroidJdkImageDependency(task: JavaCompile, globalScope: GlobalS
             task.project.dependencies.add(
                 CONFIG_NAME_ANDROID_JDK_IMAGE,
                 task.project.files(
-                        globalScope.sdkComponents.flatMap { it.coreForSystemModulesProvider }
+                        globalScope.versionedSdkLoader.flatMap { it.coreForSystemModulesProvider }
                 )
             )
         }

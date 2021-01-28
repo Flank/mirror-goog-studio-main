@@ -20,7 +20,8 @@ package com.android.ide.common.resources
 
 import java.io.File
 import java.io.IOException
-import java.lang.IllegalStateException
+import java.nio.file.FileSystems
+import kotlin.IllegalStateException
 
 private const val separator: String = ":/"
 
@@ -68,7 +69,7 @@ fun relativeResourcePathToAbsolutePath(
     }
     val sourceSetPrefix = relativePath.substring(0, separatorIndex)
     val resourcePathFromSourceSet =
-        relativePath.substring(separatorIndex + separator.length, relativePath.length)
+        relativePath.substring(separatorIndex + separator.lastIndex, relativePath.length)
     val absolutePath = sourceSetPathMap[sourceSetPrefix]
             ?: throw NoSuchElementException(
                     """Unable to get absolute path from $relativePath

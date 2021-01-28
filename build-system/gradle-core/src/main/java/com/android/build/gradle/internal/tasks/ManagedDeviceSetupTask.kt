@@ -28,9 +28,9 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.repository.Revision
 import com.android.utils.GrabProcessOutput
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import java.lang.Exception
@@ -62,6 +62,12 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
     abstract val avdService: Property<AvdComponentsBuildService>
 
     @get: Input
+    abstract val compileSdkVersion: Property<String>
+
+    @get: Input
+    abstract val buildToolsRevision: Property<Revision>
+
+    @get: Input
     abstract val abi: Property<String>
 
     @get: Input
@@ -77,6 +83,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
         workerExecutor.noIsolation().submit(ManagedDeviceSetupRunnable::class.java) {
             it.initializeWith(projectName,  path, analyticsService)
             it.sdkService.set(sdkService)
+            it.compileSdkVersion.set(compileSdkVersion)
+            it.buildToolsRevision.set(buildToolsRevision)
             it.avdService.set(avdService)
             it.imageHash.set(computeImageHash())
             it.deviceName.set(
@@ -88,7 +96,12 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
     abstract class ManagedDeviceSetupRunnable : ProfileAwareWorkAction<ManagedDeviceSetupParams>() {
         override fun run() {
+            val versionedSdkLoader = parameters.sdkService.get().sdkLoader(
+                compileSdkVersion = parameters.compileSdkVersion,
+                buildToolsRevision = parameters.buildToolsRevision
+            )
             parameters.avdService.get().avdProvider(
+                versionedSdkLoader.sdkImageDirectoryProvider(parameters.imageHash.get()),
                 parameters.imageHash.get(),
                 parameters.deviceName.get(),
                 parameters.hardwareProfile.get()).get()
@@ -101,8 +114,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
             }
 
             loggerWrapper.info("Creating snapshot for ${parameters.deviceName.get()}")
-            val emulatorDir = parameters.sdkService.get().emulatorDirectoryProvider.orNull?.asFile
-            emulatorDir ?: error("Emulator is missing.")
+            val emulatorDir = versionedSdkLoader.emulatorDirectoryProvider.orNull?.asFile
+                ?: error("Emulator is missing.")
             val emulatorExecutable = emulatorDir.resolve("emulator")
             val processBuilder = ProcessBuilder(
                 listOf(
@@ -156,6 +169,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
     abstract class ManagedDeviceSetupParams : ProfileAwareWorkAction.Parameters() {
         abstract val sdkService: Property<SdkComponentsBuildService>
+        abstract val compileSdkVersion: Property<String>
+        abstract val buildToolsRevision: Property<Revision>
         abstract val avdService: Property<AvdComponentsBuildService>
         abstract val imageHash: Property<String>
         abstract val deviceName: Property<String>
@@ -204,6 +219,8 @@ abstract class ManagedDeviceSetupTask: NonIncrementalGlobalTask() {
 
         override fun configure(task: ManagedDeviceSetupTask) {
             task.sdkService.setDisallowChanges(globalScope.sdkComponents)
+            task.compileSdkVersion.setDisallowChanges(globalScope.extension.compileSdkVersion)
+            task.buildToolsRevision.setDisallowChanges(globalScope.extension.buildToolsRevision)
             task.avdService.setDisallowChanges(globalScope.avdComponents)
 
             task.systemImageVendor.setDisallowChanges(systemImageSource)

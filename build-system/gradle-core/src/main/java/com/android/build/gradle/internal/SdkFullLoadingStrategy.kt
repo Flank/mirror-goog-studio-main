@@ -103,6 +103,5 @@ class SdkFullLoadingStrategy(
     @Synchronized
     fun reset() {
         sdkInitResult = null
-        sdkHandler.unload()
     }
 }

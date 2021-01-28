@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.sdklib.SdkVersionInfo;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,15 +58,20 @@ public class DataBindingIntegrationTestAppsConnectedTest {
     public static Iterable<Object[]> classNames() {
         List<Object[]> params = new ArrayList<>();
         for (boolean useAndroidX : new boolean[] {true, false}) {
-            params.add(new Object[] {"IndependentLibrary", useAndroidX});
-            // b/174839536 some test apps are breaking because of this
+            // b/178458738
             // params.add(new Object[] {"TestApp", useAndroidX});
+
+            // b/177370256
             // params.add(new Object[] {"ViewBindingTestApp", useAndroidX});
+
+            params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
             params.add(new Object[] {"ProguardedAppWithTest", useAndroidX});
-            // params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
+            params.add(new Object[] {"IndependentLibrary", useAndroidX});
         }
-        // params.add(new Object[] {"KotlinTestApp", true});
+        params.add(new Object[] {"KotlinTestApp", true});
         params.add(new Object[] {"ViewBindingWithDataBindingTestApp", true});
+        // b/177370256 Support version works fine
+        params.add(new Object[] {"ViewBindingTestApp", false});
         return params;
     }
 
@@ -76,56 +80,13 @@ public class DataBindingIntegrationTestAppsConnectedTest {
 
     @Before
     public void setUp() throws IOException {
-        List<String> subProjects = ImmutableList.of();
-
-        // Some test projects have a different test structure.
-        // This determines where to put Adb timeout in each of them.
-        switch (projectName) {
-            case "ViewBindingTestApp":
-                {
-                    // Support version has no subprojects
-                    if (useAndroidX) {
-                        subProjects =
-                                ImmutableList.of(
-                                        "app",
-                                        "app-test",
-                                        "app-with-features",
-                                        "feature",
-                                        "lib-with-view-binding",
-                                        "lib-without-view-binding");
-                    }
-                    break;
-                }
-            case "AppWithDataBindingInTests":
-                {
-                    // Support version only has app subproject
-                    if (useAndroidX) {
-                        subProjects = ImmutableList.of("app", "lib");
-                    } else {
-                        subProjects = ImmutableList.of("app");
-                    }
-                    break;
-                }
-            case "KotlinTestApp":
-                {
-                    subProjects = ImmutableList.of("app", "library1");
-                    break;
-                }
-            default:
-                {
-                    subProjects = ImmutableList.of("app");
-                    break;
-                }
-        }
-
-        if (!subProjects.isEmpty()) {
-            for (String i : subProjects) {
-                // fail fast if no response
-                project.getSubproject(i).addAdbTimeout();
-            }
-        } else {
+        if ("ViewBindingTestApp".equals(projectName) && !useAndroidX) {
+            // Support version has no subprojects
             project.addAdbTimeout();
+        } else {
+            project.addAdbTimeoutToSubProjects();
         }
+
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.execute("uninstallAll");

@@ -75,17 +75,28 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
         ) {
             return Severity.IGNORE
         }
-        val impliedSeverity = severity ?: getDefaultSeverity(issue)
-        if (isWarningsAsErrors() && impliedSeverity === Severity.WARNING) {
-            if (issue === IssueRegistry.BASELINE) {
-                // Don't promote the baseline informational issue
-                // (number of issues promoted) to error
-                return severity
+        if (isWarningsAsErrors() || isIgnoreWarnings()) {
+            // If the severity is defined in this configuration, use it, otherwise
+            // if we're in an override configuration, use the fallback value,
+            // and finally if severity is not configured by either use the
+            // default. This ensures that for example we set warningsAsErrors
+            // in lintOptions, this will not turn issues ignored in a lint.xml
+            // file back on, and similarly it ensures that issues not mentioned
+            // in lint.xml will use the default.
+            val impliedSeverity = severity
+                ?: configurations.getDefinedSeverityWithoutOverride(source, issue)
+                ?: getDefaultSeverity(issue)
+            if (isWarningsAsErrors() && impliedSeverity === Severity.WARNING) {
+                if (issue === IssueRegistry.BASELINE) {
+                    // Don't promote the baseline informational issue
+                    // (number of issues promoted) to error
+                    return severity
+                }
+                severity = Severity.ERROR
             }
-            severity = Severity.ERROR
-        }
-        if (isIgnoreWarnings() && impliedSeverity === Severity.WARNING) {
-            severity = Severity.IGNORE
+            if (isIgnoreWarnings() && impliedSeverity === Severity.WARNING) {
+                severity = Severity.IGNORE
+            }
         }
         return severity
     }

@@ -491,39 +491,51 @@ class MissingClassDetectorTest : AbstractCheckTest() {
             .issues(INSTANTIATABLE)
             .files(
                 androidManifest,
-                jar(
+                bytecode(
                     "libs/bytecode.jar",
-                    base64gzip(
-                        "test/pkg/Foo.class",
-                        "" +
-                            "H4sIAAAAAAAAAGVOu07DMBQ9t03jNoS2hNeMxAAMWOoK6kClSkgRDKDuTrCK" +
-                            "S0iQ7TL0r5iQGPiAfhTiJnSohC2dex7X8ln/fH0DGOFYoEWIvXZevr3M5bSq" +
-                            "BALCcKHelSxUOZf32ULnnhBem9L4MaF9dj4jBJPqSUdooxejg5AwSE2p75av" +
-                            "mbaPKis0IUmrXBUzZU2tN2bgn40j9NPtP68I0UO1tLmemnqpy95lXYG73Zal" +
-                            "tpNCOaedQMLdtl+e3ijLlRgFDv9nqyZb4QRMUB/iy30ZBSvZaKBz8YnuB5MW" +
-                            "Isbwz8QOY7zhMXabvN/gAEOeCbM9zvfRwwHPI9Av5fj6R1sBAAA="
-                    ),
-                    base64gzip(
-                        "test/pkg/Foo\$Bar.class",
-                        "" +
-                            "H4sIAAAAAAAAAF1Oy0oDQRCsTja7ybqah/kBwYN6cMCrImggEAhelNwnu4OO" +
-                            "rjPLzCTgZ3kSPPgBfpTYO3oQu6G6q7qL7s+v9w8AZ5hm6BBGQfkgmqd7Mbf2" +
-                            "8Fq6DAlhKk3lrK6EbBpxVQa91eGFkF5oo8MloXt0vCIkM1upHF0MCvSQEoZL" +
-                            "bdTN5nmt3J1c14owWdpS1ivpdMt/xSQ8aN/O/t8+J+S3duNKNdftYp/100e5" +
-                            "lYRiYYxys1p6r3yGCSt/3fwS+3EAbtAGcfJPjBkzETnQO3lD/5WbDnLGNIop" +
-                            "dhiLnwWuu3G+F3GIEdc82sfYx+AbAxaHhz8BAAA="
-                    ),
-                    base64gzip(
-                        "test/pkg/Foo\$Baz.class",
-                        "" +
-                            "H4sIAAAAAAAAAF1QTUvDQBB9k8SkjbFNa/06Cj1UBSPiTRG0UBCCF6X3bbLo" +
-                            "akxCsi3ov/Igggd/gD9KnA0eqgw8Zt57M/vYr++PTwDH2PFgEUItax2Vj3fR" +
-                            "pCiGl+LFg0MYiDytCpVGoiyji0SrhdLPBFffq3p4ROjEy2unrJypXOlzQm/0" +
-                            "V9qbEpxxkco2CKsBVuD6sLEWwEOHYI+MoRurXF7Pn2ayuhWzTBL6cZGIbCoq" +
-                            "ZeZf0jHPG+1/Zg7g3xTzKpETZYwt5g8fxEIQgqs8l9U4E3Utaw9bzCxvcwLe" +
-                            "xy6Hs/lXKAxNQtNxeWgxtnk6gcUF+PsHbwzvCF55stBldNkDdoaMQdP76KHf" +
-                            "6OsNDrDRsObmJrZBP1YpAveEAQAA"
-                    )
+                    java(
+                        """
+                        package test.pkg;
+
+                        import android.app.Activity;
+
+                        public class Foo {
+                           public static class Bar extends Activity {
+                           }
+
+                           public class Baz extends Activity {
+                           }
+                        }
+                        """
+                    ).indented(),
+                    """
+                    test/pkg/Foo＄Bar.class:
+                    H4sIAAAAAAAAAE1Oy2oCQRCs8bGr6/oKXnMI5KAe3KMXCeiCKIiXSO6jO4SJ
+                    OrPMjIKflVPAQz7AjxJ752Q3VHVVP+jb/foPYIyXCGXEIZohOgzBRCrpPhjK
+                    /cEXQyXVmWBor6QS69NxK8yGbw/kRJ/6ZHZiLgtRm2s9+uFnTuVaWLfQ1oXo
+                    xqigytBxZCX5/juhsfcZN3TcY7xUSpj0wK0VlqHHVWa0zBKe58l05+RZugtN
+                    Pa/jDSV6twhGSfcJA1KvXgPV4R/Yr2+HhIE3A1qpEZdQR+S5gTZxRN2ibqH+
+                    AGWS/VsPAQAA
+                    """,
+                    """
+                    test/pkg/Foo.class:
+                    H4sIAAAAAAAAAF2Pz04CMRDGvylIYVnlj3L0YOJBPbhHL8QDJCQkigeJ9y5O
+                    yOLaNe3iwbfyROKBB/ChCLP1QmyTmX6/+dqZ/u5+tgDuMIhQQ1ejp9HXOCXU
+                    RuaLEE+tZTfOjffsNc4Cd4TGMLNZeS/y6vqFUB8Xr0zoPGSWZ+v3lN3cpLmQ
+                    6LlYuwVPsko0J0VxuzKfhtCesS8fuXL6GC1E0qoUlHy8LROxEbqVMcmNXSZP
+                    6YoXpaBDx2WY7z9yuICSn1SLZMvLEtuizoMGjm42oO9QjiU2/qBcOZascIJO
+                    oAp1aMlAP5yVeEiIQhOtPfeBBcQ2AQAA
+                    """,
+                    """
+                    test/pkg/Foo＄Baz.class:
+                    H4sIAAAAAAAAAFVQwUrDQBB9k8SkjbFNtepZ6aGt0HjzUBG0UBRKL0rv22bR
+                    1ZoN2W1B/8qDCD34AX6UOMmpMvDem503M8z+/G6+AVzguA4XzRAe4gCtAG2C
+                    b5+U6ZwTGhMrjU3yl8dkrPWQK5cqU/aK0Or+L/VmBG+kU0loTlQmp6vXuSwe
+                    xHzJL+G9XhULOVZlUmP74FmsBcspj7jVxgY4jLADP0KAI0K8PbpzI94JboXR
+                    XZbJYrQUxkhDaIssLbRKE5HnyfXCqrWyb+zabufWbm+GEz7S43spjstFpeII
+                    UGOsc3YKhwMI+2efoP4XnI/KEzL6zED5TbvMDiLsVdzAQdnBVZf1PugP9Gl4
+                    R1QBAAA=
+                    """
                 )
             )
             .run()
@@ -595,18 +607,26 @@ class MissingClassDetectorTest : AbstractCheckTest() {
                     """
                 ).indented(),
                 classpath(),
-                jar(
+                bytecode(
                     "libs/foo.jar",
-                    base64gzip(
-                        "test/pkg/Foo/Bar.class",
-                        "" +
-                            "H4sIAAAAAAAAAF2NzU7CQBRGv1sKxVopIb6AO3XBJLrUmIgJK+JGwn7aTvQq" +
-                            "dJrpQOJjuTJxwQPwUIY76Iq7mHN/Tubb/f5sAdxgmCAiDL1pvWo+XtXUWjXR" +
-                            "LkFMONd15SxXSjeNeiw9b9h/Enr3XLN/IHQurxaE+MlWJkUHJxm66BHyGdfm" +
-                            "eb0qjJvrYmkIo5kt9XKhHYf5fxn7N27D7Tj7jpC+2LUrzZSD2Jfd+F1vNC4g" +
-                            "oQhFiEKYMJHpVkjC7vU3+l/SREjlTYUQKRbpVLrsTxKeHb4YHMx8D9v6x2YM" +
-                            "AQAA"
-                    )
+                    java(
+                        """
+                        package test.pkg.Foo;
+
+                        import android.app.Activity;
+
+                        public class Bar extends Activity {
+                           private Bar() {
+                           }
+                        }
+                        """
+                    ).indented(),
+                    "test/pkg/Foo/Bar.class:" +
+                        "H4sIAAAAAAAAAB1NuwrCQBCczVOjooU/kE4tvNJGBBVSiY1if0kOOR+5EC+C" +
+                        "n2UlWPgBfpS4usXOzM4s8/48XwAm6ERwEYVohWgTgqkutJ0R3MFwR/CWJleE" +
+                        "7koXal2fU1VtZXriS7QxdZWpRP9EYyGr8UFeZRsefELPqosV5XEvEmMEm4S+" +
+                        "LPLK6FzIshTzzOqrtjfEcLj8N8SMfxkDVjEjMfqjB+j+t0PeEYfAAY8VtzJ3" +
+                        "0PwCQXjmIMkAAAA="
                 )
             )
             .run()

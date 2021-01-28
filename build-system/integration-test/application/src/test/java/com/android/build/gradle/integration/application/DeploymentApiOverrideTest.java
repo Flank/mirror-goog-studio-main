@@ -18,11 +18,11 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -73,8 +73,8 @@ public class DeploymentApiOverrideTest {
         GradleBuildResult lastBuild =
                 project.executor()
                         .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
-                        // http://b/149978740 and http://b/146208910
-                        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                        // http://b/162074215
+                        .with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
                         .run("clean", "assembleIcsRelease");
         TaskStateList.TaskInfo multidexTask =
                 Objects.requireNonNull(lastBuild.findTask(":multiDexListIcsRelease"));

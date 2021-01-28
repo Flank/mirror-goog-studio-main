@@ -19,7 +19,7 @@ package com.android.sdklib.internal.avd;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.io.CancellableFileIo;
-import com.android.prefs.AndroidLocation;
+import com.android.prefs.AbstractAndroidLocations;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.PathFileWrapper;
@@ -78,7 +78,8 @@ public class AvdManagerTest extends TestCase {
         mAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
-                        new File(ANDROID_PREFS_ROOT, AndroidLocation.FOLDER_AVD).getAbsoluteFile(),
+                        new File(ANDROID_PREFS_ROOT, AbstractAndroidLocations.FOLDER_AVD)
+                                .getAbsoluteFile(),
                         new NullLogger());
         mAvdFolder =
                 mFileOp.toPath(AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false));

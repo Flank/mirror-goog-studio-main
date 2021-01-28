@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
@@ -213,10 +212,6 @@ public class D8DesugaringTest {
     @Test
     public void checkDesugaring() throws IOException, InterruptedException {
         GradleTaskExecutor executor = project.executor();
-        if (!withDexingArtifactTransform) {
-            // https://github.com/gradle/gradle/issues/13200
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
-        }
         executor.run("assembleBaseDebug", "assembleBaseDebugAndroidTest");
         Apk androidTestApk =
                 project.getSubproject(":app")
@@ -249,10 +244,6 @@ public class D8DesugaringTest {
     @Test
     public void checkMultidex() throws IOException, InterruptedException, ProcessException {
         GradleTaskExecutor executor = project.executor();
-        if (!withDexingArtifactTransform) {
-            // https://github.com/gradle/gradle/issues/13200
-            executor.withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF);
-        }
         executor.run("assembleMultidexDebug");
         Apk multidexApk =
                 project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "multidex");

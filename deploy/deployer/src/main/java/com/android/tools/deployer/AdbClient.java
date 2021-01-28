@@ -193,7 +193,7 @@ public class AdbClient {
         return results;
     }
 
-    public Deploy.Arch getArch(List<Integer> pids) throws DeployerException {
+    public Deploy.Arch getArch(List<Integer> pids) {
         Deploy.Arch result = Deploy.Arch.ARCH_UNKNOWN;
         for (int pid : pids) {
             Deploy.Arch curProc = getArch(pid);

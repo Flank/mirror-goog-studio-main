@@ -26,36 +26,16 @@ import java.io.OutputStream;
  * <p>Only the methods needed for LayoutInspectorService is included.
  */
 public class Picture {
-    private static CanvasFactory ourCanvasFactory;
-    private Canvas mCanvas;
     private byte[] mBytes;
 
     public Picture() {
-        if (ourCanvasFactory != null) {
-            mCanvas = ourCanvasFactory.createCanvas(this);
-        }
-    }
-
-    public static void setCanvasFactory(@NonNull CanvasFactory canvasFactory) {
-        ourCanvasFactory = canvasFactory;
     }
 
     public void setImage(@NonNull byte[] bytes) {
         mBytes = bytes;
     }
 
-    @SuppressWarnings("unused")
-    public Canvas beginRecording(int width, int height) {
-        return mCanvas;
-    }
-
-    public void endRecording() {}
-
     public void writeToStream(@NonNull OutputStream stream) throws IOException {
         stream.write(mBytes);
-    }
-
-    public interface CanvasFactory {
-        Canvas createCanvas(@NonNull Picture picture);
     }
 }

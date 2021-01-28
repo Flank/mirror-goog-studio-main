@@ -61,7 +61,10 @@ fun RecipeExecutor.googleAdMobAdsActivityRecipe(
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(dimensXmlW820dp(), resOut.resolve("values-w820dp/dimens.xml"))
 
-  save(activitySimpleXml(activityClass, adFormat, packageName), resOut.resolve("layout/${layoutName}.xml"))
+  save(
+      activitySimpleXml(activityClass, adFormat, packageName),
+      resOut.resolve("layout/${layoutName}.xml")
+  )
 
   val superClassFqcn = getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()

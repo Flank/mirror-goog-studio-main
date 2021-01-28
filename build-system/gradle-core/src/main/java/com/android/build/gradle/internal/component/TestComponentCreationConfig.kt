@@ -16,10 +16,18 @@
 
 package com.android.build.gradle.internal.component
 
+import org.gradle.api.provider.Provider
+
 /**
  * Internal interface for all test components
  */
 interface TestComponentCreationConfig: TestCreationConfig {
 
     override val testedConfig: VariantCreationConfig
+
+    /**
+     * TODO(b/176931684) Remove this and use [namespace] instead after we stop supporting using
+     *  applicationId to namespace the test component R class.
+     */
+    val namespaceForR: Provider<String>
 }

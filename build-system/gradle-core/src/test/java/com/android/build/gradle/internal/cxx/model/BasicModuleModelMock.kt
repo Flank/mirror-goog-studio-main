@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.ExternalCmake
 import com.android.build.api.variant.ExternalNdkBuild
 import com.android.build.api.variant.impl.AndroidVersionImpl
@@ -54,6 +55,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.errors.IssueReporter
+import com.android.prefs.AndroidLocationsProvider
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
@@ -181,6 +183,10 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
 
+    val androidLocationProvider = mock(
+        AndroidLocationsProvider::class.java
+    )
+
     val sdkComponents = mock(
         SdkComponentsBuildService::class.java,
         throwUnmocked
@@ -199,7 +205,7 @@ open class BasicModuleModelMock {
     val sdkDir = join(home, "Library", "Android", "sdk")
     val cmakeDir = join(sdkDir, "cmake", DEFAULT_CMAKE_VERSION, "bin")
     val ndkHandler = mock(
-        NdkHandler::class.java,
+        SdkComponentsBuildService.VersionedNdkHandler::class.java,
         throwUnmocked
     )
 
@@ -267,6 +273,9 @@ open class BasicModuleModelMock {
         doReturn(extension).`when`(global).extension
         doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
         doReturn(false).`when`(extension).generatePureSplits
+        doReturn("12.3.4").`when`(extension).compileSdkVersion
+        doReturn("29.3.4").`when`(extension).ndkVersion
+        doReturn("/path/to/nowhere").`when`(extension).ndkPath
 
         doReturn(splits).`when`(extension).splits
 
@@ -379,12 +388,16 @@ open class BasicModuleModelMock {
                 .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
             doReturn(false)
                 .`when`(projectOptions).get(BooleanOption.PREFER_CMAKE_FILE_API)
+            doReturn("verbose")
+                .`when`(projectOptions).get(StringOption.NATIVE_BUILD_OUTPUT_LEVEL)
 
             doReturn(defaultCmakeVersion.toString()).`when`(cmake).version
             doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
             doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
 
-            doReturn(ndkHandler).`when`(sdkComponents).ndkHandler
+            doReturn(ndkHandler).`when`(sdkComponents).versionedNdkHandler(
+                Mockito.anyString(), Mockito.anyString(), Mockito.anyString()
+            )
             doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
             doReturn(ndkInstallStatus).`when`(ndkHandler).getNdkPlatform(true)
             doReturn(variantDslInfo).`when`(variantImpl).variantDslInfo
@@ -395,7 +408,7 @@ open class BasicModuleModelMock {
             doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
             doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
             doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
-                .findCmakePath(any(), any(), any(), any())
+                .findCmakePath(any(), any(), any(), any(), any())
 
             doReturn(null).`when`(gradle).parent
 

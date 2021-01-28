@@ -80,11 +80,6 @@ class LintModelFactory : LintModelModuleLoader {
      * of lazy lookup.
      */
     fun create(project: IdeAndroidProject, variants: Collection<IdeVariant>, dir: File, deep: Boolean = true): LintModelModule {
-        val cached = project.getClientProperty(CACHE_KEY) as? LintModelModule
-        if (cached != null) {
-            return cached
-        }
-
         val gradleVersion = getGradleVersion(project)
 
         return if (deep) {
@@ -122,8 +117,6 @@ class LintModelFactory : LintModelModuleLoader {
                 dir = dir,
                 gradleVersion = gradleVersion
             )
-        }.also { module ->
-            project.putClientProperty(CACHE_KEY, module)
         }
     }
 
@@ -197,7 +190,7 @@ class LintModelFactory : LintModelModuleLoader {
 
     private fun IdeJavaLibrary.getMavenArtifactAddress(): String = artifactAddress.substringBefore("@")
 
-    private fun IdeModuleLibrary.getMavenArtifactAddress(): String= "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
+    private fun IdeModuleLibrary.getMavenArtifactAddress(): String = "artifacts:$projectPath:unspecified" // TODO(b/158346611): Review artifact names for modules.
 
     private fun getGraphItem(
         artifactName: String,
@@ -320,10 +313,9 @@ class LintModelFactory : LintModelModuleLoader {
             androidTestArtifact = getAndroidTestArtifact(variant),
             mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
             manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
-            oldVariant = variant,
             `package` = null, // not in the old builder model
-            minSdkVersion = variant.mergedFlavor.minSdkVersion?.toAndroidVersion(),
-            targetSdkVersion = variant.mergedFlavor.targetSdkVersion?.toAndroidVersion(),
+            minSdkVersion = variant.minSdkVersion?.toAndroidVersion(),
+            targetSdkVersion = variant.targetSdkVersion?.toAndroidVersion(),
             resValues = getResValues(variant.mergedFlavor, buildType),
             manifestPlaceholders = getPlaceholders(variant.mergedFlavor, buildType),
             resourceConfigurations = getMergedResourceConfigurations(variant),
@@ -793,16 +785,14 @@ class LintModelFactory : LintModelModuleLoader {
             get() = variant.name
         override val useSupportLibraryVectorDrawables: Boolean
             get() = useSupportLibraryVectorDrawables(variant)
-        override val oldVariant: IdeVariant?
-            get() = variant
         override val mergedManifest: File? get() = null // Injected by legacy AGP lint runner
         override val manifestMergeReport: File? get() = null // Injected by legacy AGP lint runner
         override val `package`: String?
             get() = null // no in the old builder model
         override val minSdkVersion: AndroidVersion?
-            get() = variant.mergedFlavor.minSdkVersion?.toAndroidVersion()
+            get() = variant.minSdkVersion?.toAndroidVersion()
         override val targetSdkVersion: AndroidVersion?
-            get() = variant.mergedFlavor.targetSdkVersion?.toAndroidVersion()
+            get() = variant.targetSdkVersion?.toAndroidVersion()
         override val resourceConfigurations: Collection<String>
             get() = variant.mergedFlavor.resourceConfigurations
         override val debuggable: Boolean
@@ -890,6 +880,7 @@ class LintModelFactory : LintModelModuleLoader {
                 AndroidProjectTypes.PROJECT_TYPE_DYNAMIC_FEATURE -> LintModelModuleType.DYNAMIC_FEATURE
                 // 999: Special value defined in GradleModelMocker#PROJECT_TYPE_JAVA_LIBRARY
                 999 -> LintModelModuleType.JAVA_LIBRARY
+                998 -> LintModelModuleType.JAVA_LIBRARY
                 else -> throw IllegalArgumentException("The value $typeId is not a valid project type ID")
             }
         }

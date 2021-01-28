@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.testing;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
@@ -44,8 +43,6 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    // b/162074215
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("separateTestWithMinificationButNoObfuscation")
                     .create();
 
@@ -54,8 +51,7 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
     @Before
     public void setUp() throws IOException {
         // fail fast if no response
-        project.getSubproject("app").addAdbTimeout();
-        project.getSubproject("test").addAdbTimeout();
+        project.addAdbTimeoutToSubProjects();
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.execute("uninstallAll");

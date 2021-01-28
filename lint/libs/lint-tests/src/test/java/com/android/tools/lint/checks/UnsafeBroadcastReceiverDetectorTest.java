@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
 
 import com.android.annotations.Nullable;
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;

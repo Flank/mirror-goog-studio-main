@@ -22,6 +22,7 @@ import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptTestUtils
 import com.android.ide.common.resources.CompileResourceRequest
+import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.testframework.FakeProgressIndicator
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -438,7 +439,7 @@ class Aapt2DaemonImplTest {
 
     companion object {
         private val target: IAndroidTarget by lazy(LazyThreadSafetyMode.NONE) {
-            AndroidSdkHandler.getInstance(TestUtils.getSdk())
+            AndroidSdkHandler.getInstance(AndroidLocationsSingleton, TestUtils.getSdk())
                 .getAndroidTargetManager(FakeProgressIndicator())
                 .getTargets(FakeProgressIndicator())
                 .maxBy { it.version }!!

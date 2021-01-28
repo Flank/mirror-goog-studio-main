@@ -25,8 +25,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.gradle.model.IdeAndroidProject;
-import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.IssueRegistry;
@@ -85,6 +83,10 @@ public class TestLintTask {
     /** True if the project in the task was only constructed from {@link #files(TestFile...)} */
     boolean impliedProject;
 
+    boolean requestedResourceRepository;
+    boolean forceAgpResourceRepository;
+
+    // User configurable state
     boolean allowCompilationErrors;
     boolean allowObsoleteLintChecks = true;
     boolean allowSystemErrors = true;
@@ -94,7 +96,6 @@ public class TestLintTask {
     boolean allowDelayedIssueRegistration;
     public File sdkHome;
     List<LintListener> listeners = new ArrayList<>();
-    GradleMockModifier mockModifier;
     LintDriverConfigurator driverConfigurator;
     OptionSetter optionSetter;
     ErrorMessageChecker messageChecker;
@@ -106,7 +107,6 @@ public class TestLintTask {
     Detector detector;
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
-    Boolean supportResourceRepository;
     boolean allowMissingSdk;
     boolean requireCompileSdk;
     boolean vital;
@@ -566,16 +566,6 @@ public class TestLintTask {
     }
 
     /**
-     * This method allows you to add a hook which you can run on a mock builder model to tweak it,
-     * such as changing or augmenting the builder model classes
-     */
-    public TestLintTask modifyGradleMocks(@NonNull GradleMockModifier mockModifier) {
-        ensurePreRun();
-        this.mockModifier = mockModifier;
-        return this;
-    }
-
-    /**
      * Lint will try to use real production implementations of the lint infrastructure, such as
      * {@link LintModelModuleProject}. However, in a few (narrow) cases, we don't want to do this
      * because we want to simulate certain failure scenario. This flag gives tests a chance to opt
@@ -849,8 +839,9 @@ public class TestLintTask {
      * @return this, for constructor chaining
      */
     public TestLintTask supportResourceRepository(boolean supportResourceRepository) {
-        ensurePreRun();
-        this.supportResourceRepository = supportResourceRepository;
+        if (!supportResourceRepository) {
+            fail("Resource repositories are now always supported");
+        }
         return this;
     }
 
@@ -1132,20 +1123,6 @@ public class TestLintTask {
     public TestLintTask reportFrom(@Nullable ProjectDescription project) {
         this.reportFrom = project;
         return this;
-    }
-
-    /**
-     * Interface to implement to modify the Gradle builder model that is mocked from a {@link
-     * TestFiles#gradle(String)} test file.
-     *
-     * <p>Register this modifier via {@link #modifyGradleMocks(GradleMockModifier)}.
-     *
-     * @deprecated Builder-model is going away
-     */
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    @Deprecated
-    public interface GradleMockModifier {
-        void modify(@NonNull IdeAndroidProject project, @NonNull IdeVariant variant);
     }
 
     /**

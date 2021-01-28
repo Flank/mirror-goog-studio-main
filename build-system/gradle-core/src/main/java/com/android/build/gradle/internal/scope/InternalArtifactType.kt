@@ -101,6 +101,9 @@ InternalArtifactType<T : FileSystemLocation>(
     object DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES: InternalArtifactType<RegularFile>(FILE), Replaceable
+    // Keep rules for core library desugaring that are generated and merged from dynamic feature
+    // modules
+    object DESUGAR_LIB_MERGED_KEEP_RULES: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     // --- java res ---
     // java processing output
@@ -395,6 +398,9 @@ InternalArtifactType<T : FileSystemLocation>(
     // The feature dex files output by the DexSplitter from the base. The base produces and
     // publishes these files when there's multi-apk code shrinking.
     object FEATURE_DEX: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    // The feature dex files to be published from feature modules to the base for computing main
+    // dex list for bundle.
+    object FEATURE_PUBLISHED_DEX: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // The class files for a module and all of its runtime dependencies.
     object MODULE_AND_RUNTIME_DEPS_CLASSES: InternalArtifactType<RegularFile>(FILE), Replaceable
     // The name of a dynamic or legacy instant feature`
@@ -462,6 +468,11 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // File containing app metadata to be included in the APK and .aab files for analytics.
     object APP_METADATA: InternalArtifactType<RegularFile>(FILE), Replaceable
+
+    // Micro APK manifest file
+    object MICRO_APK_MANIFEST_FILE: InternalArtifactType<RegularFile>(FILE)
+    // Micro APK res directory
+    object MICRO_APK_RES: InternalArtifactType<Directory>(DIRECTORY)
 
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()

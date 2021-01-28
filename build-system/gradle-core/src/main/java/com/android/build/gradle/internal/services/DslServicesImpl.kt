@@ -51,6 +51,12 @@ class DslServicesImpl constructor(
 
     override fun <T> property(type: Class<T>): Property<T> = projectServices.objectFactory.property(type)
 
+    override fun <T> provider(type: Class<T>, value: T?): Provider<T> =
+        projectServices.objectFactory.property(type).also {
+            it.set(value)
+        }
+
+
     override fun <T> newVar(initialValue: T): ReadWriteProperty<Any?, T> =
         variableFactory.newProperty(initialValue)
 

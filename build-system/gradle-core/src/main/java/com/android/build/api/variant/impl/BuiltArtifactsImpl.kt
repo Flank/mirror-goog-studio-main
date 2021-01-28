@@ -35,8 +35,11 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
     override val applicationId: String,
     override val variantName: String,
     override val elements: Collection<BuiltArtifactImpl>,
-    val elementType: String? = initFileType(elements))
+    private val elementType: String? = null)
     : CommonBuiltArtifacts, BuiltArtifacts, Serializable {
+
+    fun elementType():String? =
+        elementType ?: initFileType(elements)
 
     companion object {
         const val METADATA_FILE_NAME = "output-metadata.json"
@@ -44,10 +47,9 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
         private fun initFileType(elements: Collection<BuiltArtifactImpl>): String? {
             val (files, directories)  = elements
                     .asSequence()
-                    .map { FileSystems.getDefault().getPath(it.outputFile) }
-                    // ensure that the file exists and it can be determined as a File or Directory
-                    .filter { it.toFile().exists() && (Files.isRegularFile(it) || Files.isDirectory(it)) }
-                    .partition { Files.isRegularFile(it) }
+                    .map { File(it.outputFile) }
+                    .filter { it.exists() }
+                    .partition { it.isFile }
             if (files.isNotEmpty() && directories.isNotEmpty()) {
                 throw IllegalArgumentException("""
                 You cannot store both files and directories as a single artifact.
@@ -62,10 +64,10 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
             }
         }
 
-        private fun display(files: Collection<Path>, singular: String, plural: String): String {
+        private fun display(files: Collection<File>, singular: String, plural: String): String {
             return if (files.size > 1)
-                "${files.joinToString(",") { it.fileName.toString() }} are $plural"
-            else "${files.first().fileName.toString()} is a $singular"
+                "${files.joinToString(",") { it.name }} are $plural"
+            else "${files.first().name} is a $singular"
         }
     }
 
@@ -115,7 +117,7 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
                         variantOutputConfiguration = builtArtifact.variantOutputConfiguration
                     )
                 }.toList(),
-                elementType)
+                elementType())
         )
     }
 }

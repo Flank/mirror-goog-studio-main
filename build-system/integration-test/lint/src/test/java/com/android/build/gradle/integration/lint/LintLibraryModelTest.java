@@ -18,43 +18,30 @@ package com.android.build.gradle.integration.lint;
 
 import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
-import static com.google.common.truth.TruthJUnit.assume;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Assemble tests for lintLibraryModel.
  *
- * <p>To run just this test: ./gradlew :base:build-system:integration-test:application:test
- * -D:base:build-system:integration-test:application:test.single=LintLibraryModelTest
+ * <p>Tip: To execute just this test run:
+ *
+ * <pre>
+ *     $ cd tools
+ *     $ ./gradlew :base:build-system:integration-test:lint:test --tests=LintLibraryModelTest
+ * </pre>
  */
-@RunWith(FilterableParameterized.class)
 public class LintLibraryModelTest {
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
-
-    private final LintInvocationType lintInvocationType;
 
     @Rule
-    public final GradleTestProject project;
-
-    public LintLibraryModelTest(LintInvocationType lintInvocationType) {
-        this.lintInvocationType = lintInvocationType;
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintLibraryModel")
-                .create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("lintLibraryModel").create();
 
     private static final String APPLY_THE_PLUGIN_TO_JAVA_LIBRARY_PROJECT = "Apply the 'com.android.lint' plugin to java library project";
 
@@ -80,7 +67,6 @@ public class LintLibraryModelTest {
 
     @Test
     public void checkNewIntegrationWithoutLintPluginApplied() throws Exception {
-        assume().that(lintInvocationType).isEqualTo(LintInvocationType.NEW_LINT_MODEL);
         TestFileUtils.searchAndReplace(
                 project.getSubproject("javalib").getBuildFile(),
                 "apply plugin: 'com.android.lint'",

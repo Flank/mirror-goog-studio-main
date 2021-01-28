@@ -32,6 +32,16 @@ interface IdeVariant: IdeVariantHeader {
    * are defined then this is the same as the default config.
    */
   val mergedFlavor: IdeProductFlavor
+
+  /** The minSdkVersion, or null if not specified. This is only the value set on this product flavor. */
+  val minSdkVersion: IdeApiVersion?
+
+  /** The targetSdkVersion, or null if not specified. This is only the value set on this product flavor. */
+  val targetSdkVersion: IdeApiVersion?
+
+  /** The maxSdkVersion, or null if not specified. This is only the value set on this produce flavor. */
+  val maxSdkVersion: Int?
+
   val testedTargetVariants: List<IdeTestedTargetVariant>
   val instantAppCompatible: Boolean
 }

@@ -18,24 +18,19 @@
 package com.android.build.gradle.internal.packaging
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.utils.EnvironmentProviderImpl
-import com.android.build.gradle.internal.utils.GradleEnvironmentProvider
 import com.android.builder.signing.DefaultSigningConfig
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.ide.common.signing.KeytoolException
-import com.android.prefs.AndroidLocation
-import com.android.utils.ILogger
+import com.android.prefs.AndroidLocationsProvider
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.logging.Logger
+import shadow.bundletool.com.android.prefs.AndroidLocation.AndroidLocationException
 import java.io.File
 import java.io.IOException
 
-fun getDefaultDebugKeystoreLocation(
-    gradlePropertyProvider: GradleEnvironmentProvider,
-    logger: ILogger
-): File = try {
-    File(KeystoreHelper.defaultDebugKeystoreLocation(EnvironmentProviderImpl(gradlePropertyProvider), logger))
-} catch (e: AndroidLocation.AndroidLocationException) {
+fun AndroidLocationsProvider.getDefaultDebugKeystoreLocation(): File = try {
+    KeystoreHelper.defaultDebugKeystoreLocation(this)
+} catch (e: AndroidLocationException) {
     throw InvalidUserDataException("Failed to get default debug keystore location.", e)
 }
 

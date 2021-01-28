@@ -48,53 +48,17 @@ class NegativeMarginDetectorTest : AbstractCheckTest() {
             )
     }
 
-    fun testValuesWithoutRepositorySupport() {
-        lint()
-            .files(mNegative_margins2)
-            .supportResourceRepository(false)
-            .run()
-            .expect(
-                """
-                res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
-                        <item name="android:layout_marginBottom">-5dp</item> <!-- WARNING -->
-                                                                 ^
-                0 errors, 1 warnings
-                """
-            )
-    }
-
     fun testIncrementalInValues() {
         lint().files(mNegative_margins2, mNegative_margins)
             .incremental("res/values/negative_margins.xml").run().expect(
                 """
                 res/values/negative_margins.xml:10: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in values/negative_margins.xml [NegativeMargin]
                         <item name="android:layout_marginTop">@dimen/negative</item> <!-- WARNING -->
-                                                              ^
+                                                              ~~~~~~~~~~~~~~~
                 res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
                         <item name="android:layout_marginBottom">-5dp</item> <!-- WARNING -->
-                                                                 ^
+                                                                 ~~~~
                 0 errors, 2 warnings
-                """
-            )
-    }
-
-    fun testBatch() {
-        lint()
-            .files(mNegative_margins2, mNegative_margins)
-            .supportResourceRepository(false)
-            .run()
-            .expect(
-                """
-                res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
-                    <TextView android:layout_marginTop="-1dp"/> <!-- WARNING -->
-                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]
-                        <item name="android:layout_marginBottom">-5dp</item> <!-- WARNING -->
-                                                                 ^
-                res/layout/negative_margins.xml:13: Warning: Margin values should not be negative [NegativeMargin]
-                    <TextView android:layout_marginTop="@dimen/negative"/> <!-- WARNING -->
-                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                0 errors, 3 warnings
                 """
             )
     }

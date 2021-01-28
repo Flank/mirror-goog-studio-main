@@ -16,10 +16,13 @@
 
 package com.android.prefs
 
+import com.android.io.CancellableFileIo
 import com.android.utils.EnvironmentProvider
-import com.android.utils.FileUtils
 import com.android.utils.ILogger
-import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 /**
  * A class that computes various locations used by the Android tools.
@@ -38,16 +41,16 @@ abstract class AbstractAndroidLocations protected constructor(
         /**
          * The name of the .android folder returned by [prefsLocation].
          */
-        @JvmStatic
+        @JvmField
         val FOLDER_DOT_ANDROID = ".android"
 
         /**
          * Virtual Device folder inside the path returned by [avdLocation]
          */
-        @JvmStatic
+        @JvmField
         val FOLDER_AVD = "avd"
 
-        @JvmStatic
+        @JvmField
         val ANDROID_PREFS_ROOT = "ANDROID_PREFS_ROOT"
     }
 
@@ -57,16 +60,11 @@ abstract class AbstractAndroidLocations protected constructor(
      * To query the AVD Folder, use [avdLocation] as it could be be overridden
      */
     @get:Throws(AndroidLocationsException::class)
-    override val prefsLocation: File by lazy {
-        File(rootLocation, FOLDER_DOT_ANDROID)
-    }
-
-    @Throws(AndroidLocationsException::class)
-    override fun getAndCreatePrefsLocation(): File {
-        return prefsLocation.also {
-            if (!it.exists()) {
+    override val prefsLocation: Path by lazy {
+        rootLocation.resolve(FOLDER_DOT_ANDROID).also {
+            if (CancellableFileIo.notExists(it)) {
                 try {
-                    FileUtils.mkdirs(it)
+                    Files.createDirectories(it)
                 } catch (e: SecurityException) {
                     throw AndroidLocationsException(
                         """Unable to create folder '$it'.
@@ -74,7 +72,7 @@ abstract class AbstractAndroidLocations protected constructor(
                         e
                     )
                 }
-            } else if (it.isFile) {
+            } else if (CancellableFileIo.isRegularFile(it)) {
                 throw AndroidLocationsException(
                     """$it is not a directory!
 This is the path of preference folder expected by the Android tools."""
@@ -87,15 +85,15 @@ This is the path of preference folder expected by the Android tools."""
      * Computes, memoizes in the instance, and returns the location of the AVD folder.
      */
     @get:Throws(AndroidLocationsException::class)
-    override val avdLocation: File by lazy {
+    override val avdLocation: Path by lazy {
         // check if the location is overridden, if not use default
-        findValidPath(mutableListOf(), Global.ANDROID_AVD_HOME) ?: File(prefsLocation, FOLDER_AVD)
+        findValidPath(mutableListOf(), Global.ANDROID_AVD_HOME) ?: prefsLocation.resolve(FOLDER_AVD)
     }
 
     /**
      * Computes, memoizes in the instance, and returns the location of the home folder.
      */
-    override val useHomeLocation: File? by lazy {
+    override val userHomeLocation: Path? by lazy {
         findValidPath(mutableListOf(), Global.TEST_TMPDIR, Global.USER_HOME, Global.HOME)
     }
 
@@ -106,7 +104,7 @@ This is the path of preference folder expected by the Android tools."""
      * This is NOT the .android folder. Use [prefsLocation]
      * To query the AVD Folder, use [avdLocation] as it could be overridden
      */
-    private val rootLocation: File by lazy {
+    private val rootLocation: Path by lazy {
         val visitedVariables = mutableListOf<Pair<String, String>>()
         findValidPath(
             visitedVariables,
@@ -128,7 +126,7 @@ This is the path of preference folder expected by the Android tools."""
     private fun findValidPath(
         accumulator: MutableList<Pair<String, String>>,
         vararg globalVars: Global
-    ): File? {
+    ): Path? {
         for (globalVar in globalVars) {
             val path = validatePath(globalVar, accumulator)
             if (path != null) {
@@ -141,7 +139,7 @@ This is the path of preference folder expected by the Android tools."""
     private fun validatePath(
         globalVar: Global,
         accumulator: MutableList<Pair<String, String>>
-    ): File? {
+    ): Path? {
 
         val sysPropPath = if (globalVar.isSysProp) {
             checkPath(
@@ -168,7 +166,7 @@ This is the path of preference folder expected by the Android tools."""
         queryFunction: (String) -> String?,
         varTypeName: String,
         accumulator: MutableList<Pair<String, String>>
-    ): File? {
+    ): Path? {
         var path = queryFunction(globalVar.propName)
 
         path?.let {
@@ -179,7 +177,6 @@ This is the path of preference folder expected by the Android tools."""
             // Special Handling:
             // If the query is ANDROID_PREFS_ROOT, then also query ANDROID_SDK_HOME and compare
             // the values. If both values are set, they must match
-            // FIXME b/162859043
             val androidSdkHomePath = queryFunction("ANDROID_SDK_HOME")
             if (path == null) {
                 if (androidSdkHomePath != null) {
@@ -196,8 +193,7 @@ This is the path of preference folder expected by the Android tools."""
                         throw AndroidLocationsException(
                             """
 Both ANDROID_PREFS_ROOT and ANDROID_SDK_HOME are set to different values
-Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0
-Please use ANDROID_PREFS_ROOT only.
+Support for ANDROID_SDK_HOME is deprecated. Use ANDROID_PREFS_ROOT only.
 Current values:
 ANDROID_SDK_ROOT: $path
 ANDROID_SDK_HOME: $androidSdkHomePath""".trimIndent()
@@ -211,11 +207,11 @@ ANDROID_SDK_HOME: $androidSdkHomePath""".trimIndent()
             return null
         }
 
-        return File(path).asExistingDirectory()
+        return Paths.get(path).asExistingDirectory()
     }
 
     private fun validateAndroidSdkHomeValue(path: String): String? {
-        val file = File(path).asExistingDirectory() ?: return null
+        val file = Paths.get(path).asExistingDirectory() ?: return null
 
         if (isSdkRootWithoutDotAndroid(file)) {
             val message =
@@ -240,27 +236,21 @@ If this is not set we default to: ${
             }
         }
 
-        // FIXME b/162859043
-        logger.warning(
-            """
-Using ANDROID_SDK_HOME for the location of the '.android' preferences location is deprecated, please use ${Global.ANDROID_PREFS_ROOT} instead.
-Support for ANDROID_SDK_HOME is deprecated and will be removed in 6.0""".trimIndent()
-        )
         return path
     }
 
-    private fun isSdkRootWithoutDotAndroid(folder: File): Boolean {
+    private fun isSdkRootWithoutDotAndroid(folder: Path): Boolean {
         return (folder.hasSubFolder("platforms") &&
                 folder.hasSubFolder("platform-tools") &&
                 !folder.hasSubFolder(FOLDER_DOT_ANDROID))
     }
 
-    private fun File.hasSubFolder(subFolder: String): Boolean {
-        return File(this, subFolder).isDirectory
+    private fun Path.hasSubFolder(subFolder: String): Boolean {
+        return CancellableFileIo.isDirectory(resolve(subFolder))
     }
 
-    private fun File.asExistingDirectory(): File? {
-        return if (isDirectory) this else null
+    private fun Path.asExistingDirectory(): Path? {
+        return if (CancellableFileIo.isDirectory(this)) this else null
     }
 }
 

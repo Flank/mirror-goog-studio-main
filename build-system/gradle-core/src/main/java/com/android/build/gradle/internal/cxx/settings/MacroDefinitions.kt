@@ -263,22 +263,25 @@ enum class Macro(
         example = "app1",
         bind = CxxModuleModel::moduleName),
     NDK_MODULE_BUILD_ROOT(
-        description = "The default module-level CMake build root that gradle uses.",
+        description = "The default module-level CMake or ndk-build build root that gradle uses.",
         environment = GRADLE,
         tag = "moduleBuildRoot",
         example = "${NDK_MODULE_DIR.ref}/.cxx",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx",
         bind = CxxModuleModel::cxxFolder),
     NDK_VARIANT_BUILD_ROOT(
-        description = "The default variant-level CMake build root that gradle uses.",
+        description = "The default variant-level CMake or ndk-build build root that gradle uses.",
         environment = GRADLE,
         tag = "variantBuildRoot",
         example = "${NDK_MODULE_DIR.ref}/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}",
         bind = CxxVariantModel::cxxBuildFolder),
     NDK_BUILD_ROOT(
-        description = "The default CMake build root that gradle uses.",
+        description = "The default CMake or ndk-build build root that gradle uses.",
         environment = GRADLE,
         tag = "buildRoot",
         example = "${NDK_MODULE_DIR.ref}/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64",
+        ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/x86_64",
         bind = CxxAbiModel::cxxBuildFolder),
     NDK_VARIANT_C_FLAGS(
         description = "The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.",
@@ -302,7 +305,7 @@ enum class Macro(
         ndkBuildExample = "${NDK_MODULE_DIR.ref}/build/intermediates/cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/obj/local",
         bind = CxxVariantModel::soFolder),
     NDK_VARIANT_SO_REPUBLISH_DIR(
-        description = "A folder with a predictable name where final build outputs (mainly .so) are" +
+        description = "A folder with a predictable name where final build outputs (mainly .so) are " +
                 "hard linked or copied after the build completes. The purpose is so scripts " +
                 "and other external tools have a known path, with no embedded hashcode, to locate " +
                 "these files.",
@@ -354,6 +357,7 @@ enum class Macro(
         environment = GRADLE,
         tag = "prefabPath",
         example = "\$PROJECTS/MyProject/Source/Android/app1/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/prefab/x86_64",
+        ndkBuildExample = "\$PROJECTS/MyProject/Source/Android/app1/build/.cxx/Debug/${NDK_CONFIGURATION_HASH.ref}/prefab/x86_64",
         bind = CxxAbiModel::prefabFolder),
     ENV_THIS_FILE(
         description = "Path to this CMakeSettings.json file.",

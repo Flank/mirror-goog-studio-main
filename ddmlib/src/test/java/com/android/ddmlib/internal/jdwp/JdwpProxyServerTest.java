@@ -18,6 +18,8 @@ package com.android.ddmlib.internal.jdwp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.ddmlib.AdbInitOptions;
+import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.internal.FakeAdbTestRule;
 import java.net.InetSocketAddress;
@@ -34,19 +36,42 @@ public class JdwpProxyServerTest {
 
   @Test
   public void serverStartsOnPortDefaultPort() throws Exception {
-    SocketChannel channel = SocketChannel.open(new InetSocketAddress("localhost", DdmPreferences.DEFAULT_PROXY_SERVER_PORT));
+        SocketChannel channel =
+                SocketChannel.open(
+                        new InetSocketAddress("localhost", DdmPreferences.getJdwpProxyPort()));
     assertThat(channel.isConnected()).isTrue();
     channel.close();
   }
 
   @Test
   public void secondaryServerStartsInFallbackMode() throws Exception {
-    JdwpProxyServer proxy = new JdwpProxyServer(DdmPreferences.DEFAULT_PROXY_SERVER_PORT, () -> {
-    });
+        JdwpProxyServer proxy = new JdwpProxyServer(DdmPreferences.getJdwpProxyPort(), () -> {});
     proxy.start();
     assertThat(proxy.IsRunningAsServer()).isFalse();
     proxy.stop();
   }
+
+    @Test
+    public void flagTogglesJdwpProxyService() throws Exception {
+        // By default FakeAdbTestRule initializes AndroidDebugBridge and JdwpProxy should be enabled
+        assertThat(DdmPreferences.isJdwpProxyEnabled()).isTrue();
+        // Starting a server on the proxy port should run as fallback due to running proxy server.
+        JdwpProxyServer proxy = new JdwpProxyServer(DdmPreferences.getJdwpProxyPort(), () -> {});
+        proxy.start();
+        assertThat(proxy.IsRunningAsServer()).isFalse();
+        proxy.stop();
+        // Restart AndroidDebugBrigde without proxy service
+        AndroidDebugBridge.terminate();
+        AndroidDebugBridge.init(AdbInitOptions.builder().useJdwpProxyService(false).build());
+        assertThat(DdmPreferences.isJdwpProxyEnabled()).isFalse();
+        // Create a new bridge to start our services and connect to FakeAdb
+        AndroidDebugBridge.createBridge(1000, TimeUnit.MILLISECONDS);
+        JdwpProxyServer main = new JdwpProxyServer(DdmPreferences.getJdwpProxyPort(), () -> {});
+        main.start();
+        // This time the server is not running so when we create one it will bind to the proxy port.
+        assertThat(main.IsRunningAsServer()).isTrue();
+        main.stop();
+    }
 
   @Test
   public void stateChangeCallbackWhenServerStops() throws Exception {
@@ -58,7 +83,8 @@ public class JdwpProxyServerTest {
     assertThat(server.IsConnectedOrListening()).isTrue();
     waitForConnectionOrListening(server, true);
 
-    JdwpProxyServer fallback = new JdwpProxyServer(server.getBindPort(), () -> stateChangedLatch.countDown());
+        JdwpProxyServer fallback =
+                new JdwpProxyServer(server.getBindPort(), stateChangedLatch::countDown);
     fallback.start();
     assertThat(fallback.IsRunningAsServer()).isFalse();
     // Connection happens on separate thread so we need to delay a little to see if we can actually establish a connection.

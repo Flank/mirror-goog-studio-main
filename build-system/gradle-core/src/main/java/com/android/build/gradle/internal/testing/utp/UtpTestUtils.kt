@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.testing.CustomTestRunListener
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.ddmlib.testrunner.TestIdentifier
 import com.android.ide.common.process.JavaProcessExecutor
 import com.android.ide.common.process.LoggedProcessOutputHandler
@@ -52,9 +55,9 @@ internal fun runUtpTestSuite(
     }
     val loggingPropertiesFile = File.createTempFile("logging", "properties").also { file ->
         Files.asCharSink(file, Charsets.UTF_8).write("""
-                    .level=SEVERE
+                    .level=WARNING
                     .handlers=java.util.logging.ConsoleHandler
-                    java.util.logging.ConsoleHandler.level=SEVERE
+                    java.util.logging.ConsoleHandler.level=WARNING
                 """.trimIndent())
     }
     val javaProcessInfo = ProcessInfoBuilder().apply {
@@ -128,4 +131,12 @@ internal fun createTestReportXml(
         }
         testRunEnded(totalElapsedTimeMillis, mapOf())
     }
+}
+
+fun shouldEnableUtp(
+    projectOptions: ProjectOptions,
+    testOptions: TestOptions?
+): Boolean {
+    return (projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
+            || (testOptions != null && testOptions.failureRetention.enable))
 }

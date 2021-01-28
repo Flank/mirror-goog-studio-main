@@ -161,10 +161,11 @@ public class LintCliXmlParser extends XmlParser {
         return null;
     }
 
-    @Override
     @NonNull
-    public Location getNameLocation(@NonNull XmlContext context, @NonNull Node node) {
-        Location location = getLocation(context, node);
+    @Override
+    public Location getNameLocation(
+            @NonNull LintClient client, @NonNull File file, @NonNull Node node) {
+        Location location = getLocation(client, file, node);
         Position start = location.getStart();
         Position end = location.getEnd();
         if (start == null || end == null) {
@@ -184,8 +185,21 @@ public class LintCliXmlParser extends XmlParser {
 
     @Override
     @NonNull
+    public Location getNameLocation(@NonNull XmlContext context, @NonNull Node node) {
+        return getNameLocation(client, context.file, node);
+    }
+
+    @Override
+    @NonNull
     public Location getValueLocation(@NonNull XmlContext context, @NonNull Attr node) {
-        Location location = getLocation(context, node);
+        return getValueLocation(client, context.file, node);
+    }
+
+    @NonNull
+    @Override
+    public Location getValueLocation(
+            @NonNull LintClient client, @NonNull File file, @NonNull Attr node) {
+        Location location = getLocation(client, file, node);
         Position start = location.getStart();
         Position end = location.getEnd();
         if (start == null || end == null) {
@@ -234,6 +248,25 @@ public class LintCliXmlParser extends XmlParser {
         return PositionXmlParser.findNodeAtOffset(context.document, offset);
     }
 
+    @NonNull
+    @Override
+    public Location getLocation(
+            @NonNull LintClient client, @NonNull File file, @NonNull Node node) {
+        return getLocation(file, node);
+    }
+
+    @Override
+    public int getNodeStartOffset(
+            @NonNull LintClient client, @NonNull File file, @NonNull Node node) {
+        return PositionXmlParser.getPosition(node).getStartOffset();
+    }
+
+    @Override
+    public int getNodeEndOffset(
+            @NonNull LintClient client, @NonNull File file, @NonNull Node node) {
+        return PositionXmlParser.getPosition(node).getEndOffset();
+    }
+
     /* Handle for creating DOM positions cheaply and returning full fledged locations later */
     private static class LocationHandle implements Handle {
         private final LintCliXmlParser parser;
@@ -269,6 +302,11 @@ public class LintCliXmlParser extends XmlParser {
         @Nullable
         public Object getClientData() {
             return clientData;
+        }
+
+        @Override
+        public String toString() {
+            return "LocationHandle{" + resolve() + "}";
         }
     }
 }

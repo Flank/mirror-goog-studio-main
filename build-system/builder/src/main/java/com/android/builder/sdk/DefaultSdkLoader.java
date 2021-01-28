@@ -27,6 +27,7 @@ import static com.android.SdkConstants.FN_ANNOTATIONS_JAR;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.prefs.AndroidLocationsProvider;
 import com.android.repository.Revision;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
@@ -74,6 +75,8 @@ public class DefaultSdkLoader implements SdkLoader {
 
     private static DefaultSdkLoader sLoader;
 
+    @NonNull private final AndroidLocationsProvider androidLocationsProvider;
+
     @NonNull
     private final File mSdkLocation;
     private AndroidSdkHandler mSdkHandler;
@@ -81,9 +84,9 @@ public class DefaultSdkLoader implements SdkLoader {
     private final ImmutableList<File> mRepositories;
 
     public static synchronized SdkLoader getLoader(
-            @NonNull File sdkLocation) {
+            @NonNull AndroidLocationsProvider androidLocationsProvider, @NonNull File sdkLocation) {
         if (sLoader == null) {
-            sLoader = new DefaultSdkLoader(sdkLocation);
+            sLoader = new DefaultSdkLoader(androidLocationsProvider, sdkLocation);
         } else if (!FileUtils.isSameFile(sdkLocation, sLoader.mSdkLocation)) {
             throw new IllegalStateException(
                     String.format(
@@ -382,14 +385,17 @@ public class DefaultSdkLoader implements SdkLoader {
         return mRepositories;
     }
 
-    private DefaultSdkLoader(@NonNull File sdkLocation) {
+    private DefaultSdkLoader(
+            @NonNull AndroidLocationsProvider androidLocationsProvider, @NonNull File sdkLocation) {
+        this.androidLocationsProvider = androidLocationsProvider;
         mSdkLocation = sdkLocation;
         mRepositories = computeRepositories();
     }
 
     private synchronized void init(@NonNull ILogger logger) {
         if (mSdkHandler == null) {
-            mSdkHandler = AndroidSdkHandler.getInstance(mSdkLocation.toPath());
+            mSdkHandler =
+                    AndroidSdkHandler.getInstance(androidLocationsProvider, mSdkLocation.toPath());
             ProgressIndicator progress = new LoggerProgressIndicatorWrapper(logger);
             mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
 

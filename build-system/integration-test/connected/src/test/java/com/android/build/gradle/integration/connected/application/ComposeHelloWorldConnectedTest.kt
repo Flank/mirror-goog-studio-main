@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import org.junit.Before
@@ -35,15 +34,13 @@ class ComposeHelloWorldConnectedTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
-        // b/158092419
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .withKotlinVersion("1.4.21")
         .create()
 
     @Before
     fun setUp() {
         // fail fast if no response
-        project.getSubproject("app").addAdbTimeout()
+        project.addAdbTimeoutToSubProjects()
         // run the uninstall tasks in order to (1) make sure nothing is installed at the beginning
         // of each test and (2) check the adb connection before taking the time to build anything.
         project.execute("uninstallAll")

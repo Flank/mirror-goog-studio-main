@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
 public class PxUsageDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -198,25 +198,25 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/values/pxsp.xml:23: Warning: Avoid using \"mm\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
                         + "        <item name=\"android:textSize\">50mm</item>\n"
-                        + "                                      ^\n"
+                        + "                                      ~~~~\n"
                         + "res/values/pxsp.xml:25: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
                         + "            50in\n"
-                        + "            ^\n"
+                        + "            ~~~~\n"
                         + "res/values/pxsp.xml:6: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n"
                         + "        <item name=\"android:textSize\">50dp</item>\n"
-                        + "                                      ^\n"
+                        + "                                      ~~~~\n"
                         + "res/values/pxsp.xml:12: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n"
                         + "        <item name=\"android:textSize\"> 50dip </item>\n"
-                        + "                                       ^\n"
+                        + "                                       ~~~~~\n"
                         + "res/values/pxsp.xml:9: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n"
                         + "        <item name=\"android:textSize\">50px</item>\n"
-                        + "                                      ^\n"
+                        + "                                      ~~~~\n"
                         + "res/values/pxsp.xml:17: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n"
                         + "        <item name=\"android:paddingRight\"> 50px </item>\n"
-                        + "                                           ^\n"
+                        + "                                           ~~~~\n"
                         + "res/values/pxsp.xml:18: Warning: Avoid using \"px\" as units; use \"dp\" instead [PxUsage]\n"
                         + "        <item name=\"android:paddingTop\">50px</item>\n"
-                        + "                                        ^\n"
+                        + "                                        ~~~~\n"
                         + "0 errors, 7 warnings\n";
         //noinspection all // Sample code
         lint().files(
@@ -278,10 +278,10 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                 ""
                         + "res/values/dimens.xml:2: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
                         + "    <item name=\"using_in_whole\" type=\"dimen\">5in</item>\n"
-                        + "                                             ^\n"
+                        + "                                             ~~~\n"
                         + "res/values/dimens.xml:3: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
                         + "    <item name=\"using_in\" type=\"dimen\">0.05in</item>\n"
-                        + "                                       ^\n"
+                        + "                                       ~~~~~~\n"
                         + "res/layout/test.xml:3: Warning: Avoid using \"in\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
                         + "    android:layout_width=\"0.05in\"\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -326,12 +326,12 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
     public void testBatchDimensions() {
         String expected =
                 ""
-                        + "res/values/dimens.xml:2: Warning: This dimension is used as a text size: Should use \"sp\" instead of \"dp\" [SpUsage]\n"
-                        + "    <dimen name=\"bottom_bar_portrait_button_font_size\">16dp</dimen>\n"
-                        + "                                                       ^\n"
-                        + "    res/layout/textsize2.xml:9: Dimension used as a text size here\n"
+                        + "res/layout/textsize2.xml:9: Warning: Should use \"sp\" instead of \"dp\" for text sizes (@dimen/bottom_bar_portrait_button_font_size is defined as 16dp in values/dimens.xml [SpUsage]\n"
                         + "        android:textSize=\"@dimen/bottom_bar_portrait_button_font_size\"\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    res/values/dimens.xml:2: This dp dimension is used as a text size\n"
+                        + "    <dimen name=\"bottom_bar_portrait_button_font_size\">16dp</dimen>\n"
+                        + "                                                       ~~~~\n"
                         + "0 errors, 1 warnings\n";
         lint().files(dimens, textsize2).run().expect(expected);
     }

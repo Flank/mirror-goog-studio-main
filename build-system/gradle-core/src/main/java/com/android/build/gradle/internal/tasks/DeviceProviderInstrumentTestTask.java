@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import static com.android.build.gradle.internal.testing.utp.RetentionConfigKt.createRetentionConfig;
+import static com.android.build.gradle.internal.testing.utp.UtpTestUtilsKt.shouldEnableUtp;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
@@ -32,8 +33,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.component.impl.TestComponentImpl;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.internal.BuildToolsExecutableInput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsBuildService;
+import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.dsl.FailureRetention;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
@@ -89,12 +92,12 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
@@ -141,12 +144,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             throw new UnsupportedOperationException("Injected by Gradle.");
         }
 
-        @InputFile
-        @PathSensitive(PathSensitivity.NONE)
-        public Provider<File> getSplitSelectExec() {
-            return getSdkBuildService()
-                    .flatMap(SdkComponentsBuildService::getSplitSelectExecutableProvider);
-        }
+        @Nested
+        public abstract BuildToolsExecutableInput getBuildTools();
 
         TestRunner createTestRunner(ExecutorServiceAdapter executorServiceAdapter) {
             GradleProcessExecutor gradleProcessExecutor =
@@ -159,12 +158,16 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         (getExecutionEnum().get() == ANDROID_TEST_ORCHESTRATOR
                                 || getExecutionEnum().get() == ANDROIDX_TEST_ORCHESTRATOR);
                 return new UtpTestRunner(
-                        getSplitSelectExec().getOrNull(),
+                        getBuildTools().splitSelectExecutable().getOrNull(),
                         gradleProcessExecutor,
                         javaProcessExecutor,
                         executorServiceAdapter,
                         getUtpDependencies(),
-                        getSdkBuildService().get(),
+                        getSdkBuildService()
+                                .get()
+                                .sdkLoader(
+                                        getBuildTools().getCompileSdkVersion(),
+                                        getBuildTools().getBuildToolsRevision()),
                         getRetentionConfig().get(),
                         useOrchestrator);
             } else {
@@ -176,7 +179,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                 "Sharding is not supported with Android Test Orchestrator.");
 
                         return new OnDeviceOrchestratorTestRunner(
-                                getSplitSelectExec().getOrNull(),
+                                getBuildTools().splitSelectExecutable().getOrNull(),
                                 gradleProcessExecutor,
                                 getExecutionEnum().get(),
                                 executorServiceAdapter);
@@ -184,14 +187,14 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         if (getShardBetweenDevices().get()) {
 
                             return new ShardedTestRunner(
-                                    getSplitSelectExec().getOrNull(),
+                                    getBuildTools().splitSelectExecutable().getOrNull(),
                                     gradleProcessExecutor,
                                     getNumShards().getOrNull(),
                                     executorServiceAdapter);
                         } else {
 
                             return new SimpleTestRunner(
-                                    getSplitSelectExec().getOrNull(),
+                                    getBuildTools().splitSelectExecutable().getOrNull(),
                                     gradleProcessExecutor,
                                     executorServiceAdapter);
                         }
@@ -209,13 +212,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         public abstract Property<Integer> getTimeOutInMs();
 
         public DeviceProvider getDeviceProvider(
-                @NonNull Provider<SdkComponentsBuildService> sdkBuildService) {
+                @NonNull Provider<RegularFile> adbExecutableProvider) {
             if (deviceProvider != null) {
                 return deviceProvider;
             }
             // Don't store it in the field, as it breaks configuration caching.
             return new ConnectedDeviceProvider(
-                    sdkBuildService.flatMap(SdkComponentsBuildService::getAdbExecutableProvider),
+                    adbExecutableProvider,
                     getTimeOutInMs().get(),
                     LoggerWrapper.getLogger(DeviceProviderInstrumentTestTask.class));
         }
@@ -242,7 +245,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     protected void doTaskAction() throws DeviceException, IOException, ExecutionException {
         DeviceProvider deviceProvider =
                 getDeviceProviderFactory()
-                        .getDeviceProvider(getTestRunnerFactory().getSdkBuildService());
+                        .getDeviceProvider(getTestRunnerFactory().getBuildTools().adbExecutable());
         if (!deviceProvider.isConfigured()) {
             setDidWork(false);
             return;
@@ -599,6 +602,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             task.getTestRunnerFactory()
                     .getNumShards()
                     .set(projectOptions.getProvider(IntegerOption.ANDROID_TEST_SHARD_COUNT));
+
             task.getTestRunnerFactory()
                     .getSdkBuildService()
                     .set(
@@ -606,12 +610,23 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     creationConfig.getServices().getBuildServiceRegistry(),
                                     SdkComponentsBuildService.class));
 
+            SdkComponentsKt.initialize(task.getTestRunnerFactory().getBuildTools(), creationConfig);
+
             TestOptions.Execution executionEnum = extension.getTestOptions().getExecutionEnum();
             task.getTestRunnerFactory().getExecutionEnum().set(executionEnum);
-            boolean useUtp =
-                    projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM);
+            boolean useUtp = shouldEnableUtp(projectOptions, extension.getTestOptions());
             task.getTestRunnerFactory().getUnifiedTestPlatform().set(useUtp);
             if (useUtp) {
+                if (!projectOptions.get(BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM)) {
+                    LoggerWrapper.getLogger(DeviceProviderInstrumentTestTask.class)
+                            .warning(
+                                    "Implicitly enabling Unified Test Platform because related "
+                                            + "features are specified in gradle test options. "
+                                            + "Please add "
+                                            + "-Pandroid.experimental.androidTest."
+                                            + "useUnifiedTestPlatform=true "
+                                            + "to your gradle command to suppress this warning.");
+                }
                 UtpDependencyUtilsKt.maybeCreateUtpConfigurations(project);
                 UtpDependencyUtilsKt.resolveDependencies(
                         task.getTestRunnerFactory().getUtpDependencies(),

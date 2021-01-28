@@ -23,10 +23,12 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-import com.google.common.io.Files;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("javadoc")
 public class TypoLookupTest extends AbstractCheckTest {
@@ -196,11 +199,10 @@ public class TypoLookupTest extends AbstractCheckTest {
 
         LintClient client = createClient();
         for (String locale : new String[] {"de", "nb", "es", "en", "pt", "hu", "it", "tr"}) {
-            File f = client.findResource(String.format("tools/support/typos-%1$s.txt", locale));
-            assertTrue(locale, f != null && f.exists());
+            String filename = String.format("/typos/typos-%1$s.txt", locale);
+            List<String> lines = readFile(filename);
 
             Set<String> typos = new HashSet<>(2000);
-            List<String> lines = Files.readLines(f, Charsets.UTF_8);
             for (String line : lines) {
                 if (line.isEmpty() || line.trim().startsWith("#")) {
                     continue;
@@ -300,59 +302,43 @@ public class TypoLookupTest extends AbstractCheckTest {
                 "svw. bzw. so viel wie bzw. sprachverwandt"
             };
 
-    private class TypoTestClient extends ToolsBaseTestLintClient {
-        @Override
-        public File findResource(@NonNull String relativePath) {
-            if (relativePath.startsWith("tools/support/")) {
-                try {
-                    File rootDir = TestUtils.getWorkspaceRoot().toFile();
-                    String base = relativePath.substring("tools/support/".length());
-                    File file = new File(rootDir, "tools/base/files/typos/" + base);
-                    if (!file.exists()) {
-                        return null;
-                    }
-                    return file;
-                } catch (Throwable ignore) {
-                    // Lint checks not running inside a tools build -- typically
-                    // a third party lint check.
-                    return super.findResource(relativePath);
-                }
-            }
-            return super.findResource(relativePath);
-        }
-    }
-
     @Override
     protected TestLintClient createClient() {
-        return new TypoTestClient();
+        return new ToolsBaseTestLintClient();
     }
 
     private void validateDictionary(String locale) throws Exception {
         // Check that all the typo files are well formed
         LintClient client = createClient();
-        File f = client.findResource(String.format("tools/support/typos-%1$s.txt", locale));
-        assertTrue(locale, f != null && f.exists());
+        String filename = String.format("/typos/typos-%1$s.txt", locale);
+        List<String> lines = readFile(filename);
 
         Set<String> typos = new HashSet<>(2000);
         List<Pattern> patterns = new ArrayList<>(100);
 
-        List<String> lines = Files.readLines(f, Charsets.UTF_8);
         for (int i = 0, n = lines.size(); i < n; i++) {
             String line = lines.get(i);
             if (line.isEmpty() || line.trim().startsWith("#")) {
                 continue;
             }
 
-            assertTrue(msg(f, i, "Line should contain '->': %1$s", line), line.contains(SEPARATOR));
+            assertTrue(
+                    msg(filename, i, "Line should contain '->': %1$s", line),
+                    line.contains(SEPARATOR));
             int index = line.indexOf(SEPARATOR);
             String typo = line.substring(0, index).trim();
             String replacements = line.substring(index + SEPARATOR.length()).trim();
 
             if (typo.contains("*") && !typo.endsWith("*")) {
-                fixDictionary(f);
-                fail(msg(f, i, "Globbing (*) not supported anywhere but at the tail: %1$s", line));
+                fixDictionary(filename);
+                fail(
+                        msg(
+                                filename,
+                                i,
+                                "Globbing (*) not supported anywhere but at the tail: %1$s",
+                                line));
             } else if (typo.contains("*") && !replacements.contains("*")) {
-                fail(msg(f, i, "No glob found in the replacements for %1$s", line));
+                fail(msg(filename, i, "No glob found in the replacements for %1$s", line));
             }
 
             if (replacements.indexOf(',') != -1) {
@@ -360,10 +346,10 @@ public class TypoLookupTest extends AbstractCheckTest {
                 for (String s : Splitter.on(',').omitEmptyStrings().split(replacements)) {
                     if (seen.contains(s)) {
                         seen.add(s);
-                        fixDictionary(f);
+                        fixDictionary(filename);
                         fail(
                                 msg(
-                                        f,
+                                        filename,
                                         i,
                                         "For typo "
                                                 + typo
@@ -375,15 +361,16 @@ public class TypoLookupTest extends AbstractCheckTest {
                 }
             }
 
-            assertTrue(msg(f, i, "Typo entry was empty: %1$s", line), !typo.isEmpty());
+            assertTrue(msg(filename, i, "Typo entry was empty: %1$s", line), !typo.isEmpty());
             assertTrue(
-                    msg(f, i, "Typo replacements was empty: %1$s", line), !replacements.isEmpty());
+                    msg(filename, i, "Typo replacements was empty: %1$s", line),
+                    !replacements.isEmpty());
 
             for (String remove : sRemove) {
                 if (replacements.contains(remove)) {
                     fail(
                             msg(
-                                    f,
+                                    filename,
                                     i,
                                     "Replacements for typo %1$s contain description: %2$s",
                                     typo,
@@ -395,7 +382,7 @@ public class TypoLookupTest extends AbstractCheckTest {
                 // This seems to trigger a lot of false positives
                 fail(
                         msg(
-                                f,
+                                filename,
                                 i,
                                 "Typo %1$s triggers a lot of false positives, should be omitted",
                                 typo));
@@ -407,7 +394,7 @@ public class TypoLookupTest extends AbstractCheckTest {
                 // typos
                 fail(
                         msg(
-                                f,
+                                filename,
                                 i,
                                 "Typo %1$s triggers a lot of false positives, should be omitted",
                                 typo));
@@ -418,16 +405,20 @@ public class TypoLookupTest extends AbstractCheckTest {
             } else if (!patterns.isEmpty()) {
                 for (Pattern pattern : patterns) {
                     if (pattern.matcher(typo).matches()) {
-                        fixDictionary(f);
-                        fail(msg(f, i, "The typo " + typo + " matches an earlier glob: ignoring"));
+                        fixDictionary(filename);
+                        fail(
+                                msg(
+                                        filename,
+                                        i,
+                                        "The typo " + typo + " matches an earlier glob: ignoring"));
                         continue;
                     }
                 }
             }
 
             if (typos.contains(typo)) {
-                fixDictionary(f);
-                fail(msg(f, i, "Typo appeared more than once on lhs: %1$s", typo));
+                fixDictionary(filename);
+                fail(msg(filename, i, "Typo appeared more than once on lhs: %1$s", typo));
             }
             typos.add(typo);
         }
@@ -441,12 +432,22 @@ public class TypoLookupTest extends AbstractCheckTest {
         assertNotNull(db.getTypos("Andriod".getBytes(Charsets.UTF_8), 0, "Andriod".length()));
     }
 
-    private static void fixDictionary(File original) throws Exception {
-        File fixed = new File(original.getParentFile(), "fixed-" + original.getName());
+    @NonNull
+    private static List<String> readFile(String filename) {
+        InputStream typoStream = TypoLookup.class.getResourceAsStream(filename);
+        List<String> lines =
+                new BufferedReader(new InputStreamReader(typoStream))
+                        .lines()
+                        .collect(Collectors.toList());
+        return lines;
+    }
+
+    private static void fixDictionary(String original) throws Exception {
+        File fixed = new File(TestUtils.getTestOutputDir().toFile(), "fixed-" + original);
 
         Map<String, Integer> typos = new HashMap<>(2000);
         List<Pattern> patterns = new ArrayList<>(100);
-        List<String> lines = Files.readLines(original, Charsets.UTF_8);
+        List<String> lines = readFile(original);
         List<String> output = new ArrayList<>(lines.size());
 
         wordLoop:
@@ -574,13 +575,8 @@ public class TypoLookupTest extends AbstractCheckTest {
         System.err.println("==> Wrote fixed typo file to " + fixed.getPath());
     }
 
-    private static String msg(File file, int line, String message, Object... args) {
-        return file.getName()
-                + ':'
-                + Integer.toString(line + 1)
-                + ':'
-                + ' '
-                + String.format(message, args);
+    private static String msg(String file, int line, String message, Object... args) {
+        return file + ':' + Integer.toString(line + 1) + ':' + ' ' + String.format(message, args);
     }
 
     @Override

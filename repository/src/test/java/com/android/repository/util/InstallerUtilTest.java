@@ -23,7 +23,6 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeProgressIndicator;
@@ -468,8 +467,6 @@ public class InstallerUtilTest extends TestCase {
             // can't run on windows.
             return;
         }
-        // zip needs a real file, so no MockFileOp for us.
-        FileOp fop = FileOpUtils.create();
 
         Path root = Files.createTempDirectory("InstallerUtilTest");
         Path outRoot = Files.createTempDirectory("InstallerUtilTest");
@@ -522,8 +519,8 @@ public class InstallerUtilTest extends TestCase {
             assertTrue(Files.isSameFile(resultLink2, resultFile2));
         }
         finally {
-            fop.deleteFileOrFolder(root.toFile());
-            fop.deleteFileOrFolder(outRoot.toFile());
+            FileOpUtils.deleteFileOrFolder(root);
+            FileOpUtils.deleteFileOrFolder(outRoot);
         }
     }
 }

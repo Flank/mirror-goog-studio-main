@@ -82,6 +82,8 @@ open class TestMode(
         return values().iterator()
     }
 
+    override fun toString(): String = description
+
     companion object {
         /** The default type of lint execution */
         @JvmField
@@ -124,8 +126,32 @@ open class TestMode(
                 """.trimIndent()
         }
 
+        @JvmField
+        val RESOURCE_REPOSITORIES = object : TestMode("AGP Resource Repository") {
+
+            override fun applies(task: TestLintTask, projects: List<ProjectDescription>): Boolean {
+                return task.requestedResourceRepository
+            }
+
+            override fun before(task: TestLintTask, projectFolders: List<File>): Any? {
+                task.forceAgpResourceRepository = true
+                return null
+            }
+
+            override fun after(task: TestLintTask, setupValue: Any?) {
+                task.forceAgpResourceRepository = false
+            }
+
+            override val diffExplanation: String =
+                """
+                The unit test output varies whe using lint's resource
+                repository (optimized for lint's use-cases) and the AGP
+                resource repository. This is a bug in lint. Please report it.
+                """.trimIndent()
+        }
+
         /** Returns all default included test modes */
         @JvmStatic
-        fun values(): List<TestMode> = listOf(DEFAULT, UI_INJECTION_HOST)
+        fun values(): List<TestMode> = listOf(DEFAULT, UI_INJECTION_HOST, RESOURCE_REPOSITORIES)
     }
 }

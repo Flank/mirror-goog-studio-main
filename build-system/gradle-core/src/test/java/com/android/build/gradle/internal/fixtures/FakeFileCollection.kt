@@ -72,7 +72,15 @@ open class FakeFileCollection(vararg collection : Any?) : FileCollection {
     }
 
     override fun getAsFileTree(): FileTree {
-        TODO("not implemented")
+        val allFiles = mutableListOf<File>()
+        files.forEach { dir ->
+            dir.walk().filter {
+                it.isFile
+            }.forEach {
+                allFiles.add(it)
+            }
+        }
+        return FakeFileTree(allFiles)
     }
 
     override fun isEmpty() : Boolean {

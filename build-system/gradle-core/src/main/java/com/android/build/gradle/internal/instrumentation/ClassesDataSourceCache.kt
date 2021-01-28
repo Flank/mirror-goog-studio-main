@@ -26,8 +26,11 @@ import java.util.Collections
 
 /**
  * Base class for loading and caching [ClassData] from a source.
+ *
+ * @param sourceType indicates whether this source is a local project's source or a dependency
+ *                   source.
  */
-abstract class ClassesDataSourceCache : Closeable {
+abstract class ClassesDataSourceCache(val sourceType: SourceType) : Closeable {
     private val asmApiVersion = org.objectweb.asm.Opcodes.ASM7
     private val loadedClassesData: MutableMap<String, ClassData> =
         Collections.synchronizedMap(mutableMapOf())
@@ -80,6 +83,10 @@ abstract class ClassesDataSourceCache : Closeable {
         return loadedClassesData[className]
     }
 
+    fun isClassLoaded(className: String): Boolean {
+        return loadedClassesData.containsKey(className.replace('.', '/'))
+    }
+
     abstract fun maybeLoadClassData(className: String): ClassData?
 
     data class ClassData(
@@ -87,4 +94,9 @@ abstract class ClassesDataSourceCache : Closeable {
         val superClass: String?,
         val interfaces: List<String>
     )
+
+    enum class SourceType {
+        PROJECT,
+        DEPENDENCY,
+    }
 }

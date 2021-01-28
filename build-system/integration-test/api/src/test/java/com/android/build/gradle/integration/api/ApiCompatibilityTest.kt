@@ -26,9 +26,10 @@ class ApiCompatibilityTest {
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestProject("apiBinaryCompatibility")
-        // http://b/158092419
-        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-        .create()
+            // Disabled because of https://youtrack.jetbrains.com/issue/KT-43605
+            // and https://github.com/gradle/gradle/issues/15900
+            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+            .create()
 
     @Test
     fun binaryCompatibilityTest() {

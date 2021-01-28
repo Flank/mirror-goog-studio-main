@@ -100,10 +100,12 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
     requireJavaVersion("1.8", true)
   }
 
-  save(mobileNavigationXml(
-    navGraphName = navGraphName,
-    packageName = packageName),
-       resOut.resolve("navigation/${navGraphName}.xml"))
+  save(
+    mobileNavigationXml(
+      navGraphName = navGraphName,
+      packageName = packageName),
+    resOut.resolve("navigation/${navGraphName}.xml")
+  )
   open(resOut.resolve("navigation/${navGraphName}.xml"))
 
   copy(File("ic_dashboard_black_24dp.xml"), resOut.resolve("drawable/ic_dashboard_black_24dp.xml"))
@@ -133,11 +135,13 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   }
 
   save(mainActivity, srcOut.resolve("${activityClass}.${ktOrJavaExt}"))
-  save(navigationActivityMainXml(
-    navGraphName = navGraphName,
-    navHostFragmentId = navHostFragmentId,
-    useAndroidX = useAndroidX
-  ), resOut.resolve("layout/${layoutName}.xml"))
+  save(
+    navigationActivityMainXml(
+      navGraphName = navGraphName,
+      navHostFragmentId = navHostFragmentId,
+      useAndroidX = useAndroidX
+    ), resOut.resolve("layout/${layoutName}.xml")
+  )
 
   mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))

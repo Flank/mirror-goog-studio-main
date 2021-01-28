@@ -17,10 +17,10 @@ package com.android.sdklib.tool.sdkmanager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
-import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -52,10 +53,9 @@ public class SdkManagerCli {
     }
 
     private static void main(@NonNull List<String> args) throws CommandFailedException {
-        FileOp fop = FileOpUtils.create();
         SdkManagerCliSettings settings;
         try {
-            settings = SdkManagerCliSettings.createSettings(args, fop.getFileSystem());
+            settings = SdkManagerCliSettings.createSettings(args, FileSystems.getDefault());
         } catch (SdkManagerCliSettings.ShowUsageException showUsageException) {
             usage(System.err);
             throw new CommandFailedException();
@@ -76,12 +76,13 @@ public class SdkManagerCli {
                 throw new CommandFailedException();
             }
         }
-        AndroidSdkHandler handler = AndroidSdkHandler.getInstance(localPath);
+        AndroidSdkHandler handler =
+                AndroidSdkHandler.getInstance(AndroidLocationsSingleton.INSTANCE, localPath);
         new SdkManagerCli(
                         settings,
                         System.out,
                         System.in,
-                        new LegacyDownloader(fop, settings),
+                        new LegacyDownloader(FileOpUtils.create(), settings),
                         handler)
                 .run(settings.getProgressIndicator());
         System.out.println();

@@ -37,6 +37,8 @@ public class ApkParser {
     private static final byte[] SIGNATURE_BLOCK_MAGIC = "APK Sig Block 42".getBytes();
     private static final long USHRT_MAX = 65535;
     public static final int EOCD_SIZE = 22;
+    static final String NO_MANIFEST_MSG = "Missing AndroidManifest.xml entry";
+    private static final String NO_MANIFEST_MSG_DETAILS = "in '%s'";
 
     public static class ApkArchiveMap {
         public static final long UNINITIALIZED = -1;
@@ -87,13 +89,19 @@ public class ApkParser {
         ApkDetails apkDetails;
         try (ZipFile zipFile = new ZipFile(path)) {
             ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
+            if (manifestEntry == null) {
+                StringBuilder msg = new StringBuilder(NO_MANIFEST_MSG);
+                msg.append(" ");
+                msg.append(String.format(Locale.US, NO_MANIFEST_MSG_DETAILS, path));
+                throw new IOException(msg.toString());
+            }
             InputStream stream = zipFile.getInputStream(manifestEntry);
             apkDetails = parseManifest(stream);
         }
         return apkDetails;
     }
 
-    private Apk parse(String apkPath) throws IOException, DeployerException {
+    Apk parse(String apkPath) throws IOException, DeployerException {
         File file = new File(apkPath);
         String absolutePath = file.getAbsolutePath();
         String digest;

@@ -30,7 +30,7 @@ import java.util.Locale
 fun createCxxVariantModel(
     configurationParameters: CxxConfigurationParameters,
     module: CxxModuleModel) : CxxVariantModel {
-    val validAbiList = CachingEnvironment(module.cxxFolder).use {
+    val validAbiList = CachingEnvironment(configurationParameters.cxxCacheFolder).use {
         AbiConfigurator(
                 AbiConfigurationKey(
                         module.ndkSupportedAbiList,
@@ -74,14 +74,31 @@ fun createCxxVariantModel(
                 soRepublishFolder = join(intermediatesBase, ifCMake { "obj" } ?: "obj/local"),
                 stlType = determineUsedStl(arguments).argumentName,
                 optimizationTag = run {
+                    /**
+                     * Choose the optimization level to use when the user hasn't specified one
+                     * in build.gradle arguments.
+                     *
+                     * If possible, the name of the variant is used directly. For example, if it
+                     * contains "debug" then the optimization level is Debug and so on.
+                     *
+                     * There is one caveat that variants containing "release" result in
+                     * RelWithDebInfo rather than Release. The reason is that, in CMake, Release
+                     * means that no -g flag is passed to the C++ toolchain and so no symbols would
+                     * be generated. We want to keep those symbols for debug-ability. Symbols are
+                     * stripped by AGP before packaging into the APK so RelWithDebInfo is
+                     * equivalent to Release for packaging purposes.
+                     *
+                     * If the user truly wants Release then they can use
+                     * -DCMAKE_RELEASE_TYPE=Release in build.gradle to override the default chosen
+                     * here.
+                     */
                     val lower = variantName.toLowerCase(Locale.ROOT)
-
                     when {
-                        lower.endsWith("release") -> "Release"
+                        lower.endsWith("release") -> "RelWithDebInfo"
                         lower.endsWith("debug") -> "Debug"
                         lower.endsWith("relwithdebinfo") -> "RelWithDebInfo"
                         lower.endsWith("minsizerel") -> "MinSizeRel"
-                        lower.contains("release") -> "Release"
+                        lower.contains("release") -> "RelWithDebInfo"
                         lower.contains("debug") -> "Debug"
                         lower.contains("relwithdebinfo") -> "RelWithDebInfo"
                         lower.contains("minsizerel") -> "MinSizeRel"
@@ -89,7 +106,7 @@ fun createCxxVariantModel(
                             if (isDebuggable) {
                                 "Debug"
                             } else {
-                                "Release"
+                                "RelWithDebInfo"
                             }
                     }
                 }

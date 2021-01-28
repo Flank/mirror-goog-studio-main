@@ -260,7 +260,7 @@ protected constructor(
     }
 
     override fun toString(): String =
-        "Location [file=$file, start=$start, end=$end, message=$message]"
+        "Location [file=${file.name}, start=$start, end=$end, message=$message]"
 
     /**
      * A [Handle] is a reference to a location. The point of a location
@@ -301,16 +301,29 @@ protected constructor(
         override fun resolve(): Location = create(file, contents, startOffset, endOffset)
     }
 
-    class ResourceItemHandle(private val item: ResourceItem) : Handle {
+    open class ResourceItemHandle(
+        private val client: LintClient,
+        val item: ResourceItem,
+        private val nameOnly: Boolean,
+        private val valueOnly: Boolean
+    ) : Handle {
         override fun resolve(): Location {
-            // TODO: Look up the exact item location more closely.
-            val source = item.source?.toFile() ?: error(item)
-            return create(source)
+            val parser = client.xmlParser
+            val location = when {
+                valueOnly -> parser.getValueLocation(client, item)
+                nameOnly -> parser.getNameLocation(client, item)
+                else -> parser.getLocation(client, item)
+            }
+            return location ?: error(item)
         }
 
         override var clientData: Any?
             get() = null
-            set(clientData) = Unit
+            set(_) = Unit
+
+        override fun toString(): String {
+            return "Handle:$item"
+        }
     }
 
     /**

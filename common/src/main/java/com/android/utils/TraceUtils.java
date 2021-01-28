@@ -19,9 +19,15 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /** Static methods useful for tracing. */
 public class TraceUtils {
+    private static final SimpleDateFormat DATE_FORMAT =
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.ROOT);
+
     /**
      * Returns the current stack of the caller.
      *
@@ -94,6 +100,12 @@ public class TraceUtils {
                 ? "null"
                 : String.format(
                         "%s@%08X", obj.getClass().getSimpleName(), System.identityHashCode(obj));
+    }
+
+    /** Returns the current time as a yyyy-MM-dd HH:mm:ss.SSS string. */
+    @NonNull
+    public static String currentTime() {
+        return DATE_FORMAT.format(new Date());
     }
 
     private TraceUtils() {}

@@ -24,13 +24,14 @@ import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLog
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.warnln
+import com.android.prefs.AndroidLocationsProvider
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
-import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_INVALID
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_PACKAGES_SDK
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_INVALID
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import java.io.File
 import java.io.IOException
@@ -135,16 +136,14 @@ val forkCmakeReportedVersion = Revision.parseRevision("3.6.0")
  * This is the default version of CMake to use for this Android Gradle Plugin if there was no
  * version defined in build.gradle.
  */
-const val DEFAULT_CMAKE_VERSION = "3.18.1"
+const val DEFAULT_CMAKE_VERSION = "3.10.2"
 val defaultCmakeVersion = Revision.parseRevision(DEFAULT_CMAKE_VERSION)
-const val DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION = DEFAULT_CMAKE_VERSION
+const val DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION = "$DEFAULT_CMAKE_VERSION.4988404"
 
 /**
- * This is the probable next CMake to be released or the last CMake released
- * depending on where we are in the process of releasing the next version of CMake.
- * A subset of tests are run against it.
+ * This is the probable next CMake to be released. A subset of tests are run against it.
  */
-const val OFF_STAGE_CMAKE_VERSION = "3.10.2"
+const val OFF_STAGE_CMAKE_VERSION = "3.18.1"
 
 /**
  * @return list of folders (as Files) retrieved from PATH environment variable and from Sdk
@@ -175,9 +174,10 @@ private fun getSdkCmakeFolders(sdkRoot : File?) : List<File> {
 }
 
 private fun getSdkCmakePackages(
+    androidLocationsProvider: AndroidLocationsProvider,
     sdkFolder: File?
 ): List<LocalPackage> {
-    val androidSdkHandler = AndroidSdkHandler.getInstance(sdkFolder?.toPath())
+    val androidSdkHandler = AndroidSdkHandler.getInstance(androidLocationsProvider, sdkFolder?.toPath())
     val sdkManager = androidSdkHandler.getSdkManager(
         LoggerProgressIndicatorWrapper(
             ThreadLoggingEnvironment.getILogger(CMAKE_PACKAGES_SDK, CMAKE_PACKAGES_SDK)
@@ -438,6 +438,7 @@ class CmakeLocator {
     fun findCmakePath(
         cmakeVersionFromDsl: String?,
         cmakeFile: File?,
+        androidLocationsProvider: AndroidLocationsProvider,
         sdkFolder: File?,
         downloader: Consumer<String>): File? {
         PassThroughDeduplicatingLoggingEnvironment().use {
@@ -448,7 +449,7 @@ class CmakeLocator {
                     { getEnvironmentPaths() },
                     { getSdkCmakeFolders(sdkFolder) },
                     { folder -> getCmakeRevisionFromExecutable(folder) },
-                    { getSdkCmakePackages(sdkFolder) })
+                    { getSdkCmakePackages(androidLocationsProvider, sdkFolder) })
         }
     }
 }

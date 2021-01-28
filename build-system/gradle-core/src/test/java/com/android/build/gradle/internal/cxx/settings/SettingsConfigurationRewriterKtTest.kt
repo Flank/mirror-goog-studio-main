@@ -148,7 +148,12 @@ class SettingsConfigurationRewriterKtTest {
             val configurationParameters = configurationParameters.copy(
                     variantName = "myMinSizeRel"
             )
-            val model = createInitialCxxModel(sdkComponents, listOf(configurationParameters))
+            val model =
+                    createInitialCxxModel(
+                        sdkComponents,
+                        androidLocationProvider,
+                        listOf(configurationParameters)
+                    )
             val abi = model.single { it.abi == Abi.X86 }
             val variables = abi.configurationArguments.toCmakeArguments()
             println(variables.joinToString("\n") { it.sourceArgument })
@@ -166,7 +171,12 @@ class SettingsConfigurationRewriterKtTest {
                     )
 
             )
-            val abis = createInitialCxxModel(sdkComponents, listOf(configurationParameters))
+            val abis =
+                    createInitialCxxModel(
+                        sdkComponents,
+                        androidLocationProvider,
+                        listOf(configurationParameters)
+                    )
             abis.forEach { abi ->
                 abi.configurationArguments
                         .groupBy { it }

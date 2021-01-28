@@ -19,34 +19,20 @@ package com.android.build.gradle.integration.lint;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test for a custom jar in a library model, used by a consuming app.
  *
  * <p>The custom lint rule comes from a 3rd java module.
  */
-@RunWith(FilterableParameterized.class)
 public class LintCustomRuleTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static LintInvocationType[] getParams() {
-        return LintInvocationType.values();
-    }
-
     @Rule
-    public final GradleTestProject project;
-
-    public LintCustomRuleTest(LintInvocationType lintInvocationType) {
-        this.project = lintInvocationType.testProjectBuilder()
-                .fromTestProject("lintCustomRules")
-                .create();
-    }
+    public final GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("lintCustomRules").create();
 
     @Test
     public void checkCustomLint() throws Exception {

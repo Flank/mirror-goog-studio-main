@@ -16,10 +16,8 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
-import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -35,8 +33,6 @@ class GenFolderKotlinOnlyApiTest {
     var project =
         GradleTestProject.builder()
             .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.library"))
-            // http://b/158092419
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
             .create()
 
     @JvmField

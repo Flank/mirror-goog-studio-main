@@ -22,8 +22,9 @@ import com.android.annotations.concurrency.Slow;
 import com.android.io.CancellableFileIo;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
-import com.android.prefs.AndroidLocation;
-import com.android.prefs.AndroidLocation.AndroidLocationException;
+import com.android.prefs.AbstractAndroidLocations;
+import com.android.prefs.AndroidLocationsException;
+import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
@@ -108,12 +109,12 @@ public class AvdManager {
     public static final String AVD_INFO_ABS_PATH = "path";              //$NON-NLS-1$
 
     /**
-     * The path to the AVD folder (which contains the #CONFIG_INI file) relative to
-     * the {@link AndroidLocation#FOLDER_DOT_ANDROID}. This information is written
-     * in the avd ini <b>only</b> if the AVD folder is located under the .android path
-     * (that is the relative that has no backward {@code ..} references).
+     * The path to the AVD folder (which contains the #CONFIG_INI file) relative to the {@link
+     * AbstractAndroidLocations#FOLDER_DOT_ANDROID}. This information is written in the avd ini
+     * <b>only</b> if the AVD folder is located under the .android path (that is the relative that
+     * has no backward {@code ..} references).
      */
-    public static final String AVD_INFO_REL_PATH = "path.rel";          //$NON-NLS-1$
+    public static final String AVD_INFO_REL_PATH = "path.rel"; // $NON-NLS-1$
 
     /**
      * The {@link IAndroidTarget#hashString()} of the AVD.
@@ -414,7 +415,7 @@ public class AvdManager {
             @NonNull File baseAvdFolder,
             @NonNull ILogger log,
             @NonNull FileOp fop)
-            throws AndroidLocationException {
+            throws AndroidLocationsException {
         mSdkHandler = sdkHandler;
         mFop = fop;
         mBaseAvdFolder = baseAvdFolder;
@@ -422,23 +423,23 @@ public class AvdManager {
     }
 
     /**
-     * Returns an AVD Manager for a given SDK represented by {@code sdkHandler}.
-     * One AVD Manager instance is created by SDK location and then cached and reused.
+     * Returns an AVD Manager for a given SDK represented by {@code sdkHandler}. One AVD Manager
+     * instance is created by SDK location and then cached and reused.
      *
      * @param sdkHandler The SDK handler.
-     * @param log The log object to receive the log of the initial loading of the AVDs.
-     *            This log object is not kept by this instance of AvdManager and each
-     *            method takes its own logger. The rationale is that the AvdManager
-     *            might be called from a variety of context, each with different
-     *            logging needs. Cannot be null.
+     * @param log The log object to receive the log of the initial loading of the AVDs. This log
+     *     object is not kept by this instance of AvdManager and each method takes its own logger.
+     *     The rationale is that the AvdManager might be called from a variety of context, each with
+     *     different logging needs. Cannot be null.
      * @return The AVD Manager instance.
-     * @throws AndroidLocationException if {@code sdkHandler} does not have a local path set.
+     * @throws AndroidLocationsException if {@code sdkHandler} does not have a local path set.
      */
     @Nullable
-    public static AvdManager getInstance(@NonNull AndroidSdkHandler sdkHandler,
-            @NonNull ILogger log)
-            throws AndroidLocationException {
-        return getInstance(sdkHandler, new File(AndroidLocation.getAvdFolder()), log);
+    public static AvdManager getInstance(
+            @NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger log)
+            throws AndroidLocationsException {
+        return getInstance(
+                sdkHandler, AndroidLocationsSingleton.INSTANCE.getAvdLocation().toFile(), log);
     }
 
     @Nullable
@@ -446,9 +447,9 @@ public class AvdManager {
             @NonNull AndroidSdkHandler sdkHandler,
             @NonNull File baseAvdFolder,
             @NonNull ILogger log)
-            throws AndroidLocationException {
+            throws AndroidLocationsException {
         if (sdkHandler.getLocation() == null) {
-            throw new AndroidLocationException("Local SDK path not set!");
+            throw new AndroidLocationsException("Local SDK path not set!");
         }
         synchronized(mManagers) {
             AvdManager manager;
@@ -459,8 +460,7 @@ public class AvdManager {
             }
             try {
                 manager = new AvdManager(sdkHandler, baseAvdFolder, log, fop);
-            }
-            catch (AndroidLocationException e){
+            } catch (AndroidLocationsException e) {
                 throw e;
             }
             catch (Exception e) {
@@ -472,13 +472,9 @@ public class AvdManager {
         }
     }
 
-    /**
-     * Returns the base folder where AVDs are created.
-     *
-     * @throws AndroidLocationException
-     */
+    /** Returns the base folder where AVDs are created. */
     @NonNull
-    public File getBaseAvdFolder() throws AndroidLocationException {
+    public File getBaseAvdFolder() {
         return mBaseAvdFolder;
     }
 
@@ -753,11 +749,11 @@ public class AvdManager {
      * Reloads the AVD list.
      *
      * @param log the log object to receive action logs. Cannot be null.
-     * @throws AndroidLocationException if there was an error finding the location of the AVD
+     * @throws AndroidLocationsException if there was an error finding the location of the AVD
      *     folder.
      */
     @Slow
-    public void reloadAvds(@NonNull ILogger log) throws AndroidLocationException {
+    public void reloadAvds(@NonNull ILogger log) throws AndroidLocationsException {
         // build the list in a temp list first, in case the method throws an exception.
         // It's better than deleting the whole list before reading the new one.
         ArrayList<AvdInfo> allList = new ArrayList<>();
@@ -950,7 +946,7 @@ public class AvdManager {
             return newAvdInfo;
         } catch (AvdMgrException e) {
             // Warning has already been logged
-        } catch (SecurityException | AndroidLocationException | IOException e) {
+        } catch (SecurityException | AndroidLocationsException | IOException e) {
             log.warning("%1$s", e);
         } finally {
             if (needCleanup) {
@@ -1024,7 +1020,7 @@ public class AvdManager {
                     destAvdFolder.getAbsolutePath(),
                     systemImage,
                     configVals);
-        } catch (AndroidLocationException | IOException e) {
+        } catch (AndroidLocationsException | IOException e) {
             log.warning("Exception while duplicating an AVD: %1$s", e);
             return null;
         }
@@ -1116,14 +1112,15 @@ public class AvdManager {
      * @param name of the AVD.
      * @param avdFolder path for the data folder of the AVD.
      * @param removePrevious True if an existing ini file should be removed.
-     * @throws AndroidLocationException if there's a problem getting android root directory.
+     * @throws AndroidLocationsException if there's a problem getting android root directory.
      * @throws IOException if {@link File#getAbsolutePath()} fails.
      */
-    private File createAvdIniFile(@NonNull String name,
-      @NonNull File avdFolder,
-      boolean removePrevious,
-      @NonNull AndroidVersion version)
-      throws AndroidLocationException, IOException {
+    private File createAvdIniFile(
+            @NonNull String name,
+            @NonNull File avdFolder,
+            boolean removePrevious,
+            @NonNull AndroidVersion version)
+            throws AndroidLocationsException, IOException {
         File iniFile = AvdInfo.getDefaultIniFile(this, name);
 
         if (removePrevious) {
@@ -1139,7 +1136,7 @@ public class AvdManager {
         String relPath = null;
         Path androidFolder = mSdkHandler.getAndroidFolder();
         if (androidFolder == null) {
-            throw new AndroidLocation.AndroidLocationException(
+            throw new AndroidLocationsException(
                     "Can't locate Android SDK installation directory for the AVD .ini file.");
         }
         String androidPath = androidFolder.toAbsolutePath().toString() + File.separator;
@@ -1164,11 +1161,11 @@ public class AvdManager {
      * Creates the ini file for an AVD.
      *
      * @param info of the AVD.
-     * @throws AndroidLocationException if there's a problem getting android root directory.
+     * @throws AndroidLocationsException if there's a problem getting android root directory.
      * @throws IOException if {@link File#getAbsolutePath()} fails.
      */
     private File createAvdIniFile(@NonNull AvdInfo info)
-            throws AndroidLocationException, IOException {
+            throws AndroidLocationsException, IOException {
         return createAvdIniFile(info.getName(),
           new File(info.getDataFolderPath()),
           false, info.getAndroidVersion());
@@ -1296,7 +1293,7 @@ public class AvdManager {
 
             log.info("AVD '%1$s' moved.\n", avdInfo.getName());
 
-        } catch (AndroidLocationException | IOException e) {
+        } catch (AndroidLocationsException | IOException e) {
             log.warning("$1%s", e);
             return false;
         }
@@ -1331,20 +1328,20 @@ public class AvdManager {
 
     /**
      * Returns a list of files that are potential AVD ini files.
-     * <p>
-     * This lists the $HOME/.android/avd/<name>.ini files.
-     * Such files are properties file than then indicate where the AVD folder is located.
-     * <p>
-     * Note: the method is to be considered private. It is made protected so that
-     * unit tests can easily override the AVD root.
+     *
+     * <p>This lists the $HOME/.android/avd/<name>.ini files. Such files are properties file than
+     * then indicate where the AVD folder is located.
+     *
+     * <p>Note: the method is to be considered private. It is made protected so that unit tests can
+     * easily override the AVD root.
      *
      * @return A new {@link File} array or null. The array might be empty.
-     * @throws AndroidLocationException if there's a problem getting android root directory.
+     * @throws AndroidLocationsException if there's a problem getting android root directory.
      */
-    private File[] buildAvdFilesList() throws AndroidLocationException {
+    private File[] buildAvdFilesList() throws AndroidLocationsException {
         // ensure folder validity.
         if (mFop.isFile(mBaseAvdFolder)) {
-            throw new AndroidLocationException(
+            throw new AndroidLocationsException(
                     String.format("%1$s is not a valid folder.", mBaseAvdFolder.getAbsolutePath()));
         } else if (mFop.exists(mBaseAvdFolder) == false) {
             // folder is not there, we create it and return
@@ -1366,13 +1363,13 @@ public class AvdManager {
 
     /**
      * Computes the internal list of available AVDs
+     *
      * @param allList the list to contain all the AVDs
      * @param log the log object to receive action logs. Cannot be null.
-     *
-     * @throws AndroidLocationException if there's a problem getting android root directory.
+     * @throws AndroidLocationsException if there's a problem getting android root directory.
      */
     private void buildAvdList(ArrayList<AvdInfo> allList, ILogger log)
-            throws AndroidLocationException {
+            throws AndroidLocationsException {
         File[] avds = buildAvdFilesList();
         if (avds != null) {
             for (File avd : avds) {

@@ -183,10 +183,9 @@ class BlameFile internal constructor(
         // like XmlUtils#parseDocument since we'll typically be queried
         // for locations; it's the main use case for resolving
         // merged nodes back to their sources
-        val parser = client.xmlParser
         val document: Document?
         try {
-            document = parser.parseXml(manifest)
+            document = client.getXmlDocument(manifest)
             if (document == null) {
                 return null
             }

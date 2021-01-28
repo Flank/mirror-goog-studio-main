@@ -17,13 +17,14 @@
 package com.android.tools.layoutinspector
 
 import com.android.tools.idea.layoutinspector.proto.SkiaParser
-import com.google.common.annotations.VisibleForTesting
+import com.android.tools.idea.protobuf.ByteString
 import java.awt.Image
 import java.awt.Point
 import java.awt.color.ColorSpace
 import java.awt.image.BufferedImage
 import java.awt.image.DataBuffer
 import java.awt.image.DataBufferInt
+import java.awt.image.DataBufferShort
 import java.awt.image.DirectColorModel
 import java.awt.image.Raster
 import java.awt.image.SinglePixelPackedSampleModel
@@ -31,7 +32,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 object LayoutInspectorUtils {
-    private fun createImage(bytes: ByteBuffer, width: Int, height: Int): BufferedImage {
+    fun createImage8888(bytes: ByteBuffer, width: Int, height: Int): BufferedImage {
         val intArray = IntArray(width * height)
         bytes.order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(intArray)
         val buffer = DataBufferInt(intArray, width * height)
@@ -44,23 +45,35 @@ object LayoutInspectorUtils {
         return BufferedImage(colorModel, raster, false, null)
     }
 
-    @VisibleForTesting
+    fun createImage565(bytes: ByteBuffer, width: Int, height: Int): BufferedImage {
+        val shortArray = ShortArray(width * height)
+        bytes.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shortArray)
+        val buffer = DataBufferShort(shortArray, width * height)
+        val model = SinglePixelPackedSampleModel(DataBuffer.TYPE_USHORT, width, height, intArrayOf(0x1f.shl(11), 0x3f.shl(5), 0x1f))
+        val raster = Raster.createWritableRaster(model, buffer, Point(0, 0))
+        val colorModel = DirectColorModel(
+            16, 0x1f.shl(11), 0x3f.shl(5), 0x1f)
+        @Suppress("UndesirableClassUsage")
+        return BufferedImage(colorModel, raster, false, null)
+    }
+
     fun buildTree(
-        node: SkiaParser.InspectorView,
-        isInterrupted: () -> Boolean,
-        drawIdToRequest: Map<Long, SkiaParser.RequestedNodeInfo>
+      node: SkiaParser.InspectorView,
+      images: Map<Int, ByteString>,
+      isInterrupted: () -> Boolean,
+      drawIdToRequest: Map<Long, SkiaParser.RequestedNodeInfo>
     ): SkiaViewNode? {
         if (isInterrupted()) {
             throw InterruptedException()
         }
-
-        return if (!node.image.isEmpty) {
+        val image = if (node.image.isEmpty) images[node.imageId] else node.image
+        return if (image?.isEmpty == false) {
             val width = if (node.width > 0) node.width else drawIdToRequest[node.id]?.width ?: return null
             val height = if (node.height > 0) node.height else drawIdToRequest[node.id]?.height ?: return null
-            SkiaViewNode(node.id, createImage(node.image.asReadOnlyByteBuffer(), width, height))
+            SkiaViewNode(node.id, createImage8888(image.asReadOnlyByteBuffer(), width, height))
         }
         else {
-            SkiaViewNode(node.id, node.childrenList.mapNotNull { buildTree(it, isInterrupted, drawIdToRequest) })
+            SkiaViewNode(node.id, node.childrenList.mapNotNull { buildTree(it, images, isInterrupted, drawIdToRequest) })
         }
     }
 

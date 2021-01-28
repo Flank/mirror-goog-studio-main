@@ -26,10 +26,12 @@ import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.ide.common.resources.LocaleManager
 import com.android.ide.common.resources.ResourceItem
+import com.android.ide.common.resources.ResourceRepository
+import com.android.ide.common.resources.ResourceVisitor
 import com.android.ide.common.resources.configuration.DensityQualifier
 import com.android.ide.common.resources.configuration.FolderConfiguration
+import com.android.ide.common.resources.configuration.LocaleQualifier
 import com.android.ide.common.resources.configuration.VersionQualifier
-import com.android.ide.common.resources.getLocales
 import com.android.ide.common.resources.resourceNameToFieldName
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.resources.FolderTypeRelationship
@@ -45,6 +47,7 @@ import com.android.resources.ResourceType.PUBLIC
 import com.android.resources.ResourceType.STRING
 import com.android.resources.ResourceType.STYLE
 import com.android.resources.ResourceType.STYLEABLE
+import com.android.tools.lint.client.api.ResourceRepositoryScope.LOCAL_DEPENDENCIES
 import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -71,11 +74,20 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.EnumSet
 import java.util.Locale
+import java.util.SortedSet
+import java.util.TreeSet
 import kotlin.collections.set
 
 /**
- * Checks for incomplete translations - e.g. keys that are only present in some
- * locales but not all.
+ * Checks for incomplete translations - e.g. keys that are only present
+ * in some locales but not all.
+ *
+ * <p>TODO <ul> <li> Port to Kotlin before the following changes: <li>
+ * Remove all the batch mode handling here; instead of accumulating all
+ * strings we can now limit the analysis directly to references from the
+ * current strings file being analyzed -- as long as we don't duplicate
+ * the work, e.g. we only do the analysis from the base folder config,
+ * except for extra-strings. </ul>
  */
 class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, BinaryResourceScanner {
     /** The names of resources, for each resource type, defined in the base folder */
@@ -348,12 +360,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
     ) {
         // Incremental mode
         val client = context.client
-        if (!client.supportsProjectResources()) {
-            return
-        }
-        val resources = client
-            .getResourceRepository(context.mainProject, true, false) ?: return
-
+        val resources = client.getResources(context.mainProject, LOCAL_DEPENDENCIES)
         val namespace = context.project.resourceNamespace
         // See https://issuetracker.google.com/147213347
         var items: List<ResourceItem> = resources.getResources(namespace, type, originalName)
@@ -381,7 +388,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             if (locales == null) {
                 locales = filterLocalesByResConfigs(
                     context.project,
-                    resources.getLocales().mapNotNull {
+                    resources.getStringLocales().mapNotNull {
                         if (it.hasLanguage()) {
                             it.language
                         } else {
@@ -930,4 +937,34 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             }
         }
     }
+}
+
+/** Returns the sorted list of locales used in the resources. */
+fun ResourceRepository.getStringLocales(): SortedSet<LocaleQualifier> {
+    // As an optimization we just look for values since that's typically where
+    // the languages are defined -- not on layouts, menus, etc -- especially if there
+    // are no translations for it.
+    val locales = TreeSet<LocaleQualifier>()
+
+    val visitor = object : ResourceVisitor {
+        override fun visit(item: ResourceItem): ResourceVisitor.VisitResult {
+            val locale = item.configuration.localeQualifier
+            if (locale != null) {
+                locales.add(locale)
+            }
+            return ResourceVisitor.VisitResult.CONTINUE
+        }
+
+        override fun shouldVisitResourceType(resourceType: ResourceType): Boolean {
+            return resourceType == STRING
+        }
+    }
+
+    for (repository in leafResourceRepositories) {
+        repository.accept {
+            visitor.visit(it)
+        }
+    }
+
+    return locales
 }

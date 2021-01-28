@@ -80,17 +80,16 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
     private fun createDefaultDebugKeystoreIfNeeded() {
 
         checkState(signingConfig.isSigningReady, "Debug signing config not ready.")
+
+        // Synchronized file with multi process locking requires that the parent directory of the
+        // default debug keystore is present.
+        FileUtils.mkdirs(defaultDebugKeystoreLocation.parentFile)
+
         if (!defaultDebugKeystoreLocation.parentFile.canWrite()) {
             throw IOException("""Unable to create debug keystore in """
                     + """${defaultDebugKeystoreLocation.parentFile.absolutePath} because it is not writable.""")
         }
 
-        /* Synchronized file with multi process locking requires that the parent directory of the
-           default debug keystore is present.
-           It is created as part of KeystoreHelper.defaultDebugKeystoreLocation() */
-        checkState(FileUtils.parentDirExists(defaultDebugKeystoreLocation),
-                "Parent directory of the default debug keystore '%s' does not exist",
-                defaultDebugKeystoreLocation)
         /* Creating the debug keystore is done with the multi process file locking,
            to avoid one validate signing task from exiting early while the keystore is in the
            process of being written.

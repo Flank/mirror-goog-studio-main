@@ -30,6 +30,7 @@ import com.android.tools.lint.checks.SecureRandomGeneratorDetector
 import com.android.tools.lint.checks.TooManyViewsDetector
 import com.android.tools.lint.checks.TypoDetector
 import com.android.tools.lint.checks.UnusedResourceDetector
+import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
@@ -866,7 +867,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         return configuration as LintXmlConfiguration
     }
 
-    private fun getProjectDir(vararg testFiles: TestFile?): File {
+    private fun getProjectDir(vararg testFiles: TestFile): File {
         val root = temporaryFolder.root
         lint().files(*testFiles).createProjects(root)
         return File(root, "app")
@@ -1225,7 +1226,7 @@ class LintXmlConfigurationTest : AbstractCheckTest() {
         projectName: String? = null,
         check: (LintDriver, Project, Configuration) -> Unit = { _, _, _ -> },
         expected: String = "No warnings.",
-        vararg testFiles: com.android.tools.lint.checks.infrastructure.TestFile
+        vararg testFiles: TestFile
     ) {
         lint().files(
             *testFiles,

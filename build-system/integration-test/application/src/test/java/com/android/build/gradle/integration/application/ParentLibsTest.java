@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.SdkConstants;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -34,8 +33,6 @@ public class ParentLibsTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("parentLibsTest")
-                    // http://b/146208910
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Before

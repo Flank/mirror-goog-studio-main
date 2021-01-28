@@ -29,13 +29,13 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.BuiltArtifacts;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -69,7 +69,10 @@ public class BasicTest2 {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("basic")
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
+                    // http://b/149978740
+                    .addGradleProperties(
+                            BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS.getPropertyName()
+                                    + "=false")
                     .create();
 
     private static final Set<String> coordinates =

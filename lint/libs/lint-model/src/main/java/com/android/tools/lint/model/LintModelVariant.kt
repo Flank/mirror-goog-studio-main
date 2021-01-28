@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.model
 
-import com.android.ide.common.gradle.model.IdeVariant
 import com.android.sdklib.AndroidVersion
 import java.io.File
 
@@ -31,9 +30,6 @@ interface LintModelVariant {
     val androidTestArtifact: LintModelAndroidArtifact?
     val mergedManifest: File?
     val manifestMergeReport: File?
-
-    // For temporary backwards compatibility
-    val oldVariant: IdeVariant?
 
     // In builder-model these are coming from the merged flavor, plus buildType merged in
     val `package`: String?
@@ -100,9 +96,6 @@ class DefaultLintModelVariant(
     override val shrinkable: Boolean,
     override val buildFeatures: LintModelBuildFeatures,
     override val libraryResolver: LintModelLibraryResolver,
-
-    // For temporary backwards compatibility
-    override val oldVariant: IdeVariant?
 ) : LintModelVariant {
     override fun toString(): String = name
 }

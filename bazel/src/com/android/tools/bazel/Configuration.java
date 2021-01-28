@@ -15,7 +15,10 @@
  */
 package com.android.tools.bazel;
 
+import com.android.tools.bazel.ir.IrModule;
 import com.android.tools.bazel.model.BazelRule;
+
+import java.nio.file.Path;
 
 public class Configuration {
 
@@ -36,7 +39,8 @@ public class Configuration {
         return prefix + name;
     }
 
-    public boolean shouldSuppress(BazelRule rule) {
-        return rule.getLabel().startsWith("//tools/vendor/google3/blaze/");
+    public boolean ignoreModule(Path workspace, IrModule module) {
+        Path rel = workspace.relativize(module.getBaseDir());
+        return rel.startsWith("tools/vendor/google3/blaze/");
     }
 }

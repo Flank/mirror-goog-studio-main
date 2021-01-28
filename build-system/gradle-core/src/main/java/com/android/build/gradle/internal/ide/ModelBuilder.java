@@ -295,7 +295,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath;
-        if (globalScope.getSdkComponents().get().getSdkSetupCorrectly().get()) {
+        if (globalScope.getVersionedSdkLoader().get().getSdkSetupCorrectly().get()) {
             bootClasspath =
                     globalScope.getFilteredBootClasspath().get().stream()
                             .map(it -> it.getAsFile().getAbsolutePath())

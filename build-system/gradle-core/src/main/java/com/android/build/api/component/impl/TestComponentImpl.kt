@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
 abstract class TestComponentImpl @Inject constructor(
@@ -73,6 +74,8 @@ abstract class TestComponentImpl @Inject constructor(
     // as in apps it will have already been included in the tested application.
     override val packageJacocoRuntime: Boolean
         get() = variantDslInfo.isTestCoverageEnabled && testedVariant.variantType.isAar
+
+    override val namespaceForR: Provider<String> =
+        variantDslInfo.testedVariant?.testNamespace?.let { internalServices.provider { it } }
+            ?: internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
 }
-
-
