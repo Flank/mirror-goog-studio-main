@@ -205,7 +205,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
 
                     interface VariantExtension {
                         /**
-                         * the parameters is declared a Property<> so other plugins can declare
+                         * the parameters is declared a Property<> so other plugins can declare a
                          * task providing this value that will then be determined at execution time.
                          */
                         val parameters: Property<String>
@@ -231,11 +231,9 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                     """
                     import org.gradle.api.Plugin
                     import org.gradle.api.Project
-                    import org.gradle.api.plugins.ExtensionAware
                     import java.io.File
                     import com.android.build.api.dsl.ApplicationExtension
                     import com.android.build.api.extension.AndroidComponentsExtension
-                    import com.android.build.api.artifact.ArtifactType
 
                     abstract class ProviderPlugin: Plugin<Project> {
 
@@ -244,7 +242,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
 
                             val android = project.extensions.getByType(ApplicationExtension::class.java)
                             android.buildTypes.forEach {
-                                (it as ExtensionAware).extensions.add(
+                                it.extensions.add(
                                     "exampleDsl",
                                     BuildTypeExtension::class.java)
                             }
@@ -255,7 +253,7 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
                                 val variantExtension = objects.newInstance(VariantExtension::class.java)
 
                                 val debug = android.buildTypes.getByName(variantBuilder.name)
-                                val buildTypeExtension = (debug as ExtensionAware).extensions.findByName("exampleDsl")
+                                val buildTypeExtension = debug.extensions.findByName("exampleDsl")
                                     as BuildTypeExtension
                                 variantExtension.parameters.set(
                                     buildTypeExtension.invocationParameters ?: ""
@@ -322,6 +320,192 @@ class DslAndVariantCustomizationTest : BuildSrcScriptApiTest() {
             addModule(":app") {
                 buildFile =
                 """
+                plugins {
+                        id("com.android.application")
+                        kotlin("android")
+                }
+
+                apply<ProviderPlugin>()
+                apply<ConsumerPlugin>()
+
+                android { ${testingElements.addCommonAndroidBuildLogic()}
+                    buildTypes {
+                        debug {
+                            the<BuildTypeExtension>().invocationParameters = "-debug -log"
+                        }
+                    }
+                }
+                """.trimIndent()
+                testingElements.addManifest(this)
+                testingElements.addMainActivity(this)
+            }
+        }
+        withDocs {
+            index =
+                """
+                Building up on the 'customizeAgpDsl' recipe, this recipe will also add an extension
+                to the Android Gradle Plugin [Variant] interfaces. This is particularly useful when
+                such a plugin would like to offer a Variant scoped object that can be looked up
+                by other third party plugins.
+
+                In this example, the BuildTypeExtension type is a DSL interface declaration which
+                is attached to the Android Gradle Plugin build-type dsl element using "exampleDsl"
+                namespace. The DSL extension is then used in the beforeVariants API to create a
+                variant scoped object and register it.
+
+                A second plugin called ConsumerPlugin (also applied on the same project) will look
+                up the Variant scoped object to configure the ExampleTask. This demonstrate how
+                two plugins can share variant scoped objects without making explicit direct
+                connections.
+
+                Because [VariantExtension.parameters] is declared as property, you could extend the
+                example further by having a Task providing the value.
+            """.trimIndent()
+        }
+        check {
+            assertNotNull(this)
+            Truth.assertThat(output).contains("Task executed with : \"-debug -log\"")
+        }
+    }
+
+    @Test
+    fun customizeAgpDslAndVariantWithConvenientAPI() {
+        given {
+            tasksToInvoke.add("debugExample")
+            addBuildSrc {
+                addSource(
+                    "src/main/kotlin/ExampleTask.kt",
+                    // language=kotlin
+                    """
+                    import org.gradle.api.DefaultTask
+                    import org.gradle.api.provider.Property
+                    import org.gradle.api.tasks.Input
+                    import org.gradle.api.tasks.TaskAction
+
+                    abstract class ExampleTask: DefaultTask() {
+
+                        @get:Input
+                        abstract val parameters: Property<String>
+
+                        @ExperimentalStdlibApi
+                        @TaskAction
+                        fun taskAction() {
+                            System.out.println("Task executed with : \"${'$'}{parameters.get()}\"")
+                        }
+                    }
+                    """.trimIndent())
+                addSource(
+                    "src/main/kotlin/ExampleVariantExtension.kt",
+                    // language=kotlin
+                    """
+                    /**
+                    * Simple Variant scoped extension interface that will be attached to the AGP
+                    * variant object.
+                    */
+                    import org.gradle.api.provider.Property
+                    import com.android.build.api.variant.VariantExtension
+
+                    interface ExampleVariantExtension: VariantExtension {
+                        /**
+                         * the parameters is declared a Property<> so other plugins can declare a
+                         * task providing this value that will then be determined at execution time.
+                         */
+                        val parameters: Property<String>
+                    }
+                    """.trimIndent()
+                )
+                addSource(
+                    "src/main/kotlin/BuildTypeExtension.kt",
+                    // language=kotlin
+                    """
+                    /**
+                    * Simple DSL extension interface that will be attached to the android build type
+                    * DSL element.
+                    */
+                    interface BuildTypeExtension {
+                        var invocationParameters: String?
+                    }
+                    """.trimIndent()
+                )
+                addSource(
+                    "src/main/kotlin/ProviderPlugin.kt",
+                    // language=kotlin
+                    """
+                    import org.gradle.api.Plugin
+                    import org.gradle.api.Project
+                    import java.io.File
+                    import com.android.build.api.extension.AndroidComponentsExtension
+                    import com.android.build.api.extension.DslExtension
+
+                    abstract class ProviderPlugin: Plugin<Project> {
+
+                        override fun apply(project: Project) {
+                            project.extensions.getByType(AndroidComponentsExtension::class.java)
+                                .registerExtension(
+                                    DslExtension.Builder("exampleDsl")
+                                        .extendBuildTypeWith(BuildTypeExtension::class.java)
+                                        .build()
+                                    ) { variantExtensionConfig ->
+                                        project.objects.newInstance(ExampleVariantExtension::class.java).also {
+                                            it.parameters.set(
+                                                variantExtensionConfig.buildTypeExtension(BuildTypeExtension::class.java)
+                                                    .invocationParameters
+                                            )
+                                        }
+                                    }
+                        }
+                    }
+                    """.trimIndent()
+                )
+                addSource(
+                    "src/main/kotlin/ConsumerPlugin.kt",
+                    // language=kotlin
+                    """
+                    import org.gradle.api.Plugin
+                    import org.gradle.api.Project
+                    import java.io.File
+                    import com.android.build.api.extension.AndroidComponentsExtension
+
+                    abstract class ConsumerPlugin: Plugin<Project> {
+
+                        override fun apply(project: Project) {
+                            project.extensions.getByType(AndroidComponentsExtension::class.java)
+                                .onVariants { variant ->
+                                    project.tasks.register(variant.name + "Example", ExampleTask::class.java) { task ->
+                                        task.parameters.set(
+                                            variant.getExtension(ExampleVariantExtension::class.java)?.parameters
+                                        )
+                                    }
+                            }
+                        }
+                    }
+                    """.trimIndent()
+                )
+                addSource(
+                    "src/main/kotlin/ExampleTask.kt",
+                    // language=kotlin
+                    """
+                    import org.gradle.api.DefaultTask
+                    import org.gradle.api.provider.Property
+                    import org.gradle.api.tasks.Input
+                    import org.gradle.api.tasks.TaskAction
+
+                    abstract class ExampleTask: DefaultTask() {
+
+                        @get:Input
+                        abstract val parameters: Property<String>
+
+                        @ExperimentalStdlibApi
+                        @TaskAction
+                        fun taskAction() {
+                            System.out.println("Task executed with : \"${'$'}{parameters.get()}\"")
+                        }
+                    }
+                    """.trimIndent())
+            }
+            addModule(":app") {
+                buildFile =
+                    """
                 plugins {
                         id("com.android.application")
                         kotlin("android")

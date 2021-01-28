@@ -66,7 +66,7 @@ abstract class AnalyticsEnabledVariantBuilder(
             delegate.unitTestEnabled = value
         }
 
-    override fun <T: Any> registerExtension(type: Class<T>, instance: T) {
+    override fun <T: Any> registerExtension(type: Class<out T>, instance: T) {
         stats.variantApiAccessBuilder.addVariantAccessBuilder()
             .type = VariantMethodType.REGISTER_EXTENSION_VALUE
         delegate.registerExtension(type, instance)

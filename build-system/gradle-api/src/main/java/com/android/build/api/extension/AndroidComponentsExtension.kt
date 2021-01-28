@@ -21,9 +21,13 @@ import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.ComponentBuilder
 import com.android.build.api.component.UnitTestBuilder
 import com.android.build.api.component.UnitTest
+import com.android.build.api.dsl.BuildType
+import com.android.build.api.dsl.DefaultConfig
+import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.VariantExtension
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
@@ -303,4 +307,29 @@ interface AndroidComponentsExtension<
         callback: (AndroidTest) -> Unit) {
         androidTests(selector, callback)
     }
+
+    /**
+     * Register an Android Gradle Plugin DSL extension.
+     *
+     * Please see Gradle documentation first at :
+     * https://docs.gradle.org/current/userguide/custom_plugins.html#sec:getting_input_from_the_build
+     *
+     * A lambda must be provided to create and configure the variant scoped object
+     * that will be stored with the Android Gradle Plugin [com.android.build.api.variant.Variant]
+     * instance.
+     *
+     * Variant Scoped objects should use [org.gradle.api.provider.Property<T>] for its mutable
+     * state to allow for late binding. (see [com.android.build.api.variant.Variant] for examples).
+     *
+     * @param dslExtension the DSL extension configuration.
+     * @param configurator a lambda to create a variant scoped object. The lambda is
+     * provided with the [VariantExtensionConfig] that can be used to retrieve the [VariantT]
+     * instance as well as DSL extensions registered with [DslExtension]
+     * @return an sub type of [VariantExtension] instance that will be stored with the [VariantT]
+     * instance and can be retrieved by [Variant.getExtension] API.
+     */
+    fun registerExtension(
+        dslExtension: DslExtension,
+        configurator: (variantExtensionConfig: VariantExtensionConfig<VariantT>) -> VariantExtension
+    )
 }

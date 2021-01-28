@@ -72,14 +72,14 @@ abstract class VariantBuilderImpl(
     override var unitTestEnabled: Boolean = true
 
     private val registeredExtensionDelegate= lazy {
-        mutableMapOf<Class<*>, Any>()
+        mutableMapOf<Class<out Any>, Any>()
     }
 
-    override fun <T: Any> registerExtension(type: Class<T>, instance: T) {
+    override fun <T: Any> registerExtension(type: Class<out T>, instance: T) {
         registeredExtensionDelegate.value[type] = instance
     }
 
-    fun getRegisteredExtensions(): Map<Class<*>, Any>? =
+    fun getRegisteredExtensions(): Map<Class<out Any>, Any>? =
         if (registeredExtensionDelegate.isInitialized())
             registeredExtensionDelegate.value
         else null

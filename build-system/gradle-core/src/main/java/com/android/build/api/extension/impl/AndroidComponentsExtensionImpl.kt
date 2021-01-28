@@ -18,22 +18,25 @@ package com.android.build.api.extension.impl
 
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.AndroidTestBuilder
-import com.android.build.api.component.ComponentIdentity
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.UnitTestBuilder
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SdkComponents
 import com.android.build.api.extension.AndroidComponentsExtension
+import com.android.build.api.extension.DslExtension
+import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.VariantSelector
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.gradle.internal.dsl.SdkComponentsImpl
+import com.android.build.api.variant.VariantExtension
 import com.android.build.gradle.internal.services.DslServices
 import org.gradle.api.Action
 
 abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, VariantT: Variant>(
         private val dslServices: DslServices,
         override val sdkComponents: SdkComponents,
-        private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>
+        private val variantApiOperations: VariantApiOperationsRegistrar<VariantBuilderT, VariantT>,
+        private val commonExtension: CommonExtension<*, *, *, *, *, *, VariantBuilderT, VariantT>
 ): AndroidComponentsExtension<VariantBuilderT, VariantT> {
 
     override fun beforeVariants(selector: VariantSelector, callback: (VariantBuilderT) -> Unit) {
@@ -136,5 +139,39 @@ abstract class AndroidComponentsExtensionImpl<VariantBuilderT: VariantBuilder, V
                 },
                 selector
         )
+    }
+
+    class RegisteredApiExtension<VariantT: Variant>(
+        val dslExtensionTypes: DslExtension,
+        val configurator: (variantExtensionConfig: VariantExtensionConfig<VariantT>) -> VariantExtension
+    )
+
+    override fun registerExtension(
+        dslExtension: DslExtension,
+        configurator: (variantExtensionConfig: VariantExtensionConfig<VariantT>) -> VariantExtension
+    ) {
+        variantApiOperations.dslExtensions.add(
+            RegisteredApiExtension(
+                dslExtensionTypes = dslExtension,
+                configurator = configurator
+        ))
+
+        dslExtension.buildTypeExtensionType?.let {
+            commonExtension.buildTypes.forEach {
+                    buildType ->
+                buildType.extensions.add(
+                    dslExtension.dslName,
+                    it
+                )
+            }
+        }
+        dslExtension.productFlavorExtensionType?.let {
+            commonExtension.productFlavors.forEach {
+                productFlavor -> productFlavor.extensions.add(
+                    dslExtension.dslName,
+                    it
+                )
+            }
+        }
     }
 }

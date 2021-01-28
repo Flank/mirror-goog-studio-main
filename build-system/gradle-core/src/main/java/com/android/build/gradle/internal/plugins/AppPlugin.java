@@ -149,7 +149,8 @@ public class AppPlugin
                         ApplicationAndroidComponentsExtensionImpl.class,
                         dslServices,
                         sdkComponents,
-                        variantApiOperationsRegistrar);
+                        variantApiOperationsRegistrar,
+                        getExtension());
     }
 
     @NonNull

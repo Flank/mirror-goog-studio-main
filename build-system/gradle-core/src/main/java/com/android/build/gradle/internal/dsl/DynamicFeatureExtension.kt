@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures
-import com.android.build.api.variant.DynamicFeatureVariantBuilder
-import com.android.build.api.variant.DynamicFeatureVariant
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.BaseVariantOutput
 import com.android.build.gradle.api.ViewBindingOptions

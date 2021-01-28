@@ -35,6 +35,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.AndroidTest
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.impl.*
+import com.android.build.api.extension.VariantExtensionConfig
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -64,6 +65,7 @@ import com.google.wireless.android.sdk.stats.ApiVersion
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.internal.GeneratedSubclass
 import java.io.File
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
@@ -704,6 +706,35 @@ class VariantManager<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImp
                     .createUserVisibleVariantObject<Variant>(projectServices,
                         variantApiOperationsRegistrar,
                         variantInfo.stats)
+
+                // The variant object is created, let's create the user extension variant scoped objects
+                // and store them in our newly created variant object.
+                val variantExtensionConfig = object: VariantExtensionConfig<Variant> {
+                    override val variant: Variant
+                        get() = userVisibleVariant
+
+                    override fun <T> projectExtension(extensionType: Class<T>): T {
+                        // we need to make DefaultConfig or CommonExtension implement ExtensionAware.
+                        throw RuntimeException("No global extension DSL element implements ExtensionAware.")
+                    }
+
+                    override fun <T> buildTypeExtension(extensionType: Class<T>): T =
+                        buildTypeData.buildType.extensions.getByType(extensionType)
+
+                    override fun <T> productFlavorsExtensions(extensionType: Class<T>): List<T> =
+                        productFlavorDataList.map { productFlavorData ->
+                            productFlavorData.productFlavor.extensions.getByType(extensionType)
+                        }
+                }
+
+                variantApiOperationsRegistrar.dslExtensions.forEach { registeredExtension ->
+                    registeredExtension.configurator.invoke(variantExtensionConfig).let {
+                        variantInfo.variantBuilder.registerExtension<Any>(
+                            if (it is GeneratedSubclass) it.publicType() else it.javaClass,
+                            it
+                        )
+                    }
+                }
                 variantApiOperationsRegistrar.variantOperations.executeOperations(userVisibleVariant)
 
                 // all the variant public APIs have run, we can now safely fill the analytics with

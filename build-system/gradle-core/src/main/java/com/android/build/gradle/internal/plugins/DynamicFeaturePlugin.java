@@ -148,7 +148,8 @@ public class DynamicFeaturePlugin
                         DynamicFeatureAndroidComponentsExtensionImpl.class,
                         dslServices,
                         sdkComponents,
-                        variantApiOperationsRegistrar);
+                        variantApiOperationsRegistrar,
+                        getExtension());
     }
 
     @NonNull

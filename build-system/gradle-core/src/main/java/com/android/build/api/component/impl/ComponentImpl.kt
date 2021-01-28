@@ -27,6 +27,7 @@ import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
@@ -703,7 +704,7 @@ abstract class ComponentImpl(
 
     abstract fun <T: Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<VariantBuilder, Variant>,
+            operationsRegistrar: VariantApiOperationsRegistrar<out VariantBuilder, out Variant>,
             stats: GradleBuildVariant.Builder?
     ): T
 

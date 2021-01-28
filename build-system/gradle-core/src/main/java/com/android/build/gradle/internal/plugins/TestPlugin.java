@@ -134,7 +134,8 @@ public class TestPlugin
                         TestAndroidComponentsExtensionImpl.class,
                         dslServices,
                         sdkComponents,
-                        variantApiOperationsRegistrar);
+                        variantApiOperationsRegistrar,
+                        getExtension());
     }
 
     @NonNull

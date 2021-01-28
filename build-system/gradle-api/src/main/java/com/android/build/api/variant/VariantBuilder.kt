@@ -65,9 +65,9 @@ interface VariantBuilder: ComponentBuilder, ActionableComponentObject {
      * configuration object to the Android Gradle Plugin variant object and make it available to
      * other plugins.
      *
-     * @param type the registered object type (can be a supertype), this is the type that must be
-     * passed to the [Variant.getExtension] API.
+     * @param type the registered object type (can be a supertype of [instance]), this is the type
+     * that must be passed to the [Variant.getExtension] API.
      * @param instance the object to associate to the AGP Variant object.
      */
-    fun <T: Any> registerExtension(type: Class<T>, instance: T)
+    fun <T: Any> registerExtension(type: Class<out T>, instance: T)
 }

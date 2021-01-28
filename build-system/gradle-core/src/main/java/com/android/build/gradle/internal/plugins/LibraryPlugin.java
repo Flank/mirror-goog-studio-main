@@ -44,14 +44,13 @@ import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
+import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-
-import javax.inject.Inject;
-import java.util.List;
 
 /** Gradle plugin class for 'library' projects. */
 public class LibraryPlugin
@@ -125,7 +124,8 @@ public class LibraryPlugin
                         LibraryAndroidComponentsExtensionImpl.class,
                         dslServices,
                         sdkComponents,
-                        variantApiOperationsRegistrar);
+                        variantApiOperationsRegistrar,
+                        getExtension());
     }
 
     @NonNull
