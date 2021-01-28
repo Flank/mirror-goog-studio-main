@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.addon.v2;
 
 import com.android.sdklib.repository.generated.common.v2.LibraryType;
@@ -71,4 +72,5 @@ public class LibrariesType
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

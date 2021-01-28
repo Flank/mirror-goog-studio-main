@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.generic.v2;
 
 import com.android.repository.impl.generated.v2.TypeDetails;
@@ -35,4 +36,5 @@ public class GenericDetailsType extends TypeDetails
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

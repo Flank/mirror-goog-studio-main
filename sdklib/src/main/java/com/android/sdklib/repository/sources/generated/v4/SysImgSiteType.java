@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.sources.generated.v4;
 
 import com.android.repository.impl.sources.generated.v1.SiteType;
@@ -33,4 +34,5 @@ public class SysImgSiteType extends SiteType
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

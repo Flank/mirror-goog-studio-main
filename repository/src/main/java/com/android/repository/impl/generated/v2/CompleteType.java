@@ -38,10 +38,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 public class CompleteType extends com.android.repository.impl.meta.Archive.CompleteType {
 
     protected long size;
-
     @XmlElement(name = "checksum", required = true)
     protected ChecksumType typedChecksum;
-
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlSchemaType(name = "token")

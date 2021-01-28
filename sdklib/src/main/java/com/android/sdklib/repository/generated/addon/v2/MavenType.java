@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.addon.v2;
 
 import com.android.repository.impl.generated.v2.TypeDetails;
@@ -64,4 +65,5 @@ public class MavenType extends TypeDetails
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

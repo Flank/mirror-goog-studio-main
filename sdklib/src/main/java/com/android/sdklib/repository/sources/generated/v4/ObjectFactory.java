@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.sources.generated.v4;
 
 import com.android.repository.impl.sources.generated.v1.SiteListType;
@@ -60,4 +61,5 @@ public class ObjectFactory {
                             value) {
         return ((JAXBElement) createSdkAddonsListInternal(((SiteListType) value)));
     }
+
 }

@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.repository.v2;
 
 import com.android.sdklib.repository.generated.common.v2.ApiDetailsType;
@@ -71,4 +72,5 @@ public class PlatformDetailsType extends ApiDetailsType
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

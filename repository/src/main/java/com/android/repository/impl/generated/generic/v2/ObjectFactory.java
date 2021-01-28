@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.generic.v2;
 
 import com.android.repository.api.Repository;
@@ -55,4 +56,5 @@ public class ObjectFactory extends GenericFactory {
     public JAXBElement<Repository> generateRepository(Repository value) {
         return ((JAXBElement) createRepositoryInternal(((RepositoryType) value)));
     }
+
 }

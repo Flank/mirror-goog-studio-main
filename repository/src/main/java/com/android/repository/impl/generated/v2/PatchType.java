@@ -44,10 +44,8 @@ public class PatchType extends com.android.repository.impl.meta.Archive.PatchTyp
     @XmlElement(name = "based-on", required = true)
     protected com.android.repository.impl.generated.v2.RevisionType basedOn;
     protected long size;
-
     @XmlElement(name = "checksum", required = true)
     protected ChecksumType typedChecksum;
-
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlSchemaType(name = "token")

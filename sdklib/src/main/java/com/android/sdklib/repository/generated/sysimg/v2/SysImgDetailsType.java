@@ -49,7 +49,6 @@ public class SysImgDetailsType extends ApiDetailsType
 
     @XmlElement(name = "tag")
     protected List<IdDisplayType> tags;
-
     protected IdDisplayType vendor;
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)

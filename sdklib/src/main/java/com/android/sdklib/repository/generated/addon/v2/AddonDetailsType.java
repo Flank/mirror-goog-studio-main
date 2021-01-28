@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.addon.v2;
 
 import com.android.repository.impl.meta.TrimStringAdapter;
@@ -45,14 +46,11 @@ public class AddonDetailsType extends ApiDetailsType
 
     @XmlElement(required = true)
     protected IdDisplayType vendor;
-
     @XmlElement(required = true)
     protected IdDisplayType tag;
-
     @XmlElement(name = "default-skin")
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String defaultSkin;
-
     protected LibrariesType libraries;
 
     /**
@@ -143,4 +141,5 @@ public class AddonDetailsType extends ApiDetailsType
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

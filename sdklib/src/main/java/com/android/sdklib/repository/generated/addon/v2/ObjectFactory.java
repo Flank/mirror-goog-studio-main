@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.addon.v2;
 
 import com.android.repository.api.Repository;
@@ -69,4 +70,5 @@ public class ObjectFactory extends AddonFactory {
     public JAXBElement<Repository> generateSdkAddon(Repository value) {
         return ((JAXBElement) createSdkAddonInternal(((RepositoryType) value)));
     }
+
 }

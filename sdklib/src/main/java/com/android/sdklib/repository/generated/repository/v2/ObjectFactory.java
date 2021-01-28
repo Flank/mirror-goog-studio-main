@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.repository.v2;
 
 import com.android.repository.api.Repository;
@@ -66,4 +67,5 @@ public class ObjectFactory extends RepoFactory {
     public JAXBElement<Repository> generateSdkRepository(Repository value) {
         return ((JAXBElement) createSdkRepositoryInternal(((RepositoryType) value)));
     }
+
 }

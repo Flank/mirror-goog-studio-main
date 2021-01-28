@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.repository.v2;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -47,4 +48,5 @@ public class LayoutlibType
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }
