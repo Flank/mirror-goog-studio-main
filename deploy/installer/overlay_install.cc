@@ -142,6 +142,7 @@ void OverlayInstallCommand::UpdateOverlay(
 
   const std::string overlay_path = Sites::AppOverlays(request_.package_name());
   overlay_request.set_overlay_path(overlay_path);
+  overlay_request.set_package_name(request_.package_name());
 
   for (auto overlay_file : request_.overlay_files()) {
     auto file = overlay_request.add_files_to_write();
