@@ -520,6 +520,33 @@ public class SymbolIoTest {
     }
 
     @Test
+    public void testDuplicatesStyleables() throws Exception {
+        File aaptRTxt = new File(mTemporaryFolder.newFolder(), "R.txt");
+        Files.asCharSink(aaptRTxt, Charsets.UTF_8)
+                .write("int[] styleable a { 0x7f000000, 0x7f000001 }\n"
+                        + "int styleable a_b 1\n"
+                        + "int styleable a_c 0\n"
+                        + "int[] styleable a { 0x7f000000, 0x7f000001 }\n"
+                        + "int styleable a_b 1\n"
+                        + "int styleable a_c 0\n");
+
+        try {
+            SymbolIo.readFromAapt(aaptRTxt, "packageName");
+        } catch (Exception e) {
+            assertThat(e.getMessage()).isEqualTo(
+                    "Issue parsing symbol table from package 'packageName' at "
+                            + aaptRTxt.getAbsolutePath()
+                            +".\n"
+                            + "Duplicate key: (row=styleable, column=a), "
+                            + "values: [StyleableSymbolImpl(name=a, values=[2130706432, 2130706433],"
+                            + " children=[c, b], resourceVisibility=UNDEFINED, canonicalName=a),"
+                            + " StyleableSymbolImpl(name=a, values=[2130706432, 2130706433],"
+                            + " children=[c, b], resourceVisibility=UNDEFINED, canonicalName=a)]."
+            );
+        }
+    }
+
+    @Test
     public void writeRTxtGeneration() throws Exception {
         SymbolTable table =
                 SymbolTable.builder()
@@ -592,7 +619,7 @@ public class SymbolIoTest {
     }
 
     @Test
-    public void checkReadWithCrLf() throws IOException {
+    public void checkReadWithCrLf() throws Exception {
         File txt = mTemporaryFolder.newFile();
         String content =
                 "int drawable foobar 0x7f02000 \r\n"
@@ -880,7 +907,7 @@ public class SymbolIoTest {
     }
 
     @Test
-    public void testRealMisorderedAar() {
+    public void testRealMisorderedAar() throws Exception {
         File misordered =
                 TestResources.getFile(SymbolIoTest.class, "/testData/symbolIo/misordered_R.txt");
         try {
@@ -1162,7 +1189,7 @@ public class SymbolIoTest {
     }
 
     @Test
-    public void testCharsDifferingInAnsiAndUtf8() throws IOException {
+    public void testCharsDifferingInAnsiAndUtf8() throws Exception {
         // The character "ë" if encoded in ANSI will cause a crash when read as UTF-8.
         SymbolTable table =
                 SymbolTable.builder()

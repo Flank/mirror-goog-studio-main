@@ -1566,7 +1566,7 @@ public class ResourceUsageAnalyzer implements ResourceShrinker {
                     mModel.addResource(symbol.getResourceType(), symbol.getName(), symbolValue);
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
