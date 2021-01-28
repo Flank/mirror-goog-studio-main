@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.License;
 import com.android.repository.api.LocalPackage;
@@ -97,7 +98,7 @@ public abstract class FakePackage implements RepoPackage {
      * A fake {@link RemotePackage} for use in unit tests.
      */
     public static class FakeRemotePackage extends FakePackage implements RemotePackage {
-        private FakeArchive mArchive = new FakeArchive();
+        private final FakeArchive mArchive = new FakeArchive();
         private Channel mChannel;
 
         public FakeRemotePackage(@NonNull String path) {
@@ -175,6 +176,7 @@ public abstract class FakePackage implements RepoPackage {
                 if (mComplete == null && mCompleteUrl != null) {
                     mComplete = createFactory().createCompleteType();
                     mComplete.setUrl(mCompleteUrl);
+                    mComplete.setTypedChecksum(Checksum.create("1234567890abcdef", "sha1"));
                 }
                 if (mComplete != null) {
                     return mComplete;

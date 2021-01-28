@@ -42,6 +42,12 @@
                 </property>
             </bindings>
         </bindings>
+        <bindings node="//xsd:group[@name='archiveFields']/xsd:sequence/xsd:element[@name='checksum']">
+            <property name="typedChecksum"/>
+        </bindings>
+        <bindings node="//xsd:complexType[@name='checksumType']">
+            <plugin:super name="com.android.repository.api.Checksum"/>
+        </bindings>
         <bindings node="//xsd:complexType[@name='channelType']">
             <plugin:super name="com.android.repository.api.Channel"/>
         </bindings>

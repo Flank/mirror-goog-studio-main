@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.api.Dependency;
@@ -42,7 +43,6 @@ public class DependencyType extends Dependency {
 
     @XmlElement(name = "min-revision")
     protected com.android.repository.impl.generated.v2.RevisionType minRevision;
-
     @XmlAttribute(name = "path", required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String path;
@@ -91,4 +91,5 @@ public class DependencyType extends Dependency {
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

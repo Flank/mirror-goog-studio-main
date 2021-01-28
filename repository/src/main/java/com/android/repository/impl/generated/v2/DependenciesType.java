@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.api.Dependency;
@@ -70,4 +71,5 @@ public class DependenciesType
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

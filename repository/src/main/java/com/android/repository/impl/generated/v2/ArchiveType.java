@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.impl.meta.Archive;
@@ -47,20 +48,15 @@ public class ArchiveType extends Archive {
     @XmlElement(name = "host-os")
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String hostOs;
-
     @XmlElement(name = "host-arch")
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String hostArch;
-
     @XmlElement(name = "jvm-bits")
     protected Integer jvmBits;
-
     @XmlElement(name = "min-jvm-version")
     protected com.android.repository.impl.generated.v2.RevisionType minJvmVersion;
-
     @XmlElement(required = true)
     protected com.android.repository.impl.generated.v2.CompleteType complete;
-
     protected com.android.repository.impl.generated.v2.PatchesType patches;
 
     /**
@@ -199,4 +195,5 @@ public class ArchiveType extends Archive {
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

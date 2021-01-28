@@ -275,6 +275,11 @@
             <xsd:element name="size" type="xsd:long"/>
             <!-- The checksum of the archive file. -->
             <xsd:element name="checksum">
+                <xsd:annotation>
+                    <xsd:appinfo>
+                        <jaxb:property name="legacyChecksum"/>
+                    </xsd:appinfo>
+                </xsd:annotation>
                 <xsd:simpleType>
                     <xsd:annotation>
                         <xsd:documentation>A SHA1 checksum.</xsd:documentation>

@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.api.Channel;
@@ -49,7 +50,6 @@ public class ChannelType extends Channel {
     @XmlValue
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String value;
-
     @XmlAttribute(name = "id")
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlID
@@ -94,4 +94,5 @@ public class ChannelType extends Channel {
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

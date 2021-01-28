@@ -98,7 +98,9 @@ public class UnmarshalTest extends TestCase {
         assertEquals("something", patch.getUrl());
         Archive.CompleteType complete = archive.getComplete();
         assertEquals(65536, complete.getSize());
-        assertEquals("1234ae37115ebf13412bbef91339ee0d9454525e", complete.getChecksum());
+        // TODO: sha-256
+        assertEquals(
+                "1234ae37115ebf13412bbef91339ee0d9454525e", complete.getTypedChecksum().getValue());
 
         // TODO: add other extension types as below
 /*

@@ -124,6 +124,7 @@ public class OfflineRepoCreator {
             throws IOException {
         if (Files.exists(dest)) {
             try {
+                // TODO: sha-256
                 MessageDigest digest = MessageDigest.getInstance("SHA-1");
                 try (InputStream in = new BufferedInputStream(Files.newInputStream(dest))) {
                     byte[] buf = new byte[4096];
@@ -133,8 +134,12 @@ public class OfflineRepoCreator {
                     }
                 }
                 if (DatatypeConverter.printHexBinary(digest.digest())
-                        .equals(remote.getArchive().getComplete().getChecksum()
-                                .toUpperCase())) {
+                        .equals(
+                                remote.getArchive()
+                                        .getComplete()
+                                        .getTypedChecksum()
+                                        .getValue()
+                                        .toUpperCase())) {
                     System.out.println(dest + " is up to date");
                     return true;
                 }

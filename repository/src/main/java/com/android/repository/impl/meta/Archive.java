@@ -19,6 +19,7 @@ package com.android.repository.impl.meta;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.SchemaModule;
 import com.android.tools.analytics.CommonMetricsData;
@@ -301,14 +302,23 @@ public abstract class Archive {
 
         /** Returns the checksum for the zip. */
         @NonNull
-        public abstract String getChecksum();
-
-        /**
-         * Sets the checksum for this zip.
-         */
-        public void setChecksum(@NonNull String checksum) {
-            // Stub
+        public Checksum getTypedChecksum() {
+            // Implementation for compatibility with v1
+            return Checksum.create(getLegacyChecksum(), "sha1");
         }
+
+        /** Sets the checksum for this zip. */
+        public void setTypedChecksum(@NonNull Checksum checksum) {
+            // Implementation for compatibility with v1
+            setLegacyChecksum(checksum.getValue());
+        }
+
+        protected String getLegacyChecksum() {
+            // Overridden by v1 and shouldn't be used otherwise
+            throw new UnsupportedOperationException();
+        }
+
+        protected void setLegacyChecksum(String checksum) {}
 
         /** Returns the URL to download from. */
         @NonNull

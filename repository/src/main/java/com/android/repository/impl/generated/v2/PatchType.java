@@ -1,6 +1,7 @@
+
 package com.android.repository.impl.generated.v2;
 
-import com.android.repository.impl.meta.TrimStringAdapter;
+import com.android.repository.api.Checksum;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -36,18 +37,16 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(
         name = "patchType",
-        propOrder = {"basedOn", "size", "checksum", "url"})
+        propOrder = {"basedOn", "size", "typedChecksum", "url"})
 @SuppressWarnings({"override", "unchecked"})
 public class PatchType extends com.android.repository.impl.meta.Archive.PatchType {
 
     @XmlElement(name = "based-on", required = true)
     protected com.android.repository.impl.generated.v2.RevisionType basedOn;
-
     protected long size;
 
-    @XmlElement(required = true)
-    @XmlJavaTypeAdapter(TrimStringAdapter.class)
-    protected String checksum;
+    @XmlElement(name = "checksum", required = true)
+    protected ChecksumType typedChecksum;
 
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
@@ -83,21 +82,21 @@ public class PatchType extends com.android.repository.impl.meta.Archive.PatchTyp
     }
 
     /**
-     * Gets the value of the checksum property.
+     * Gets the value of the typedChecksum property.
      *
-     * @return possible object is {@link String }
+     * @return possible object is {@link ChecksumType }
      */
-    public String getChecksum() {
-        return checksum;
+    public ChecksumType getTypedChecksum() {
+        return typedChecksum;
     }
 
     /**
-     * Sets the value of the checksum property.
+     * Sets the value of the typedChecksum property.
      *
-     * @param value allowed object is {@link String }
+     * @param value allowed object is {@link ChecksumType }
      */
-    public void setChecksum(String value) {
-        this.checksum = value;
+    public void setTypedChecksumInternal(ChecksumType value) {
+        this.typedChecksum = value;
     }
 
     /**
@@ -118,15 +117,16 @@ public class PatchType extends com.android.repository.impl.meta.Archive.PatchTyp
         this.url = value;
     }
 
-    public boolean isValidChecksum(String value) {
-        return ((value != null) && (value.matches("^([0-9a-fA-F]){40}$")));
-    }
-
     public void setBasedOn(com.android.repository.impl.meta.RevisionType value) {
         setBasedOnInternal(((com.android.repository.impl.generated.v2.RevisionType) value));
+    }
+
+    public void setTypedChecksum(Checksum value) {
+        setTypedChecksumInternal(((ChecksumType) value));
     }
 
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

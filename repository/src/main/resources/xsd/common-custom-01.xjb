@@ -24,7 +24,7 @@
           xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
           xmlns:plugin="http://schemas.android.com/android/jaxb/plugin/1"
           extensionBindingPrefixes="plugin">
-    <bindings schemaLocation="../../api/repo-common-01.xsd" node="/xsd:schema">
+    <bindings schemaLocation="repo-common-01.xsd" node="/xsd:schema">
         <!-- unfortunately we can't use scd refs with custom plugins: JAXB-1047 -->
         <bindings node="//xsd:complexType[@name='channelRefType']">
             <bindings node="xsd:attribute[@name='ref']">

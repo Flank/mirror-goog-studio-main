@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import java.util.ArrayList;
@@ -69,4 +70,5 @@ public class PatchesType extends com.android.repository.impl.meta.Archive.Patche
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

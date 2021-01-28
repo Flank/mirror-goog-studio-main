@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.impl.meta.Archive;
@@ -69,4 +70,5 @@ public class ArchivesType extends com.android.repository.impl.meta.RepoPackageIm
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

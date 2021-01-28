@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.api.License;
@@ -64,4 +65,5 @@ public class LicenseRefType extends com.android.repository.impl.meta.RepoPackage
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

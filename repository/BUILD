@@ -107,6 +107,17 @@ coverage_java_test(
 )
 
 xsd_to_java(
+    name = "repo-common-1",
+    catalog = "src/main/resources/xsd/catalog.xml",
+    custom_binding = "src/main/resources/xsd/common-custom-01.xjb",
+    episode = "repo-common-01.xjb",
+    package = "com.android.repository.impl.generated.v1",
+    src_location = "tools/base/repository/src/main/java",
+    xsd = "src/main/resources/xsd/repo-common-01.xsd",
+    deps = [":tools.repository"],
+)
+
+xsd_to_java(
     name = "repo-common-2",
     catalog = "src/main/resources/xsd/catalog.xml",
     custom_binding = "src/main/resources/xsd/common-custom-02.xjb",
@@ -114,7 +125,7 @@ xsd_to_java(
     package = "com.android.repository.impl.generated.v2",
     src_location = "tools/base/repository/src/main/java",
     xsd = "src/main/resources/xsd/repo-common-02.xsd",
-    deps = [":tools.repository"],  # glob(["src/main/resources/xsd/**"])
+    deps = [":tools.repository"],
 )
 
 xsd_to_java(
@@ -136,7 +147,7 @@ xsd_to_java(
     package = "com.android.repository.impl.sources.generated.v1",
     src_location = "tools/base/repository/src/main/java",
     xsd = "src/main/resources/xsd/sources/repo-sites-common-1.xsd",
-    deps = [":tools.repository"],  #glob(["src/main/resources/xsd/**"]) +
+    deps = [":tools.repository"],
 )
 
 java_binary(

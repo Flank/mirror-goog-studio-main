@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.impl.meta.RemotePackageImpl;
@@ -52,27 +53,20 @@ public class RemotePackage extends RemotePackageImpl {
 
     @XmlElement(name = "type-details", required = true)
     protected com.android.repository.impl.generated.v2.TypeDetails typeDetails;
-
     @XmlElement(required = true)
     protected com.android.repository.impl.generated.v2.RevisionType revision;
-
     @XmlElement(name = "display-name", required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String displayName;
-
     @XmlElement(name = "uses-license")
     protected LicenseRefType usesLicense;
-
     protected DependenciesType dependencies;
     protected ChannelRefType channelRef;
-
     @XmlElement(required = true)
     protected ArchivesType archives;
-
     @XmlAttribute(name = "path", required = true)
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     protected String path;
-
     @XmlAttribute(name = "obsolete")
     protected Boolean obsolete;
 
@@ -266,4 +260,5 @@ public class RemotePackage extends RemotePackageImpl {
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

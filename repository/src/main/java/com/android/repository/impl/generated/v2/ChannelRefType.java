@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.api.Channel;
@@ -61,4 +62,5 @@ public class ChannelRefType extends com.android.repository.impl.meta.RemotePacka
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

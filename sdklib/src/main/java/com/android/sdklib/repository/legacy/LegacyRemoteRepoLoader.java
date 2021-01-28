@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.Dependency;
 import com.android.repository.api.Downloader;
@@ -258,7 +259,7 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                     CommonFactory f = RepoManager.getCommonModule().createLatestFactory();
                     Archive arch = f.createArchiveType();
                     Archive.CompleteType complete = f.createCompleteType();
-                    complete.setChecksum(archive.getChecksum());
+                    complete.setTypedChecksum(Checksum.create(archive.getChecksum(), "sha1"));
                     complete.setSize(archive.getSize());
                     complete.setUrl(archive.getUrl());
                     arch.setComplete(complete);

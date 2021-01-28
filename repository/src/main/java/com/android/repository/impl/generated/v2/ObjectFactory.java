@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.api.Repository;
@@ -82,6 +83,11 @@ public class ObjectFactory extends CommonFactory {
         return new PatchesType();
     }
 
+    /** Create an instance of {@link ChecksumType } */
+    public ChecksumType createChecksumType() {
+        return new ChecksumType();
+    }
+
     /** Create an instance of {@link CompleteType } */
     public CompleteType createCompleteType() {
         return new CompleteType();
@@ -124,4 +130,5 @@ public class ObjectFactory extends CommonFactory {
     public JAXBElement<Repository> generateRepository(Repository value) {
         return ((JAXBElement) createRepositoryInternal(((RepositoryType) value)));
     }
+
 }

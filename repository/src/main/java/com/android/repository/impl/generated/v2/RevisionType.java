@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -109,4 +110,5 @@ public class RevisionType extends com.android.repository.impl.meta.RevisionType 
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }
