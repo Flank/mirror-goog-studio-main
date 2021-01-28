@@ -143,7 +143,9 @@ public abstract class FakePackage implements RepoPackage {
         @Override
         @NonNull
         public Channel getChannel() {
-            return mChannel == null ? Channel.DEFAULT : mChannel;
+            return mChannel == null
+                    ? createFactory().createChannelType(Channel.DEFAULT_ID)
+                    : mChannel;
         }
 
         @Override

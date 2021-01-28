@@ -63,10 +63,8 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
     private static final String FETCH_PACKAGES_WAITING_MESSAGE =
             "Still waiting for package manifests to be fetched remotely.";
 
-    /**
-     * {@link FallbackRemoteRepoLoader} to use if we get an XML file we can't parse.
-     */
-    private FallbackRemoteRepoLoader mFallback;
+    /** {@link FallbackRemoteRepoLoader} to use if we get an XML file we can't parse. */
+    private final FallbackRemoteRepoLoader mFallback;
 
     /**
      * The {@link RepositorySourceProvider}s to load from.
@@ -297,7 +295,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
                 }
                 Channel settingsChannel =
                         settings == null || settings.getChannel() == null
-                                ? Channel.DEFAULT
+                                ? pkg.createFactory().createChannelType(Channel.DEFAULT_ID)
                                 : settings.getChannel();
 
                 if (pkg.getArchive() != null && pkg.getChannel().compareTo(settingsChannel) <= 0) {

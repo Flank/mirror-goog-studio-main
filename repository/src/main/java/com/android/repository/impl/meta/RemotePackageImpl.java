@@ -87,7 +87,9 @@ public abstract class RemotePackageImpl extends RepoPackageImpl implements Remot
     @NonNull
     @Override
     public Channel getChannel() {
-        return getChannelRef() == null ? Channel.DEFAULT : getChannelRef().getRef();
+        return getChannelRef() == null
+                ? createFactory().createChannelType(Channel.DEFAULT_ID)
+                : getChannelRef().getRef();
     }
 
     @NonNull
@@ -122,7 +124,10 @@ public abstract class RemotePackageImpl extends RepoPackageImpl implements Remot
      */
     @NonNull
     public static RemotePackageImpl create(@NonNull RemotePackage remotePackage) {
-        CommonFactory factory = RepoManager.getCommonModule().createLatestFactory();
+        if (remotePackage instanceof RemotePackageImpl) {
+            return (RemotePackageImpl) remotePackage;
+        }
+        CommonFactory factory = remotePackage.createFactory();
         RemotePackageImpl result = factory.createRemotePackage();
         result.setVersion(remotePackage.getVersion());
         result.setLicense(remotePackage.getLicense());

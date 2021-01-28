@@ -71,11 +71,7 @@ class SdkLibDataFactory(
             }
 
             override fun getChannel(): Channel? {
-                return if (androidSdkChannel != null) {
-                    Channel.create(androidSdkChannel!!)
-                } else {
-                    Channel.DEFAULT
-                }
+                return Channel.create(androidSdkChannel ?: Channel.DEFAULT_ID)
             }
 
             override fun getProxy(): Proxy {
@@ -119,7 +115,7 @@ class SdkLibDataFactory(
         if (host != null) {
             val proxyAddr = createAddress(host, port)
             if (proxyAddr != null) {
-                return Proxy(Proxy.Type.HTTP, proxyAddr!!)
+                return Proxy(Proxy.Type.HTTP, proxyAddr)
             }
         }
         return Proxy.NO_PROXY

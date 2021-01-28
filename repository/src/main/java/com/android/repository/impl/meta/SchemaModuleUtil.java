@@ -123,23 +123,26 @@ public class SchemaModuleUtil {
         if (resourceResolver != null) {
             sf.setResourceResolver(resourceResolver);
         }
-        sf.setErrorHandler(new ErrorHandler() {
-            @Override
-            public void warning(SAXParseException exception) throws SAXException {
-                progress.logWarning("Warning while creating schema:", exception);
-            }
+        sf.setErrorHandler(
+                new ErrorHandler() {
+                    @Override
+                    public void warning(SAXParseException exception) throws SAXException {
+                        progress.logWarning("Warning while creating schema:", exception);
+                        throw exception;
+                    }
 
-            @Override
-            public void error(SAXParseException exception) throws SAXException {
-                progress.logWarning("Error creating schema:", exception);
+                    @Override
+                    public void error(SAXParseException exception) throws SAXException {
+                        progress.logWarning("Error creating schema:", exception);
+                        throw exception;
+                    }
 
-            }
-
-            @Override
-            public void fatalError(SAXParseException exception) throws SAXException {
-                progress.logWarning("Fatal error creating schema:", exception);
-            }
-        });
+                    @Override
+                    public void fatalError(SAXParseException exception) throws SAXException {
+                        progress.logWarning("Fatal error creating schema:", exception);
+                        throw exception;
+                    }
+                });
 
         List<StreamSource> sources = Lists.newArrayList();
         List<SchemaModule<?>.SchemaModuleVersion<?>> key = Lists.newArrayList();

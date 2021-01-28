@@ -19,7 +19,6 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.Collection;
 
 /**
@@ -33,11 +32,14 @@ public interface FallbackRemoteRepoLoader {
 
     /**
      * Parses an xml file into {@link RemotePackage}s.
+     *
      * @param xml The {@link RepositorySource} to read from.
      * @return The parsed packages, null if none are found (due to an error).
      */
     @Nullable
-    Collection<RemotePackage> parseLegacyXml(@NonNull RepositorySource xml,
-            @NonNull Downloader downloader, @NonNull SettingsController settings,
+    Collection<RemotePackage> parseLegacyXml(
+            @NonNull RepositorySource xml,
+            @NonNull Downloader downloader,
+            @Nullable SettingsController settings,
             @NonNull ProgressIndicator progress);
 }

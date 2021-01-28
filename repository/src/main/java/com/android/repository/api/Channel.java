@@ -18,8 +18,6 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.impl.meta.CommonFactory;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
@@ -28,10 +26,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlTransient
 public abstract class Channel implements Comparable<Channel> {
 
-    /**
-     * The default channel is the most stable.
-     */
-    public static final Channel DEFAULT = create(0);
+    /** The default channel is the most stable. */
+    public static final int DEFAULT_ID = 0;
 
     /**
      * Create a new {@code Channel} with the specified ID.
