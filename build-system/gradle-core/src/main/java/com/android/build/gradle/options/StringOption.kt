@@ -77,6 +77,8 @@ enum class StringOption(
 
     AAPT2_FROM_MAVEN_OVERRIDE("android.aapt2FromMavenOverride", ApiStage.Experimental),
 
+    AAPT2_FROM_MAVEN_VERSION_OVERRIDE("android.aapt2Version", ApiStage.Experimental),
+
     SUPPRESS_UNSUPPORTED_OPTION_WARNINGS("android.suppressUnsupportedOptionWarnings", ApiStage.Experimental),
 
     // User-specified path to Prefab jar to return from getPrefabFromMaven.

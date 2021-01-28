@@ -80,15 +80,31 @@ class Aapt2FromMaven(val aapt2Directory: FileCollection, val version: String) {
         @JvmStatic
         fun create(project: Project, projectOptions: ProjectOptions): Aapt2FromMaven {
             // Use custom AAPT2 if it was overridden.
-            val customAapt2 = projectOptions[StringOption.AAPT2_FROM_MAVEN_OVERRIDE]
-            if (!customAapt2.isNullOrEmpty()) {
+            val customAapt2 = projectOptions[StringOption.AAPT2_FROM_MAVEN_OVERRIDE] ?: ""
+            // Use custom maven coordinates if specified.
+            val overriddenVersion = projectOptions[StringOption.AAPT2_FROM_MAVEN_VERSION_OVERRIDE] ?: ""
+            val defaultVersion = "${Version.ANDROID_GRADLE_PLUGIN_VERSION}-${Aapt2Version.BUILD_NUMBER}"
+
+            if (customAapt2.any() && overriddenVersion.any()) {
+                error("You cannot specify both local and remote custom versions of AAPT2.\n" +
+                        "Please use either ${StringOption.AAPT2_FROM_MAVEN_OVERRIDE.propertyName}" +
+                        " for setting a local path to the executable or " +
+                        "${StringOption.AAPT2_FROM_MAVEN_VERSION_OVERRIDE} for specifying a Maven" +
+                        " version (e.g. \"$defaultVersion\").")
+            }
+
+            if (customAapt2.any()) {
                 if (!customAapt2.endsWith(SdkConstants.FN_AAPT2)) {
                     error("Custom AAPT2 location does not point to an AAPT2 executable: $customAapt2")
                 }
                 return Aapt2FromMaven(project.files(File(customAapt2).parentFile), customAapt2)
             }
 
-            val version = "${Version.ANDROID_GRADLE_PLUGIN_VERSION}-${Aapt2Version.BUILD_NUMBER}"
+            val version =
+                    if (overriddenVersion.any())
+                        overriddenVersion
+                    else
+                        defaultVersion
 
             // See tools/base/aapt2 for the classifiers to use.
             val classifier = when (SdkConstants.currentPlatform()) {
