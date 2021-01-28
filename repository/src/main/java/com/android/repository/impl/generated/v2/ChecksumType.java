@@ -1,3 +1,4 @@
+
 package com.android.repository.impl.generated.v2;
 
 import com.android.repository.api.Checksum;
@@ -39,7 +40,6 @@ public class ChecksumType extends Checksum {
     @XmlValue
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String value;
-
     @XmlAttribute(name = "type", required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String type;

@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.common.v2;
 
 import com.android.repository.impl.meta.TrimStringAdapter;
@@ -44,7 +45,6 @@ public class IdDisplayType extends IdDisplay {
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlSchemaType(name = "token")
     protected String id;
-
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String display;
@@ -92,4 +92,5 @@ public class IdDisplayType extends IdDisplay {
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

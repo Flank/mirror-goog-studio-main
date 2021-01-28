@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -219,7 +220,9 @@ public class SystemImageManager {
         }
 
         if (details instanceof DetailsTypes.SysImgDetailsType) {
-            tag = ((DetailsTypes.SysImgDetailsType) details).getTag();
+            // TODO: support multi-tag
+            List<IdDisplay> tags = ((DetailsTypes.SysImgDetailsType) details).getTags();
+            tag = tags.isEmpty() ? SystemImage.DEFAULT_TAG : tags.get(0);
         } else if (details instanceof DetailsTypes.AddonDetailsType) {
             tag = ((DetailsTypes.AddonDetailsType) details).getTag();
         } else {

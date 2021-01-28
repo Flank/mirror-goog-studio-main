@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.sysimg.v2;
 
 import com.android.repository.api.Repository;
@@ -54,4 +55,5 @@ public class ObjectFactory extends SysImgFactory {
     public JAXBElement<Repository> generateSdkSysImg(Repository value) {
         return ((JAXBElement) createSdkSysImgInternal(((RepositoryType) value)));
     }
+
 }

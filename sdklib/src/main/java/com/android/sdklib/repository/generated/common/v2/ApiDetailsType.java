@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.common.v2;
 
 import com.android.repository.impl.generated.v2.TypeDetails;
@@ -42,7 +43,6 @@ public abstract class ApiDetailsType extends TypeDetails
 
     @XmlElement(name = "api-level")
     protected int apiLevel;
-
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String codename;
 
@@ -73,4 +73,5 @@ public abstract class ApiDetailsType extends TypeDetails
     public void setCodename(String value) {
         this.codename = value;
     }
+
 }

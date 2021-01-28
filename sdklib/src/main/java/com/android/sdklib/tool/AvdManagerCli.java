@@ -721,7 +721,9 @@ class AvdManagerCli extends CommandLineParser {
             if (cmdTag == null) {
                 DetailsTypes.SysImgDetailsType details =
                         (DetailsTypes.SysImgDetailsType) imagePkg.getTypeDetails();
-                tag = details.getTag();
+                // TODO: support multi-tag
+                List<IdDisplay> tags = details.getTags();
+                tag = tags.isEmpty() ? null : tags.get(0);
             }
 
             if (abiType != null && abiType.indexOf('/') != -1) {

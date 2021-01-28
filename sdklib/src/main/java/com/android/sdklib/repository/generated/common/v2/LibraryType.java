@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.common.v2;
 
 import com.android.repository.impl.meta.TrimStringAdapter;
@@ -44,15 +45,12 @@ public class LibraryType extends Library {
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String description;
-
     @XmlAttribute(name = "localJarPath")
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String localJarPath;
-
     @XmlAttribute(name = "name", required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String name;
-
     @XmlAttribute(name = "manifestEntryRequired")
     protected Boolean manifestEntryRequired;
 
@@ -135,4 +133,5 @@ public class LibraryType extends Library {
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

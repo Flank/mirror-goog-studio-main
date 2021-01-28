@@ -117,9 +117,9 @@ public class LegacyRepoUtils {
                 IdDisplay tag = sdkFactory.createIdDisplayType();
                 tag.setId(tagIdDisplay.getId());
                 tag.setDisplay(tagIdDisplay.getDisplay());
-                details.setTag(tag);
+                details.getTags().add(tag);
             } else {
-                details.setTag(SystemImage.DEFAULT_TAG);
+                details.getTags().add(SystemImage.DEFAULT_TAG);
             }
             IdDisplay vendorIdDisplay = desc.getVendor();
             if (vendorIdDisplay != null) {

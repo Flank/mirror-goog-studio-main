@@ -1,3 +1,4 @@
+
 package com.android.sdklib.repository.generated.common.v2;
 
 import com.android.sdklib.repository.meta.SdkCommonFactory;
@@ -34,4 +35,5 @@ public class ObjectFactory extends SdkCommonFactory {
     public LibraryType createLibraryType() {
         return new LibraryType();
     }
+
 }

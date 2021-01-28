@@ -66,7 +66,13 @@
         <xsd:complexContent>
             <xsd:extension base="sdk-common:apiDetailsType">
                 <xsd:sequence>
-                    <xsd:element name="tag" type="sdk-common:idDisplayType"/>
+                    <xsd:element name="tag" type="sdk-common:idDisplayType" maxOccurs="unbounded" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:appinfo>
+                                <jaxb:property name="tags"/>
+                            </xsd:appinfo>
+                        </xsd:annotation>
+                    </xsd:element>
                     <xsd:element name="vendor" type="sdk-common:idDisplayType" minOccurs="0"/>
                     <xsd:element name="abi" type="sdk:abiType"/>
                 </xsd:sequence>

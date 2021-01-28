@@ -1,9 +1,12 @@
+
 package com.android.sdklib.repository.generated.sysimg.v2;
 
 import com.android.repository.impl.meta.TrimStringAdapter;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.generated.common.v2.ApiDetailsType;
 import com.android.sdklib.repository.generated.common.v2.IdDisplayType;
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -27,7 +30,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  *   &lt;complexContent&gt;
  *     &lt;extension base="{http://schemas.android.com/sdk/android/repo/common/02}apiDetailsType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="tag" type="{http://schemas.android.com/sdk/android/repo/common/02}idDisplayType"/&gt;
+ *         &lt;element name="tag" type="{http://schemas.android.com/sdk/android/repo/common/02}idDisplayType" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="vendor" type="{http://schemas.android.com/sdk/android/repo/common/02}idDisplayType" minOccurs="0"/&gt;
  *         &lt;element name="abi" type="{http://schemas.android.com/sdk/android/repo/sys-img2/02}abiType"/&gt;
  *       &lt;/sequence&gt;
@@ -39,36 +42,39 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(
         name = "sysImgDetailsType",
-        propOrder = {"tag", "vendor", "abi"})
+        propOrder = {"tags", "vendor", "abi"})
 @SuppressWarnings({"override", "unchecked"})
 public class SysImgDetailsType extends ApiDetailsType
         implements com.android.sdklib.repository.meta.DetailsTypes.SysImgDetailsType {
 
-    @XmlElement(required = true)
-    protected IdDisplayType tag;
+    @XmlElement(name = "tag")
+    protected List<IdDisplayType> tags;
 
     protected IdDisplayType vendor;
-
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String abi;
 
     /**
-     * Gets the value of the tag property.
+     * Gets the value of the tags property.
      *
-     * @return possible object is {@link IdDisplayType }
-     */
-    public IdDisplayType getTag() {
-        return tag;
-    }
-
-    /**
-     * Sets the value of the tag property.
+     * <p>This accessor method returns a reference to the live list, not a snapshot. Therefore any
+     * modification you make to the returned list will be present inside the JAXB object. This is
+     * why there is not a <CODE>set</CODE> method for the tags property.
      *
-     * @param value allowed object is {@link IdDisplayType }
+     * <p>For example, to add a new item, do as follows:
+     *
+     * <pre>
+     *    getTags().add(newItem);
+     * </pre>
+     *
+     * <p>Objects of the following type(s) are allowed in the list {@link IdDisplayType }
      */
-    public void setTagInternal(IdDisplayType value) {
-        this.tag = value;
+    public List<IdDisplayType> getTagsInternal() {
+        if (tags == null) {
+            tags = new ArrayList<IdDisplayType>();
+        }
+        return this.tags;
     }
 
     /**
@@ -112,8 +118,8 @@ public class SysImgDetailsType extends ApiDetailsType
                 && (value.matches("^armeabi|armeabi-v7a|arm64-v8a|x86|x86_64|mips|mips64$")));
     }
 
-    public void setTag(IdDisplay value) {
-        setTagInternal(((IdDisplayType) value));
+    public List<IdDisplay> getTags() {
+        return ((List) getTagsInternal());
     }
 
     public void setVendor(IdDisplay value) {
@@ -123,4 +129,5 @@ public class SysImgDetailsType extends ApiDetailsType
     public ObjectFactory createFactory() {
         return new ObjectFactory();
     }
+
 }

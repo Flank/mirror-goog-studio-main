@@ -47,7 +47,6 @@ public class DependencyType extends Dependency {
     @XmlAttribute(name = "path", required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String path;
-
     @XmlAttribute(name = "soft")
     protected Boolean soft;
 

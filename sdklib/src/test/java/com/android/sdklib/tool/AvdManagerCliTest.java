@@ -80,7 +80,7 @@ public class AvdManagerCliTest {
         FakePackage.FakeLocalPackage p1 = new FakePackage.FakeLocalPackage(gApiPath, mFileOp);
         DetailsTypes.SysImgDetailsType details1 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
-        details1.setTag(IdDisplay.create("google_apis", "Google APIs"));
+        details1.getTags().add(IdDisplay.create("google_apis", "Google APIs"));
         details1.setAbi("x86");
         details1.setVendor(IdDisplay.create("google", "Google"));
         details1.setApiLevel(25);
@@ -92,7 +92,7 @@ public class AvdManagerCliTest {
         FakePackage.FakeLocalPackage p2 = new FakePackage.FakeLocalPackage(wearPath, mFileOp);
         DetailsTypes.SysImgDetailsType details2 =
                 AndroidSdkHandler.getSysImgModule().createLatestFactory().createSysImgDetailsType();
-        details2.setTag(IdDisplay.create("android-wear", "Google APIs"));
+        details2.getTags().add(IdDisplay.create("android-wear", "Google APIs"));
         details2.setAbi("armeabi-v7a");
         details2.setApiLevel(26);
         p2.setTypeDetails((TypeDetails) details2);
