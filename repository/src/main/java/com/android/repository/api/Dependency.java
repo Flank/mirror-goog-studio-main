@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.RevisionType;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
@@ -61,4 +60,12 @@ public abstract class Dependency {
         // Stub
     }
 
+    public Boolean isSoft() {
+        // Stub for v1
+        return false;
+    }
+
+    public void setSoft(Boolean soft) {
+        // Stub for v1
+    }
 }

@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  *         &lt;element name="min-revision" type="{http://schemas.android.com/repository/android/common/02}revisionType" minOccurs="0"/&gt;
  *       &lt;/all&gt;
  *       &lt;attribute name="path" use="required" type="{http://www.w3.org/2001/XMLSchema}string" /&gt;
+ *       &lt;attribute name="soft" type="{http://www.w3.org/2001/XMLSchema}boolean" /&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
  * &lt;/complexType&gt;
@@ -46,6 +47,9 @@ public class DependencyType extends Dependency {
     @XmlAttribute(name = "path", required = true)
     @XmlJavaTypeAdapter(TrimStringAdapter.class)
     protected String path;
+
+    @XmlAttribute(name = "soft")
+    protected Boolean soft;
 
     /**
      * Gets the value of the minRevision property.
@@ -82,6 +86,24 @@ public class DependencyType extends Dependency {
      */
     public void setPath(String value) {
         this.path = value;
+    }
+
+    /**
+     * Gets the value of the soft property.
+     *
+     * @return possible object is {@link Boolean }
+     */
+    public Boolean isSoft() {
+        return soft;
+    }
+
+    /**
+     * Sets the value of the soft property.
+     *
+     * @param value allowed object is {@link Boolean }
+     */
+    public void setSoft(Boolean value) {
+        this.soft = value;
     }
 
     public void setMinRevision(com.android.repository.impl.meta.RevisionType value) {
