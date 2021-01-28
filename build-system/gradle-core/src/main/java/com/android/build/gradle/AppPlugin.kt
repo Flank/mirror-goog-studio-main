@@ -21,7 +21,6 @@ import org.gradle.api.Project
 /**
  * The plugin applied with `com.android.application'
  */
-@Suppress("DEPRECATION")
 class AppPlugin: BasePlugin() {
     override fun apply(project: Project) {
         super.apply(project)

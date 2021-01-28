@@ -24,7 +24,6 @@ import org.gradle.api.Project
  *
  * @Deprecated Use the plugin classes directly
  */
-@Deprecated("Do not use")
 open class BasePlugin: Plugin<Project> {
     private lateinit var project: Project
 

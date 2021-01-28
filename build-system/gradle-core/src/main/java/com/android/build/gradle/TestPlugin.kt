@@ -21,7 +21,6 @@ import org.gradle.api.Project
 /**
  * The plugin applied with 'com.android.test'
  */
-@Suppress("DEPRECATION")
 class TestPlugin: BasePlugin() {
     override fun apply(project: Project) {
         super.apply(project)
