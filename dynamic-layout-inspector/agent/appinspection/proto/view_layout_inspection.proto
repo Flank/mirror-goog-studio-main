@@ -176,20 +176,19 @@ message Property {
         DIMENSION = 19;
     }
 
-    int32 namespace = 1;
-    Type type = 2;
-    int32 name = 3;
-    Resource source = 4;
-    repeated Resource resolution_stack = 5;
-    bool is_layout = 6;
+    Type type = 1;
+    int32 name = 2;
+    Resource source = 3;
+    repeated Resource resolution_stack = 4;
+    bool is_layout = 5;
 
     oneof value {
-        int32 int32_value = 8;
-        int64 int64_value = 9;
-        double double_value = 10;
-        float float_value = 11;
-        Resource resource_value = 12;
-        FlagValue flag_value = 13;
+        int32 int32_value = 101;
+        int64 int64_value = 102;
+        double double_value = 103;
+        float float_value = 104;
+        Resource resource_value = 105;
+        FlagValue flag_value = 106;
     }
 }
 
