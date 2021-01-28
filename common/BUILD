@@ -132,3 +132,23 @@ kotlin_library(
         "//tools/base/third_party:com.google.guava_guava",
     ],
 )
+
+# managed by go/iml_to_build
+iml_module(
+    name = "studio.android.sdktools.common.testfixtures",
+    srcs = ["src/testFixtures/java"],
+    iml_files = ["android.sdktools.common.testfixtures.iml"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    exports = [
+        "//tools/adt/idea/.idea/libraries:Guava",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations",
+    ],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/adt/idea/.idea/libraries:Guava",
+        "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
+        "//tools/base/common:studio.android.sdktools.common[module]",
+        "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
+    ],
+)

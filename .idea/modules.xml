@@ -61,6 +61,7 @@
       <module fileurl="file://$PROJECT_DIR$/chunkio-processor/android.sdktools.chunkio-processor.iml" filepath="$PROJECT_DIR$/chunkio-processor/android.sdktools.chunkio-processor.iml" />
       <module fileurl="file://$PROJECT_DIR$/common/android.sdktools.common.iml" filepath="$PROJECT_DIR$/common/android.sdktools.common.iml" />
       <module fileurl="file://$PROJECT_DIR$/common/android.sdktools.common.tests.iml" filepath="$PROJECT_DIR$/common/android.sdktools.common.tests.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common/android.sdktools.common.testfixtures.iml" filepath="$PROJECT_DIR$/common/android.sdktools.common.testfixtures.iml" />
       <module fileurl="file://$PROJECT_DIR$/ddmlib/android.sdktools.ddmlib.iml" filepath="$PROJECT_DIR$/ddmlib/android.sdktools.ddmlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/ddmlib/android.sdktools.ddmlib.integration.tests.iml" filepath="$PROJECT_DIR$/ddmlib/android.sdktools.ddmlib.integration.tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/deploy/service/android.sdktools.deploy.service.iml" filepath="$PROJECT_DIR$/deploy/service/android.sdktools.deploy.service.iml" />
