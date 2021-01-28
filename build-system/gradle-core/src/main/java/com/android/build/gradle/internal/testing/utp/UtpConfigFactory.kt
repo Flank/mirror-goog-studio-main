@@ -201,6 +201,7 @@ class UtpConfigFactory {
                                         emulatorPath = Any.pack(PathProto.Path.newBuilder().apply {
                                             path = deviceInfo.emulatorPath
                                         }.build())
+                                        gradleDslDeviceName = deviceInfo.deviceName
                                     }
                                     adbServerPort = DEFAULT_ADB_SERVER_PORT
                                 }.build())

@@ -44,4 +44,7 @@ message GradleManagedDeviceConfig {
     // The absolute path to the emulator executable.
     // Message must be com.google.testing.platform.proto.api.core.PathProto.Path.
     google.protobuf.Any emulator_path = 5;
+
+    // The name of the Managed Device as provided from the dsl.
+    string gradle_dsl_device_name = 6;
 }

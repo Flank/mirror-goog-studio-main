@@ -876,7 +876,7 @@ class UtpConfigFactoryTest {
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
-                  value: "\n\332\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator\020\255\'"
+                  value: "\n\346\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator2\ndeviceName\020\255\'"
                 }
               }
             }
@@ -1019,7 +1019,7 @@ class UtpConfigFactoryTest {
                 }
                 config {
                   type_url: "type.googleapis.com/com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderConfig"
-                  value: "\n\332\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator\020\255\'"
+                  value: "\n\346\001\nW\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\024\n\022path/to/gradle/avd\022\aavdName\032\037:app:deviceNameDebugAndroidTest*U\n?type.googleapis.com/google.testing.platform.proto.api.core.Path\022\022\n\020path/to/emulator2\ndeviceName\020\255\'"
                 }
               }
             }
