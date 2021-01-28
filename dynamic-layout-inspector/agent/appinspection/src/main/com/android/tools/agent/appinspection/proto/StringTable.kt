@@ -29,6 +29,7 @@ class StringTable {
     private val innerMap = mutableMapOf<String, Int>()
 
     fun put(str: String): Int {
+        if (str.isEmpty()) return 0
         return innerMap.computeIfAbsent(str) { innerMap.size + 1 }
     }
 
