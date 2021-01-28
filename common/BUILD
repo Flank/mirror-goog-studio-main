@@ -121,8 +121,8 @@ iml_module(
 kotlin_library(
     name = "tools.fixtures",
     srcs = glob([
-        "src/testfixtures/java/**/*.kt",
-        "src/testfixtures/java/**/*.java",
+        "src/testFixtures/java/**/*.kt",
+        "src/testFixtures/java/**/*.java",
     ]),
     resources = glob(["src/testFixtures/resources/**"]),
     visibility = ["//visibility:public"],  # contains com.android.repository.testframework
