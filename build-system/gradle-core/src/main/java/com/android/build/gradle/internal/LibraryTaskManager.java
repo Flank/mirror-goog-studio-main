@@ -28,7 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.component.impl.TestComponentBuilderImpl;
 import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.dsl.PrefabPackagingOptions;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
@@ -37,9 +36,7 @@ import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
 import com.android.build.api.variant.impl.LibraryVariantImpl;
 import com.android.build.api.variant.impl.VariantImpl;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -61,13 +58,10 @@ import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
-import com.android.build.gradle.internal.tasks.PrefabModuleTaskData;
-import com.android.build.gradle.internal.tasks.PrefabPackageTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.variant.ComponentInfo;
-import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
@@ -82,9 +76,7 @@ import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.artifacts.Configuration;
@@ -348,8 +340,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     }
 
     private void createBundleTask(@NonNull VariantImpl variant) {
-        TaskProvider<BundleAar> bundle =
-                taskFactory.register(new BundleAar.CreationAction(variant));
+        taskFactory.register(new BundleAar.CreationAction(variant));
 
         variant.getTaskContainer()
                 .getAssembleTask()
@@ -385,18 +376,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                 variantDependencies.getElements(ALL_RUNTIME_PUBLICATION);
         allVariants.addVariantsFromConfiguration(
                 allRuntimePub, new ConfigurationVariantMapping("runtime", true));
-
-        // Old style publishing. This is likely to go away at some point.
-        if (extension.getDefaultPublishConfig().equals(variant.getName())) {
-            VariantHelper.setupArchivesConfig(project, variantDependencies.getRuntimeClasspath());
-
-            // add the artifact that will be published.
-            // it must be default so that it can be found by other library modules during
-            // publishing to a maven repo. Adding it to "archives" only allows the current
-            // module to be published by not to be found by consumer who are themselves published
-            // (leading to their pom not containing dependencies).
-            project.getArtifacts().add("default", bundle);
-        }
     }
 
     @Override

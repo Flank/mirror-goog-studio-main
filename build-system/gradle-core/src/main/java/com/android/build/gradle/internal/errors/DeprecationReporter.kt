@@ -54,6 +54,7 @@ interface DeprecationReporter {
     ) {
         VERSION_4_2(Version.VERSION_4_2),
         VERSION_7_0(Version.VERSION_7_0),
+        VERSION_8_0(Version.VERSION_8_0),
 
         // Obsolete dx Dex Options
         DEX_OPTIONS(Version.VERSION_8_0),
