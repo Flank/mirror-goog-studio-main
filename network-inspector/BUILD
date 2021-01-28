@@ -1,3 +1,6 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
@@ -9,7 +12,6 @@ android_java_proto_library(
     grpc_support = 1,
     java_deps = ["//tools/base/third_party:io.grpc_grpc-all"],
     protoc_grpc_version = "1.21.1",
-    visibility = ["//visibility:public"],
 )
 
 kotlin_library(
@@ -52,4 +54,10 @@ merge_jars(
         ":network-inspector-sources_dexed",
         ":network-inspector-resources",
     ],
+)
+
+studio_data(
+    name = "bundle",
+    files = ["network-inspector.jar"],
+    mappings = {"tools/base/network-inspector/": "app-inspection/"},
 )
