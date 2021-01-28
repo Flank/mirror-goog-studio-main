@@ -102,7 +102,6 @@ class UtpTestRunnerTest {
                 any(SdkComponentsBuildService.VersionedSdkLoader::class.java),
                 any(File::class.java),
                 any(File::class.java),
-                any(File::class.java),
                 any(RetentionConfig::class.java),
                 anyBoolean())).then {
             utpOutputDir = it.getArgument<File>(5)

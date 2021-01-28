@@ -34,8 +34,6 @@ import java.io.IOException
 
 // Unified Test Platform outputs test results with this hardcoded name file.
 const val TEST_RESULT_OUTPUT_FILE_NAME = "test-result.textproto"
-// Relative path for test log directory.
-const val TEST_LOG_DIR = "testlog"
 
 /**
  * Runs Android Instrumentation tests using UTP (Unified Test Platform).
@@ -68,7 +66,6 @@ class UtpTestRunner @JvmOverloads constructor(
         return apksForDevice.map { (deviceConnector, apks) ->
             val utpOutputDir = resultsDir
             val utpTmpDir = Files.createTempDir()
-            val utpTestLogDir = File(TEST_LOG_DIR)
             val utpTestRunLogDir = Files.createTempDir()
             val runnerConfigProtoFile = File.createTempFile("runnerConfig", ".pb").also { file ->
                 FileOutputStream(file).use { writer ->
@@ -80,7 +77,6 @@ class UtpTestRunner @JvmOverloads constructor(
                             versionedSdkLoader,
                             utpOutputDir,
                             utpTmpDir,
-                            utpTestLogDir,
                             retentionConfig,
                             useOrchestrator).writeTo(writer)
                 }
@@ -96,7 +92,7 @@ class UtpTestRunner @JvmOverloads constructor(
             resultsProto.writeTo(File(utpOutputDir, "test-result.pb").outputStream())
 
             try {
-                FileUtils.deleteRecursivelyIfExists(utpTestLogDir)
+                FileUtils.deleteRecursivelyIfExists(utpOutputDir.resolve(TEST_LOG_DIR))
                 FileUtils.deleteRecursivelyIfExists(utpTestRunLogDir)
                 FileUtils.deleteRecursivelyIfExists(utpTmpDir)
             } catch (e: IOException) {

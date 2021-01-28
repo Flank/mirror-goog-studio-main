@@ -62,6 +62,9 @@ private const val DEFAULT_ADB_SERVER_PORT = 5037
 
 private const val TEST_RUNNER_LOG_FILE_NAME = "test-results.log"
 
+// Relative path to the UTP outputDir for test log directory.
+const val TEST_LOG_DIR = "testlog"
+
 /**
  * A factory class to construct UTP runner and server configuration protos.
  */
@@ -80,7 +83,6 @@ class UtpConfigFactory {
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         retentionConfig: RetentionConfig,
         useOrchestrator: Boolean
     ): RunnerConfigProto.RunnerConfig {
@@ -97,7 +99,6 @@ class UtpConfigFactory {
                     versionedSdkLoader,
                     outputDir,
                     tmpDir,
-                    testLogDir,
                     retentionConfig,
                     useOrchestrator
                 )
@@ -120,7 +121,6 @@ class UtpConfigFactory {
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         retentionConfig: RetentionConfig,
         useOrchestrator: Boolean
     ): RunnerConfigProto.RunnerConfig {
@@ -129,7 +129,7 @@ class UtpConfigFactory {
             addTestFixture(
                 createTestFixture(
                     null, null, apks, testData, utpDependencies, versionedSdkLoader,
-                    outputDir, tmpDir, testLogDir, retentionConfig, useOrchestrator
+                    outputDir, tmpDir, retentionConfig, useOrchestrator
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.id)
@@ -217,7 +217,6 @@ class UtpConfigFactory {
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader,
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         retentionConfig: RetentionConfig,
         useOrchestrator: Boolean
     ): FixtureProto.TestFixture {
@@ -238,7 +237,6 @@ class UtpConfigFactory {
             environment = createEnvironment(
                 outputDir,
                 tmpDir,
-                testLogDir,
                 versionedSdkLoader
             )
 
@@ -302,7 +300,6 @@ class UtpConfigFactory {
     private fun createEnvironment(
         outputDir: File,
         tmpDir: File,
-        testLogDir: File,
         versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
     ): EnvironmentProto.Environment {
         return EnvironmentProto.Environment.newBuilder().apply {
@@ -329,7 +326,7 @@ class UtpConfigFactory {
                             .getPath(BuildToolInfo.PathId.DEXDUMP)
                     }
                     testLogDirBuilder.apply {
-                        path = testLogDir.path // Must be relative path to outputDir
+                        path = TEST_LOG_DIR // Must be relative path to outputDir
                     }
                     testRunLogBuilder.apply {
                         path = TEST_RUNNER_LOG_FILE_NAME

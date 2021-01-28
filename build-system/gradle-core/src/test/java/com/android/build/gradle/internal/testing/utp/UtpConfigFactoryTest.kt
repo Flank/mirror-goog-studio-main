@@ -141,7 +141,6 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
             useOrchestrator = false)
 
@@ -275,7 +274,6 @@ class UtpConfigFactoryTest {
                 versionedSdkLoader,
                 mockOutputDir,
                 mockTmpDir,
-                File(TEST_LOG_DIR),
                 mockRetentionConfig,
                 useOrchestrator = true)
 
@@ -412,7 +410,6 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
             useOrchestrator = false)
 
@@ -564,7 +561,6 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
             useOrchestrator = false)
 
@@ -714,7 +710,6 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
             useOrchestrator = true)
 
@@ -857,7 +852,6 @@ class UtpConfigFactoryTest {
             versionedSdkLoader,
             mockOutputDir,
             mockTmpDir,
-            File(TEST_LOG_DIR),
             mockRetentionConfig,
             useOrchestrator = false
         )
@@ -1000,7 +994,6 @@ class UtpConfigFactoryTest {
                 versionedSdkLoader,
                 mockOutputDir,
                 mockTmpDir,
-                File(TEST_LOG_DIR),
                 mockRetentionConfig,
                 useOrchestrator = true
         )
