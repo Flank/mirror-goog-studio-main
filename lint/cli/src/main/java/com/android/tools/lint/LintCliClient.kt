@@ -221,7 +221,7 @@ open class LintCliClient : LintClient {
         validateIssueIds()
         driver.analyze()
         kotlinPerformanceManager?.report(lintRequest)
-        incidents.sort()
+        sortResults()
         val baseline = driver.baseline
         val stats = create(incidents, baseline)
         for (reporter in flags.reporters) {
@@ -285,6 +285,10 @@ open class LintCliClient : LintClient {
             return ERRNO_CREATED_BASELINE
         }
         return if (flags.isSetExitCode) if (hasErrors) ERRNO_ERRORS else ERRNO_SUCCESS else ERRNO_SUCCESS
+    }
+
+    protected open fun sortResults() {
+        incidents.sort()
     }
 
     fun getBaselineCreationMessage(baselineFile: File): String {

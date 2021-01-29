@@ -26,6 +26,7 @@ import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.tools.lint.checks.infrastructure.KotlinClasspathKt.findKotlinStdlibPath;
+import static com.android.tools.lint.checks.infrastructure.LintTestUtils.checkTransitiveComparator;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -907,6 +908,13 @@ public class TestLintClient extends LintCliClient {
                 }
             }
         }
+    }
+
+    @Override
+    protected void sortResults() {
+        super.sortResults();
+        // Make sure Incident comparator is correct. (See also IncidentTest#testComparator)
+        checkTransitiveComparator(getIncidents());
     }
 
     @Override
