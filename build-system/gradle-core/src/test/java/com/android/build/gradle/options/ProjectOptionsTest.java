@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.tools.analytics.AnalyticsSettings;
 import com.android.tools.analytics.AnalyticsSettingsData;
@@ -216,72 +215,6 @@ public class ProjectOptionsTest {
     }
 
     @Test
-    public void removedOptionUse() {
-        ImmutableMap<String, Object> gradleProperties =
-                ImmutableMap.of("android.incrementalJavaCompile", "true");
-        ProjectOptions projectOptions =
-                new ProjectOptions(
-                        ImmutableMap.of(),
-                        new FakeProviderFactory(
-                                FakeProviderFactory.getFactory(), gradleProperties));
-
-        assertThat(getWarnings(projectOptions)).contains("android.incrementalJavaCompile");
-    }
-
-    @Test
-    public void deprecatedOptionsUse() {
-        ImmutableMap<String, Object> gradleProperties =
-                ImmutableMap.of(
-                        "android.jetifier.skipIfPossible", "false",
-                        "android.enableIncrementalDexingTransform", "false");
-        ProjectOptions projectOptions =
-                new ProjectOptions(
-                        ImmutableMap.of(),
-                        new FakeProviderFactory(
-                                FakeProviderFactory.getFactory(), gradleProperties));
-
-        assertThat(getWarnings(projectOptions)).hasSize(2);
-
-        gradleProperties =
-                ImmutableMap.of(
-                        "android.jetifier.skipIfPossible", "true",
-                        "android.enableIncrementalDexingTransform", "false");
-        projectOptions =
-                new ProjectOptions(
-                        ImmutableMap.of(),
-                        new FakeProviderFactory(
-                                FakeProviderFactory.getFactory(), gradleProperties));
-
-        assertThat(getWarnings(projectOptions)).hasSize(1);
-
-        gradleProperties =
-                ImmutableMap.of(
-                        "android.jetifier.skipIfPossible", "true",
-                        "android.enableIncrementalDexingTransform", "true");
-        projectOptions =
-                new ProjectOptions(
-                        ImmutableMap.of(),
-                        new FakeProviderFactory(
-                                FakeProviderFactory.getFactory(), gradleProperties));
-
-        assertThat(getWarnings(projectOptions)).isEmpty();
-    }
-
-    @Test
-    public void experimentalOptionsUse() {
-        ImmutableMap<String, Object> gradleProperties =
-                ImmutableMap.of("android.enableProfileJson", "true");
-        ProjectOptions projectOptions =
-                new ProjectOptions(
-                        ImmutableMap.of(),
-                        new FakeProviderFactory(
-                                FakeProviderFactory.getFactory(), gradleProperties));
-
-        assertThat(getWarnings(projectOptions))
-                .containsExactly(BooleanOption.ENABLE_PROFILE_JSON.getPropertyName());
-    }
-
-    @Test
     public void ensureUniqueness() {
         List<String> optionsNames =
                 Stream.of(
@@ -330,12 +263,5 @@ public class ProjectOptionsTest {
                 new FakeProviderFactory(
                         FakeProviderFactory.getFactory(), ImmutableMap.of()));
         assertThat(projectOptions.isAnalyticsEnabled()).isTrue();
-    }
-
-    @NonNull
-    private static List<String> getWarnings(@NonNull ProjectOptions projectOptions) {
-        final FakeDeprecationReporter reporter = new FakeDeprecationReporter();
-        projectOptions.getAllOptions().forEach(reporter::reportOptionIssuesIfAny);
-        return reporter.getWarnings();
     }
 }

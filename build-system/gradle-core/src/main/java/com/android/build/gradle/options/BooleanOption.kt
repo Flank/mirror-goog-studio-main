@@ -171,9 +171,6 @@ enum class BooleanOption(
      * SOFTLY-ENFORCED FEATURES
      */
 
-    /** Whether Jetifier will skip libraries that already support AndroidX. */
-    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
-
     /** Incremental dexing task using D8's new API for desugaring graph computation. */
     ENABLE_INCREMENTAL_DEXING_TASK_V2("android.enableIncrementalDexingTaskV2", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_7_0)),
 
@@ -365,6 +362,9 @@ enum class BooleanOption(
     ),
 
     USE_NEW_LINT_MODEL("android.experimental.useNewLintModel", true, FeatureStage.Enforced(VERSION_7_0)),
+
+    /** Whether Jetifier will skip libraries that already support AndroidX. */
+    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.Enforced(VERSION_7_0)),
 
     /* ----------------
      * REMOVED FEATURES

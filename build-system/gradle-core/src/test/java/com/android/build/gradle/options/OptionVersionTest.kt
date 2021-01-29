@@ -34,7 +34,6 @@ class OptionVersionTest {
         /** Deprecated [Option]s that have invalid deprecation versions and need to be fixed. */
         @Suppress("DEPRECATION")
         private val KNOWN_VIOLATING_DEPRECATION_OPTIONS: Set<Option<*>> = setOf(
-                BooleanOption.JETIFIER_SKIP_IF_POSSIBLE,
                 BooleanOption.ENABLE_INCREMENTAL_DEXING_TASK_V2,
                 BooleanOption.ENABLE_INCREMENTAL_DEXING_TRANSFORM,
                 BooleanOption.ENABLE_JVM_RESOURCE_COMPILER,
