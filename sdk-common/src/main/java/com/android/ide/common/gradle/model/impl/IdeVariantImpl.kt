@@ -17,10 +17,12 @@ package com.android.ide.common.gradle.model.impl
 
 import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeApiVersion
+import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
+import java.io.File
 import java.io.Serializable
 
 data class IdeVariantImpl(
@@ -37,6 +39,10 @@ data class IdeVariantImpl(
   override val maxSdkVersion: Int?,
   override val instantAppCompatible: Boolean,
   override val resourceConfigurations: Collection<String>,
+  override val resValues: Map<String, IdeClassField>,
+  override val proguardFiles: Collection<File>,
+  override val consumerProguardFiles: Collection<File>,
+  override val manifestPlaceholders: Map<String, String>,
   override val testApplicationId: String?,
   override val testInstrumentationRunner: String?,
   override val testInstrumentationRunnerArguments: Map<String, String>,

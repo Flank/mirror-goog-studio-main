@@ -30,7 +30,6 @@ import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeJavaArtifact
 import com.android.ide.common.gradle.model.IdeJavaLibrary
 import com.android.ide.common.gradle.model.IdeLintOptions
-import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeSourceProvider
 import com.android.ide.common.gradle.model.IdeSourceProviderContainer
 import com.android.ide.common.gradle.model.IdeVariant
@@ -167,7 +166,7 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     private fun getLibrary(library: IdeModuleLibrary): LintModelLibrary {
-        val projectPath = library.projectPath ?: "unknown:unknown:unknown"
+        val projectPath = library.projectPath
         return DefaultLintModelModuleLibrary(
             artifactAddress = library.getMavenArtifactAddress(),
             projectPath = projectPath,
@@ -316,11 +315,11 @@ class LintModelFactory : LintModelModuleLoader {
             `package` = null, // not in the old builder model
             minSdkVersion = variant.minSdkVersion?.toAndroidVersion(),
             targetSdkVersion = variant.targetSdkVersion?.toAndroidVersion(),
-            resValues = getResValues(variant.mergedFlavor, buildType),
-            manifestPlaceholders = getPlaceholders(variant.mergedFlavor, buildType),
-            resourceConfigurations = getMergedResourceConfigurations(variant),
-            proguardFiles = variant.mergedFlavor.proguardFiles + buildType.proguardFiles,
-            consumerProguardFiles = variant.mergedFlavor.consumerProguardFiles + buildType.proguardFiles,
+            resValues = variant.resValues.mapValues { it.value.toResourceField() },
+            manifestPlaceholders = variant.manifestPlaceholders,
+            resourceConfigurations = variant.resourceConfigurations,
+            proguardFiles = variant.proguardFiles,
+            consumerProguardFiles = variant.consumerProguardFiles,
             sourceProviders = computeSourceProviders(project, variant),
             testSourceProviders = computeTestSourceProviders(project, variant),
             debuggable = buildType.isDebuggable,
@@ -328,27 +327,6 @@ class LintModelFactory : LintModelModuleLoader {
             buildFeatures = getBuildFeatures(project, module.gradleVersion),
             libraryResolver = libraryResolver
         )
-    }
-
-    private fun getMergedResourceConfigurations(variant: IdeVariant): Collection<String> {
-        // Are there any splits that specify densities?
-        /* Hotfix for b/148602190
-        if (relevantDensities.isEmpty()) {
-            AndroidArtifact mainArtifact = variant.getMainArtifact();
-            Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
-            for (AndroidArtifactOutput output : outputs) {
-                final String DENSITY_NAME = VariantOutput.FilterType.DENSITY.name();
-                if (output.getFilterTypes().contains(DENSITY_NAME)) {
-                    for (FilterData data : output.getFilters()) {
-                        if (DENSITY_NAME.equals(data.getFilterType())) {
-                            relevantDensities.add(data.getIdentifier());
-                        }
-                    }
-                }
-            }
-        }
-        */
-        return variant.resourceConfigurations
     }
 
     private fun getAndroidTestArtifact(variant: IdeVariant): LintModelAndroidArtifact? {
@@ -496,27 +474,6 @@ class LintModelFactory : LintModelModuleLoader {
         return providers
     }
 
-    /** Merges place holders from the merged product flavor and the build type */
-    private fun getPlaceholders(
-        mergedFlavor: IdeProductFlavor,
-        buildType: IdeBuildType
-    ): Map<String, String> {
-        return if (mergedFlavor.manifestPlaceholders.isEmpty()) {
-            if (buildType.manifestPlaceholders.isEmpty()) {
-                emptyMap()
-            } else {
-                buildType.manifestPlaceholders.mapValues { it.value.toString() }
-            }
-        } else if (buildType.manifestPlaceholders.isEmpty()) {
-            mergedFlavor.manifestPlaceholders.mapValues { it.value.toString() }
-        } else {
-            val map = mutableMapOf<String, String>()
-            mergedFlavor.manifestPlaceholders.forEach { map[it.key] = it.value.toString() }
-            buildType.manifestPlaceholders.forEach { map[it.key] = it.value.toString() }
-            map
-        }
-    }
-
     private fun getSourceProvider(
         providerContainer: IdeSourceProviderContainer,
         debugOnly: Boolean = false
@@ -556,26 +513,6 @@ class LintModelFactory : LintModelModuleLoader {
             name = name,
             value = value
         )
-    }
-
-    private fun getResValues(
-        mergedFlavor: IdeProductFlavor,
-        buildType: IdeBuildType
-    ): Map<String, LintModelResourceField> {
-        return if (mergedFlavor.resValues.isEmpty()) {
-            if (buildType.resValues.isEmpty()) {
-                emptyMap()
-            } else {
-                buildType.resValues.mapValues { it.value.toResourceField() }
-            }
-        } else if (buildType.resValues.isEmpty()) {
-            mergedFlavor.resValues.mapValues { it.value.toResourceField() }
-        } else {
-            val map = mutableMapOf<String, LintModelResourceField>()
-            mergedFlavor.resValues.forEach { map[it.key] = it.value.toResourceField() }
-            buildType.resValues.forEach { map[it.key] = it.value.toResourceField() }
-            map
-        }
     }
 
     private fun getBuildFeatures(
@@ -690,7 +627,7 @@ class LintModelFactory : LintModelModuleLoader {
         )
     }
 
-    private fun IdeApiVersion.toAndroidVersion(): AndroidVersion? {
+    private fun IdeApiVersion.toAndroidVersion(): AndroidVersion {
         return AndroidVersion(apiLevel, codename)
     }
 
@@ -725,7 +662,7 @@ class LintModelFactory : LintModelModuleLoader {
             get() = project.javaCompileOptions.sourceCompatibility
         override val compileTarget: String
             get() = project.compileTarget
-        override val oldProject: IdeAndroidProject?
+        override val oldProject: IdeAndroidProject
             get() = project
         override val lintRuleJars: List<File> = project.getLintRuleJarsForAnyAgpVersion()
 
@@ -819,14 +756,12 @@ class LintModelFactory : LintModelModuleLoader {
         private var _resValues: Map<String, LintModelResourceField>? = null
         override val resValues: Map<String, LintModelResourceField>
             get() = _resValues
-                ?: getResValues(variant.mergedFlavor, buildType).also { _resValues = it }
+                ?: variant.resValues.mapValues { it.value.toResourceField() }.also { _resValues = it }
 
         private var _manifestPlaceholders: Map<String, String>? = null
         override val manifestPlaceholders: Map<String, String>
             get() = _manifestPlaceholders
-                ?: getPlaceholders(variant.mergedFlavor, buildType).also {
-                    _manifestPlaceholders = it
-                }
+                ?: variant.manifestPlaceholders.also { _manifestPlaceholders = it }
 
         private var _mainArtifact: LintModelAndroidArtifact? = null
         override val mainArtifact: LintModelAndroidArtifact
@@ -845,16 +780,12 @@ class LintModelFactory : LintModelModuleLoader {
         private var _proguardFiles: Collection<File>? = null
         override val proguardFiles: Collection<File>
             get() = _proguardFiles
-                ?: (variant.mergedFlavor.proguardFiles + buildType.proguardFiles).also {
-                    _proguardFiles = it
-                }
+                ?: variant.proguardFiles.also { _proguardFiles = it }
 
         private var _consumerProguardFiles: Collection<File>? = null
         override val consumerProguardFiles: Collection<File>
             get() = _consumerProguardFiles
-                ?: (variant.mergedFlavor.consumerProguardFiles + buildType.consumerProguardFiles).also {
-                    _consumerProguardFiles = it
-                }
+                ?: variant.consumerProguardFiles.also { _consumerProguardFiles = it }
 
         private var _buildFeatures: LintModelBuildFeatures? = null
         override val buildFeatures: LintModelBuildFeatures
@@ -863,8 +794,6 @@ class LintModelFactory : LintModelModuleLoader {
     }
 
     companion object {
-        private const val CACHE_KEY = "lint-model"
-
         /**
          * Returns the [LintModelModuleType] for the given type ID. Type ids must be one of the values defined by
          * AndroidProjectTypes.PROJECT_TYPE_*.

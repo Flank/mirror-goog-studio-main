@@ -360,7 +360,7 @@ class GradleModelMocker @JvmOverloads constructor(
             val variantName = buildVariantName(productFlavors, buildType)
 
             val generated = File(projectDir, "generated")
-            val mergedFlavor = merge(defaultConfig, productFlavors, buildType)
+            val mergedFlavorsAndBuildType = merge(defaultConfig, productFlavors, buildType)
             variants.add(
                 IdeVariantImpl(
                     name = variantName,
@@ -368,7 +368,7 @@ class GradleModelMocker @JvmOverloads constructor(
                     mainArtifact = createAndroidArtifact(ARTIFACT_NAME_MAIN)
                         .copy(
                             name = variantName,
-                            applicationId = mergedFlavor.applicationId!!,
+                            applicationId = mergedFlavorsAndBuildType.applicationId!!,
                             outputs = outputs,
                             level2Dependencies = dependencies,
                             classesFolder = File(projectDir, "build/intermediates/javac/$variantName/classes"),
@@ -395,21 +395,25 @@ class GradleModelMocker @JvmOverloads constructor(
                         ),
                     androidTestArtifact = createAndroidArtifact(ARTIFACT_NAME_ANDROID_TEST)
                         .copy(
-                            applicationId = mergedFlavor.applicationId!!,
+                            applicationId = mergedFlavorsAndBuildType.applicationId!!,
                             level2Dependencies = androidTestDependencies,
                             classesFolder = File(projectDir, "instrumentation-classes"),
                         ),
                     buildType = buildType.name,
                     productFlavors = productFlavors.map { it.name },
-                    mergedFlavor = mergedFlavor,
-                    minSdkVersion = mergedFlavor.minSdkVersion,
-                    targetSdkVersion = mergedFlavor.targetSdkVersion,
-                    maxSdkVersion = mergedFlavor.maxSdkVersion,
+                    mergedFlavor = mergedFlavorsAndBuildType,
+                    minSdkVersion = mergedFlavorsAndBuildType.minSdkVersion,
+                    targetSdkVersion = mergedFlavorsAndBuildType.targetSdkVersion,
+                    maxSdkVersion = mergedFlavorsAndBuildType.maxSdkVersion,
                     instantAppCompatible = false,
-                    resourceConfigurations = mergedFlavor.resourceConfigurations,
-                    testApplicationId = mergedFlavor.testApplicationId,
-                    testInstrumentationRunner = mergedFlavor.testInstrumentationRunner,
-                    testInstrumentationRunnerArguments = mergedFlavor.testInstrumentationRunnerArguments,
+                    resourceConfigurations = mergedFlavorsAndBuildType.resourceConfigurations,
+                    resValues = mergedFlavorsAndBuildType.resValues,
+                    proguardFiles = mergedFlavorsAndBuildType.proguardFiles,
+                    consumerProguardFiles = mergedFlavorsAndBuildType.consumerProguardFiles,
+                    manifestPlaceholders = mergedFlavorsAndBuildType.manifestPlaceholders,
+                    testApplicationId = mergedFlavorsAndBuildType.testApplicationId,
+                    testInstrumentationRunner = mergedFlavorsAndBuildType.testInstrumentationRunner,
+                    testInstrumentationRunnerArguments = mergedFlavorsAndBuildType.testInstrumentationRunnerArguments,
                     testedTargetVariants = emptyList(),
                 )
             )

@@ -70,14 +70,15 @@ class LintModuleLoader(
             return try {
                 val modelCache = ModelCache.create()
                 val model = modelBuilder.buildAll(modelName, project) as AndroidProject
+                val androidProject = ModelCache.create().androidProjectFrom(model)
                 val variants = model.variants.map {
                     modelCache.variantFrom(
+                        androidProject,
                         it,
                         GradleVersion.tryParseAndroidGradlePluginVersion(model.modelVersion)
                     )
                 }
                 // Sync issues are not used in lint.
-                val androidProject = ModelCache.create().androidProjectFrom(model)
                 androidProject to variants
             } finally {
                 ext[AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED] = null

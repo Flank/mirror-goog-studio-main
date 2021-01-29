@@ -18,6 +18,7 @@ package com.android.ide.common.gradle.model
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
+import java.io.File
 
 interface IdeVariantHeader {
   val name: String
@@ -54,6 +55,26 @@ interface IdeVariant: IdeVariantHeader {
    * This is the list of -c parameters for aapt.
    */
   val resourceConfigurations: Collection<String>
+
+  /**
+   * Map of generated res values where the key is the res name.
+   */
+  val resValues: Map<String, IdeClassField>
+
+  /**
+   * Specifies the ProGuard configuration files that the plugin should use.
+   */
+  val proguardFiles: Collection<File>
+
+  /** The collection of proguard rule files for consumers of the library to use. */
+  val consumerProguardFiles: Collection<File>
+
+  /**
+   * The map of key value pairs for placeholder substitution in the android manifest file.
+   *
+   * This map will be used by the manifest merger.
+   */
+  val manifestPlaceholders: Map<String, String>
 
   /**
    * The test application id. This is only the value set on this product flavor.
