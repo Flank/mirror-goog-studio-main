@@ -69,7 +69,11 @@ internal fun runUtpTestSuite(
         addJvmArg("-Djava.util.logging.config.file=${loggingPropertiesFile.absolutePath}")
     }.createJavaProcess()
 
-    javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger))
+    javaProcessExecutor.execute(javaProcessInfo, LoggedProcessOutputHandler(logger)).apply {
+        rethrowFailure()
+        assertNormalExitValue()
+    }
+
     return getResultsProto(utpOutputDir)
 }
 

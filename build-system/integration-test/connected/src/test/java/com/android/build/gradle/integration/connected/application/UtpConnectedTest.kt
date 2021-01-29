@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import org.junit.Before
@@ -39,8 +38,6 @@ class UtpConnectedTest {
     @get:Rule
     var project = builder()
             .fromTestProject("utp")
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.WARN) // b/158092419
-            .addGradleProperties("org.gradle.unsafe.configuration-cache.max-problems=45")
             .create()
 
     @Before
@@ -57,5 +54,10 @@ class UtpConnectedTest {
     @Throws(Exception::class)
     fun connectedAndroidTest() {
         project.executor().run("connectedAndroidTest")
+
+        // Run the task again after clean. This time the task configuration is
+        // restored from the configuration cache. We expect no crashes.
+         project.executor().run("clean")
+         project.executor().run("connectedAndroidTest")
     }
 }
