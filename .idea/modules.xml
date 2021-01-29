@@ -83,6 +83,8 @@
       <module fileurl="file://$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" filepath="$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" />
       <module fileurl="file://$PROJECT_DIR$/zipflinger/android.sdktools.zipflinger.iml" filepath="$PROJECT_DIR$/zipflinger/android.sdktools.zipflinger.iml" />
       <module fileurl="file://$PROJECT_DIR$/zipflinger/tools/android.sdktools.zipflinger_tools.iml" filepath="$PROJECT_DIR$/zipflinger/tools/android.sdktools.zipflinger_tools.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app-inspection/inspectors/network/app-inspection.inspectors.network.iml" filepath="$PROJECT_DIR$/app-inspection/inspectors/network/app-inspection.inspectors.network.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app-inspection/inspectors/network/fake-android/app-inspection.inspectors.network.fake-android.iml" filepath="$PROJECT_DIR$/app-inspection/inspectors/network/fake-android/app-inspection.inspectors.network.fake-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrarySupport/db-baseLibrarySupport.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" />
@@ -91,13 +93,11 @@
       <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/agent/transport/dynamic-layout-inspector.agent.transport.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/agent/transport/dynamic-layout-inspector.agent.transport.iml" />
       <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/common/dynamic-layout-inspector.common.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/common/dynamic-layout-inspector.common.iml" />
       <module fileurl="file://$PROJECT_DIR$/dynamic-layout-inspector/skia/dynamic-layout-inspector.skia.iml" filepath="$PROJECT_DIR$/dynamic-layout-inspector/skia/dynamic-layout-inspector.skia.iml" />
-      <module fileurl="file://$PROJECT_DIR$/network-inspector/fake-android/network-inspector.fake-android.iml" filepath="$PROJECT_DIR$/network-inspector/fake-android/network-inspector.fake-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/fakeandroid/fakeandroid.iml" filepath="$PROJECT_DIR$/fakeandroid/fakeandroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/perf-logger/perf-logger.iml" filepath="$PROJECT_DIR$/perf-logger/perf-logger.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils-tests.iml" filepath="$PROJECT_DIR$/testutils/testutils-tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" filepath="$PROJECT_DIR$/transport/test-framework/transport-test-framework.iml" />
       <module fileurl="file://$PROJECT_DIR$/usb-devices/usb-devices.iml" filepath="$PROJECT_DIR$/usb-devices/usb-devices.iml" />
-      <module fileurl="file://$PROJECT_DIR$/network-inspector/network-inspector.iml" filepath="$PROJECT_DIR$/network-inspector/network-inspector.iml" />
     </modules>
   </component>
 </project>

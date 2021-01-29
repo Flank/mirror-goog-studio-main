@@ -20,7 +20,7 @@ kotlin_library(
     # do not sort: fake_android must come before latest_jar in the classpath to override small pieces of it
     deps = [
         ":network_inspector_java_proto",
-        "//tools/base/network-inspector/fake-android:fake_android",
+        "//tools/base/app-inspection/inspectors/network/fake-android:fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
@@ -43,7 +43,7 @@ dex_library(
 
 java_library(
     name = "network-inspector-resources",
-    resource_strip_prefix = "tools/base/network-inspector/resources",
+    resource_strip_prefix = "tools/base/app-inspection/inspectors/network/resources",
     resources = glob(["resources/META-INF/**"]),
 )
 
@@ -59,5 +59,5 @@ merge_jars(
 studio_data(
     name = "bundle",
     files = ["network-inspector.jar"],
-    mappings = {"tools/base/network-inspector/": "app-inspection/"},
+    mappings = {"tools/base/app-inspection/inspectors/network/": "app-inspection/"},
 )
