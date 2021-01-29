@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.android.tools.utp.plugins.host.icebox.proto;
+option java_package = 'com.android.tools.utp.plugins.host.icebox.proto';
+option java_outer_classname = 'IceboxOutputProto';
+
+// Stores Icebox output metadata.
+message IceboxOutput {
+    // Test APP package name
+    string app_package = 1;
+}

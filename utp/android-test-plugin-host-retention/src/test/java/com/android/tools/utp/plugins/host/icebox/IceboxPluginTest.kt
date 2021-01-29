@@ -18,6 +18,7 @@ package com.android.tools.utp.plugins.host.icebox
 
 import com.android.testutils.MockitoKt.any
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
+import com.android.tools.utp.plugins.host.icebox.proto.IceboxOutputProto.IceboxOutput
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.testing.platform.api.device.DeviceController
@@ -216,7 +217,12 @@ class IceboxPluginTest {
         iceboxPlugin.beforeAll(mockDeviceController)
         iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val newResult = iceboxPlugin.afterEach(failingTestResult, mockDeviceController)
-        assertThat(newResult.outputArtifactCount).isEqualTo(1)
+        assertThat(newResult.outputArtifactCount).isEqualTo(2)
+        val infoFilePath = newResult.outputArtifactList.find {
+          it.label.label == "icebox.info" && it.label.namespace == "android"
+        }?.sourcePath?.path
+        assertThat(infoFilePath).isNotNull()
+        assertThat(IceboxOutput.parseFrom(File(infoFilePath).inputStream()).appPackage).isEqualTo(appPackage)
         assertThat(snapshotFile.exists()).isTrue()
         iceboxPlugin.afterAll(testSuiteResult, mockDeviceController)
         verify(mockIceboxCaller, times(1)).shutdownGrpc()
@@ -242,7 +248,7 @@ class IceboxPluginTest {
         iceboxPlugin.beforeAll(mockDeviceController)
         iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val newResult = iceboxPlugin.afterEach(failingTestResult, mockDeviceController)
-        assertThat(newResult.outputArtifactCount).isEqualTo(1)
+        assertThat(newResult.outputArtifactCount).isEqualTo(2)
         assertThat(snapshotFileCompressed.exists()).isTrue()
         iceboxPlugin.afterAll(testSuiteResult, mockDeviceController)
         verify(mockIceboxCaller, times(1)).shutdownGrpc()

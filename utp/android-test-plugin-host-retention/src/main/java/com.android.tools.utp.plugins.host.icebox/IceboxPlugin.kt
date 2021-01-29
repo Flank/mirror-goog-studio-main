@@ -17,6 +17,8 @@
 package com.android.tools.utp.plugins.host.icebox
 
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.Compression
+import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin as IceboxPluginConfig
+import com.android.tools.utp.plugins.host.icebox.proto.IceboxOutputProto.IceboxOutput
 import com.google.common.annotations.VisibleForTesting
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.ProtoConfig
@@ -33,7 +35,7 @@ import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.io.File
-import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto.IceboxPlugin as IceboxPluginConfig
+import java.io.FileOutputStream
 
 /**
  * Implementation of the Icebox plugin. Used to trigger Icebox commands.
@@ -159,11 +161,27 @@ class IceboxPlugin @VisibleForTesting constructor(
         // Add the artifact to testResult
         if (snapshotFile.exists()) {
             remainSnapshotNumber = remainSnapshotNumber - 1
+            val iceboxInfo = IceboxOutput.newBuilder()
+                    .setAppPackage(iceboxPluginConfig.appPackage)
+                    .build()
+            val iceboxInfoFile = File(outputDir, "icebox-info-$testClass-$testMethod-$emulatorSnapshotName.pb")
+            FileOutputStream(iceboxInfoFile).use {
+                iceboxInfo.writeTo(it)
+            }
             return testResult.toBuilder().apply {
                 addOutputArtifact(
-                        TestArtifactProto.Artifact.newBuilder().apply {
-                            sourcePathBuilder.path = snapshotFile.absolutePath
-                        }
+                    TestArtifactProto.Artifact.newBuilder().apply {
+                        labelBuilder.label = "icebox.info"
+                        labelBuilder.namespace = "android"
+                        sourcePathBuilder.path = iceboxInfoFile.getPath()
+                    }
+                )
+                addOutputArtifact(
+                    TestArtifactProto.Artifact.newBuilder().apply {
+                        labelBuilder.label = "icebox.snapshot"
+                        labelBuilder.namespace = "android"
+                        sourcePathBuilder.path = snapshotFile.getPath()
+                    }
                 )
             }.build()
         } else {
