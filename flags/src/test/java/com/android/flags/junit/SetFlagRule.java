@@ -16,37 +16,19 @@
 package com.android.flags.junit;
 
 import com.android.flags.Flag;
-import org.junit.Rule;
 
 /**
- * {@link Rule} which will ensure that a target {@link Flag} is reset back to its default value
- * after every test.
- *
- * <p>If you have code behind a flag, then that means your code can exhibit different behavior
- * depending on the flag's value. The easiest way to test all paths is to have multiple tests, with
- * each test changing the flag's value explicitly at the beginning of it.
+ * An override of {@link RestoreFlagRule} that allows you to additionally initialize the flag to an
+ * initial value.
  *
  * <pre>
  *   public class MyTest {
  *     @Rule
- *     public RestoreFlagRule{Boolean} myRestoreFlag = new RestoreFlagRule{}(StudioFlags.MY_FLAG);
- *
- *     @Test
- *     public void testFirstBranch() throws Exception {
- *       StudioFlags.MY_FLAG.override(false);
- *       ...
- *     }
- *
- *     @Test
- *     public void testSecondBranch() throws Exception {
- *       StudioFlags.MY_FLAG.override(true);
- *       ...
- *     }
+ *     public SetFlagRule{Boolean} myFlagRule = new SetFlagRule{}(StudioFlags.MY_FLAG, true);
  *   }
  * </pre>
  *
- * <p>For Studio tests consider using the {@code Flag.override(T, Disposable)} Kotlin extension
- * method defined in {@code com.android.tools.idea.testing.flags.FlagUtils}.
+ * <p>See also: {@link RestoreFlagRule}
  */
 public class SetFlagRule<T> extends RestoreFlagRule<T> {
     private final Flag<T> myFlag;
