@@ -189,9 +189,7 @@ java_import(
         "//tools/base/app-inspection/inspectors:__subpackages__",
         "//tools/base/deploy/agent/instrumentation:__pkg__",
         "//tools/base/profiler/app:__pkg__",
-        "//tools/base/dynamic-layout-inspector/agent/appinspection:__pkg__",
-        "//tools/base/dynamic-layout-inspector/agent/fake-android:__pkg__",
-        "//tools/base/dynamic-layout-inspector/agent/transport:__pkg__",
+        "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
         "//tools/base/experimental/live-sql-inspector:__pkg__",
     ],
 )
