@@ -27,7 +27,7 @@ kotlin_test(
     # do not sort: fake_android must come before latest_runtime_jar in the classpath to override small pieces of it
     deps = [
         ":agent",
-        "//tools/base/dynamic-layout-inspector/agent/fake-android:fake_android",
+        "//tools/base/dynamic-layout-inspector/agent/transport/fake-android:fake_android",
         "//prebuilts/studio/sdk:platforms/latest_runtime_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//tools/base/bazel:studio-grpc",
@@ -47,7 +47,7 @@ coverage_java_library(
     srcs = glob(["src/main/**/*.java"]),
     # do not sort: fake_android must come before latest_runtime_jar in the classpath to override small pieces of it
     deps = [
-        "//tools/base/dynamic-layout-inspector/agent/fake-android:fake_android",
+        "//tools/base/dynamic-layout-inspector/agent/transport/fake-android:fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
     ],

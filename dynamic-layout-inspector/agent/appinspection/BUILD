@@ -16,7 +16,7 @@ kotlin_library(
     ]),
     # do not sort: fake_android must come before latest_runtime_jar in the classpath to override small pieces of it
     deps = [
-        "//tools/base/dynamic-layout-inspector/agent/fake-android:fake_android",
+        "//tools/base/dynamic-layout-inspector/agent/transport/fake-android:fake_android",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
