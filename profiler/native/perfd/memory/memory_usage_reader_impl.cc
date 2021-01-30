@@ -39,6 +39,12 @@ enum MemoryType {
   CODE,
   OTHERS
 };
+
+bool IsOneOf(const char* subject,
+             std::initializer_list<const char*> toCompare) {
+  return std::any_of(toCompare.begin(), toCompare.end(),
+                     [=](const char* s) { return strcmp(subject, s) == 0; });
+}
 }  // namespace
 
 namespace profiler {
@@ -148,27 +154,17 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
 
     int memory_type = UNKNOWN;
     if (currentIndex >= otherStatsStartIndex) {
-      if (strcmp(result, "Dalvik Other") == 0 ||
-          strcmp(result, "Ashmem") == 0 || strcmp(result, "Cursor") == 0 ||
-          strcmp(result, "Other dev") == 0 ||
-          strcmp(result, "Other mmap") == 0 ||
-          strcmp(result, "Other mtrack") == 0 ||
-          strcmp(result, "Unknown") == 0) {
+      if (IsOneOf(result, {"Dalvik Other", "Ashmem", "Cursor", "Other dev",
+                           "Other mmap", "Other mtrack", "Unknown"})) {
         memory_type = OTHERS;
-      } else if (strcmp(result, "Stack") == 0) {
+      } else if (IsOneOf(result, {"Stack"})) {
         memory_type = STACK;
-      } else if (strcmp(result, ".art mmap") == 0) {
+      } else if (IsOneOf(result, {".art mmap"})) {
         memory_type = ART;
-      } else if (strcmp(result, "Gfx dev") == 0 ||
-                 strcmp(result, "EGL mtrack") == 0 ||
-                 strcmp(result, "GL mtrack") == 0) {
+      } else if (IsOneOf(result, {"Gfx dev", "EGL mtrack", "GL mtrack"})) {
         memory_type = GRAPHICS;
-      } else if (strcmp(result, ".so mmap") == 0 ||
-                 strcmp(result, ".jar mmap") == 0 ||
-                 strcmp(result, ".apk mmap") == 0 ||
-                 strcmp(result, ".ttf mmap") == 0 ||
-                 strcmp(result, ".dex mmap") == 0 ||
-                 strcmp(result, ".oat mmap") == 0) {
+      } else if (IsOneOf(result, {".so mmap", ".jar mmap", ".apk mmap",
+                                  ".ttf mmap", ".dex mmap", ".oat mmap"})) {
         memory_type = CODE;
       }
     } else if (currentIndex == privateCleanStartIndex) {
