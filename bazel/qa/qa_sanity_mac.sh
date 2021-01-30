@@ -14,7 +14,7 @@ readonly mac_timestamp_file="/buildbot/lastrun.out"
 current_time=$(date +"%s")
 if [[ -f "${mac_timestamp_file}" ]]; then
   last_run_time=$(cat $mac_timestamp_file)
-  if [[ $(($current_time-$last_run_time)) -lt 43200 ]]; then
+  if [[ $(($current_time-$last_run_time)) -lt 10800 ]]; then
     exit 0
   fi
 fi
@@ -28,7 +28,7 @@ readonly script_name="$(basename "$0")"
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
 readonly config_options="--config=local --config=release --config=cloud_resultstore"
-readonly target_filters="qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator"
+readonly target_filters="qa_sanity,-qa_unreliable,-no_mac,-no_test_mac,-requires_emulator"
 
 # Use test strategy to run 1 test at a time after all build dependencies are built
 "${script_dir}/../bazel" \
@@ -44,11 +44,7 @@ readonly target_filters="qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requ
         --test_tag_filters=${target_filters} \
         --tool_tag=${script_name} \
         -- \
-        //tools/adt/idea/android-uitests:AddCppToModuleActionTest \
-        //tools/adt/idea/android-uitests:BasicLayoutEditTest \
-        //tools/adt/idea/android-uitests:CreateBasicKotlinProjectTest \
-        //tools/adt/idea/android-uitests:CreateDefaultActivityTest \
-        //tools/adt/idea/android-uitests:OpenExistingProjectTest
+        //tools/adt/idea/android-uitests/...
 
 readonly bazel_status=$?
 
