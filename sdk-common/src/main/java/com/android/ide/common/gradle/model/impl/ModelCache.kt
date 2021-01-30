@@ -762,13 +762,16 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
       val mergedFlavor = copyModel(variant.mergedFlavor, ::productFlavorFrom)
       val buildType = androidProject.buildTypes.find { it.buildType.name == variant.buildType }?.buildType
 
-      fun <T> merge(f: IdeProductFlavor.() -> T, b: IdeBuildType.() -> T, combine: (T?, T?) -> T): T {
+      fun <T> merge(f: IdeProductFlavor.() -> T, b:IdeBuildType.() -> T, combine: (T?, T?) -> T): T {
         return combine(mergedFlavor.f(), buildType?.b())
       }
 
     fun <T> combineMaps(u: Map<String, T>?, v: Map<String, T>?): Map<String, T> = u.orEmpty() + v.orEmpty()
     fun <T> combineSets(u: Collection<T>?, v: Collection<T>?): Collection<T> = (u?.toSet().orEmpty() + v.orEmpty()).toList()
 
+    val versionNameSuffix =
+        if (mergedFlavor.versionNameSuffix == null && buildType?.versionNameSuffix == null) null
+        else mergedFlavor.versionNameSuffix.orEmpty() + buildType?.versionNameSuffix.orEmpty()
     return IdeVariantImpl(
           name = variant.name,
           displayName = variant.displayName,
@@ -782,6 +785,9 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
           minSdkVersion = mergedFlavor.minSdkVersion,
           targetSdkVersion = mergedFlavor.targetSdkVersion,
           maxSdkVersion = mergedFlavor.maxSdkVersion,
+          versionCode = mergedFlavor.versionCode,
+          versionNameWithSuffix = mergedFlavor.versionName?.let { it + versionNameSuffix },
+          versionNameSuffix = versionNameSuffix,
           instantAppCompatible = (modelVersion != null &&
                   modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
                   variant.isInstantAppCompatible),

@@ -17,6 +17,7 @@ package com.android.ide.common.gradle.model
 
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.BuildType
 import com.android.builder.model.Variant
 import java.io.File
 
@@ -38,14 +39,17 @@ interface IdeVariant: IdeVariantHeader {
    */
   val mergedFlavor: IdeProductFlavor
 
-  /** The minSdkVersion, or null if not specified. This is only the value set on this product flavor. */
   val minSdkVersion: IdeApiVersion?
 
-  /** The targetSdkVersion, or null if not specified. This is only the value set on this product flavor. */
   val targetSdkVersion: IdeApiVersion?
 
-  /** The maxSdkVersion, or null if not specified. This is only the value set on this produce flavor. */
   val maxSdkVersion: Int?
+
+  val versionCode: Int?
+
+  val versionNameSuffix: String?
+
+  val versionNameWithSuffix: String?
 
   val instantAppCompatible: Boolean
 
