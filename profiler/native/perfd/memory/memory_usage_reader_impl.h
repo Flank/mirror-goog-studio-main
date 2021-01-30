@@ -28,9 +28,6 @@ class MemoryUsageReaderImpl : public MemoryUsageReader {
 
   void ParseMemoryLevels(const std::string& memory_info_string,
                          proto::MemoryUsageData* data);
-
- private:
-  int ParseInt(char** delimited_string, const char* delimiter);
 };
 
 }  // namespace profiler
