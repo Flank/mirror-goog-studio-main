@@ -15,10 +15,6 @@
  */
 package com.android.ide.common.gradle.model
 
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.BuildType
-import com.android.builder.model.Variant
 import java.io.File
 
 interface IdeVariantHeader {
@@ -82,12 +78,6 @@ interface IdeVariant: IdeVariantHeader {
    */
   val manifestPlaceholders: Map<String, String>
 
-  /**
-   * The test application id. This is only the value set on this product flavor.
-   * To get the final value, use [Variant.getExtraAndroidArtifacts] with
-   * [AndroidProject.ARTIFACT_ANDROID_TEST] and then
-   * [AndroidArtifact.getApplicationId]
-   */
   val testApplicationId: String?
 
   /**
@@ -100,4 +90,7 @@ interface IdeVariant: IdeVariantHeader {
   val testInstrumentationRunnerArguments: Map<String, String>
 
   val testedTargetVariants: List<IdeTestedTargetVariant>
+
+  // TODO(b/178961768); Review usages and replace with the correct alternatives or rename.
+  val deprecatedPreMergedApplicationId: String?
 }

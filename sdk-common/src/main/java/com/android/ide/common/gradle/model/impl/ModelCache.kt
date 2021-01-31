@@ -800,7 +800,8 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
           resValues = merge({ resValues }, { resValues }, ::combineMaps),
           proguardFiles = merge({ proguardFiles }, { proguardFiles }, ::combineSets),
           consumerProguardFiles = merge({ consumerProguardFiles }, { consumerProguardFiles }, ::combineSets),
-          manifestPlaceholders = merge({ manifestPlaceholders }, { manifestPlaceholders }, ::combineMaps)
+          manifestPlaceholders = merge({ manifestPlaceholders }, { manifestPlaceholders }, ::combineMaps),
+          deprecatedPreMergedApplicationId = mergedFlavor.applicationId
       )
   }
 

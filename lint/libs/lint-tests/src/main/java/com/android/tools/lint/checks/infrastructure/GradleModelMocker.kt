@@ -419,7 +419,8 @@ class GradleModelMocker @JvmOverloads constructor(
                     versionCode = mergedFlavorsAndBuildType.versionCode,
                     versionNameWithSuffix =
                         mergedFlavorsAndBuildType.versionName?.let { it + mergedFlavorsAndBuildType.versionNameSuffix.orEmpty() },
-                    versionNameSuffix = mergedFlavorsAndBuildType.versionNameSuffix
+                    versionNameSuffix = mergedFlavorsAndBuildType.versionNameSuffix,
+                    deprecatedPreMergedApplicationId = mergedFlavorsAndBuildType.applicationId
                 )
             )
         }

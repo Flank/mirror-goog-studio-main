@@ -51,4 +51,6 @@ data class IdeVariantImpl(
     override val testInstrumentationRunner: String?,
     override val testInstrumentationRunnerArguments: Map<String, String>,
     override val testedTargetVariants: List<IdeTestedTargetVariant>,
+    // TODO(b/178961768); Review usages and replace with the correct alternatives or rename.
+    override val deprecatedPreMergedApplicationId: String?,
 ) : IdeVariant, Serializable
