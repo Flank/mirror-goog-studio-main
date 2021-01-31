@@ -34,15 +34,16 @@ import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.
 import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.src.app_package.viewModelKt
 
 fun RecipeExecutor.viewModelActivityRecipe(
-  moduleData: ModuleTemplateData, activityClass: String,
+  moduleData: ModuleTemplateData,
+  activityClass: String,
   activityLayout: String,
   fragmentClass: String,
   fragmentLayout: String,
   viewModelClass: String,
   isLauncher: Boolean,
   packageName: String,
-  fragmentPackage: String) {
-
+  fragmentPackage: String
+) {
   val (projectData, srcOut, resOut) = moduleData
   val apis = moduleData.apis
   val appCompatVersion = apis.appCompatVersion
@@ -54,7 +55,7 @@ fun RecipeExecutor.viewModelActivityRecipe(
 
   // TODO: Old templates doesn't set requireTheme as true, check if it's not needed
   generateManifest(
-    moduleData, activityClass, activityClass, packageName, isLauncher, false,
+    moduleData, activityClass, packageName, isLauncher, false,
     generateActivityTitle = false
   )
 

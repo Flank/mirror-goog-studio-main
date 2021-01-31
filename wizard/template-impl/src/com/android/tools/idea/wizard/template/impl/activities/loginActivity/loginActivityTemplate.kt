@@ -61,15 +61,6 @@ val loginActivityTemplate
       suggest = { activityToLayout(activityClass.value) }
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "Sign in"
-      help = "The name of the activity"
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { activityClass.value }
-    }
-
     val packageName = defaultPackageNameParameter
 
     widgets(
@@ -82,7 +73,6 @@ val loginActivityTemplate
     thumb { File("template_login_activity.png") }
 
     recipe = { data: TemplateData ->
-      loginActivityRecipe(data as ModuleTemplateData, activityClass.value, activityTitle.value, layoutName.value, packageName.value)
+      loginActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, packageName.value)
     }
-
   }

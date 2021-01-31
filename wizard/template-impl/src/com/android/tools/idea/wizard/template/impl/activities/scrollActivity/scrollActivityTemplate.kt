@@ -65,15 +65,6 @@ val scrollActivityTemplate
       suggest = { activityToLayout(activityClass.value) }
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "ScrollingActivity"
-      help = "The name of the activity. For launcher activities, the application title"
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { activityClass.value }
-    }
-
     val menuName = stringParameter {
       name = "Menu Resource Name"
       default = "menu_scrolling"
@@ -112,7 +103,7 @@ val scrollActivityTemplate
     thumb { File("template_scroll_activity.png") }
 
     recipe = { data: TemplateData ->
-      scrollActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, activityTitle.value, contentLayoutName.value,
+      scrollActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, contentLayoutName.value,
                            menuName.value, isLauncher.value, packageName.value)
     }
 

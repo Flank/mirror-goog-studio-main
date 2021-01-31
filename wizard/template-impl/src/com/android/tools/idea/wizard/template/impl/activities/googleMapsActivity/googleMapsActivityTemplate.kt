@@ -72,14 +72,6 @@ val googleMapsActivityTemplate
       help = "If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "Map"
-      help = "The name of the activity."
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-    }
-
     val packageName = defaultPackageNameParameter
 
     widgets(
@@ -93,7 +85,7 @@ val googleMapsActivityTemplate
     thumb { File("template_map_activity.png") }
 
     recipe = { data: TemplateData ->
-      googleMapsActivityRecipe(data as ModuleTemplateData, activityClass.value, activityTitle.value, isLauncher.value,
+      googleMapsActivityRecipe(data as ModuleTemplateData, activityClass.value, isLauncher.value,
                                layoutName.value, packageName.value)
     }
   }

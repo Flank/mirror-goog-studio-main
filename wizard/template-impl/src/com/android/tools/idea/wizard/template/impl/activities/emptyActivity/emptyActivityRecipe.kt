@@ -42,7 +42,7 @@ fun RecipeExecutor.generateEmptyActivity(
   addMaterialDependency(useAndroidX)
 
   generateManifest(
-    moduleData , activityClass, "", packageName, isLauncher, false,
+    moduleData, activityClass, packageName, isLauncher, false,
     generateActivityTitle = false
   )
 

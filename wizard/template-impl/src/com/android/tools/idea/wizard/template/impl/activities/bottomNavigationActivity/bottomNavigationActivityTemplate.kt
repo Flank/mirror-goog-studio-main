@@ -64,15 +64,6 @@ val bottomNavigationActivityTemplate
       suggest = { activityToLayout(activityClass.value) }
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "MainActivity"
-      help = "The name of the activity. For launcher activities, the application title"
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { activityClass.value }
-    }
-
     val packageName = defaultPackageNameParameter
 
     val navGraphName = stringParameter {
@@ -100,7 +91,6 @@ val bottomNavigationActivityTemplate
       bottomNavigationActivityRecipe(
         moduleData = data as ModuleTemplateData,
         activityClass = activityClass.value,
-        activityTitle = activityTitle.value,
         layoutName = layoutName.value,
         packageName = packageName.value,
         navGraphName = navGraphName.value

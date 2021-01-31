@@ -45,7 +45,6 @@ fun RecipeExecutor.generateBasicActivity(
   contentLayoutName: String,
   packageName: PackageName,
   menuName: String,
-  activityTitle: String,
   isLauncher: Boolean,
   firstFragmentLayoutName: String,
   secondFragmentLayoutName: String,
@@ -57,8 +56,7 @@ fun RecipeExecutor.generateBasicActivity(
   addAllKotlinDependencies(moduleData)
   addMaterialDependency(useAndroidX)
   generateManifest(
-    moduleData, activityClass, activityTitle, packageName, isLauncher, true,
-    generateActivityTitle = true)
+    moduleData, activityClass, packageName, isLauncher, true, generateActivityTitle = true)
   generateAppBar(
     moduleData, activityClass, packageName, contentLayoutName, layoutName, useAndroidX = useAndroidX
   )

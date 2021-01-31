@@ -52,7 +52,6 @@ fun RecipeExecutor.generateThemeStyles(
 fun RecipeExecutor.generateManifest(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   packageName: String,
   isLauncher: Boolean,
   hasNoActionBar: Boolean,
@@ -63,7 +62,7 @@ fun RecipeExecutor.generateManifest(
   baseFeatureResOut: File = moduleData.baseFeature?.resDir ?: moduleData.resDir,
   generateActivityTitle: Boolean
 ) {
-  generateManifestStrings(activityClass, activityTitle, baseFeatureResOut, isNewModule, generateActivityTitle)
+  generateManifestStrings(activityClass, baseFeatureResOut, isNewModule, generateActivityTitle)
 
   val manifest = androidManifestXml(
     isNewModule = isNewModule,
@@ -142,12 +141,11 @@ fun RecipeExecutor.generateNoActionBarStyles(baseFeatureResOut: File?, resDir: F
 
 fun RecipeExecutor.generateManifestStrings(
   activityClass: String,
-  activityTitle: String,
   baseFeatureResOut: File,
   isNewModule: Boolean,
   generateActivityTitle: Boolean
 ) {
-  mergeXml(manifestStrings(activityClass, activityTitle, isNewModule, generateActivityTitle), baseFeatureResOut.resolve("values/strings.xml"))
+  mergeXml(manifestStrings(activityClass, isNewModule, generateActivityTitle), baseFeatureResOut.resolve("values/strings.xml"))
 }
 
 fun RecipeExecutor.generateAppBar(

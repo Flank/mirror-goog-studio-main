@@ -61,15 +61,6 @@ val navigationDrawerActivityTemplate = template {
     suggest = { activityToLayout(activityClass.value) }
   }
 
-  val activityTitle = stringParameter {
-    name = "Title"
-    default = "MainActivity"
-    help = "The name of the activity. For launcher activities, the application title"
-    constraints = listOf(Constraint.NONEMPTY)
-    suggest = { activityClass.value }
-    visible = { false }
-  }
-
   val isLauncher = booleanParameter {
     name = "Launcher Activity"
     default = false
@@ -126,7 +117,6 @@ val navigationDrawerActivityTemplate = template {
   widgets(
     TextFieldWidget(activityClass),
     TextFieldWidget(layoutName),
-    TextFieldWidget(activityTitle),
     CheckBoxWidget(isLauncher),
     TextFieldWidget(packageName),
     // Below are invisible widgets. Defining as widgets to impose constraints
@@ -145,7 +135,6 @@ val navigationDrawerActivityTemplate = template {
       data = data as ModuleTemplateData,
       activityClass = activityClass.value,
       layoutName = layoutName.value,
-      activityTitle = activityTitle.value,
       isLauncher = isLauncher.value,
       packageName = packageName.value,
       appBarLayoutName = appBarLayoutName.value,

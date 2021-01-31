@@ -81,7 +81,6 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   generateManifest(
     moduleData,
     "${collection}DetailHostActivity",
-    "${collection} Detail Host Activity",
     packageName,
     isLauncher,
     hasNoActionBar = false,

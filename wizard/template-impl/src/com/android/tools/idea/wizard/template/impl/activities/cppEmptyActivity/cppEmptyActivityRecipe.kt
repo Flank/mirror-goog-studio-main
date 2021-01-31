@@ -46,7 +46,7 @@ fun RecipeExecutor.generateCppEmptyActivity(
   setCppOptions(cppFlags = cppFlags, cppPath = "src/main/cpp/CMakeLists.txt", cppVersion = DEFAULT_CMAKE_VERSION)
 
   generateManifest(
-    moduleData , activityClass, "", packageName, isLauncher, false,
+    moduleData , activityClass, packageName, isLauncher, false,
     generateActivityTitle = false
   )
 

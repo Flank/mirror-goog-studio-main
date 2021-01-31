@@ -73,15 +73,6 @@ val googleAdMobAdsActivityTemplate
       suggest = { activityToLayout(activityClass.value) }
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "MainActivity"
-      help = "The name of the activity. For launcher activities, the application title"
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { activityClass.value }
-    }
-
     val menuName = stringParameter {
       name = "Menu Resource Name"
       default = "menu_main"
@@ -118,7 +109,7 @@ val googleAdMobAdsActivityTemplate
 
     recipe = { data: TemplateData ->
       googleAdMobAdsActivityRecipe(
-        data as ModuleTemplateData, activityClass.value, activityTitle.value, layoutName.value, menuName.value, adFormat.value,
+        data as ModuleTemplateData, activityClass.value, layoutName.value, menuName.value, adFormat.value,
         isLauncher.value, packageName.value)
     }
 

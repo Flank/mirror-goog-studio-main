@@ -33,7 +33,6 @@ import java.io.File
 fun RecipeExecutor.googleMapsActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   isLauncher: Boolean,
   layoutName: String,
   packageName: String
@@ -69,7 +68,7 @@ fun RecipeExecutor.googleMapsActivityRecipe(
     finalReleaseResOut = moduleData.rootDir.resolve("src/release/res")
   }
 
-  mergeXml(stringsXml(activityTitle, simpleName), finalResOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityClass, simpleName), finalResOut.resolve("values/strings.xml"))
   val isViewBindingSupported = moduleData.viewBindingSupport.isViewBindingSupported()
   val mapActivity = when (projectData.language) {
     Language.Java -> mapActivityJava(

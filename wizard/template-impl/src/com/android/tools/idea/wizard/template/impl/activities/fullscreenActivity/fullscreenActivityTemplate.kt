@@ -63,15 +63,6 @@ val fullscreenActivityTemplate
       suggest = { activityToLayout(activityClass.value) }
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "FullscreenActivity"
-      help = "The name of the activity"
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { activityClass.value }
-    }
-
     val isLauncher = booleanParameter {
       name = "Launcher Activity"
       default = false
@@ -93,7 +84,7 @@ val fullscreenActivityTemplate
     recipe = { data: TemplateData ->
       fullscreenActivityRecipe(
         data as ModuleTemplateData,
-        activityClass.value, activityTitle.value, isLauncher.value, layoutName.value, packageName.value
+        activityClass.value, isLauncher.value, layoutName.value, packageName.value
       )
     }
   }

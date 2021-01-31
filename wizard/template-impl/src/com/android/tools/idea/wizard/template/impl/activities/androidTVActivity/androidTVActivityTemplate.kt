@@ -76,15 +76,6 @@ val androidTVActivityTemplate
       suggest = { "MainFragment" }
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "Title"
-      help = "The name of the activity. For launcher activities, the application title"
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { activityClass.value }
-    }
-
     val detailsActivity = stringParameter {
       name = "Details Activity"
       default = "DetailsActivity"
@@ -133,7 +124,7 @@ val androidTVActivityTemplate
 
     recipe = { data: TemplateData ->
       androidTVActivityRecipe(
-        data as ModuleTemplateData, activityClass.value, activityTitle.value, layoutName.value, mainFragment.value, detailsActivity.value,
+        data as ModuleTemplateData, activityClass.value, layoutName.value, mainFragment.value, detailsActivity.value,
         detailsLayoutName.value, detailsFragment.value, packageName.value)
     }
   }

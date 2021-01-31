@@ -54,13 +54,6 @@ val composeActivityTemplate
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "My Compose App"
-      help = "The name of the activity. For launcher activities, the application title"
-      constraints = listOf(NONEMPTY)
-    }
-
     val packageName = defaultPackageNameParameter
 
     val isLauncher = booleanParameter {
@@ -87,7 +80,6 @@ val composeActivityTemplate
 
     widgets(
       TextFieldWidget(activityClass),
-      TextFieldWidget(activityTitle),
       PackageNameWidget(packageName),
       CheckBoxWidget(isLauncher),
       // Invisible widgets to pass data
@@ -99,7 +91,7 @@ val composeActivityTemplate
     thumb { File("template_compose_empty_activity.png") }
 
     recipe = { data: TemplateData ->
-      composeActivityRecipe(data as ModuleTemplateData, activityClass.value, activityTitle.value, packageName.value, isLauncher.value,
+      composeActivityRecipe(data as ModuleTemplateData, activityClass.value, packageName.value, isLauncher.value,
                             greeting.value, defaultPreview.value)
     }
   }

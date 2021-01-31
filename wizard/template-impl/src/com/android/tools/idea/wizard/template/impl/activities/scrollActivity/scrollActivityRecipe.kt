@@ -33,9 +33,9 @@ import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.src
 import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.src.app_package.scrollActivityKt
 
 fun RecipeExecutor.scrollActivityRecipe(
-  moduleData: ModuleTemplateData, activityClass: String,
+  moduleData: ModuleTemplateData,
+  activityClass: String,
   layoutName: String,
-  activityTitle: String,
   contentLayoutName: String,
   menuName: String,
   isLauncher: Boolean,
@@ -54,7 +54,7 @@ fun RecipeExecutor.scrollActivityRecipe(
   addViewBindingSupport(moduleData.viewBindingSupport, true)
 
   generateManifest(
-    moduleData, activityClass, activityTitle, packageName, isLauncher, true,
+    moduleData, activityClass, packageName, isLauncher, true,
     generateActivityTitle = true
   )
   mergeXml(stringsXml(), resOut.resolve("values/strings.xml"))

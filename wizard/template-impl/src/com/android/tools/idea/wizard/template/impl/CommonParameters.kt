@@ -16,12 +16,26 @@
 package com.android.tools.idea.wizard.template.impl
 
 import com.android.tools.idea.wizard.template.Constraint
+import com.android.tools.idea.wizard.template.StringParameter
 import com.android.tools.idea.wizard.template.stringParameter
 
-val defaultPackageNameParameter get() = stringParameter {
-  name = "Package name"
-  visible = { !isNewModule }
-  default = "com.mycompany.myapp"
-  constraints = listOf(Constraint.PACKAGE)
-  suggest = { packageName }
+val defaultPackageNameParameter: StringParameter
+    get() = stringParameter {
+      name = "Package name"
+      visible = { !isNewModule }
+      default = "com.mycompany.myapp"
+      constraints = listOf(Constraint.PACKAGE)
+      suggest = { packageName }
+    }
+
+// This is an invisible parameter to pass data from [WizardTemplateData] to the recipe.
+// TODO(qumeric): Provide a better way to pass data than creating a widget with invisible parameter
+//          Note: Tests can't be added at this moment
+val invisibleSourceProviderNameParameter: StringParameter
+  get() = stringParameter {
+    name = "Source Provider Name"
+    constraints = listOf()
+    default = ""
+    visible = { false }
+    suggest = { sourceProviderName }
 }

@@ -39,7 +39,6 @@ import java.io.File
 fun RecipeExecutor.settingsActivityRecipe(
   moduleData: ModuleTemplateData,
   activityClass: String,
-  activityTitle: String,
   multipleScreens: Boolean,
   packageName: String
 ) {
@@ -54,11 +53,11 @@ fun RecipeExecutor.settingsActivityRecipe(
   addMaterialDependency(useAndroidX)
 
   generateManifest(
-    moduleData, activityClass, activityClass, packageName, isLauncher = moduleData.isNewModule, hasNoActionBar = false,
+    moduleData, activityClass, packageName, isLauncher = moduleData.isNewModule, hasNoActionBar = false,
     generateActivityTitle = true
   )
 
-  mergeXml(stringsXml(activityTitle, simpleName), resOut.resolve("values/strings.xml"))
+  mergeXml(stringsXml(activityClass, simpleName), resOut.resolve("values/strings.xml"))
   mergeXml(arraysXml(), resOut.resolve("values/arrays.xml"))
   mergeXml(settingsActivityXml(), resOut.resolve("layout/settings_activity.xml"))
 

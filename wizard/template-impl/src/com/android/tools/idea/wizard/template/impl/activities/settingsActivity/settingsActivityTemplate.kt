@@ -54,15 +54,6 @@ val settingsActivityTemplate
       constraints = listOf(CLASS, UNIQUE, NONEMPTY)
     }
 
-    val activityTitle = stringParameter {
-      name = "Title"
-      default = "Settings"
-      help = "The title of the activity."
-      visible = { false }
-      constraints = listOf(NONEMPTY)
-      suggest = { activityClass.value }
-    }
-
     val multipleScreens = booleanParameter {
       name = "Split settings hierarchy into separate sub-screens"
       default = false
@@ -81,7 +72,7 @@ val settingsActivityTemplate
     thumb { File("template_settings_activity.png") }
 
     recipe = { data: TemplateData ->
-      settingsActivityRecipe(data as ModuleTemplateData, activityClass.value, activityTitle.value, multipleScreens.value, packageName.value)
+      settingsActivityRecipe(data as ModuleTemplateData, activityClass.value, multipleScreens.value, packageName.value)
     }
 
   }
