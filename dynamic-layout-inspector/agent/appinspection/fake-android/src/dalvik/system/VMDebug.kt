@@ -17,6 +17,8 @@ package dalvik.system
 
 @Suppress("UNUSED_PARAMETER")
 object VMDebug {
+
     @JvmStatic
-    fun <T> allowHiddenApiReflectionFrom(klass: Class<T>) {}
+    fun <T> allowHiddenApiReflectionFrom(klass: Class<T>) {
+    }
 }

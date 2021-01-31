@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.graphics
 
-import androidx.annotation.VisibleForTesting
+package com.android.tools.agent.appinspection.testutils
 
-class HardwareRenderer {
+import android.view.WindowManagerGlobal
+import org.junit.rules.ExternalResource
 
-    @get:VisibleForTesting // Normally, the framework only has a set method
-    var pictureCaptureCallback: PictureCapturedCallback? = null
+/**
+ * Simple rule for setting up / clearing global framework state between tests.
+ */
+class FrameworkStateRule : ExternalResource() {
 
-    interface PictureCapturedCallback {
-
-        fun onPictureCaptured(picture: Picture)
+    public override fun after() {
+        WindowManagerGlobal.instance.rootViews.clear()
     }
+
 }

@@ -41,7 +41,7 @@ import java.util.concurrent.Executors
 private const val LAYOUT_INSPECTION_ID = "layoutinspector.view.inspection"
 
 // created by java.util.ServiceLoader
-class LayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_INSPECTION_ID) {
+class ViewLayoutInspectorFactory : InspectorFactory<ViewLayoutInspector>(LAYOUT_INSPECTION_ID) {
     override fun createInspector(
         connection: Connection,
         environment: InspectorEnvironment
