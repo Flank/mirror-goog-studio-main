@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//tools/base/bazel:android.bzl", "dex_library")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
 load("//tools/adt/idea/studio:studio.bzl", "studio_data")
 
@@ -22,6 +22,25 @@ kotlin_library(
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0-SNAPSHOT:jar",
         "//tools/base/bazel:studio-proto",
         "//tools/base/dynamic-layout-inspector/agent/appinspection/proto:layout_inspector_view_java_proto",
+    ],
+)
+
+kotlin_test(
+    name = "agent_tests",
+    srcs = glob([
+        "src/test/com/android/tools/agent/appinspection/**/*.kt",
+        "src/test/com/android/tools/agent/appinspection/**/*.java",
+    ]),
+    jvm_flags = [
+        "-Dtest.suite.jar=agent_tests.jar",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":agent-sources_undexed",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
     ],
 )
 
