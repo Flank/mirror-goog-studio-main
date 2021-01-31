@@ -19,7 +19,6 @@ import com.android.ide.common.gradle.model.IdeAndroidArtifact
 import com.android.ide.common.gradle.model.IdeApiVersion
 import com.android.ide.common.gradle.model.IdeClassField
 import com.android.ide.common.gradle.model.IdeJavaArtifact
-import com.android.ide.common.gradle.model.IdeProductFlavor
 import com.android.ide.common.gradle.model.IdeTestedTargetVariant
 import com.android.ide.common.gradle.model.IdeVariant
 import java.io.File
@@ -33,7 +32,6 @@ data class IdeVariantImpl(
     override val androidTestArtifact: IdeAndroidArtifact?,
     override val buildType: String,
     override val productFlavors: List<String>,
-    override val mergedFlavor: IdeProductFlavor,
     override val minSdkVersion: IdeApiVersion?,
     override val targetSdkVersion: IdeApiVersion?,
     override val maxSdkVersion: Int?,

@@ -29,12 +29,6 @@ interface IdeVariant: IdeVariantHeader {
   val androidTestArtifact: IdeAndroidArtifact?
   val unitTestArtifact: IdeJavaArtifact?
 
-  /**
-   * The result of the merge of all the flavors and of the main default config. If no flavors
-   * are defined then this is the same as the default config.
-   */
-  val mergedFlavor: IdeProductFlavor
-
   val minSdkVersion: IdeApiVersion?
 
   val targetSdkVersion: IdeApiVersion?

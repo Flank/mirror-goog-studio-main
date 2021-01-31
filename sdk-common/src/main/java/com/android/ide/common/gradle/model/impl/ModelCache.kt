@@ -781,7 +781,6 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
           unitTestArtifact = copy(variant::getExtraJavaArtifacts) { javaArtifactFrom(it) }.firstOrNull { it.isTestArtifact },
           buildType = variant.buildType,
           productFlavors = ImmutableList.copyOf(variant.productFlavors),
-          mergedFlavor = mergedFlavor,
           minSdkVersion = mergedFlavor.minSdkVersion,
           targetSdkVersion = mergedFlavor.targetSdkVersion,
           maxSdkVersion = mergedFlavor.maxSdkVersion,
