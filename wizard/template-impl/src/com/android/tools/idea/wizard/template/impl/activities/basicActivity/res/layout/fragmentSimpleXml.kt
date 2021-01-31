@@ -16,7 +16,6 @@
 package com.android.tools.idea.wizard.template.impl.activities.basicActivity.res.layout
 
 import com.android.tools.idea.wizard.template.getMaterialComponentName
-import com.android.tools.idea.wizard.template.renderIf
 
 fun fragmentSimpleXml(
   navGraphName: String,

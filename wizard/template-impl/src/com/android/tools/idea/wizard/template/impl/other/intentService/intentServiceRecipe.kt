@@ -21,7 +21,6 @@ import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.escapeKotlinIdentifier
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.other.intentService.root.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.other.intentService.src.app_package.intentServiceJava
 import com.android.tools.idea.wizard.template.impl.other.intentService.src.app_package.intentServiceKt
 

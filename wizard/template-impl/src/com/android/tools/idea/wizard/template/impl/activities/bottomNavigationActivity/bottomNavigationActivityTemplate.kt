@@ -17,9 +17,9 @@
 package com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity
 
 import com.android.tools.idea.wizard.template.Category
-import com.android.tools.idea.wizard.template.Constraint
 import com.android.tools.idea.wizard.template.Constraint.CLASS
 import com.android.tools.idea.wizard.template.Constraint.LAYOUT
+import com.android.tools.idea.wizard.template.Constraint.NAVIGATION
 import com.android.tools.idea.wizard.template.Constraint.NONEMPTY
 import com.android.tools.idea.wizard.template.Constraint.UNIQUE
 import com.android.tools.idea.wizard.template.FormFactor
@@ -80,7 +80,7 @@ val bottomNavigationActivityTemplate
       default = "mobile_navigation"
       help = "The name of the navigation graph"
       visible = { false }
-      constraints = listOf(Constraint.NAVIGATION, Constraint.UNIQUE)
+      constraints = listOf(NAVIGATION, UNIQUE)
       suggest = { "mobile_navigation" }
     }
 

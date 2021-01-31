@@ -20,7 +20,6 @@ import com.android.tools.idea.wizard.template.Language
 import com.android.tools.idea.wizard.template.ModuleTemplateData
 import com.android.tools.idea.wizard.template.RecipeExecutor
 import com.android.tools.idea.wizard.template.impl.activities.common.addAllKotlinDependencies
-import com.android.tools.idea.wizard.template.impl.other.contentProvider.root.androidManifestXml
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.src.app_package.contentProviderJava
 import com.android.tools.idea.wizard.template.impl.other.contentProvider.src.app_package.contentProviderKt
 
@@ -37,8 +36,9 @@ fun RecipeExecutor.contentProviderRecipe(
   val packageName = moduleData.packageName
   addAllKotlinDependencies(moduleData)
 
-  mergeXml(androidManifestXml(authorities, className, isEnabled,
-           isExported, packageName), manifestOut.resolve("AndroidManifest.xml"))
+  mergeXml(
+      androidManifestXml(authorities, className, isEnabled,
+                         isExported, packageName), manifestOut.resolve("AndroidManifest.xml"))
   val contentProvider = when (projectData.language) {
     Language.Java -> contentProviderJava(className, packageName)
     Language.Kotlin -> contentProviderKt(className, packageName)
