@@ -53,6 +53,8 @@ interface IdeVariant: IdeVariantHeader {
 
   val instantAppCompatible: Boolean
 
+  val vectorDrawablesUseSupportLibrary: Boolean
+
   /**
    * The resource configuration for this variant.
    *

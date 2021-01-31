@@ -791,6 +791,7 @@ private fun modelCacheImpl(buildFolderPaths: BuildFolderPaths): ModelCacheTestin
           instantAppCompatible = (modelVersion != null &&
                   modelVersion.isAtLeast(3, 3, 0, "alpha", 10, true) &&
                   variant.isInstantAppCompatible),
+          vectorDrawablesUseSupportLibrary = mergedFlavor.vectorDrawables?.useSupportLibrary ?: false,
           resourceConfigurations = mergedFlavor.resourceConfigurations,
           testApplicationId = mergedFlavor.testApplicationId,
           testInstrumentationRunner = mergedFlavor.testInstrumentationRunner,

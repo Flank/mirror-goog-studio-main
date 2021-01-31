@@ -406,6 +406,7 @@ class GradleModelMocker @JvmOverloads constructor(
                     targetSdkVersion = mergedFlavorsAndBuildType.targetSdkVersion,
                     maxSdkVersion = mergedFlavorsAndBuildType.maxSdkVersion,
                     instantAppCompatible = false,
+                    vectorDrawablesUseSupportLibrary = mergedFlavorsAndBuildType.vectorDrawables?.useSupportLibrary ?: false,
                     resourceConfigurations = mergedFlavorsAndBuildType.resourceConfigurations,
                     resValues = mergedFlavorsAndBuildType.resValues,
                     proguardFiles = mergedFlavorsAndBuildType.proguardFiles,
