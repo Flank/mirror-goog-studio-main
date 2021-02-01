@@ -74,7 +74,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
         assertEquals(2, pkgs.size());
-        RemotePackage p1 = pkgs.get("dummy;foo");
+        RemotePackage p1 = pkgs.get("mypackage;foo");
         assertEquals(new Revision(1, 2, 3), p1.getVersion());
         assertEquals("the license text", p1.getLicense().getValue().trim());
         assertEquals(3, ((RemotePackageImpl) p1).getAllArchives().size());
@@ -113,26 +113,26 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         progress.assertNoErrorsOrWarnings();
 
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 3), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 6), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 3), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 6), pkgs.get("mypackage;bar").getVersion());
 
         settings.setChannel(Channel.create(1));
         pkgs = loader.fetchPackages(progress, downloader, settings);
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 4), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 6), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 4), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 6), pkgs.get("mypackage;bar").getVersion());
 
         settings.setChannel(Channel.create(2));
         pkgs = loader.fetchPackages(progress, downloader, settings);
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 5), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 6), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 5), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 6), pkgs.get("mypackage;bar").getVersion());
 
         settings.setChannel(Channel.create(3));
         pkgs = loader.fetchPackages(progress, downloader, settings);
         assertEquals(2, pkgs.size());
-        assertEquals(new Revision(1, 2, 5), pkgs.get("dummy;foo").getVersion());
-        assertEquals(new Revision(4, 5, 7), pkgs.get("dummy;bar").getVersion());
+        assertEquals(new Revision(1, 2, 5), pkgs.get("mypackage;foo").getVersion());
+        assertEquals(new Revision(4, 5, 7), pkgs.get("mypackage;bar").getVersion());
     }
 
     public void testFallback() throws Exception {
@@ -210,7 +210,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                                         ImmutableList.of(source, legacySource))),
                         (source1, downloader1, settings, progress1) -> {
                             assertEquals(legacyUrl, source1.getUrl());
-                            FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
+                            FakeRemotePackage legacy = new FakeRemotePackage("mypackage;foo");
                             legacy.setRevision(new Revision(1, 2, 3));
                             legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                             return ImmutableSet.of(legacy);
@@ -219,29 +219,30 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
         assertEquals(2, pkgs.size());
-        assertFalse(pkgs.get("dummy;foo") instanceof FakePackage);
+        assertFalse(pkgs.get("mypackage;foo") instanceof FakePackage);
     }
 
-    private static final String TEST_LOCAL_PREFERRED_REPO = "\n"
-            + "<repo:repository\n"
-            + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-            + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-            + "    <remotePackage path=\"dummy;foo\">\n"
-            + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-            + "        <revision><major>%1$d</major></revision>\n"
-            + "        <display-name>%2$s</display-name>\n"
-            + "        <archives>\n"
-            + "            <archive>\n"
-            + "                <complete>\n"
-            + "                    <size>2345</size>\n"
-            + "                    <checksum>e1b7e62ecc3925054900b70e6eb9038bba8f702a</checksum>\n"
-            + "                    <url>%3$s</url>\n"
-            + "                </complete>\n"
-            + "            </archive>\n"
-            + "        </archives>\n"
-            + "    </remotePackage>\n"
-            + "</repo:repository>\n"
-            + "\n";
+    private static final String TEST_LOCAL_PREFERRED_REPO =
+            "\n"
+                    + "<repo:repository\n"
+                    + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                    + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                    + "    <remotePackage path=\"mypackage;foo\">\n"
+                    + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                    + "        <revision><major>%1$d</major></revision>\n"
+                    + "        <display-name>%2$s</display-name>\n"
+                    + "        <archives>\n"
+                    + "            <archive>\n"
+                    + "                <complete>\n"
+                    + "                    <size>2345</size>\n"
+                    + "                    <checksum>e1b7e62ecc3925054900b70e6eb9038bba8f702a</checksum>\n"
+                    + "                    <url>%3$s</url>\n"
+                    + "                </complete>\n"
+                    + "            </archive>\n"
+                    + "        </archives>\n"
+                    + "    </remotePackage>\n"
+                    + "</repo:repository>\n"
+                    + "\n";
 
     public void testLocalPreferred() throws Exception {
         RepositorySource httpSource = new SimpleRepositorySource("http://www.example.com",
@@ -272,7 +273,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 String.format(TEST_LOCAL_PREFERRED_REPO, 1, "file", "bar").getBytes());
         Map<String, RemotePackage> pkgs =
                 loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
-        assertEquals("file", pkgs.get("dummy;foo").getDisplayName());
+        assertEquals("file", pkgs.get("mypackage;foo").getDisplayName());
 
         // file preferred over url: absolute paths
         downloader = new FakeDownloader(new MockFileOp());
@@ -281,7 +282,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL("file:///foo/bar2"),
                 String.format(TEST_LOCAL_PREFERRED_REPO, 1, "file", "file:///foo/bar2").getBytes());
         pkgs = loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
-        assertEquals("file", pkgs.get("dummy;foo").getDisplayName());
+        assertEquals("file", pkgs.get("mypackage;foo").getDisplayName());
 
         // newer http preferred over file
         downloader = new FakeDownloader(new MockFileOp());
@@ -290,7 +291,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         downloader.registerUrl(new URL("file:///foo/bar"),
                 String.format(TEST_LOCAL_PREFERRED_REPO, 1, "file", "bar").getBytes());
         pkgs = loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
-        assertEquals("http", pkgs.get("dummy;foo").getDisplayName());
+        assertEquals("http", pkgs.get("mypackage;foo").getDisplayName());
     }
 
     public void testNewerFallbackPreferred() throws Exception {
@@ -325,7 +326,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                                         ImmutableList.of(source, legacySource))),
                         (source1, downloader1, settings, progress1) -> {
                             assertEquals(legacyUrl, source1.getUrl());
-                            FakeRemotePackage legacy = new FakeRemotePackage("dummy;foo");
+                            FakeRemotePackage legacy = new FakeRemotePackage("mypackage;foo");
                             legacy.setRevision(new Revision(1, 2, 4));
                             legacy.setCompleteUrl("http://www.example.com/legacy.zip");
                             return ImmutableSet.of(legacy);
@@ -334,7 +335,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 .fetchPackages(progress, downloader, new FakeSettingsController(false));
         progress.assertNoErrorsOrWarnings();
         assertEquals(2, pkgs.size());
-        assertTrue(pkgs.get("dummy;foo") instanceof FakePackage);
+        assertTrue(pkgs.get("mypackage;foo") instanceof FakePackage);
     }
 
 

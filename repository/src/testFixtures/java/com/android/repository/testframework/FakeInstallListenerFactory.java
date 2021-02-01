@@ -21,12 +21,9 @@ import com.android.repository.api.InstallerFactory;
 import com.android.repository.api.PackageOperation;
 import com.android.repository.api.RepoPackage;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
-/**
- * A dummy install listener factory that just returns the provided list.
- */
+/** A fake install listener factory that just returns the provided list. */
 public class FakeInstallListenerFactory implements InstallerFactory.StatusChangeListenerFactory {
 
     private final List<PackageOperation.StatusChangeListener> mListeners;

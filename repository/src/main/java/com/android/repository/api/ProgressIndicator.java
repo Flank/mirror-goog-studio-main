@@ -111,7 +111,7 @@ public interface ProgressIndicator {
      */
     default ProgressIndicator createSubProgress(double max) {
         double start = getFraction();
-        // Unfortunately some dummy indicators always report their fraction as 1. In that case just
+        // Unfortunately some fake indicators always report their fraction as 1. In that case just
         // return the indicator itself.
         if (start == 1) {
             return this;

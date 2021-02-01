@@ -23,7 +23,7 @@
     <license id="lic2" type="text">
         license text 2
     </license>
-    <remotePackage path="dummy;foo">
+    <remotePackage path="mypackage;foo">
         <type-details xsi:type="repo:genericDetailsType"/>
         <revision>
             <major>1</major>
@@ -78,7 +78,7 @@
             </archive>
         </archives>
     </remotePackage>
-    <remotePackage path="dummy;bar">
+    <remotePackage path="mypackage;bar">
         <type-details xsi:type="repo:genericDetailsType"/>
         <revision>
             <major>4</major>

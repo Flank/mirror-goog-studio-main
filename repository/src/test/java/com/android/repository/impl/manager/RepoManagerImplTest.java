@@ -50,7 +50,7 @@ import org.junit.Assert;
  */
 public class RepoManagerImplTest extends TestCase {
 
-    // test load with local and remote, dummy loaders, callbacks called in order
+    // test load with local and remote, fake loaders, callbacks called in order
     public void testLoadOperationsInOrder() {
         MockFileOp fop = new MockFileOp();
         final AtomicInteger counter = new AtomicInteger(0);

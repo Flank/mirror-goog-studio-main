@@ -107,7 +107,7 @@ public class LocalRepoTest extends TestCase {
         LocalPackageImpl p = factory.createLocalPackage();
         License license = factory.createLicenseType("some license text", "license1");
         p.setLicense(license);
-        p.setPath("dummy;path");
+        p.setPath("mypackage;path");
         p.setVersion(new Revision(1, 2));
         p.setDisplayName("package name");
         p.setTypeDetails((TypeDetails) genericFactory.createGenericDetailsType());
@@ -164,7 +164,7 @@ public class LocalRepoTest extends TestCase {
         assertEquals("license1", licenseNode.getAttribute("id"));
         assertEquals("some license text", licenseNode.getTextContent());
         Element packageNode = (Element) doc.getElementsByTagName("localPackage").item(0);
-        assertEquals("dummy;path", packageNode.getAttribute("path"));
+        assertEquals("mypackage;path", packageNode.getAttribute("path"));
         Element details = (Element) packageNode.getElementsByTagName("type-details").item(0);
         assertEquals("genericDetailsType", details.getSchemaTypeInfo().getTypeName());
         Element revision = (Element) packageNode.getElementsByTagName("revision").item(0);

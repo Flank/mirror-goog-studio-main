@@ -392,9 +392,10 @@ public class RepoManagerImpl extends RepoManager {
                 mTask.addCallbacks(onLocalComplete, onSuccess, onError, runner);
                 if (sync) {
                     // If we're running synchronously, release the semaphore after run complete.
-                    // Use a dummy runner to ensure we don't try to run on a different thread and
+                    // Use a fake runner to ensure we don't try to run on a different thread and
                     // then block trying to release the semaphore.
-                    mTask.addCallbacks(ImmutableList.of(),
+                    mTask.addCallbacks(
+                            ImmutableList.of(),
                             ImmutableList.of(packages -> completed.release()),
                             ImmutableList.of(completed::release),
                             new DummyProgressRunner(new ConsoleProgressIndicator()));
