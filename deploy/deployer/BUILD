@@ -5,12 +5,6 @@ load("//tools/base/bazel:coverage.bzl", "coverage_java_library", "coverage_java_
 iml_module(
     name = "studio.android.sdktools.deployer",
     srcs = ["src/main/java"],
-    bundled_deps = [
-        "//tools/base/deploy/deployer:deploy_java_proto",
-        "//prebuilts/r8",
-        "//tools/base/deploy/deployer:libjava_version",
-        "//tools/base/deploy/deployer:libjava_sites",
-    ],
     iml_files = ["android.sdktools.deployer.iml"],
     lint_baseline = "lint_baseline.xml",
     tags = [
