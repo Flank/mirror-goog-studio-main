@@ -32,7 +32,7 @@ import org.gradle.api.tasks.Internal
 abstract class AndroidLintGlobalTask: BaseTask(), VariantAwareTask {
 
     @Internal("No influence on output, this is for our build stats reporting mechanism")
-    override lateinit var variantName: String
+    override var variantName: String = ""
 
     class GlobalCreationAction(globalScope: GlobalScope) : BaseGlobalCreationAction(globalScope) {
         override val name: String get() = Companion.name
