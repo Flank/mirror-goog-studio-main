@@ -43,7 +43,7 @@ class Overlay {
 
     public List<File> getApkDirs() throws IOException {
         ArrayList<File> apkDirs = new ArrayList<>();
-        if (!overlayPathExists()) {
+        if (Files.notExists(overlayPath)) {
             return apkDirs;
         }
 
@@ -62,7 +62,7 @@ class Overlay {
 
     public List<File> getDexFiles() throws IOException {
         ArrayList<File> dexFiles = new ArrayList<>();
-        if (!overlayPathExists()) {
+        if (Files.notExists(liveLiteralOverlayPath)) {
             return dexFiles;
         }
 
@@ -94,9 +94,6 @@ class Overlay {
 
     public List<File> getNativeLibraryDirs() throws IOException {
         ArrayList<File> nativeLibraryDirs = new ArrayList<>();
-        if (!overlayPathExists()) {
-            return nativeLibraryDirs;
-        }
 
         for (File apk : getApkDirs()) {
             Path libPath = apk.toPath().resolve("lib");
@@ -110,9 +107,5 @@ class Overlay {
             }
         }
         return nativeLibraryDirs;
-    }
-
-    private boolean overlayPathExists() {
-        return overlayPath.toFile().exists();
     }
 }
