@@ -119,8 +119,7 @@ class Level1RuntimeArtifactCollections(variantDependencies: VariantDependencies)
     val runtimeArtifactsFileCollection: FileCollection
         get() = runtimeArtifacts.artifactFiles
 
-    // Don't query jetified jars on project classes as for java libraries the artifact
-    // might not exist yet.
+    /** See [ArtifactCollections.projectJars]. */
     @get:Internal
     val runtimeProjectJars = variantDependencies.getArtifactCollectionForToolingModel(
         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
@@ -220,8 +219,13 @@ class ArtifactCollections(
     val explodedAarFileCollection: FileCollection
         get() = explodedAars.artifactFiles
 
-    // Note: Query for JAR instead of PROCESSED_JAR for project dependencies due to b/110054209
-    // With a solution to that projectJars and externalJars could be merged.
+    /**
+     * For project jars, query for JAR instead of PROCESSED_JAR for two reasons:
+     *  - Performance: Project jars are currently considered already processed (unlike external
+     *    jars).
+     *  - Workaround for a Gradle issue: Gradle may throw FileNotFoundException if a project jar has
+     *    not been built yet; this issue does not affect external jars (see bug 110054209).
+     */
     @get:Internal
     val projectJars: ArtifactCollection = variantDependencies.getArtifactCollectionForToolingModel(
         consumedConfigType,
@@ -318,8 +322,7 @@ fun getAllArtifacts(
 
     val explodedAars = collections.explodedAars.asMultiMap()
 
-    // Note: Query for JAR instead of PROCESSED_JAR for project dependencies due to b/110054209
-    // With a solution to that projectJars and externalJars could be merged.
+    /** See [ArtifactCollections.projectJars]. */
     val projectJars = collections.projectJars.asMultiMap()
 
     // collect dependency resolution failures

@@ -282,13 +282,31 @@ public class AndroidArtifacts {
         SHARED_CLASSES(TYPE_SHARED_CLASSES),
         /** A jar containing classes with recalculated stack frames */
         CLASSES_FIXED_FRAMES_JAR(TYPE_CLASSES_FIXED_FRAMES_JAR),
-        // Jar or processed jar, used for purposes such as computing the annotation processor
-        // classpath or building the model.
-        // IMPORTANT: Consumers should generally use PROCESSED_JAR instead of JAR, as the jars may
-        // need to be processed (e.g., jetified to AndroidX) before they can be used. Consuming JAR
-        // should be considered as an exception and the reason should be documented.
+
+        /**
+         * Original (unprocessed) jar.
+         *
+         * <p>JAR vs. {@link #PROCESSED_JAR}: Jars usually need to be processed (e.g., jetified,
+         * namespaced) before they can be used. Therefore, consumers should generally use {@link
+         * #PROCESSED_JAR}.
+         *
+         * <p>In a few cases, consumers may want to use unprocessed jars (be sure to document the
+         * reason in those cases). Common reasons are:
+         *
+         * <ul>
+         *   <li>Correctness: Some tasks want to work with unprocessed jars.
+         *   <li>Performance: Some jars don't need to be processed (e.g., android.jar, lint.jar).
+         * </ul>
+         */
         JAR(TYPE_JAR),
+
+        /**
+         * Processed jar.
+         *
+         * <p>See {@link #JAR} for context on processed/unprocessed artifacts.
+         */
         PROCESSED_JAR(TYPE_PROCESSED_JAR),
+
         // published dex folder for bundle
         DEX(TYPE_DEX),
         // dex and keep rules(shrinking desugar lib), a folder with a subfolder named dex
@@ -431,12 +449,34 @@ public class AndroidArtifacts {
         REVERSE_METADATA_NATIVE_SYMBOL_TABLES(TYPE_REVERSE_METADATA_NATIVE_SYMBOL_TABLES),
 
         // types for querying only. Not publishable.
+
+        /**
+         * Original (unprocessed) aar.
+         *
+         * <p>See {@link #JAR} for context on processed/unprocessed artifacts.
+         */
         AAR(TYPE_AAR),
-        // Artifact type for processed aars (the aars may need to be processed, e.g. jetified to
-        // AndroidX, before they can be used)
+
+        /**
+         * Processed aar.
+         *
+         * <p>See {@link #JAR} for context on processed/unprocessed artifacts.
+         */
         PROCESSED_AAR(TYPE_PROCESSED_AAR),
+
+        /**
+         * Directory containing the extracted contents of a <em>processed</em> aar ({@link
+         * #PROCESSED_AAR}).
+         */
         EXPLODED_AAR(TYPE_EXPLODED_AAR),
+
+        /**
+         * Original (unprocessed) aar or jar (i.e., it is either an {@link #AAR} or a {@Link #JAR}).
+         *
+         * <p>See {@link #JAR} for context on processed/unprocessed artifacts.
+         */
         AAR_OR_JAR(TYPE_AAR_OR_JAR), // See ArtifactUtils for how this is used.
+
         // A file containing unique resource symbols from ANDROID_RES.
         ANDROID_RES_SYMBOLS(TYPE_AAR_ClASS_LIST_AND_RES_SYMBOLS),
         // A file containing classpaths from CLASSES_JAR.

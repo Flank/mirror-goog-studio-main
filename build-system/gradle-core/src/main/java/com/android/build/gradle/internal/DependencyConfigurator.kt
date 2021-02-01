@@ -223,6 +223,7 @@ class DependencyConfigurator(
         // transform to create the JDK image from core-for-system-modules.jar
         registerTransform(
             JdkImageTransform::class.java,
+            // Query for JAR instead of PROCESSED_JAR as core-for-system-modules.jar doesn't need processing
             AndroidArtifacts.ArtifactType.JAR.type,
             ANDROID_JDK_IMAGE
         ) { params ->
