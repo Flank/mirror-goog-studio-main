@@ -144,10 +144,17 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 for (toRemove in removed) {
                     state.contextMap.remove(toRemove)?.handle?.close()
                 }
-                if (captureNewRoots) {
-                    ThreadUtils.runOnMainThread {
-                        for (toAdd in added) {
-                            startCapturing(currRoots.getValue(toAdd), continuous = true)
+                if (captureNewRoots && added.isNotEmpty()) {
+                    // The first time we call this method, `lastRootIds` gets initialized with views
+                    // already being captured, so we don't need to start capturing them again.
+                    val actuallyAdded = added.toMutableList().apply {
+                        removeAll { id -> state.contextMap.containsKey(id) }
+                    }
+                    if (actuallyAdded.isNotEmpty()) {
+                        ThreadUtils.runOnMainThread {
+                            for (toAdd in added) {
+                                startCapturing(currRoots.getValue(toAdd), continuous = true)
+                            }
                         }
                     }
                 }

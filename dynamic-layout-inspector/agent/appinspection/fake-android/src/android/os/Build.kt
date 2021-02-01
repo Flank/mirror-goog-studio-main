@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.content
 
-import android.content.res.Resources
-import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicInteger
+package android.os
 
-class Context @VisibleForTesting constructor(
-    val packageName: String,
-    val resources: Resources
-) {
+object Build {
+    object VERSION {
 
-    val themeResId: Int = 0
-
-    // Only for tests - doesn't exist in the framework
-    private val viewIdGenerator = AtomicInteger(0)
-    internal fun generateViewId() = viewIdGenerator.addAndGet(1)
+        const val SDK_INT = 29
+        const val CODENAME = "F(ake)"
+    }
 }

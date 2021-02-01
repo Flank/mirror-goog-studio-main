@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.content
 
-import android.content.res.Resources
-import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicInteger
+package android.view
 
-class Context @VisibleForTesting constructor(
-    val packageName: String,
-    val resources: Resources
-) {
+import android.content.Context
 
-    val themeResId: Int = 0
+class ViewGroup(context: Context) : View(context) {
+    open class LayoutParams
 
-    // Only for tests - doesn't exist in the framework
-    private val viewIdGenerator = AtomicInteger(0)
-    internal fun generateViewId() = viewIdGenerator.addAndGet(1)
+    private val children = mutableListOf<View>()
+
+    val childCount get() = children.size
+    fun getChildAt(i: Int) = children[i]
+    fun addView(view: View) {
+        children.add(view)
+    }
 }

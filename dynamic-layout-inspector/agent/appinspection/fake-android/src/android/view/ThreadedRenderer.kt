@@ -13,20 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.content
 
-import android.content.res.Resources
-import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicInteger
+package android.view
 
-class Context @VisibleForTesting constructor(
-    val packageName: String,
-    val resources: Resources
-) {
+import android.graphics.HardwareRenderer
 
-    val themeResId: Int = 0
-
-    // Only for tests - doesn't exist in the framework
-    private val viewIdGenerator = AtomicInteger(0)
-    internal fun generateViewId() = viewIdGenerator.addAndGet(1)
-}
+class ThreadedRenderer : HardwareRenderer()

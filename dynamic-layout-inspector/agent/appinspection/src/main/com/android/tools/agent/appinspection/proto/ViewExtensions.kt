@@ -136,7 +136,6 @@ private fun View.toNodeImpl(
  */
 fun View.createResource(stringTable: StringTable, resourceId: Int): Resource? {
     if (resourceId <= 0) return null
-    val resources: Resources = resources ?: return null
 
     return try {
         return Resource.newBuilder().apply {

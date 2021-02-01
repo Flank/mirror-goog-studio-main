@@ -17,7 +17,7 @@ package android.graphics
 
 import androidx.annotation.VisibleForTesting
 
-class HardwareRenderer {
+open class HardwareRenderer {
 
     @get:VisibleForTesting // Normally, the framework only has a set method
     var pictureCaptureCallback: PictureCapturedCallback? = null

@@ -16,11 +16,18 @@
 
 package com.android.tools.agent.appinspection
 
+import android.content.Context
+import android.content.res.Resources
+import android.graphics.Picture
+import android.view.View
+import android.view.WindowManagerGlobal
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
 import com.android.tools.agent.appinspection.testutils.inspection.InspectorRule
+import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.google.common.truth.Truth.assertThat
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchCommand
 import org.junit.Rule
@@ -72,6 +79,126 @@ class ViewLayoutInspectorTest {
             assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.STOP_FETCH_RESPONSE)
         }
     }
+
+    @Test
+    fun canCaptureTreeInContinuousMode() = createViewInspector { viewInspector ->
+
+        val eventQueue = ArrayBlockingQueue<ByteArray>(2)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.offer(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val tree1 = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        val tree2 = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        val tree3 = View(context).apply { setAttachInfo(View.AttachInfo() )}
+        WindowManagerGlobal.instance.rootViews.addAll(listOf(tree1, tree2))
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+        assertThat(eventQueue).isEmpty()
+
+        val tree1FakePicture1 = Picture(byteArrayOf(1, 1))
+        val tree1FakePicture2 = Picture(byteArrayOf(1, 2))
+        val tree1FakePicture3 = Picture(byteArrayOf(1, 3))
+        val tree2FakePicture = Picture(byteArrayOf(2))
+
+        tree1.forcePictureCapture(tree1FakePicture1)
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+                tree2.uniqueDrawingId
+            )
+        }
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture1.bytes)
+            }
+        }
+
+        tree2.forcePictureCapture(tree2FakePicture)
+        // Roots event not resent, as roots haven't changed
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree2.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree2FakePicture.bytes)
+            }
+        }
+
+        WindowManagerGlobal.instance.rootViews.add(tree3)
+
+        tree1.forcePictureCapture(tree1FakePicture2)
+        // As a side-effect, this capture discovers the newly added third tree
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+                tree2.uniqueDrawingId,
+                tree3.uniqueDrawingId
+            )
+        }
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture2.bytes)
+            }
+        }
+
+        // Roots changed - this should generate a new roots event
+        WindowManagerGlobal.instance.rootViews.remove(tree2)
+        tree1.forcePictureCapture(tree1FakePicture3)
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.ROOTS_EVENT)
+            assertThat(event.rootsEvent.idsList).containsExactly(
+                tree1.uniqueDrawingId,
+                tree3.uniqueDrawingId
+            )
+        }
+
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture3.bytes)
+            }
+        }
+
+        // TODO: Add event listening for stop inspectors, which will trigger a PropertiesEvent. We
+        //  side-step this for now because it will require even more changes to fake-android, and
+        //  this change is already getting big enough.
+    }
+
+    // TODO: Add test for testing snapshot mode (which will require adding more support for fetching
+    //  view properties in fake-android.
+
+    // TODO: Add test for filtering system views and properties
 
     private fun createViewInspector(block: (ViewLayoutInspector) -> Unit) {
         // We could just create the view inspector directly, but using the factory mimics what

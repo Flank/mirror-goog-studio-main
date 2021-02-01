@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.content
 
-import android.content.res.Resources
+package android.graphics
+
 import androidx.annotation.VisibleForTesting
-import java.util.concurrent.atomic.AtomicInteger
+import java.io.OutputStream
 
-class Context @VisibleForTesting constructor(
-    val packageName: String,
-    val resources: Resources
+class Picture @VisibleForTesting constructor(
+    @VisibleForTesting val bytes: ByteArray
 ) {
 
-    val themeResId: Int = 0
-
-    // Only for tests - doesn't exist in the framework
-    private val viewIdGenerator = AtomicInteger(0)
-    internal fun generateViewId() = viewIdGenerator.addAndGet(1)
+    fun writeToStream(os: OutputStream) {
+        os.write(bytes)
+    }
 }
