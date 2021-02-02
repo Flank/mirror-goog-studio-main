@@ -16,16 +16,36 @@
 
 package com.android.tools.agent.appinspection.testutils
 
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManagerGlobal
+import android.view.inspector.StaticInspectionCompanionProvider
+import android.widget.TextView
+import com.android.tools.agent.appinspection.testutils.property.companions.TextViewInspectionCompanion
+import com.android.tools.agent.appinspection.testutils.property.companions.ViewGroupLayoutParamsInspectionCompanion
+import com.android.tools.agent.appinspection.testutils.property.companions.ViewInspectionCompanion
 import org.junit.rules.ExternalResource
 
 /**
  * Simple rule for setting up / clearing global framework state between tests.
  */
 class FrameworkStateRule : ExternalResource() {
+    public override fun before() {
+        StaticInspectionCompanionProvider.register(View::class.java, ViewInspectionCompanion())
+        StaticInspectionCompanionProvider.register(
+            TextView::class.java,
+            TextViewInspectionCompanion()
+        )
+        StaticInspectionCompanionProvider.register(
+            ViewGroup.LayoutParams::class.java,
+            ViewGroupLayoutParamsInspectionCompanion()
+        )
+    }
 
     public override fun after() {
         WindowManagerGlobal.instance.rootViews.clear()
+
+        StaticInspectionCompanionProvider.cleanup()
     }
 
 }

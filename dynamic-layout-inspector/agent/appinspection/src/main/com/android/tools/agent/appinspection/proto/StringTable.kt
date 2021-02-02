@@ -16,6 +16,7 @@
 
 package com.android.tools.agent.appinspection.proto
 
+import androidx.annotation.VisibleForTesting
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StringEntry
 
 /**
@@ -26,7 +27,23 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StringEntry
  * of text is across the layout tree will be the same.
  */
 class StringTable {
+
+    companion object {
+
+        @VisibleForTesting
+        fun fromStringEntries(entries: List<StringEntry>): StringTable {
+            return StringTable().apply {
+                for (entry in entries) {
+                    innerMap[entry.str] = entry.id
+                }
+            }
+        }
+    }
+
     private val innerMap = mutableMapOf<String, Int>()
+
+    @VisibleForTesting
+    operator fun get(id: Int): String? = innerMap.entries.firstOrNull { it.value == id }?.key
 
     fun put(str: String): Int {
         if (str.isEmpty()) return 0

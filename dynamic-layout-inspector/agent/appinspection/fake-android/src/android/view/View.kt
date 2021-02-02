@@ -45,7 +45,9 @@ open class View @VisibleForTesting constructor(val context: Context) {
 
     companion object {
 
-        const val VISIBLE = 0
+        const val VISIBLE = 0x0
+        const val INVISIBLE = 0x4
+        const val GONE = 0x8
     }
 
     val id = context.generateViewId()

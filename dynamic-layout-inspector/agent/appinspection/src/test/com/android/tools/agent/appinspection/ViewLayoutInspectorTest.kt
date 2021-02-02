@@ -20,7 +20,10 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Picture
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManagerGlobal
+import android.widget.TextView
+import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.testutils.FrameworkStateRule
 import com.android.tools.agent.appinspection.testutils.MainLooperRule
 import com.android.tools.agent.appinspection.testutils.inspection.InspectorRule
@@ -50,7 +53,7 @@ class ViewLayoutInspectorTest {
 
         val responseQueue = ArrayBlockingQueue<ByteArray>(1)
         inspectorRule.commandCallback.replyListeners.add { bytes ->
-            responseQueue.offer(bytes)
+            responseQueue.add(bytes)
         }
 
         val startFetchCommand = Command.newBuilder().apply {
@@ -82,10 +85,9 @@ class ViewLayoutInspectorTest {
 
     @Test
     fun canCaptureTreeInContinuousMode() = createViewInspector { viewInspector ->
-
         val eventQueue = ArrayBlockingQueue<ByteArray>(2)
         inspectorRule.connection.eventListeners.add { bytes ->
-            eventQueue.offer(bytes)
+            eventQueue.add(bytes)
         }
 
         val resourceNames = mutableMapOf<Int, String>()
@@ -239,6 +241,83 @@ class ViewLayoutInspectorTest {
 
     // TODO: Add test for testing snapshot mode (which will require adding more support for fetching
     //  view properties in fake-android.
+
+    @Test
+    fun canFetchPropertiesForView() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val resourceNames = mutableMapOf<Int, String>()
+        val resources = Resources(resourceNames)
+        val context = Context("view.inspector.test", resources)
+        val root = ViewGroup(context).apply {
+            setAttachInfo(View.AttachInfo())
+            addView(View(context))
+            addView(TextView(context, "Placeholder Text"))
+        }
+
+        WindowManagerGlobal.instance.rootViews.addAll(listOf(root))
+
+        run { // Search for properties for View
+            val viewChild = root.getChildAt(0)
+
+            val getPropertiesCommand = Command.newBuilder().apply {
+                getPropertiesCommandBuilder.apply {
+                    rootViewId = root.uniqueDrawingId
+                    viewId = viewChild.uniqueDrawingId
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                getPropertiesCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.GET_PROPERTIES_RESPONSE)
+                response.getPropertiesResponse.let { propertiesResponse ->
+                    val strings = StringTable.fromStringEntries(propertiesResponse.stringsList)
+                    val propertyGroup = propertiesResponse.propertyGroup
+                    assertThat(propertyGroup.viewId).isEqualTo(viewChild.uniqueDrawingId)
+                    assertThat(propertyGroup.propertyList.map { strings[it.name] }).containsExactly(
+                        "visibility", "layout_width", "layout_height"
+                    )
+                }
+            }
+        }
+
+        run { // Search for properties for TextView
+            val textChild = root.getChildAt(1)
+
+            val getPropertiesCommand = Command.newBuilder().apply {
+                getPropertiesCommandBuilder.apply {
+                    rootViewId = root.uniqueDrawingId
+                    viewId = textChild.uniqueDrawingId
+                }
+            }.build()
+            viewInspector.onReceiveCommand(
+                getPropertiesCommand.toByteArray(),
+                inspectorRule.commandCallback
+            )
+
+            responseQueue.take().let { bytes ->
+                val response = Response.parseFrom(bytes)
+                assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.GET_PROPERTIES_RESPONSE)
+                response.getPropertiesResponse.let { propertiesResponse ->
+                    val strings = StringTable.fromStringEntries(propertiesResponse.stringsList)
+                    val propertyGroup = propertiesResponse.propertyGroup
+                    assertThat(propertyGroup.viewId).isEqualTo(textChild.uniqueDrawingId)
+                    assertThat(propertyGroup.propertyList.map { strings[it.name] }).containsExactly(
+                        "text", "visibility", "layout_width", "layout_height"
+                    )
+                }
+            }
+        }
+    }
+
+
 
     // TODO: Add test for filtering system views and properties
 

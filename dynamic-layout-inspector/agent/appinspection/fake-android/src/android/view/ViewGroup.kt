@@ -19,7 +19,16 @@ package android.view
 import android.content.Context
 
 class ViewGroup(context: Context) : View(context) {
-    open class LayoutParams
+    open class LayoutParams {
+        companion object {
+
+            const val MATCH_PARENT = -1
+            const val WRAP_CONTENT = -2
+        }
+
+        @JvmField var width = 0
+        @JvmField var height = 0
+    }
 
     private val children = mutableListOf<View>()
 

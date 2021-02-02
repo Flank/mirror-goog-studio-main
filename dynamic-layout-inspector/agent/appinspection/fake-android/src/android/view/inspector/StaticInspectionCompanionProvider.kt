@@ -16,9 +16,27 @@
 
 package android.view.inspector
 
-@Suppress("UNUSED_PARAMETER")
+import androidx.annotation.VisibleForTesting
+
 class StaticInspectionCompanionProvider {
+
+    companion object {
+
+        private val providers = mutableMapOf<Class<*>, InspectionCompanion<*>>()
+
+        @VisibleForTesting
+        fun <T> register(cls: Class<T>, provider: InspectionCompanion<T>) {
+            providers[cls] = provider
+        }
+
+        @VisibleForTesting
+        fun cleanup() {
+            providers.clear()
+        }
+    }
+
     fun <T> provide(cls: Class<T>): InspectionCompanion<T>? {
-        return null
+        @Suppress("UNCHECKED_CAST")
+        return providers[cls] as? InspectionCompanion<T>
     }
 }
