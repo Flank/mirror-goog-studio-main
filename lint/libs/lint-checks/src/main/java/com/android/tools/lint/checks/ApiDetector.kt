@@ -865,6 +865,23 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return
             }
 
+            // Also see if this cast has been explicitly checked for
+            var curr = node
+            while (true) {
+                val check = curr.getParentOfType(UIfExpression::class.java, true, UMethod::class.java)
+                    ?: break
+                val condition = check.condition
+                if (condition is UBinaryExpressionWithType) {
+                    val type = condition.type
+                    // Explicitly checked with surrounding instanceof check
+                    if (type == interfaceType) {
+                        return
+                    }
+                }
+
+                curr = check
+            }
+
             val location = context.getLocation(node)
             val message: String
             val to = interfaceType.className

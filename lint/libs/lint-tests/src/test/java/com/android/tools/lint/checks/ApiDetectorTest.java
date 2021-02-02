@@ -4062,6 +4062,69 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testInstanceofCast() {
+        lint().files(
+                        manifest().minSdk(21),
+                        java(""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.content.Context;\n"
+                                        + "import android.media.AudioFormat;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings({\"RedundantCast\", \"unused\"})\n"
+                                        + "public class CastTest {\n"
+                                        + "    public static void test(Context context) {\n"
+                                        + "        AudioFormat format = new AudioFormat.Builder().build(); // requires 21\n"
+                                        + "        if (format instanceof Parcelable) {\n"
+                                        + "            Parcelable parcel = format; // OK - requires 24 but instanceof checked\n"
+                                        + "            parcel.describeContents(); // OK\n"
+                                        + "        }\n"
+                                        + "        if (format instanceof Parcelable) {\n"
+                                        + "            if (true) {\n"
+                                        + "                ((Parcelable) format).describeContents(); // OK - requires 24 but instanceof checked\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "        format.describeContents(); // ERROR - requires 24 because Parcelable method\n"
+                                        + "        Parcelable parcel = format; // ERROR - implicit cast requires 24\n"
+                                        + "    }\n"
+                                        + "}")
+                                .indented(),
+                        kotlin(
+                                        ""
+                                                + "package test.pkg\n"
+                                                + "\n"
+                                                + "import android.content.Context\n"
+                                                + "import android.media.AudioFormat\n"
+                                                + "import android.os.Parcelable\n"
+                                                + "\n"
+                                                + "object CastTest2 {\n"
+                                                + "    fun test(context: Context?) {\n"
+                                                + "        val format = AudioFormat.Builder().build() // requires 21\n"
+                                                + "        if (format is Parcelable) {\n"
+                                                + "            val parcel: Parcelable = format // OK - requires 24 but instanceof checked\n"
+                                                + "            parcel.describeContents() // OK\n"
+                                                + "        }\n"
+                                                + "        if (format is Parcelable) {\n"
+                                                + "            (format as Parcelable).describeContents() // OK - requires 24 but instanceof checked\n"
+                                                + "        }\n"
+                                                + "        format.describeContents() // ERROR - requires 24 because Parcelable method\n"
+                                                + "        val parcel: Parcelable = format // ERROR - implicit cast requires 24\n"
+                                                + "    }\n"
+                                                + "}")
+                                .indented())
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/CastTest.java:21: Error: Cast from AudioFormat to Parcelable requires API level 24 (current min is 21) [NewApi]\n"
+                                + "        Parcelable parcel = format; // ERROR - implicit cast requires 24\n"
+                                + "                            ~~~~~~\n"
+                                + "src/test/pkg/CastTest2.kt:18: Error: Cast from AudioFormat to Parcelable requires API level 24 (current min is 21) [NewApi]\n"
+                                + "        val parcel: Parcelable = format // ERROR - implicit cast requires 24\n"
+                                + "                                 ~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
     @SuppressWarnings({
         "MethodMayBeStatic",
         "ConstantConditions",
