@@ -78,6 +78,7 @@ public final class Looper {
         if (looper == sMainLooper) {
             sMainLooper = null;
         }
+        sLoopers.remove(Thread.currentThread());
     }
 
     private final Object mLock = new Object();
