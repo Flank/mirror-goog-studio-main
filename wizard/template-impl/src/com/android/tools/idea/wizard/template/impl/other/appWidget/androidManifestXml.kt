@@ -39,7 +39,7 @@ fun androidManifestXml(
         </receiver>
 
 ${renderIf(configurable) {"""
-        <activity android:name="${packageName}.${className}ConfigureActivity" >
+        <activity android:name="${packageName}.${className}ConfigureActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>

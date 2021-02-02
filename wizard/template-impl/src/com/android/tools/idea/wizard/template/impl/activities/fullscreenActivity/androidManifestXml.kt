@@ -35,6 +35,7 @@ fun androidManifestXml(
 
     <application>
         <activity android:name="${packageName}.${activityClass}"
+            android:exported="true"
             android:configChanges="orientation|keyboardHidden|screenSize"
             $activityLabel
             android:theme="@style/${getFullscreenTheme(themeName)}">
