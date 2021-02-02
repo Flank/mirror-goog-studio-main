@@ -201,7 +201,7 @@ java_import(
     jars = sdk_path(["platforms/android-30/android.jar"]),
     testonly = 1,
     visibility = [
-        "//tools/base/dynamic-layout-inspector/agent/transport:__pkg__",
+        "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
     ],
 )
 
