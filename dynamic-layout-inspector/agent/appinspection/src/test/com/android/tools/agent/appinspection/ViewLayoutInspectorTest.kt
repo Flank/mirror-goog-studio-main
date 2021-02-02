@@ -113,7 +113,9 @@ class ViewLayoutInspectorTest {
         val tree1FakePicture1 = Picture(byteArrayOf(1, 1))
         val tree1FakePicture2 = Picture(byteArrayOf(1, 2))
         val tree1FakePicture3 = Picture(byteArrayOf(1, 3))
+        val tree1FakePicture4 = Picture(byteArrayOf(1, 4))
         val tree2FakePicture = Picture(byteArrayOf(2))
+        val tree3FakePicture = Picture(byteArrayOf(3))
 
         tree1.forcePictureCapture(tree1FakePicture1)
         eventQueue.take().let { bytes ->
@@ -190,9 +192,49 @@ class ViewLayoutInspectorTest {
             }
         }
 
-        // TODO: Add event listening for stop inspectors, which will trigger a PropertiesEvent. We
-        //  side-step this for now because it will require even more changes to fake-android, and
-        //  this change is already getting big enough.
+        val stopFetchCommand = Command.newBuilder().apply {
+            stopFetchCommand = StopFetchCommand.getDefaultInstance()
+        }.build()
+        viewInspector.onReceiveCommand(
+            stopFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for the stop command to run its course
+
+        // Normally, stopping the inspector triggers invalidate calls, but in fake android, those
+        // do nothing. Instead, we emulate this by manually firing capture events.
+        tree1.forcePictureCapture(tree1FakePicture4)
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture4.bytes)
+
+            }
+        }
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.PROPERTIES_EVENT)
+            assertThat(event.propertiesEvent.rootId).isEqualTo(tree1.uniqueDrawingId)
+        }
+
+        tree3.forcePictureCapture(tree3FakePicture)
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.LAYOUT_EVENT)
+            event.layoutEvent.let { layoutEvent ->
+                assertThat(layoutEvent.rootView.id).isEqualTo(tree3.uniqueDrawingId)
+                assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree3FakePicture.bytes)
+
+            }
+        }
+        eventQueue.take().let { bytes ->
+            val event = Event.parseFrom(bytes)
+            assertThat(event.specializedCase).isEqualTo(Event.SpecializedCase.PROPERTIES_EVENT)
+            assertThat(event.propertiesEvent.rootId).isEqualTo(tree3.uniqueDrawingId)
+        }
     }
 
     // TODO: Add test for testing snapshot mode (which will require adding more support for fetching

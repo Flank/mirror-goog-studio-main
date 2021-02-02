@@ -38,6 +38,9 @@ kotlin_test(
         "-Dtest.suite.jar=agent_tests.jar",
     ],
     test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        "//prebuilts/studio/sdk:platforms/latest_runtime_jar",
+    ],
     deps = [
         ":agent-sources_undexed",
         "//tools/base/testutils:tools.testutils",

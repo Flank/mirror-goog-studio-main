@@ -54,7 +54,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     /**
      * Context data associated with a capture of a single layout tree.
      */
-    private class CaptureContext(
+    private data class CaptureContext(
         /**
          * A handle returned by a system that does continuous capturing, which, when closed, tells
          * the system to stop as soon as possible.
@@ -190,7 +190,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // We might get some lingering captures even though we already finished
                     // listening earlier (this would be indicated by no context). Just abort
                     // early in that case.
-                    context = state.contextMap[root.uniqueDrawingId] ?: return@execute
+                    // Note: We copy the context instead of returning it directly, to avoid rare
+                    // but potential threading issues as other threads can modify the context, e.g.
+                    // handling the stop fetch command.
+                    context = state.contextMap[root.uniqueDrawingId]?.copy() ?: return@execute
                     if (context.isLastCapture) {
                         state.contextMap.remove(root.uniqueDrawingId)
                     }
@@ -304,8 +307,14 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
 
         synchronized(stateLock) {
-            for (context in state.contextMap.values) {
+            val contextMap = state.contextMap
+            for (context in contextMap.values) {
                 context.isLastCapture = true
+            }
+            ThreadUtils.runOnMainThread {
+                getRootViews()
+                    .filter { view -> contextMap.containsKey(view.uniqueDrawingId) }
+                    .forEach { view -> view.invalidate() }
             }
         }
     }
