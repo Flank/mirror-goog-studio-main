@@ -18,6 +18,7 @@ package com.android.repository.impl.sources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemoteListSourceProvider;
@@ -108,7 +109,7 @@ public class RemoteListSourceProviderTest extends TestCase {
                     public void downloadFully(
                             @NonNull URL url,
                             @Nullable Path target,
-                            @Nullable String checksum,
+                            @Nullable Checksum checksum,
                             @NonNull ProgressIndicator indicator) {
                         fail("shouldn't be downloading again");
                     }

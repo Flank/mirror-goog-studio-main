@@ -70,11 +70,12 @@ class BasicInstaller extends AbstractInstaller {
             String path = url.getPath();
             Path downloadLocation =
                     installTempPath.resolve(path.substring(path.lastIndexOf('/') + 1));
-            // TODO sha-256
-            String checksum = archive.getComplete().getTypedChecksum().getValue();
             getDownloader()
                     .downloadFullyWithCaching(
-                            url, downloadLocation, checksum, progress.createSubProgress(0.5));
+                            url,
+                            downloadLocation,
+                            archive.getComplete().getTypedChecksum(),
+                            progress.createSubProgress(0.5));
             if (progress.isCanceled()) {
                 progress.setFraction(1);
                 return false;

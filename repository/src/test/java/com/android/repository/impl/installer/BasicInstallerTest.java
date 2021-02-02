@@ -24,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.ConstantSourceProvider;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.Installer;
@@ -464,7 +465,7 @@ public class BasicInstallerTest extends TestCase {
                     public void downloadFully(
                             @NonNull URL url,
                             @NonNull Path target,
-                            @Nullable String checksum,
+                            @Nullable Checksum checksum,
                             @NonNull ProgressIndicator indicator)
                             throws IOException {
                         super.downloadFully(url, target, checksum, indicator);
@@ -489,7 +490,7 @@ public class BasicInstallerTest extends TestCase {
 
         String repo =
                 "<repo:repository\n"
-                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/02\"\n"
                         + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
                         + "    <remotePackage path=\"mypackage;bar\">\n"
                         + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
@@ -503,10 +504,11 @@ public class BasicInstallerTest extends TestCase {
                         + "            <archive>\n"
                         + "                <complete>\n"
                         + "                    <size>2345</size>\n"
-                        + "                    <checksum>"
+                        + "                    <checksum type='sha-256'>"
                         + Downloader.hash(
                                 new ByteArrayInputStream(zipBytes),
                                 zipBytes.length,
+                                "sha-256",
                                 new FakeProgressIndicator())
                         + "</checksum>\n"
                         + "                    <url>http://example.com/2/arch1</url>\n"
@@ -568,14 +570,15 @@ public class BasicInstallerTest extends TestCase {
                     public void downloadFully(
                             @NonNull URL url,
                             @NonNull Path target,
-                            @Nullable String checksum,
+                            @Nullable Checksum checksum,
                             @NonNull ProgressIndicator indicator)
                             throws IOException {
                         assertEquals(
-                                checksum,
+                                checksum.getValue(),
                                 Downloader.hash(
                                         Files.newInputStream(target),
                                         Files.size(target),
+                                        checksum.getType(),
                                         indicator));
                     }
                 };

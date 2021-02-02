@@ -304,7 +304,7 @@ public abstract class Archive {
         @NonNull
         public Checksum getTypedChecksum() {
             // Implementation for compatibility with v1
-            return Checksum.create(getLegacyChecksum(), "sha1");
+            return Checksum.create(getLegacyChecksum(), "sha-1");
         }
 
         /** Sets the checksum for this zip. */

@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
@@ -62,8 +63,9 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                 ImmutableSet.of(RepoManager.getGenericModule()),
                 null);
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
-        downloader.registerUrl(new URL("http://www.example.com"),
-                getClass().getResourceAsStream("/testRepo.xml"));
+        downloader.registerUrl(
+                new URL("http://www.example.com"),
+                getClass().getResourceAsStream("/testRepo2.xml"));
         FakeProgressIndicator progress = new FakeProgressIndicator(true);
         RemoteRepoLoader loader =
                 new RemoteRepoLoaderImpl(
@@ -77,15 +79,18 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         RemotePackage p1 = pkgs.get("mypackage;foo");
         assertEquals(new Revision(1, 2, 3), p1.getVersion());
         assertEquals("the license text", p1.getLicense().getValue().trim());
-        assertEquals(3, ((RemotePackageImpl) p1).getAllArchives().size());
-        assertTrue(p1.getTypeDetails() instanceof TypeDetails.GenericType);
         Collection<Archive> archives = ((RemotePackageImpl) p1).getAllArchives();
-        assertEquals(3, archives.size());
+        assertEquals(4, archives.size());
+        assertTrue(p1.getTypeDetails() instanceof TypeDetails.GenericType);
         Iterator<Archive> archiveIter = ((RemotePackageImpl) p1).getAllArchives().iterator();
         Archive a1 = archiveIter.next();
         assertEquals(1234, a1.getComplete().getSize());
+        assertEquals("x64", a1.getHostArch());
         Archive a2 = archiveIter.next();
-        Iterator<Archive.PatchType> patchIter = a2.getAllPatches().iterator();
+        assertEquals(1234, a2.getComplete().getSize());
+        assertEquals("aarch64", a2.getHostArch());
+        Archive a3 = archiveIter.next();
+        Iterator<Archive.PatchType> patchIter = a3.getAllPatches().iterator();
         Archive.PatchType patch = patchIter.next();
         assertEquals(new Revision(1, 3, 2), patch.getBasedOn().toRevision());
         patch = patchIter.next();
@@ -402,7 +407,7 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                     public void downloadFully(
                             @NonNull URL url,
                             @NonNull Path target,
-                            @Nullable String checksum,
+                            @Nullable Checksum checksum,
                             @NonNull ProgressIndicator indicator)
                             throws IOException {
                         super.downloadFully(url, target, checksum, indicator);

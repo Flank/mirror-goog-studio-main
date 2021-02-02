@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Slow;
 import com.android.prefs.AndroidLocationsSingleton;
 import com.android.repository.api.Channel;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.License;
 import com.android.repository.api.ProgressIndicator;
@@ -124,8 +125,8 @@ public class OfflineRepoCreator {
             throws IOException {
         if (Files.exists(dest)) {
             try {
-                // TODO: sha-256
-                MessageDigest digest = MessageDigest.getInstance("SHA-1");
+                Checksum existingChecksum = remote.getArchive().getComplete().getTypedChecksum();
+                MessageDigest digest = MessageDigest.getInstance(existingChecksum.getType());
                 try (InputStream in = new BufferedInputStream(Files.newInputStream(dest))) {
                     byte[] buf = new byte[4096];
                     int n;
@@ -134,12 +135,7 @@ public class OfflineRepoCreator {
                     }
                 }
                 if (DatatypeConverter.printHexBinary(digest.digest())
-                        .equals(
-                                remote.getArchive()
-                                        .getComplete()
-                                        .getTypedChecksum()
-                                        .getValue()
-                                        .toUpperCase())) {
+                        .equals(existingChecksum.getValue().toUpperCase())) {
                     System.out.println(dest + " is up to date");
                     return true;
                 }

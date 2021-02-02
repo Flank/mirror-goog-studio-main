@@ -65,8 +65,9 @@ public class LegacyRemoteTest extends TestCase {
         LegacyRemoteRepoLoader sdk = new LegacyRemoteRepoLoader();
         mgr.setFallbackRemoteRepoLoader(sdk);
         FakeDownloader downloader = new FakeDownloader(fop);
-        downloader.registerUrl(new URL("http://www.example.com/testRepo2"),
-                getClass().getResourceAsStream("/repository2_sample_1.xml"));
+        downloader.registerUrl(
+                new URL("http://www.example.com/testRepo2"),
+                getClass().getResourceAsStream("/repository2-1_sample.xml"));
         downloader.registerUrl(new URL("http://www.example.com/testRepo"),
                 getClass().getResourceAsStream("/repository_sample_10.xml"));
         FakeProgressRunner runner = new FakeProgressRunner();

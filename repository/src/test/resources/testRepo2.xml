@@ -36,15 +36,25 @@
             <archive>
                 <complete>
                     <size>1234</size>
-                    <checksum>4321432143214321432143214321432143214321</checksum>
+                    <checksum type="sha-1">4321432143214321432143214321432143214321</checksum>
                     <url>http://example.com/arch1</url>
                 </complete>
                 <host-os>linux</host-os>
+                <host-arch>x64</host-arch>
+            </archive>
+            <archive>
+                <complete>
+                    <size>1234</size>
+                    <checksum type="sha-1">4321432143214321432143214321432143214321</checksum>
+                    <url>http://example.com/arch1</url>
+                </complete>
+                <host-os>linux</host-os>
+                <host-arch>aarch64</host-arch>
             </archive>
             <archive>
                 <complete>
                     <size>5678</size>
-                    <checksum>8765876587658765876587658765876587658765</checksum>
+                    <checksum type="sha-1">8765876587658765876587658765876587658765</checksum>
                     <url>http://example.com/arch2</url>
                 </complete>
                 <host-os>windows</host-os>
@@ -56,7 +66,7 @@
                             <micro>2</micro>
                         </based-on>
                         <size>987</size>
-                        <checksum>234564398579acf678b32ea98b988f1ab326dc65</checksum>
+                        <checksum type="sha-1">234564398579acf678b32ea98b988f1ab326dc65</checksum>
                         <url>http://example.com/patch</url>
                     </patch>
                     <patch>
@@ -64,7 +74,7 @@
                             <major>2</major>
                         </based-on>
                         <size>123</size>
-                        <checksum>2350927340957820498572350293847502934875</checksum>
+                        <checksum type="sha-1">2350927340957820498572350293847502934875</checksum>
                         <url>http://example.com/patch2</url>
                     </patch>
                 </patches>
@@ -72,7 +82,7 @@
             <archive>
                 <complete>
                     <size>9876</size>
-                    <checksum>2350927340957820498572350293847502934875</checksum>
+                    <checksum type="sha-1">2350927340957820498572350293847502934875</checksum>
                     <url>http://example.com/arch3</url>
                 </complete>
             </archive>
@@ -91,7 +101,7 @@
             <archive>
                 <complete>
                     <size>2345</size>
-                    <checksum>e1b7e62ecc3925054900b70e6eb9038bba8f702a</checksum>
+                    <checksum type="sha-256">e1b7e62ecc3925054900b70e6eb9038bba8f702a70e6eb9038bba8f702af702a</checksum>
                     <url>http://example.com/2/arch1</url>
                 </complete>
             </archive>

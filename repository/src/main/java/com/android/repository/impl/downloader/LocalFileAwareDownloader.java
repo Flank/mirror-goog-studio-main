@@ -18,6 +18,7 @@ package com.android.repository.impl.downloader;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.api.Checksum;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.ProgressIndicator;
 import java.io.IOException;
@@ -67,7 +68,7 @@ public class LocalFileAwareDownloader implements Downloader {
     public void downloadFully(
             @NonNull URL url,
             @NonNull Path target,
-            @Nullable String checksum,
+            @Nullable Checksum checksum,
             @NonNull ProgressIndicator indicator)
             throws IOException {
         if ("file".equals(url.getProtocol())) {
