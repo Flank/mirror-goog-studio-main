@@ -1,5 +1,10 @@
-load(":proto.bzl", "ProtoPackageInfo", "android_java_proto_library")
-load(":maven.bzl", "maven_java_import")
+load("//tools/adt/idea/studio:studio.bzl", "studio_data")
+load("//tools/base/bazel:android.bzl", "dex_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:maven.bzl", "maven_java_import")
+load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
+load("//tools/base/bazel:proto.bzl", "ProtoPackageInfo", "android_java_proto_library")
+load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 def _impl(ctx):
     args = [ctx.file.jar.path] + [ctx.attr.proto_file_name + ":" + ctx.outputs.out.path]
@@ -69,4 +74,65 @@ def app_inspection_aar_import(name, aar, **kwargs):
         name = name,
         jars = [unpacked_jar],
         **kwargs
+    )
+
+# Rule that encapsulates all of the intermediate steps in the building
+# of an inspector jar.
+#
+# This macro expands into several rules named after the *name* of this rule:
+#   name_undexed[.jar]
+#   name_jarjared[.jar]
+#   name_dexed[.jar]
+#   name (the final rule that puts everything together)
+#
+# The resulting jar is named out.jar if out is provided. Otherwise name.jar.
+def app_inspection_jar(
+        name,
+        proto,
+        inspection_resources,
+        inspection_resource_strip_prefix,
+        out = "",
+        d8_flags = [],
+        **kwargs):
+    kotlin_library(
+        name = name + "-sources_undexed",
+        **kwargs
+    )
+
+    java_jarjar(
+        name = name + "-sources_jarjared",
+        srcs = [
+            ":" + name + "-sources_undexed",
+            "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.0:kotlin-stdlib-jdk8_files",
+        ],
+        rules = "//tools/base/bazel:jarjar_rules.txt",
+    )
+
+    dex_library(
+        name = name + "-sources_dexed",
+        dexer = "D8",
+        flags = d8_flags,
+        jars = [
+            ":" + name + "-sources_jarjared",
+            "//tools/base/bazel:studio-proto",
+            proto,
+        ],
+    )
+
+    native.java_library(
+        name = name + "_inspection_resources",
+        resource_strip_prefix = inspection_resource_strip_prefix,
+        resources = inspection_resources,
+    )
+
+    output_name = out
+    if (out == ""):
+        output_name = name
+    merge_jars(
+        name = name,
+        out = output_name,
+        jars = [
+            ":" + name + "-sources_dexed",
+            ":" + name + "_inspection_resources",
+        ],
     )

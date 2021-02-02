@@ -1,11 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//tools/adt/idea/studio:studio.bzl", "studio_data")
-load("//tools/base/bazel:android.bzl", "dex_library")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
-load("//tools/base/bazel:merge_archives.bzl", "merge_jars")
+load("//tools/base/app-inspection:app_inspection.bzl", "app_inspection_jar")
 load("//tools/base/bazel:proto.bzl", "android_java_proto_library")
-load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 android_java_proto_library(
     name = "network_inspector_java_proto",
@@ -15,9 +12,16 @@ android_java_proto_library(
     protoc_grpc_version = "1.21.1",
 )
 
-kotlin_library(
-    name = "network-inspector-sources_undexed",
+app_inspection_jar(
+    name = "agent",
     srcs = glob(["src/**/*.kt"]),
+    out = "network-inspector.jar",
+    d8_flags = [
+        "--min-api 26",  # Network inspector is only supported on O+ devices.
+    ],
+    inspection_resource_strip_prefix = "tools/base/app-inspection/inspectors/network/resources",
+    inspection_resources = glob(["resources/META-INF/**"]),
+    proto = ":network_inspector_java_proto",
     # do not sort: fake_android must come before latest_jar in the classpath to override small pieces of it
     deps = [
         ":network_inspector_java_proto",
@@ -26,43 +30,6 @@ kotlin_library(
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
         "//tools/base/bazel:studio-proto",
-    ],
-)
-
-java_jarjar(
-    name = "network-inspector-sources_jarjared",
-    srcs = [
-        ":network-inspector-sources_undexed",
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.0:kotlin-stdlib-jdk8_files",
-    ],
-    rules = "//tools/base/bazel:jarjar_rules.txt",
-)
-
-dex_library(
-    name = "network-inspector-sources_dexed",
-    dexer = "D8",
-    flags = [
-        "--min-api 26",  # Network inspector is only supported on O+ devices.
-    ],
-    jars = [
-        ":network_inspector_java_proto",
-        ":network-inspector-sources_jarjared",
-        "//tools/base/bazel:studio-proto",
-    ],
-)
-
-java_library(
-    name = "network-inspector-resources",
-    resource_strip_prefix = "tools/base/app-inspection/inspectors/network/resources",
-    resources = glob(["resources/META-INF/**"]),
-)
-
-merge_jars(
-    name = "network-inspector",
-    out = "network-inspector.jar",
-    jars = [
-        ":network-inspector-sources_dexed",
-        ":network-inspector-resources",
     ],
 )
 
