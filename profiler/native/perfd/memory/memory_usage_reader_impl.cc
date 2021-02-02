@@ -108,14 +108,15 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
   char* result;
 
   int32_t java_private = 0, native_private = 0, stack = 0, graphics = 0,
-          code = 0, other_private = 0;
+          code = 0, total = 0;
 
   // Version check.
   int version = ParseInt(&temp_memory_info_ptr, ",");
   int regularStatsFieldCount = 4;
-  int privateDirtyStartIndex =
+  constexpr int kTotalIndex = 18;  // index for total memory consumption.
+  constexpr int kPrivateDirtyStartIndex =
       30;  // index before the private dirty category begins.
-  int privateCleanStartIndex =
+  constexpr int kPrivateCleanStartIndex =
       34;  // index before the private clean category begins.
   int otherStatsFieldCount;
   int otherStatsStartIndex;
@@ -180,15 +181,17 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
                                   ".ttf mmap", ".dex mmap", ".oat mmap"})) {
         memory_type = CODE;
       }
-    } else if (currentIndex == privateCleanStartIndex) {
+    } else if (currentIndex == kPrivateCleanStartIndex) {
       memory_type = PRIVATE_CLEAN;
-    } else if (currentIndex == privateDirtyStartIndex) {
+    } else if (currentIndex == kPrivateDirtyStartIndex) {
       memory_type = PRIVATE_DIRTY;
+    } else if (currentIndex == kTotalIndex) {
+      total = strtol(result, nullptr, 10);
     }
 
     if (memory_type == PRIVATE_CLEAN) {
-      accumulate(other_private);  // native private clean.
-      accumulate(other_private);  // dalvik private clean.
+      skip();                     // native private clean.
+      skip();                     // dalvik private clean.
       skip();                     // UNUSED - other private clean total.
       skip();                     // UNUSED - total private clean.
       currentIndex += regularStatsFieldCount;
@@ -207,14 +210,14 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
       // Parse out private dirty and private clean.
       switch (memory_type) {
         case OTHERS:
-          accumulate(other_private);
-          accumulate(other_private);
+          skip();
+          skip();
           break;
         case STACK:
           accumulate(stack);
           // Note that stack's private clean is treated as private others in
           // dumpsys.
-          accumulate(other_private);
+          skip();
           break;
         case ART:
           accumulate(java_private);
@@ -239,9 +242,9 @@ void MemoryUsageReaderImpl::ParseMemoryLevels(
   data->set_stack_mem(stack);
   data->set_graphics_mem(graphics);
   data->set_code_mem(code);
-  data->set_others_mem(other_private);
-  data->set_total_mem(java_private + native_private + stack + graphics + code +
-                      other_private);
+  data->set_others_mem(total - java_private - native_private - stack -
+                       graphics - code);
+  data->set_total_mem(total);
   return;
 }
 
