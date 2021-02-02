@@ -14,7 +14,10 @@ android_java_proto_library(
 
 app_inspection_jar(
     name = "agent",
-    srcs = glob(["src/**/*.kt"]),
+    srcs = glob([
+        "src/**/*.kt",
+        "src/**/*.java",
+    ]),
     out = "network-inspector.jar",
     d8_flags = [
         "--min-api 26",  # Network inspector is only supported on O+ devices.
