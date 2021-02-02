@@ -29,12 +29,23 @@ public class FakeDependency extends Dependency {
 
     private final RevisionType mRevision;
 
+    private final boolean mSoft;
+
     public FakeDependency(String path) {
-        this(path, null, null, null);
+        this(path, null, null, null, false);
     }
 
     public FakeDependency(String path, final Integer major, final Integer minor,
             final Integer micro) {
+        this(path, major, minor, micro, false);
+    }
+
+    public FakeDependency(
+            String path,
+            final Integer major,
+            final Integer minor,
+            final Integer micro,
+            boolean soft) {
         mPath = path;
         mRevision = major == null ? null : new RevisionType() {
             @Override
@@ -54,6 +65,7 @@ public class FakeDependency extends Dependency {
                 return micro;
             }
         };
+        mSoft = soft;
     }
 
     @NonNull
@@ -66,5 +78,10 @@ public class FakeDependency extends Dependency {
     @Override
     public RevisionType getMinRevision() {
         return mRevision;
+    }
+
+    @Override
+    public Boolean isSoft() {
+        return mSoft;
     }
 }

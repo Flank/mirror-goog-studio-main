@@ -387,6 +387,10 @@ public class InstallerUtil {
                     return null;
                 }
                 LocalPackage localDependency = updatableDependency.getLocal();
+                if (localDependency == null && d.isSoft()) {
+                    // Soft dependency and package isn't already installed -> skip
+                    continue;
+                }
                 Revision requiredMinRevision = null;
                 RevisionType r = d.getMinRevision();
                 if (r != null) {
