@@ -16,14 +16,10 @@ iml_module(
     ],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/adt/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations",
-    ],
+    exports = ["//tools/base/annotations:studio.android.sdktools.android-annotations"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
@@ -102,14 +98,10 @@ iml_module(
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/adt/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations",
-    ],
+    exports = ["//tools/base/annotations:studio.android.sdktools.android-annotations"],
     # do not sort: must match IML order
     deps = [
         "//prebuilts/studio/intellij-sdk:studio-sdk",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/adt/idea/.idea/libraries:truth[test]",
@@ -140,13 +132,10 @@ iml_module(
     iml_files = ["android.sdktools.common.testfixtures.iml"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools/adt/idea/.idea/libraries:Guava",
-        "//tools/base/annotations:studio.android.sdktools.android-annotations",
-    ],
+    exports = ["//tools/base/annotations:studio.android.sdktools.android-annotations"],
     # do not sort: must match IML order
     deps = [
-        "//tools/adt/idea/.idea/libraries:Guava",
+        "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",

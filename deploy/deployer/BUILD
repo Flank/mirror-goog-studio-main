@@ -38,7 +38,6 @@ iml_module(
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/base/apkparser:studio.android.sdktools.binary-resources[module]",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/base/deploy/deployer:deploy_java_proto",
         "//tools/adt/idea/.idea/libraries:protobuf",
         "//prebuilts/r8",

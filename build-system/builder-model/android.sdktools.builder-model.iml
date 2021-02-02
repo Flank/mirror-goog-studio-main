@@ -12,7 +12,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
-    <orderEntry type="library" scope="TEST" name="Guava" level="project" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
   </component>
 </module>

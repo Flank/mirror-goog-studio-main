@@ -11,7 +11,6 @@ iml_module(
     deps = [
         "//tools/adt/idea/.idea/libraries:kotlin-stdlib-jdk8",
         "//tools/adt/idea/.idea/libraries:studio-proto",
-        "//tools/adt/idea/.idea/libraries:Guava",
         "//tools/adt/idea/.idea/libraries:layoutinspector-skia-proto",
         "//prebuilts/tools/common/m2/repository/junit/junit/4.12:junit-4.12[test]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
