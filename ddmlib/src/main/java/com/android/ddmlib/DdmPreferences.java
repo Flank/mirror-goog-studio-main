@@ -66,6 +66,9 @@ public final class DdmPreferences {
 
   private static boolean sUseAdbHost = DEFAULT_USE_ADBHOST;
   private static String sAdbHostValue = DEFAULT_ADBHOST_VALUE;
+    private static int sJdwpMaxPacketSize =
+            getPropertyOrDefault(
+                    "DDMLIB_JDWP_MAX_PACKET_SIZE", 800 * 1024 * 1024, Integer::parseInt);
 
     /** Enable / Disable the JdwpProxy feature. */
     private static boolean sJdwpProxyEnabled =
@@ -219,6 +222,18 @@ public final class DdmPreferences {
         } catch (Exception ignored) {
             return def;
         }
+    }
+
+    /**
+     * Packets that are larger than this will throw a buffer overflow exception and disconnect the
+     * client.
+     */
+    public static int getJdwpMaxPacketSize() {
+        return sJdwpMaxPacketSize;
+    }
+
+    public static void setsJdwpMaxPacketSize(int size) {
+        sJdwpMaxPacketSize = size;
     }
 
     /**

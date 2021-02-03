@@ -17,17 +17,27 @@ package com.android.ddmlib.internal.jdwp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
 import com.android.ddmlib.internal.jdwp.chunkhandler.JdwpPacket;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class JdwpConnectionReaderTest {
+
+    @Before
+    public void setup() {
+        // Reset max packet size between test.
+        DdmPreferences.setsJdwpMaxPacketSize(1024 * 1024);
+    }
 
     @Test
     public void multiplePacketsSpanningBufferSize() throws Exception {
@@ -129,6 +139,25 @@ public class JdwpConnectionReaderTest {
         ByteBuffer packetData = ByteBuffer.allocate(readPacket.getLength());
         readPacket.copy(packetData);
         assertThat(sentPacket.array()).isEqualTo(packetData.array());
+    }
+
+    @Test(expected = BufferOverflowException.class)
+    public void invalidPacketSizeThrowsException() throws Exception {
+        SocketChannel channel = SocketChannel.open();
+        DdmPreferences.setsJdwpMaxPacketSize(JdwpPacket.JDWP_HEADER_LEN);
+        ByteBuffer sentPacket = JdwpTest.createPacketBuffer(JdwpTest.CHUNK_TEST, 10);
+        SlowSimpleServer server = new SlowSimpleServer(sentPacket.array());
+        channel.connect(
+                new InetSocketAddress(InetAddress.getByName("localhost"), server.getPort()));
+        JdwpConnectionReader mReader =
+                new JdwpConnectionReader(channel, JdwpPacket.JDWP_HEADER_LEN);
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+        JdwpPacket readPacket = null;
+        while (mReader.read() != -1 && readPacket == null) {
+            readPacket = mReader.readPacket();
+        }
+        Assert.fail();
     }
 
     private void validatePackets(JdwpConnectionReader reader, ByteBuffer[] packets)
