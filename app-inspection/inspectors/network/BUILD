@@ -30,6 +30,7 @@ app_inspection_jar(
         "//prebuilts/tools/common/m2/repository/androidx/annotation/annotation/1.1.0:jar",
         "//prebuilts/tools/common/m2/repository/androidx/inspection/inspection/1.0.0:jar",
         "//tools/base/bazel:studio-proto",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.4.1:jar",
     ],
 )
 

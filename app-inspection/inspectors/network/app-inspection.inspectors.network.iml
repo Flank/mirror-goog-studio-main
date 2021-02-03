@@ -25,5 +25,6 @@
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" name="studio-proto" level="project" />
     <orderEntry type="library" name="network_inspector_java_proto" level="project" />
+    <orderEntry type="library" name="kotlinx-coroutines" level="project" />
   </component>
 </module>

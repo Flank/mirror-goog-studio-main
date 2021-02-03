@@ -103,7 +103,8 @@ def app_inspection_jar(
         name = name + "-sources_jarjared",
         srcs = [
             ":" + name + "-sources_undexed",
-            "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.0:kotlin-stdlib-jdk8_files",
+            "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.4.21:jar",
+            "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.4.1:jar",
         ],
         rules = "//tools/base/bazel:jarjar_rules.txt",
     )

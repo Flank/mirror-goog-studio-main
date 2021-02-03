@@ -19,12 +19,20 @@ package com.android.tools.appinspection
 import androidx.inspection.Connection
 import androidx.inspection.Inspector
 import androidx.inspection.InspectorEnvironment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import studio.network.inspection.NetworkInspectorProtocol
+import java.util.concurrent.CancellationException
 
 class NetworkInspector(
     connection: Connection,
     private val environment: InspectorEnvironment
 ) : Inspector(connection) {
+
+    private val supervisorJob = SupervisorJob()
+    private val scope =
+        CoroutineScope(supervisorJob + environment.executors().primary().asCoroutineDispatcher())
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = NetworkInspectorProtocol.Command.parseFrom(data)
@@ -39,5 +47,11 @@ class NetworkInspector(
                 .build()
                 .toByteArray()
         )
+    }
+
+    override fun onDispose() {
+        if (!supervisorJob.isCancelled) {
+            supervisorJob.cancel(CancellationException("Network Inspector has been disposed."))
+        }
     }
 }
