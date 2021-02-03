@@ -54,12 +54,6 @@ public class LiveLiteralDeployer {
         }
     }
 
-    private final DeploymentCacheDatabase deployCache;
-
-    public LiveLiteralDeployer(DeploymentCacheDatabase db) {
-        this.deployCache = db;
-    }
-
     /** Temp solution. Going to refactor / move this elsewhere later. */
     public void updateLiveLiteral(
             Installer installer,
@@ -86,16 +80,6 @@ public class LiveLiteralDeployer {
         requestBuilder.setPackageName(packageName);
         requestBuilder.addAllProcessIds(pids);
         requestBuilder.setArch(arch);
-
-        // We update the OID on the device as thought we did an install of an unchanged APK.
-        OverlayId overlayId = deployCache.get(adb.getSerial(), packageName).getOverlayId();
-        if (overlayId.isBaseInstall()) {
-            requestBuilder.setExpectedOverlayId("");
-            deployCache.store(adb.getSerial(), packageName, overlayId.getInstalledApks(), overlayId);
-        } else {
-            requestBuilder.setExpectedOverlayId(overlayId.getSha());
-        }
-        requestBuilder.setOverlayId(overlayId.getSha());
 
         Deploy.LiveLiteralUpdateRequest request = requestBuilder.build();
 

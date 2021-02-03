@@ -35,7 +35,7 @@ public class SitesGenerator {
         {"AppStartupAgent", "AppCodeCache(pkg) + \"startup_agents/\""},
         // TODO: Change name to AppOverlay (no 's' at the end).
         {"AppOverlays", "AppCodeCache(pkg) + \".overlay/\""},
-        {"AppLiveLiteral", "AppOverlays(pkg) + \".ll/\""}
+        {"AppLiveLiteral", "AppCodeCache(pkg) + \".ll/\""}
     };
 
     private static void print(String path, String code) throws FileNotFoundException {

@@ -232,24 +232,6 @@ void LiveLiteralUpdateCommand::Update(
     return;
   }
 
-  proto::OverlayUpdateRequest oid_update_request;
-  oid_update_request.set_expected_overlay_id(request_.expected_overlay_id());
-  oid_update_request.set_overlay_id(request_.overlay_id());
-  const std::string pkg = request_.package_name();
-  oid_update_request.set_overlay_path(Sites::AppOverlays(pkg));
-  oid_update_request.set_wipe_all_files(false);
-  auto oid_resp = client_->UpdateOverlay(oid_update_request);
-  if (!oid_resp) {
-    ErrEvent("OverlayIdPushCommand comm error");
-    return;
-  }
-  proto::OverlayUpdateResponse_Status oid_status = oid_resp->status();
-  if (oid_status != proto::OverlayUpdateResponse::OK) {
-    ErrEvent("OverlayIdPushCommand error: Bad status (" +
-             to_string(oid_status) + ")");
-    return;
-  }
-
   // Remove process ids that we do not need to swap.
   FilterProcessIds(&process_ids_);
 
