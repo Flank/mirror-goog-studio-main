@@ -306,7 +306,6 @@ com.android.build.api.dsl.Cmake.path: void (java.lang.Object)
 com.android.build.api.dsl.Cmake.setBuildStagingDirectory: void (java.io.File)
 com.android.build.api.dsl.Cmake.setPath: void (java.io.File)
 com.android.build.api.dsl.Cmake.setVersion: void (java.lang.String)
-com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.aaptOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AaptOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AdbOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)

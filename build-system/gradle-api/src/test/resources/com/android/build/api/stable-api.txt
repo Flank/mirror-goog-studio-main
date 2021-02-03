@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-373ab8dee1744108b2003277d0a360024d1d2564dae6262c58a10066ba26879f
+0b6aa173ddc20a6420c44734c001bd85e8b892a26dc6983cfc04c1cf752ba057
 -------------------------------------------------------------------------
 com.android.build.api.artifact.FileNames extends java.lang.Enum
 com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
@@ -17,6 +17,7 @@ com.android.build.api.attributes.ProductFlavorAttr implements org.gradle.api.Nam
 com.android.build.api.attributes.VariantAttr implements org.gradle.api.Named
 com.android.build.api.attributes.VariantAttr$Companion
 com.android.build.api.attributes.VariantAttr$Companion.<init>: com.android.build.api.attributes.VariantAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
+com.android.build.api.dsl.CommonExtension
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()

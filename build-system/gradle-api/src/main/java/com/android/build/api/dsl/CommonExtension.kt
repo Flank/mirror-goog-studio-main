@@ -28,7 +28,6 @@ import org.gradle.api.NamedDomainObjectContainer
  *
  * Only the Android Gradle Plugin should create instances of this interface.
  */
-@Incubating
 interface CommonExtension<
         AndroidSourceSetT : AndroidSourceSet,
         BuildFeaturesT : BuildFeatures,
@@ -45,6 +44,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
+    @get:Incubating
     val aaptOptions: AaptOptions
 
     /**
@@ -52,6 +52,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AaptOptions].
      */
+    @Incubating
     fun aaptOptions(action: AaptOptions.() -> Unit)
 
     /**
@@ -61,6 +62,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
+    @get:Incubating
     val adbOptions: AdbOptions
 
     /**
@@ -70,6 +72,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [AdbOptions].
      */
+    @Incubating
     fun adbOptions(action: AdbOptions.() -> Unit)
 
     /**
@@ -78,6 +81,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
+    @get:Incubating
     val compileOptions: CompileOptions
 
     /**
@@ -86,16 +90,19 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
+    @Incubating
     fun compileOptions(action: CompileOptions.() -> Unit)
 
     /**
      * A list of build features that can be enabled or disabled on the Android Project.
      */
+    @get:Incubating
     val buildFeatures: BuildFeaturesT
 
     /**
      * A list of build features that can be enabled or disabled on the Android Project.
      */
+    @Incubating
     fun buildFeatures(action: BuildFeaturesT.() -> Unit)
 
     /**
@@ -115,6 +122,7 @@ interface CommonExtension<
      *
      * @see [BuildType
      */
+    @get:Incubating
     val buildTypes: NamedDomainObjectContainer<BuildTypeT>
 
     /**
@@ -122,6 +130,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [BuildType]
      */
+    @Incubating
     fun buildTypes(action: Action<in NamedDomainObjectContainer<BuildTypeT>>)
 
     /**
@@ -138,6 +147,7 @@ interface CommonExtension<
      * }
      * ```
      */
+    @Incubating
     fun NamedDomainObjectContainer<BuildTypeT>.debug(action: BuildTypeT.() -> Unit)
     /**
      * Shortcut extension method to allow easy access to the predefined `release` [BuildType]
@@ -153,6 +163,7 @@ interface CommonExtension<
      * }
      * ```
      */
+    @Incubating
     fun NamedDomainObjectContainer<BuildTypeT>.release(action: BuildTypeT.() -> Unit)
 
     /**
@@ -161,6 +172,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
+    @get:Incubating
     val dataBinding: DataBinding
 
     /**
@@ -169,6 +181,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DataBinding]
      */
+    @Incubating
     fun dataBinding(action: DataBinding.() -> Unit)
 
     /**
@@ -185,6 +198,7 @@ interface CommonExtension<
      * }
      * ```
      */
+    @get:Incubating
     val jacoco: JacocoOptions
     /**
      * Configure JaCoCo version that is used for offline instrumentation and coverage report.
@@ -200,6 +214,7 @@ interface CommonExtension<
      * }
      * ```
      */
+    @Incubating
     fun jacoco(action: JacocoOptions.() -> Unit)
 
     /**
@@ -207,6 +222,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
+    @get:Incubating
     val lintOptions: LintOptions
 
     /**
@@ -214,6 +230,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
+    @Incubating
     fun lintOptions(action: LintOptions.() -> Unit)
 
     /**
@@ -222,6 +239,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [PackagingOptions].
      */
+    @get:Incubating
     val packagingOptions: PackagingOptions
 
     /**
@@ -230,6 +248,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [PackagingOptions].
      */
+    @Incubating
     fun packagingOptions(action: PackagingOptions.() -> Unit)
 
     /**
@@ -272,6 +291,7 @@ interface CommonExtension<
      *
      * @see [ProductFlavor]
      */
+    @get:Incubating
     val productFlavors: NamedDomainObjectContainer<ProductFlavorT>
 
     /**
@@ -280,6 +300,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block,
      * see [ProductFlavor]
      */
+    @Incubating
     fun productFlavors(action: Action<NamedDomainObjectContainer<ProductFlavorT>>)
 
 
@@ -292,6 +313,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DefaultConfig].
      */
+    @get:Incubating
     val defaultConfig: DefaultConfigT
 
     /**
@@ -303,6 +325,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [DefaultConfig].
      */
+    @Incubating
     fun defaultConfig(action: Action<DefaultConfigT>)
 
 
@@ -323,6 +346,7 @@ interface CommonExtension<
      *
      * @see [SigningConfig]
      */
+    @get:Incubating
     val signingConfigs: NamedDomainObjectContainer<SigningConfigT>
 
     /**
@@ -332,6 +356,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block,
      * see [SigningConfig].
      */
+    @Incubating
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfigT>>)
 
 
@@ -354,6 +379,7 @@ interface CommonExtension<
      * @since 2.2.0
      */
 
+    @get:Incubating
     val externalNativeBuild: ExternalNativeBuild
     /**
      * Specifies options for external native build using [CMake](https://cmake.org/) or
@@ -373,6 +399,7 @@ interface CommonExtension<
      *
      * @since 2.2.0
      */
+    @Incubating
     fun externalNativeBuild(action: ExternalNativeBuild.()->Unit)
 
     /**
@@ -380,6 +407,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
+    @get:Incubating
     val testOptions: TestOptions
 
     /**
@@ -387,6 +415,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [TestOptions].
      */
+    @Incubating
     fun testOptions(action: TestOptions.() -> Unit)
 
     /**
@@ -396,6 +425,7 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
+    @get:Incubating
     val splits: Splits
 
     /**
@@ -405,10 +435,13 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
+    @Incubating
     fun splits(action: Splits.() -> Unit)
 
+    @get:Incubating
     val composeOptions: ComposeOptions
 
+    @Incubating
     fun composeOptions(action: ComposeOptions.() -> Unit)
 
     /**
@@ -417,6 +450,7 @@ interface CommonExtension<
      * Note that the Android plugin uses its own implementation of source sets. For more
      * information about the properties you can configure in this block, see [AndroidSourceSet].
      */
+    @get:Incubating
     val sourceSets: NamedDomainObjectContainer<AndroidSourceSetT>
 
     /**
@@ -425,6 +459,7 @@ interface CommonExtension<
      * Note that the Android plugin uses its own implementation of source sets. For more
      * information about the properties you can configure in this block, see [AndroidSourceSet].
      */
+    @Incubating
     fun sourceSets(action: NamedDomainObjectContainer<AndroidSourceSetT>.() -> Unit)
 
     /**
@@ -494,6 +529,7 @@ interface CommonExtension<
      * To learn more, read
      * [Combine multiple flavors](https://developer.android.com/studio/build/build-variants.html#flavor-dimensions).
      */
+    @get:Incubating
     val flavorDimensions: MutableList<String>
 
     /**
@@ -515,6 +551,8 @@ interface CommonExtension<
      * resourcePrefix 'mylib_'
      * ```
      */
+    @get:Incubating
+    @set:Incubating
     var resourcePrefix: String?
 
     /**
@@ -548,6 +586,8 @@ interface CommonExtension<
      * For additional information about NDK installation see
      * [Install and configure the NDK](https://developer.android.com/studio/projects/install-ndk).
      */
+    @get:Incubating
+    @set:Incubating
     var ndkVersion: String?
 
     /**
@@ -567,6 +607,8 @@ interface CommonExtension<
      * For additional information about NDK installation see
      * [Install and configure the NDK](https://developer.android.com/studio/projects/install-ndk).
      */
+    @get:Incubating
+    @set:Incubating
     var ndkPath: String?
 
     /**
@@ -594,6 +636,8 @@ interface CommonExtension<
      * Note that the value assigned to this property is parsed and stored in a normalized form,
      * so reading it back may give a slightly different result.
      */
+    @get:Incubating
+    @set:Incubating
     var buildToolsVersion: String
 
     /**
@@ -619,6 +663,7 @@ interface CommonExtension<
      *
      * @param name the name of the library.
      */
+    @Incubating
     fun useLibrary(name: String)
     /**
      * Includes the specified library to the classpath.
@@ -645,8 +690,10 @@ interface CommonExtension<
      * @param required if using the library requires a manifest entry, the entry will indicate that
      *     the library is not required.
      */
+    @Incubating
     fun useLibrary(name: String, required: Boolean)
 
+    @get:Incubating
     @Deprecated(
         message = "This API will be removed in AGP 7.0, replaced with AndroidComponents::sdkComponents")
     val sdkComponents: SdkComponents
@@ -669,10 +716,15 @@ interface CommonExtension<
      * The value you assign to this property is parsed and stored in a normalized form, so
      * reading it back may return a slightly different value.
      */
+    @get:Incubating
+    @set:Incubating
     var compileSdk: Int?
 
+    @get:Incubating
+    @set:Incubating
     var compileSdkPreview: String?
 
+    @Incubating
     fun compileSdkAddon(vendor: String, name: String, version: Int)
 
     /**
@@ -683,5 +735,7 @@ interface CommonExtension<
      * AndroidManifest.xml, but doing a 'get' on this property will not retrieve the value specified
      * in the AndroidManifest.xml.
      */
+    @get:Incubating
+    @set:Incubating
     var namespace: String?
 }
