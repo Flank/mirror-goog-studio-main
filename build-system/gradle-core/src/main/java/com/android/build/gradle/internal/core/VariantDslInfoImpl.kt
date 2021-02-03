@@ -108,12 +108,6 @@ open class VariantDslInfoImpl internal constructor(
         mergeFlavors(defaultConfig, productFlavorList, applicationId, dslServices)
     }
 
-    /** Variant-specific build Config fields.  */
-    private val mBuildConfigFields: MutableMap<String, ClassField> = Maps.newTreeMap()
-
-    /** Variant-specific res values.  */
-    private val mResValues: MutableMap<String, ClassField> = Maps.newTreeMap()
-
     /**
      * Optional tested config in case this variant is used for testing another variant.
      *
@@ -667,36 +661,6 @@ open class VariantDslInfoImpl internal constructor(
     override val vectorDrawables: VectorDrawablesOptions
         get() = mergedFlavor.vectorDrawables
 
-    /**
-     * Adds a variant-specific BuildConfig field.
-     *
-     * @param type the type of the field
-     * @param name the name of the field
-     * @param value the value of the field
-     */
-    override fun addBuildConfigField(
-        type: String,
-        name: String,
-        value: String
-    ) {
-        val classField: ClassField = ClassFieldImpl(type, name, value)
-        mBuildConfigFields[name] = classField
-    }
-
-    /**
-     * Adds a variant-specific res value.
-     *
-     * @param type the type of the field
-     * @param name the name of the field
-     * @param value the value of the field
-     */
-    override fun addResValue(type: String, name: String, value: String) {
-        val classField: ClassField = ClassFieldImpl(type, name, value)
-        mResValues[name] = classField
-    } // keep track of the names already added. This is because we show where the items
-// come from so we cannot just put everything a map and let the new ones override the
-// old ones.
-
     override fun getBuildConfigFields(): Map<String, BuildConfigField<out java.io.Serializable>> {
         val buildConfigFieldsMap =
             mutableMapOf<String, BuildConfigField<out java.io.Serializable>>()
@@ -706,10 +670,6 @@ open class VariantDslInfoImpl internal constructor(
                 buildConfigFieldsMap[classField.name] =
                         BuildConfigField(classField.type , classField.value, comment)
             }
-        }
-
-        mBuildConfigFields.values.forEach { classField ->
-            addToListIfNotAlreadyPresent(classField, "Field from the variant API")
         }
 
         buildTypeObj.buildConfigFields.values.forEach { classField ->
@@ -750,10 +710,6 @@ open class VariantDslInfoImpl internal constructor(
                     comment = comment
                 )
             }
-        }
-
-        mResValues.values.forEach { classField ->
-            addToListIfNotAlreadyPresent(classField, "Value from the variant")
         }
 
         buildTypeObj.resValues.values.forEach { classField ->
