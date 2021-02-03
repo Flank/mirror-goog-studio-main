@@ -716,15 +716,10 @@ interface CommonExtension<
      * The value you assign to this property is parsed and stored in a normalized form, so
      * reading it back may return a slightly different value.
      */
-    @get:Incubating
-    @set:Incubating
     var compileSdk: Int?
 
-    @get:Incubating
-    @set:Incubating
     var compileSdkPreview: String?
 
-    @Incubating
     fun compileSdkAddon(vendor: String, name: String, version: Int)
 
     /**

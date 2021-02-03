@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-0b6aa173ddc20a6420c44734c001bd85e8b892a26dc6983cfc04c1cf752ba057
+d6cdd4f2c5151d31bdac573eb11a214640ce99b6caa74a3122b8114975015268
 -------------------------------------------------------------------------
 com.android.build.api.artifact.FileNames extends java.lang.Enum
 com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
@@ -18,6 +18,11 @@ com.android.build.api.attributes.VariantAttr implements org.gradle.api.Named
 com.android.build.api.attributes.VariantAttr$Companion
 com.android.build.api.attributes.VariantAttr$Companion.<init>: com.android.build.api.attributes.VariantAttr$Companion (kotlin.jvm.internal.DefaultConstructorMarker)
 com.android.build.api.dsl.CommonExtension
+com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
+com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
+com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
+com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()
