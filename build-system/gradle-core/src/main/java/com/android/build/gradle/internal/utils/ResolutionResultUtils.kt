@@ -40,49 +40,53 @@ fun ResolutionResult.getModuleComponents(
 }
 
 /**
- * Returns a list containing [ResolvedComponentResult]s starting from the root of a
- * [ResolutionResult] to this component.
+ * Returns a [ComponentPath] starting from the root of a [ResolutionResult] to this component.
  *
  * Note that there can be multiple paths from root to the component, and this method returns only
  * the first path (as returned by Gradle). In practice, this path is usually the shortest path, but
  * there is no guarantee from the Gradle API.
  */
-fun ResolvedComponentResult.getFirstPathFromRoot(): List<ResolvedComponentResult> {
-    val path = mutableListOf(this)
+fun ResolvedComponentResult.getPathFromRoot(): ComponentPath {
+    val components = mutableListOf(this)
     var current = this
     while (current.dependents.isNotEmpty()) {
         // Select only the first parent of this component
         current = current.dependents.first().from
-        path.add(current)
+        components.add(current)
     }
-    // Reverse the path as it was constructed in reverse order
-    path.reverse()
-    return path
+    // Reverse the list as we want the root to be the first element
+    components.reverse()
+    return ComponentPath(components)
 }
 
 /**
- * Returns a string describing the path of [ResolvedComponentResult]s starting from the root of a
- * [ResolutionResult] to this component.
- *
- * Note that there can be multiple paths from root to the component, and this method returns only
- * the first path (as returned by Gradle). In practice, this path is usually the shortest path, but
- * there is no guarantee from the Gradle API.
- *
- * Also, since the root of the [ResolutionResult] may not be in a user-friendly format (e.g.,
- * ":<project-name>:unspecified"), the caller of this method can provide a `rootDisplayNameOverride`
- * (e.g., "root project '<project-name>'") to substitute it.
- *
- * @param rootDisplayNameOverride a display name substitute for the root of the [ResolutionResult]
+ * A path consisting of [ResolvedComponentResult]s starting from the root of a [ResolutionResult] to
+ * a component.
  */
-fun ResolvedComponentResult.getPathFromRoot(
-        rootDisplayNameOverride: String? = null,
-        separator: String = " -> "
-): String {
-    val path = this.getFirstPathFromRoot().map { it.id.displayName }
-    val adjustedPath = if (rootDisplayNameOverride != null) {
-        listOf(rootDisplayNameOverride) + path.drop(1)
-    } else {
-        path
+class ComponentPath(
+        val components: List<ResolvedComponentResult>
+) {
+
+    /**
+     * Returns a string describing this [ComponentPath].
+     *
+     * Note that the root of the [ResolutionResult] may not be in a user-friendly format (e.g.,
+     * ":<project-name>:unspecified"), so the caller of this method can provide a
+     * `rootDisplayNameOverride` (e.g., "Project <name>" or "Configuration <name>") to substitute
+     * it.
+     *
+     * @param rootDisplayNameOverride a display name substitute for the root of the [ResolutionResult]
+     */
+    fun getPathString(
+            rootDisplayNameOverride: String? = null,
+            separator: String = " -> "
+    ): String {
+        val path = this.components.map { it.id.displayName }
+        val adjustedPath = if (rootDisplayNameOverride != null) {
+            listOf(rootDisplayNameOverride) + path.drop(1)
+        } else {
+            path
+        }
+        return adjustedPath.joinToString(separator)
     }
-    return adjustedPath.joinToString(separator)
 }

@@ -58,7 +58,7 @@ class ResolutionResultUtilsTest {
     @Test
     fun `test getPathFromRoot()`() {
         val moduleComponent = resolutionResult.getModuleComponents { it.module == "c" }.single()
-        val pathFromRoot = moduleComponent.getPathFromRoot()
+        val pathFromRoot = moduleComponent.getPathFromRoot().getPathString()
         assertThat(
                 pathFromRoot == "root:root:1 -> c:c:1"
                         || pathFromRoot == "root:root:1 -> a:a:1 -> c:c:1"

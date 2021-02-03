@@ -728,6 +728,7 @@ public abstract class BasePlugin<
         new DependencyConfigurator(
                         project, project.getName(), globalScope, variantInputModel, projectServices)
                 .configureDependencySubstitutions()
+                .configureDependencyChecks()
                 .configureGeneralTransforms()
                 .configureVariantTransforms(variants, variantManager.getTestComponents())
                 .configureAttributeMatchingStrategies();

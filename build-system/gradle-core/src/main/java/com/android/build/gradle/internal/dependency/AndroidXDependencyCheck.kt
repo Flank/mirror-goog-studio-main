@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.utils.getModuleComponents
+import com.android.build.gradle.internal.utils.getPathFromRoot
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.errors.IssueReporter
 import com.android.builder.errors.IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ResolvableDependencies
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import java.util.HashSet
 
 /**
  * Checks whether a configuration uses AndroidX dependencies but the project does not have the
@@ -33,34 +33,34 @@ import java.util.HashSet
  *
  * @see [com.android.builder.model.SyncIssue.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED]
  */
-class AndroidXDependencyCheck(private val issueReporter: IssueReporter) :
-    Action<ResolvableDependencies> {
+class AndroidXDependencyCheck(
+        private val configurationName: String, private val issueReporter: IssueReporter
+) : Action<ResolvableDependencies> {
 
     override fun execute(resolvableDependencies: ResolvableDependencies) {
-        val androidXDependencies = HashSet<String>()
-        for (artifact in resolvableDependencies.resolutionResult.allComponents) {
-            val artifactId = artifact.id
-            if (artifactId is ModuleComponentIdentifier) {
-                val dependency = "${artifactId.group}:${artifactId.module}:${artifactId.version}"
-                if (AndroidXDependencySubstitution.isAndroidXDependency(dependency)) {
-                    androidXDependencies.add(dependency)
-                }
-            }
+        // Report only once
+        if (issueReporter.hasIssue(ANDROID_X_PROPERTY_NOT_ENABLED)) {
+            return
         }
 
-        if (androidXDependencies.isNotEmpty()) {
-            val androidXDepList = androidXDependencies.joinToString(", ")
-            val message =
-                "This project uses AndroidX dependencies, but the" +
-                        " '${BooleanOption.USE_ANDROID_X.propertyName}' property is not enabled." +
-                        " Set this property to true in the gradle.properties file and retry.\n" +
-                        "The following AndroidX dependencies are detected: $androidXDepList"
-            // Report only once
-            if (!issueReporter.hasIssue(ANDROID_X_PROPERTY_NOT_ENABLED)) {
-                issueReporter.reportError(
-                    ANDROID_X_PROPERTY_NOT_ENABLED, message, androidXDepList
-                )
-            }
+        val androidXDependencies = resolvableDependencies.resolutionResult.getModuleComponents() {
+                AndroidXDependencySubstitution.isAndroidXDependency("${it.group}:${it.module}:${it.version}")
+        }
+        val pathsToAndroidXDependencies = androidXDependencies.map {
+            it.getPathFromRoot().getPathString(configurationName)
+        }.filterNot {
+            // Ignore databinding-compiler (see bug 179377689)
+            it.contains("androidx.databinding:databinding-compiler:")
+        }
+        if (pathsToAndroidXDependencies.isNotEmpty()) {
+            val message = "Configuration `$configurationName` uses AndroidX dependencies, but the" +
+                    " `${BooleanOption.USE_ANDROID_X.propertyName}` property is not enabled.\n" +
+                    "Set `${BooleanOption.USE_ANDROID_X.propertyName}=true` in the `gradle.properties` file and retry.\n" +
+                    "The following AndroidX dependencies are detected:\n" +
+                    pathsToAndroidXDependencies.joinToString("\n")
+            issueReporter.reportError(
+                    ANDROID_X_PROPERTY_NOT_ENABLED, message, pathsToAndroidXDependencies.joinToString(",")
+            )
         }
     }
 }

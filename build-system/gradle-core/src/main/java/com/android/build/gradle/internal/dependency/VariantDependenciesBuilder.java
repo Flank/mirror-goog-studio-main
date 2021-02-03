@@ -281,13 +281,6 @@ public class VariantDependenciesBuilder {
             }
         }
 
-        if (!projectOptions.get(BooleanOption.USE_ANDROID_X)) {
-            AndroidXDependencyCheck androidXDependencyCheck =
-                    new AndroidXDependencyCheck(issueReporter);
-            compileClasspath.getIncoming().afterResolve(androidXDependencyCheck);
-            runtimeClasspath.getIncoming().afterResolve(androidXDependencyCheck);
-        }
-
         Configuration globalTestedApks =
                 configurations.findByName(VariantDependencies.CONFIG_NAME_TESTED_APKS);
         Configuration providedClasspath;

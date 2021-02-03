@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.dependency.AarToClassTransform
 import com.android.build.gradle.internal.dependency.AarTransform
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule
+import com.android.build.gradle.internal.dependency.AndroidXDependencyCheck
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.replaceOldSupportLibraries
 import com.android.build.gradle.internal.dependency.AsmClassesTransform.Companion.registerAsmTransformForComponent
 import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform
@@ -39,11 +40,11 @@ import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransfor
 import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
-import com.android.build.gradle.internal.dependency.JetifyTransform
 import com.android.build.gradle.internal.dependency.JdkImageTransform
 import com.android.build.gradle.internal.dependency.CollectResourceSymbolsTransform
 import com.android.build.gradle.internal.dependency.CollectClassesTransform
 import com.android.build.gradle.internal.dependency.ExtractJniTransform
+import com.android.build.gradle.internal.dependency.JetifyTransform
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform
 import com.android.build.gradle.internal.dependency.MockableJarTransform
 import com.android.build.gradle.internal.dependency.ModelArtifactCompatibilityRule.Companion.setUp
@@ -105,6 +106,18 @@ class DependencyConfigurator(
                 // create a new string every time this code is executed, which could be many when
                 // there are many subprojects).
                 reasonToReplace = "android.enableJetifier=true")
+        }
+        return this
+    }
+
+    fun configureDependencyChecks(): DependencyConfigurator {
+        if (!projectServices.projectOptions.get(BooleanOption.USE_ANDROID_X)) {
+            project.configurations.all { configuration ->
+                if (configuration.isCanBeResolved) {
+                    configuration.incoming.afterResolve(
+                            AndroidXDependencyCheck(configuration.name, projectServices.issueReporter))
+                }
+            }
         }
         return this
     }

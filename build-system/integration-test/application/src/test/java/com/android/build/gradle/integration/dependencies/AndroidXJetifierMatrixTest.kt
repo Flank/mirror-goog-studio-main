@@ -24,6 +24,9 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.AndroidProject
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.TestInputsGenerator
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -40,11 +43,36 @@ class AndroidXJetifierMatrixTest {
             .create()
 
     private fun addAndroidXDependencies() {
+        project.projectDir.resolve("mavenRepo").also {
+            FileUtils.mkdirs(it)
+            MavenRepoGenerator(
+                    listOf(
+                            // Set up the libraries such that they have some shared dependencies to
+                            // check that AGP can handle that case (it should show only one path for
+                            // each dependency in the error message).
+                            MavenRepoGenerator.Library(
+                                    "depends-on-androidx:lib1:1.0",
+                                    TestInputsGenerator.jarWithEmptyClasses(listOf()),
+                                    "androidx.annotation:annotation:$ANDROIDX_VERSION"
+                            ),
+                            MavenRepoGenerator.Library(
+                                    "depends-on-androidx:lib2:1.0",
+                                    TestInputsGenerator.jarWithEmptyClasses(listOf()),
+                                    "androidx.annotation:annotation:$ANDROIDX_VERSION",
+                                    "androidx.collection:collection:$ANDROIDX_VERSION",
+                            )
+                    )
+            ).generate(it.toPath())
+        }
         TestFileUtils.appendToFile(
                 project.buildFile,
                 """
+                repositories {
+                    maven { url 'mavenRepo' }
+                }
                 dependencies {
-                    implementation 'androidx.annotation:annotation:$ANDROIDX_VERSION'
+                    implementation 'depends-on-androidx:lib1:1.0'
+                    implementation 'depends-on-androidx:lib2:1.0'
                 }
                 """.trimIndent()
         )
@@ -78,11 +106,13 @@ class AndroidXJetifierMatrixTest {
                 model,
                 IssueReporter.Type.ANDROID_X_PROPERTY_NOT_ENABLED,
                 IssueReporter.Severity.ERROR,
-                "This project uses AndroidX dependencies, but the 'android.useAndroidX' property is" +
-                        " not enabled. Set this property to true in the gradle.properties file and retry.\n" +
-                        "The following AndroidX dependencies are detected:" +
-                        " androidx.annotation:annotation:$ANDROIDX_VERSION",
-                "androidx.annotation:annotation:$ANDROIDX_VERSION"
+                message = "Configuration `debugRuntimeClasspath` uses AndroidX dependencies, but the `android.useAndroidX` property is not enabled.\n" +
+                        "Set `android.useAndroidX=true` in the `gradle.properties` file and retry.\n" +
+                        "The following AndroidX dependencies are detected:\n" +
+                        "debugRuntimeClasspath -> depends-on-androidx:lib1:1.0 -> androidx.annotation:annotation:$ANDROIDX_VERSION\n" +
+                        "debugRuntimeClasspath -> depends-on-androidx:lib2:1.0 -> androidx.collection:collection:$ANDROIDX_VERSION",
+                data = "debugRuntimeClasspath -> depends-on-androidx:lib1:1.0 -> androidx.annotation:annotation:$ANDROIDX_VERSION," +
+                        "debugRuntimeClasspath -> depends-on-androidx:lib2:1.0 -> androidx.collection:collection:$ANDROIDX_VERSION"
         )
     }
 
