@@ -88,6 +88,11 @@ abstract class VariantImpl(
         buildConfigFields.put(key, BuildConfigField(descriptor, value, comment))
     }
 
+    // for compatibility with old variant API.
+    fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
+        buildConfigFields.put(key, BuildConfigField(type, value, comment))
+    }
+
     /**
      * Adds a ResValue element to the generated resources.
      * @param name the resource name
