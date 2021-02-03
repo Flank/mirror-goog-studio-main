@@ -295,10 +295,7 @@ public abstract class AbstractAppTaskManager<
                 variant, true, Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES));
 
         ProjectOptions projectOptions = variant.getServices().getProjectOptions();
-        // TODO: get rid of separate flag for app modules.
-        boolean nonTransitiveR =
-                projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS)
-                        && projectOptions.get(BooleanOption.NON_TRANSITIVE_APP_R_CLASS);
+        boolean nonTransitiveR = projectOptions.get(BooleanOption.NON_TRANSITIVE_R_CLASS);
         boolean namespaced =
                 variant.getGlobalScope().getExtension().getAaptOptions().getNamespaced();
 

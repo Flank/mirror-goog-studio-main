@@ -858,9 +858,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                 MergeType.MERGE,
                 globalScope.projectBaseName)
         val projectOptions = creationConfig.services.projectOptions
-        // TODO(b/156339511): get rid of separate flag for app modules.
-        val nonTransitiveR = (projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
-                && projectOptions[BooleanOption.NON_TRANSITIVE_APP_R_CLASS])
+        val nonTransitiveR = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
         val namespaced: Boolean = creationConfig.globalScope.extension.aaptOptions.namespaced
 
         // TODO(b/138780301): Also use compile time R class in android tests.
@@ -952,8 +950,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                     taskFactory.register(
                             GenerateLibraryProguardRulesTask.CreationAction(creationConfig))
                 }
-                val nonTransitiveRClassInApp = (projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
-                        && projectOptions[BooleanOption.NON_TRANSITIVE_APP_R_CLASS])
+                val nonTransitiveRClassInApp = projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
                 // Generate the R class for a library using both local symbols and symbols
                 // from dependencies.
                 // TODO: double check this (what about dynamic features?)

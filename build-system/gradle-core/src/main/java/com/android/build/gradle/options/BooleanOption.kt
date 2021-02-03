@@ -117,7 +117,6 @@ enum class BooleanOption(
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
     NON_TRANSITIVE_R_CLASS("android.nonTransitiveRClass", false, FeatureStage.Experimental),
-    NON_TRANSITIVE_APP_R_CLASS("android.experimental.nonTransitiveAppRClass", false, FeatureStage.Experimental),
     FULL_R8("android.enableR8.fullMode", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
@@ -368,6 +367,15 @@ enum class BooleanOption(
 
     /** Whether Jetifier will skip libraries that already support AndroidX. */
     JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.Enforced(VERSION_7_0)),
+
+    @Suppress("unused")
+    NON_TRANSITIVE_APP_R_CLASS(
+            "android.experimental.nonTransitiveAppRClass",
+            true,
+            FeatureStage.Enforced(
+                    VERSION_7_0,
+                    "Non-transitive R classes are now enabled in app modules with the " +
+                            "${NON_TRANSITIVE_R_CLASS.propertyName} option.")),
 
     /* ----------------
      * REMOVED FEATURES

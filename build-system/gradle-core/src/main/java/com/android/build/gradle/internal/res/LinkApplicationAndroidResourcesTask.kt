@@ -652,10 +652,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         ) {
             super.configure(task)
 
-            // TODO: Remove separate flag for app R class.
-            if (creationConfig.services.projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]
-                && creationConfig.services.projectOptions[BooleanOption.NON_TRANSITIVE_APP_R_CLASS]
-            ) {
+            if (creationConfig.services.projectOptions[BooleanOption.NON_TRANSITIVE_R_CLASS]) {
                 // List of local resources, used to generate a non-transitive R for the app module.
                 creationConfig.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
