@@ -730,7 +730,5 @@ interface CommonExtension<
      * AndroidManifest.xml, but doing a 'get' on this property will not retrieve the value specified
      * in the AndroidManifest.xml.
      */
-    @get:Incubating
-    @set:Incubating
     var namespace: String?
 }

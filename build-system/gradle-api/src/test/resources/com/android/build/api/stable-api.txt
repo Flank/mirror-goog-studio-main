@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-d6cdd4f2c5151d31bdac573eb11a214640ce99b6caa74a3122b8114975015268
+7a3053deade7b6f5f705c71ef0e993849ff0dbca005f5d48a40ead9d808feea3
 -------------------------------------------------------------------------
 com.android.build.api.artifact.FileNames extends java.lang.Enum
 com.android.build.api.artifact.FileNames.getFileName: java.lang.String ()
@@ -21,8 +21,10 @@ com.android.build.api.dsl.CommonExtension
 com.android.build.api.dsl.CommonExtension.compileSdkAddon: void (java.lang.String, java.lang.String, int)
 com.android.build.api.dsl.CommonExtension.getCompileSdk: java.lang.Integer ()
 com.android.build.api.dsl.CommonExtension.getCompileSdkPreview: java.lang.String ()
+com.android.build.api.dsl.CommonExtension.getNamespace: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.setCompileSdk: void (java.lang.Integer)
 com.android.build.api.dsl.CommonExtension.setCompileSdkPreview: void (java.lang.String)
+com.android.build.api.dsl.CommonExtension.setNamespace: void (java.lang.String)
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()
