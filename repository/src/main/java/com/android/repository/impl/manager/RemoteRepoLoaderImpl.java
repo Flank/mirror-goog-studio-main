@@ -30,15 +30,14 @@ import com.android.repository.api.RepositorySource;
 import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.meta.SchemaModuleUtil;
-import com.android.repository.util.InstallerUtil;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -91,7 +90,9 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
             @NonNull ProgressIndicator progress,
             @NonNull Downloader downloader,
             @Nullable SettingsController settings) {
-        Map<String, RemotePackage> result = Maps.newHashMap();
+        Map<RepositorySource, Collection<? extends RemotePackage>> parsedPackages = new HashMap<>();
+        Map<RepositorySource, Collection<? extends RemotePackage>> legacyParsedPackages =
+                new HashMap<>();
         List<RepositorySource> sources = Lists.newArrayList();
 
         double progressMax = 0;
@@ -188,12 +189,13 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
                     progressMax += progressIncrement;
                     RepositorySource source = repoResult.getKey();
                     InputStream repoStream = repoResult.getValue();
-                    processSource(
+                    parseSource(
                             source,
                             repoStream,
                             downloader,
                             settings,
-                            result,
+                            parsedPackages,
+                            legacyParsedPackages,
                             progress,
                             progressMax);
                     progressMax += progressIncrement;
@@ -206,15 +208,31 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
             progress.setIndeterminate(wasIndeterminate);
         }
 
+        Map<String, RemotePackage> result = new HashMap<>();
+
+        for (RepositorySource source : sources) {
+            Collection<? extends RemotePackage> regularPackages = parsedPackages.get(source);
+            if (regularPackages != null) {
+                mergePackages(regularPackages, source, settings, result);
+            }
+        }
+        for (RepositorySource source : sources) {
+            // Legacy after since they are lower priority
+            Collection<? extends RemotePackage> legacyPackages = legacyParsedPackages.get(source);
+            if (legacyPackages != null) {
+                mergePackages(legacyPackages, source, settings, result);
+            }
+        }
         return result;
     }
 
-    private void processSource(
+    private void parseSource(
             @NonNull RepositorySource source,
             @NonNull InputStream repoStream,
             @NonNull Downloader downloader,
             @Nullable SettingsController settings,
-            @NonNull Map<String, RemotePackage> result,
+            @NonNull Map<RepositorySource, Collection<? extends RemotePackage>> result,
+            @NonNull Map<RepositorySource, Collection<? extends RemotePackage>> legacyResult,
             @NonNull ProgressIndicator progress,
             double progressMax) {
         final List<String> errors = Lists.newArrayList();
@@ -267,43 +285,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
         }
 
         if (parsedPackages != null && !parsedPackages.isEmpty()) {
-            for (RemotePackage pkg : parsedPackages) {
-                RemotePackage existing = result.get(pkg.getPath());
-                if (existing != null) {
-                    int compare = existing.getVersion().compareTo(pkg.getVersion());
-                    if (compare > 0) {
-                        // If there are multiple versions of the same package available,
-                        // pick the latest.
-                        continue;
-                    }
-                    if (compare == 0) {
-                        if (legacy) {
-                            // If legacy and non-legacy packages are available with the
-                            // same version, pick the non-legacy one.
-                            continue;
-                        }
-                        URL existingUrl =
-                                InstallerUtil.resolveCompleteArchiveUrl(existing, progress);
-                        if (existingUrl != null) {
-                            String existingProtocol = existingUrl.getProtocol();
-                            if (existingProtocol.equals("file")) {
-                                // If the existing package is local, use it.
-                                continue;
-                            }
-                        }
-                    }
-                }
-                Channel settingsChannel =
-                        settings == null || settings.getChannel() == null
-                                ? pkg.createFactory().createChannelType(Channel.DEFAULT_ID)
-                                : settings.getChannel();
-
-                if (pkg.getArchive() != null && pkg.getChannel().compareTo(settingsChannel) <= 0) {
-                    pkg.setSource(source);
-                    result.put(pkg.getPath(), pkg);
-                }
-                source.setFetchError(null);
-            }
+            (legacy ? legacyResult : result).put(source, parsedPackages);
         } else {
             progress.logWarning("Errors during XML parse:");
             for (String error : errors) {
@@ -314,6 +296,48 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
                 progress.logWarning("Additionally, the fallback loader failed to parse the XML.");
             }
             source.setFetchError(errors.isEmpty() ? "unknown error" : errors.get(0));
+        }
+    }
+
+    private void mergePackages(
+            @NonNull Collection<? extends RemotePackage> packagesFromSource,
+            @NonNull RepositorySource source,
+            @Nullable SettingsController settings,
+            @NonNull Map<String, RemotePackage> result) {
+        for (RemotePackage pkg : packagesFromSource) {
+            RemotePackage existing = result.get(pkg.getPath());
+            if (existing != null) {
+                int compare = existing.getVersion().compareTo(pkg.getVersion());
+                if (compare > 0) {
+                    // If there are multiple versions of the same package available,
+                    // pick the latest.
+                    continue;
+                } else if (compare == 0) {
+                    // If there's a file:// version (for debugging) and an http:// version, use the
+                    // file:// version.
+                    try {
+                        URL newUrl = new URL(source.getUrl());
+                        String newProtocol = newUrl.getProtocol();
+                        if (!newProtocol.equals("file")) {
+                            // If the existing package is local, use it.
+                            continue;
+                        }
+                    } catch (MalformedURLException ignore) {
+                        // If it's not a valid url, don't prioritize it.
+                        continue;
+                    }
+                }
+            }
+            Channel settingsChannel =
+                    settings == null || settings.getChannel() == null
+                            ? pkg.createFactory().createChannelType(Channel.DEFAULT_ID)
+                            : settings.getChannel();
+
+            if (pkg.getArchive() != null && pkg.getChannel().compareTo(settingsChannel) <= 0) {
+                pkg.setSource(source);
+                result.put(pkg.getPath(), pkg);
+            }
+            source.setFetchError(null);
         }
     }
 

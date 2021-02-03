@@ -27,6 +27,7 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepositorySource;
+import com.android.repository.api.RepositorySourceProvider;
 import com.android.repository.api.SimpleRepositorySource;
 import com.android.repository.impl.manager.RemoteRepoLoader;
 import com.android.repository.impl.manager.RemoteRepoLoaderImpl;
@@ -47,12 +48,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CyclicBarrier;
 import junit.framework.TestCase;
+import org.mockito.Mockito;
 
 /** Tests for {@link RemoteRepoLoaderImpl} */
 public class RemoteRepoLoaderImplTest extends TestCase {
@@ -250,18 +253,27 @@ public class RemoteRepoLoaderImplTest extends TestCase {
                     + "\n";
 
     public void testLocalPreferred() throws Exception {
-        RepositorySource httpSource = new SimpleRepositorySource("http://www.example.com",
-                "HTTP Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
-        RepositorySource fileSource = new SimpleRepositorySource("file:///foo/bar",
-                "File Source UI Name", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
-        RepositorySource fileSource2 = new SimpleRepositorySource("file:///foo/bar2",
-                "File Source UI Name 2", true,
-                ImmutableSet.of(RepoManager.getGenericModule()),
-                null);
+        RepositorySource httpSource =
+                new SimpleRepositorySource(
+                        "http://www.example.com",
+                        "HTTP Source UI Name",
+                        true,
+                        ImmutableSet.of(RepoManager.getGenericModule()),
+                        new FakeRepositorySourceProvider(ImmutableList.of()));
+        RepositorySource fileSource =
+                new SimpleRepositorySource(
+                        "file:///foo/bar",
+                        "File Source UI Name",
+                        true,
+                        ImmutableSet.of(RepoManager.getGenericModule()),
+                        new FakeRepositorySourceProvider(ImmutableList.of()));
+        RepositorySource fileSource2 =
+                new SimpleRepositorySource(
+                        "file:///foo/bar2",
+                        "File Source UI Name 2",
+                        true,
+                        ImmutableSet.of(RepoManager.getGenericModule()),
+                        new FakeRepositorySourceProvider(ImmutableList.of()));
         FakeDownloader downloader = new FakeDownloader(new MockFileOp());
         FakeProgressIndicator progress = new FakeProgressIndicator();
         RemoteRepoLoader loader =
@@ -343,6 +355,57 @@ public class RemoteRepoLoaderImplTest extends TestCase {
         assertTrue(pkgs.get("mypackage;foo") instanceof FakePackage);
     }
 
+    /** Create five sources and verify that they're processed in the right order */
+    public void testRepoOrdering() throws Exception {
+        List<RepositorySourceProvider> providers = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            SimpleRepositorySource source =
+                    new SimpleRepositorySource(
+                            "http://www.example.com/f" + i,
+                            "Source UI Name",
+                            true,
+                            ImmutableSet.of(
+                                    RepoManager.getCommonModule(), RepoManager.getGenericModule()),
+                            Mockito.mock(RepositorySourceProvider.class));
+            providers.add(new FakeRepositorySourceProvider(ImmutableList.of(source)));
+        }
+        String template =
+                "<repo:repository\n"
+                        + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
+                        + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+                        + "%s"
+                        + "</repo:repository>\n";
+        String packageTemplate =
+                "    <remotePackage path=\"mypackage;foo%d\">\n"
+                        + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
+                        + "        <revision><major>1</major></revision>\n"
+                        + "        <display-name>%s</display-name>\n"
+                        + "        <archives><archive><complete>\n"
+                        + "                    <size>1234</size>\n"
+                        + "                    <checksum type='sha-1'>123</checksum>\n"
+                        + "                    <url>foo</url>\n"
+                        + "        </complete></archive></archives>\n"
+                        + "    </remotePackage>\n";
+
+        FakeDownloader downloader = new FakeDownloader(new MockFileOp());
+        for (int i = 1; i <= 5; i++) {
+            String package1 = String.format(packageTemplate, i, "bad");
+            String package2 = String.format(packageTemplate, i + 1, "good");
+            downloader.registerUrl(
+                    new URL("http://www.example.com/f" + i),
+                    String.format(template, package1 + package2).getBytes());
+        }
+        FakeProgressIndicator progress = new FakeProgressIndicator(true);
+        RemoteRepoLoader loader = new RemoteRepoLoaderImpl(providers, null);
+        Map<String, RemotePackage> pkgs =
+                loader.fetchPackages(progress, downloader, new FakeSettingsController(false));
+        progress.assertNoErrorsOrWarnings();
+        assertEquals(6, pkgs.size());
+
+        for (int i = 2; i <= 6; i++) {
+            assertEquals("good", pkgs.get("mypackage;foo" + i).getDisplayName());
+        }
+    }
 
     public void testDownloadsAreParallel() throws Exception {
         RepositorySource httpSource =

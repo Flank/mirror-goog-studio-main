@@ -39,9 +39,7 @@ import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +85,7 @@ public class RepoManagerImpl extends RepoManager {
      * The {@link RepositorySourceProvider}s from which to get {@link RepositorySource}s to load
      * from.
      */
-    private final Set<RepositorySourceProvider> mSourceProviders = Sets.newHashSet();
+    private final List<RepositorySourceProvider> mSourceProviders = new ArrayList<>();
 
     /** The loaded packages. */
     private final RepositoryPackages mPackages = new RepositoryPackages();
@@ -229,15 +227,17 @@ public class RepoManagerImpl extends RepoManager {
     @VisibleForTesting
     @Override
     @NonNull
-    public Set<RepositorySourceProvider> getSourceProviders() {
+    public List<RepositorySourceProvider> getSourceProviders() {
         return mSourceProviders;
     }
 
     @Override
     @NonNull
-    public Set<RepositorySource> getSources(@Nullable Downloader downloader,
-            @NonNull ProgressIndicator progress, boolean forceRefresh) {
-        Set<RepositorySource> result = Sets.newHashSet();
+    public List<RepositorySource> getSources(
+            @Nullable Downloader downloader,
+            @NonNull ProgressIndicator progress,
+            boolean forceRefresh) {
+        List<RepositorySource> result = new ArrayList<>();
         for (RepositorySourceProvider provider : mSourceProviders) {
             result.addAll(provider.getSources(downloader, progress, forceRefresh));
         }
@@ -514,9 +514,9 @@ public class RepoManagerImpl extends RepoManager {
             }
         }
 
-        private final List<Callback> mOnSuccesses = Lists.newArrayList();
+        private final List<Callback> mOnSuccesses = new ArrayList<>();
 
-        private final List<Runnable> mOnErrors = Lists.newArrayList();
+        private final List<Runnable> mOnErrors = new ArrayList<>();
 
         // Must be synchronized since new elements can be added while the task is still in progress
         // (that is, before mTask is set to null).

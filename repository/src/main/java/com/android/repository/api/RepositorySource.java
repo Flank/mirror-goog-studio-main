@@ -18,7 +18,6 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.Collection;
 
 /**
@@ -49,9 +48,8 @@ public interface RepositorySource {
     @Nullable
     String getDisplayName();
 
-    /**
-     * @return The URL from which to download.
-     */
+    /** @return The URL from which to download. */
+    @NonNull
     String getUrl();
 
     /**

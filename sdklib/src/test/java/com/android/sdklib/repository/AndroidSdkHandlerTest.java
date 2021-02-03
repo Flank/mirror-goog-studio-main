@@ -29,8 +29,8 @@ import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import junit.framework.TestCase;
 
 /**
@@ -207,7 +207,7 @@ public class AndroidSdkHandlerTest extends TestCase {
         Locale origDefault = Locale.getDefault();
         Locale.setDefault(new Locale("hi", "IN"));
         try {
-            Set<RepositorySourceProvider> providers =
+            List<RepositorySourceProvider> providers =
                     AndroidSdkHandler.getInstance(
                                     AndroidLocationsSingleton.INSTANCE, TestUtils.getSdk())
                             .getSdkManager(new FakeProgressIndicator())
