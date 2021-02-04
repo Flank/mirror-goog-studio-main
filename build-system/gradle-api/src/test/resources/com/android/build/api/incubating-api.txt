@@ -310,7 +310,6 @@ com.android.build.api.dsl.CommonExtension.aaptOptions: void (kotlin.jvm.function
 com.android.build.api.dsl.CommonExtension.adbOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AdbOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildFeatures: void (kotlin.jvm.functions.Function1<? super BuildFeaturesT, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.buildTypes: void (org.gradle.api.Action<? super org.gradle.api.NamedDomainObjectContainer<BuildTypeT>>)
-com.android.build.api.dsl.CommonExtension.compileOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.CompileOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.composeOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ComposeOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.dataBinding: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.debug: void (org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT, kotlin.Unit>)
@@ -321,7 +320,6 @@ com.android.build.api.dsl.CommonExtension.getAdbOptions: com.android.build.api.d
 com.android.build.api.dsl.CommonExtension.getBuildFeatures: BuildFeaturesT ()
 com.android.build.api.dsl.CommonExtension.getBuildToolsVersion: java.lang.String ()
 com.android.build.api.dsl.CommonExtension.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<BuildTypeT> ()
-com.android.build.api.dsl.CommonExtension.getCompileOptions: com.android.build.api.dsl.CompileOptions ()
 com.android.build.api.dsl.CommonExtension.getComposeOptions: com.android.build.api.dsl.ComposeOptions ()
 com.android.build.api.dsl.CommonExtension.getDataBinding: com.android.build.api.dsl.DataBinding ()
 com.android.build.api.dsl.CommonExtension.getDefaultConfig: DefaultConfigT ()
@@ -354,7 +352,6 @@ com.android.build.api.dsl.CommonExtension.splits: void (kotlin.jvm.functions.Fun
 com.android.build.api.dsl.CommonExtension.testOptions: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestOptions, kotlin.Unit>)
 com.android.build.api.dsl.CommonExtension.useLibrary: void (java.lang.String)
 com.android.build.api.dsl.CommonExtension.useLibrary: void (java.lang.String, boolean)
-com.android.build.api.dsl.CompileOptions
 com.android.build.api.dsl.CompileOptions.getEncoding: java.lang.String ()
 com.android.build.api.dsl.CompileOptions.getSourceCompatibility: org.gradle.api.JavaVersion ()
 com.android.build.api.dsl.CompileOptions.getTargetCompatibility: org.gradle.api.JavaVersion ()

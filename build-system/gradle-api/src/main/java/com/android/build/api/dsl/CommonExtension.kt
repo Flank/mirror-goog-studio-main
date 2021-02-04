@@ -81,7 +81,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
-    @get:Incubating
     val compileOptions: CompileOptions
 
     /**
@@ -90,7 +89,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [CompileOptions].
      */
-    @Incubating
     fun compileOptions(action: CompileOptions.() -> Unit)
 
     /**
