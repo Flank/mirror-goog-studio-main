@@ -252,9 +252,26 @@ interface CommonExtension<
     /**
      * Specifies options for the lint tool.
      *
+     * For more information about the properties you can configure in this block, see [Lint].
+     */
+    @get:Incubating
+    val lint: Lint
+
+    /**
+     * Specifies options for the lint tool.
+     *
+     * For more information about the properties you can configure in this block, see [Lint].
+     */
+    @Incubating
+    fun lint(action: Lint.() -> Unit)
+
+    /**
+     * Specifies options for the lint tool.
+     *
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
     @get:Incubating
+    @Deprecated("Renamed to lint", replaceWith = ReplaceWith("lint"))
     val lintOptions: LintOptions
 
     /**
@@ -263,6 +280,7 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block, see [LintOptions].
      */
     @Incubating
+    @Deprecated("Renamed to lint", replaceWith = ReplaceWith("lint"))
     fun lintOptions(action: LintOptions.() -> Unit)
 
     /**
